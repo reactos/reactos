@@ -2,7 +2,6 @@
  * cryptui dll resources
  *
  * Copyright 2008 Juan Lang
- * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +19,6 @@
  */
 
 #include "cryptuires.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
@@ -59,8 +55,8 @@ STRINGTABLE
     IDS_FIELD_VALID_TO "Дійсний до"
     IDS_FIELD_SUBJECT "Предмет"
     IDS_FIELD_PUBLIC_KEY "Публічний ключ"
-    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d bits)"
-    IDS_PROP_HASH "SHA1 hash"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d біт)"
+    IDS_PROP_HASH "SHA1 хеш"
     IDS_PROP_ENHKEY_USAGE "Розширене використання ключа (властивість)"
     IDS_PROP_FRIENDLY_NAME "Дружня назва"
     IDS_PROP_DESCRIPTION "Опис"
@@ -108,23 +104,34 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Дружня назва"
     IDS_ALLOWED_PURPOSE_ALL "<Всі>"
     IDS_ALLOWED_PURPOSE_NONE "<Немає>"
-    IDS_WARN_REMOVE_MY "Ви більше не зможете розшифровувати чи підписувати повідомлення цим сертифікатом.\nВи дійсно хочете видалити цей сертифікат?"
-    IDS_WARN_REMOVE_PLURAL_MY "Ви більше не зможете розшифровувати чи підписувати повідомлення цими сертифікатами.\nВи дійсно хочете видалити ці сертифікати?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Ви більше не зможете зашифровувати чи перевіряти повідомлення цим сертифікатом.\nВи дійсно хочете видалити цей сертифікат?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Ви більше не зможете зашифровувати чи перевіряти повідомлення цими сертифікатами.\nВи дійсно хочете видалити ці сертифікати?"
-    IDS_WARN_REMOVE_CA "Сертифікати, видані цим органом сертифікації, втратять довіру.\nВи дійсно хочете видалити цей сертифікат?"
-    IDS_WARN_REMOVE_PLURAL_CA "Сертифікати, видані цими органами сертифікації, втратять довіру.\nВи дійсно хочете видалити ці сертифікати?"
-    IDS_WARN_REMOVE_ROOT "Сертифікати, видані цим органом кореневої сертифікації, чи іншим органом сертифікації, який їх видав, втратять довіру.\nВи дійсно хочете видалити цей довірений кореневий сертифікат?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Сертифікати, видані цими органами кореневої сертифікації, чи іншими органами сертифікації, які їх видали, втратять довіру.\nВи дійсно хочете видалити ці довірені кореневі сертифікати?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "ПЗ, підписане цим видавцем втратить довіру.\nВи дійсно хочете видалити цей сертифікат?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "ПЗ, підписане цими видавцями втратить довіру.\nВи дійсно хочете видалити ці сертифікати?"
+    IDS_WARN_REMOVE_MY "Ви більше не зможете розшифровувати чи підписувати повідомлення цим сертифікатом.\n\
+Ви дійсно хочете видалити цей сертифікат?"
+    IDS_WARN_REMOVE_PLURAL_MY "Ви більше не зможете розшифровувати чи підписувати повідомлення цими сертифікатами.\n\
+Ви дійсно хочете видалити ці сертифікати?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Ви більше не зможете зашифровувати чи перевіряти повідомлення цим сертифікатом.\n\
+Ви дійсно хочете видалити цей сертифікат?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Ви більше не зможете зашифровувати чи перевіряти повідомлення цими сертифікатами.\n\
+Ви дійсно хочете видалити ці сертифікати?"
+    IDS_WARN_REMOVE_CA "Сертифікати, видані цим органом сертифікації, втратять довіру.\n\
+Ви дійсно хочете видалити цей сертифікат?"
+    IDS_WARN_REMOVE_PLURAL_CA "Сертифікати, видані цими органами сертифікації, втратять довіру.\n\
+Ви дійсно хочете видалити ці сертифікати?"
+    IDS_WARN_REMOVE_ROOT "Сертифікати, видані цим органом кореневої сертифікації, чи іншим органом сертифікації, який їх видав, втратять довіру.\n\
+Ви дійсно хочете видалити цей довірений кореневий сертифікат?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Сертифікати, видані цими органами кореневої сертифікації, чи іншими органами сертифікації, які їх видали, втратять довіру.\n\
+Ви дійсно хочете видалити ці довірені кореневі сертифікати?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "ПЗ, підписане цим видавцем втратить довіру.\n\
+Ви дійсно хочете видалити цей сертифікат?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "ПЗ, підписане цими видавцями втратить довіру.\n\
+Ви дійсно хочете видалити ці сертифікати?"
     IDS_WARN_REMOVE_DEFAULT "Ви дійсно хочете видалити цей сертифікат?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Ви дійсно хочете видалити ці сертифікати?"
     IDS_CERT_MGR "Сертифікати"
     IDS_FRIENDLY_NAME_NONE "<Немає>"
     IDS_PURPOSE_SERVER_AUTH "Забезпечує ідентифікацію віддаленого комп'ютера"
     IDS_PURPOSE_CLIENT_AUTH "Забезпечує ваше виявлення на віддаленому комп'ютері"
-    IDS_PURPOSE_CODE_SIGNING "Гарантує, що програмне забезпечення прийшло від\n видавця ПЗ.Захищає ПЗ від змін після публікації"
+    IDS_PURPOSE_CODE_SIGNING "Гарантує, що програмне забезпечення прийшло від\n\
+ видавця ПЗ.Захищає ПЗ від змін після публікації"
     IDS_PURPOSE_EMAIL_PROTECTION "Захищає повідомлення e-mail"
     IDS_PURPOSE_IPSEC "Забезпечує безпечний зв'язок через Інтернет"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Дозволяє підписати дані поточним часом"
@@ -183,35 +190,28 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
-  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,8,11,26,26
-  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W", ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W", ES_READONLY|WS_DISABLED,34,11,212,26
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
-  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W", ES_READONLY|ES_MULTILINE,8,38,238,78
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
-  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
-  PUSHBUTTON "&Встановити сертифікат...", IDC_ADDTOSTORE,83,216,90,14
-  PUSHBUTTON "&Заява видавця", IDC_ISSUERSTATEMENT,177,216,70,14
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W", ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "&Встановити сертифікат...", IDC_ADDTOSTORE,53,216,95,14
+  PUSHBUTTON "&Заява видавця", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
 IDD_DETAIL DIALOG 0, 0, 255, 236
-CAPTION "Деталі"
+CAPTION "Подробиці"
 STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Показати:", -1, 6,12,40,14
-  COMBOBOX IDC_DETAIL_SELECT, 40,10,100,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  COMBOBOX IDC_DETAIL_SELECT, 48,10,100,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
-    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    6,28,241,100
-  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "&Змінити властивості...", IDC_EDITPROPERTIES,91,216,80,14
-  PUSHBUTTON "&Копіювати в файл...", IDC_EXPORT,175,216,72,14
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "&Змінити властивості...", IDC_EDITPROPERTIES,53,216,95,14
+  PUSHBUTTON "&Копіювати в файл...", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOG 0, 0, 255, 236
@@ -222,8 +222,8 @@ BEGIN
   GROUPBOX "&Шлях сертифікації", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
-  PUSHBUTTON "&Перегляд сертифікату", IDC_VIEWCERTIFICATE,167,156,78,14
-  LTEXT "&Стан сертифікату:", IDC_CERTIFICATESTATUS,6,183,70,14
+  PUSHBUTTON "&Перегляд сертифікату", IDC_VIEWCERTIFICATE,155,156,90,14
+  LTEXT "&Стан сертифікату:", IDC_CERTIFICATESTATUS,6,183,200,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
@@ -235,8 +235,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
-  PUSHBUTTON "Закрити", IDOK,103,216,70,14
-  PUSHBUTTON "&Детальніше", IDC_CPS,177,216,70,14
+  PUSHBUTTON "Закрити", IDOK,73,216,85,14
+  PUSHBUTTON "&Детальніше", IDC_CPS,162,216,85,14
 END
 
 IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
@@ -245,20 +245,20 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Дружня назва:", -1, 6,14,60,14
-  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  EDITTEXT IDC_FRIENDLY_NAME, 70,12,181,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Опис:", -1, 6,32,60,14
-  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Цілі сертифікату", -1,6,48,245,165, BS_GROUPBOX
+  EDITTEXT IDC_DESCRIPTION, 70,30,181,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Цілі сертифікату", -1,6,48,245,185, BS_GROUPBOX
   AUTORADIOBUTTON "&Ввімкнути всі цілі для цього сертифікату",
-    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_ENABLE_ALL_PURPOSES, 12,58,230,14, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "В&имкнути всі цілі для цього сертифікату",
-    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+    IDC_DISABLE_ALL_PURPOSES, 12,70,230,14, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Ввімкнути &лише наступні цілі для цього сертифікату:",
-    IDC_ENABLE_SELECTED_PURPOSES, 12,82,188,14, BS_AUTORADIOBUTTON
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,230,14, BS_AUTORADIOBUTTON
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    24,100,220,90
-  PUSHBUTTON "Додати &ціль...", IDC_ADD_PURPOSE,184,194,60,14
+    24,100,220,106
+  PUSHBUTTON "Додати &ціль...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
 IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
@@ -279,8 +279,7 @@ BEGIN
   LTEXT "Виберіть потрібне сховище сертифікатів:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "&Показати фізичні сховища", IDC_SHOW_PHYSICAL_STORES, 6,102,102,14,
-    BS_AUTOCHECKBOX|WS_TABSTOP
+  CHECKBOX "&Показати фізичні сховища", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
   PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Скасувати", IDCANCEL, 144,118,50,14
 END
@@ -289,14 +288,9 @@ IDD_IMPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Майстер імпорту сертифікатів"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Вас вітає Майстер імпорту сертифікатів", IDC_IMPORT_TITLE,
-    115,7,195,12
-  LTEXT "Цей майстер допоможе імпортувати сертифікати, списки анульованих сертифікатів та списки довірених сертифікатів з файлу до сховища сертифікатів.",
-    -1, 115,26,195,25
+  LTEXT "Вас вітає Майстер імпорту сертифікатів", IDC_IMPORT_TITLE, 115,7,195,30
   LTEXT "Сертифікат може бути використаний для вашої ідентифікації або ідентифікації комп'ютера, з яким ви з'єднані.  Також він може бути використаний для завірення і для підписуваня повідомлень.  Сховищами сертифікатів є колекції сертифікатів, списки анульованих сертифікатів та списки довірених сертифікатів.",
-    -1, 115,52,195,48
-  LTEXT "Для продовження натисніть Далі.",
-    -1, 115,103,195,8
+    -1, 115,40,195,120
 END
 
 IDD_IMPORT_FILE DIALOG 0,0,317,178
@@ -307,13 +301,13 @@ BEGIN
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   PUSHBUTTON "&Огляд...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Увага:  Наступні формати файлів можуть містити більше одного сертифікату, списку анульованих сертифікатів, чи списку довірених сертифікатів:",
-    -1, 21,26,265,16
+    -1, 21,30,265,16
   LTEXT "Cryptographic Message Syntax Standard/PKCS #7 Messages (.p7b)",
-    -1, 31,49,265,10
+    -1, 31,53,265,10
   LTEXT "Обмін особистою інформацією/PKCS #12 (.pfx, .p12)",
-    -1, 31,64,265,10
+    -1, 31,68,265,10
   LTEXT "Сховище серійних сертифікатів Microsoft (.sst)",
-    -1, 31,79,265,10
+    -1, 31,83,265,10
 END
 
 IDD_IMPORT_STORE DIALOG 0,0,317,143
@@ -321,13 +315,13 @@ CAPTION "Майстер імпорту сертифікатів"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine може автоматично вибрати сховище сертифікатів, або ви можете вказати місце для сертифікатів.",
-    -1, 21,1,195,20
+    -1, 21,1,220,25
   AUTORADIOBUTTON "&Автоматично вибрати сховище сертифікатів",
-    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Помістити всі сертифікати в наступне сховище:",
-    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
-  EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
-  PUSHBUTTON "&Огляд...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+    IDC_IMPORT_SPECIFY_STORE, 31,42,220,12, BS_AUTORADIOBUTTON
+  EDITTEXT IDC_IMPORT_STORE, 44,61,185,14, ES_READONLY
+  PUSHBUTTON "&Огляд...", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
 IDD_IMPORT_FINISH DIALOG 0,0,317,178
@@ -350,20 +344,17 @@ CAPTION "Сертифікати"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Призначена ціль:", -1, 7,9,100,12
-  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
-  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
-    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
-  CONTROL "", IDC_MGR_CERTS, "SysListView32",
-    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
-  PUSHBUTTON "&Імпорт...", IDC_MGR_IMPORT, 7,172,51,14
-  PUSHBUTTON "&Експорт...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
-  PUSHBUTTON "&Видалити", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
-  PUSHBUTTON "&Додатково...", IDC_MGR_ADVANCED, 277,172,51,14
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32", WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32", LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "&Імпорт...", IDC_MGR_IMPORT, 7,172,65,14
+  PUSHBUTTON "&Експорт...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Видалити", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Додатково...", IDC_MGR_ADVANCED, 263,172,65,14
   GROUPBOX "Призначені цілі сертифікату", -1,7,194,321,47, BS_GROUPBOX
-  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
-  PUSHBUTTON "Пе&регляд...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
-  PUSHBUTTON "&Закрити", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
+  LTEXT "", IDC_MGR_PURPOSES, 13,206,252,32
+  PUSHBUTTON "&Вигляд", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  PUSHBUTTON "За&крити", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
 IDD_CERT_MGR_ADVANCED DIALOG 0,0,248,176
@@ -385,14 +376,9 @@ IDD_EXPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Майстер експорту сертифікатів"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Вас вітає Майстер експорту сертифікатів", IDC_EXPORT_TITLE,
-    115,7,195,12
-  LTEXT "Цей майстер допоможе імпортувати сертифікати, списки анульованих сертифікатів та списки довірених сертифікатів з сховища сертифікатів до файлу.",
-    -1, 115,26,195,25
+  LTEXT "Вас вітає Майстер експорту сертифікатів", IDC_EXPORT_TITLE, 115,7,195,30
   LTEXT "Сертифікат може бути використаний для вашої ідентифікації або ідентифікації комп'ютера, з яким ви з'єднані.  Також він може бути використаний для завірення і для підписуваня повідомлень.  Сховищами сертифікатів є колекції сертифікатів, списки анульованих сертифікатів та списки довірених сертифікатів.",
-    -1, 115,52,195,48
-  LTEXT "Для продовження натисніть Далі.",
-    -1, 115,103,195,8
+    -1, 115,40,195,120
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
@@ -424,23 +410,21 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Виберіть формат, який ви хочете використати:", -1, 21,1,195,10
   AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Cryptographic Message Syntax Standard/PKCS #7 Message (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Включити всі сертифікати за сертифікаційним шляхом якщо можливо",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,245,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "&Обмін особистою інформацією/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Включити вс&і сертифікати за сертифікаційним шляхом якщо можливо",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,245,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Ввімкнути сильне шифрування",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "Видалити приватний &ключ після успішного експорту",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
 IDD_EXPORT_FILE DIALOG 0,0,317,143

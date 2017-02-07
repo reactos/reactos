@@ -49,7 +49,7 @@ list(APPEND IDL_SOURCES
 #    htiface.idl
     htiframe.idl
 #    htmlfilter.idl
-#    httprequest.idl
+    httprequest.idl
 #    iaccess.idl
 #    iaspolcy.idl
 #    iedial.idl
@@ -169,16 +169,22 @@ list(APPEND IDL_SOURCES
     tuner.idl
     vmr9.idl
     wia_xp.idl
+    wincodec.idl
     xmldom.idl
     xmldso.idl
     ctfutb.idl
     xmllite.idl)
 
-if(NOT MSVC)
-  list(APPEND IDL_SOURCES
-    wbemcli.idl
-    wincodec.idl
-    wuapi.idl)
+if(MSVC)
+    list(APPEND IDL_SOURCES
+        atliface.idl
+        cor.idl
+        cordebug.idl
+        metahost.idl)
+else()
+    list(APPEND IDL_SOURCES
+        wbemcli.idl
+        wuapi.idl)
 endif()
 
 foreach(IDL_FILE ${IDL_SOURCES})

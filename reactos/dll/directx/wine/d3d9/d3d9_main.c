@@ -40,7 +40,7 @@ IDirect3D9* WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT SDKVersion) {
     object->ref = 1;
 
     wined3d_mutex_lock();
-    object->WineD3D = wined3d_create(9, object);
+    object->WineD3D = wined3d_create(9, 0, object);
     wined3d_mutex_unlock();
 
     TRACE("SDKVersion = %x, Created Direct3D object @ %p, WineObj @ %p\n", SDKVersion, object, object->WineD3D);

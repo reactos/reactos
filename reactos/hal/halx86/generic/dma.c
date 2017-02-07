@@ -309,7 +309,7 @@ HalpGrowMapBuffers(IN PADAPTER_OBJECT AdapterObject,
             }
 
             RtlClearBit(AdapterObject->MapRegisters,
-                        CurrentEntry - AdapterObject->MapRegisterBase);
+                        (ULONG)(CurrentEntry - AdapterObject->MapRegisterBase));
             CurrentEntry->VirtualAddress = VirtualAddress;
             CurrentEntry->PhysicalAddress = PhysicalAddress;
 
@@ -553,7 +553,7 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
         {
             /* Set the Request Data */
             WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
-            
+
             /* Unmask DMA Channel */
             WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->SingleMask,
                              AdapterObject->ChannelNumber | DMA_CLEARMASK);
@@ -562,7 +562,7 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
         {
             /* Set the Request Data */
             WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
-            
+
             /* Unmask DMA Channel */
             WRITE_PORT_UCHAR(&((PDMA2_CONTROL)AdapterBaseVa)->SingleMask,
                              AdapterObject->ChannelNumber | DMA_CLEARMASK);
@@ -917,7 +917,7 @@ typedef struct _SCATTER_GATHER_CONTEXT {
 	ULONG MapRegisterCount;
 	BOOLEAN WriteToDevice;
 } SCATTER_GATHER_CONTEXT, *PSCATTER_GATHER_CONTEXT;
-	
+
 
 IO_ALLOCATION_ACTION
 NTAPI
@@ -932,10 +932,10 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	SCATTER_GATHER_ELEMENT TempElements[MAX_SG_ELEMENTS];
 	ULONG ElementCount = 0, RemainingLength = AdapterControlContext->Length;
 	PUCHAR CurrentVa = AdapterControlContext->CurrentVa;
-	
+
 	/* Store the map register base for later in HalPutScatterGatherList */
 	AdapterControlContext->MapRegisterBase = MapRegisterBase;
-	
+
 	while (RemainingLength > 0 && ElementCount < MAX_SG_ELEMENTS)
 	{
 	    TempElements[ElementCount].Length = RemainingLength;
@@ -948,16 +948,16 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 														   AdapterControlContext->WriteToDevice);
 		if (TempElements[ElementCount].Length == 0)
 			break;
-			
+
 		DPRINT("Allocated one S/G element: 0x%I64u with length: 0x%x\n",
 		        TempElements[ElementCount].Address.QuadPart,
 				TempElements[ElementCount].Length);
-		
+
 		ASSERT(TempElements[ElementCount].Length <= RemainingLength);
 		RemainingLength -= TempElements[ElementCount].Length;
 		ElementCount++;
 	}
-	
+
 	if (RemainingLength > 0)
 	{
 		DPRINT1("Scatter/gather list construction failed!\n");
@@ -974,14 +974,14 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	RtlCopyMemory(ScatterGatherList->Elements,
 	              TempElements,
 				  sizeof(SCATTER_GATHER_ELEMENT) * ElementCount);
-				  
+
 	DPRINT("Initiating S/G DMA with %d element(s)\n", ElementCount);
-	
+
 	AdapterControlContext->AdapterListControlRoutine(DeviceObject,
 	                                                 Irp,
 													 ScatterGatherList,
 													 AdapterControlContext->AdapterListControlContext);
-													 
+
 	return DeallocateObjectKeepRegisters;
 }
 
@@ -1025,10 +1025,10 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 						 IN BOOLEAN WriteToDevice)
 {
 	PSCATTER_GATHER_CONTEXT AdapterControlContext;
-	
+
 	AdapterControlContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(SCATTER_GATHER_CONTEXT), TAG_DMA);
 	if (!AdapterControlContext) return STATUS_INSUFFICIENT_RESOURCES;
-	
+
 	AdapterControlContext->AdapterObject = AdapterObject;
 	AdapterControlContext->Mdl = Mdl;
 	AdapterControlContext->CurrentVa = CurrentVa;
@@ -1037,7 +1037,7 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	AdapterControlContext->AdapterListControlRoutine = ExecutionRoutine;
 	AdapterControlContext->AdapterListControlContext = Context;
 	AdapterControlContext->WriteToDevice = WriteToDevice;
-	
+
 	return IoAllocateAdapterChannel(AdapterObject,
 	                                DeviceObject,
 									AdapterControlContext->MapRegisterCount,
@@ -1071,7 +1071,7 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 {
     PSCATTER_GATHER_CONTEXT AdapterControlContext = (PSCATTER_GATHER_CONTEXT)ScatterGather->Reserved;
 	ULONG i;
-	
+
 	for (i = 0; i < ScatterGather->NumberOfElements; i++)
 	{
 	     IoFlushAdapterBuffers(AdapterObject,
@@ -1086,9 +1086,9 @@ HalpScatterGatherAdapterControl(IN PDEVICE_OBJECT DeviceObject,
 	IoFreeMapRegisters(AdapterObject,
 	                   AdapterControlContext->MapRegisterBase,
 					   AdapterControlContext->MapRegisterCount);
-					   
+
 	DPRINT("S/G DMA has finished!\n");
-	
+
 	ExFreePoolWithTag(AdapterControlContext, TAG_DMA);
 	ExFreePoolWithTag(ScatterGather, TAG_DMA);
 }
@@ -1141,10 +1141,10 @@ HalReadDmaCounter(IN PADAPTER_OBJECT AdapterObject)
         do
         {
             OldCount = Count;
-         
+
             /* Send Reset */
             WRITE_PORT_UCHAR(&DmaControl1->ClearBytePointer, 0);
-            
+
             /* Read Count */
             Count = READ_PORT_UCHAR(&DmaControl1->DmaAddressCount
                                     [AdapterObject->ChannelNumber].DmaBaseCount);
@@ -1160,10 +1160,10 @@ HalReadDmaCounter(IN PADAPTER_OBJECT AdapterObject)
         do
         {
             OldCount = Count;
-         
+
             /* Send Reset */
             WRITE_PORT_UCHAR(&DmaControl2->ClearBytePointer, 0);
-            
+
             /* Read Count */
             Count = READ_PORT_UCHAR(&DmaControl2->DmaAddressCount
                                     [AdapterObject->ChannelNumber].DmaBaseCount);
@@ -1327,7 +1327,7 @@ HalAllocateAdapterChannel(IN PADAPTER_OBJECT AdapterObject,
         if (Index == MAXULONG)
         {
             InsertTailList(&MasterAdapter->AdapterQueue, &AdapterObject->AdapterQueue);
-            
+
             WorkItem = ExAllocatePoolWithTag(NonPagedPool,
                                              sizeof(GROW_WORK_ITEM),
                                              TAG_DMA);
@@ -1439,7 +1439,7 @@ IoFreeAdapterChannel(IN PADAPTER_OBJECT AdapterObject)
 
         DeviceQueueEntry = KeRemoveDeviceQueue(&AdapterObject->ChannelWaitQueue);
         if (!DeviceQueueEntry) break;
-      
+
         WaitContextBlock = CONTAINING_RECORD(DeviceQueueEntry,
                                              WAIT_CONTEXT_BLOCK,
                                              WaitQueueEntry);
@@ -1547,7 +1547,7 @@ IoFreeMapRegisters(IN PADAPTER_OBJECT AdapterObject,
 
         RealMapRegisterBase = (PROS_MAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
         RtlClearBits(MasterAdapter->MapRegisters,
-                     RealMapRegisterBase - MasterAdapter->MapRegisterBase,
+                     (ULONG)(RealMapRegisterBase - MasterAdapter->MapRegisterBase),
                      NumberOfMapRegisters);
     }
 
@@ -1593,12 +1593,12 @@ IoFreeMapRegisters(IN PADAPTER_OBJECT AdapterObject,
                 {
                     KeAcquireSpinLock(&MasterAdapter->SpinLock, &OldIrql);
                     RtlClearBits(MasterAdapter->MapRegisters,
-                                 AdapterObject->MapRegisterBase -
-                                 MasterAdapter->MapRegisterBase,
+                                 (ULONG)(AdapterObject->MapRegisterBase -
+                                         MasterAdapter->MapRegisterBase),
                                  AdapterObject->NumberOfMapRegisters);
                     KeReleaseSpinLock(&MasterAdapter->SpinLock, OldIrql);
                 }
-            
+
                 IoFreeAdapterChannel(AdapterObject);
                 break;
 
@@ -2011,16 +2011,16 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
 
             /* Reset Register */
             WRITE_PORT_UCHAR(&DmaControl1->ClearBytePointer, 0);
-         
+
             /* Set the Mode */
             WRITE_PORT_UCHAR(&DmaControl1->Mode, AdapterMode.Byte);
-         
+
             /* Set the Offset Register */
             WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress,
                              (UCHAR)(TransferOffset));
             WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress,
                              (UCHAR)(TransferOffset >> 8));
-                          
+
             /* Set the Page Register */
             WRITE_PORT_UCHAR(AdapterObject->PagePort + FIELD_OFFSET(EISA_CONTROL, DmaController1Pages),
                              (UCHAR)(PhysicalAddress.LowPart >> 16));
@@ -2029,13 +2029,13 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
                 WRITE_PORT_UCHAR(AdapterObject->PagePort + FIELD_OFFSET(EISA_CONTROL, DmaController2Pages),
                                  0);
             }
-         
+
             /* Set the Length */
             WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
                              (UCHAR)(TransferLength - 1));
             WRITE_PORT_UCHAR(&DmaControl1->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
                              (UCHAR)((TransferLength - 1) >> 8));
-                          
+
             /* Unmask the Channel */
             WRITE_PORT_UCHAR(&DmaControl1->SingleMask, AdapterObject->ChannelNumber | DMA_CLEARMASK);
         }
@@ -2045,16 +2045,16 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
 
             /* Reset Register */
             WRITE_PORT_UCHAR(&DmaControl2->ClearBytePointer, 0);
-         
+
             /* Set the Mode */
             WRITE_PORT_UCHAR(&DmaControl2->Mode, AdapterMode.Byte);
-         
+
             /* Set the Offset Register */
             WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress,
                              (UCHAR)(TransferOffset));
             WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseAddress,
                              (UCHAR)(TransferOffset >> 8));
-                          
+
             /* Set the Page Register */
             WRITE_PORT_UCHAR(AdapterObject->PagePort + FIELD_OFFSET(EISA_CONTROL, DmaController1Pages),
                              (UCHAR)(PhysicalAddress.u.LowPart >> 16));
@@ -2063,13 +2063,13 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
                 WRITE_PORT_UCHAR(AdapterObject->PagePort + FIELD_OFFSET(EISA_CONTROL, DmaController2Pages),
                                  0);
             }
-         
+
             /* Set the Length */
             WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
                              (UCHAR)(TransferLength - 1));
             WRITE_PORT_UCHAR(&DmaControl2->DmaAddressCount[AdapterObject->ChannelNumber].DmaBaseCount,
                              (UCHAR)((TransferLength - 1) >> 8));
-                          
+
             /* Unmask the Channel */
             WRITE_PORT_UCHAR(&DmaControl2->SingleMask,
                              AdapterObject->ChannelNumber | DMA_CLEARMASK);

@@ -217,7 +217,7 @@ static __inline const char *wine_dbgstr_rect( const RECT *rect )
 
 static __inline const char *wine_dbgstr_longlong( ULONGLONG ll )
 {
-    if (sizeof(ll) > sizeof(unsigned long) && ll >> 32)
+    if (/*sizeof(ll) > sizeof(unsigned long) &&*/ ll >> 32) /* ULONGLONG is always > long in ReactOS */
         return wine_dbg_sprintf( "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );
     else return wine_dbg_sprintf( "%lx", (unsigned long)ll );
 }

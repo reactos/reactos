@@ -1301,6 +1301,26 @@ interface IUpdateInstaller : IDispatch
 }
 
 [
+    object,
+    uuid(ADE87BF7-7B56-4275-8FAB-B9B0E591844B),
+    oleautomation,
+    hidden,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+]
+interface ISystemInformation : IDispatch
+{
+    [propget]
+    HRESULT OemHardwareSupportLink(
+        [out, retval] BSTR *retval);
+
+    [propget]
+    HRESULT RebootRequired(
+        [out, retval] VARIANT_BOOL *retval);
+}
+
+[
     helpstring("AutomaticUpdates Class"),
     threading(both),
     progid("Microsoft.Update.AutoUpdate.1"),
@@ -1317,5 +1337,14 @@ coclass AutomaticUpdates { interface IAutomaticUpdates; }
     uuid(4cb43d7f-7eee-4906-8698-60da1c38f2fe)
 ]
 coclass UpdateSession { interface IUpdateSession; }
+
+[
+    helpstring("SystemInformation Class"),
+    threading(both),
+    progid("Microsoft.Update.SystemInfo.1"),
+    vi_progid("Microsoft.Update.SystemInfo"),
+    uuid(C01B9BA0-BEA7-41BA-B604-D0A36F469133)
+]
+coclass SystemInformation { interface ISystemInformation; }
 
 } /* WUApiLib */

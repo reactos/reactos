@@ -158,7 +158,7 @@ typedef struct tagGLRC
 /* OpenGL private device context data */
 typedef struct tagGLDCDATA
 {
-    HDC hdc;           /*!< Device context handle for which this data is */
+    HANDLE handle;     /*!< Handle for which this data is (HWND for device, HDC for memory context) */
     GLDRIVERDATA *icd; /*!< Driver used for this DC */
     int pixel_format;  /*!< Selected pixel format */
 
@@ -177,15 +177,7 @@ typedef struct tagGLPROCESSDATA
     HANDLE        dcdata_mutex; /*!< Mutex to protect glrc list */
 } GLPROCESSDATA;
 
-/* TLS data */
-typedef struct tagGLTHREADDATA
-{
-    GLRC   *glrc;      /*!< current GL rendering context */
-} GLTHREADDATA;
-
-extern DWORD OPENGL32_tls;
 extern GLPROCESSDATA OPENGL32_processdata;
-#define OPENGL32_threaddata ((GLTHREADDATA *)TlsGetValue( OPENGL32_tls ))
 
 /* function prototypes */
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );

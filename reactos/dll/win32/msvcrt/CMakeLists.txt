@@ -1,5 +1,5 @@
 
-spec2def(msvcrt.dll msvcrt.spec)
+spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
@@ -37,4 +37,4 @@ endif()
 add_importlibs(msvcrt kernel32 ntdll)
 add_pch(msvcrt precomp.h)
 add_cd_file(TARGET msvcrt DESTINATION reactos/system32 FOR all)
-add_importlib_target(msvcrt.spec)
+

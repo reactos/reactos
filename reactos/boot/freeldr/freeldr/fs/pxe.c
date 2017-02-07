@@ -96,7 +96,7 @@ BOOLEAN CallPxe(UINT16 Service, PVOID Parameter)
     {
         // HACK: this delay shouldn't be necessary
         KeStallExecutionProcessor(100 * 1000); // 100 ms
-        ERR("PxeCall(0x%x, %p)\n", Service, Parameter);
+        TRACE("PxeCall(0x%x, %p)\n", Service, Parameter);
     }
 
     exit = PxeCallApi(pxe->EntryPointSP.segment, pxe->EntryPointSP.offset, Service, Parameter);
@@ -293,7 +293,7 @@ static LONG PxeDiskClose(ULONG FileId)
 
 static LONG PxeDiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    UNIMPLEMENTED;
+    // No disk access in PXE mode
     return EINVAL;
 }
 
@@ -305,13 +305,13 @@ static LONG PxeDiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 static LONG PxeDiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-    UNIMPLEMENTED;
+    // No disk access in PXE mode
     return EINVAL;
 }
 
 static LONG PxeDiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    UNIMPLEMENTED;
+    // No disk access in PXE mode
     return EINVAL;
 }
 

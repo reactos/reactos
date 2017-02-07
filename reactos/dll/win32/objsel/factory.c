@@ -26,6 +26,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(objsel);
 
 
+static inline ClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactoryImpl, IClassFactory_iface);
+}
+
 /**********************************************************************
  * OBJSEL_IClassFactory_QueryInterface (also IUnknown)
  */
@@ -60,7 +65,7 @@ static HRESULT WINAPI OBJSEL_IClassFactory_QueryInterface(
  */
 static ULONG WINAPI OBJSEL_IClassFactory_AddRef(LPCLASSFACTORY iface)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl *)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref;
     
     TRACE("\n");
@@ -83,7 +88,7 @@ static ULONG WINAPI OBJSEL_IClassFactory_AddRef(LPCLASSFACTORY iface)
  */
 static ULONG WINAPI OBJSEL_IClassFactory_Release(LPCLASSFACTORY iface)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl *)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
     ULONG ref;
     
     TRACE("\n");
@@ -160,4 +165,4 @@ static IClassFactoryVtbl IClassFactory_Vtbl =
  * static ClassFactory instance
  */
 
-ClassFactoryImpl OBJSEL_ClassFactory = { &IClassFactory_Vtbl, 0 };
+ClassFactoryImpl OBJSEL_ClassFactory = { { &IClassFactory_Vtbl }, 0 };

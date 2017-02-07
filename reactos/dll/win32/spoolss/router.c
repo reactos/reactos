@@ -266,13 +266,12 @@ static backend_t * backend_load(LPWSTR dllname, LPWSTR name, LPWSTR regroot)
 BOOL backend_load_all(void)
 {
     static BOOL failed = FALSE;
-    backend_t * pb;
 
     EnterCriticalSection(&backend_cs);
 
     /* if we failed before, don't try again */
     if (!failed && (used_backends == 0)) {
-        pb = backend_load(localsplW, NULL, NULL);
+        backend_load(localsplW, NULL, NULL);
 
         /* ToDo: parse the registry and load all other backends */
 

@@ -10,9 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#ifdef NEWCC
 #include "../cache/section/newmm.h"
-#endif
 #define NDEBUG
 #include <debug.h>
 
@@ -54,17 +52,32 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
-   PMM_PAGEOP PageOp;
-   ULONG Offset;
+   ULONGLONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
+
+#ifdef NEWCC
+   // Special case for NEWCC: we can have a page that's only in a segment
+   // page table
+   if (entry && RMAP_IS_SEGMENT(entry->Address) && entry->Next == NULL)
+   {
+       /* NEWCC does locking itself */
+       ExReleaseFastMutex(&RmapListLock);
+       return MmpPageOutPhysicalAddress(Page);
+   }
+#endif
+
+   while (entry && RMAP_IS_SEGMENT(entry->Address))
+       entry = entry->Next;
+
    if (entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
    }
+
    Process = entry->Process;
 
    Address = entry->Address;
@@ -112,17 +125,20 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG)((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-               + MemoryArea->Data.SectionData.ViewOffset);
+      ULONG_PTR Entry;
+      Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
+               ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress);
+
+      MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
 
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
+      Entry = MmGetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment,
+                                           (PLARGE_INTEGER)&Offset);
+      if (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
       {
+         MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
          MmUnlockAddressSpace(AddressSpace);
          if (Address < MmSystemRangeStart)
          {
@@ -132,42 +148,24 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
          return(STATUS_UNSUCCESSFUL);
       }
 
+      MmSetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment, (PLARGE_INTEGER)&Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+
       /*
        * Release locks now we have a page op.
        */
+      MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
       MmUnlockAddressSpace(AddressSpace);
 
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutSectionView(AddressSpace, MemoryArea,
-                                    Address, PageOp);
+      Status = MmPageOutSectionView(AddressSpace, MemoryArea, Address, Entry);
    }
-   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
+   else if (Type == MEMORY_AREA_CACHE)
    {
-      PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
-                           Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
-      {
-         MmUnlockAddressSpace(AddressSpace);
-         if (Address < MmSystemRangeStart)
-         {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-            ObDereferenceObject(Process);
-         }
-         return(STATUS_UNSUCCESSFUL);
-      }
-
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
-
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmPageOutVirtualMemory(AddressSpace, MemoryArea,
-                                      Address, PageOp);
+       /* NEWCC does locking itself */
+       MmUnlockAddressSpace(AddressSpace);
+       Status = MmpPageOutPhysicalAddress(Page);
    }
    else
    {
@@ -197,9 +195,7 @@ MmSetCleanAllRmaps(PFN_NUMBER Page)
    }
    while (current_entry != NULL)
    {
-#ifdef NEWCC
       if (!RMAP_IS_SEGMENT(current_entry->Address))
-#endif
          MmSetCleanPage(current_entry->Process, current_entry->Address);
       current_entry = current_entry->Next;
    }
@@ -221,9 +217,7 @@ MmSetDirtyAllRmaps(PFN_NUMBER Page)
    }
    while (current_entry != NULL)
    {
-#ifdef NEWCC
       if (!RMAP_IS_SEGMENT(current_entry->Address))
-#endif
          MmSetDirtyPage(current_entry->Process, current_entry->Address);
       current_entry = current_entry->Next;
    }
@@ -246,9 +240,7 @@ MmIsDirtyPageRmap(PFN_NUMBER Page)
    while (current_entry != NULL)
    {
       if (
-#ifdef NEWCC
           !RMAP_IS_SEGMENT(current_entry->Address) &&
-#endif
           MmIsDirtyPage(current_entry->Process, current_entry->Address))
       {
          ExReleaseFastMutex(&RmapListLock);
@@ -268,9 +260,7 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
-#ifdef NEWCC
    if (!RMAP_IS_SEGMENT(Address))
-#endif
       Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
@@ -289,13 +279,12 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 #endif
 
    if (
-#ifdef NEWCC
        !RMAP_IS_SEGMENT(Address) &&
-#endif
        MmGetPfnForProcess(Process, Address) != Page)
    {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
-              "address 0x%.8X\n", Process->UniqueProcessId, Address,
+              "address 0x%.8X\n", Process ? Process->UniqueProcessId : 0,
+              Address,
               MmGetPfnForProcess(Process, Address) << PAGE_SHIFT,
               Page << PAGE_SHIFT);
       KeBugCheck(MEMORY_MANAGEMENT);
@@ -322,9 +311,7 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 #endif
    MmSetRmapListHeadPage(Page, new_entry);
    ExReleaseFastMutex(&RmapListLock);
-#ifdef NEWCC
    if (!RMAP_IS_SEGMENT(Address))
-#endif
    {
       if (Process == NULL)
       {
@@ -360,13 +347,12 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
    }
    MmSetRmapListHeadPage(Page, NULL);
    ExReleaseFastMutex(&RmapListLock);
+
    while (current_entry != NULL)
    {
       previous_entry = current_entry;
       current_entry = current_entry->Next;
-#ifdef NEWCC
       if (!RMAP_IS_SEGMENT(previous_entry->Address))
-#endif
       {
          if (DeleteMapping)
          {
@@ -384,12 +370,10 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
             (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
          }
       }
-#ifdef NEWCC
       else
       {
          ExFreeToNPagedLookasideList(&RmapLookasideList, previous_entry);
       }
-#endif
    }
 }
 
@@ -419,9 +403,7 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
          }
          ExReleaseFastMutex(&RmapListLock);
          ExFreeToNPagedLookasideList(&RmapLookasideList, current_entry);
-#ifdef NEWCC
          if (!RMAP_IS_SEGMENT(Address))
-#endif
          {
             if (Process == NULL)
             {
@@ -440,7 +422,20 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
    KeBugCheck(MEMORY_MANAGEMENT);
 }
 
-#ifdef NEWCC
+/*
+
+Return the process pointer given when a previous call to MmInsertRmap was
+called with a process and address pointer that conform to the segment rmap
+schema.  In short, this requires the address part to be 0xffffff00 + n
+where n is between 0 and 255.  When such an rmap exists, it specifies a
+segment rmap in which the process part is a pointer to a slice of a section
+page table, and the low 8 bits of the address represent a page index in the
+page table slice.  Together, this information is used by
+MmGetSectionAssociation to determine which page entry points to this page in
+the segment page table.
+
+*/
+
 PVOID
 NTAPI
 MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
@@ -467,6 +462,12 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
    ExReleaseFastMutex(&RmapListLock);
    return NULL;
 }
+
+/*
+
+Remove the section rmap associated with the indicated page, if it exists.
+
+*/
 
 VOID
 NTAPI
@@ -498,4 +499,3 @@ MmDeleteSectionAssociation(PFN_NUMBER Page)
    }
    ExReleaseFastMutex(&RmapListLock);
 }
-#endif

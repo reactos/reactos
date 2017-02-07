@@ -370,25 +370,52 @@ _tmain(int argc, TCHAR *argv[])
 	// See if the drive is removable or not
 	//
 	driveType = GetDriveType( RootDirectory );
-
-	if( driveType == 0 ) {
-		LoadStringAndOem( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-		PrintWin32Error( szMsg, GetLastError());
-		return -1;
-	}
-	else if ( driveType == 1 )
+	switch (driveType)
 	{
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-		PrintWin32Error( szMsg, GetLastError());
-		return -1;
+		case DRIVE_UNKNOWN :
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			PrintWin32Error( szMsg, GetLastError());
+			return -1;
+
+		case DRIVE_REMOTE:
+		case DRIVE_CDROM:
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+			_tprintf(szMsg);
+			return -1;
+
+		case DRIVE_NO_ROOT_DIR:
+			LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			PrintWin32Error( szMsg, GetLastError());
+			return -1;
+
+		case DRIVE_REMOVABLE:
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			_tprintf(szMsg, RootDirectory[0] );
+			_fgetts( input, sizeof(input)/2, stdin );
+			media = FMIFS_FLOPPY;
+			break;
+
+		case DRIVE_FIXED:
+		case DRIVE_RAMDISK:
+			media = FMIFS_HARDDISK;
+			break;
 	}
 
-	if( driveType != DRIVE_FIXED ) {
-		LoadStringAndOem( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
-		_tprintf(szMsg, RootDirectory[0] );
-		_fgetts( input, sizeof(input)/2, stdin );
-
-		media = FMIFS_FLOPPY;
+	// Reject attempts to format the system drive
+	{
+		TCHAR path[MAX_PATH + 1];
+		UINT rc;
+		rc = GetWindowsDirectory(path, MAX_PATH);
+		if (rc == 0 || rc > MAX_PATH)
+			// todo: Report "Unable to query system directory"
+			return -1;
+		if (_totlower(path[0]) == _totlower(Drive[0]))
+		{
+			// todo: report "Cannot format system drive"
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg, RC_STRING_MAX_SIZE);
+			_tprintf(szMsg);
+			return -1;
+		}
 	}
 
 	//
@@ -452,7 +479,6 @@ _tmain(int argc, TCHAR *argv[])
 				return 0;
 			}
 		}
-		media = FMIFS_HARDDISK;
 	}
 
 	//

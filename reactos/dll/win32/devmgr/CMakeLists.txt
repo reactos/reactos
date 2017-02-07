@@ -1,7 +1,7 @@
 
 set_rc_compiler()
 
-spec2def(devmgr.dll devmgr.spec)
+spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     devmgr.rc
@@ -31,4 +31,4 @@ add_importlibs(devmgr
 add_pch(devmgr precomp.h)
 
 add_cd_file(TARGET devmgr DESTINATION reactos/system32 FOR all)
-add_importlib_target(devmgr.spec)
+

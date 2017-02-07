@@ -5,13 +5,18 @@
 extern "C" {
 #endif
 
+/** Pragma support **/
+#define _PRAGMA_WARNING_SUPPRESS(x) __pragma(warning(suppress: x))
+
 /*** Stack frame juggling ***/
 void * _ReturnAddress(void);
 #pragma intrinsic(_ReturnAddress)
 void * _AddressOfReturnAddress(void);
 #pragma intrinsic(_AddressOfReturnAddress)
+#if defined(_M_IX86) || defined(_M_AMD64)
 unsigned int __getcallerseflags(void);
 #pragma intrinsic(__getcallerseflags)
+#endif
 
 /*** Memory barriers ***/
 void _ReadWriteBarrier(void);
@@ -20,12 +25,14 @@ void _ReadBarrier(void);
 #pragma intrinsic(_ReadBarrier)
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
+#if defined(_M_IX86) || defined(_M_AMD64)
 void _mm_mfence(void);
 #pragma intrinsic(_mm_mfence)
 void _mm_lfence(void);
 #pragma intrinsic(_mm_lfence)
 void _mm_sfence(void);
 #pragma intrinsic(_mm_sfence)
+#endif
 #ifdef _M_AMD64
 void __faststorefence(void);
 #pragma intrinsic(__faststorefence)
@@ -97,6 +104,7 @@ unsigned char _interlockedbittestandset64(volatile __int64 * a, __int64 b);
 #pragma intrinsic(_interlockedbittestandset64)
 #endif
 
+#if defined(_M_IX86) || defined(_M_AMD64)
 /*** String operations ***/
 void __stosb(unsigned char * Dest, unsigned char Data, size_t Count);
 #pragma intrinsic(__stosb)
@@ -110,6 +118,7 @@ void __movsw(unsigned short * Destination, unsigned short const * Source, size_t
 #pragma intrinsic(__movsw)
 void __movsd(unsigned long * Destination, unsigned long const * Source, size_t Count);
 #pragma intrinsic(__movsd)
+#endif
 #ifdef _M_AMD64
 void __movsq(unsigned __int64 * Destination, unsigned __int64 const * Source, size_t Count);
 #pragma intrinsic(__movsq)
@@ -203,33 +212,38 @@ unsigned char _rotr8(unsigned char value, unsigned char shift);
 #pragma intrinsic(_rotr8)
 unsigned short _rotr16(unsigned short value, unsigned char shift);
 #pragma intrinsic(_rotr16)
-unsigned __int64 __ll_lshift(unsigned __int64 Mask, int Bit);
-#pragma intrinsic(__ll_lshift)
-__int64 __ll_rshift(__int64 Mask, int Bit);
-#pragma intrinsic(__ll_rshift)
-unsigned __int64 __ull_rshift(unsigned __int64 Mask, int Bit);
-#pragma intrinsic(__ull_rshift)
 unsigned short _byteswap_ushort(unsigned short value);
 #pragma intrinsic(_byteswap_ushort)
 unsigned long _byteswap_ulong(unsigned long value);
 #pragma intrinsic(_byteswap_ulong)
 unsigned __int64 _byteswap_uint64(unsigned __int64 value);
 #pragma intrinsic(_byteswap_uint64)
+#if defined(_M_IX86) || defined(_M_AMD64)
+unsigned __int64 __ll_lshift(unsigned __int64 Mask, int Bit);
+#pragma intrinsic(__ll_lshift)
+__int64 __ll_rshift(__int64 Mask, int Bit);
+#pragma intrinsic(__ll_rshift)
+unsigned __int64 __ull_rshift(unsigned __int64 Mask, int Bit);
+#pragma intrinsic(__ull_rshift)
+#endif
 #ifdef _M_AMD64
 unsigned char _bittest64(__int64 const *a, __int64 b);
 #pragma intrinsic(_bittest64)
 #endif
 
+#if defined(_M_IX86) || defined(_M_AMD64)
 /*** 64-bit math ***/
 __int64 __emul(int a, int b);
 #pragma intrinsic(__emul)
 unsigned __int64 __emulu(unsigned int a, unsigned int b);
 #pragma intrinsic(__emulu)
+#endif
 #ifdef _M_AMD64
 unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b);
 #pragma intrinsic(__umulh)
 #endif
 
+#if defined(_M_IX86) || defined(_M_AMD64)
 /*** Port I/O ***/
 unsigned char __inbyte(unsigned short Port);
 #pragma intrinsic(__inbyte)
@@ -255,7 +269,9 @@ void __outwordstring(unsigned short Port, unsigned short * Buffer, unsigned long
 #pragma intrinsic(__outwordstring)
 void __outdwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count);
 #pragma intrinsic(__outdwordstring)
+#endif
 
+#if defined(_M_IX86) || defined(_M_AMD64)
 /*** System information ***/
 void __cpuid(int CPUInfo[], int InfoType);
 #pragma intrinsic(__cpuid)
@@ -265,27 +281,31 @@ void __writeeflags(uintptr_t Value);
 #pragma intrinsic(__writeeflags)
 uintptr_t __readeflags(void);
 #pragma intrinsic(__readeflags)
+#endif
 
 /*** Interrupts ***/
 void __debugbreak(void);
 #pragma intrinsic(__debugbreak)
-void __int2c(void);
-#pragma intrinsic(__int2c)
 void _disable(void);
 #pragma intrinsic(_disable)
 void _enable(void);
 #pragma intrinsic(_enable)
+#if defined(_M_IX86) || defined(_M_AMD64)
+void __int2c(void);
+#pragma intrinsic(__int2c)
 void __halt(void);
 #pragma intrinsic(__halt)
+#endif
 
 /*** Protected memory management ***/
+#if defined(_M_IX86) || defined(_M_AMD64)
 void __writecr0(unsigned __int64 Data);
 #pragma intrinsic(__writecr0)
 void __writecr3(unsigned __int64 Data);
 #pragma intrinsic(__writecr3)
 void __writecr4(unsigned __int64 Data);
 #pragma intrinsic(__writecr4)
-
+#endif
 #ifdef _M_AMD64
 void __writecr8(unsigned __int64 Data);
 #pragma intrinsic(__writecr8)
@@ -303,7 +323,7 @@ unsigned __int64 __readdr(unsigned int reg);
 #pragma intrinsic(__readdr)
 void __writedr(unsigned reg, unsigned __int64 value);
 #pragma intrinsic(__writedr)
-#else
+#elif defined(_M_IX86)
 unsigned long __readcr0(void);
 unsigned long __readcr2(void);
 unsigned long __readcr3(void);
@@ -316,9 +336,6 @@ unsigned long  ___readcr4(void);
 unsigned int __readdr(unsigned int reg);
 void __writedr(unsigned reg, unsigned int value);
 #endif
-
-void __invlpg(void * Address);
-#pragma intrinsic(__invlpg)
 
 #ifdef _M_IX86
 // This intrinsic is broken and generates wrong opcodes,
@@ -337,9 +354,13 @@ void  __forceinline __invlpg_fixed(void * Address)
 }
 #pragma warning(pop)
 #define __invlpg __invlpg_fixed
+#elif defined(_M_AMD64)
+void __invlpg(void * Address);
+#pragma intrinsic(__invlpg)
 #endif
 
 /*** System operations ***/
+#if defined(_M_IX86) || defined(_M_AMD64)
 unsigned __int64 __readmsr(int reg);
 #pragma intrinsic(__readmsr)
 void __writemsr(unsigned long Register, unsigned __int64 Value);
@@ -356,6 +377,7 @@ void __sidt(void *Destination);
 #pragma intrinsic(__sidt)
 void _mm_pause(void);
 #pragma intrinsic(_mm_pause)
+#endif
 
 #ifdef __cplusplus
 }

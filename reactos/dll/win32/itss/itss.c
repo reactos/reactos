@@ -33,6 +33,7 @@
 #include "winuser.h"
 #include "winreg.h"
 #include "ole2.h"
+#include "rpcproxy.h"
 #include "advpub.h"
 
 #include "wine/unicode.h"
@@ -67,14 +68,19 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  * ITSS ClassFactory
  */
 typedef struct {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
 } IClassFactoryImpl;
+
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
 
 static HRESULT WINAPI
 ITSSCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IClassFactory))
@@ -104,7 +110,7 @@ static ULONG WINAPI ITSSCF_Release(LPCLASSFACTORY iface)
 static HRESULT WINAPI ITSSCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter,
 					  REFIID riid, LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     HRESULT hres;
     LPUNKNOWN punk;
 
@@ -140,9 +146,9 @@ static const IClassFactoryVtbl ITSSCF_Vtbl =
     ITSSCF_LockServer
 };
 
-static const IClassFactoryImpl ITStorage_factory = { &ITSSCF_Vtbl, ITSS_create };
-static const IClassFactoryImpl MSITStore_factory = { &ITSSCF_Vtbl, ITS_IParseDisplayName_create };
-static const IClassFactoryImpl ITSProtocol_factory = { &ITSSCF_Vtbl, ITSProtocol_create };
+static const IClassFactoryImpl ITStorage_factory = { { &ITSSCF_Vtbl }, ITSS_create };
+static const IClassFactoryImpl MSITStore_factory = { { &ITSSCF_Vtbl }, ITS_IParseDisplayName_create };
+static const IClassFactoryImpl ITSProtocol_factory = { { &ITSSCF_Vtbl }, ITSProtocol_create };
 
 /***********************************************************************
  *		DllGetClassObject	(ITSS.@)
@@ -171,9 +177,14 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 /*****************************************************************************/
 
 typedef struct {
-    const IITStorageVtbl *vtbl_IITStorage;
+    IITStorage IITStorage_iface;
     LONG ref;
 } ITStorageImpl;
+
+static inline ITStorageImpl *impl_from_IITStorage(IITStorage *iface)
+{
+    return CONTAINING_RECORD(iface, ITStorageImpl, IITStorage_iface);
+}
 
 
 static HRESULT WINAPI ITStorageImpl_QueryInterface(
@@ -181,7 +192,7 @@ static HRESULT WINAPI ITStorageImpl_QueryInterface(
     REFIID riid,
     void** ppvObject)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     if (IsEqualGUID(riid, &IID_IUnknown)
 	|| IsEqualGUID(riid, &IID_IITStorage))
     {
@@ -197,7 +208,7 @@ static HRESULT WINAPI ITStorageImpl_QueryInterface(
 static ULONG WINAPI ITStorageImpl_AddRef(
     IITStorage* iface)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     TRACE("%p\n", This);
     return InterlockedIncrement(&This->ref);
 }
@@ -205,7 +216,7 @@ static ULONG WINAPI ITStorageImpl_AddRef(
 static ULONG WINAPI ITStorageImpl_Release(
     IITStorage* iface)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (ref == 0) {
@@ -223,7 +234,7 @@ static HRESULT WINAPI ITStorageImpl_StgCreateDocfile(
     DWORD reserved,
     IStorage** ppstgOpen)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
 
     TRACE("%p %s %u %u %p\n", This,
           debugstr_w(pwcsName), grfMode, reserved, ppstgOpen );
@@ -239,7 +250,7 @@ static HRESULT WINAPI ITStorageImpl_StgCreateDocfileOnILockBytes(
     DWORD reserved,
     IStorage** ppstgOpen)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -248,7 +259,7 @@ static HRESULT WINAPI ITStorageImpl_StgIsStorageFile(
     IITStorage* iface,
     const WCHAR* pwcsName)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -257,7 +268,7 @@ static HRESULT WINAPI ITStorageImpl_StgIsStorageILockBytes(
     IITStorage* iface,
     ILockBytes* plkbyt)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -271,7 +282,7 @@ static HRESULT WINAPI ITStorageImpl_StgOpenStorage(
     DWORD reserved,
     IStorage** ppstgOpen)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
 
     TRACE("%p %s %p %d %p\n", This, debugstr_w( pwcsName ),
            pstgPriority, grfMode, snbExclude );
@@ -289,7 +300,7 @@ static HRESULT WINAPI ITStorageImpl_StgOpenStorageOnILockBytes(
     DWORD reserved,
     IStorage** ppstgOpen)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -301,7 +312,7 @@ static HRESULT WINAPI ITStorageImpl_StgSetTimes(
     const FILETIME* patime,
     const FILETIME* pmtime)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -310,7 +321,7 @@ static HRESULT WINAPI ITStorageImpl_SetControlData(
     IITStorage* iface,
     PITS_Control_Data pControlData)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -319,7 +330,7 @@ static HRESULT WINAPI ITStorageImpl_DefaultControlData(
     IITStorage* iface,
     PITS_Control_Data* ppControlData)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -329,7 +340,7 @@ static HRESULT WINAPI ITStorageImpl_Compact(
     const WCHAR* pwcsName,
     ECompactionLev iLev)
 {
-    ITStorageImpl *This = (ITStorageImpl *)iface;
+    ITStorageImpl *This = impl_from_IITStorage(iface);
     FIXME("%p\n", This);
     return E_NOTIMPL;
 }
@@ -359,7 +370,7 @@ static HRESULT ITSS_create(IUnknown *pUnkOuter, LPVOID *ppObj)
         return CLASS_E_NOAGGREGATION;
 
     its = HeapAlloc( GetProcessHeap(), 0, sizeof(ITStorageImpl) );
-    its->vtbl_IITStorage = &ITStorageImpl_Vtbl;
+    its->IITStorage_iface.lpVtbl = &ITStorageImpl_Vtbl;
     its->ref = 1;
 
     TRACE("-> %p\n", its);
@@ -377,65 +388,12 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return dll_count ? S_FALSE : S_OK;
 }
 
-#define INF_SET_ID(id)            \
-    do                            \
-    {                             \
-        static CHAR name[] = #id; \
-                                  \
-        pse[i].pszName = name;    \
-        clsids[i++] = &id;        \
-    } while (0)
-
-#define INF_SET_CLSID(clsid) INF_SET_ID(CLSID_ ## clsid)
-
-static HRESULT register_server(BOOL do_register)
-{
-    HRESULT hres;
-    HMODULE hAdvpack;
-    HRESULT (WINAPI *pRegInstall)(HMODULE hm, LPCSTR pszSection, const STRTABLEA* pstTable);
-    STRTABLEA strtable;
-    STRENTRYA pse[4];
-    static CLSID const *clsids[4];
-    DWORD i = 0;
-
-    static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
-
-    INF_SET_CLSID(ITStorage);
-    INF_SET_CLSID(MSFSStore);
-    INF_SET_CLSID(MSITStore);
-    INF_SET_CLSID(ITSProtocol);
-
-    strtable.cEntries = sizeof(pse)/sizeof(pse[0]);
-    strtable.pse = pse;
-
-    for(i=0; i < strtable.cEntries; i++) {
-        pse[i].pszValue = HeapAlloc(GetProcessHeap(), 0, 39);
-        sprintf(pse[i].pszValue, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-                clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
-                clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
-                clsids[i]->Data4[5], clsids[i]->Data4[6], clsids[i]->Data4[7]);
-    }
-
-    hAdvpack = LoadLibraryW(wszAdvpack);
-    pRegInstall = (void *)GetProcAddress(hAdvpack, "RegInstall");
-
-    hres = pRegInstall(hInst, do_register ? "RegisterDll" : "UnregisterDll", &strtable);
-
-    for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
-        HeapFree(GetProcessHeap(), 0, pse[i].pszValue);
-
-    return hres;
-}
-
-#undef INF_SET_CLSID
-#undef INF_SET_ID
-
 /***********************************************************************
  *          DllRegisterServer (ITSS.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return register_server(TRUE);
+    return __wine_register_resources( hInst );
 }
 
 /***********************************************************************
@@ -443,5 +401,5 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    return register_server(FALSE);
+    return __wine_unregister_resources( hInst );
 }

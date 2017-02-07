@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  29-05-2008
  */
 
@@ -6,17 +6,17 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "ZobrazovaË obr·zkov a faxov systÈmu ReactOS"
-    IDS_SETASDESKBG "Nastaviù ako pozadie pracovnej plochy"
-    IDS_PREVIEW     "Preview" //N·hæad, Uk·ûka, Prezrieù ???
+    IDS_APPTITLE    "Zobrazovaƒç obr√°zkov a faxov syst√©mu ReactOS"
+    IDS_SETASDESKBG "Nastavi≈• ako pozadie pracovnej plochy"
+    IDS_PREVIEW     "Preview" //N√°hƒæad, Uk√°≈æka, Prezrie≈• ???
 
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Nasleduj˙ci obr·zok"
-    IDS_TOOLTIP_PREV_PIC   "Predch·dzaj˙ci obr·zok"
-    IDS_TOOLTIP_ZOOM_IN    "PriblÌûiù (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Vzdialiù (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "OtoËiù v smere hodinov˝ch ruËiËiek (Ctrl+K)" //OtoËiù vpravo
-    IDS_TOOLTIP_ROT_COUNCW "OtoËiù proti smeru hodinov˝ch ruËiËiek (Ctrl+L)" //OtoËiù væavo
-    IDS_TOOLTIP_PRINT      "VytlaËiù (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Uloûiù ako... (Ctrl+S)"
+    IDS_TOOLTIP_NEXT_PIC   "Nasleduj√∫ci obr√°zok"
+    IDS_TOOLTIP_PREV_PIC   "Predch√°dzaj√∫ci obr√°zok"
+    IDS_TOOLTIP_ZOOM_IN    "Pribl√≠≈æi≈• (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Vzdiali≈• (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Otoƒçi≈• v smere hodinov√Ωch ruƒçiƒçiek (Ctrl+K)" //Otoƒçi≈• vpravo
+    IDS_TOOLTIP_ROT_COUNCW "Otoƒçi≈• proti smeru hodinov√Ωch ruƒçiƒçiek (Ctrl+L)" //Otoƒçi≈• vƒæavo
+    IDS_TOOLTIP_PRINT      "Vytlaƒçi≈• (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Ulo≈æi≈• ako... (Ctrl+S)"
 END

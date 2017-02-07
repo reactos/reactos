@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #include "newcc.h"
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -33,10 +33,10 @@ CcSetLogHandleForFile(IN PFILE_OBJECT FileObject,
                       IN PVOID LogHandle,
                       IN PFLUSH_TO_LSN FlushToLsnRoutine)
 {
-	PNOCC_CACHE_MAP Map = FileObject->SectionObjectPointer->SharedCacheMap;
-	if (!Map) return;
-	Map->LogHandle = LogHandle;
-	Map->FlushToLsn = FlushToLsnRoutine;
+    PNOCC_CACHE_MAP Map = FileObject->SectionObjectPointer->SharedCacheMap;
+    if (!Map) return;
+    Map->LogHandle = LogHandle;
+    Map->FlushToLsn = FlushToLsnRoutine;
 }
 
 LARGE_INTEGER

@@ -260,7 +260,7 @@ BuildFilterStrings(TCHAR *Filter, PFILTERPAIR Pairs, int PairCount)
 
 static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
 {
-    FILTERPAIR FilterPairs[3];
+    FILTERPAIR FilterPairs[4];
     static TCHAR Filter[1024];
 
     memset(pofn, 0, sizeof(OPENFILENAME));
@@ -271,11 +271,13 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     /* create filter string */
     FilterPairs[0].DisplayID = IDS_FLT_REGFILES;
     FilterPairs[0].FilterID = IDS_FLT_REGFILES_FLT;
-    FilterPairs[1].DisplayID = IDS_FLT_REGEDIT4;
-    FilterPairs[1].FilterID = IDS_FLT_REGEDIT4_FLT;
-    FilterPairs[2].DisplayID = IDS_FLT_ALLFILES;
-    FilterPairs[2].FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, FilterPairs, sizeof(FilterPairs) / sizeof(FILTERPAIR));
+    FilterPairs[1].DisplayID = IDS_FLT_HIVFILES;
+    FilterPairs[1].FilterID = IDS_FLT_HIVFILES_FLT;
+    FilterPairs[2].DisplayID = IDS_FLT_REGEDIT4;
+    FilterPairs[2].FilterID = IDS_FLT_REGEDIT4_FLT;
+    FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
+    FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
+    BuildFilterStrings(Filter, FilterPairs, COUNT_OF(FilterPairs));
 
     pofn->lpstrFilter = Filter;
     pofn->lpstrFile = FileNameBuffer;
@@ -312,6 +314,36 @@ static INT_PTR CALLBACK LoadHive_KeyNameInHookProc(HWND hWndDlg, UINT uMsg, WPAR
     return FALSE;
 }
 
+static BOOL EnablePrivilege(LPCTSTR lpszPrivilegeName, LPCTSTR lpszSystemName, BOOL bEnablePrivilege)
+{
+    BOOL   bRet   = FALSE;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &hToken))
+    {
+        TOKEN_PRIVILEGES tp;
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValue(lpszSystemName,
+                                 lpszPrivilegeName,
+                                 &tp.Privileges[0].Luid))
+        {
+            bRet = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
+
+            if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                bRet = FALSE;
+        }
+
+        CloseHandle(hToken);
+    }
+
+    return bRet;
+}
+
 static BOOL LoadHive(HWND hWnd)
 {
     OPENFILENAME ofn;
@@ -340,7 +372,13 @@ static BOOL LoadHive(HWND hWnd)
     {
         if(DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_LOADHIVE), hWnd, &LoadHive_KeyNameInHookProc, (LPARAM)xPath))
         {
-            LONG regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
+            LONG regLoadResult;
+
+            /* Enable the 'restore' privilege, load the hive, disable the privilege */
+            EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
+            regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
+            EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
+
             if(regLoadResult == ERROR_SUCCESS)
             {
                 /* refresh tree and list views */
@@ -373,8 +411,12 @@ static BOOL UnloadHive(HWND hWnd)
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* load and set the caption and flags for dialog */
     LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
-    /* now unload the hive */
+
+    /* Enable the 'restore' privilege, unload the hive, disable the privilege */
+    EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
     regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
+    EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
+
     if(regUnloadResult == ERROR_SUCCESS)
     {
         /* refresh tree and list views */
@@ -392,10 +434,14 @@ static BOOL UnloadHive(HWND hWnd)
 
 static BOOL ImportRegistryFile(HWND hWnd)
 {
+    BOOL bRet = FALSE;
     OPENFILENAME ofn;
     TCHAR Caption[128], szTitle[256], szText[256];
+    HKEY hKeyRoot;
     LPCTSTR pszKeyPath;
-    HKEY hRootKey;
+
+    /* Figure out in which key path we are importing */
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
 
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_IMPORT_REG_FILE, Caption, COUNT_OF(Caption));
@@ -404,32 +450,77 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn))
     {
-        FILE *fp = _wfopen(ofn.lpstrFile, L"r");
-        if (fp == NULL || !import_registry_file(fp))
+        /* Look at the extension of the file to determine its type */
+        if (ofn.nFileExtension >= 1 &&
+            _tcsicmp(ofn.lpstrFile + ofn.nFileExtension, TEXT("reg")) == 0) /* REGEDIT4 or Windows Registry Editor Version 5.00 */
         {
-            LPSTR p = GetMultiByteString(ofn.lpstrFile);
-            fprintf(stderr, "Can't open file \"%s\"\n", p);
-            HeapFree(GetProcessHeap(), 0, p);
-            if (fp != NULL)
-                fclose(fp);
-            return FALSE;
+            /* Open the file */
+            FILE *fp = _wfopen(ofn.lpstrFile, L"r");
+
+            /* Import it */
+            if (fp == NULL || !import_registry_file(fp))
+            {
+                LPSTR p = GetMultiByteString(ofn.lpstrFile);
+                fprintf(stderr, "Can't open file \"%s\"\n", p);
+                HeapFree(GetProcessHeap(), 0, p);
+                bRet = FALSE;
+            }
+            else
+            {
+                /* Show successful import */
+                LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+                LoadString(hInst, IDS_IMPORTED_OK, szText, COUNT_OF(szText));
+                MessageBox(NULL, szText, szTitle, MB_OK);
+                bRet = TRUE;
+            }
+
+            /* Close the file */
+            if (fp) fclose(fp);
         }
-        LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
-        LoadString(hInst, IDS_IMPORTED_OK, szText, sizeof(szTitle));
-        /* show successful import */
-        MessageBox(NULL, szText, szTitle, MB_OK);
-        fclose(fp);
+        else /* Registry Hive Files */
+        {
+            LoadString(hInst, IDS_QUERY_IMPORT_HIVE_CAPTION, szTitle, COUNT_OF(szTitle));
+            LoadString(hInst, IDS_QUERY_IMPORT_HIVE_MSG, szText, COUNT_OF(szText));
+
+            /* Display a confirmation message */
+            if (MessageBox(g_pChildWnd->hWnd, szText, szTitle, MB_ICONWARNING | MB_YESNO) == IDYES)
+            {
+                LONG lResult;
+                HKEY hSubKey;
+
+                /* Open the subkey */
+                lResult = RegOpenKeyEx(hKeyRoot, pszKeyPath, 0, KEY_WRITE, &hSubKey);
+                if (lResult == ERROR_SUCCESS)
+                {
+                    /* Enable the 'restore' privilege, restore the hive then disable the privilege */
+                    EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
+                    lResult = RegRestoreKey(hSubKey, ofn.lpstrFile, REG_FORCE_RESTORE);
+                    EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
+
+                    /* Flush the subkey and close it */
+                    RegFlushKey(hSubKey);
+                    RegCloseKey(hSubKey);
+                }
+
+                /* Set the return value */
+                bRet = (lResult == ERROR_SUCCESS);
+
+                /* Display error, if any */
+                if (!bRet) ErrorMessageBox(hWnd, Caption, lResult);
+            }
+        }
     }
     else
     {
         CheckCommDlgError(hWnd);
     }
 
+    /* refresh tree and list views */
     RefreshTreeView(g_pChildWnd->hTreeWnd);
-    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath);
 
-    return TRUE;
+    return bRet;
 }
 
 static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
@@ -488,6 +579,7 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
 
 BOOL ExportRegistryFile(HWND hWnd)
 {
+    BOOL bRet = FALSE;
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];
     TCHAR Caption[128];
@@ -499,7 +591,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     GetKeyName(ExportKeyPath, COUNT_OF(ExportKeyPath), hKeyRoot, pszKeyPath);
 
     InitOpenFileName(hWnd, &ofn);
-    LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
+    LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, COUNT_OF(Caption));
     ofn.lpstrTitle = Caption;
 
     /* Only set the path if a key (not the root node) is selected */
@@ -512,27 +604,86 @@ BOOL ExportRegistryFile(HWND hWnd)
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn))
     {
-        BOOL result;
-        DWORD format;
-
-        if (ofn.nFilterIndex == 1)
-            format = REG_FORMAT_5;
-        else
-            format = REG_FORMAT_4;
-        result = export_registry_key(ofn.lpstrFile, ExportKeyPath, format);
-        if (!result)
+        switch (ofn.nFilterIndex)
         {
-            LPSTR p = GetMultiByteString(ofn.lpstrFile);
-            fprintf(stderr, "Can't open file \"%s\"\n", p);
-            HeapFree(GetProcessHeap(), 0, p);
-            return FALSE;
+            case 2: /* Registry Hive Files */
+            {
+                LONG lResult;
+                HKEY hSubKey;
+
+                /* Open the subkey */
+                lResult = RegOpenKeyEx(hKeyRoot, pszKeyPath, 0, KEY_READ, &hSubKey);
+                if (lResult == ERROR_SUCCESS)
+                {
+                    /* Enable the 'backup' privilege, save the hive then disable the privilege */
+                    EnablePrivilege(SE_BACKUP_NAME, NULL, TRUE);
+                    lResult = RegSaveKey(hSubKey, ofn.lpstrFile, NULL);
+                    if (lResult == ERROR_ALREADY_EXISTS)
+                    {
+                        /*
+                         * We are here, that means that we already said "yes" to the confirmation dialog.
+                         * So we absolutely want to replace the hive file.
+                         */
+                        if (DeleteFile(ofn.lpstrFile))
+                        {
+                            /* Try again */
+                            lResult = RegSaveKey(hSubKey, ofn.lpstrFile, NULL);
+                        }
+                    }
+                    EnablePrivilege(SE_BACKUP_NAME, NULL, FALSE);
+
+                    if (lResult != ERROR_SUCCESS)
+                    {
+                        /*
+                         * If we are here, it's because RegSaveKey has failed for any reason.
+                         * The problem is that even if it has failed, it has created or
+                         * replaced the exported hive file with a new empty file. We don't
+                         * want to keep this file, so we delete it.
+                         */
+                        DeleteFile(ofn.lpstrFile);
+                    }
+
+                    /* Close the subkey */
+                    RegCloseKey(hSubKey);
+                }
+
+                /* Set the return value */
+                bRet = (lResult == ERROR_SUCCESS);
+
+                /* Display error, if any */
+                if (!bRet) ErrorMessageBox(hWnd, Caption, lResult);
+
+                break;
+            }
+
+            case 1:  /* Windows Registry Editor Version 5.00 */
+            case 3:  /* REGEDIT4 */
+            default: /* All files ==> use Windows Registry Editor Version 5.00 */
+            {
+                if (!export_registry_key(ofn.lpstrFile, ExportKeyPath,
+                                         (ofn.nFilterIndex == 3 ? REG_FORMAT_4
+                                                                : REG_FORMAT_5)))
+                {
+                    LPSTR p = GetMultiByteString(ofn.lpstrFile);
+                    fprintf(stderr, "Can't open file \"%s\"\n", p);
+                    HeapFree(GetProcessHeap(), 0, p);
+                    bRet = FALSE;
+                }
+                else
+                {
+                    bRet = TRUE;
+                }
+
+                break;
+            }
         }
     }
     else
     {
         CheckCommDlgError(hWnd);
     }
-    return TRUE;
+
+    return bRet;
 }
 
 BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
@@ -773,7 +924,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
 
         InitInfo.cbSize = sizeof(InitInfo);
         InitInfo.pwzTargetComputer = NULL;
-        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.cDsScopeInfos = COUNT_OF(Scopes);
         InitInfo.aDsScopeInfos = Scopes;
         InitInfo.flOptions = 0;
         InitInfo.cAttributesToFetch = 0;
@@ -914,7 +1065,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
                                                         hWnd,
                                                         szComputerName,
-                                                        sizeof(szComputerName) / sizeof(szComputerName[0]));
+                                                        COUNT_OF(szComputerName));
                 if (hRet == S_OK)
                 {
                     /* FIXME - connect to the registry */
@@ -1015,8 +1166,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if(nSelected >= 1)
             {
                 TCHAR msg[128], caption[128];
-                LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
-                LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+                LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, COUNT_OF(caption));
+                LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, COUNT_OF(msg));
                 if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
                 {
                     int ni, errs;
@@ -1036,8 +1187,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
                     if(errs > 0)
                     {
-                        LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-                        LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+                        LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, COUNT_OF(caption));
+                        LoadString(hInst, IDS_ERR_DELETEVALUE, msg, COUNT_OF(msg));
                         MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
                     }
                 }
@@ -1095,7 +1246,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
-        /*RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, NULL); */
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
         /*case ID_OPTIONS_TOOLBAR:*/
         /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
@@ -1117,7 +1269,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             mii.fMask = MIIM_TYPE;
             mii.fType = MFT_STRING;
             mii.dwTypeData = szFavorite;
-            mii.cch = sizeof(szFavorite) / sizeof(szFavorite[0]);
+            mii.cch = COUNT_OF(szFavorite);
 
             if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
             {
@@ -1188,6 +1340,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
+        SaveSettings();
         PostQuitMessage(0);
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

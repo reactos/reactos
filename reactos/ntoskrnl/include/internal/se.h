@@ -1,7 +1,5 @@
 #pragma once
 
-extern POBJECT_TYPE SepTokenObjectType;
-
 /* SID Authorities */
 extern SID_IDENTIFIER_AUTHORITY SeNullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;
@@ -224,6 +222,15 @@ SepPrivilegeCheck(
     ULONG PrivilegeCount,
     ULONG PrivilegeControl,
     KPROCESSOR_MODE PreviousMode
+);
+
+BOOLEAN
+NTAPI
+SeCheckPrivilegedObject(
+    IN LUID PrivilegeValue,
+    IN HANDLE ObjectHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN KPROCESSOR_MODE PreviousMode
 );
 
 NTSTATUS

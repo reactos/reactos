@@ -276,7 +276,7 @@ static void release_temp_buffer( char *buffer, size_t size )
 
 
 /* default implementation of wine_dbgstr_an */
-const char *default_dbgstr_an( const char *str, int n )
+static const char *default_dbgstr_an( const char *str, int n )
 {
     static const char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     char *dst, *res;
@@ -330,7 +330,7 @@ const char *default_dbgstr_an( const char *str, int n )
 
 
 /* default implementation of wine_dbgstr_wn */
-const char *default_dbgstr_wn( const WCHAR *str, int n )
+static const char *default_dbgstr_wn( const WCHAR *str, int n )
 {
     char *dst, *res;
     size_t size;

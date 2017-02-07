@@ -131,11 +131,13 @@ list(APPEND CRT_SOURCE
     misc/stubs.c
     misc/tls.c
     printf/_cprintf.c
-	printf/_cwprintf.c
+    printf/_cwprintf.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
-	printf/_vcwprintf.c
+    printf/_vcwprintf.c
+    printf/_vscprintf.c
+    printf/_vscwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
     printf/_vsprintf_p.c
@@ -175,6 +177,32 @@ list(APPEND CRT_SOURCE
     search/lsearch.c
     signal/signal.c
     signal/xcptinfo.c
+    startup/crtexe.c
+    startup/wcrtexe.c
+    startup/crt_handler.c
+    startup/crtdll.c
+    startup/_newmode.c
+    startup/wildcard.c
+    startup/tlssup.c
+    startup/mingw_helpers.c
+    startup/natstart.c
+    startup/charmax.c
+    startup/merr.c
+    startup/atonexit.c
+    startup/txtmode.c
+    startup/pesect.c
+    startup/tlsmcrt.c
+    startup/tlsthrd.c
+    startup/tlsmthread.c
+    startup/cinitexe.c
+    startup/gs_support.c
+    startup/dll_argv.c
+    startup/dllargv.c
+    startup/wdllargv.c
+    startup/crt0_c.c
+    startup/crt0_w.c
+    startup/dllentry.c
+    startup/reactos.c
     stdio/_flsbuf.c
     stdio/_flswbuf.c
     stdio/access.c
@@ -349,6 +377,11 @@ if(ARCH MATCHES i386)
         math/i386/tan_asm.s
         math/i386/atan2_asm.s
         math/i386/ci.c
+        math/i386/cicos.c
+        math/i386/cilog.c
+        math/i386/cipow.c
+        math/i386/cisin.c
+        math/i386/cisqrt.c
         math/i386/exp_asm.s
         math/i386/fmod_asm.s
         math/i386/fmodf_asm.s
@@ -392,6 +425,8 @@ elseif(ARCH MATCHES amd64)
         float/amd64/fpreset.S
         float/amd64/logb.S
         float/i386/statfp.c
+        math/amd64/acos.S
+        math/amd64/acosf.S
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S

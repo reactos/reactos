@@ -245,11 +245,11 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
             ExfWakePushLock(PushLock, OldValue);
             break;
         }
-        
+
         /* Get the wait block */
         WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                ~EX_PUSH_LOCK_PTR_BITS);
-        
+
         /* Loop the blocks */
         FirstWaitBlock = WaitBlock;
         while (TRUE)
@@ -262,32 +262,32 @@ ExpOptimizePushLockList(PEX_PUSH_LOCK PushLock,
                 FirstWaitBlock->Last = LastWaitBlock;
                 break;
             }
-            
+
             /* Save the block */
             PreviousWaitBlock = WaitBlock;
-            
+
             /* Get the next block */
             WaitBlock = WaitBlock->Next;
-            
+
             /* Save the previous */
             WaitBlock->Previous = PreviousWaitBlock;
         }
-        
+
         /* Remove the wake bit */
         NewValue.Value = OldValue.Value &~ EX_PUSH_LOCK_WAKING;
-        
+
         /* Sanity checks */
         ASSERT(NewValue.Locked);
         ASSERT(!NewValue.Waking);
-        
+
         /* Update the value */
         NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                          NewValue.Ptr,
                                                          OldValue.Ptr);
-        
+
         /* If we updated correctly, leave */
         if (NewValue.Value == OldValue.Value) break;
-        
+
         /* Update value */
         OldValue = NewValue;
     }
@@ -523,7 +523,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                                   EX_PUSH_LOCK_LOCK |
                                   EX_PUSH_LOCK_WAKING |
                                   EX_PUSH_LOCK_WAITING |
-                                  PtrToUlong(WaitBlock);
+                                  (ULONG_PTR)WaitBlock;
 
                 /* Check if the pushlock was already waking */
                 if (!OldValue.Waking) NeedWake = TRUE;
@@ -543,7 +543,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                     NewValue.Value = EX_PUSH_LOCK_MULTIPLE_SHARED |
                                      EX_PUSH_LOCK_LOCK |
                                      EX_PUSH_LOCK_WAITING |
-                                     PtrToUlong(WaitBlock);
+                                     (ULONG_PTR)WaitBlock;
                 }
                 else
                 {
@@ -553,7 +553,7 @@ ExfAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
                     /* Point to our wait block */
                     NewValue.Value = EX_PUSH_LOCK_LOCK |
                                      EX_PUSH_LOCK_WAITING |
-                                     PtrToUlong(WaitBlock);
+                                     (ULONG_PTR)WaitBlock;
                 }
             }
 
@@ -706,7 +706,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                                                     EX_PUSH_LOCK_LOCK)) |
                                   EX_PUSH_LOCK_WAKING |
                                   EX_PUSH_LOCK_WAITING |
-                                  PtrToUlong(WaitBlock);
+                                  (ULONG_PTR)WaitBlock;
 
                 /* Check if the pushlock was already waking */
                 if (!OldValue.Waking) NeedWake = TRUE;
@@ -719,7 +719,7 @@ ExfAcquirePushLockShared(PEX_PUSH_LOCK PushLock)
                 /* Point to our wait block */
                 NewValue.Value = (OldValue.Value & EX_PUSH_LOCK_PTR_BITS) |
                                   EX_PUSH_LOCK_WAITING |
-                                  PtrToUlong(WaitBlock);
+                                  (ULONG_PTR)WaitBlock;
             }
 
             /* Sanity check */
@@ -812,7 +812,7 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
 
     /* Sanity check */
     ASSERT(OldValue.Locked);
-    
+
     /* Start main loop */
     while (TRUE)
     {
@@ -849,13 +849,13 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                 /* Get the wait block */
                 WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                        ~EX_PUSH_LOCK_PTR_BITS);
-                
+
                 /* Loop until we find the last wait block */
                 while (TRUE)
                 {
                     /* Get the last wait block */
                     LastWaitBlock = WaitBlock->Last;
-                    
+
                     /* Did it exist? */
                     if (LastWaitBlock)
                     {
@@ -863,22 +863,22 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                         WaitBlock = LastWaitBlock;
                         break;
                     }
-                    
+
                     /* Keep searching */
                     WaitBlock = WaitBlock->Next;
                 }
-                
+
                 /* Make sure the Share Count is above 0 */
                 if (WaitBlock->ShareCount > 0)
                 {
                     /* This shouldn't be an exclusive wait block */
                     ASSERT(WaitBlock->Flags & EX_PUSH_LOCK_FLAGS_EXCLUSIVE);
-                    
+
                     /* Do the decrease and check if the lock isn't shared anymore */
                     if (InterlockedDecrement(&WaitBlock->ShareCount) > 0) return;
                 }
             }
-            
+
             /*
              * If nobody was waiting on the block, then we possibly reduced the number
              * of times the pushlock was shared, and we unlocked it.
@@ -895,10 +895,10 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                     NewValue.Value = OldValue.Value;
                     NewValue.MultipleShared = FALSE;
                     NewValue.Locked = FALSE;
-                    
+
                     /* Sanity check */
                     ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
-                    
+
                     /* Write the new value */
                     NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                                      NewValue.Ptr,
@@ -911,20 +911,20 @@ ExfReleasePushLock(PEX_PUSH_LOCK PushLock)
                     NewValue.Value = OldValue.Value;
                     NewValue.MultipleShared = FALSE;
                     NewValue.Locked = FALSE;
-                    
+
                     /* It's not already waking, so add the wake bit */
                     NewValue.Waking = TRUE;
-                    
+
                     /* Sanity check */
                     ASSERT(NewValue.Waking && !NewValue.Locked && !NewValue.MultipleShared);
-                    
+
                     /* Write the new value */
                     WakeValue = NewValue;
                     NewValue.Ptr = InterlockedCompareExchangePointer(&PushLock->Ptr,
                                                                      NewValue.Ptr,
                                                                      OldValue.Ptr);
                     if (NewValue.Value != OldValue.Value) continue;
-                    
+
                     /* The write was successful. The pushlock is Unlocked and Waking */
                     ExfWakePushLock(PushLock, WakeValue);
                     return;
@@ -988,13 +988,13 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
         /* Get the wait block */
         WaitBlock = (PEX_PUSH_LOCK_WAIT_BLOCK)(OldValue.Value &
                                                ~EX_PUSH_LOCK_PTR_BITS);
-        
+
         /* Loop until we find the last wait block */
         while (TRUE)
         {
             /* Get the last wait block */
             LastWaitBlock = WaitBlock->Last;
-            
+
             /* Did it exist? */
             if (LastWaitBlock)
             {
@@ -1002,7 +1002,7 @@ ExfReleasePushLockShared(PEX_PUSH_LOCK PushLock)
                 WaitBlock = LastWaitBlock;
                 break;
             }
-            
+
             /* Keep searching */
             WaitBlock = WaitBlock->Next;
         }
@@ -1169,11 +1169,11 @@ ExfTryToWakePushLock(PEX_PUSH_LOCK PushLock)
      * and locked, don't do anything
      */
     if ((OldValue.Waking) || (OldValue.Locked) || !(OldValue.Waiting)) return;
-    
+
     /* Make it Waking */
     NewValue = OldValue;
     NewValue.Waking = TRUE;
-    
+
     /* Write the New Value */
     if (InterlockedCompareExchangePointer(&PushLock->Ptr,
                                           NewValue.Ptr,

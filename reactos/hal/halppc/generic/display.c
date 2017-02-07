@@ -122,7 +122,6 @@
  */
 
 #include <hal.h>
-#include <rosldr.h>
 #include <ppcboot.h>
 #include <ppcdebug.h>
 

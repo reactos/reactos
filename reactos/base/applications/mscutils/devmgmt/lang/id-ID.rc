@@ -16,10 +16,12 @@ BEGIN
   END
   POPUP "Lihat"
   BEGIN
-    MENUITEM "Device dengan tipe",      IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Device dengan koneksi",   IDC_STATIC, GRAYED
-    MENUITEM "Resource dengan tipe",    IDC_STATIC, GRAYED
-    MENUITEM "Resource dengan koneksi", IDC_STATIC, GRAYED
+    MENUITEM "Device dengan tipe",      IDC_DEVBYTYPE
+    MENUITEM "Device dengan koneksi",   IDC_DEVBYCONN
+    MENUITEM "Resource dengan tipe",    IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resource dengan koneksi", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Bantuan"
   BEGIN

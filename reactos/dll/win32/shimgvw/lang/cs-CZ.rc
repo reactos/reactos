@@ -7,17 +7,17 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE    "ReactOS prohl�e� obr�zk� a fax�"
-    IDS_SETASDESKBG "Nastavit jako pozad� plochy"
-    IDS_PREVIEW     "N�hled"
+    IDS_APPTITLE    "ReactOS prohlížeč obrázků a faxů"
+    IDS_SETASDESKBG "Nastavit jako pozadí plochy"
+    IDS_PREVIEW     "Náhled"
 
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Dal�� obr�zek"
-    IDS_TOOLTIP_PREV_PIC   "P�edchoz� obr�zek"
-    IDS_TOOLTIP_ZOOM_IN    "P�ibl�it (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Odd�lit (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Oto�it po sm�ru hodinov�ch ru�i�ek (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Oto�it proti sm�ru hodinov�ch ru�i�ek (Ctrl+L)"
+    IDS_TOOLTIP_NEXT_PIC   "Další obrázek"
+    IDS_TOOLTIP_PREV_PIC   "Předchozí obrázek"
+    IDS_TOOLTIP_ZOOM_IN    "Přiblížit (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Oddálit (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Otočit po směru hodinových ručiček (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Otočit proti směru hodinových ručiček (Ctrl+L)"
     IDS_TOOLTIP_PRINT      "Tisk (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS     "Ulo�it jako... (Ctrl+S)"
+    IDS_TOOLTIP_SAVEAS     "Uložit jako... (Ctrl+S)"
 END

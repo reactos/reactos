@@ -1,4 +1,4 @@
-LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
@@ -16,10 +16,12 @@ BEGIN
   END
   POPUP "Изглед"
   BEGIN
-    MENUITEM "Устройствата според вид",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройствата според свързването",   IDC_STATIC, GRAYED
-    MENUITEM "Средствата според вида",       IDC_STATIC, GRAYED
-    MENUITEM "Средствата според свързването", IDC_STATIC, GRAYED
+    MENUITEM "Устройствата според вид",         IDC_DEVBYTYPE
+    MENUITEM "Устройствата според свързването",   IDC_DEVBYCONN
+    MENUITEM "Средствата според вида",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Средствата според свързването", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Помощ"
   BEGIN

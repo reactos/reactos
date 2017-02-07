@@ -114,109 +114,118 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY {
 
 #ifndef _USBD_
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 DECLSPEC_IMPORT
 VOID
 NTAPI
 USBD_GetUSBDIVersion(
-  OUT PUSBD_VERSION_INFORMATION VersionInformation);
+  _Out_ PUSBD_VERSION_INFORMATION VersionInformation);
 
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
 NTAPI
 USBD_ParseConfigurationDescriptor(
-  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-  IN UCHAR InterfaceNumber,
-  IN UCHAR AlternateSetting);
+  _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _In_ UCHAR InterfaceNumber,
+  _In_ UCHAR AlternateSetting);
 
 DECLSPEC_IMPORT
 PURB
 NTAPI
 USBD_CreateConfigurationRequest(
-  IN  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-  OUT PUSHORT Siz);
+  _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _Out_ PUSHORT Siz);
 
+_IRQL_requires_max_(APC_LEVEL)
 DECLSPEC_IMPORT
 PUSB_COMMON_DESCRIPTOR
 NTAPI
 USBD_ParseDescriptors(
-  IN PVOID DescriptorBuffer,
-  IN ULONG TotalLength,
-  IN PVOID StartPosition,
-  IN LONG DescriptorType);
+  _In_ PVOID DescriptorBuffer,
+  _In_ ULONG TotalLength,
+  _In_ PVOID StartPosition,
+  _In_ LONG DescriptorType);
 
+_IRQL_requires_max_(APC_LEVEL)
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
 NTAPI
 USBD_ParseConfigurationDescriptorEx(
-  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-  IN PVOID StartPosition,
-  IN LONG InterfaceNumber,
-  IN LONG AlternateSetting,
-  IN LONG InterfaceClass,
-  IN LONG InterfaceSubClass,
-  IN LONG InterfaceProtocol);
+  _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _In_ PVOID StartPosition,
+  _In_ LONG InterfaceNumber,
+  _In_ LONG AlternateSetting,
+  _In_ LONG InterfaceClass,
+  _In_ LONG InterfaceSubClass,
+  _In_ LONG InterfaceProtocol);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 DECLSPEC_IMPORT
 PURB
 NTAPI
 USBD_CreateConfigurationRequestEx(
-  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-  IN PUSBD_INTERFACE_LIST_ENTRY InterfaceList);
+  _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _In_ PUSBD_INTERFACE_LIST_ENTRY InterfaceList);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 DECLSPEC_EXPORT
 ULONG
 NTAPI
 USBD_GetInterfaceLength(
-  IN PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
-  IN PUCHAR BufferEnd);
+  _In_ PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
+  _In_ PUCHAR BufferEnd);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 DECLSPEC_EXPORT
 VOID
 NTAPI
 USBD_RegisterHcFilter(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PDEVICE_OBJECT FilterDeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PDEVICE_OBJECT FilterDeviceObject);
 
+_IRQL_requires_max_(APC_LEVEL)
 DECLSPEC_EXPORT
 NTSTATUS
 NTAPI
 USBD_GetPdoRegistryParameter(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN OUT PVOID Parameter,
-  IN ULONG ParameterLength,
-  IN PWSTR KeyName,
-  IN ULONG KeyNameLength);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _Inout_updates_bytes_(ParameterLength) PVOID Parameter,
+  _In_ ULONG ParameterLength,
+  _In_reads_bytes_(KeyNameLength) PWSTR KeyName,
+  _In_ ULONG KeyNameLength);
 
 DECLSPEC_EXPORT
 NTSTATUS
 NTAPI
 USBD_QueryBusTime(
-  IN PDEVICE_OBJECT RootHubPdo,
-  OUT PULONG CurrentFrame);
+  _In_ PDEVICE_OBJECT RootHubPdo,
+  _Out_ PULONG CurrentFrame);
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 DECLSPEC_IMPORT
 ULONG
 NTAPI
 USBD_CalculateUsbBandwidth(
-  IN ULONG MaxPacketSize,
-  IN UCHAR EndpointType,
-  IN BOOLEAN LowSpeed);
+  _In_ ULONG MaxPacketSize,
+  _In_ UCHAR EndpointType,
+  _In_ BOOLEAN LowSpeed);
 
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 DECLSPEC_IMPORT
 USBD_STATUS
 NTAPI
 USBD_ValidateConfigurationDescriptor(
-  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
-  IN ULONG BufferLength,
-  IN USHORT Level,
-  OUT PUCHAR *Offset,
-  IN ULONG Tag OPTIONAL);
+  _In_reads_bytes_(BufferLength) PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
+  _In_ ULONG BufferLength,
+  _In_ USHORT Level,
+  _Out_ PUCHAR *Offset,
+  _In_opt_ ULONG Tag);
 
 #endif
 

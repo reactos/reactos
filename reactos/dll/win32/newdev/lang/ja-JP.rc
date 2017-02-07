@@ -3,107 +3,107 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "‚æ‚¤‚±‚»",IDC_WELCOMETITLE,120,8,195,24
-    LTEXT           "‚±‚ÌƒEƒBƒU[ƒh‚Å‚ÍAˆÈ‰º‚ÌV‚µ‚¢ƒfƒoƒCƒX ƒhƒ‰ƒCƒo‚ðƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·:",
+    LTEXT           "ã‚ˆã†ã“ã",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "ã“ã®ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰ã§ã¯ã€ä»¥ä¸‹ã®æ–°ã—ã„ãƒ‡ãƒã‚¤ã‚¹ ãƒ‰ãƒ©ã‚¤ãƒã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¾ã™:",
                     IDC_STATIC,120,21,195,30
-    LTEXT           "‘±s‚·‚é‚É‚ÍA[ŽŸ‚Ö] ‚ðƒNƒŠƒbƒN‚µ‚Ä‚­‚¾‚³‚¢B",IDC_STATIC,120,169,195,17
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,134,52,164,11
-    LTEXT           "Œx! ƒJƒXƒ^ƒ€ ƒfƒoƒCƒX‚ðƒCƒ“ƒXƒg[ƒ‹‚·‚é‚ÆAƒRƒ“ƒsƒ…[ƒ^‚ªƒtƒŠ[ƒY‚µ‚½‚èA‹N“®•s”\\‚É‚È‚é‰Â”\\«‚ª‚ ‚è‚Ü‚·!",IDC_STATIC,120,67,195,34
-    CONTROL         "ƒhƒ‰ƒCƒo‚ðŽ©“®“I‚ÉƒCƒ“ƒXƒg[ƒ‹‚·‚é",IDC_RADIO_AUTO,"Button",
+    LTEXT           "ç¶šè¡Œã™ã‚‹ã«ã¯ã€[æ¬¡ã¸] ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¦ãã ã•ã„ã€‚",IDC_STATIC,120,169,195,17
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,134,52,164,11
+    LTEXT           "è­¦å‘Š! ã‚«ã‚¹ã‚¿ãƒ  ãƒ‡ãƒã‚¤ã‚¹ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹ã¨ã€ã‚³ãƒ³ãƒ”ãƒ¥ãƒ¼ã‚¿ãŒãƒ•ãƒªãƒ¼ã‚ºã—ãŸã‚Šã€èµ·å‹•ä¸èƒ½ ã«ãªã‚‹å¯èƒ½ æ€§ãŒã‚ã‚Šã¾ã™!",IDC_STATIC,120,67,195,34
+    CONTROL         "ãƒ‰ãƒ©ã‚¤ãƒã‚’è‡ªå‹•çš„ã«ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
-    CONTROL         "ƒhƒ‰ƒCƒo‚ð“Á’è‚ÌêŠ‚©‚çƒCƒ“ƒXƒg[ƒ‹‚·‚é",IDC_RADIO_MANUAL,
+    CONTROL         "ãƒ‰ãƒ©ã‚¤ãƒã‚’ç‰¹å®šã®å ´æ‰€ã‹ã‚‰ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹",IDC_RADIO_MANUAL,
                     "Button",BS_AUTORADIOBUTTON,120,133,164,14
 END
 
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "ƒCƒ“ƒXƒg[ƒ‹Ž¸”s",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "ƒhƒ‰ƒCƒo‚ªŒ©‚Â‚©‚ç‚È‚©‚Á‚½‚½‚ßAƒfƒoƒCƒX‚ÍƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ü‚¹‚ñ‚Å‚µ‚½B",
+    LTEXT           "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å¤±æ•—",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "ãƒ‰ãƒ©ã‚¤ãƒãŒè¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸãŸã‚ã€ãƒ‡ãƒã‚¤ã‚¹ã¯ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¾ã›ã‚“ã§ã—ãŸã€‚",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "ƒhƒ‰ƒCƒo‚ÌƒfƒBƒXƒN‚ðŽ‚Á‚Ä‚¢‚½‚èAƒhƒ‰ƒCƒo‚Ö‚ÌƒpƒX‚ð’m‚Á‚Ä‚¢‚éê‡‚ÍA[–ß‚é] ‚ðƒNƒŠƒbƒN‚µ‚Ä‚­‚¾‚³‚¢B",
+    LTEXT           "ãƒ‰ãƒ©ã‚¤ãƒã®ãƒ‡ã‚£ã‚¹ã‚¯ã‚’æŒã£ã¦ã„ãŸã‚Šã€ãƒ‰ãƒ©ã‚¤ãƒã¸ã®ãƒ‘ã‚¹ã‚’çŸ¥ã£ã¦ã„ã‚‹å ´åˆã¯ã€[æˆ»ã‚‹] ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¦ãã ã•ã„ã€‚",
                     IDC_STATIC,120,98,181,24
-    CONTROL         "‚±‚Ìƒ_ƒCƒAƒƒO‚ð¡Œã•\\Ž¦‚µ‚È‚¢",IDC_DONOTSHOWDLG,"Button",
+    CONTROL         "ã“ã®ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ä»Šå¾Œè¡¨ ç¤ºã—ãªã„",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
 END
 
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "ƒCƒ“ƒXƒg[ƒ‹Ž¸”s",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "—\\Šú‚¹‚ÊƒGƒ‰[‚ª”­¶‚µ‚½‚½‚ßAƒfƒoƒCƒX‚ÍƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ü‚¹‚ñ‚Å‚µ‚½B",
+    LTEXT           "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å¤±æ•—",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "äºˆ æœŸã›ã¬ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ãŸãŸã‚ã€ãƒ‡ãƒã‚¤ã‚¹ã¯ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¾ã›ã‚“ã§ã—ãŸã€‚",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,134,55,164,11
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,134,55,164,11
 END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    CONTROL         "ŽŸ‚ÌêŠ‚ðŒŸõ‚·‚é",IDC_RADIO_SEARCHHERE,"Button",
+    CONTROL         "æ¬¡ã®å ´æ‰€ã‚’æ¤œç´¢ã™ã‚‹",IDC_RADIO_SEARCHHERE,"Button",
                     BS_AUTORADIOBUTTON,27,11,239,13
-    CONTROL         "Žè“®‚Åƒhƒ‰ƒCƒo‚ð‘I‘ð‚·‚é",IDC_RADIO_CHOOSE,"Button",
+    CONTROL         "æ‰‹å‹•ã§ãƒ‰ãƒ©ã‚¤ãƒã‚’é¸æŠžã™ã‚‹",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "ƒŠƒ€[ƒoƒuƒ‹ ƒƒfƒBƒA‚ðŒŸõ",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "ãƒªãƒ ãƒ¼ãƒãƒ–ãƒ« ãƒ¡ãƒ‡ã‚£ã‚¢ã‚’æ¤œç´¢",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
-    CONTROL         "ŽŸ‚ÌƒpƒX‚ðŠÜ‚ß‚é",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "æ¬¡ã®ãƒ‘ã‚¹ã‚’å«ã‚ã‚‹",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "ŽQÆ",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "å‚ç…§",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,51,20,169,16
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,51,20,169,16
 END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,51,20,169,16
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,51,20,169,16
 END
 
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "ƒCƒ“ƒXƒg[ƒ‹Š®—¹",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "ˆÈ‰º‚ÌƒCƒ“ƒXƒg[ƒ‹‚ðŠ®—¹‚·‚é‚É‚ÍÄ‹N“®‚ª•K—v‚Å‚·:",
+    LTEXT           "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "ä»¥ä¸‹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’å®Œäº†ã™ã‚‹ã«ã¯å†èµ·å‹•ãŒå¿…è¦ã§ã™:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "[Š®—¹] ‚ðƒNƒŠƒbƒN‚·‚é‚ÆƒEƒBƒU[ƒh‚ð•Â‚¶‚Ü‚·B",IDC_STATIC,120,174,
+    LTEXT           "[å®Œäº†] ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã¨ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰ã‚’é–‰ã˜ã¾ã™ã€‚",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,148,53,147,12
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,148,53,147,12
 END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "ƒfƒoƒCƒX‚ÌƒCƒ“ƒXƒg[ƒ‹"
+CAPTION "ãƒ‡ãƒã‚¤ã‚¹ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«"
 FONT 9, "MS UI Gothic"
 BEGIN
-    LTEXT           "ƒCƒ“ƒXƒg[ƒ‹Š®—¹",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "ƒEƒBƒU[ƒh‚ÍˆÈ‰º‚Ìƒhƒ‰ƒCƒo‚ÌƒCƒ“ƒXƒg[ƒ‹‚ðŠ®—¹‚µ‚Ü‚µ‚½:",
+    LTEXT           "ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«å®Œäº†",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰ã¯ä»¥ä¸‹ã®ãƒ‰ãƒ©ã‚¤ãƒã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã‚’å®Œäº†ã—ã¾ã—ãŸ:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "[Š®—¹] ‚ðƒNƒŠƒbƒN‚·‚é‚ÆƒEƒBƒU[ƒh‚ð•Â‚¶‚Ü‚·B",IDC_STATIC,120,174,
+    LTEXT           "[å®Œäº†] ã‚’ã‚¯ãƒªãƒƒã‚¯ã™ã‚‹ã¨ã‚¦ã‚£ã‚¶ãƒ¼ãƒ‰ã‚’é–‰ã˜ã¾ã™ã€‚",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "•s–¾‚ÈƒfƒoƒCƒX",IDC_DEVICE,148,53,147,12
+    LTEXT           "ä¸æ˜Žãªãƒ‡ãƒã‚¤ã‚¹",IDC_DEVICE,148,53,147,12
 END
 

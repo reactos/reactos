@@ -59,6 +59,17 @@
     ConvertAnsiToUnicodeEpilogue
 
 //
+// This macro uses the ConvertAnsiToUnicode macros above to convert a CreateXxxA
+// Win32 API into its equivalent CreateXxxW API.
+//
+#define ConvertWin32AnsiObjectApiToUnicodeApi2(obj, name, ...)                  \
+    ConvertAnsiToUnicodePrologue                                                \
+    if (!name) return Create##obj##W(NULL, __VA_ARGS__);                        \
+    ConvertAnsiToUnicodeBody(name)                                              \
+    if (NT_SUCCESS(Status)) return Create##obj##W(UnicodeCache->Buffer, __VA_ARGS__);  \
+    ConvertAnsiToUnicodeEpilogue
+
+//
 // This macro uses the ConvertAnsiToUnicode macros above to convert a FindFirst*A
 // Win32 API into its equivalent FindFirst*W API.
 //

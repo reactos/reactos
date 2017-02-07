@@ -214,7 +214,9 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
     return FALSE;
   }
 
-  BaseValue = (OrigValue & 0x00000001) ? (OrigValue & ~0x3) : (OrigValue & ~0xF);
+  BaseValue = (OrigValue & PCI_ADDRESS_IO_SPACE)
+              ? (OrigValue & PCI_ADDRESS_IO_ADDRESS_MASK)
+              : (OrigValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK);
 
   *Base = BaseValue;
 
@@ -267,33 +269,35 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
      return TRUE;
   }
 
-  XLength = ~((NewValue & 0x00000001) ? (NewValue & ~0x3) : (NewValue & ~0xF)) + 1;
+  XLength = ~((NewValue & PCI_ADDRESS_IO_SPACE)
+              ? (NewValue & PCI_ADDRESS_IO_ADDRESS_MASK)
+              : (NewValue & PCI_ADDRESS_MEMORY_ADDRESS_MASK)) + 1;
 
 #if 0
   DbgPrint("BaseAddress 0x%08lx  Length 0x%08lx",
            BaseValue, XLength);
 
-  if (NewValue & 0x00000001)
+  if (NewValue & PCI_ADDRESS_IO_SPACE)
   {
     DbgPrint("  IO range");
   }
   else
   {
     DbgPrint("  Memory range");
-    if ((NewValue & 0x00000006) == 0)
+    if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 0)
     {
       DbgPrint(" in 32-Bit address space");
     }
-    else if ((NewValue & 0x00000006) == 2)
+    else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 2)
     {
       DbgPrint(" below 1BM ");
     }
-    else if ((NewValue & 0x00000006) == 4)
+    else if ((NewValue & PCI_ADDRESS_MEMORY_TYPE_MASK) == 4)
     {
       DbgPrint(" in 64-Bit address space");
     }
 
-    if (NewValue & 0x00000008)
+    if (NewValue & PCI_ADDRESS_MEMORY_PREFETCHABLE)
     {
       DbgPrint(" prefetchable");
     }
@@ -303,7 +307,9 @@ PdoGetRangeLength(PPDO_DEVICE_EXTENSION DeviceExtension,
 #endif
 
   *Length = XLength;
-  *Flags = (NewValue & 0x00000001) ? (NewValue & 0x3) : (NewValue & 0xF);
+  *Flags = (NewValue & PCI_ADDRESS_IO_SPACE)
+           ? (NewValue & ~PCI_ADDRESS_IO_ADDRESS_MASK)
+           : (NewValue & ~PCI_ADDRESS_MEMORY_ADDRESS_MASK);
 
   return TRUE;
 }
@@ -760,6 +766,9 @@ PdoQueryResources(
         Descriptor->u.Port.Start.QuadPart =
           (ULONGLONG)Base;
         Descriptor->u.Port.Length = Length;
+
+        /* Enable IO space access */
+        DeviceExtension->PciDevice->EnableIoSpace = TRUE;
       }
       else
       {
@@ -769,6 +778,9 @@ PdoQueryResources(
         Descriptor->u.Memory.Start.QuadPart =
           (ULONGLONG)Base;
         Descriptor->u.Memory.Length = Length;
+
+        /* Enable memory space access */
+        DeviceExtension->PciDevice->EnableMemorySpace = TRUE;
       }
 
       Descriptor++;
@@ -786,6 +798,9 @@ PdoQueryResources(
       Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
+
+    /* Allow bus master mode */
+    DeviceExtension->PciDevice->EnableBusMaster = TRUE;
   }
   else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
   {
@@ -815,6 +830,9 @@ PdoQueryResources(
         Descriptor->u.Port.Start.QuadPart =
           (ULONGLONG)Base;
         Descriptor->u.Port.Length = Length;
+
+        /* Enable IO space access */
+        DeviceExtension->PciDevice->EnableIoSpace = TRUE;
       }
       else
       {
@@ -824,6 +842,9 @@ PdoQueryResources(
         Descriptor->u.Memory.Start.QuadPart =
           (ULONGLONG)Base;
         Descriptor->u.Memory.Length = Length;
+
+        /* Enable memory space access */
+        DeviceExtension->PciDevice->EnableMemorySpace = TRUE;
       }
 
       Descriptor++;
@@ -1200,45 +1221,88 @@ PdoStartDevice(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PCM_RESOURCE_LIST RawResList = IrpSp->Parameters.StartDevice.AllocatedResources;
-  PCM_FULL_RESOURCE_DESCRIPTOR RawFullDesc;
-  PCM_PARTIAL_RESOURCE_DESCRIPTOR RawPartialDesc;
-  ULONG i, ii;
-  PPDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-  UCHAR Irq;
+    PCM_RESOURCE_LIST RawResList = IrpSp->Parameters.StartDevice.AllocatedResources;
+    PCM_FULL_RESOURCE_DESCRIPTOR RawFullDesc;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR RawPartialDesc;
+    ULONG i, ii;
+    PPDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    UCHAR Irq;
+    USHORT Command;
 
-  if (!RawResList)
-      return STATUS_SUCCESS;
+    if (!RawResList)
+        return STATUS_SUCCESS;
 
-  /* TODO: Assign the other resources we get to the card */
+    /* TODO: Assign the other resources we get to the card */
 
-  for (i = 0; i < RawResList->Count; i++)
-  {
-      RawFullDesc = &RawResList->List[i];
+    for (i = 0; i < RawResList->Count; i++)
+    {
+        RawFullDesc = &RawResList->List[i];
 
-      for (ii = 0; ii < RawFullDesc->PartialResourceList.Count; ii++)
-      {
-          RawPartialDesc = &RawFullDesc->PartialResourceList.PartialDescriptors[ii];
+        for (ii = 0; ii < RawFullDesc->PartialResourceList.Count; ii++)
+        {
+            RawPartialDesc = &RawFullDesc->PartialResourceList.PartialDescriptors[ii];
 
-          if (RawPartialDesc->Type == CmResourceTypeInterrupt)
-          {
-              DPRINT1("Assigning IRQ %x to PCI device (%x, %x)\n",
-                      RawPartialDesc->u.Interrupt.Vector,
-                      DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                      DeviceExtension->PciDevice->BusNumber);
+            if (RawPartialDesc->Type == CmResourceTypeInterrupt)
+            {
+                DPRINT1("Assigning IRQ %d to PCI device 0x%x on bus 0x%x\n",
+                        RawPartialDesc->u.Interrupt.Vector,
+                        DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                        DeviceExtension->PciDevice->BusNumber);
 
-              Irq = (UCHAR)RawPartialDesc->u.Interrupt.Vector;
-              HalSetBusDataByOffset(PCIConfiguration,
-                                    DeviceExtension->PciDevice->BusNumber,
-                                    DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                    &Irq,
-                                    0x3c /* PCI_INTERRUPT_LINE */,
-                                    sizeof(UCHAR));
-          }
-      }
-   }
+                Irq = (UCHAR)RawPartialDesc->u.Interrupt.Vector;
+                HalSetBusDataByOffset(PCIConfiguration,
+                                      DeviceExtension->PciDevice->BusNumber,
+                                      DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                                      &Irq,
+                                      0x3c /* PCI_INTERRUPT_LINE */,
+                                      sizeof(UCHAR));
+            }
+        }
+    }
 
-   return STATUS_SUCCESS;
+    Command = 0;
+
+    DPRINT1("Enabling command flags for PCI device 0x%x on bus 0x%x: ",
+            DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+            DeviceExtension->PciDevice->BusNumber);
+    if (DeviceExtension->PciDevice->EnableBusMaster)
+    {
+        Command |= PCI_ENABLE_BUS_MASTER;
+        DbgPrint("[Bus master] ");
+    }
+
+    if (DeviceExtension->PciDevice->EnableMemorySpace)
+    {
+        Command |= PCI_ENABLE_MEMORY_SPACE;
+        DbgPrint("[Memory space enable] ");
+    }
+
+    if (DeviceExtension->PciDevice->EnableIoSpace)
+    {
+        Command |= PCI_ENABLE_IO_SPACE;
+        DbgPrint("[I/O space enable] ");
+    }
+
+    if (Command != 0)
+    {
+        DbgPrint("\n");
+
+        /* OR with the previous value */
+        Command |= DeviceExtension->PciDevice->PciConfig.Command;
+
+        HalSetBusDataByOffset(PCIConfiguration,
+                              DeviceExtension->PciDevice->BusNumber,
+                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                              &Command,
+                              FIELD_OFFSET(PCI_COMMON_CONFIG, Command),
+                              sizeof(USHORT));
+    }
+    else
+    {
+        DbgPrint("None\n");
+    }
+
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
@@ -1437,10 +1501,33 @@ PdoPnpControl(
   case IRP_MN_STOP_DEVICE:
   case IRP_MN_QUERY_REMOVE_DEVICE:
   case IRP_MN_CANCEL_REMOVE_DEVICE:
-  case IRP_MN_REMOVE_DEVICE:
   case IRP_MN_SURPRISE_REMOVAL:
     Status = STATUS_SUCCESS;
     break;
+
+  case IRP_MN_REMOVE_DEVICE:
+  {
+    PPDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    PFDO_DEVICE_EXTENSION FdoDeviceExtension = DeviceExtension->Fdo->DeviceExtension;
+    KIRQL OldIrql;
+
+    /* Remove it from the device list */
+    KeAcquireSpinLock(&FdoDeviceExtension->DeviceListLock, &OldIrql);
+    RemoveEntryList(&DeviceExtension->PciDevice->ListEntry);
+    FdoDeviceExtension->DeviceListCount--;
+    KeReleaseSpinLock(&FdoDeviceExtension->DeviceListLock, OldIrql);
+
+    /* Free the device */
+    ExFreePool(DeviceExtension->PciDevice);
+
+    /* Complete the IRP */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    /* Delete the DO */
+    IoDeleteDevice(DeviceObject);
+    return STATUS_SUCCESS;
+  }
 
   case IRP_MN_QUERY_INTERFACE:
     DPRINT("IRP_MN_QUERY_INTERFACE received\n");

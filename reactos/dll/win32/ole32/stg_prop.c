@@ -152,7 +152,7 @@ static HRESULT create_EnumSTATPROPSTG(PropertyStorage_impl *, IEnumSTATPROPSTG**
  */
 struct tagPropertyStorage_impl
 {
-    const IPropertyStorageVtbl *vtbl;
+    IPropertyStorage IPropertyStorage_iface;
     LONG ref;
     CRITICAL_SECTION cs;
     IStream *stm;
@@ -171,6 +171,11 @@ struct tagPropertyStorage_impl
     struct dictionary *propid_to_prop;
 };
 
+static inline PropertyStorage_impl *impl_from_IPropertyStorage(IPropertyStorage *iface)
+{
+    return CONTAINING_RECORD(iface, PropertyStorage_impl, IPropertyStorage_iface);
+}
+
 /************************************************************************
  * IPropertyStorage_fnQueryInterface (IPropertyStorage)
  */
@@ -179,7 +184,7 @@ static HRESULT WINAPI IPropertyStorage_fnQueryInterface(
     REFIID riid,
     void** ppvObject)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
 
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
@@ -205,7 +210,7 @@ static HRESULT WINAPI IPropertyStorage_fnQueryInterface(
 static ULONG WINAPI IPropertyStorage_fnAddRef(
     IPropertyStorage *iface)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     return InterlockedIncrement(&This->ref);
 }
 
@@ -215,7 +220,7 @@ static ULONG WINAPI IPropertyStorage_fnAddRef(
 static ULONG WINAPI IPropertyStorage_fnRelease(
     IPropertyStorage *iface)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     ULONG ref;
 
     ref = InterlockedDecrement(&This->ref);
@@ -293,7 +298,7 @@ static HRESULT WINAPI IPropertyStorage_fnReadMultiple(
     const PROPSPEC rgpspec[],
     PROPVARIANT rgpropvar[])
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     HRESULT hr = S_OK;
     ULONG i;
 
@@ -551,7 +556,7 @@ static HRESULT WINAPI IPropertyStorage_fnWriteMultiple(
     const PROPVARIANT rgpropvar[],
     PROPID propidNameFirst)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     HRESULT hr = S_OK;
     ULONG i;
 
@@ -650,7 +655,7 @@ static HRESULT WINAPI IPropertyStorage_fnDeleteMultiple(
     ULONG cpspec,
     const PROPSPEC rgpspec[])
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     ULONG i;
     HRESULT hr;
 
@@ -696,7 +701,7 @@ static HRESULT WINAPI IPropertyStorage_fnReadPropertyNames(
     const PROPID rgpropid[],
     LPOLESTR rglpwstrName[])
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     ULONG i;
     HRESULT hr = S_FALSE;
 
@@ -715,8 +720,8 @@ static HRESULT WINAPI IPropertyStorage_fnReadPropertyNames(
 
             hr = S_OK;
             rglpwstrName[i] = CoTaskMemAlloc((len + 1) * sizeof(WCHAR));
-            if (rglpwstrName)
-                memcpy(rglpwstrName, name, (len + 1) * sizeof(WCHAR));
+            if (rglpwstrName[i])
+                memcpy(rglpwstrName[i], name, (len + 1) * sizeof(WCHAR));
             else
                 hr = STG_E_INSUFFICIENTMEMORY;
         }
@@ -736,7 +741,7 @@ static HRESULT WINAPI IPropertyStorage_fnWritePropertyNames(
     const PROPID rgpropid[],
     const LPOLESTR rglpwstrName[])
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     ULONG i;
     HRESULT hr;
 
@@ -769,7 +774,7 @@ static HRESULT WINAPI IPropertyStorage_fnDeletePropertyNames(
     ULONG cpropid,
     const PROPID rgpropid[])
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     ULONG i;
     HRESULT hr;
 
@@ -805,7 +810,7 @@ static HRESULT WINAPI IPropertyStorage_fnCommit(
     IPropertyStorage* iface,
     DWORD grfCommitFlags)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     HRESULT hr;
 
     TRACE("(%p, 0x%08x)\n", iface, grfCommitFlags);
@@ -828,7 +833,7 @@ static HRESULT WINAPI IPropertyStorage_fnRevert(
     IPropertyStorage* iface)
 {
     HRESULT hr;
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
 
     TRACE("%p\n", iface);
 
@@ -853,7 +858,7 @@ static HRESULT WINAPI IPropertyStorage_fnEnum(
     IPropertyStorage* iface,
     IEnumSTATPROPSTG** ppenum)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     return create_EnumSTATPROPSTG(This, ppenum);
 }
 
@@ -877,7 +882,7 @@ static HRESULT WINAPI IPropertyStorage_fnSetClass(
     IPropertyStorage* iface,
     REFCLSID clsid)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
 
     TRACE("%p, %s\n", iface, debugstr_guid(clsid));
 
@@ -899,7 +904,7 @@ static HRESULT WINAPI IPropertyStorage_fnStat(
     IPropertyStorage* iface,
     STATPROPSETSTG* statpsstg)
 {
-    PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
+    PropertyStorage_impl *This = impl_from_IPropertyStorage(iface);
     STATSTG stat;
     HRESULT hr;
 
@@ -1104,6 +1109,22 @@ static HRESULT PropertyStorage_ReadProperty(PropertyStorage_impl *This,
             else
                 hr = STG_E_INSUFFICIENTMEMORY;
         }
+        break;
+    }
+    case VT_BLOB:
+    {
+        DWORD count;
+
+        StorageUtl_ReadDWord(data, 0, &count);
+        prop->u.blob.cbSize = count;
+        prop->u.blob.pBlobData = CoTaskMemAlloc(count);
+        if (prop->u.blob.pBlobData)
+        {
+            memcpy(prop->u.blob.pBlobData, data + sizeof(DWORD), count);
+            TRACE("Read blob value of size %d\n", count);
+        }
+        else
+            hr = STG_E_INSUFFICIENTMEMORY;
         break;
     }
     case VT_LPWSTR:
@@ -1314,13 +1335,6 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
     hr = PropertyStorage_ReadFmtIdOffsetFromStream(This->stm, &fmtOffset);
     if (FAILED(hr))
         goto end;
-    if (!IsEqualGUID(&fmtOffset.fmtid, &FMTID_DocSummaryInformation) &&
-        !IsEqualGUID(&fmtOffset.fmtid, &FMTID_SummaryInformation))
-    {
-        WARN("not reading unknown fmtid %s\n", debugstr_guid(&fmtOffset.fmtid));
-        hr = S_FALSE;
-        goto end;
-    }
     if (fmtOffset.dwOffset > stat.cbSize.u.LowPart)
     {
         WARN("invalid offset %d (stream length is %d)\n", fmtOffset.dwOffset,
@@ -1363,7 +1377,7 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
          i * sizeof(PROPERTYIDOFFSET));
 
         if (idOffset->dwOffset < sizeof(PROPERTYSECTIONHEADER) ||
-         idOffset->dwOffset >= sectionHdr.cbSection - sizeof(DWORD))
+         idOffset->dwOffset > sectionHdr.cbSection - sizeof(DWORD))
             hr = STG_E_INVALIDPOINTER;
         else
         {
@@ -1748,6 +1762,15 @@ static HRESULT PropertyStorage_WritePropertyToStream(PropertyStorage_impl *This,
         bytesWritten = count + sizeof cf_hdr;
         break;
     }
+    case VT_CLSID:
+    {
+        CLSID temp;
+
+        StorageUtl_WriteGUID((BYTE *)&temp, 0, var->u.puuid);
+        hr = IStream_Write(This->stm, &temp, sizeof(temp), &count);
+        bytesWritten = count;
+        break;
+    }
     default:
         FIXME("unsupported type: %d\n", var->vt);
         return STG_E_INVALIDPARAMETER;
@@ -1986,7 +2009,7 @@ static HRESULT PropertyStorage_BaseConstruct(IStream *stm,
     if (!*pps)
         return E_OUTOFMEMORY;
 
-    (*pps)->vtbl = &IPropertyStorage_Vtbl;
+    (*pps)->IPropertyStorage_iface.lpVtbl = &IPropertyStorage_Vtbl;
     (*pps)->ref = 1;
     InitializeCriticalSection(&(*pps)->cs);
     (*pps)->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PropertyStorage_impl.cs");
@@ -2020,7 +2043,7 @@ static HRESULT PropertyStorage_ConstructFromStream(IStream *stm,
         hr = PropertyStorage_ReadFromStream(ps);
         if (SUCCEEDED(hr))
         {
-            *pps = (IPropertyStorage *)ps;
+            *pps = &ps->IPropertyStorage_iface;
             TRACE("PropertyStorage %p constructed\n", ps);
             hr = S_OK;
         }
@@ -2054,7 +2077,7 @@ static HRESULT PropertyStorage_ConstructEmpty(IStream *stm,
             ps->codePage = CP_UNICODE;
         ps->locale = LOCALE_SYSTEM_DEFAULT;
         TRACE("Code page is %d, locale is %d\n", ps->codePage, ps->locale);
-        *pps = (IPropertyStorage *)ps;
+        *pps = &ps->IPropertyStorage_iface;
         TRACE("PropertyStorage %p constructed\n", ps);
         hr = S_OK;
     }

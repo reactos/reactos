@@ -1,9 +1,13 @@
+/* Превод на Български/ Bulgarian translation */
+/* http://www.reactos.org/wiki/Bulgarian_translation */
+/* LOCATION: \base\applications\format\lang */
+
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_HELP,  "Употреба: %s устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
   [drive:]         Указва устройството за оразмеряване.\n\
-  -FS:файлова_система  Указва вида на дайловата система (%s).\n\
+  -FS:файлова_система  Указва вида на файловата система (%s).\n\
   -V:етикет         Указва етикет за тома.\n\
   -Q               Извършва бързо оразмеряване (форматиране).\n\
   -A:размер        Потиска подразбрания размер на чепката. Подразбраните настройки\n\
@@ -15,7 +19,7 @@ STRING_HELP,  "Употреба: %s устройство: [-FS:файлова_с
   -C               Файловете, създадени на новия том ще бъдат сбивани по\n\
                    подразбиране.\n\n"
 
-STRING_COMPLETE   "%lu на сто готови.\r"
+STRING_COMPLETE   "%lu% готови.\r"
 
 STRING_FORMAT_FAIL "FormatEx не завърши успешно.\n\n"
 

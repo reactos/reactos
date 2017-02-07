@@ -6,7 +6,7 @@ include_directories(
 
 add_definitions(-DADNS_JGAA_WIN32)
 
-spec2def(dnsapi.dll dnsapi.spec)
+spec2def(dnsapi.dll dnsapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dnsapi/adns.c
@@ -27,4 +27,4 @@ add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_pch(dnsapi dnsapi/precomp.h)
 add_dependencies(dnsapi psdk)
 add_cd_file(TARGET dnsapi DESTINATION reactos/system32 FOR all)
-add_importlib_target(dnsapi.spec)
+

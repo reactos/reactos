@@ -28,7 +28,7 @@ static MUI_ENTRY deDELanguagePageEntries[] =
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        11,
         11,
         "wollen.  Dann drÅcken Sie ENTER.",
         TEXT_STYLE_NORMAL

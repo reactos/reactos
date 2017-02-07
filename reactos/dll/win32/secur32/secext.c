@@ -287,23 +287,3 @@ BOOLEAN WINAPI GetUserNameExW(
 
     return status;
 }
-
-BOOLEAN WINAPI TranslateNameA(
-  LPCSTR lpAccountName, EXTENDED_NAME_FORMAT AccountNameFormat,
-  EXTENDED_NAME_FORMAT DesiredNameFormat, LPSTR lpTranslatedName,
-  PULONG nSize)
-{
-    DPRINT("%p %d %d %p %p\n", lpAccountName, AccountNameFormat,
-          DesiredNameFormat, lpTranslatedName, nSize);
-    return FALSE;
-}
-
-BOOLEAN WINAPI TranslateNameW(
-  LPCWSTR lpAccountName, EXTENDED_NAME_FORMAT AccountNameFormat,
-  EXTENDED_NAME_FORMAT DesiredNameFormat, LPWSTR lpTranslatedName,
-  PULONG nSize)
-{
-    DPRINT("%p %d %d %p %p\n", lpAccountName, AccountNameFormat,
-          DesiredNameFormat, lpTranslatedName, nSize);
-    return FALSE;
-}

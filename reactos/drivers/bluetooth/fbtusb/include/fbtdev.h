@@ -17,37 +17,37 @@
 extern "C" {
 #endif
 
-NTSTATUS FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_ResetPipe(IN PDEVICE_OBJECT	DeviceObject, IN USBD_PIPE_HANDLE PipeInfo);
-NTSTATUS FreeBT_ResetDevice(IN PDEVICE_OBJECT DeviceObject);
-NTSTATUS FreeBT_GetPortStatus(IN PDEVICE_OBJECT DeviceObject, IN PULONG PortStatus);
-NTSTATUS FreeBT_ResetParentPort(IN IN PDEVICE_OBJECT DeviceObject);
+NTSTATUS NTAPI FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_ResetPipe(IN PDEVICE_OBJECT	DeviceObject, IN USBD_PIPE_HANDLE PipeInfo);
+NTSTATUS NTAPI FreeBT_ResetDevice(IN PDEVICE_OBJECT DeviceObject);
+NTSTATUS NTAPI FreeBT_GetPortStatus(IN PDEVICE_OBJECT DeviceObject, IN PULONG PortStatus);
+NTSTATUS NTAPI FreeBT_ResetParentPort(IN IN PDEVICE_OBJECT DeviceObject);
 
-NTSTATUS SubmitIdleRequestIrp(IN PDEVICE_EXTENSION DeviceExtension);
-VOID IdleNotificationCallback(IN PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS IdleNotificationRequestComplete(
+NTSTATUS NTAPI SubmitIdleRequestIrp(IN PDEVICE_EXTENSION DeviceExtension);
+VOID NTAPI IdleNotificationCallback(IN PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI IdleNotificationRequestComplete(
     IN PDEVICE_OBJECT    DeviceObject,
     IN PIRP              Irp,
     IN PDEVICE_EXTENSION DeviceExtension);
 
-VOID CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension);
-VOID PoIrpCompletionFunc(
+VOID NTAPI CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension);
+VOID NTAPI PoIrpCompletionFunc(
     IN PDEVICE_OBJECT   DeviceObject,
     IN UCHAR            MinorFunction,
     IN POWER_STATE      PowerState,
     IN PVOID            Context,
     IN PIO_STATUS_BLOCK IoStatus);
 
-VOID PoIrpAsyncCompletionFunc(
+VOID NTAPI PoIrpAsyncCompletionFunc(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR MinorFunction,
     IN POWER_STATE PowerState,
     IN PVOID Context,
     IN PIO_STATUS_BLOCK IoStatus);
 
-VOID WWIrpCompletionFunc(
+VOID NTAPI WWIrpCompletionFunc(
     IN PDEVICE_OBJECT   DeviceObject,
     IN UCHAR            MinorFunction,
     IN POWER_STATE      PowerState,

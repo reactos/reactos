@@ -8,16 +8,16 @@ BEGIN
     IDS_NAME "Nombre"
     IDS_TYPE "Tipo"
     IDS_MANUFACTURER "Fabricante: %1"
-    IDS_LOCATION "LocalizaciÛn: %1"
+    IDS_LOCATION "Localizaci√≥n: %1"
     IDS_STATUS "Estado del Dispositivo: %1"
     IDS_UNKNOWN "Desconocido"
-    IDS_LOCATIONSTR "LocalizaciÛn %1!u! (%2)"
+    IDS_LOCATIONSTR "Localizaci√≥n %1!u! (%2)"
     IDS_DEVCODE " (Codigo %1!u!)"
     IDS_DEVCODE2 " (Codigo %2!u!)"
     IDS_ENABLEDEVICE "Habilita este dispositivo (enable)"
     IDS_DISABLEDEVICE "Deshabilitar este dispositivo (disable)"
     IDS_UNKNOWNDEVICE "Dispositivo desconocido"
-    IDS_NODRIVERLOADED "Ning˙n controlador esta instalado para este dispositivo."
+    IDS_NODRIVERLOADED "Ning√∫n controlador esta instalado para este dispositivo."
     IDS_DEVONPARENT "en %1"
     IDS_TROUBLESHOOTDEV "&Solucionar problemas..."
     IDS_ENABLEDEV "Habilit&e Dispositivo"
@@ -33,28 +33,28 @@ END
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Este dispositivo est· funcionando correctamente."
+    IDS_DEV_NO_PROBLEM "Este dispositivo est√° funcionando correctamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo no esta configurado correctamente."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS no podrÌa cargar el controlador para este dispositivo porque la computadora est· reportando dos $1 tipos de Bus."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS no podr√≠a cargar el controlador para este dispositivo porque la computadora est√° reportando dos $1 tipos de Bus."
     IDS_DEV_DEVLOADER_FAILED2 "El cargador(es) de $1 no puede cargar el controlador del dispositivo."
-    IDS_DEV_OUT_OF_MEMORY "El controlador para este dispositivo puede estar daÒado, o su sistema puede estar bajo en memoria u otros recursos."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no est· funcionando correctamente porque uno de sus controladores estan daÒados, o su registro esta corrupto."
-    IDS_DEV_LACKED_ARBITRATOR "El controlador para este dispositivo solicitÛ un recurso que ReactOS no sabe dirigir."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Otro dispositivo est· utilizando los recursos que necesita de este dispositivo."
+    IDS_DEV_OUT_OF_MEMORY "El controlador para este dispositivo puede estar da√±ado, o su sistema puede estar bajo en memoria u otros recursos."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no est√° funcionando correctamente porque uno de sus controladores estan da√±ados, o su registro esta corrupto."
+    IDS_DEV_LACKED_ARBITRATOR "El controlador para este dispositivo solicit√≥ un recurso que ReactOS no sabe dirigir."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Otro dispositivo est√° utilizando los recursos que necesita de este dispositivo."
     IDS_DEV_FAILED_FILTER "Los controladors para este dispositivo necesitan ser reinstalados."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo no est· funcionando correctamente porque ReactOS no puede cargar el archivo $1 que carga los controladors para el dispositivo."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo no est· funcionando correctamente porque el archivo $1 que carga los controladors para este dispositivo esta daÒado."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Falla del dispositivo: Trate de cambiar el controlador para este dispositivo. Si eso no funciona, vea la documentaciÛn de su hardware."
-    IDS_DEV_INVALID_DATA "Este dispositivo no est· funcionando correctamente porque la BIOS en su computadora est· reportando los recursos para el dispositivo incorrectamente."
-    IDS_DEV_INVALID_DATA2 "Este dispositivo no est· funcionando correctamente porque la BIOS en el dispositivo est· reportando los recursos para el dispositivo incorrectamente."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo no est√° funcionando correctamente porque ReactOS no puede cargar el archivo $1 que carga los controladors para el dispositivo."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo no est√° funcionando correctamente porque el archivo $1 que carga los controladors para este dispositivo esta da√±ado."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Falla del dispositivo: Trate de cambiar el controlador para este dispositivo. Si eso no funciona, vea la documentaci√≥n de su hardware."
+    IDS_DEV_INVALID_DATA "Este dispositivo no est√° funcionando correctamente porque la BIOS en su computadora est√° reportando los recursos para el dispositivo incorrectamente."
+    IDS_DEV_INVALID_DATA2 "Este dispositivo no est√° funcionando correctamente porque la BIOS en el dispositivo est√° reportando los recursos para el dispositivo incorrectamente."
     IDS_DEV_FAILED_START "Este dispositivo o no esta presente, no trabajando correctamente, o no tiene todos los controladors instalados."
-    IDS_DEV_LIAR "ReactOS parÛ de responder mientras que procuraba encender este dispositivo, y por lo tanto nunca procurar· encender este dispositivo otra vez."
+    IDS_DEV_LIAR "ReactOS par√≥ de responder mientras que procuraba encender este dispositivo, y por lo tanto nunca procurar√° encender este dispositivo otra vez."
     IDS_DEV_NORMAL_CONFLICT "Este dispositivo no puede encontrar ningun $1 recurso libre para utilizar."
     IDS_DEV_NOT_VERIFIED "Este dispositivo no esta presente, no trabaja correctamente, o no tiene todos los controladors instalados."
     IDS_DEV_NEED_RESTART "Este dispositivo no puede trabajar correctamente hasta que usted reinicie su equipo."
-    IDS_DEV_REENUMERATION "Este dispositivo est· causando un conflicto de recursos."
+    IDS_DEV_REENUMERATION "Este dispositivo est√° causando un conflicto de recursos."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS no puede identificar todos los recursos que este dispositivo usa."
-    IDS_DEV_UNKNOWN_RESOURCE "El archivo de informaciÛn del controlador $1 est· diciendo que este dispositivo hijo utiliza un recurso que el dispositivo padre no tiene o no reconoce."
+    IDS_DEV_UNKNOWN_RESOURCE "El archivo de informaci√≥n del controlador $1 est√° diciendo que este dispositivo hijo utiliza un recurso que el dispositivo padre no tiene o no reconoce."
     IDS_DEV_REINSTALL  "Los controladors para este dispositivo necesitan ser reinstalados."
     IDS_DEV_REGISTRY "Su registro puede estar corrupto."
     IDS_DEV_WILL_BE_REMOVED "ReactOS esta removiendo este dispositivo."
@@ -64,31 +64,31 @@ BEGIN
     IDS_DEV_DEVLOADER_NOT_READY2 "Este adaptador de video esta funcionando correctamente."
     IDS_DEV_DEVLOADER_NOT_READY3 "Los cargadores para este dispositivo no pueden cargar los controladors requeridos."
     IDS_DEV_DEVICE_NOT_THERE "Este dispositivo no esta presente, no trabaja correctamente, o no tiene todos los controladors instalados."
-    IDS_DEV_MOVED "ReactOS est· en el proceso de instalaciÛn de este dispositivo."
-    IDS_DEV_TOO_EARLY "ReactOS est· en el proceso de instalaciÛn de este dispositivo."
+    IDS_DEV_MOVED "ReactOS est√° en el proceso de instalaci√≥n de este dispositivo."
+    IDS_DEV_TOO_EARLY "ReactOS est√° en el proceso de instalaci√≥n de este dispositivo."
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS no puede especificar los recursos para este dispositivo."
-    IDS_DEV_FAILED_INSTALL "Los controladors para este dispositivo no est·n instalados."
-    IDS_DEV_HARDWARE_DISABLED "Este dispositivo es deshabilitado porque la BIOS para el dispositivo no le dio ning˙n recurso."
-    IDS_DEV_CANT_SHARE_IRQ "Este dispositivo est· utilizando un recurso de la peticiÛn de interrupciÛn (IRQ) que usa otro dispositivo y no puede ser compartido. Usted debe cambiar la opciÛn que esta confligiendo o remover el real-mode controlador que causa el conflicto."
-    IDS_DEV_FAILED_ADD "Este dispositivo no est· funcionando correctamente porque $1 no est· trabajando correctamente."
-    IDS_DEV_DISABLED_SERVICE "ReactOS no puede instalar los controladors para este dispositivo porque no se puede acceder al disco o la localizaciÛn en la red que tiene los archivos de instalaciÛn."
+    IDS_DEV_FAILED_INSTALL "Los controladors para este dispositivo no est√°n instalados."
+    IDS_DEV_HARDWARE_DISABLED "Este dispositivo es deshabilitado porque la BIOS para el dispositivo no le dio ning√∫n recurso."
+    IDS_DEV_CANT_SHARE_IRQ "Este dispositivo est√° utilizando un recurso de la petici√≥n de interrupci√≥n (IRQ) que usa otro dispositivo y no puede ser compartido. Usted debe cambiar la opci√≥n que esta confligiendo o remover el real-mode controlador que causa el conflicto."
+    IDS_DEV_FAILED_ADD "Este dispositivo no est√° funcionando correctamente porque $1 no est√° trabajando correctamente."
+    IDS_DEV_DISABLED_SERVICE "ReactOS no puede instalar los controladors para este dispositivo porque no se puede acceder al disco o la localizaci√≥n en la red que tiene los archivos de instalaci√≥n."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo no responde a su controlador."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS no puede determinar las propiedades de este dispositivo. Consulte la documentaciÛn que vino con este dispositivo y utiliza la pestaÒa del recurso para fijar la configuraciÛn correcta."
-    IDS_DEV_BIOS_TABLE "Los soportes lÛgicos inalterables del sistema(firmware) no incluyen suficiente informaciÛn para configurar correctamente y utilizar este dispositivo Para utilizar este dispositivo, entre en contacto con el fabricante de su equipo para obtener una actualizaciÛn de la BIOS."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Este dispositivo esta pidiendo un interruptor PC pero  es configurado para interruptor ISA (o vice versa). Por favor utilize el programa de configuraciÛn de la BIOS para reconfigurar el interruptor para este dispositivo."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS no puede determinar las propiedades de este dispositivo. Consulte la documentaci√≥n que vino con este dispositivo y utiliza la pesta√±a del recurso para fijar la configuraci√≥n correcta."
+    IDS_DEV_BIOS_TABLE "Los soportes l√≥gicos inalterables del sistema(firmware) no incluyen suficiente informaci√≥n para configurar correctamente y utilizar este dispositivo Para utilizar este dispositivo, entre en contacto con el fabricante de su equipo para obtener una actualizaci√≥n de la BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Este dispositivo esta pidiendo un interruptor PC pero  es configurado para interruptor ISA (o vice versa). Por favor utilize el programa de configuraci√≥n de la BIOS para reconfigurar el interruptor para este dispositivo."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS no puede inicializar el controlador del dispositivo para este hardware."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS no puede cargar el controlador del dispositivo para este hardware porque un caso anterior del controlador de dispositivo todavÌa est· en memoria."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS no puede cargar el controlador del dispositivo para este hardware porque un caso anterior del controlador de dispositivo todav√≠a est√° en memoria."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS no puede cargar el controlador del dispositivo para este hardware. El controlador puede estar corrompido o ausente."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS no puede tener acceso a este hardware porque su informaciÛn de la llave del servicio en el registro es falta o esta registrada incorrectamente."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS cargÛ con Èxito el controlador del dispositivo pero no puede encontrar el dispositivo."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS no puede tener acceso a este hardware porque su informaci√≥n de la llave del servicio en el registro es falta o esta registrada incorrectamente."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS carg√≥ con √©xito el controlador del dispositivo pero no puede encontrar el dispositivo."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS no puede cargar el controlador de dispositivo para este hardware porque hay un dispositivo duplicado que ya funciona en el sistema."
     IDS_DEV_FAILED_POST_START "ReactOS a deshabilitado este dispositivo porque a reportado problemas."
-    IDS_DEV_HALTED "Una aplicaciÛn o un servicio ha cerrado este dispositivo de hardware."
-    IDS_DEV_PHANTOM "Actualmente, este dispositivo de hardware no est· conectado al equipo."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS no puede accesar este dispositivo de hardware porque el sistema operativo est· en el proceso de cerrar."
+    IDS_DEV_HALTED "Una aplicaci√≥n o un servicio ha cerrado este dispositivo de hardware."
+    IDS_DEV_PHANTOM "Actualmente, este dispositivo de hardware no est√° conectado al equipo."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS no puede accesar este dispositivo de hardware porque el sistema operativo est√° en el proceso de cerrar."
     IDS_DEV_HELD_FOR_EJECT "ReactOS no puede usar este dispositivo de hardware por que ha sido preparado para quitar con seguiridad, pero aun no ha sido desconectado del equipo."
     IDS_DEV_DRIVER_BLOCKED "El software para este dispositivo se ha bloqueado de comenzar porque tiene problemas con ReactOS. Entre en contacto con su vendedor de hardware para un controlador nuevo."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS no puede encender los nuevos dispositivos de hardware porque la estructura del sistema es demasiado grande (excede el lÌmite del tamaÒo del registro)."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS no puede encender los nuevos dispositivos de hardware porque la estructura del sistema es demasiado grande (excede el l√≠mite del tama√±o del registro)."
     IDS_DEV_SETPROPERTIES_FAILED "ReactOS no fue capaz de cambiar las propiedades de este dispositivo."
 END
 
@@ -104,8 +104,8 @@ BEGIN
     IDS_PROP_DEVNODEFLAGS "Marcadores Devnode"
     IDS_PROP_CONFIGFLAGS "Marcadores Config"
     IDS_PROP_CSCONFIGFLAGS "Marcadores CSConfig"
-    IDS_PROP_EJECTIONRELATIONS "Relaciones de extracciÛn"
-    IDS_PROP_REMOVALRELATIONS "Relaciones de eliminaciÛn"
+    IDS_PROP_EJECTIONRELATIONS "Relaciones de extracci√≥n"
+    IDS_PROP_REMOVALRELATIONS "Relaciones de eliminaci√≥n"
     IDS_PROP_BUSRELATIONS "Relaciones de bus"
     IDS_PROP_DEVUPPERFILTERS "Filtros superiores de dispositivo"
     IDS_PROP_DEVLOWERFILTERS "Filtros inferiores de dispositivo"
@@ -114,10 +114,10 @@ BEGIN
     IDS_PROP_CLASSINSTALLER "Instaladores de clase"
     IDS_PROP_CLASSCOINSTALLER "Coinstaladores de clase"
     IDS_PROP_DEVICECOINSTALLER "Coinstaladores de dispositivo"
-    IDS_PROP_FIRMWAREREVISION "RevisiÛn de firmware"
-    IDS_PROP_CURRENTPOWERSTATE "Estado actual de energÌa"
-    IDS_PROP_POWERCAPABILITIES "Capacidad de energÌa"
-    IDS_PROP_POWERSTATEMAPPINGS "Asignaciones de estado de energÌa"
+    IDS_PROP_FIRMWAREREVISION "Revisi√≥n de firmware"
+    IDS_PROP_CURRENTPOWERSTATE "Estado actual de energ√≠a"
+    IDS_PROP_POWERCAPABILITIES "Capacidad de energ√≠a"
+    IDS_PROP_POWERSTATEMAPPINGS "Asignaciones de estado de energ√≠a"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -148,7 +148,7 @@ BEGIN
      EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Fabricante:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "UbicaciÛn:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Ubicaci√≥n:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      GROUPBOX "Estado del dispositivo ", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
      EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
@@ -168,7 +168,7 @@ BEGIN
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Fecha del controlador:", -1, 15, 53, 80, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "VersiÛn del controlador:", -1, 15, 67, 80, 8, SS_NOPREFIX
+     LTEXT "Versi√≥n del controlador:", -1, 15, 67, 80, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Firmante Digital:", -1, 15, 81, 80, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -189,7 +189,7 @@ BEGIN
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
     LTEXT "Proveedor:", -1, 10, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "VersiÛn:", -1, 10, 150, 50, 8
+    LTEXT "Versi√≥n:", -1, 10, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Copyright:", -1, 10, 166, 50, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
@@ -222,11 +222,9 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "AdministraciÛn de energÌa"
+CAPTION "Administraci√≥n de energ√≠a"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
-
-

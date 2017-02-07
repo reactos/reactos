@@ -8,7 +8,7 @@ BEGIN
     IDS_FAVORITES      "Favoritter"
     IDS_STARTMENU      "Start Menu"
     IDS_PROGRAMS       "Start Menu\\Programmer"
-    IDS_ADMINTOOLS     "Start Menu\\Programmer\\Administrative Værktøjer"
+    IDS_ADMINTOOLS     "Start Menu\\Programmer\\Administrative VÃ¦rktÃ¸jer"
     IDS_STARTUP        "Start Menu\\Programmer\\Opstart"
     IDS_MYDOCUMENTS    "Mine Dokumenter"
     IDS_MYPICTURES     "Mine Dokumenter\\Mine Billeder"

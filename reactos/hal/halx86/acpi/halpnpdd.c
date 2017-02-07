@@ -59,8 +59,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PFDO_EXTENSION FdoExtension = Context;
     PPDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT PdoDeviceObject;
-    NTSTATUS Status;
     PDESCRIPTION_HEADER Wdrt;
+    NTSTATUS Status;
 
     /* Create the PDO */
     Status = IoCreateDevice(DriverObject,
@@ -83,11 +83,11 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PdoExtension->PhysicalDeviceObject = PdoDeviceObject;
     PdoExtension->ParentFdoExtension = FdoExtension;
     PdoExtension->PdoType = AcpiPdo;
-    
+
     /* Add the PDO to the head of the list */
     PdoExtension->Next = FdoExtension->ChildPdoList;
     FdoExtension->ChildPdoList = PdoExtension;
-    
+
     /* Initialization is finished */
     PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -99,8 +99,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
     }
 
-    /* Invalidate device relations since we added a new device */
-    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    /* This will synchronously load the ACPI driver (needed because we're critical for boot) */
+    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS
@@ -111,11 +111,12 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     NTSTATUS Status;
     PFDO_EXTENSION FdoExtension;
     PDEVICE_OBJECT DeviceObject, AttachedDevice;
+
     DPRINT("HAL: PnP Driver ADD!\n");
 
     /* Create the FDO */
     Status = IoCreateDevice(DriverObject,
-                            sizeof(FDO_EXTENSION), 
+                            sizeof(FDO_EXTENSION),
                             NULL,
                             FILE_DEVICE_BUS_EXTENDER,
                             0,
@@ -127,17 +128,17 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
         DbgBreakPoint();
         return Status;
     }
-    
+
     /* Setup the FDO extension */
     FdoExtension = DeviceObject->DeviceExtension;
     FdoExtension->ExtensionType = FdoExtensionType;
     FdoExtension->PhysicalDeviceObject = TargetDevice;
     FdoExtension->FunctionalDeviceObject = DeviceObject;
     FdoExtension->ChildPdoList = NULL;
-    
+
     /* FDO is done initializing */
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-    
+
     /* Attach to the physical device object (the bus) */
     AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject, TargetDevice);
     if (!AttachedDevice)
@@ -151,9 +152,9 @@ HalpAddDevice(IN PDRIVER_OBJECT DriverObject,
     FdoExtension->AttachedDeviceObject = AttachedDevice;
 
     /* Register for reinitialization to report devices later */
-    IoRegisterDriverReinitialization(DriverObject,
-                                     HalpReportDetectedDevices,
-                                     FdoExtension);
+    IoRegisterBootDriverReinitialization(DriverObject,
+                                         HalpReportDetectedDevices,
+                                         FdoExtension);
 
     /* Return status */
     DPRINT("Device added %lx\n", Status);
@@ -171,8 +172,7 @@ HalpQueryInterface(IN PDEVICE_OBJECT DeviceObject,
                    OUT PULONG Length)
 {
     UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NO_SUCH_DEVICE;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -187,11 +187,11 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_RELATIONS PdoRelations, FdoRelations;
     PDEVICE_OBJECT* ObjectEntry;
     ULONG i = 0, PdoCount = 0;
-    
+
     /* Get FDO device extension and PDO count */
     FdoExtension = DeviceObject->DeviceExtension;
     ExtensionType = FdoExtension->ExtensionType;
-    
+
     /* What do they want? */
     if (RelationType == BusRelations)
     {
@@ -220,10 +220,10 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                                                  sizeof(PDEVICE_OBJECT) * PdoCount,
                                                  ' laH');
             if (!FdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
-            
+
             /* Save our count */
             FdoRelations->Count = PdoCount;
-            
+
             /* Query existing relations */
             ObjectEntry = FdoRelations->Objects;
             if (*DeviceRelations)
@@ -239,11 +239,11 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                     }
                     while (++i < (*DeviceRelations)->Count);
                 }
-                
+
                 /* Free existing structure */
                 ExFreePool(*DeviceRelations);
             }
-            
+
             /* Now check if we have a PDO list */
             PdoExtension = FdoExtension->ChildPdoList;
             if (PdoExtension)
@@ -253,14 +253,14 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                 {
                     /* Save our own PDO and reference it */
                     *ObjectEntry++ = PdoExtension->PhysicalDeviceObject;
-                    ObfReferenceObject(PdoExtension->PhysicalDeviceObject);
-                    
+                    ObReferenceObject(PdoExtension->PhysicalDeviceObject);
+
                     /* Go to our next PDO */
                     PdoExtension = PdoExtension->Next;
                 }
                 while (PdoExtension);
             }
-            
+
             /* Return the new structure */
             *DeviceRelations = FdoRelations;
             return STATUS_SUCCESS;
@@ -277,18 +277,18 @@ HalpQueryDeviceRelations(IN PDEVICE_OBJECT DeviceObject,
                                                  sizeof(DEVICE_RELATIONS),
                                                  ' laH');
             if (!PdoRelations) return STATUS_INSUFFICIENT_RESOURCES;
-            
+
             /* Fill it out and reference us */
             PdoRelations->Count = 1;
             PdoRelations->Objects[0] = DeviceObject;
-            ObfReferenceObject(DeviceObject);
-            
+            ObReferenceObject(DeviceObject);
+
             /* Return it */
             *DeviceRelations = PdoRelations;
             return STATUS_SUCCESS;
         }
     }
-    
+
     /* We don't support anything else */
     return STATUS_NOT_SUPPORTED;
 }
@@ -301,7 +301,7 @@ HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
     //PPDO_EXTENSION PdoExtension;
     NTSTATUS Status;
     PAGED_CODE();
-    
+
     /* Get the extension and check for valid version */
     //PdoExtension = DeviceObject->DeviceExtension;
     ASSERT(Capabilities->Version == 1);
@@ -310,33 +310,33 @@ HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
         /* Can't lock or eject us */
         Capabilities->LockSupported = FALSE;
         Capabilities->EjectSupported = FALSE;
-        
+
         /* Can't remove or dock us */
         Capabilities->Removable = FALSE;
         Capabilities->DockDevice = FALSE;
-        
+
         /* Can't access us raw */
         Capabilities->RawDeviceOK = FALSE;
-        
+
         /* We have a unique ID, and don't bother the user */
         Capabilities->UniqueID = TRUE;
         Capabilities->SilentInstall = TRUE;
-        
+
         /* Fill out the adress */
         Capabilities->Address = InterfaceTypeUndefined;
         Capabilities->UINumber = InterfaceTypeUndefined;
-        
+
         /* Fill out latencies */
         Capabilities->D1Latency = 0;
         Capabilities->D2Latency = 0;
         Capabilities->D3Latency = 0;
-        
+
         /* Fill out supported device states */
         Capabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
         Capabilities->DeviceState[PowerSystemHibernate] = PowerDeviceD3;
         Capabilities->DeviceState[PowerSystemShutdown] = PowerDeviceD3;
         Capabilities->DeviceState[PowerSystemSleeping3] = PowerDeviceD3;
-        
+
         /* Done */
         Status = STATUS_SUCCESS;
     }
@@ -345,7 +345,7 @@ HalpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
         /* Fail */
         Status = STATUS_NOT_SUPPORTED;
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -363,16 +363,16 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
     ULONG i;
     PAGED_CODE();
-    
+
     /* Only the ACPI PDO has requirements */
     if (DeviceExtension->PdoType == AcpiPdo)
     {
         /* Query ACPI requirements */
         Status = HalpQueryAcpiResourceRequirements(&RequirementsList);
         if (!NT_SUCCESS(Status)) return Status;
-        
+
         ASSERT(RequirementsList->AlternativeLists == 1);
-        
+
         /* Allocate the resourcel ist */
         ResourceList = ExAllocatePoolWithTag(PagedPool,
                                              sizeof(CM_RESOURCE_LIST),
@@ -384,7 +384,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
             ExFreePoolWithTag(RequirementsList, ' laH');
             return Status;
         }
-        
+
         /* Initialize it */
         RtlZeroMemory(ResourceList, sizeof(CM_RESOURCE_LIST));
         ResourceList->Count = 1;
@@ -432,7 +432,7 @@ HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
     else if (DeviceExtension->PdoType == WdPdo)
     {
         /* Watchdog doesn't */
-        return STATUS_NOT_SUPPORTED;    
+        return STATUS_NOT_SUPPORTED;
     }
     else
     {
@@ -448,7 +448,7 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
 {
     PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     PAGED_CODE();
-    
+
     /* Only the ACPI PDO has requirements */
     if (DeviceExtension->PdoType == AcpiPdo)
     {
@@ -458,7 +458,7 @@ HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
     else if (DeviceExtension->PdoType == WdPdo)
     {
         /* Watchdog doesn't */
-        return STATUS_NOT_SUPPORTED;    
+        return STATUS_NOT_SUPPORTED;
     }
     else
     {
@@ -478,7 +478,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
     PWCHAR CurrentId;
     WCHAR Id[100];
     NTSTATUS Status;
-    ULONG Length = 0;
+    SIZE_T Length = 0;
     PWCHAR Buffer;
 
     /* Get the PDO type */
@@ -491,7 +491,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
     {
         case BusQueryDeviceID:
         case BusQueryHardwareIDs:
-            
+
             /* What kind of PDO is this? */
             if (PdoType == AcpiPdo)
             {
@@ -521,7 +521,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
                 return STATUS_NOT_SUPPORTED;
             }
             break;
-            
+
         case BusQueryInstanceID:
 
             /* Instance ID */
@@ -529,15 +529,15 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
             RtlCopyMemory(Id, CurrentId, (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL));
             Length += (wcslen(CurrentId) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
             break;
-            
+
         case BusQueryCompatibleIDs:
         default:
-            
+
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
-   
-    
+
+
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
@@ -547,7 +547,7 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
         /* Copy the string and null-terminate it */
         RtlCopyMemory(Buffer, Id, Length);
         Buffer[Length / sizeof(WCHAR)] = UNICODE_NULL;
-        
+
         /* Return string */
         *BusQueryId = Buffer;
         Status = STATUS_SUCCESS;
@@ -558,11 +558,11 @@ HalpQueryIdPdo(IN PDEVICE_OBJECT DeviceObject,
         /* Fail */
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     /* Return status */
     return Status;
 }
-     
+
 NTSTATUS
 NTAPI
 HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
@@ -570,10 +570,10 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
                OUT PUSHORT *BusQueryId)
 {
     NTSTATUS Status;
-    ULONG Length;
+    SIZE_T Length;
     PWCHAR Id;
     PWCHAR Buffer;
-    
+
     /* What kind of ID is being requested? */
     DPRINT("ID: %d\n", IdType);
     switch (IdType)
@@ -584,26 +584,26 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case BusQueryHardwareIDs:
-            
+
             /* This is our hardware ID */
             Id = HalHardwareIdString;
             break;
-            
+
         case BusQueryInstanceID:
-            
+
             /* And our instance ID */
             Id = L"0";
             break;
-            
+
         default:
-            
+
             /* We don't support anything else */
             return STATUS_NOT_SUPPORTED;
     }
-    
+
     /* Calculate the length */
     Length = (wcslen(Id) * sizeof(WCHAR)) + sizeof(UNICODE_NULL);
-    
+
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(PagedPool,
                                    Length + sizeof(UNICODE_NULL),
@@ -639,12 +639,12 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
     PFDO_EXTENSION FdoExtension;
     NTSTATUS Status;
     UCHAR Minor;
-    
+
     /* Get the device extension and stack location */
     FdoExtension = DeviceObject->DeviceExtension;
     IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
     Minor = IoStackLocation->MinorFunction;
-    
+
     /* FDO? */
     if (FdoExtension->ExtensionType == FdoExtensionType)
     {
@@ -652,14 +652,14 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
         switch (Minor)
         {
             case IRP_MN_QUERY_DEVICE_RELATIONS:
-                
+
                 /* Call the worker */
                 DPRINT("Querying device relations for FDO\n");
                 Status = HalpQueryDeviceRelations(DeviceObject,
                                                   IoStackLocation->Parameters.QueryDeviceRelations.Type,
                                                   (PVOID)&Irp->IoStatus.Information);
                 break;
-                
+
             case IRP_MN_QUERY_INTERFACE:
 
                 /* Call the worker */
@@ -672,27 +672,27 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
-                                               
-                
+
+
             case IRP_MN_QUERY_ID:
-                
+
                 /* Call the worker */
                 DPRINT("Querying ID for FDO\n");
                 Status = HalpQueryIdFdo(DeviceObject,
                                         IoStackLocation->Parameters.QueryId.IdType,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
-                
+
             case IRP_MN_QUERY_CAPABILITIES:
-                
+
                 /* Call the worker */
                 DPRINT("Querying the capabilities for the FDO\n");
                 Status = HalpQueryCapabilities(DeviceObject,
                                                IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
                 break;
-                
+
             default:
-                
+
                 DPRINT("Other IRP: %lx\n", Minor);
                 Status = Irp->IoStatus.Status;
                 break;
@@ -711,41 +711,41 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
         /* Query the IRP type */
         Status = STATUS_SUCCESS;
         switch (Minor)
-        {                
+        {
             case IRP_MN_START_DEVICE:
-                
+
                 /* We only care about a PCI PDO */
                 DPRINT1("Start device received\n");
                 /* Complete the IRP normally */
                 break;
-                
+
             case IRP_MN_REMOVE_DEVICE:
 
                 /* Check if this is a PCI device */
                 DPRINT1("Remove device received\n");
-                
+
                 /* We're done */
                 Status = STATUS_SUCCESS;
                 break;
 
             case IRP_MN_SURPRISE_REMOVAL:
-                
+
                 /* Inherit whatever status we had */
                 DPRINT1("Surprise removal IRP\n");
                 Status = Irp->IoStatus.Status;
                 break;
-                
+
             case IRP_MN_QUERY_DEVICE_RELATIONS:
-                
+
                 /* Query the device relations */
                 DPRINT("Querying PDO relations\n");
                 Status = HalpQueryDeviceRelations(DeviceObject,
                                                   IoStackLocation->Parameters.QueryDeviceRelations.Type,
                                                   (PVOID)&Irp->IoStatus.Information);
                 break;
-                
+
             case IRP_MN_QUERY_INTERFACE:
-                
+
                 /* Call the worker */
                 DPRINT("Querying interface for PDO\n");
                 Status = HalpQueryInterface(DeviceObject,
@@ -756,24 +756,24 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                                             IoStackLocation->Parameters.QueryInterface.Interface,
                                             (PVOID)&Irp->IoStatus.Information);
                 break;
-                
+
             case IRP_MN_QUERY_CAPABILITIES:
-                
+
                 /* Call the worker */
                 DPRINT("Querying the capabilities for the PDO\n");
                 Status = HalpQueryCapabilities(DeviceObject,
                                                IoStackLocation->Parameters.DeviceCapabilities.Capabilities);
                 break;
-                
+
             case IRP_MN_QUERY_RESOURCES:
-                
+
                 /* Call the worker */
                 DPRINT("Querying the resources for the PDO\n");
                 Status = HalpQueryResources(DeviceObject, (PVOID)&Irp->IoStatus.Information);
                 break;
-                
+
             case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
-                
+
                 /* Call the worker */
                 DPRINT("Querying the resource requirements for the PDO\n");
                 Status = HalpQueryResourceRequirements(DeviceObject,
@@ -781,25 +781,25 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             case IRP_MN_QUERY_ID:
-                
+
                 /* Call the worker */
                 DPRINT("Query the ID for the PDO\n");
                 Status = HalpQueryIdPdo(DeviceObject,
                                         IoStackLocation->Parameters.QueryId.IdType,
                                         (PVOID)&Irp->IoStatus.Information);
                 break;
-                              
+
             default:
-                
+
                 /* We don't handle anything else, so inherit the old state */
                 DPRINT("Illegal IRP: %lx\n", Minor);
                 Status = Irp->IoStatus.Status;
                 break;
         }
-               
+
         /* If it's not supported, inherit the old status */
         if (Status == STATUS_NOT_SUPPORTED) Status = Irp->IoStatus.Status;
-        
+
         /* Complete the IRP */
         DPRINT("IRP completed with status: %lx\n", Status);
         Irp->IoStatus.Status = Status;
@@ -815,7 +815,7 @@ HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
 {
     DPRINT1("HAL: PnP Driver WMI!\n");
     while (TRUE);
-    return STATUS_SUCCESS;   
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -824,7 +824,7 @@ HalpDispatchPower(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
     DPRINT1("HAL: PnP Driver Power!\n");
-    return STATUS_SUCCESS;   
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -890,7 +890,7 @@ HaliInitPnpDriver(VOID)
     NTSTATUS Status;
     UNICODE_STRING DriverString;
     PAGED_CODE();
-    
+
     /* Create the driver */
     RtlInitUnicodeString(&DriverString, L"\\Driver\\ACPI_HAL");
     Status = IoCreateDriver(&DriverString, HalpDriverEntry);

@@ -2,6 +2,6 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Moûnosti telefÛnu a modemu"
-	IDS_CPLSYSTEMDESCRIPTION "Konfiguruje pravidl· pre telefonickÈ vyt·Ëanie a nastavenia modemu."
+	IDS_CPLSYSTEMNAME "Mo≈ænosti telef√≥nu a modemu"
+	IDS_CPLSYSTEMDESCRIPTION "Konfiguruje pravidl√° pre telefonick√© vyt√°ƒçanie a nastavenia modemu."
 END

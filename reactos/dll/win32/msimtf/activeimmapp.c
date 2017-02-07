@@ -31,7 +31,6 @@
 #include "winuser.h"
 #include "winerror.h"
 #include "objbase.h"
-#include "advpub.h"
 #include "dimm.h"
 #include "imm.h"
 
@@ -42,9 +41,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msimtf);
 
 typedef struct tagActiveIMMApp {
-    const IActiveIMMAppVtbl *vtbl;
+    IActiveIMMApp IActiveIMMApp_iface;
     LONG refCount;
 } ActiveIMMApp;
+
+static inline ActiveIMMApp *impl_from_IActiveIMMApp(IActiveIMMApp *iface)
+{
+    return CONTAINING_RECORD(iface, ActiveIMMApp, IActiveIMMApp_iface);
+}
 
 static void ActiveIMMApp_Destructor(ActiveIMMApp* This)
 {
@@ -55,7 +59,7 @@ static void ActiveIMMApp_Destructor(ActiveIMMApp* This)
 static HRESULT WINAPI ActiveIMMApp_QueryInterface (IActiveIMMApp* iface,
         REFIID iid, LPVOID *ppvOut)
 {
-    ActiveIMMApp *This = (ActiveIMMApp*)iface;
+    ActiveIMMApp *This = impl_from_IActiveIMMApp(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IActiveIMMApp))
@@ -75,13 +79,13 @@ static HRESULT WINAPI ActiveIMMApp_QueryInterface (IActiveIMMApp* iface,
 
 static ULONG WINAPI ActiveIMMApp_AddRef(IActiveIMMApp* iface)
 {
-    ActiveIMMApp *This = (ActiveIMMApp*)iface;
+    ActiveIMMApp *This = impl_from_IActiveIMMApp(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI ActiveIMMApp_Release(IActiveIMMApp* iface)
 {
-    ActiveIMMApp *This = (ActiveIMMApp*)iface;
+    ActiveIMMApp *This = impl_from_IActiveIMMApp(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -808,7 +812,7 @@ static const IActiveIMMAppVtbl ActiveIMMAppVtbl =
     ActiveIMMApp_EnumInputContext
 };
 
-HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
+DECLSPEC_HIDDEN HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     ActiveIMMApp *This;
     if (pUnkOuter)
@@ -818,7 +822,7 @@ HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->vtbl = &ActiveIMMAppVtbl;
+    This->IActiveIMMApp_iface.lpVtbl = &ActiveIMMAppVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n",This);

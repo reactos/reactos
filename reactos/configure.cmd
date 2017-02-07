@@ -1,5 +1,17 @@
 @echo off
 
+:: Special case %1 = arm_hosttools %2 = vcvarsall.bat %3 = %CMAKE_GENERATOR%
+if /I "%1" == "arm_hosttools" (
+    echo Configuring x86 host tools for ARM cross build
+
+    :: This launches %VSINSTALLDIR%VS\vcvarsall.bat
+    call %2 x86
+
+    :: Configure host tools for x86
+    cmake -G %3 -DARCH=i386 %~dp0
+    exit
+)
+
 :: Get the source root directory
 set REACTOS_SOURCE_DIR=%~dp0
 set USE_NMAKE=0
@@ -16,6 +28,8 @@ if defined ROS_ARCH (
         set CMAKE_GENERATOR="CodeBlocks - MinGW Makefiles"
     ) else if /I "%1" == "Eclipse" (
         set CMAKE_GENERATOR="Eclipse CDT4 - MinGW Makefiles"
+    ) else if /I "%1" == "Ninja" (
+        set CMAKE_GENERATOR="Ninja"
     ) else (
         set CMAKE_GENERATOR="MinGW Makefiles"
     )
@@ -35,6 +49,7 @@ if defined ROS_ARCH (
     :: VS command prompt does not put this in enviroment vars
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
+    cl 2>&1 | find "ARM" > NUL && set ARCH=arm
     cl 2>&1 | find "14." > NUL && set BUILD_ENVIRONMENT=VS8
     cl 2>&1 | find "15." > NUL && set BUILD_ENVIRONMENT=VS9
     cl 2>&1 | find "16." > NUL && set BUILD_ENVIRONMENT=VS10
@@ -67,6 +82,8 @@ if defined ROS_ARCH (
         ) else if "%BUILD_ENVIRONMENT%" == "VS11" (
             if "%ARCH%" == "amd64" (
                 set CMAKE_GENERATOR="Visual Studio 11 Win64"
+            ) else if "%ARCH%" == "arm" (
+                set CMAKE_GENERATOR="Visual Studio 11 ARM"
             ) else (
                 set CMAKE_GENERATOR="Visual Studio 11"
             )
@@ -106,6 +123,8 @@ if %USE_NMAKE% == 1 (
         set CMAKE_GENERATOR="Eclipse CDT4 - NMake Makefiles"
     ) else if /I "%1" == "JOM" (
         set CMAKE_GENERATOR="NMake Makefiles JOM"
+    ) else if /I "%1" == "Ninja" (
+        set CMAKE_GENERATOR="Ninja"
     ) else (
         set CMAKE_GENERATOR="NMake Makefiles"
     )
@@ -136,7 +155,14 @@ if EXIST CMakeCache.txt (
 )
 set REACTOS_BUILD_TOOLS_DIR=%CD%
 
-cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+:: Use x86 for ARM host tools
+if "%ARCH%" == "arm" (
+    :: Launch new script instance for x86 host tools configuration
+    start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
+) else (
+    cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
+)
+
 cd..
 
 echo Preparing reactos...

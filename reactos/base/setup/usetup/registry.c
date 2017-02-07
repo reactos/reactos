@@ -306,7 +306,7 @@ do_reg_operation(HANDLE KeyHandle,
 
       if (Type == REG_DWORD)
         {
-          ULONG dw = Str ? wcstol (Str, NULL, 0) : 0;
+          ULONG dw = Str ? wcstoul (Str, NULL, 0) : 0;
 
           DPRINT("setting dword %wZ to %lx\n", ValueName, dw);
 

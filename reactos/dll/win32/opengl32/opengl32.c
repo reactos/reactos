@@ -20,15 +20,12 @@ static DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
 
 
 /* global vars */
-/* Do not assume it have the free value MAXDWORD set, any value can be in here */
-DWORD OPENGL32_tls = MAXDWORD;
 GLPROCESSDATA OPENGL32_processdata;
 
 
 static BOOL
 OPENGL32_ThreadAttach( void )
 {
-    GLTHREADDATA* lpData = NULL;
     PROC *dispatchTable = NULL;
     TEB *teb = NULL;
 
@@ -38,16 +35,6 @@ OPENGL32_ThreadAttach( void )
     if (dispatchTable == NULL)
     {
         DBGPRINT( "Error: Couldn't allocate GL dispatch table" );
-        return FALSE;
-    }
-
-    lpData = (GLTHREADDATA*)HeapAlloc( GetProcessHeap(),
-                                       HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-                                       sizeof (GLTHREADDATA) );
-    if (lpData == NULL)
-    {
-        DBGPRINT( "Error: Couldn't allocate GLTHREADDATA" );
-        HeapFree( GetProcessHeap(), 0, dispatchTable );
         return FALSE;
     }
 
@@ -62,7 +49,8 @@ OPENGL32_ThreadAttach( void )
     #undef X
 
     teb->glTable = dispatchTable;
-    TlsSetValue( OPENGL32_tls, lpData );
+    /* At first we have no context */
+    teb->glCurrentRC = NULL;
 
     return TRUE;
 }
@@ -71,20 +59,9 @@ OPENGL32_ThreadAttach( void )
 static void
 OPENGL32_ThreadDetach( void )
 {
-    GLTHREADDATA* lpData = NULL;
 	TEB* teb = NtCurrentTeb();
 
     rosglMakeCurrent( NULL, NULL );
-
-    lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
-    if (lpData != NULL)
-    {
-        if (!HeapFree( GetProcessHeap(), 0, lpData ))
-            DBGPRINT( "Warning: HeapFree() on GLTHREADDATA failed (%d)",
-                      GetLastError() );
-        lpData = NULL;
-    }
-    TlsSetValue( OPENGL32_tls, NULL );
 
     if (teb->glTable != NULL)
     {
@@ -105,10 +82,6 @@ OPENGL32_ProcessAttach( void )
     SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
                                    NULL, /* lpSecurityDescriptor */
                                    TRUE /* bInheritHandle */ };
-
-    OPENGL32_tls = TlsAlloc();
-    if (OPENGL32_tls == MAXDWORD)
-        return FALSE;
 
     memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
 
@@ -181,10 +154,6 @@ OPENGL32_ProcessDetach( void )
         CloseHandle( OPENGL32_processdata.glrc_mutex );
     if (OPENGL32_processdata.dcdata_mutex != NULL)
         CloseHandle( OPENGL32_processdata.dcdata_mutex );
-
-    /* free TLS */
-    if (OPENGL32_tls != MAXDWORD)
-        TlsFree(OPENGL32_tls);
 }
 
 

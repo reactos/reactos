@@ -227,8 +227,3 @@ BEGIN
 	IDS_DUP_IPADDR      "The IP address is already on the list."
 	IDS_DUP_GW          "The default gateway is already on the list."
 END
-
-
-
-
-

@@ -1250,8 +1250,8 @@ KdbpInternalEnter()
         InbvAcquireDisplayOwnership();
         InbvResetDisplay();
 
-        /* Display blue screen */
-        InbvSolidColorFill(0, 0, 639, 479, 6);
+        /* Display debugger prompt */
+        InbvSolidColorFill(0, 0, 639, 479, 0);
         InbvSetTextColor(15);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);

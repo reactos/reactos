@@ -34,6 +34,8 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff native-cabman)
 
 # Then we create the actual cab file using a custom target
+# Please do not change this into custom command + custom target. This breaks reactos.cab dependencies on modules
+# and you can't do something like "make gdi32/fast reactos_cab/fast bootcd/fast"
 add_custom_target(reactos_cab
     COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -L ${CMAKE_CURRENT_BINARY_DIR} -N -P ${REACTOS_SOURCE_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman)

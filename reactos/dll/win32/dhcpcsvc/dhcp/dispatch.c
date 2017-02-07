@@ -47,6 +47,8 @@
 //#include <ifaddrs.h>
 //#include <poll.h>
 
+extern SOCKET DhcpSocket;
+HANDLE AdapterStateChangedEvent = NULL;
 struct protocol *protocols = NULL;
 struct timeout *timeouts = NULL;
 static struct timeout *free_timeouts = NULL;
@@ -63,17 +65,19 @@ void (*bootp_packet_handler)(struct interface_info *,
 void
 dispatch(void)
 {
-    int count, to_msec, err;
+    int count, to_msec;
     struct protocol *l;
-    fd_set fds;
     time_t howlong, cur_time;
-    struct timeval timeval;
-    HANDLE AdapterStateChangedEvent;
+    HANDLE Events[2];
+    int EventCount = 1;
 
-    AdapterStateChangedEvent = StartAdapterDiscovery();
-    if (!AdapterStateChangedEvent)
+    Events[0] = StartAdapterDiscovery();
+    if (!Events[0])
          return;
-
+    AdapterStateChangedEvent = Events[0];
+    
+    Events[1] = WSA_INVALID_EVENT;
+    
     ApiLock();
 
     do {
@@ -83,7 +87,8 @@ dispatch(void)
          */
         time(&cur_time);
 
-        if (timeouts) {
+        if (timeouts)
+        {
             struct timeout *t;
 
             if (timeouts->when <= cur_time) {
@@ -105,55 +110,75 @@ dispatch(void)
             if (howlong > INT_MAX / 1000)
                 howlong = INT_MAX / 1000;
             to_msec = howlong * 1000;
-
-            /* Set up the descriptors to be polled. */
-            FD_ZERO(&fds);
-
-            for (l = protocols; l; l = l->next)
-                 FD_SET(l->fd, &fds);
-
-            /* Wait for a packet or a timeout... XXX */
-            timeval.tv_sec = to_msec / 1000;
-            timeval.tv_usec = to_msec % 1000;
-
-            ApiUnlock();
-
-            count = select(0, &fds, NULL, NULL, &timeval);
-
-            ApiLock();
         }
         else
         {
-            ApiUnlock();
-            WaitForSingleObject(AdapterStateChangedEvent, INFINITE);
-            ApiLock();
-
-            continue;
+            to_msec = INFINITE;
         }
 
-        DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
+        if (Events[1] == WSA_INVALID_EVENT && DhcpSocket != INVALID_SOCKET)
+        {
+            Events[1] = WSACreateEvent();
+            if (Events[1] != WSA_INVALID_EVENT)
+            {
+                count = WSAEventSelect(DhcpSocket, Events[1], FD_READ | FD_CLOSE);
+                if (count != NO_ERROR)
+                {
+                    WSACloseEvent(Events[1]);
+                    Events[1] = WSA_INVALID_EVENT;
+                }
+                else
+                {
+                    EventCount = 2;
+                }
+            }
+        }
+        else if (Events[1] != WSA_INVALID_EVENT && DhcpSocket == INVALID_SOCKET)
+        {
+            WSACloseEvent(Events[1]);
+            Events[1] = WSA_INVALID_EVENT;
 
-        /* Not likely to be transitory... */
-        if (count == SOCKET_ERROR) {
-            err = WSAGetLastError();
-            error("poll: %d", err);
-            break;
+            EventCount = 1;
+        }
+
+        ApiUnlock();
+        count = WaitForMultipleObjects(EventCount,
+                                       Events,
+                                       FALSE,
+                                       to_msec);
+        ApiLock();
+        if (count == WAIT_OBJECT_0)
+        {
+            /* Adapter state change */
+            continue;
+        }
+        else if (count == WAIT_OBJECT_0 + 1)
+        {
+            /* Packet received */
+            
+            /* WSA events are manual reset events */
+            WSAResetEvent(Events[1]);
+        }
+        else
+        {
+            /* Timeout */
+            continue;
         }
 
         for (l = protocols; l; l = l->next) {
             struct interface_info *ip;
             ip = l->local;
-            if (FD_ISSET(l->fd, &fds)) {
-                if (ip && (l->handler != got_one ||
-                           !ip->dead)) {
-                    DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
-                    (*(l->handler))(l);
-                }
+            if (ip && (l->handler != got_one ||
+                        !ip->dead)) {
+                DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
+                (*(l->handler))(l);
             }
         }
     } while (1);
 
-    CloseHandle(AdapterStateChangedEvent);
+    AdapterStateChangedEvent = NULL;
+    CloseHandle(Events[0]);
+    WSACloseEvent(Events[1]);
 
     ApiUnlock();
 }
@@ -327,6 +352,41 @@ void
 remove_protocol(struct protocol *proto)
 {
     struct protocol *p, *next, *prev;
+    struct interface_info *ip = proto->local;
+    struct timeout *t, *q, *u;
+    
+    t = NULL;
+    q = timeouts;
+    while (q != NULL)
+    {
+        /* Remove all timeouts for this protocol */
+        if (q->what == ip)
+        {
+            /* Unlink the timeout from previous */
+            if (t)
+                t->next = q->next;
+            else
+                timeouts = q->next;
+                        
+            /* Advance to the next timeout */
+            u = q->next;
+            
+            /* Add it to the free list */
+            q->next = free_timeouts;
+            free_timeouts = q;
+        }
+        else
+        {
+            /* Advance to the next timeout */
+            u = q->next;
+            
+            /* Update the previous pointer */
+            t = q;
+        }
+        
+        /* Advance */
+        q = u;
+    }
 
     prev = NULL;
     for (p = protocols; p; p = next) {

@@ -1,0 +1,9 @@
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Protetor de Tela de Logon"
+    IDS_TEXT        "Nenhuma opção precisa ser definida."
+END

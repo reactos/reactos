@@ -82,7 +82,7 @@ DECLARE_HANDLE(HPSXA);
 #endif
 
 UINT         WINAPI SHAddFromPropSheetExtArray(HPSXA,LPFNADDPROPSHEETPAGE,LPARAM);
-LPVOID       WINAPI SHAlloc(ULONG) __WINE_ALLOC_SIZE(1);
+LPVOID       WINAPI SHAlloc(SIZE_T) __WINE_ALLOC_SIZE(1);
 HRESULT      WINAPI SHCoCreateInstance(LPCWSTR,const CLSID*,IUnknown*,REFIID,LPVOID*);
 HPSXA        WINAPI SHCreatePropSheetExtArray(HKEY,LPCWSTR,UINT);
 HPSXA        WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
@@ -743,6 +743,21 @@ DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
     STDMETHOD_(HRESULT,GetSize)(THIS_ DWORD,LPRECT) PURE;
 };
 #undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IDeskBarClient_QueryInterface(p,a,b)       (p)->lpVtbl->QueryInterface(p,a,b)
+#define IDeskBarClient_AddRef(p)                   (p)->lpVtbl->AddRef(p)
+#define IDeskBarClient_Release(p)                  (p)->lpVtbl->Release(p)
+/*** IOleWindow methods ***/
+#define IDeskBarClient_GetWindow(p,a)              (p)->lpVtbl->GetWindow(p,a)
+#define IDeskBarClient_ContextSensitiveHelp(p,a)   (p)->lpVtbl->ContextSensitiveHelp(p,a)
+/*** IOleWindow IDeskBarClient ***/
+#define IDeskBarClient_SetDeskBarSite(p,a)         (p)->lpVtbl->SetDeskBarSite(p,a)
+#define IDeskBarClient_SetModeDBC(p,a)             (p)->lpVtbl->SetModeDBC(p,a)
+#define IDeskBarClient_UIActivateDBC(p,a)          (p)->lpVtbl->UIActivateDBC(p,a)
+#define IDeskBarClient_GetSize(p,a,b)              (p)->lpVtbl->GetSize(p,a,b)
+#endif
 
 #define DBC_GS_IDEAL    0
 #define DBC_GS_SIZEDOWN 1
@@ -1797,7 +1812,7 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
  * SHOpenWithDialog
  */
 
-enum tagOPEN_AS_INFO_FLAGS 
+enum tagOPEN_AS_INFO_FLAGS
 {
 	OAIF_ALLOW_REGISTRATION = 1,
 	OAIF_REGISTER_EXT       = 2,
@@ -1856,14 +1871,14 @@ DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
  * Travel log
  */
 
-#define TLOG_BACK  -1 
-#define TLOG_FORE   1 
+#define TLOG_BACK  -1
+#define TLOG_FORE   1
 
-#define TLMENUF_INCLUDECURRENT      0x00000001 
-#define TLMENUF_CHECKCURRENT        (TLMENUF_INCLUDECURRENT | 0x00000002) 
-#define TLMENUF_BACK                0x00000010  // Default 
-#define TLMENUF_FORE                0x00000020 
-#define TLMENUF_BACKANDFORTH        (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT) 
+#define TLMENUF_INCLUDECURRENT      0x00000001
+#define TLMENUF_CHECKCURRENT        (TLMENUF_INCLUDECURRENT | 0x00000002)
+#define TLMENUF_BACK                0x00000010  // Default
+#define TLMENUF_FORE                0x00000020
+#define TLMENUF_BACKANDFORTH        (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT)
 
 /*****************************************************************************
  * IDockingWindowSite interface

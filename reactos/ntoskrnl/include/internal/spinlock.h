@@ -51,7 +51,7 @@ FORCEINLINE
 VOID
 KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-#ifdef DBG
+#if DBG
     /* Make sure that we don't own the lock already */
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
     {
@@ -63,7 +63,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
     /* Try to acquire the lock */
     while (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
     {
-#if defined(_M_IX86) && defined(DBG)
+#if defined(_M_IX86) && DBG
         /* On x86 debug builds, we use a much slower but useful routine */
         Kii386SpinOnSpinLock(SpinLock, 5);
 #else
@@ -75,7 +75,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
         }
 #endif
     }
-#ifdef DBG
+#if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
 #endif

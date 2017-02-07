@@ -61,13 +61,13 @@ typedef struct tagLAYOUT_INFO
 
 static const LAYOUT_INFO g_layout_info[] =
 {
-    {IDD_TITLE,         BF_TOP|BF_LEFT|BF_RIGHT},
-    {IDD_STATUS,        BF_TOP|BF_LEFT|BF_RIGHT},
-    {IDD_FOLDER,        BF_TOP|BF_LEFT|BF_RIGHT},
-    {IDD_TREEVIEW,      BF_TOP|BF_BOTTOM|BF_LEFT|BF_RIGHT},
-    {IDD_FOLDER,        BF_BOTTOM|BF_LEFT},
-    {IDD_FOLDERTEXT,    BF_BOTTOM|BF_LEFT|BF_RIGHT},
-    {IDD_MAKENEWFOLDER, BF_BOTTOM|BF_LEFT},
+    {IDC_BROWSE_FOR_FOLDER_TITLE,         BF_TOP|BF_LEFT|BF_RIGHT},
+    {IDC_BROWSE_FOR_FOLDER_STATUS,        BF_TOP|BF_LEFT|BF_RIGHT},
+    {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_TOP|BF_LEFT|BF_RIGHT},
+    {IDC_BROWSE_FOR_FOLDER_TREEVIEW,      BF_TOP|BF_BOTTOM|BF_LEFT|BF_RIGHT},
+    {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_BOTTOM|BF_LEFT},
+    {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,    BF_BOTTOM|BF_LEFT|BF_RIGHT},
+    {IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, BF_BOTTOM|BF_LEFT},
     {IDOK,              BF_BOTTOM|BF_RIGHT},
     {IDCANCEL,          BF_BOTTOM|BF_RIGHT}
 };
@@ -87,11 +87,7 @@ static void FillTreeView(browse_info*, LPSHELLFOLDER,
 static HTREEITEM InsertTreeViewItem( browse_info*, IShellFolder *,
                LPCITEMIDLIST, LPCITEMIDLIST, IEnumIDList*, HTREEITEM);
 
-static const WCHAR szBrowseFolderInfo[] = {
-    '_','_','W','I','N','E','_',
-    'B','R','S','F','O','L','D','E','R','D','L','G','_',
-    'I','N','F','O',0
-};
+static const WCHAR szBrowseFolderInfo[] = L"__WINE_BRSFOLDERDLG_INFO";
 
 static DWORD __inline BrowseFlagsToSHCONTF(UINT ulFlags)
 {
@@ -400,7 +396,6 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                  LPITEMIDLIST  pidl, HTREEITEM hParent, IEnumIDList* lpe)
 {
-    HTREEITEM    hPrev = 0;
     LPITEMIDLIST    pidlTemp = 0;
     ULONG        ulFetched;
     HRESULT        hr;
@@ -440,7 +435,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                 }
         }
 
-        if (!(hPrev = InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent)))
+        if (!InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
             goto done;
         SHFree(pidlTemp);  /* Finally, free the pidl that the shell gave us... */
         pidlTemp=NULL;
@@ -489,10 +484,10 @@ static void BrsFolder_CheckValidSelection( browse_info *info, LPTV_ITEMDATA lptv
     {
         if (lpBrowseInfo->ulFlags & BIF_RETURNONLYFSDIRS)
             bEnabled = FALSE;
-        EnableWindow(GetDlgItem(info->hWnd, IDD_MAKENEWFOLDER), FALSE);
+        EnableWindow(GetDlgItem(info->hWnd, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER), FALSE);
     }
     else
-        EnableWindow(GetDlgItem(info->hWnd, IDD_MAKENEWFOLDER), TRUE);
+        EnableWindow(GetDlgItem(info->hWnd, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER), TRUE);
 
     SendMessageW(info->hWnd, BFFM_ENABLEOK, 0, bEnabled);
 }
@@ -555,7 +550,7 @@ static HRESULT BrsFolder_Treeview_Changed( browse_info *info, NMTREEVIEWW *pnmtv
     info->pidlRet = ILClone(lptvid->lpifq);
 
     if (GetName(lptvid->lpsfParent, lptvid->lpi, SHGDN_NORMAL, name))
-            SetWindowTextW( GetDlgItem(info->hWnd, IDD_FOLDERTEXT), name );
+            SetWindowTextW( GetDlgItem(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), name );
 
     browsefolder_callback( info->lpBrowseInfo, info->hWnd, BFFM_SELCHANGED,
                            (LPARAM)info->pidlRet );
@@ -609,7 +604,7 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
 
     TRACE("%p %x %p msg=%x\n", info, CtlID, lpnmh, pnmtv->hdr.code);
 
-    if (pnmtv->hdr.idFrom != IDD_TREEVIEW)
+    if (pnmtv->hdr.idFrom != IDC_BROWSE_FOR_FOLDER_TREEVIEW)
         return 0;
 
     switch (pnmtv->hdr.code)
@@ -668,27 +663,27 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     }
 
     if (lpBrowseInfo->lpszTitle)
-        SetWindowTextW( GetDlgItem(hWnd, IDD_TITLE), lpBrowseInfo->lpszTitle );
+        SetWindowTextW( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TITLE), lpBrowseInfo->lpszTitle );
     else
-        ShowWindow( GetDlgItem(hWnd, IDD_TITLE), SW_HIDE );
+        ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TITLE), SW_HIDE );
 
     if (!(lpBrowseInfo->ulFlags & BIF_STATUSTEXT)
         || (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
-        ShowWindow( GetDlgItem(hWnd, IDD_STATUS), SW_HIDE );
+        ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_STATUS), SW_HIDE );
 
     /* Hide "Make New Folder" Button? */
     if ((lpBrowseInfo->ulFlags & BIF_NONEWFOLDERBUTTON)
         || !(lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
-        ShowWindow( GetDlgItem(hWnd, IDD_MAKENEWFOLDER), SW_HIDE );
+        ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER), SW_HIDE );
 
     /* Hide the editbox? */
     if (!(lpBrowseInfo->ulFlags & BIF_EDITBOX))
     {
-        ShowWindow( GetDlgItem(hWnd, IDD_FOLDER), SW_HIDE );
-        ShowWindow( GetDlgItem(hWnd, IDD_FOLDERTEXT), SW_HIDE );
+        ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER), SW_HIDE );
+        ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), SW_HIDE );
     }
 
-    info->hwndTreeView = GetDlgItem( hWnd, IDD_TREEVIEW );
+    info->hwndTreeView = GetDlgItem( hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW );
     if (info->hwndTreeView)
     {
         InitializeTreeView( info );
@@ -830,7 +825,7 @@ static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
         EndDialog( info->hWnd, 0 );
         return TRUE;
 
-    case IDD_MAKENEWFOLDER:
+    case IDC_BROWSE_FOR_FOLDER_NEW_FOLDER:
         BrsFolder_NewFolder(info);
         return TRUE;
     }
@@ -1006,12 +1001,12 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
 
     case BFFM_SETSTATUSTEXTA:
         TRACE("Set status %s\n", debugstr_a((LPSTR)lParam));
-        SetWindowTextA(GetDlgItem(hWnd, IDD_STATUS), (LPSTR)lParam);
+        SetWindowTextA(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_STATUS), (LPSTR)lParam);
         break;
 
     case BFFM_SETSTATUSTEXTW:
         TRACE("Set status %s\n", debugstr_w((LPWSTR)lParam));
-        SetWindowTextW(GetDlgItem(hWnd, IDD_STATUS), (LPWSTR)lParam);
+        SetWindowTextW(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_STATUS), (LPWSTR)lParam);
         break;
 
     case BFFM_ENABLEOK:
@@ -1039,10 +1034,8 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     return FALSE;
 }
 
-static const WCHAR swBrowseTemplateName[] = {
-    'S','H','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
-static const WCHAR swNewBrowseTemplateName[] = {
-    'S','H','N','E','W','B','R','S','F','O','R','F','O','L','D','E','R','_','M','S','G','B','O','X',0};
+
+
 
 /*************************************************************************
  * SHBrowseForFolderA [SHELL32.@]
@@ -1105,7 +1098,7 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     browse_info info;
     DWORD r;
     HRESULT hr;
-    const WCHAR * templateName;
+    WORD wDlgId;
 
     info.hWnd = 0;
     info.pidlRet = NULL;
@@ -1115,10 +1108,10 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     hr = OleInitialize(NULL);
 
     if (lpbi->ulFlags & BIF_NEWDIALOGSTYLE)
-        templateName = swNewBrowseTemplateName;
+        wDlgId = IDD_BROWSE_FOR_FOLDER_NEW;
     else
-        templateName = swBrowseTemplateName;
-    r = DialogBoxParamW( shell32_hInstance, templateName, lpbi->hwndOwner,
+        wDlgId = IDD_BROWSE_FOR_FOLDER;
+    r = DialogBoxParamW( shell32_hInstance, MAKEINTRESOURCEW(wDlgId), lpbi->hwndOwner,
                          BrsFolderDlgProc, (LPARAM)&info );
     if (SUCCEEDED(hr))
         OleUninitialize();

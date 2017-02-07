@@ -652,14 +652,14 @@ PVOID
 NTAPI
 HalpMapPhysicalMemory64(
     IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN PFN_NUMBER PageCount
+    IN PFN_COUNT PageCount
 );
 
 VOID
 NTAPI
 HalpUnmapVirtualAddress(
     IN PVOID VirtualAddress,
-    IN PFN_NUMBER NumberPages
+    IN PFN_COUNT NumberPages
 );
 
 /* sysinfo.c */
@@ -846,7 +846,7 @@ HalpInitProcessor(
 #define KfLowerIrql KeLowerIrql
 #define KiEnterInterruptTrap(TrapFrame) /* We do all neccessary in asm code */
 #define KiEoiHelper(TrapFrame) return /* Just return to the caller */
-#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) TRUE
+#define HalBeginSystemInterrupt(Irql, Vector, OldIrql) ((*(OldIrql) = PASSIVE_LEVEL), TRUE)
 #ifndef CONFIG_SMP
 /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
 #define KiAcquireSpinLock(SpinLock)

@@ -27,601 +27,832 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NDEBUG
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
 /* GLOBALS *******************************************************************/
 
 
 /* FUNCTIONS *****************************************************************/
 
-
-static BOOL
-CreateBuiltinAliases (HKEY hAliasesKey)
+void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
 {
-  return TRUE;
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 
-static BOOL
-CreateBuiltinGroups (HKEY hGroupsKey)
+void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
-  return TRUE;
+    HeapFree(GetProcessHeap(), 0, ptr);
 }
 
 
-static BOOL
-CreateBuiltinUsers (HKEY hUsersKey)
+handle_t __RPC_USER
+PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
 {
-  return TRUE;
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    TRACE("PSAMPR_SERVER_NAME_bind() called\n");
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      pszSystemName,
+                                      L"\\pipe\\samr",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        TRACE("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+        TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+//        TRACE("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
 }
 
 
-BOOL WINAPI
-SamInitializeSAM (VOID)
+void __RPC_USER
+PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
+                          handle_t hBinding)
 {
-  DWORD dwDisposition;
-  HKEY hSamKey;
-  HKEY hDomainsKey;
-  HKEY hAccountKey;
-  HKEY hBuiltinKey;
-  HKEY hAliasesKey;
-  HKEY hGroupsKey;
-  HKEY hUsersKey;
+    RPC_STATUS status;
 
-  DPRINT("SamInitializeSAM() called\n");
+    TRACE("PSAMPR_SERVER_NAME_unbind() called\n");
 
-  if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
-		       L"SAM\\SAM",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hSamKey,
-		       &dwDisposition))
+    status = RpcBindingFree(&hBinding);
+    if (status)
     {
-      DPRINT1 ("Failed to create 'Sam' key! (Error %lu)\n", GetLastError());
-      return FALSE;
+        TRACE("RpcBindingFree returned 0x%x\n", status);
     }
-
-  if (RegCreateKeyExW (hSamKey,
-		       L"Domains",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hDomainsKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Domains' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hSamKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hSamKey);
-
-  /* Create the 'Domains\\Account' key */
-  if (RegCreateKeyExW (hDomainsKey,
-		       L"Account",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hAccountKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Domains\\Account' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-
-  /* Create the 'Account\Aliases' key */
-  if (RegCreateKeyExW (hAccountKey,
-		       L"Aliases",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hAliasesKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Account\\Aliases' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hAccountKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hAliasesKey);
-
-
-  /* Create the 'Account\Groups' key */
-  if (RegCreateKeyExW (hAccountKey,
-		       L"Groups",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hGroupsKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Account\\Groups' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hAccountKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hGroupsKey);
-
-
-  /* Create the 'Account\Users' key */
-  if (RegCreateKeyExW (hAccountKey,
-		       L"Users",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hUsersKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Account\\Users' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hAccountKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hUsersKey);
-
-  RegCloseKey (hAccountKey);
-
-
-  /* Create the 'Domains\\Builtin' */
-  if (RegCreateKeyExW (hDomainsKey,
-		       L"Builtin",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hBuiltinKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create Builtin key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-
-  /* Create the 'Builtin\Aliases' key */
-  if (RegCreateKeyExW (hBuiltinKey,
-		       L"Aliases",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hAliasesKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Builtin\\Aliases' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  /* Create builtin aliases */
-  if (!CreateBuiltinAliases (hAliasesKey))
-    {
-      DPRINT1 ("Failed to create builtin aliases!\n");
-      RegCloseKey (hAliasesKey);
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hAliasesKey);
-
-
-  /* Create the 'Builtin\Groups' key */
-  if (RegCreateKeyExW (hBuiltinKey,
-		       L"Groups",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hGroupsKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Builtin\\Groups' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  /* Create builtin groups */
-  if (!CreateBuiltinGroups (hGroupsKey))
-    {
-      DPRINT1 ("Failed to create builtin groups!\n");
-      RegCloseKey (hGroupsKey);
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hGroupsKey);
-
-
-  /* Create the 'Builtin\Users' key */
-  if (RegCreateKeyExW (hBuiltinKey,
-		       L"Users",
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hUsersKey,
-		       &dwDisposition))
-    {
-      DPRINT1 ("Failed to create 'Builtin\\Users' key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  /* Create builtin users */
-  if (!CreateBuiltinUsers (hUsersKey))
-    {
-      DPRINT1 ("Failed to create builtin users!\n");
-      RegCloseKey (hUsersKey);
-      RegCloseKey (hBuiltinKey);
-      RegCloseKey (hDomainsKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hUsersKey);
-
-  RegCloseKey (hBuiltinKey);
-
-  RegCloseKey (hDomainsKey);
-
-  DPRINT ("SamInitializeSAM() done\n");
-
-  return TRUE;
 }
 
 
-BOOL WINAPI
-SamGetDomainSid (PSID *Sid)
+NTSTATUS
+NTAPI
+SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
+                    IN PSID MemberId)
 {
-  DPRINT ("SamGetDomainSid() called\n");
+    NTSTATUS Status;
 
-  return FALSE;
+    TRACE("SamAddMemberToAlias(%p %p)\n",
+          AliasHandle, MemberId);
+
+    RpcTryExcept
+    {
+        Status = SamrAddMemberToAlias((SAMPR_HANDLE)AliasHandle,
+                                      (PRPC_SID)MemberId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
-BOOL WINAPI
-SamSetDomainSid (PSID Sid)
+NTSTATUS
+NTAPI
+SamCloseHandle(IN SAM_HANDLE SamHandle)
 {
-  HKEY hAccountKey;
+    NTSTATUS Status;
 
-  DPRINT ("SamSetDomainSid() called\n");
+    TRACE("SamCloseHandle(%p)\n", SamHandle);
 
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hAccountKey))
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to open the Account key! (Error %lu)\n", GetLastError());
-      return FALSE;
+        Status = SamrCloseHandle((SAMPR_HANDLE *)&SamHandle);
     }
-
-  if (RegSetValueExW (hAccountKey,
-		      L"Sid",
-		      0,
-		      REG_BINARY,
-		      (LPBYTE)Sid,
-		      RtlLengthSid (Sid)))
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-      DPRINT1 ("Failed to set Domain-SID value! (Error %lu)\n", GetLastError());
-      RegCloseKey (hAccountKey);
-      return FALSE;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
+    RpcEndExcept;
 
-  RegCloseKey (hAccountKey);
-
-  DPRINT ("SamSetDomainSid() called\n");
-
-  return TRUE;
+    return Status;
 }
 
 
-/*
- * ERROR_USER_EXISTS
- */
-BOOL WINAPI
-SamCreateUser (PWSTR UserName,
-	       PWSTR UserPassword,
-	       PSID UserSid)
+NTSTATUS
+NTAPI
+SamConnect(IN OUT PUNICODE_STRING ServerName,
+           OUT PSAM_HANDLE ServerHandle,
+           IN ACCESS_MASK DesiredAccess,
+           IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-  DWORD dwDisposition;
-  HKEY hUsersKey;
-  HKEY hUserKey;
+    NTSTATUS Status;
 
-  DPRINT ("SamCreateUser() called\n");
+    TRACE("SamConnect(%p,%p,0x%08x,%p)\n",
+          ServerName, ServerHandle, DesiredAccess, ObjectAttributes);
 
-  /* FIXME: Check whether the SID is a real user sid */
-
-  /* Open the Users key */
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account\\Users",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hUsersKey))
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to open Account key! (Error %lu)\n", GetLastError());
-      return FALSE;
+        Status = SamrConnect((PSAMPR_SERVER_NAME)ServerName,
+                             (SAMPR_HANDLE *)ServerHandle,
+                             DesiredAccess);
     }
-
-  /* Create user name key */
-  if (RegCreateKeyExW (hUsersKey,
-		       UserName,
-		       0,
-		       NULL,
-		       REG_OPTION_NON_VOLATILE,
-		       KEY_ALL_ACCESS,
-		       NULL,
-		       &hUserKey,
-		       &dwDisposition))
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-      DPRINT1 ("Failed to create/open the user key! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUsersKey);
-      return FALSE;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
+    RpcEndExcept;
 
-  RegCloseKey (hUsersKey);
-
-  if (dwDisposition == REG_OPENED_EXISTING_KEY)
-    {
-      DPRINT1 ("User already exists!\n");
-      RegCloseKey (hUserKey);
-      SetLastError (ERROR_USER_EXISTS);
-      return FALSE;
-    }
-
-
-  /* Set 'Name' value */
-  if (RegSetValueExW (hUserKey,
-		      L"Name",
-		      0,
-		      REG_SZ,
-		      (LPBYTE)UserName,
-		      (wcslen (UserName) + 1) * sizeof (WCHAR)))
-    {
-      DPRINT1 ("Failed to set the user name value! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUserKey);
-      return FALSE;
-    }
-
-  /* Set 'Password' value */
-  if (RegSetValueExW (hUserKey,
-		      L"Password",
-		      0,
-		      REG_SZ,
-		      (LPBYTE)UserPassword,
-		      (wcslen (UserPassword) + 1) * sizeof (WCHAR)))
-    {
-      DPRINT1 ("Failed to set the user name value! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUserKey);
-      return FALSE;
-    }
-
-  /* Set 'Sid' value */
-  if (RegSetValueExW (hUserKey,
-		      L"Sid",
-		      0,
-		      REG_BINARY,
-		      (LPBYTE)UserSid,
-		      RtlLengthSid (UserSid)))
-    {
-      DPRINT1 ("Failed to set the user SID value! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUserKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hUserKey);
-
-  DPRINT ("SamCreateUser() done\n");
-
-  return TRUE;
+    return Status;
 }
 
 
-/*
- * ERROR_WRONG_PASSWORD
- * ERROR_NO_SUCH_USER
- */
-BOOL WINAPI
-SamCheckUserPassword (PWSTR UserName,
-		      PWSTR UserPassword)
+NTSTATUS
+NTAPI
+SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE AliasHandle,
+                       OUT PULONG RelativeId)
 {
-  WCHAR szPassword[256];
-  DWORD dwLength;
-  HKEY hUsersKey;
-  HKEY hUserKey;
+    NTSTATUS Status;
 
-  DPRINT ("SamCheckUserPassword() called\n");
+    TRACE("SamCreateAliasInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, AliasHandle, RelativeId);
 
-  /* Open the Users key */
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account\\Users",
-		     0,
-		     KEY_READ,
-		     &hUsersKey))
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
-      return FALSE;
+        Status = SamrCreateAliasInDomain((SAMPR_HANDLE)DomainHandle,
+                                         (PRPC_UNICODE_STRING)AccountName,
+                                         DesiredAccess,
+                                         (SAMPR_HANDLE *)AliasHandle,
+                                         RelativeId);
     }
-
-  /* Open the user key */
-  if (RegOpenKeyExW (hUsersKey,
-		     UserName,
-		     0,
-		     KEY_READ,
-		     &hUserKey))
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-      if (GetLastError () == ERROR_FILE_NOT_FOUND)
-	{
-	  DPRINT1 ("Invalid user name!\n");
-	  SetLastError (ERROR_NO_SUCH_USER);
-	}
-      else
-	{
-	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
-	}
-
-      RegCloseKey (hUsersKey);
-      return FALSE;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
+    RpcEndExcept;
 
-  RegCloseKey (hUsersKey);
-
-  /* Get the password */
-  dwLength = 256 * sizeof(WCHAR);
-  if (RegQueryValueExW (hUserKey,
-			L"Password",
-			NULL,
-			NULL,
-			(LPBYTE)szPassword,
-			&dwLength))
-    {
-      DPRINT1 ("Failed to read the password! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUserKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hUserKey);
-
-  /* Compare passwords */
-  if ((wcslen (szPassword) != wcslen (UserPassword)) ||
-      (wcscmp (szPassword, UserPassword) != 0))
-    {
-      DPRINT1 ("Wrong password!\n");
-      SetLastError (ERROR_WRONG_PASSWORD);
-      return FALSE;
-    }
-
-  DPRINT ("SamCheckUserPassword() done\n");
-
-  return TRUE;
+    return Status;
 }
 
 
-BOOL WINAPI
-SamGetUserSid (PWSTR UserName,
-	       PSID *Sid)
+NTSTATUS
+NTAPI
+SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE GroupHandle,
+                       OUT PULONG RelativeId)
 {
-  PSID lpSid;
-  DWORD dwLength;
-  HKEY hUsersKey;
-  HKEY hUserKey;
+    NTSTATUS Status;
 
-  DPRINT ("SamGetUserSid() called\n");
+    TRACE("SamCreateGroupInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, GroupHandle, RelativeId);
 
-  if (Sid != NULL)
-    *Sid = NULL;
-
-  /* Open the Users key */
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account\\Users",
-		     0,
-		     KEY_READ,
-		     &hUsersKey))
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
-      return FALSE;
+        Status = SamrCreateGroupInDomain((SAMPR_HANDLE)DomainHandle,
+                                         (PRPC_UNICODE_STRING)AccountName,
+                                         DesiredAccess,
+                                         (SAMPR_HANDLE *)GroupHandle,
+                                         RelativeId);
     }
-
-  /* Open the user key */
-  if (RegOpenKeyExW (hUsersKey,
-		     UserName,
-		     0,
-		     KEY_READ,
-		     &hUserKey))
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-      if (GetLastError () == ERROR_FILE_NOT_FOUND)
-	{
-	  DPRINT1 ("Invalid user name!\n");
-	  SetLastError (ERROR_NO_SUCH_USER);
-	}
-      else
-	{
-	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
-	}
-
-      RegCloseKey (hUsersKey);
-      return FALSE;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
+    RpcEndExcept;
 
-  RegCloseKey (hUsersKey);
+    return Status;
+}
 
-  /* Get SID size */
-  dwLength = 0;
-  if (RegQueryValueExW (hUserKey,
-			L"Sid",
-			NULL,
-			NULL,
-			NULL,
-			&dwLength))
+
+NTSTATUS
+NTAPI
+SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
+                      IN PUNICODE_STRING AccountName,
+                      IN ACCESS_MASK DesiredAccess,
+                      OUT PSAM_HANDLE UserHandle,
+                      OUT PULONG RelativeId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamCreateUserInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, UserHandle, RelativeId);
+
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to read the SID size! (Error %lu)\n", GetLastError());
-      RegCloseKey (hUserKey);
-      return FALSE;
+        Status = SamrCreateUserInDomain((SAMPR_HANDLE)DomainHandle,
+                                        (PRPC_UNICODE_STRING)AccountName,
+                                        DesiredAccess,
+                                        (SAMPR_HANDLE *)UserHandle,
+                                        RelativeId);
     }
-
-  /* Allocate sid buffer */
-  DPRINT ("Required SID buffer size: %lu\n", dwLength);
-  lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
-				 0,
-				 dwLength);
-  if (lpSid == NULL)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-      DPRINT1 ("Failed to allocate SID buffer!\n");
-      RegCloseKey (hUserKey);
-      return FALSE;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
+    RpcEndExcept;
 
-  /* Read sid */
-  if (RegQueryValueExW (hUserKey,
-			L"Sid",
-			NULL,
-			NULL,
-			(LPBYTE)lpSid,
-			&dwLength))
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamEnumerateAliasesInDomain(IN SAM_HANDLE DomainHandle,
+                            IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                            OUT PVOID *Buffer,
+                            IN ULONG PreferedMaximumLength,
+                            OUT PULONG CountReturned)
+{
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamEnumerateAliasesInDomain(%p,%p,%p,%lu,%p)\n",
+          DomainHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    if ((EnumerationContext == NULL) ||
+        (Buffer == NULL) ||
+        (CountReturned == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *Buffer = NULL;
+
+    RpcTryExcept
     {
-      DPRINT1 ("Failed to read the SID! (Error %lu)\n", GetLastError());
-      RtlFreeHeap (RtlGetProcessHeap (),
-		   0,
-		   lpSid);
-      RegCloseKey (hUserKey);
-      return FALSE;
+        Status = SamrEnumerateAliasesInDomain((SAMPR_HANDLE)DomainHandle,
+                                              EnumerationContext,
+                                              (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                              PreferedMaximumLength,
+                                              CountReturned);
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                *Buffer = EnumBuffer->Buffer;
+            }
+
+            midl_user_free(EnumBuffer);
+        }
     }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
-  RegCloseKey (hUserKey);
+    return Status;
+}
 
-  *Sid = lpSid;
 
-  DPRINT ("SamGetUserSid() done\n");
+NTSTATUS
+NTAPI
+SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
+                               IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                               OUT PVOID *Buffer,
+                               IN ULONG PreferedMaximumLength,
+                               OUT PULONG CountReturned)
+{
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    NTSTATUS Status;
 
-  return TRUE;
+    TRACE("SamEnumerateDomainsInSamServer(%p,%p,%p,%lu,%p)\n",
+          ServerHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    if ((EnumerationContext == NULL) ||
+        (Buffer == NULL) ||
+        (CountReturned == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *Buffer = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrEnumerateDomainsInSamServer((SAMPR_HANDLE)ServerHandle,
+                                                 EnumerationContext,
+                                                 (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                                 PreferedMaximumLength,
+                                                 CountReturned);
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                *Buffer = EnumBuffer->Buffer;
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamFreeMemory(IN PVOID Buffer)
+{
+    if (Buffer != NULL)
+        midl_user_free(Buffer);
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
+                      IN ULONG PassedCount,
+                      IN PSID *Sids,
+                      OUT PULONG MembershipCount,
+                      OUT PULONG *Aliases)
+{
+    SAMPR_PSID_ARRAY SidArray;
+    SAMPR_ULONG_ARRAY Membership;
+    NTSTATUS Status;
+
+    TRACE("SamAliasMembership(%p %ul %p %p %p)\n",
+          DomainHandle, PassedCount, Sids, MembershipCount, Aliases);
+
+    if (Sids == NULL ||
+        MembershipCount == NULL ||
+        Aliases == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    Membership.Element = NULL;
+
+    RpcTryExcept
+    {
+        SidArray.Count = PassedCount;
+        SidArray.Sids = (PSAMPR_SID_INFORMATION)Sids;
+
+        Status = SamrGetAliasMembership((SAMPR_HANDLE)DomainHandle,
+                                        &SidArray,
+                                        &Membership);
+        if (NT_SUCCESS(Status))
+        {
+            *MembershipCount = Membership.Count;
+            *Aliases = Membership.Element;
+        }
+        else
+        {
+            if (Membership.Element != NULL)
+                midl_user_free(Membership.Element);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
+                     OUT PSID **MemberIds,
+                     OUT PULONG MemberCount)
+{
+    SAMPR_PSID_ARRAY_OUT SidArray;
+    NTSTATUS Status;
+
+    TRACE("SamGetMembersInAlias(%p %p %p)\n",
+          AliasHandle, MemberIds, MemberCount);
+
+    if ((MemberIds == NULL) ||
+        (MemberCount == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *MemberIds = NULL;
+    *MemberCount = 0;
+
+    SidArray.Sids = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrGetMembersInAlias((SAMPR_HANDLE)AliasHandle,
+                                       &SidArray);
+        if (NT_SUCCESS(Status))
+        {
+            *MemberCount = SidArray.Count;
+            *MemberIds = (PSID *)SidArray.Sids;
+        }
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
+                           IN PUNICODE_STRING Name,
+                           OUT PSID *DomainId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamLookupDomainInSamServer(%p,%p,%p)\n",
+          ServerHandle, Name, DomainId);
+
+    RpcTryExcept
+    {
+        Status = SamrLookupDomainInSamServer((SAMPR_HANDLE)ServerHandle,
+                                             (PRPC_UNICODE_STRING)Name,
+                                             (PRPC_SID *)DomainId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
+                       IN ULONG Count,
+                       IN PUNICODE_STRING Names,
+                       OUT PULONG *RelativeIds,
+                       OUT PSID_NAME_USE *Use)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenAlias(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG AliasId,
+             OUT PSAM_HANDLE AliasHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenAlias(%p 0x%08x %lx %p)\n",
+          DomainHandle, DesiredAccess, AliasId, AliasHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenAlias((SAMPR_HANDLE)DomainHandle,
+                               DesiredAccess,
+                               AliasId,
+                               (SAMPR_HANDLE *)AliasHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenDomain(IN SAM_HANDLE ServerHandle,
+              IN ACCESS_MASK DesiredAccess,
+              IN PSID DomainId,
+              OUT PSAM_HANDLE DomainHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenDomain(%p,0x%08x,%p,%p)\n",
+          ServerHandle, DesiredAccess, DomainId, DomainHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenDomain((SAMPR_HANDLE)ServerHandle,
+                                DesiredAccess,
+                                (PRPC_SID)DomainId,
+                                (SAMPR_HANDLE *)DomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenGroup(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG GroupId,
+             OUT PSAM_HANDLE GroupHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenGroup(%p,0x%08x,%p,%p)\n",
+          DomainHandle, DesiredAccess, GroupId, GroupHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenGroup((SAMPR_HANDLE)DomainHandle,
+                               DesiredAccess,
+                               GroupId,
+                               (SAMPR_HANDLE *)GroupHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenUser(IN SAM_HANDLE DomainHandle,
+            IN ACCESS_MASK DesiredAccess,
+            IN ULONG UserId,
+            OUT PSAM_HANDLE UserHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenUser(%p,0x%08x,%lx,%p)\n",
+          DomainHandle, DesiredAccess, UserId, UserHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenUser((SAMPR_HANDLE)DomainHandle,
+                              DesiredAccess,
+                              UserId,
+                              (SAMPR_HANDLE *)UserHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamQueryInformationAlias(IN SAM_HANDLE AliasHandle,
+                         IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                         OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationAlias((SAMPR_HANDLE)AliasHandle,
+                                           AliasInformationClass,
+                                           (PSAMPR_ALIAS_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
+                          IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                          OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationDomain((SAMPR_HANDLE)DomainHandle,
+                                            DomainInformationClass,
+                                            (PSAMPR_DOMAIN_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamQueryInformationGroup(IN SAM_HANDLE GroupHandle,
+                         IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                         OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationGroup((SAMPR_HANDLE)GroupHandle,
+                                           GroupInformationClass,
+                                           (PSAMPR_GROUP_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamQueryInformationUser(IN SAM_HANDLE UserHandle,
+                        IN USER_INFORMATION_CLASS UserInformationClass,
+                        OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationUser((SAMPR_HANDLE)UserHandle,
+                                          UserInformationClass,
+                                          (PSAMPR_USER_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationAlias(IN SAM_HANDLE AliasHandle,
+                       IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                       IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationAlias((SAMPR_HANDLE)AliasHandle,
+                                         AliasInformationClass,
+                                         Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationDomain(IN SAM_HANDLE DomainHandle,
+                        IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                        IN PVOID DomainInformation)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, DomainInformation);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationDomain((SAMPR_HANDLE)DomainHandle,
+                                          DomainInformationClass,
+                                          DomainInformation);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationGroup(IN SAM_HANDLE GroupHandle,
+                       IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                       IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationGroup((SAMPR_HANDLE)GroupHandle,
+                                         GroupInformationClass,
+                                         Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationUser(IN SAM_HANDLE UserHandle,
+                      IN USER_INFORMATION_CLASS UserInformationClass,
+                      IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationUser((SAMPR_HANDLE)UserHandle,
+                                        UserInformationClass,
+                                        Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

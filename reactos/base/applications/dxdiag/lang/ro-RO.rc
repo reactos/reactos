@@ -15,7 +15,7 @@ CAPTION "Diagnostic ReactX"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL       "Tab1",         IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
-    PUSHBUTTON    "&Manual",      IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON    "&Manual…",     IDC_BUTTON_HELP, 2, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&Următorul compartiment", IDC_BUTTON_NEXT, 187, 261, 120, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON    "&Păstrare informații…", IDC_BUTTON_SAVE_INFO, 311, 261, 110, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON    "Î&nchide",     IDC_BUTTON_EXIT, 425, 261, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
@@ -26,7 +26,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT    "Acest instrument oferă informații detaliate despre componentele ReactX și modulele pilot instalate în sistem. De asemenea, vă permite testarea funcționalităților, diagnosticarea problemelor, precum și modificarea configurației de sistem pentru obținerea de rezultate optime.", -1, 10, 10, 443, 17
-    LTEXT    "Dacă aveți la cunoștință careva probleme la o anumită categorie, mergeți la compartimentul corespunzător de mai sus. Altfel, puteți utiliza butonul „Următorul compartiment” de mai jos pentru a trece secvențial prin fiecare compartiment.", -1, 10, 30, 443, 25
+    LTEXT    "Dacă aveți la cunoștință careva probleme la o anumită categorie, mergeți la compartimentul corespunzător de mai sus. Altfel, puteți utiliza butonul „Următorul compartiment” de mai jos pentru a trece secvențial prin fiecare categorie.", -1, 10, 30, 443, 25
     GROUPBOX "Informații despre sistem", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT    "Data/Ora curentă:",      -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT    "Numele calculatorului:", -1, 70, 80, 80, 10, SS_RIGHT

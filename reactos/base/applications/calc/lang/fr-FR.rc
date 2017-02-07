@@ -609,7 +609,7 @@ BEGIN
     IDS_POWER_FPS_PER_MINUTE        "Pied-livres par minute"
     IDS_POWER_HORSEPOWER            "Cheval-vapeur"
     IDS_POWER_KILOWATTS             "Kilowatts"
-    IDS_POWER_MEGAWATTS             "Megawatts"
+    IDS_POWER_MEGAWATTS             "Mégawatts"
     IDS_POWER_WATTS                 "Watts"
 END
 
@@ -639,7 +639,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TIME_DAYS         "Jours"
     IDS_TIME_HOURS        "Heures"
-    IDS_TIME_NANOSECONDS  "Nanoseconds"
+    IDS_TIME_NANOSECONDS  "Nanosecondes"
     IDS_TIME_MICROSECONDS "Microsecondes"
     IDS_TIME_MILLISECONDS "Millisecondes"
     IDS_TIME_MINUTES      "Minutes"
@@ -657,7 +657,7 @@ BEGIN
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilomètres/heure"
     IDS_VELOCITY_KNOTS              "Knots"
     IDS_VELOCITY_MACH               "Mach"
-    IDS_VELOCITY_METERS_SECOND      "Mètres/second"
+    IDS_VELOCITY_METERS_SECOND      "Mètres/seconde"
     IDS_VELOCITY_MILES_HOUR         "Miles/heure"
 END
 

@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(d3d9.dll d3d9.spec)
+spec2def(d3d9.dll d3d9.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     buffer.c
@@ -47,4 +47,4 @@ add_importlibs(d3d9
 add_dependencies(d3d9 wineheaders)
 add_pch(d3d9 d3d9_private.h)
 add_cd_file(TARGET d3d9 DESTINATION reactos/system32 FOR all)
-add_importlib_target(d3d9.spec)
+

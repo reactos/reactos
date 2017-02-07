@@ -136,10 +136,10 @@ IoShutdownSystem(IN ULONG Phase)
     PIRP Irp;
     KEVENT Event;
     NTSTATUS Status;
-        
+
     /* Initialize an event to wait on */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    
+
     /* What phase? */
     if (Phase == 0)
     {
@@ -167,16 +167,22 @@ IoShutdownSystem(IN ULONG Phase)
                                                NULL,
                                                &Event,
                                                &StatusBlock);
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
+            if (Irp)
             {
-                /* Wait on the driver */
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = IoCallDriver(DeviceObject, Irp);
+                if (Status == STATUS_PENDING)
+                {
+                    /* Wait on the driver */
+                    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                }
             }
 
+            /* Remove the flag */
+            ShutdownEntry->DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
             /* Get rid of our reference to it */
-            ObDereferenceObject(DeviceObject);
-            
+            ObDereferenceObject(ShutdownEntry->DeviceObject);
+
             /* Free the shutdown entry and reset the event */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
             KeClearEvent(&Event);
@@ -199,7 +205,7 @@ IoShutdownSystem(IN ULONG Phase)
 
         /* Shutdown tape filesystems */
         IopShutdownBaseFileSystems(&IopTapeFileSystemQueueHead);
-        
+
         /* Loop last-chance shutdown notifications */
         ListEntry = ExInterlockedRemoveHeadList(&LastChanceShutdownListHead,
                                                 &ShutdownListLock);
@@ -228,9 +234,12 @@ IoShutdownSystem(IN ULONG Phase)
                 KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
             }
 
+            /* Remove the flag */
+            ShutdownEntry->DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
             /* Get rid of our reference to it */
-            ObDereferenceObject(DeviceObject);
-            
+            ObDereferenceObject(ShutdownEntry->DeviceObject);
+
             /* Free the shutdown entry and reset the event */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
             KeClearEvent(&Event);
@@ -359,71 +368,22 @@ NTAPI
 IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PDRIVER_OBJECT DriverObject = DeviceObject->DriverObject;
-    PDEVICE_OBJECT AttachedDeviceObject, LowestDeviceObject;
-    PEXTENDED_DEVOBJ_EXTENSION ThisExtension, DeviceExtension;
-    PDEVICE_NODE DeviceNode;
-    BOOLEAN SafeToUnload = TRUE;
-
-    /* Check if removal is pending */
-    ThisExtension = IoGetDevObjExtension(DeviceObject);
-    if (ThisExtension->ExtensionFlags & DOE_REMOVE_PENDING)
-    {
-        /* Get the PDO, extension, and node */
-        LowestDeviceObject = IopGetLowestDevice(DeviceObject);
-        DeviceExtension = IoGetDevObjExtension(LowestDeviceObject);
-        DeviceNode = DeviceExtension->DeviceNode;
-
-        /* The PDO needs a device node */
-        ASSERT(DeviceNode != NULL);
-
-        /* Loop all attached objects */
-        AttachedDeviceObject = LowestDeviceObject;
-        while (AttachedDeviceObject)
-        {
-            /* Make sure they're dereferenced */
-            if (AttachedDeviceObject->ReferenceCount) return;
-            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
-        }
-
-        /* Loop all attached objects */
-        AttachedDeviceObject = LowestDeviceObject;
-        while (AttachedDeviceObject)
-        {
-            /* Get the device extension */
-            DeviceExtension = IoGetDevObjExtension(AttachedDeviceObject);
-
-            /* Remove the pending flag and set processed */
-            DeviceExtension->ExtensionFlags &= ~DOE_REMOVE_PENDING;
-            DeviceExtension->ExtensionFlags |= DOE_REMOVE_PROCESSED;
-            AttachedDeviceObject = AttachedDeviceObject->AttachedDevice;
-        }
-
-        /*
-         * FIXME: TODO HPOUSSIN
-         * We need to parse/lock the device node, and if we have any pending
-         * surprise removals, query all relationships and send IRP_MN_REMOVE_
-         * _DEVICE to the devices related...
-         */
-        return;
-    }
+    PEXTENDED_DEVOBJ_EXTENSION ThisExtension = IoGetDevObjExtension(DeviceObject);
 
     /* Check if deletion is pending */
     if (ThisExtension->ExtensionFlags & DOE_DELETE_PENDING)
     {
-        /* Make sure unload is pending */
-        if (!(ThisExtension->ExtensionFlags & DOE_UNLOAD_PENDING) ||
-            (DriverObject->Flags & DRVO_UNLOAD_INVOKED))
+        if (DeviceObject->AttachedDevice)
         {
-            /* We can't unload anymore */
-            SafeToUnload = FALSE;
+            DPRINT("Device object is in the middle of a device stack\n");
+            return;
         }
 
-        /*
-         * Check if we have an attached device and fail if we're attached
-         * and still have a reference count.
-         */
-        AttachedDeviceObject = DeviceObject->AttachedDevice;
-        if ((AttachedDeviceObject) && (DeviceObject->ReferenceCount)) return;
+        if (DeviceObject->ReferenceCount)
+        {
+            DPRINT("Device object still has %d references\n", DeviceObject->ReferenceCount);
+            return;
+        }
 
         /* Check if we have a Security Descriptor */
         if (DeviceObject->SecurityDescriptor)
@@ -437,44 +397,42 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
         /* Dereference the keep-alive */
         ObDereferenceObject(DeviceObject);
-
-        /* If we're not unloading, stop here */
-        if (!SafeToUnload) return;
     }
 
-    /* Loop all the device objects */
-    DeviceObject = DriverObject->DeviceObject;
-    while (DeviceObject)
+    /* We can't unload a non-PnP driver here */
+    if (DriverObject->Flags & DRVO_LEGACY_DRIVER)
     {
-        /*
-         * Make sure we're not attached, having a reference count
-         * or already deleting
-         */
-        if ((DeviceObject->ReferenceCount) ||
-             (DeviceObject->AttachedDevice) ||
-             (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
-              (DOE_DELETE_PENDING | DOE_REMOVE_PENDING)))
-        {
-            /* We're not safe to unload, quit */
-            return;
-        }
-
-        /* Check the next device */
-        DeviceObject = DeviceObject->NextDevice;
+        DPRINT("Not a PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
     }
+
+    /* Return if we've already called unload (maybe we're in it?) */
+    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED) return;
+
+    /* We can't unload unless there's an unload handler */
+    if (!DriverObject->DriverUnload)
+    {
+        DPRINT1("No DriverUnload function on PnP driver! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
+    }
+
+    /* Bail if there are still devices present */
+    if (DriverObject->DeviceObject)
+    {
+        DPRINT("Devices still present! '%wZ' will not be unloaded!\n", &DriverObject->DriverName);
+        return;
+    }
+
+    DPRINT1("Unloading driver '%wZ' (automatic)\n", &DriverObject->DriverName);
 
     /* Set the unload invoked flag */
     DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
 
     /* Unload it */
-    if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+    DriverObject->DriverUnload(DriverObject);
 
     /* Make object temporary so it can be deleted */
     ObMakeTemporaryObject(DriverObject);
-
-    /* Dereference once more, referenced at driver object creation */
-    ObDereferenceObject(DriverObject);
-
 }
 
 VOID
@@ -486,18 +444,15 @@ IopDereferenceDeviceObject(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject->ReferenceCount);
 
     /* Dereference the device */
-    DeviceObject->ReferenceCount--;
+    InterlockedDecrement(&DeviceObject->ReferenceCount);
 
     /*
      * Check if we can unload it and it's safe to unload (or if we're forcing
      * an unload, which is OK too).
      */
+    ASSERT(!ForceUnload);
     if (!(DeviceObject->ReferenceCount) &&
-        ((ForceUnload) || (IoGetDevObjExtension(DeviceObject)->ExtensionFlags &
-                           (DOE_UNLOAD_PENDING |
-                            DOE_DELETE_PENDING |
-                            DOE_REMOVE_PENDING |
-                            DOE_REMOVE_PROCESSED))))
+        (IoGetDevObjExtension(DeviceObject)->ExtensionFlags & DOE_DELETE_PENDING))
     {
         /* Unload it */
         IopUnloadDevice(DeviceObject);
@@ -937,7 +892,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     /* Set the Type and Size. Question: why is Size 0 on Windows? */
     DeviceObjectExtension->Type = IO_TYPE_DEVICE_OBJECT_EXTENSION;
     DeviceObjectExtension->Size = 0;
-    
+
     /* Initialize with Power Manager */
     PoInitializeDeviceObject(DeviceObjectExtension);
 
@@ -969,8 +924,8 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
         Status = IopCreateVpb(CreatedDeviceObject);
         if (!NT_SUCCESS(Status))
         {
-            /* Reference the device object and fail */
-            ObDereferenceObject(DeviceObject);
+            /* Dereference the device object and fail */
+            ObDereferenceObject(CreatedDeviceObject);
             return Status;
         }
 
@@ -1029,7 +984,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     ASSERT((DriverObject->Flags & DRVO_UNLOAD_INVOKED) == 0);
     CreatedDeviceObject->DriverObject = DriverObject;
     IopEditDeviceList(DriverObject, CreatedDeviceObject, IopAdd);
-    
+
     /* Link with the power manager */
     if (CreatedDeviceObject->Vpb) PoVolumeDevice(CreatedDeviceObject);
 
@@ -1102,8 +1057,7 @@ IoDetachDevice(IN PDEVICE_OBJECT TargetDevice)
     TargetDevice->AttachedDevice = NULL;
 
     /* Check if it's ok to delete this device */
-    if ((IoGetDevObjExtension(TargetDevice)->ExtensionFlags &
-        (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING | DOE_REMOVE_PENDING)) &&
+    if ((IoGetDevObjExtension(TargetDevice)->ExtensionFlags & DOE_DELETE_PENDING) &&
         !(TargetDevice->ReferenceCount))
     {
         /* It is, do it */
@@ -1451,7 +1405,7 @@ IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
-    
+
     /* Reference it so it doesn't go away */
     ObReferenceObject(DeviceObject);
 
@@ -1482,7 +1436,7 @@ IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
-    
+
     /* Reference it so it doesn't go away */
     ObReferenceObject(DeviceObject);
 
@@ -1507,6 +1461,9 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
     PLIST_ENTRY NextEntry;
     KIRQL OldIrql;
 
+    /* Remove the flag */
+    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
+
     /* Acquire the shutdown lock and loop the shutdown list */
     KeAcquireSpinLock(&ShutdownListLock, &OldIrql);
     NextEntry = ShutdownListHead.Flink;
@@ -1526,7 +1483,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
-            
+
             /* Get rid of our reference to it */
             ObDereferenceObject(DeviceObject);
         }
@@ -1553,7 +1510,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
-            
+
             /* Get rid of our reference to it */
             ObDereferenceObject(DeviceObject);
         }
@@ -1564,9 +1521,6 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
     /* Release the shutdown lock */
     KeReleaseSpinLock(&ShutdownListLock, OldIrql);
-
-    /* Now remove the flag */
-    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 }
 
 /*

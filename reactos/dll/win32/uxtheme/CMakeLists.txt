@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 set_rc_compiler()
 
-spec2def(uxtheme.dll uxtheme.spec)
+spec2def(uxtheme.dll uxtheme.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     buffer.c
@@ -29,4 +29,4 @@ add_delay_importlibs(uxtheme msimg32)
 add_importlibs(uxtheme user32 advapi32 gdi32 msvcrt kernel32 ntdll)
 add_pch(uxtheme uxthemep.h)
 add_cd_file(TARGET uxtheme DESTINATION reactos/system32 FOR all)
-add_importlib_target(uxtheme.spec)
+

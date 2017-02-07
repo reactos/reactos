@@ -141,7 +141,7 @@ BEGIN
 
         END
         MENUITEM "Définir l'&affinité...",            ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Éditer les &canaux de débogage...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+    MENUITEM "Éditer les &canaux de débogage...",     ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -250,7 +250,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
-		    LVS_SORTASCENDING,7,7,233,177
+                    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Fermer",IDOK,171,189,69,14
 END
 
@@ -336,7 +336,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,130,177,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,187,177,50,14
-    LTEXT           "Sélectionnez les colones qui apparaîtront dans la page Processus du Gestionnaire des tâches",
+    LTEXT           "Sélectionnez les colonnes qui apparaîtront dans la page Processus du Gestionnaire des tâches",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Nom de l'image",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,123,10
@@ -628,16 +628,16 @@ BEGIN
     IDS_MSG_PROCESSONEPRO         "Le processus doit avoir de l'affinité avec au moins un processeur."
     IDS_MSG_INVALIDOPTION         "Option Invalide"
     IDS_MSG_UNABLEDEBUGPROCESS    "Impossible de déboguer le processus."
-    IDS_MSG_WARNINGDEBUG          "ATTENTION: Déboguer ce processus peut entraîner une perte de données.\nÊtes-vous sûrs de vouloir le déboguer?"
+    IDS_MSG_WARNINGDEBUG          "ATTENTION : Déboguer ce processus peut entraîner une perte de données.\nÊtes-vous sûrs de vouloir le déboguer ?"
     IDS_MSG_TASKMGRWARNING        "Avertissement du Gestionnaire des tâches"
-    IDS_MSG_WARNINGTERMINATING    "ATTENTION: Terminer un processus peut causer des effets indésirables\nincluant une perte de donnée ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état\nou les données avant de terminer.\nÊtes-vous sûr de vouloir terminer le processus?"
+    IDS_MSG_WARNINGTERMINATING    "ATTENTION : Terminer un processus peut causer des effets indésirables\nincluant une perte de donnée ou une instabilité du système.\nLe processus n'aura pas la chance de sauvegarder son état\nou les données avant de terminer.\nÊtes-vous sûr de vouloir terminer le processus ?"
     IDS_MSG_UNABLETERMINATEPRO    "Impossible de terminer le processus"
     IDS_MSG_UNABLECHANGEPRIORITY  "Impossible de changer la priorité"
-    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENTION: Changer la priorité du processus peut causer des\neffets indésirables comme l'instabilité du système.\nÊtes-vous sûr de vouloir changer la priorité?"
-    IDS_MSG_TRAYICONCPUUSAGE      "UC utilisée: %d%%"
-    IDS_STATUS_MEMUSAGE           "Fichier d'échange utilisé: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "UC utilisée: %3d%%"
-    IDS_STATUS_PROCESSES          "Processus: %d"
+    IDS_MSG_WARNINGCHANGEPRIORITY "ATTENTION : Changer la priorité du processus peut causer des\neffets indésirables comme l'instabilité du système.\nÊtes-vous sûr de vouloir changer la priorité ?"
+    IDS_MSG_TRAYICONCPUUSAGE      "UC utilisée : %d%%"
+    IDS_STATUS_MEMUSAGE           "Fichier d'échange utilisé : %dK / %dK"
+    IDS_STATUS_CPUUSAGE           "UC utilisée : %3d%%"
+    IDS_STATUS_PROCESSES          "Processus : %d"
     IDS_Not_Responding            "Ne répond pas"
     IDS_Running                   "En cours d'exécution"
 END

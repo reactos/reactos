@@ -115,6 +115,8 @@ typedef enum _CM_SHARE_DISPOSITION
 //
 #define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
 #define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+#define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
+#define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
 
 //
 // NtInitializeRegistry Flags
@@ -136,7 +138,10 @@ typedef enum _KEY_INFORMATION_CLASS
     KeyFullInformation,
     KeyNameInformation,
     KeyCachedInformation,
-    KeyFlagsInformation
+    KeyFlagsInformation,
+    KeyVirtualizationInformation,
+    KeyHandleTagsInformation,
+    MaxKeyInfoClass
 } KEY_INFORMATION_CLASS;
 
 typedef enum _KEY_VALUE_INFORMATION_CLASS
@@ -145,7 +150,8 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
     KeyValueFullInformation,
     KeyValuePartialInformation,
     KeyValueFullInformationAlign64,
-    KeyValuePartialInformationAlign64
+    KeyValuePartialInformationAlign64,
+    MaxKeyValueInfoClass
 } KEY_VALUE_INFORMATION_CLASS;
 
 typedef enum _KEY_SET_INFORMATION_CLASS {
@@ -165,12 +171,30 @@ typedef enum _KEY_SET_INFORMATION_CLASS {
 //
 typedef enum _PLUGPLAY_CONTROL_CLASS
 {
-    PlugPlayControlUserResponse = 0x07,
-    PlugPlayControlProperty = 0x0A,
-    PlugPlayControlGetRelatedDevice = 0x0C,
-    PlugPlayControlDeviceStatus = 0x0E,
+    PlugPlayControlEnumerateDevice,
+    PlugPlayControlRegisterNewDevice,
+    PlugPlayControlDeregisterDevice,
+    PlugPlayControlInitializeDevice,
+    PlugPlayControlStartDevice,
+    PlugPlayControlUnlockDevice,
+    PlugPlayControlQueryAndRemoveDevice,
+    PlugPlayControlUserResponse,
+    PlugPlayControlGenerateLegacyDevice,
+    PlugPlayControlGetInterfaceDeviceList,
+    PlugPlayControlProperty,
+    PlugPlayControlDeviceClassAssociation,
+    PlugPlayControlGetRelatedDevice,
+    PlugPlayControlGetInterfaceDeviceAlias,
+    PlugPlayControlDeviceStatus,
     PlugPlayControlGetDeviceDepth,
-    PlugPlayControlResetDevice = 0x14
+    PlugPlayControlQueryDeviceRelations,
+    PlugPlayControlTargetDeviceRelation,
+    PlugPlayControlQueryConflictList,
+    PlugPlayControlRetrieveDock,
+    PlugPlayControlResetDevice,
+    PlugPlayControlHaltDevice,
+    PlugPlayControlGetBlockedDriverList,
+    MaxPlugPlayControl
 } PLUGPLAY_CONTROL_CLASS;
 
 typedef enum _PLUGPLAY_BUS_CLASS
@@ -216,10 +240,44 @@ typedef struct _KEY_WRITE_TIME_INFORMATION
     LARGE_INTEGER LastWriteTime;
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
 
+typedef struct _KEY_WOW64_FLAGS_INFORMATION
+{
+    ULONG UserFlags;
+} KEY_WOW64_FLAGS_INFORMATION, *PKEY_WOW64_FLAGS_INFORMATION;
+
 typedef struct _KEY_USER_FLAGS_INFORMATION
 {
     ULONG UserFlags;
 } KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
+
+typedef struct _KEY_HANDLE_TAGS_INFORMATION
+{
+    ULONG HandleTags;
+} KEY_HANDLE_TAGS_INFORMATION, *PKEY_HANDLE_TAGS_INFORMATION;
+
+typedef struct _KEY_CONTROL_FLAGS_INFORMATION
+{
+    ULONG ControlFlags;
+} KEY_CONTROL_FLAGS_INFORMATION, *PKEY_CONTROL_FLAGS_INFORMATION;
+
+typedef struct _KEY_VIRTUALIZATION_INFORMATION
+{
+    ULONG VirtualizationCandidate:1;
+    ULONG VirtualizationEnabled:1;
+    ULONG VirtualTarget:1;
+    ULONG VirtualStore:1;
+    ULONG VirtualSource:1;
+    ULONG Reserved:27;
+} KEY_VIRTUALIZATION_INFORMATION, *PKEY_VIRTUALIZATION_INFORMATION;
+
+typedef struct _KEY_SET_VIRTUALIZATION_INFORMATION
+{
+    ULONG VirtualTarget:1;
+    ULONG VirtualStore:1;
+    ULONG VirtualSource:1;
+    ULONG Reserved:29;
+} KEY_SET_VIRTUALIZATION_INFORMATION, *PKEY_SET_VIRTUALIZATION_INFORMATION;
+
 
 typedef struct _KEY_FULL_INFORMATION
 {
@@ -267,6 +325,13 @@ typedef struct _KEY_VALUE_PARTIAL_INFORMATION
     ULONG DataLength;
     UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
+
+typedef struct _KEY_VALUE_PARTIAL_INFORMATION_ALIGN64
+{
+    ULONG Type;
+    ULONG DataLength;
+    UCHAR Data[1];
+} KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, *PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64;
 
 typedef struct _KEY_VALUE_BASIC_INFORMATION
 {

@@ -1,4 +1,4 @@
-LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+﻿LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU
 BEGIN
@@ -16,10 +16,12 @@ BEGIN
   END
   POPUP "Εμφάνιση"
   BEGIN
-    MENUITEM "Συσκευές ανά τύπο",    IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Συσκευές ανά σύνδεση", IDC_STATIC, GRAYED
-    MENUITEM "Πηγές ανά τύπο",       IDC_STATIC, GRAYED
-    MENUITEM "Πηγές ανά σύνδεση",    IDC_STATIC, GRAYED
+    MENUITEM "Συσκευές ανά τύπο",    IDC_DEVBYTYPE
+    MENUITEM "Συσκευές ανά σύνδεση", IDC_DEVBYCONN
+    MENUITEM "Πηγές ανά τύπο",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Πηγές ανά σύνδεση",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",  IDC_SHOWHIDDEN
   END
   POPUP "Βοήθεια"
   BEGIN

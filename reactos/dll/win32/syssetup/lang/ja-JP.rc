@@ -36,13 +36,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOSの開発者より、下記のオープンソ\ース プロジェクトに感謝の意を表\明します。 これらのすべてまたは一部はReactOSの開発に利用されました。",
+    LTEXT           "ReactOSの開発者より、下記のオープンソ ース プロジェクトに感謝の意を表 明します。 これらのすべてまたは一部はReactOSの開発に利用されました。",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "ReactOSはGPLの下にライセンスされており、すべてまたは一部を再利用、 再配布する場合はGPLに従う必要があります。",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "GPLを表\示(&V)...",IDC_VIEWGPL,251,110,50,19
+    PUSHBUTTON      "GPLを表 示(&V)...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "セットアップを続行するには [次へ] をクリックしてください。",IDC_STATIC,15,136,
                     195,17
 END
@@ -91,7 +91,7 @@ CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定してください。 ユーザーロケールは、数値、通貨、日付の表\示方法を制御します。 ", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定してください。 ユーザーロケールは、数値、通貨、日付の表 示方法を制御します。 ", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "システム、ユーザーロケール設定変更には[カスタマイズ]をクリックします。",
           IDC_STATIC, 53, 50, 166, 25
@@ -172,7 +172,7 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "承認"
     IDS_ACKSUBTITLE      "ReactOS が利用しているプロジェクトとライセンスに関する情報"
-    IDS_OWNERTITLE       "ソ\フトウェアの個人用設定"
+    IDS_OWNERTITLE       "ソ フトウェアの個人用設定"
     IDS_OWNERSUBTITLE    "この情報は、ReactOS の個人用設定に用いられます。"
     IDS_COMPUTERTITLE    "コンピュータ名と Administrator パスワード"
     IDS_COMPUTERSUBTITLE "コンピュータ名と Administrator パスワードを入力する必要があります。"
@@ -197,7 +197,7 @@ BEGIN
     IDS_CMT_DEVMGMT     "デバイス マネージャを起動します"
     IDS_CMT_EVENTVIEW   "イベント ビューアを起動します"
     IDS_CMT_EXPLORER    "エクスプローラを起動します"
-    IDS_CMT_MSCONFIG    "システムの構\成プログラムを開きます"
+    IDS_CMT_MSCONFIG    "システムの構 成プログラムを開きます"
     IDS_CMT_NOTEPAD     "テキストエディタを起動します"
     IDS_CMT_RDESKTOP    "リモート デスクトップを起動します"
     IDS_CMT_REGEDIT     "レジストリ エディタを起動します"
@@ -210,9 +210,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_GAMES           "ゲーム"
-    IDS_CMT_SOLITAIRE   "ソ\リティア"
+    IDS_CMT_SOLITAIRE   "ソ リティア"
     IDS_CMT_WINEMINE    "WineMine"
-	IDS_CMT_SPIDER      "スパイダ ソ\リティア"
+	IDS_CMT_SPIDER      "スパイダ ソ リティア"
 END
 
 STRINGTABLE
@@ -253,7 +253,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHORT_CALC       "電卓.lnk"
-    IDS_SHORT_CHARMAP    "文字コード表\.lnk"
+    IDS_SHORT_CHARMAP    "文字コード表 .lnk"
     IDS_SHORT_CMD        "コマンド プロンプト.lnk"
     IDS_SHORT_DEVICE     "デバイス マネージャ.lnk"
     IDS_SHORT_DOWNLOADER "ReactOS アプリケーション マネージャ.lnk"
@@ -263,7 +263,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "キーボード レイアウト 切替器.lnk"
     IDS_SHORT_MAGNIFY    "拡大鏡.lnk"
     IDS_SHORT_MPLAY32    "マルチメディア プレーヤ.lnk"
-    IDS_SHORT_MSCONFIG   "システムの構\成.lnk"
+    IDS_SHORT_MSCONFIG   "システムの構 成.lnk"
     IDS_SHORT_NOTEPAD    "メモ帳.lnk"
     IDS_SHORT_RDESKTOP   "リモート デスクトップ接続.lnk"
     IDS_SHORT_REGEDIT    "レジストリ エディタ.lnk"
@@ -271,11 +271,11 @@ BEGIN
     IDS_SHORT_SNAP       "スナップショット.lnk"
     IDS_SHORT_SNDVOL32   "ボリューム コントロール.lnk"
     IDS_SHORT_SNDREC32   "オーディオレコーダ.lnk"
-    IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
+    IDS_SHORT_SOLITAIRE  "ソ リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"
     IDS_SHORT_PAINT      "ペイント.lnk"
-	IDS_SHORT_SPIDER     "スパイダ ソ\リティア.lnk"
+	IDS_SHORT_SPIDER     "スパイダ ソ リティア.lnk"
 END
 
 STRINGTABLE

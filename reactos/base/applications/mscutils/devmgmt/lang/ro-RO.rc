@@ -1,4 +1,4 @@
-//2011.10.19 - Fulea Ștefan: minor changes
+﻿//2011.10.19 - Fulea Ștefan: minor changes
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
@@ -17,14 +17,16 @@ BEGIN
   END
   POPUP "&Afișare"
   BEGIN
-    MENUITEM "Dispozitive după &tip",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispozitive după &conexiune",   IDC_STATIC, GRAYED
-    MENUITEM "Resurse după t&ip",             IDC_STATIC, GRAYED
-    MENUITEM "Resurse după c&onexiune",       IDC_STATIC, GRAYED
+    MENUITEM "Dispozitive după &tip",         IDC_DEVBYTYPE
+    MENUITEM "Dispozitive după &conexiune",   IDC_DEVBYCONN
+    MENUITEM "Resurse după t&ip",             IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resurse după c&onexiune",       IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",           IDC_SHOWHIDDEN
   END
   POPUP "&?"
   BEGIN
-    MENUITEM "&Manual",                       IDC_PROGHELP
+    MENUITEM "&Manual…",                      IDC_PROGHELP
     MENUITEM "Despre…",                       IDC_ABOUT
   END
 END
@@ -35,7 +37,7 @@ BEGIN
   BEGIN
     MENUITEM "&Proprietăți",                  IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "&Manual",                       IDC_PROGHELP
+    MENUITEM "&Manual…",                      IDC_PROGHELP
   END
 END
 

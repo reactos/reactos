@@ -105,7 +105,7 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
         return ERROR_SUCCESS;
     }
  
-    ret = ACTION_PerformUIAction( package, szAction, -1 );
+    ret = ACTION_PerformUIAction( package, szAction, SCRIPT_NONE );
     msiobj_release( &package->hdr );
 
     return ret;
@@ -119,7 +119,7 @@ UINT WINAPI MsiSequenceA( MSIHANDLE hInstall, LPCSTR szTable, INT iSequenceMode 
     LPWSTR szwTable;
     UINT ret;
 
-    TRACE("%s\n", debugstr_a(szTable));
+    TRACE("%s, %d\n", debugstr_a(szTable), iSequenceMode);
 
     szwTable = strdupAtoW(szTable);
     if (szTable && !szwTable)
@@ -138,7 +138,7 @@ UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode
     MSIPACKAGE *package;
     UINT ret;
 
-    TRACE("%s\n", debugstr_w(szTable));
+    TRACE("%s, %d\n", debugstr_w(szTable), iSequenceMode);
 
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
@@ -173,10 +173,8 @@ UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode
 
         return ERROR_SUCCESS;
     }
-
-    ret = MSI_Sequence( package, szTable, iSequenceMode );
+    ret = MSI_Sequence( package, szTable );
     msiobj_release( &package->hdr );
- 
     return ret;
 }
 
@@ -212,6 +210,23 @@ UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz )
     return r;
 }
 
+const WCHAR *msi_get_target_folder( MSIPACKAGE *package, const WCHAR *name )
+{
+    MSIFOLDER *folder = msi_get_loaded_folder( package, name );
+
+    if (!folder) return NULL;
+    if (!folder->ResolvedTarget)
+    {
+        MSIFOLDER *parent = folder;
+        while (parent->Parent && strcmpW( parent->Parent, parent->Directory ))
+        {
+            parent = msi_get_loaded_folder( package, parent->Parent );
+        }
+        msi_resolve_target_folder( package, parent->Directory, TRUE );
+    }
+    return folder->ResolvedTarget;
+}
+
 /***********************************************************************
  * MsiGetTargetPath   (internal)
  */
@@ -219,7 +234,7 @@ static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
                                awstring *szPathBuf, LPDWORD pcchPathBuf )
 {
     MSIPACKAGE *package;
-    LPWSTR path;
+    const WCHAR *path;
     UINT r = ERROR_FUNCTION_FAILED;
 
     if (!szFolder)
@@ -246,8 +261,7 @@ static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
         }
 
         len = 0;
-        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder,
-                                                  NULL, &len );
+        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder, NULL, &len );
         if (FAILED(hr))
             goto done;
 
@@ -259,8 +273,7 @@ static UINT MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
             goto done;
         }
 
-        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder,
-                                                  (BSTR *)value, &len);
+        hr = IWineMsiRemotePackage_GetTargetPath( remote_package, folder, value, &len );
         if (FAILED(hr))
             goto done;
 
@@ -282,14 +295,13 @@ done:
         return r;
     }
 
-    path = resolve_target_folder( package, szFolder, FALSE, TRUE, NULL );
+    path = msi_get_target_folder( package, szFolder );
     msiobj_release( &package->hdr );
 
     if (!path)
         return ERROR_DIRECTORY;
 
     r = msi_strcpy_to_awstring( path, szPathBuf, pcchPathBuf );
-    msi_free( path );
     return r;
 }
 
@@ -335,6 +347,54 @@ UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder,
     return MSI_GetTargetPath( hInstall, szFolder, &path, pcchPathBuf );
 }
 
+static WCHAR *get_source_root( MSIPACKAGE *package )
+{
+    msi_set_sourcedir_props( package, FALSE );
+    return msi_dup_property( package->db, szSourceDir );
+}
+
+WCHAR *msi_resolve_source_folder( MSIPACKAGE *package, const WCHAR *name, MSIFOLDER **folder )
+{
+    MSIFOLDER *f;
+    LPWSTR p, path = NULL, parent;
+
+    TRACE("working to resolve %s\n", debugstr_w(name));
+
+    if (!strcmpW( name, szSourceDir )) name = szTargetDir;
+    if (!(f = msi_get_loaded_folder( package, name ))) return NULL;
+
+    /* special resolving for root dir */
+    if (!strcmpW( name, szTargetDir ) && !f->ResolvedSource)
+    {
+        f->ResolvedSource = get_source_root( package );
+    }
+    if (folder) *folder = f;
+    if (f->ResolvedSource)
+    {
+        path = strdupW( f->ResolvedSource );
+        TRACE("   already resolved to %s\n", debugstr_w(path));
+        return path;
+    }
+    if (!f->Parent) return path;
+    parent = f->Parent;
+    TRACE(" ! parent is %s\n", debugstr_w(parent));
+
+    p = msi_resolve_source_folder( package, parent, NULL );
+
+    if (package->WordCount & msidbSumInfoSourceTypeCompressed)
+        path = get_source_root( package );
+    else if (package->WordCount & msidbSumInfoSourceTypeSFN)
+        path = msi_build_directory_name( 3, p, f->SourceShortPath, NULL );
+    else
+        path = msi_build_directory_name( 3, p, f->SourceLongPath, NULL );
+
+    TRACE("-> %s\n", debugstr_w(path));
+    f->ResolvedSource = strdupW( path );
+    msi_free( p );
+
+    return path;
+}
+
 /***********************************************************************
  * MSI_GetSourcePath   (internal)
  */
@@ -371,8 +431,7 @@ static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
         }
 
         len = 0;
-        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder,
-                                                  NULL, &len );
+        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder, NULL, &len );
         if (FAILED(hr))
             goto done;
 
@@ -384,8 +443,7 @@ static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
             goto done;
         }
 
-        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder,
-                                                  (BSTR *)value, &len);
+        hr = IWineMsiRemotePackage_GetSourcePath( remote_package, folder, value, &len );
         if (FAILED(hr))
             goto done;
 
@@ -413,7 +471,7 @@ done:
         return ERROR_INVALID_PARAMETER;
     }
 
-    path = resolve_source_folder( package, szFolder, NULL );
+    path = msi_resolve_source_folder( package, szFolder, NULL );
     msiobj_release( &package->hdr );
 
     TRACE("path = %s\n", debugstr_w(path));
@@ -435,7 +493,7 @@ UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder,
     awstring str;
     UINT r;
 
-    TRACE("%s %p %p\n", szFolder, debugstr_a(szPathBuf), pcchPathBuf);
+    TRACE("%s %p %p\n", debugstr_a(szFolder), szPathBuf, pcchPathBuf);
 
     str.unicode = FALSE;
     str.str.a = szPathBuf;
@@ -489,80 +547,58 @@ end:
     return rc;
 }
 
-/*
- * Ok my original interpretation of this was wrong. And it looks like msdn has
- * changed a bit also. The given folder path does not have to actually already
- * exist, it just cannot be read only and must be a legal folder path.
- */
-UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder, 
-                             LPCWSTR szFolderPath)
+static void set_target_path( MSIPACKAGE *package, MSIFOLDER *folder, const WCHAR *path )
+{
+    FolderList *fl;
+    MSIFOLDER *child;
+    WCHAR *target_path;
+
+    if (!(target_path = msi_normalize_path( path ))) return;
+    if (strcmpW( target_path, folder->ResolvedTarget ))
+    {
+        msi_free( folder->ResolvedTarget );
+        folder->ResolvedTarget = target_path;
+        msi_set_property( package->db, folder->Directory, folder->ResolvedTarget );
+
+        LIST_FOR_EACH_ENTRY( fl, &folder->children, FolderList, entry )
+        {
+            child = fl->folder;
+            msi_resolve_target_folder( package, child->Directory, FALSE );
+        }
+    }
+    else msi_free( target_path );
+}
+
+UINT MSI_SetTargetPathW( MSIPACKAGE *package, LPCWSTR szFolder, LPCWSTR szFolderPath )
 {
     DWORD attrib;
-    LPWSTR path = NULL;
-    LPWSTR path2 = NULL;
     MSIFOLDER *folder;
     MSIFILE *file;
 
-    TRACE("%p %s %s\n",package, debugstr_w(szFolder),debugstr_w(szFolderPath));
+    TRACE("%p %s %s\n", package, debugstr_w(szFolder), debugstr_w(szFolderPath));
 
     attrib = GetFileAttributesW(szFolderPath);
     /* native MSI tests writeability by making temporary files at each drive */
-    if ( attrib != INVALID_FILE_ATTRIBUTES &&
-          (attrib & FILE_ATTRIBUTE_OFFLINE ||
-           attrib & FILE_ATTRIBUTE_READONLY))
+    if (attrib != INVALID_FILE_ATTRIBUTES &&
+        (attrib & FILE_ATTRIBUTE_OFFLINE || attrib & FILE_ATTRIBUTE_READONLY))
+    {
         return ERROR_FUNCTION_FAILED;
-
-    path = resolve_target_folder( package, szFolder, FALSE, FALSE, &folder );
-    if (!path)
-        return ERROR_DIRECTORY;
-
-    msi_free(folder->Property);
-    folder->Property = build_directory_name(2, szFolderPath, NULL);
-
-    if (!strcmpiW( path, folder->Property ))
-    {
-        /*
-         *  Resolved Target has not really changed, so just 
-         *  set this folder and do not recalculate everything.
-         */
-        msi_free(folder->ResolvedTarget);
-        folder->ResolvedTarget = NULL;
-        path2 = resolve_target_folder( package, szFolder, TRUE, FALSE, NULL );
-        msi_free(path2);
     }
-    else
+    if (!(folder = msi_get_loaded_folder( package, szFolder ))) return ERROR_DIRECTORY;
+
+    set_target_path( package, folder, szFolderPath );
+
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        MSIFOLDER *f;
+        const WCHAR *dir;
+        MSICOMPONENT *comp = file->Component;
 
-        LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
-        {
-            msi_free(f->ResolvedTarget);
-            f->ResolvedTarget=NULL;
-        }
+        if (!comp->Enabled || (comp->assembly && !comp->assembly->application)) continue;
 
-        LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
-        {
-            path2 = resolve_target_folder( package, f->Directory, TRUE, FALSE, NULL );
-            msi_free(path2);
-        }
-
-        LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
-        {
-            MSICOMPONENT *comp = file->Component;
-            LPWSTR dir;
-
-            if (!comp->Enabled || (comp->assembly && !comp->assembly->application))
-                continue;
-
-            dir = resolve_target_folder( package, comp->Directory, FALSE, FALSE, NULL );
-            msi_free(file->TargetPath);
-
-            file->TargetPath = build_directory_name(2, dir, file->FileName);
-            msi_free(dir);
-        }
+        dir = msi_get_target_folder( package, comp->Directory );
+        msi_free( file->TargetPath );
+        file->TargetPath = msi_build_directory_name( 2, dir, file->FileName );
     }
-    msi_free(path);
-
     return ERROR_SUCCESS;
 }
 
@@ -685,6 +721,14 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
 
     switch (iRunMode)
     {
+    case MSIRUNMODE_ADMIN:
+        FIXME("no support for administrative installs\n");
+        break;
+
+    case MSIRUNMODE_ADVERTISE:
+        FIXME("no support for advertised installs\n");
+        break;
+
     case MSIRUNMODE_WINDOWS9X:
         if (GetVersion() & 0x80000000)
             r = TRUE;
@@ -712,8 +756,16 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         r = msi_get_property_int( package->db, szInstalled, 0 ) != 0;
         break;
 
+    case MSIRUNMODE_ROLLBACKENABLED:
+        r = msi_get_property_int( package->db, szRollbackDisabled, 0 ) == 0;
+        break;
+
     case MSIRUNMODE_REBOOTATEND:
-        r = package->need_reboot;
+        r = package->need_reboot_at_end;
+        break;
+
+    case MSIRUNMODE_REBOOTNOW:
+        r = package->need_reboot_now;
         break;
 
     case MSIRUNMODE_LOGENABLED:
@@ -766,13 +818,13 @@ UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
     switch (iRunMode)
     {
     case MSIRUNMODE_REBOOTATEND:
-        package->need_reboot = 1;
+        package->need_reboot_at_end = (fState != 0);
         r = ERROR_SUCCESS;
         break;
 
     case MSIRUNMODE_REBOOTNOW:
-        FIXME("unimplemented run mode: %d\n", iRunMode);
-        r = ERROR_FUNCTION_FAILED;
+        package->need_reboot_now = (fState != 0);
+        r = ERROR_SUCCESS;
         break;
 
     default:
@@ -807,17 +859,97 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
     return rc;
 }
 
+/* update component state based on a feature change */
+void ACTION_UpdateComponentStates( MSIPACKAGE *package, MSIFEATURE *feature )
+{
+    INSTALLSTATE newstate;
+    ComponentList *cl;
 
+    newstate = feature->ActionRequest;
+    if (newstate == INSTALLSTATE_ABSENT) newstate = INSTALLSTATE_UNKNOWN;
 
-UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
-                                INSTALLSTATE iState)
+    LIST_FOR_EACH_ENTRY(cl, &feature->Components, ComponentList, entry)
+    {
+        MSICOMPONENT *component = cl->component;
+
+        if (!component->Enabled) continue;
+
+        TRACE("Modifying (%d): Component %s (Installed %d, Action %d, Request %d)\n",
+            newstate, debugstr_w(component->Component), component->Installed,
+            component->Action, component->ActionRequest);
+
+        if (newstate == INSTALLSTATE_LOCAL)
+        {
+            component->Action = INSTALLSTATE_LOCAL;
+            component->ActionRequest = INSTALLSTATE_LOCAL;
+        }
+        else
+        {
+            ComponentList *clist;
+            MSIFEATURE *f;
+
+            component->hasLocalFeature = FALSE;
+
+            component->Action = newstate;
+            component->ActionRequest = newstate;
+            /* if any other feature wants it local we need to set it local */
+            LIST_FOR_EACH_ENTRY(f, &package->features, MSIFEATURE, entry)
+            {
+                if ( f->ActionRequest != INSTALLSTATE_LOCAL &&
+                     f->ActionRequest != INSTALLSTATE_SOURCE )
+                {
+                    continue;
+                }
+                LIST_FOR_EACH_ENTRY(clist, &f->Components, ComponentList, entry)
+                {
+                    if (clist->component == component &&
+                        (f->ActionRequest == INSTALLSTATE_LOCAL ||
+                         f->ActionRequest == INSTALLSTATE_SOURCE))
+                    {
+                        TRACE("Saved by %s\n", debugstr_w(f->Feature));
+                        component->hasLocalFeature = TRUE;
+
+                        if (component->Attributes & msidbComponentAttributesOptional)
+                        {
+                            if (f->Attributes & msidbFeatureAttributesFavorSource)
+                            {
+                                component->Action = INSTALLSTATE_SOURCE;
+                                component->ActionRequest = INSTALLSTATE_SOURCE;
+                            }
+                            else
+                            {
+                                component->Action = INSTALLSTATE_LOCAL;
+                                component->ActionRequest = INSTALLSTATE_LOCAL;
+                            }
+                        }
+                        else if (component->Attributes & msidbComponentAttributesSourceOnly)
+                        {
+                            component->Action = INSTALLSTATE_SOURCE;
+                            component->ActionRequest = INSTALLSTATE_SOURCE;
+                        }
+                        else
+                        {
+                            component->Action = INSTALLSTATE_LOCAL;
+                            component->ActionRequest = INSTALLSTATE_LOCAL;
+                        }
+                    }
+                }
+            }
+        }
+        TRACE("Result (%d): Component %s (Installed %d, Action %d, Request %d)\n",
+            newstate, debugstr_w(component->Component), component->Installed,
+            component->Action, component->ActionRequest);
+    }
+}
+
+UINT MSI_SetFeatureStateW( MSIPACKAGE *package, LPCWSTR szFeature, INSTALLSTATE iState )
 {
     UINT rc = ERROR_SUCCESS;
     MSIFEATURE *feature, *child;
 
     TRACE("%s %i\n", debugstr_w(szFeature), iState);
 
-    feature = get_loaded_feature(package,szFeature);
+    feature = msi_get_loaded_feature( package, szFeature );
     if (!feature)
         return ERROR_UNKNOWN_FEATURE;
 
@@ -891,6 +1023,70 @@ UINT WINAPI MsiSetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 }
 
 /***********************************************************************
+* MsiSetFeatureAttributesA   (MSI.@)
+*/
+UINT WINAPI MsiSetFeatureAttributesA( MSIHANDLE handle, LPCSTR feature, DWORD attrs )
+{
+    UINT r;
+    WCHAR *featureW = NULL;
+
+    TRACE("%u, %s, 0x%08x\n", handle, debugstr_a(feature), attrs);
+
+    if (feature && !(featureW = strdupAtoW( feature ))) return ERROR_OUTOFMEMORY;
+
+    r = MsiSetFeatureAttributesW( handle, featureW, attrs );
+    msi_free( featureW );
+    return r;
+}
+
+static DWORD unmap_feature_attributes( DWORD attrs )
+{
+    DWORD ret = 0;
+
+    if (attrs & INSTALLFEATUREATTRIBUTE_FAVORLOCAL)             ret = msidbFeatureAttributesFavorLocal;
+    if (attrs & INSTALLFEATUREATTRIBUTE_FAVORSOURCE)            ret |= msidbFeatureAttributesFavorSource;
+    if (attrs & INSTALLFEATUREATTRIBUTE_FOLLOWPARENT)           ret |= msidbFeatureAttributesFollowParent;
+    if (attrs & INSTALLFEATUREATTRIBUTE_FAVORADVERTISE)         ret |= msidbFeatureAttributesFavorAdvertise;
+    if (attrs & INSTALLFEATUREATTRIBUTE_DISALLOWADVERTISE)      ret |= msidbFeatureAttributesDisallowAdvertise;
+    if (attrs & INSTALLFEATUREATTRIBUTE_NOUNSUPPORTEDADVERTISE) ret |= msidbFeatureAttributesNoUnsupportedAdvertise;
+    return ret;
+}
+
+/***********************************************************************
+* MsiSetFeatureAttributesW   (MSI.@)
+*/
+UINT WINAPI MsiSetFeatureAttributesW( MSIHANDLE handle, LPCWSTR name, DWORD attrs )
+{
+    MSIPACKAGE *package;
+    MSIFEATURE *feature;
+    WCHAR *costing;
+
+    TRACE("%u, %s, 0x%08x\n", handle, debugstr_w(name), attrs);
+
+    if (!name || !name[0]) return ERROR_UNKNOWN_FEATURE;
+
+    if (!(package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE )))
+        return ERROR_INVALID_HANDLE;
+
+    costing = msi_dup_property( package->db, szCostingComplete );
+    if (!costing || !strcmpW( costing, szOne ))
+    {
+        msi_free( costing );
+        msiobj_release( &package->hdr );
+        return ERROR_FUNCTION_FAILED;
+    }
+    msi_free( costing );
+    if (!(feature = msi_get_loaded_feature( package, name )))
+    {
+        msiobj_release( &package->hdr );
+        return ERROR_UNKNOWN_FEATURE;
+    }
+    feature->Attributes = unmap_feature_attributes( attrs );
+    msiobj_release( &package->hdr );
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
 * MsiGetFeatureStateA   (MSI.@)
 */
 UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
@@ -899,12 +1095,10 @@ UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
     LPWSTR szwFeature = NULL;
     UINT rc;
     
-    szwFeature = strdupAtoW(szFeature);
+    if (szFeature && !(szwFeature = strdupAtoW(szFeature))) return ERROR_OUTOFMEMORY;
 
-    rc = MsiGetFeatureStateW(hInstall,szwFeature,piInstalled, piAction);
-
+    rc = MsiGetFeatureStateW(hInstall, szwFeature, piInstalled, piAction);
     msi_free( szwFeature);
-
     return rc;
 }
 
@@ -913,7 +1107,7 @@ UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPCWSTR szFeature,
 {
     MSIFEATURE *feature;
 
-    feature = get_loaded_feature(package,szFeature);
+    feature = msi_get_loaded_feature(package,szFeature);
     if (!feature)
         return ERROR_UNKNOWN_FEATURE;
 
@@ -1033,7 +1227,7 @@ UINT MSI_GetFeatureCost( MSIPACKAGE *package, MSIFEATURE *feature, MSICOSTTREE t
         const WCHAR *feature_parent = feature->Feature_Parent;
         for (;;)
         {
-            MSIFEATURE *parent = get_loaded_feature( package, feature_parent );
+            MSIFEATURE *parent = msi_get_loaded_feature( package, feature_parent );
             if (!parent)
                 break;
 
@@ -1106,7 +1300,7 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
         return ERROR_SUCCESS;
     }
 
-    feature = get_loaded_feature(package, szFeature);
+    feature = msi_get_loaded_feature(package, szFeature);
 
     if (feature)
         ret = MSI_GetFeatureCost(package, feature, iCostTree, iState, piCost);
@@ -1115,6 +1309,126 @@ UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
 
     msiobj_release( &package->hdr );
     return ret;
+}
+
+/***********************************************************************
+* MsiGetFeatureInfoA   (MSI.@)
+*/
+UINT WINAPI MsiGetFeatureInfoA( MSIHANDLE handle, LPCSTR feature, LPDWORD attrs,
+                                LPSTR title, LPDWORD title_len, LPSTR help, LPDWORD help_len )
+{
+    UINT r;
+    WCHAR *titleW = NULL, *helpW = NULL, *featureW = NULL;
+
+    TRACE("%u, %s, %p, %p, %p, %p, %p\n", handle, debugstr_a(feature), attrs, title,
+          title_len, help, help_len);
+
+    if (feature && !(featureW = strdupAtoW( feature ))) return ERROR_OUTOFMEMORY;
+
+    if (title && title_len && !(titleW = msi_alloc( *title_len * sizeof(WCHAR) )))
+    {
+        msi_free( featureW );
+        return ERROR_OUTOFMEMORY;
+    }
+    if (help && help_len && !(helpW = msi_alloc( *help_len * sizeof(WCHAR) )))
+    {
+        msi_free( featureW );
+        msi_free( titleW );
+        return ERROR_OUTOFMEMORY;
+    }
+    r = MsiGetFeatureInfoW( handle, featureW, attrs, titleW, title_len, helpW, help_len );
+    if (r == ERROR_SUCCESS)
+    {
+        if (titleW) WideCharToMultiByte( CP_ACP, 0, titleW, -1, title, *title_len + 1, NULL, NULL );
+        if (helpW) WideCharToMultiByte( CP_ACP, 0, helpW, -1, help, *help_len + 1, NULL, NULL );
+    }
+    msi_free( titleW );
+    msi_free( helpW );
+    msi_free( featureW );
+    return r;
+}
+
+static DWORD map_feature_attributes( DWORD attrs )
+{
+    DWORD ret = 0;
+
+    if (attrs == msidbFeatureAttributesFavorLocal)            ret |= INSTALLFEATUREATTRIBUTE_FAVORLOCAL;
+    if (attrs & msidbFeatureAttributesFavorSource)            ret |= INSTALLFEATUREATTRIBUTE_FAVORSOURCE;
+    if (attrs & msidbFeatureAttributesFollowParent)           ret |= INSTALLFEATUREATTRIBUTE_FOLLOWPARENT;
+    if (attrs & msidbFeatureAttributesFavorAdvertise)         ret |= INSTALLFEATUREATTRIBUTE_FAVORADVERTISE;
+    if (attrs & msidbFeatureAttributesDisallowAdvertise)      ret |= INSTALLFEATUREATTRIBUTE_DISALLOWADVERTISE;
+    if (attrs & msidbFeatureAttributesNoUnsupportedAdvertise) ret |= INSTALLFEATUREATTRIBUTE_NOUNSUPPORTEDADVERTISE;
+    return ret;
+}
+
+static UINT MSI_GetFeatureInfo( MSIPACKAGE *package, LPCWSTR name, LPDWORD attrs,
+                                LPWSTR title, LPDWORD title_len, LPWSTR help, LPDWORD help_len )
+{
+    UINT r = ERROR_SUCCESS;
+    MSIFEATURE *feature = msi_get_loaded_feature( package, name );
+    int len;
+
+    if (!feature) return ERROR_UNKNOWN_FEATURE;
+    if (attrs) *attrs = map_feature_attributes( feature->Attributes );
+    if (title_len)
+    {
+        if (feature->Title) len = strlenW( feature->Title );
+        else len = 0;
+        if (*title_len <= len)
+        {
+            *title_len = len;
+            if (title) r = ERROR_MORE_DATA;
+        }
+        else if (title)
+        {
+            if (feature->Title) strcpyW( title, feature->Title );
+            else *title = 0;
+            *title_len = len;
+        }
+    }
+    if (help_len)
+    {
+        if (feature->Description) len = strlenW( feature->Description );
+        else len = 0;
+        if (*help_len <= len)
+        {
+            *help_len = len;
+            if (help) r = ERROR_MORE_DATA;
+        }
+        else if (help)
+        {
+            if (feature->Description) strcpyW( help, feature->Description );
+            else *help = 0;
+            *help_len = len;
+        }
+    }
+    return r;
+}
+
+/***********************************************************************
+* MsiGetFeatureInfoW   (MSI.@)
+*/
+UINT WINAPI MsiGetFeatureInfoW( MSIHANDLE handle, LPCWSTR feature, LPDWORD attrs,
+                                LPWSTR title, LPDWORD title_len, LPWSTR help, LPDWORD help_len )
+{
+    UINT r;
+    MSIPACKAGE *package;
+
+    TRACE("%u, %s, %p, %p, %p, %p, %p\n", handle, debugstr_w(feature), attrs, title,
+          title_len, help, help_len);
+
+    if (!feature) return ERROR_INVALID_PARAMETER;
+
+    if (!(package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE )))
+        return ERROR_INVALID_HANDLE;
+
+    /* features may not have been loaded yet */
+    msi_load_all_components( package );
+    msi_load_all_features( package );
+
+    r = MSI_GetFeatureInfo( package, feature, attrs, title, title_len, help, help_len );
+    msiobj_release( &package->hdr );
+    return r;
 }
 
 /***********************************************************************
@@ -1158,7 +1472,7 @@ static UINT MSI_SetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
 
     TRACE("%p %s %d\n", package, debugstr_w(szComponent), iState);
 
-    comp = get_loaded_component(package, szComponent);
+    comp = msi_get_loaded_component(package, szComponent);
     if (!comp)
         return ERROR_UNKNOWN_COMPONENT;
 
@@ -1176,7 +1490,7 @@ UINT MSI_GetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
     TRACE("%p %s %p %p\n", package, debugstr_w(szComponent),
            piInstalled, piAction);
 
-    comp = get_loaded_component(package,szComponent);
+    comp = msi_get_loaded_component(package,szComponent);
     if (!comp)
         return ERROR_UNKNOWN_COMPONENT;
 
@@ -1307,9 +1621,7 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
 {
     MSIPACKAGE* package;
     LANGID langid;
-    static const WCHAR szProductLanguage[] =
-        {'P','r','o','d','u','c','t','L','a','n','g','u','a','g','e',0};
-    
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
@@ -1336,8 +1648,6 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
 
 UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
 {
-    static const WCHAR szInstallLevel[] = {
-        'I','N','S','T','A','L','L','L','E','V','E','L',0 };
     static const WCHAR fmt[] = { '%','d',0 };
     WCHAR level[6];
     UINT r;

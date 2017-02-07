@@ -906,14 +906,14 @@ static HRESULT UXTHEME_DrawBackgroundFill(HTHEME hTheme, HDC hdc, int iPartId,
         vert[0].Red   = GetRValue(gradient1) << 8;
         vert[0].Green = GetGValue(gradient1) << 8;
         vert[0].Blue  = GetBValue(gradient1) << 8;
-        vert[0].Alpha = 0x0000;
+        vert[0].Alpha = 0xff00;
 
         vert[1].x     = pRect->right;
         vert[1].y     = pRect->bottom;
         vert[1].Red   = GetRValue(gradient2) << 8;
         vert[1].Green = GetGValue(gradient2) << 8;
         vert[1].Blue  = GetBValue(gradient2) << 8;
-        vert[1].Alpha = 0x0000;
+        vert[1].Alpha = 0xff00;
 
         gRect.UpperLeft  = 0;
         gRect.LowerRight = 1;

@@ -24,19 +24,47 @@
 
 #include "version.rc"
 
-#include "crypt32_En.rc"
-#include "crypt32_Ko.rc"
-#include "crypt32_Pl.rc"
+#ifdef LANGUAGE_EN_US
+    #include "crypt32_En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "crypt32_Ko.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "crypt32_Pl.rc"
+#endif
 
 /* UTF-8 */
-#include "crypt32_De.rc"
-#include "crypt32_Fr.rc"
-#include "crypt32_Hu.rc"
-#include "crypt32_It.rc"
-#include "crypt32_Lt.rc"
-#include "crypt32_Nl.rc"
-#include "crypt32_No.rc"
-#include "crypt32_Pt.rc"
-#include "crypt32_Ro.rc"
-#include "crypt32_Sv.rc"
-#include "crypt32_Uk.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "crypt32_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "crypt32_Fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "crypt32_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "crypt32_It.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "crypt32_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "crypt32_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "crypt32_No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "crypt32_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "crypt32_Ro.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "crypt32_Sv.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "crypt32_Uk.rc"
+#endif

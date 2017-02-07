@@ -355,7 +355,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 
    DPRINT("VfatWriteFileData(DeviceExt %p, FileObject %p, "
 	  "Length %d, WriteOffset 0x%I64x), '%wZ'\n", DeviceExt,
-	  IrpContext->FileObject, Length, WriteOffset,
+	  IrpContext->FileObject, Length, WriteOffset.QuadPart,
 	  &Fcb->PathNameU);
 
    ASSERT(WriteOffset.QuadPart + Length <= Fcb->RFCB.AllocationSize.QuadPart);

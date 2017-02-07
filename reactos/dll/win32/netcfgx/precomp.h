@@ -14,6 +14,8 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <iphlpapi.h>
+#include <dhcpcsdk.h>
+#include <dhcpcapi.h>
 #include <olectl.h>
 #include <netcfgn.h>
 #include "resource.h"

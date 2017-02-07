@@ -10,7 +10,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
-#include <win32k/callback.h>
+#include <callback.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -18,8 +18,8 @@
 
 /* GLOBALS *******************************************************************/
 
-HKEY ImageExecOptionsKey;
-HKEY Wow64ExecOptionsKey;
+HANDLE ImageExecOptionsKey;
+HANDLE Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
@@ -104,9 +104,9 @@ NTSTATUS
 NTAPI
 LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
                            IN BOOLEAN Wow64,
-                           OUT PHKEY NewKeyHandle)
+                           OUT PHANDLE NewKeyHandle)
 {
-    PHKEY RootKeyLocation;
+    PHANDLE RootKeyLocation;
     HANDLE RootKey;
     UNICODE_STRING SubKeyString;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -124,7 +124,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
 
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                               Wow64 ? 
+                               Wow64 ?
                                &Wow64OptionsString : &ImageExecOptionsString,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
@@ -174,7 +174,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
  */
 NTSTATUS
 NTAPI
-LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
+LdrQueryImageFileKeyOption(IN HANDLE KeyHandle,
                            IN PCWSTR ValueName,
                            IN ULONG Type,
                            OUT PVOID Buffer,
@@ -207,20 +207,22 @@ LdrQueryImageFileKeyOption(IN HKEY KeyHandle,
         KeyValueInformation = RtlAllocateHeap(RtlGetProcessHeap(),
                                               0,
                                               KeyInfoSize);
-        if (KeyValueInformation == NULL)
+        if (KeyValueInformation != NULL)
+        {
+            /* Try again */
+            Status = ZwQueryValueKey(KeyHandle,
+                                     &ValueNameString,
+                                     KeyValuePartialInformation,
+                                     KeyValueInformation,
+                                     KeyInfoSize,
+                                     &ResultSize);
+            FreeHeap = TRUE;
+        }
+        else
         {
             /* Give up this time */
             Status = STATUS_NO_MEMORY;
         }
-
-        /* Try again */
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueNameString,
-                                 KeyValuePartialInformation,
-                                 KeyValueInformation,
-                                 KeyInfoSize,
-                                 &ResultSize);
-        FreeHeap = TRUE;
     }
 
     /* Check for success */
@@ -345,7 +347,7 @@ LdrQueryImageFileExecutionOptionsEx(IN PUNICODE_STRING SubKey,
                                     IN BOOLEAN Wow64)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
 
     /* Open a handle to the key */
     Status = LdrOpenImageFileOptionsKey(SubKey, Wow64, &KeyHandle);
@@ -441,7 +443,7 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PULONG_PTR Cookie;
     LARGE_INTEGER Counter;
-    ULONG NewCookie;
+    ULONG_PTR NewCookie;
 
     /* Fetch address of the cookie */
     Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
@@ -536,7 +538,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                 EntryPoint = LdrEntry->EntryPoint;
 
                 /* Check if we are ready to call it */
-                if ((EntryPoint) && 
+                if ((EntryPoint) &&
                     (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                     (LdrEntry->Flags & LDRP_IMAGE_DLL))
                 {
@@ -641,7 +643,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             /* Allocate space for all the entries */
             LdrRootEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                            0,
-                                           Count * sizeof(LdrRootEntry));
+                                           Count * sizeof(*LdrRootEntry));
             if (!LdrRootEntry) return STATUS_NO_MEMORY;
         }
         else
@@ -687,6 +689,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                 if (LdrEntry->EntryPoint)
                 {
                     /* Write in array */
+                    ASSERT(i < Count);
                     LdrRootEntry[i] = LdrEntry;
 
                     /* Display debug message */
@@ -939,7 +942,7 @@ LdrShutdownProcess(VOID)
             EntryPoint = LdrEntry->EntryPoint;
 
             /* Check if we are ready to call it */
-            if (EntryPoint && 
+            if (EntryPoint &&
                 (LdrEntry->Flags & LDRP_PROCESS_ATTACH_CALLED) &&
                 LdrEntry->Flags)
             {
@@ -1212,7 +1215,7 @@ LdrpAllocateTls(VOID)
     PTEB Teb = NtCurrentTeb();
     PLIST_ENTRY NextEntry, ListHead;
     PLDRP_TLS_DATA TlsData;
-    ULONG TlsDataSize;
+    SIZE_T TlsDataSize;
     PVOID *TlsVector;
 
     /* Check if we have any entries */
@@ -1236,7 +1239,7 @@ LdrpAllocateTls(VOID)
         NextEntry = NextEntry->Flink;
 
         /* Allocate this vector */
-        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData - 
+        TlsDataSize = TlsData->TlsDirectory.EndAddressOfRawData -
                       TlsData->TlsDirectory.StartAddressOfRawData;
         TlsVector[TlsData->TlsDirectory.Characteristics] = RtlAllocateHeap(RtlGetProcessHeap(),
                                                                            0,
@@ -1326,10 +1329,10 @@ LdrpInitializeApplicationVerifierPackage(PUNICODE_STRING ImagePathName, PPEB Peb
 
 NTSTATUS
 NTAPI
-LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHKEY OptionsKey)
+LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE OptionsKey)
 {
     NTSTATUS Status;
-    HKEY KeyHandle;
+    HANDLE KeyHandle;
     ULONG ExecuteOptions, MinimumStackCommit = 0, GlobalFlag;
 
     /* Return error if we were not provided a pointer where to save the options key handle */
@@ -1467,12 +1470,12 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     PPEB Peb = NtCurrentPeb();
     BOOLEAN IsDotNetImage = FALSE;
     BOOLEAN FreeCurDir = FALSE;
-    //HKEY CompatKey;
+    //HANDLE CompatKey;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
     //LPWSTR ImagePathBuffer;
     ULONG ConfigSize;
     UNICODE_STRING CurrentDirectory;
-    HKEY OptionsKey;
+    HANDLE OptionsKey;
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;
@@ -1546,7 +1549,6 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Normalize the parameters */
     ProcessParameters = RtlNormalizeProcessParams(Peb->ProcessParameters);
-    ProcessParameters = Peb->ProcessParameters;
     if (ProcessParameters)
     {
         /* Save the Image and Command Line Names */
@@ -1993,7 +1995,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
     {
         DPRINT1("LDR: Performing EXE relocation\n");
-        
+
         /* Change the protection to prepare for relocation */
         ViewBase = Peb->ImageBaseAddress;
         Status = LdrpSetProtection(ViewBase, FALSE);
@@ -2011,7 +2013,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             DPRINT1("LdrRelocateImageWithBias() failed\n");
             return Status;
         }
-        
+
         /* Check if a start context was provided */
         if (Context)
         {
@@ -2019,7 +2021,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
             UNIMPLEMENTED; // We should support this
             return STATUS_INVALID_IMAGE_FORMAT;
         }
-        
+
         /* Restore the protection */
         Status = LdrpSetProtection(ViewBase, TRUE);
         if (!NT_SUCCESS(Status)) return Status;

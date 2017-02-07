@@ -5,9 +5,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
-spec2def(gdiplus.dll gdiplus.spec)
+spec2def(gdiplus.dll gdiplus.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     brush.c
@@ -19,38 +17,18 @@ list(APPEND SOURCE
     image.c
     imageattributes.c
     matrix.c
+    metafile.c
     pathiterator.c
     pen.c
     region.c
     stringformat.c
+    gdiplus.rc
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
-
-if(MSVC)
-    set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE
-        ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
-endif()
 
 add_library(gdiplus SHARED ${SOURCE})
 set_module_type(gdiplus win32dll)
 target_link_libraries(gdiplus uuid wine)
 add_delay_importlibs(gdiplus windowscodecs)
-
-add_importlibs(gdiplus
-    msvcrt
-    shlwapi
-    oleaut32
-    ole32
-    user32
-    gdi32
-    kernel32
-    ntdll)
-
-add_importlib_target(gdiplus.spec)
-
-if(ARCH MATCHES amd64)
-    target_link_libraries(gdiplus crt)
-endif()
-
+add_importlibs(gdiplus msvcrt shlwapi oleaut32 ole32 user32 gdi32 kernel32 ntdll)
 add_cd_file(TARGET gdiplus DESTINATION reactos/system32 FOR all)

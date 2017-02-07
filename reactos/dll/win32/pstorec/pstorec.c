@@ -33,9 +33,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(pstores);
 
 typedef struct
 {
-    const IPStoreVtbl *lpVtbl;
+    IPStore IPStore_iface;
     LONG ref;
 } PStore_impl;
+
+static inline PStore_impl *impl_from_IPStore(IPStore *iface)
+{
+    return CONTAINING_RECORD(iface, PStore_impl, IPStore_iface);
+}
 
 BOOL WINAPI DllMain(HINSTANCE hinst, DWORD fdwReason, LPVOID fImpLoad)
 {
@@ -62,7 +67,7 @@ static HRESULT WINAPI PStore_fnQueryInterface(
         REFIID riid,
         LPVOID *ppvObj)
 {
-    PStore_impl *This = (PStore_impl *)iface;
+    PStore_impl *This = impl_from_IPStore(iface);
 
     TRACE("%p %s\n",This,debugstr_guid(riid));
 
@@ -87,7 +92,7 @@ static HRESULT WINAPI PStore_fnQueryInterface(
  */
 static ULONG WINAPI PStore_fnAddRef(IPStore* iface)
 {
-    PStore_impl *This = (PStore_impl *)iface;
+    PStore_impl *This = impl_from_IPStore(iface);
 
     TRACE("%p %u\n", This, This->ref);
 
@@ -99,7 +104,7 @@ static ULONG WINAPI PStore_fnAddRef(IPStore* iface)
  */
 static ULONG WINAPI PStore_fnRelease(IPStore* iface)
 {
-    PStore_impl *This = (PStore_impl *)iface;
+    PStore_impl *This = impl_from_IPStore(iface);
     LONG ref;
 
     TRACE("%p %u\n", This, This->ref);
@@ -293,9 +298,8 @@ static HRESULT WINAPI PStore_fnOpenItem( IPStore* This, PST_KEY Key,
     const GUID* pItemType, const GUID* pItemSubtype, LPCWSTR szItemName,
     PST_ACCESSMODE ModeFlags, PPST_PROMPTINFO pProomptInfo, DWORD dwFlags )
 {
-    FIXME("%p %08x %s %s %p %08x %p %08x\n", This, Key,
-           debugstr_guid(pItemType), debugstr_guid(pItemSubtype),
-           debugstr_w(szItemName), ModeFlags, pProomptInfo, dwFlags);
+    FIXME("(%p,%08x,%s,%s,%s,%08x,%p,%08x) stub\n", This, Key, debugstr_guid(pItemType),
+           debugstr_guid(pItemSubtype), debugstr_w(szItemName), ModeFlags, pProomptInfo, dwFlags);
     return E_NOTIMPL;
 }
 
@@ -359,7 +363,7 @@ HRESULT WINAPI PStoreCreateInstance( IPStore** ppProvider,
     if( !ips )
         return E_OUTOFMEMORY;
 
-    ips->lpVtbl = &pstores_vtbl;
+    ips->IPStore_iface.lpVtbl = &pstores_vtbl;
     ips->ref = 1;
 
     *ppProvider = (IPStore*) ips;

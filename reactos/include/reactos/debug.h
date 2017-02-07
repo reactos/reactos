@@ -27,20 +27,21 @@
 ULONG
 __cdecl
 DbgPrint(
-    IN PCCH  Format,
-    IN ...
+    _In_z_ _Printf_format_string_ PCSTR Format,
+    ...
 );
 
 NTSYSAPI
 ULONG
 __cdecl
 DbgPrintEx(
-    IN ULONG ComponentId,
-    IN ULONG Level,
-    IN PCCH  Format,
-    IN ...
+    _In_ ULONG ComponentId,
+    _In_ ULONG Level,
+    _In_z_ _Printf_format_string_ PCCH Format,
+    ...
 );
 
+__analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
@@ -107,7 +108,7 @@ RtlAssert(
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-    
+
     #define ERR__(ch, fmt, ...)    DbgPrintEx(ch, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define WARN__(ch, fmt, ...)   DbgPrintEx(ch, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
     #define TRACE__(ch, fmt, ...)  DbgPrintEx(ch, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
@@ -124,7 +125,7 @@ RtlAssert(
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-    
+
     #define ERR__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define WARN__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE__(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)

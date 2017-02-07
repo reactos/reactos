@@ -124,8 +124,9 @@ extern "C" {
   __CRT_INLINE long double tanl(long double x) { return (tan((double)x)); }
 #endif
 
-#if defined(__x86_64) || defined(_M_AMD64) || \
-    defined (__ia64__) || defined (_M_IA64)
+#if (_WIN32_WINNT >= 0x600) && \
+    (defined(__x86_64) || defined(_M_AMD64) || \
+     defined (__ia64__) || defined (_M_IA64))
   _CRTIMP float __cdecl acosf(float x);
   _CRTIMP float __cdecl asinf(float x);
   _CRTIMP float __cdecl atanf(float x);
@@ -239,8 +240,6 @@ extern "C++" {
 
 #pragma pack(pop)
 
-#endif /* !_INC_MATH */
-
 #if defined(_USE_MATH_DEFINES) && !defined(_MATH_DEFINES_DEFINED)
 #define _MATH_DEFINES_DEFINED
 
@@ -259,3 +258,142 @@ extern "C++" {
 #define M_SQRT1_2 0.707106781186547524401
 
 #endif /* _USE_MATH_DEFINES */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef __NO_ISOCEXT
+#if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
+  || !defined __STRICT_ANSI__ || defined __GLIBCPP__
+  
+/* 7.12.3.1 */
+/*
+   Return values for fpclassify.
+   These are based on Intel x87 fpu condition codes
+   in the high byte of status word and differ from
+   the return values for MS IEEE 754 extension _fpclass()
+*/
+#define FP_NAN		0x0100
+#define FP_NORMAL	0x0400
+#define FP_INFINITE	(FP_NAN | FP_NORMAL)
+#define FP_ZERO		0x4000
+#define FP_SUBNORMAL	(FP_NORMAL | FP_ZERO)
+/* 0x0200 is signbit mask */
+
+/*
+  We can't inline float or double, because we want to ensure truncation
+  to semantic type before classification. 
+  (A normal long double value might become subnormal when 
+  converted to double, and zero when converted to float.)
+*/
+
+  extern int __cdecl __fpclassifyl (long double);
+  extern int __cdecl __fpclassifyf (float);
+  extern int __cdecl __fpclassify (double);
+
+#ifndef __CRT__NO_INLINE
+  __CRT_INLINE int __cdecl __fpclassifyl (long double x) {
+    unsigned short sw;
+    __asm__ __volatile__ ("fxam; fstsw %%ax;" : "=a" (sw): "t" (x));
+    return sw & (FP_NAN | FP_NORMAL | FP_ZERO );
+  }
+  __CRT_INLINE int __cdecl __fpclassify (double x) {
+#ifdef __x86_64__
+    __mingw_dbl_type_t hlp;
+    unsigned int l, h;
+
+    hlp.x = x;
+    h = hlp.lh.high;
+    l = hlp.lh.low | (h & 0xfffff);
+    h &= 0x7ff00000;
+    if ((h | l) == 0)
+      return FP_ZERO;
+    if (!h)
+      return FP_SUBNORMAL;
+    if (h == 0x7ff00000)
+      return (l ? FP_NAN : FP_INFINITE);
+    return FP_NORMAL;
+#else
+    unsigned short sw;
+    __asm__ __volatile__ ("fxam; fstsw %%ax;" : "=a" (sw): "t" (x));
+    return sw & (FP_NAN | FP_NORMAL | FP_ZERO );
+#endif
+  }
+  __CRT_INLINE int __cdecl __fpclassifyf (float x) {
+#ifdef __x86_64__
+    __mingw_flt_type_t hlp;
+
+    hlp.x = x;
+    hlp.val &= 0x7fffffff;
+    if (hlp.val == 0)
+      return FP_ZERO;
+    if (hlp.val < 0x800000)
+      return FP_SUBNORMAL;
+    if (hlp.val >= 0x7f800000)
+      return (hlp.val > 0x7f800000 ? FP_NAN : FP_INFINITE);
+    return FP_NORMAL;
+#else
+    unsigned short sw;
+    __asm__ __volatile__ ("fxam; fstsw %%ax;" : "=a" (sw): "t" (x));
+    return sw & (FP_NAN | FP_NORMAL | FP_ZERO );
+#endif
+  }
+#endif
+
+#define fpclassify(x) (sizeof (x) == sizeof (float) ? __fpclassifyf (x)	  \
+  : sizeof (x) == sizeof (double) ? __fpclassify (x) \
+  : __fpclassifyl (x))
+
+/* 7.12.3.2 */
+#define isfinite(x) ((fpclassify(x) & FP_NAN) == 0)
+
+/* 7.12.3.3 */
+#define isinf(x) (fpclassify(x) == FP_INFINITE)
+  
+/* Inverse hyperbolic trig functions  */ 
+/* 7.12.5.1 */
+  extern double __cdecl acosh (double);
+  extern float __cdecl acoshf (float);
+  extern long double __cdecl acoshl (long double);
+
+/* 7.12.5.2 */
+  extern double __cdecl asinh (double);
+  extern float __cdecl asinhf (float);
+  extern long double __cdecl asinhl (long double);
+
+/* 7.12.5.3 */
+  extern double __cdecl atanh (double);
+  extern float __cdecl atanhf  (float);
+  extern long double __cdecl atanhl (long double);
+  
+/* 7.12.6.2 */
+  extern double __cdecl exp2(double);
+  extern float __cdecl exp2f(float);
+  extern long double __cdecl exp2l(long double);
+  
+/* 7.12.6.10 */
+  extern double __cdecl log2 (double);
+  extern float __cdecl log2f (float);
+  extern long double __cdecl log2l (long double);
+  
+/* 7.12.9.6 */
+/* round away from zero, regardless of fpu control word settings */
+  extern double __cdecl round (double);
+  extern float __cdecl roundf (float);
+  extern long double __cdecl roundl (long double);
+  
+/* 7.12.9.8 */
+/* round towards zero, regardless of fpu control word settings */
+  extern double __cdecl trunc (double);
+  extern float __cdecl truncf (float);
+  extern long double __cdecl truncl (long double);
+
+#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* __NO_ISOCEXT */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
+#endif /* !_INC_MATH */

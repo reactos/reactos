@@ -750,7 +750,7 @@ cpp_quote("STDAPI Rfc1766ToLcidA(LCID *, LPCSTR);")
 cpp_quote("STDAPI Rfc1766ToLcidW(LCID *, LPCWSTR);")
 cpp_quote("#define Rfc1766ToLcid WINELIB_NAME_AW(Rfc1766ToLcid)")
 
-cpp_quote("STDAPI GetGlobalFontLinkObject(void);")
+cpp_quote("STDAPI GetGlobalFontLinkObject(void **unknown);")
 cpp_quote("STDAPI IsConvertINetStringAvailable(DWORD, DWORD);")
 cpp_quote("STDAPI ConvertINetString(LPDWORD, DWORD, DWORD, LPCSTR, LPINT, LPSTR, LPINT);")
 cpp_quote("STDAPI ConvertINetMultiByteToUnicode(LPDWORD, DWORD, LPCSTR, LPINT, LPWSTR, LPINT);")

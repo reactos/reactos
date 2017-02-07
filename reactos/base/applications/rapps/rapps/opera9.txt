@@ -5,7 +5,7 @@ Name = Opera
 Version = 9.64
 Licence = Freeware
 Description = The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.
-Size = 7.2M
+Size = 7.21MB
 Category = 5
 URLSite = http://www.opera.com/
 URLDownload = http://arc.opera.com/pub/opera/win/964/int/Opera_964_int_Setup.exe
@@ -22,6 +22,11 @@ Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités av
 
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
+
+[Section.0418]
+Licence = Gratuită
+Description = Navigatorul popular Opera cu multe funcționalități avansate incluzând poștă electronică și un client de BitTorrent.
+Size = 7.21Mo
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.

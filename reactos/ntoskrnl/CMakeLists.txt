@@ -1,5 +1,7 @@
 
-spec2def(ntoskrnl.exe ntoskrnl.spec)
+PROJECT(NTOS)
+
+spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}
@@ -18,7 +20,9 @@ add_definitions(
 
 set_rc_compiler()
 
-set(NEWCC FALSE)
+if(NOT DEFINED NEWCC)
+    set(NEWCC FALSE)
+endif(NOT DEFINED NEWCC)
 
 if(NEWCC)
     add_definitions(-DNEWCC)
@@ -29,12 +33,7 @@ if(NEWCC)
         cache/lazyrite.c
         cache/logsup.c
         cache/mdlsup.c
-        cache/pinsup.c
-        cache/section/data.c
-        cache/section/fault.c
-        cache/section/reqtools.c
-        cache/section/sptab.c
-        cache/section/swapout.c)
+        cache/pinsup.c)
 else()
     list(APPEND SOURCE
         cc/cacheman.c
@@ -47,6 +46,11 @@ endif()
 
 list(APPEND SOURCE
     cache/section/io.c
+    cache/section/data.c
+    cache/section/fault.c
+    cache/section/reqtools.c
+    cache/section/sptab.c
+    cache/section/swapout.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c
@@ -117,6 +121,7 @@ list(APPEND SOURCE
     fsrtl/fsfilter.c
     fsrtl/fsrtlpc.c
     fsrtl/largemcb.c
+    fsrtl/mcb.c
     fsrtl/name.c
     fsrtl/notify.c
     fsrtl/oplock.c
@@ -127,7 +132,7 @@ list(APPEND SOURCE
     fstub/disksup.c
     fstub/fstubex.c
     fstub/halstub.c
-	fstub/translate.c
+    fstub/translate.c
     inbv/inbv.c
     inbv/inbvport.c
     io/iomgr/adapter.c
@@ -220,14 +225,12 @@ list(APPEND SOURCE
     mm/ARM3/vadnode.c
     mm/ARM3/virtual.c
     mm/ARM3/zeropage.c
-    mm/anonmem.c
     mm/balance.c
     mm/freelist.c
     mm/marea.c
     mm/mmfault.c
     mm/mminit.c
     mm/pagefile.c
-    mm/pageop.c
     mm/region.c
     mm/rmap.c
     mm/section.c
@@ -271,8 +274,7 @@ list(APPEND SOURCE
     se/token.c
     vf/driver.c
     wmi/wmi.c
-    ntoskrnl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
+    ntoskrnl.rc)
 
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
@@ -421,7 +423,9 @@ else() # _WINKD_
 
 endif()
 
-add_executable(ntoskrnl ${SOURCE})
+add_executable(ntoskrnl
+    ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 
 if (ARCH MATCHES i386)
   set_entrypoint(ntoskrnl KiSystemStartup 4)
@@ -434,6 +438,11 @@ if(MSVC)
     set_image_base(ntoskrnl 0x00400000)
 else()
     set_image_base(ntoskrnl 0x80800000)
+endif()
+
+# Linker bug
+if(NOT MSVC AND LTCG)
+    add_target_link_flags(ntoskrnl "-shared")
 endif()
 
 target_link_libraries(ntoskrnl
@@ -453,6 +462,38 @@ add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(ntoskrnl.spec)
+
+if(BUILD_MP)
+    spec2def(ntkrnlmp.exe ntoskrnl.spec)
+
+    add_executable(ntkrnlmp
+        ${SOURCE}
+        ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
+
+    add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
+
+    if(ARCH MATCHES i386)
+        set_entrypoint(ntkrnlmp KiSystemStartup 4)
+    else()
+        set_entrypoint(ntkrnlmp KiSystemStartup)
+    endif()
+    set_subsystem(ntkrnlmp native)
+
+    if(MSVC)
+        set_image_base(ntkrnlmp 0x00400000)
+    else()
+        set_image_base(ntkrnlmp 0x80800000)
+    endif()
+
+    # Linker bug
+    if(NOT MSVC AND LTCG)
+        add_target_link_flags(ntkrnlmp "-shared")
+    endif()
+
+    target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib rtl rossym libcntpr wdmguid ioevent)
+    add_importlibs(ntkrnlmp hal kdcom bootvid)
+    add_dependencies(ntkrnlmp psdk bugcodes asm)
+    add_cd_file(TARGET ntkrnlmp DESTINATION reactos/system32 NO_CAB FOR all)
+endif()
 
 add_library(ntdllsys ntdll.S)

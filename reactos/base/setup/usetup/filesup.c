@@ -168,7 +168,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			    FileHandleSource);
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtCreateSection failed: %x\n", Status);
+      DPRINT1("NtCreateSection failed: %x, %wZ\n", Status, SourceFileName);
       goto closesrc;
     }
 
@@ -184,7 +184,7 @@ SetupCopyFile(PWCHAR SourceFileName,
 			       PAGE_READONLY );
   if(!NT_SUCCESS(Status))
     {
-      DPRINT1("NtMapViewOfSection failed: %x\n", Status);
+      DPRINT1("NtMapViewOfSection failed: %x, %wZ\n", Status, SourceFileName);
       goto closesrcsec;
     }
 

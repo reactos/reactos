@@ -42,6 +42,22 @@ typedef enum _NDIS_DEVICE_POWER_STATE {
   NdisDeviceStateMaximum
 } NDIS_DEVICE_POWER_STATE, *PNDIS_DEVICE_POWER_STATE;
 
+typedef enum _NDIS_802_11_WEP_STATUS
+{
+    Ndis802_11WEPEnabled,
+    Ndis802_11WEPDisabled,
+    Ndis802_11WEPKeyAbsent,
+    Ndis802_11WEPNotSupported
+} NDIS_802_11_WEP_STATUS, *PNDIS_802_11_WEP_STATUS;
+
+typedef enum _NDIS_802_11_AUTHENTICATION_MODE
+{
+    Ndis802_11AuthModeOpen,
+    Ndis802_11AuthModeShared,
+    Ndis802_11AuthModeAutoSwitch,
+    Ndis802_11AuthModeMax
+} NDIS_802_11_AUTHENTICATION_MODE, *PNDIS_802_11_AUTHENTICATION_MODE;
+
 typedef enum _NDIS_802_11_NETWORK_INFRASTRUCTURE
 {
     Ndis802_11IBSS,
@@ -116,6 +132,14 @@ typedef struct _NDIS_802_11_BSSID_LIST
     ULONG NumberOfItems;
     NDIS_WLAN_BSSID Bssid[1];
 } NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
+
+typedef struct _NDIS_802_11_WEP
+{
+    ULONG Length;
+    ULONG KeyIndex;
+    ULONG KeyLength;
+    UCHAR KeyMaterial[1];
+} NDIS_802_11_WEP, *PNDIS_802_11_WEP;
 
 typedef struct _NDIS_PM_WAKE_UP_CAPABILITIES {
   NDIS_DEVICE_POWER_STATE  MinMagicPacketWakeUp;
@@ -265,8 +289,34 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
 #define OID_802_3_XMIT_TIMES_CRS_LOST     0x01020206
 #define OID_802_3_XMIT_LATE_COLLISIONS    0x01020207
 
-#define OID_802_11_BSSID_LIST      0x0D010217
-#define OID_802_11_BSSID_LIST_SCAN 0x0D01011A
+/* IEEE 802.11 (WLAN) OIDs */
+#define OID_802_11_BSSID                        0x0D010101
+#define OID_802_11_SSID                         0x0D010102
+#define OID_802_11_NETWORK_TYPES_SUPPORTED      0x0D010203
+#define OID_802_11_NETWORK_TYPE_IN_USE          0x0D010204
+#define OID_802_11_TX_POWER_LEVEL               0x0D010205
+#define OID_802_11_RSSI                         0x0D010206
+#define OID_802_11_RSSI_TRIGGER                 0x0D010207
+#define OID_802_11_INFRASTRUCTURE_MODE          0x0D010108
+#define OID_802_11_FRAGMENTATION_THRESHOLD      0x0D010209
+#define OID_802_11_RTS_THRESHOLD                0x0D01020A
+#define OID_802_11_NUMBER_OF_ANTENNAS           0x0D01020B
+#define OID_802_11_RX_ANTENNA_SELECTED          0x0D01020C
+#define OID_802_11_TX_ANTENNA_SELECTED          0x0D01020D
+#define OID_802_11_SUPPORTED_RATES              0x0D01020E
+#define OID_802_11_DESIRED_RATES                0x0D010210
+#define OID_802_11_CONFIGURATION                0x0D010211
+#define OID_802_11_STATISTICS                   0x0D020212
+#define OID_802_11_ADD_WEP                      0x0D010113
+#define OID_802_11_REMOVE_WEP                   0x0D010114
+#define OID_802_11_DISASSOCIATE                 0x0D010115
+#define OID_802_11_POWER_MODE                   0x0D010216
+#define OID_802_11_BSSID_LIST                   0x0D010217
+#define OID_802_11_AUTHENTICATION_MODE          0x0D010118
+#define OID_802_11_PRIVACY_FILTER               0x0D010119
+#define OID_802_11_BSSID_LIST_SCAN              0x0D01011A
+#define OID_802_11_WEP_STATUS                   0x0D01011B
+#define OID_802_11_RELOAD_DEFAULTS              0x0D01011C
 
 /* OID_GEN_MINIPORT_INFO constants */
 #define NDIS_MINIPORT_BUS_MASTER                      0x00000001

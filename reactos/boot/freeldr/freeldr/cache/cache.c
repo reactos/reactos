@@ -31,8 +31,8 @@ CACHE_DRIVE		CacheManagerDrive;
 BOOLEAN			CacheManagerInitialized = FALSE;
 BOOLEAN			CacheManagerDataInvalid = FALSE;
 ULONG			CacheBlockCount = 0;
-ULONG			CacheSizeLimit = 0;
-ULONG			CacheSizeCurrent = 0;
+SIZE_T			CacheSizeLimit = 0;
+SIZE_T			CacheSizeCurrent = 0;
 
 BOOLEAN CacheInitializeDrive(UCHAR DriveNumber)
 {

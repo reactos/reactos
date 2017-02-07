@@ -28,49 +28,49 @@
  * Basically, what happens is that generic code which looks like:
  *
  * for (...)
- *   {
+ * {
  *     if (CondA)
- *       {
+ *     {
  *         doSomethingA;
- *       }
+ *     }
  *     for (...)
- *       {
+ *     {
  *         if (CondB)
- *           {
+ *         {
  *             doSomethingB;
- *           }
+ *         }
  *         else
- *           {
+ *         {
  *             doSomethingElseB;
- *           }
- *       }
- *   }
+ *         }
+ *     }
+ * }
  *
  * is specialized for named rops to look like:
  *
  * if (condC)
- *   {
+ * {
  *     if (condD)
- *       {
+ *     {
  *         for (...)
- *           {
+ *         {
  *             for (...)
- *               {
+ *             {
  *                 pumpSomeBytes;
- *               }
- *           }
- *       }
+ *             }
+ *         }
+ *     }
  *     else
- *       {
+ *     {
  *         for (...)
- *           {
+ *         {
  *             for (...)
- *               {
+ *             {
  *                 pumpSomeBytesSlightlyDifferentE;
- *               }
- *           }
- *       }
- *   }
+ *             }
+ *         }
+ *     }
+ * }
  *
  * i.e. we make the inner loops as tight as possible.
  * Another optimization is to try to load/store 32 alligned bits at a time from
@@ -117,14 +117,14 @@
 #define ROPCODE_GENERIC     256 /* Special case */
 
 typedef struct _ROPINFO
-  {
+{
     unsigned RopCode;
     const char *Name;
     const char *Operation;
     int UsesDest;
     int UsesSource;
     int UsesPattern;
-  }
+}
 ROPINFO, *PROPINFO;
 
 #define FLAG_PATTERNSURFACE      0x01
@@ -136,170 +136,164 @@ ROPINFO, *PROPINFO;
 static PROPINFO
 FindRopInfo(unsigned RopCode)
 {
-  static ROPINFO KnownCodes[] =
+    static ROPINFO KnownCodes[] =
     {
-      { ROPCODE_BLACKNESS,   "BLACKNESS",  "0",            0, 0, 0 },
-      { ROPCODE_NOTSRCERASE, "NOTSRCERASE","~(D | S)",     1, 1, 0 },
-      { ROPCODE_NOTSRCCOPY,  "NOTSRCCOPY", "~S",           0, 1, 0 },
-      { ROPCODE_SRCERASE,    "SRCERASE",   "(~D) & S",     1, 1, 0 },
-      { ROPCODE_DSTINVERT,   "DSTINVERT",  "~D",           1, 0, 0 },
-      { ROPCODE_PATINVERT,   "PATINVERT",  "D ^ P",        1, 0, 1 },
-      { ROPCODE_SRCINVERT,   "SRCINVERT",  "D ^ S",        1, 1, 0 },
-      { ROPCODE_SRCAND,      "SRCAND",     "D & S",        1, 1, 0 },
-      { ROPCODE_NOOP,        "NOOP",       "D",            1, 0, 0 },
-      { ROPCODE_MERGEPAINT,  "MERGEPAINT", "D | (~S)",     1, 1, 0 },
-      { ROPCODE_MERGECOPY,   "MERGECOPY",  "S & P",        0, 1, 1 },
-      { ROPCODE_SRCCOPY,     "SRCCOPY",    "S",            0, 1, 0 },
-      { ROPCODE_SRCPAINT,    "SRCPAINT",   "D | S",        1, 1, 0 },
-      { ROPCODE_PATCOPY,     "PATCOPY",    "P",            0, 0, 1 },
-      { ROPCODE_PATPAINT,    "PATPAINT",   "D | (~S) | P", 1, 1, 1 },
-      { ROPCODE_WHITENESS,   "WHITENESS",  "0xffffffff",   0, 0, 0 },
-      { ROPCODE_GENERIC,     NULL,         NULL,           1, 1, 1 }
+        { ROPCODE_BLACKNESS,   "BLACKNESS",  "0",            0, 0, 0 },
+        { ROPCODE_NOTSRCERASE, "NOTSRCERASE","~(D | S)",     1, 1, 0 },
+        { ROPCODE_NOTSRCCOPY,  "NOTSRCCOPY", "~S",           0, 1, 0 },
+        { ROPCODE_SRCERASE,    "SRCERASE",   "(~D) & S",     1, 1, 0 },
+        { ROPCODE_DSTINVERT,   "DSTINVERT",  "~D",           1, 0, 0 },
+        { ROPCODE_PATINVERT,   "PATINVERT",  "D ^ P",        1, 0, 1 },
+        { ROPCODE_SRCINVERT,   "SRCINVERT",  "D ^ S",        1, 1, 0 },
+        { ROPCODE_SRCAND,      "SRCAND",     "D & S",        1, 1, 0 },
+        { ROPCODE_NOOP,        "NOOP",       "D",            1, 0, 0 },
+        { ROPCODE_MERGEPAINT,  "MERGEPAINT", "D | (~S)",     1, 1, 0 },
+        { ROPCODE_MERGECOPY,   "MERGECOPY",  "S & P",        0, 1, 1 },
+        { ROPCODE_SRCCOPY,     "SRCCOPY",    "S",            0, 1, 0 },
+        { ROPCODE_SRCPAINT,    "SRCPAINT",   "D | S",        1, 1, 0 },
+        { ROPCODE_PATCOPY,     "PATCOPY",    "P",            0, 0, 1 },
+        { ROPCODE_PATPAINT,    "PATPAINT",   "D | (~S) | P", 1, 1, 1 },
+        { ROPCODE_WHITENESS,   "WHITENESS",  "0xffffffff",   0, 0, 0 },
+        { ROPCODE_GENERIC,     NULL,         NULL,           1, 1, 1 }
     };
-  unsigned Index;
+    unsigned Index;
 
-  for (Index = 0; Index < sizeof(KnownCodes) / sizeof(KnownCodes[0]); Index++)
+    for (Index = 0; Index < sizeof(KnownCodes) / sizeof(KnownCodes[0]); Index++)
     {
-      if (RopCode == KnownCodes[Index].RopCode)
+        if (RopCode == KnownCodes[Index].RopCode)
         {
-          return KnownCodes + Index;
+            return KnownCodes + Index;
         }
     }
 
-  return NULL;
+    return NULL;
 }
 
 static void
 Output(FILE *Out, const char *Fmt, ...)
 {
-  static unsigned Indent = 0;
-  static int AtBOL = 1;
-  unsigned n;
-  va_list Args;
+    static unsigned Indent = 0;
+    static int AtBOL = 1;
+    unsigned n;
+    va_list Args;
 
-  if (NULL != strchr(Fmt, '{') && 0 != Indent)
+    if (strchr(Fmt, '}'))
     {
-      Indent += 2;
+        Indent -= 4;
     }
-  else if (NULL != strchr(Fmt, '}'))
+
+    if (AtBOL)
     {
-      Indent -= 2;
-    }
-  if (AtBOL)
-    {
-      for (n = 0; n < Indent; n++)
+        for (n = 0; n < Indent; n++)
         {
-          putc(' ', Out);
+            putc(' ', Out);
         }
-      AtBOL = 0;
+        AtBOL = 0;
     }
 
-  va_start(Args, Fmt);
-  vfprintf(Out, Fmt, Args);
-  va_end(Args);
+    va_start(Args, Fmt);
+    vfprintf(Out, Fmt, Args);
+    va_end(Args);
 
-  if (NULL != strchr(Fmt, '{'))
+    if (strchr(Fmt, '{'))
     {
-      Indent += 2;
+        Indent += 4;
     }
-  else if (NULL != strchr(Fmt, '}') && 0 != Indent)
-    {
-      Indent -= 2;
-    }
-  AtBOL = '\n' == Fmt[strlen(Fmt) - 1];
+
+    AtBOL = '\n' == Fmt[strlen(Fmt) - 1];
 }
 
 static void
 PrintRoutineName(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
 {
-  if (NULL != RopInfo && ROPCODE_GENERIC != RopInfo->RopCode)
+    if (NULL != RopInfo && ROPCODE_GENERIC != RopInfo->RopCode)
     {
-      Output(Out, "DIB_%uBPP_BitBlt_%s", Bpp, RopInfo->Name);
+        Output(Out, "DIB_%uBPP_BitBlt_%s", Bpp, RopInfo->Name);
     }
-  else
+    else
     {
-      Output(Out, "DIB_%uBPP_BitBlt_Generic", Bpp);
+        Output(Out, "DIB_%uBPP_BitBlt_Generic", Bpp);
     }
 }
 
 static void
 CreateShiftTables(FILE *Out)
 {
-  Output(Out, "\n");
-  Output(Out, "static unsigned Shift1Bpp[] =\n");
-  Output(Out, "{\n");
-  Output(Out, "0,\n");
-  Output(Out, "24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23,\n");
-  Output(Out, "8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7\n");
-  Output(Out, "};\n");
-  Output(Out, "static unsigned Shift4Bpp[] =\n");
-  Output(Out, "{\n");
-  Output(Out, "0,\n");
-  Output(Out, "24, 28, 16, 20, 8, 12, 0, 4\n");
-  Output(Out, "};\n");
-  Output(Out, "static unsigned Shift8Bpp[] =\n");
-  Output(Out, "{\n");
-  Output(Out, "0,\n");
-  Output(Out, "24, 16, 8, 0\n");
-  Output(Out, "};\n");
-  Output(Out, "static unsigned Shift16Bpp[] =\n");
-  Output(Out, "{\n");
-  Output(Out, "0,\n");
-  Output(Out, "16, 0\n");
-  Output(Out, "};\n");
+    Output(Out, "\n");
+    Output(Out, "static unsigned Shift1Bpp[] =\n");
+    Output(Out, "{\n");
+    Output(Out, "0,\n");
+    Output(Out, "24, 25, 26, 27, 28, 29, 30, 31, 16, 17, 18, 19, 20, 21, 22, 23,\n");
+    Output(Out, "8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7\n");
+    Output(Out, "};\n");
+    Output(Out, "static unsigned Shift4Bpp[] =\n");
+    Output(Out, "{\n");
+    Output(Out, "0,\n");
+    Output(Out, "24, 28, 16, 20, 8, 12, 0, 4\n");
+    Output(Out, "};\n");
+    Output(Out, "static unsigned Shift8Bpp[] =\n");
+    Output(Out, "{\n");
+    Output(Out, "0,\n");
+    Output(Out, "24, 16, 8, 0\n");
+    Output(Out, "};\n");
+    Output(Out, "static unsigned Shift16Bpp[] =\n");
+    Output(Out, "{\n");
+    Output(Out, "0,\n");
+    Output(Out, "16, 0\n");
+    Output(Out, "};\n");
 }
 
 static void
 CreateOperation(FILE *Out, unsigned Bpp, PROPINFO RopInfo, unsigned SourceBpp,
                 unsigned Bits)
 {
-  const char *Cast;
-  const char *Dest;
-  const char *Template;
+    const char *Cast;
+    const char *Dest;
+    const char *Template;
 
-  MARK(Out);
-  if (32 == Bits)
+    MARK(Out);
+    if (32 == Bits)
     {
-      Cast = "";
-      Dest = "*DestPtr";
+        Cast = "";
+        Dest = "*DestPtr";
     }
-  else if (16 == Bpp)
+    else if (16 == Bpp)
     {
-      Cast = "(USHORT) ";
-      Dest = "*((PUSHORT) DestPtr)";
+        Cast = "(USHORT) ";
+        Dest = "*((PUSHORT) DestPtr)";
     }
-  else
+    else
     {
-      Cast = "(UCHAR) ";
-      Dest = "*((PUCHAR) DestPtr)";
+        Cast = "(UCHAR) ";
+        Dest = "*((PUCHAR) DestPtr)";
     }
-  Output(Out, "%s = ", Dest);
-  if (ROPCODE_GENERIC == RopInfo->RopCode)
+    Output(Out, "%s = ", Dest);
+    if (ROPCODE_GENERIC == RopInfo->RopCode)
     {
-      Output(Out, "%sDIB_DoRop(BltInfo->Rop4, %s, Source, Pattern)",
-             Cast, Dest);
+        Output(Out, "%sDIB_DoRop(BltInfo->Rop4, %s, Source, Pattern)",
+               Cast, Dest);
     }
-  else
+    else
     {
-      Template = RopInfo->Operation;
-      while ('\0' != *Template)
+        Template = RopInfo->Operation;
+        while ('\0' != *Template)
         {
-          switch(*Template)
+            switch(*Template)
             {
             case 'S':
-              Output(Out, "%sSource", Cast);
-              break;
+                Output(Out, "%sSource", Cast);
+                break;
             case 'P':
-              Output(Out, "%sPattern", Cast);
-              break;
+                Output(Out, "%sPattern", Cast);
+                break;
             case 'D':
-              Output(Out, "%s", Dest);
-              break;
+                Output(Out, "%s", Dest);
+                break;
             default:
-              Output(Out, "%c", *Template);
-              break;
+                Output(Out, "%c", *Template);
+                break;
             }
-          Template++;
+            Template++;
         }
     }
 }
@@ -307,62 +301,62 @@ CreateOperation(FILE *Out, unsigned Bpp, PROPINFO RopInfo, unsigned SourceBpp,
 static void
 CreateBase(FILE *Out, int Source, int Flags, unsigned Bpp)
 {
-  const char *What = (Source ? "Source" : "Dest");
+    const char *What = (Source ? "Source" : "Dest");
 
-  MARK(Out);
-  Output(Out, "%sBase = (char *) BltInfo->%sSurface->pvScan0 +\n", What, What);
-  if (0 == (Flags & FLAG_BOTTOMUP))
+    MARK(Out);
+    Output(Out, "%sBase = (char *) BltInfo->%sSurface->pvScan0 +\n", What, What);
+    if (0 == (Flags & FLAG_BOTTOMUP))
     {
-      if (Source)
+        if (Source)
         {
-          Output(Out, "             BltInfo->SourcePoint.y *\n");
+            Output(Out, "             BltInfo->SourcePoint.y *\n");
         }
-      else
+        else
         {
-          Output(Out, "           BltInfo->DestRect.top *\n");
-        }
-    }
-  else
-    {
-      if (Source)
-        {
-          Output(Out, "             (BltInfo->SourcePoint.y +\n");
-          Output(Out, "              BltInfo->DestRect.bottom -\n");
-          Output(Out, "              BltInfo->DestRect.top - 1) *\n");
-        }
-      else
-        {
-          Output(Out, "           (BltInfo->DestRect.bottom - 1) *\n");
+            Output(Out, "           BltInfo->DestRect.top *\n");
         }
     }
-  Output(Out, "           %sBltInfo->%sSurface->lDelta +\n",
-         Source ? "  " : "", What);
-  if (Source)
+    else
     {
-      Output(Out, "             %sBltInfo->SourcePoint.x",
-             16 < Bpp ? "" : "((");
+        if (Source)
+        {
+            Output(Out, "             (BltInfo->SourcePoint.y +\n");
+            Output(Out, "              BltInfo->DestRect.bottom -\n");
+            Output(Out, "              BltInfo->DestRect.top - 1) *\n");
+        }
+        else
+        {
+            Output(Out, "           (BltInfo->DestRect.bottom - 1) *\n");
+        }
     }
-  else
+    Output(Out, "           %sBltInfo->%sSurface->lDelta +\n",
+           Source ? "  " : "", What);
+    if (Source)
     {
-      Output(Out, "           BltInfo->DestRect.left");
+        Output(Out, "             %sBltInfo->SourcePoint.x",
+               16 < Bpp ? "" : "((");
     }
-  if (Bpp < 8)
+    else
     {
-      Output(Out, " / %u", 8 / Bpp);
+        Output(Out, "           BltInfo->DestRect.left");
     }
-  else if (8 < Bpp)
+    if (Bpp < 8)
     {
-      Output(Out, " * %u", Bpp / 8);
+        Output(Out, " / %u", 8 / Bpp);
     }
-  if (Source && Bpp <= 16)
+    else if (8 < Bpp)
     {
-      Output(Out, ") & ~ 0x3)");
+        Output(Out, " * %u", Bpp / 8);
     }
-  Output(Out, ";\n", Bpp / 8);
-  if (Source && Bpp <= 16)
+    if (Source && Bpp <= 16)
     {
-      Output(Out, "BaseSourcePixels = %u - (BltInfo->SourcePoint.x & 0x%x);\n",
-             32 / Bpp, 32 / Bpp - 1);
+        Output(Out, ") & ~ 0x3)");
+    }
+    Output(Out, ";\n", Bpp / 8);
+    if (Source && Bpp <= 16)
+    {
+        Output(Out, "BaseSourcePixels = %u - (BltInfo->SourcePoint.x & 0x%x);\n",
+               32 / Bpp, 32 / Bpp - 1);
     }
 }
 
@@ -370,79 +364,79 @@ static void
 CreateGetSource(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
                 unsigned SourceBpp, unsigned Shift)
 {
-  const char *AssignOp;
-  const char *Before;
-  char After[8];
+    const char *AssignOp;
+    const char *Before;
+    char After[8];
 
-  MARK(Out);
-  if (0 == Shift)
+    MARK(Out);
+    if (0 == Shift)
     {
-      AssignOp = "=";
-      Before = "";
-      After[0] = '\0';
+        AssignOp = "=";
+        Before = "";
+        After[0] = '\0';
     }
-  else
+    else
     {
-      AssignOp = "|=";
-      Before = "(";
-      sprintf(After, ") << %u", Shift);
+        AssignOp = "|=";
+        Before = "(";
+        sprintf(After, ") << %u", Shift);
     }
 
-  if (ROPCODE_SRCCOPY != RopInfo->RopCode ||
-      0 == (Flags & FLAG_TRIVIALXLATE) || Bpp != SourceBpp)
+    if (ROPCODE_SRCCOPY != RopInfo->RopCode ||
+            0 == (Flags & FLAG_TRIVIALXLATE) || Bpp != SourceBpp)
     {
-      if (0 == (Flags & FLAG_FORCERAWSOURCEAVAIL) && SourceBpp <= 16)
+        if (0 == (Flags & FLAG_FORCERAWSOURCEAVAIL) && SourceBpp <= 16)
         {
-          Output(Out, "if (0 == SourcePixels)\n");
-          Output(Out, "{\n");
-          Output(Out, "RawSource = *SourcePtr++;\n");
-          Output(Out, "SourcePixels = %u;\n", 32 / SourceBpp);
-          Output(Out, "}\n");
+            Output(Out, "if (0 == SourcePixels)\n");
+            Output(Out, "{\n");
+            Output(Out, "RawSource = *SourcePtr++;\n");
+            Output(Out, "SourcePixels = %u;\n", 32 / SourceBpp);
+            Output(Out, "}\n");
         }
-      Output(Out, "Source %s (%s", AssignOp, Before);
-      if (0 == (Flags & FLAG_TRIVIALXLATE))
+        Output(Out, "Source %s (%s", AssignOp, Before);
+        if (0 == (Flags & FLAG_TRIVIALXLATE))
         {
-          Output(Out, "XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, %s",
-                 16 < SourceBpp ? "" : "(");
+            Output(Out, "XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, %s",
+                   16 < SourceBpp ? "" : "(");
         }
-      if (32 == SourceBpp)
+        if (32 == SourceBpp)
         {
-          Output(Out, "*SourcePtr++");
+            Output(Out, "*SourcePtr++");
         }
-      else if (24 == SourceBpp)
+        else if (24 == SourceBpp)
         {
-          Output(Out, "*(PUSHORT) SourcePtr + (*((PBYTE) SourcePtr + 2) << 16)");
+            Output(Out, "*(PUSHORT) SourcePtr + (*((PBYTE) SourcePtr + 2) << 16)");
         }
-      else
+        else
         {
-          Output(Out, "RawSource >> Shift%uBpp[SourcePixels]", SourceBpp);
+            Output(Out, "RawSource >> Shift%uBpp[SourcePixels]", SourceBpp);
         }
-      if (0 == (Flags & FLAG_TRIVIALXLATE))
+        if (0 == (Flags & FLAG_TRIVIALXLATE))
         {
-          if (16 < SourceBpp)
+            if (16 < SourceBpp)
             {
-              Output(Out, ")");
+                Output(Out, ")");
             }
-          else
+            else
             {
-              Output(Out, ") & 0x%x)", (1 << SourceBpp) - 1);
+                Output(Out, ") & 0x%x)", (1 << SourceBpp) - 1);
             }
         }
-      if (32 == Bpp)
+        if (32 == Bpp)
         {
-          Output(Out, ")%s;\n", After);
+            Output(Out, ")%s;\n", After);
         }
-      else
+        else
         {
-          Output(Out, " & 0x%x)%s;\n", (1 << Bpp) - 1, After);
+            Output(Out, " & 0x%x)%s;\n", (1 << Bpp) - 1, After);
         }
-      if (SourceBpp <= 16)
+        if (SourceBpp <= 16)
         {
-          Output(Out, "SourcePixels--;\n");
+            Output(Out, "SourcePixels--;\n");
         }
-      else if (24 == SourceBpp)
+        else if (24 == SourceBpp)
         {
-          Output(Out, "SourcePtr = (PULONG)((char *) SourcePtr + 3);\n");
+            Output(Out, "SourcePtr = (PULONG)((char *) SourcePtr + 3);\n");
         }
     }
 }
@@ -450,31 +444,31 @@ CreateGetSource(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
 static void
 CreateCounts(FILE *Out, unsigned Bpp)
 {
-  MARK(Out);
-  if (32 != Bpp)
+    MARK(Out);
+    if (32 != Bpp)
     {
-      if (8 < Bpp)
+        if (8 < Bpp)
         {
-          Output(Out, "LeftCount = ((ULONG_PTR) DestBase >> 1) & 0x01;\n");
+            Output(Out, "LeftCount = ((ULONG_PTR) DestBase >> 1) & 0x01;\n");
         }
-      else
+        else
         {
-          Output(Out, "LeftCount = (ULONG_PTR) DestBase & 0x03;\n");
-          Output(Out, "if (BltInfo->DestRect.right - BltInfo->DestRect.left < "
-                      "LeftCount)\n");
-          Output(Out, "{\n");
-          Output(Out, "LeftCount = BltInfo->DestRect.right - "
-                      "BltInfo->DestRect.left;\n");
-          Output(Out, "}\n");
+            Output(Out, "LeftCount = (ULONG_PTR) DestBase & 0x03;\n");
+            Output(Out, "if ((ULONG)(BltInfo->DestRect.right - BltInfo->DestRect.left) < "
+                   "LeftCount)\n");
+            Output(Out, "{\n");
+            Output(Out, "LeftCount = BltInfo->DestRect.right - "
+                   "BltInfo->DestRect.left;\n");
+            Output(Out, "}\n");
         }
-      Output(Out, "CenterCount = (BltInfo->DestRect.right - BltInfo->DestRect.left -\n");
-      Output(Out, "               LeftCount) / %u;\n", 32 / Bpp);
-      Output(Out, "RightCount = (BltInfo->DestRect.right - BltInfo->DestRect.left -\n");
-      Output(Out, "              LeftCount - %u * CenterCount);\n", 32 / Bpp);
+        Output(Out, "CenterCount = (BltInfo->DestRect.right - BltInfo->DestRect.left -\n");
+        Output(Out, "               LeftCount) / %u;\n", 32 / Bpp);
+        Output(Out, "RightCount = (BltInfo->DestRect.right - BltInfo->DestRect.left -\n");
+        Output(Out, "              LeftCount - %u * CenterCount);\n", 32 / Bpp);
     }
-  else
+    else
     {
-      Output(Out, "CenterCount = BltInfo->DestRect.right - BltInfo->DestRect.left;\n");
+        Output(Out, "CenterCount = BltInfo->DestRect.right - BltInfo->DestRect.left;\n");
     }
 }
 
@@ -482,562 +476,562 @@ static void
 CreateSetSinglePixel(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
                      unsigned SourceBpp)
 {
-  if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
+    if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
     {
-      CreateGetSource(Out, Bpp, RopInfo, Flags, SourceBpp, 0);
-      MARK(Out);
+        CreateGetSource(Out, Bpp, RopInfo, Flags, SourceBpp, 0);
+        MARK(Out);
     }
-  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+    if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
-      Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
-      Output(Out, "{\n");
-      Output(Out, "PatternX -= BltInfo->PatternSurface->sizlBitmap.cx;\n");
-      Output(Out, "}\n");
+        Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
+        Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
+        Output(Out, "{\n");
+        Output(Out, "PatternX -= BltInfo->PatternSurface->sizlBitmap.cx;\n");
+        Output(Out, "}\n");
     }
-  if ((RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE) &&
-       Bpp != SourceBpp) ||
-      (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE)))
+    if ((RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE) &&
+            Bpp != SourceBpp) ||
+            (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE)))
     {
-      Output(Out, "\n");
+        Output(Out, "\n");
     }
-  CreateOperation(Out, Bpp, RopInfo, SourceBpp, 16);
-  Output(Out, ";\n");
-  MARK(Out);
-  Output(Out, "\n");
-  Output(Out, "DestPtr = (PULONG)((char *) DestPtr + %u);\n", Bpp / 8);
+    CreateOperation(Out, Bpp, RopInfo, SourceBpp, 16);
+    Output(Out, ";\n");
+    MARK(Out);
+    Output(Out, "\n");
+    Output(Out, "DestPtr = (PULONG)((char *) DestPtr + %u);\n", Bpp / 8);
 }
 
 static void
 CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
               unsigned SourceBpp)
 {
-  unsigned Partial;
+    unsigned Partial;
 
-  MARK(Out);
-  if (RopInfo->UsesSource)
+    MARK(Out);
+    if (RopInfo->UsesSource)
     {
-      if (0 == (Flags & FLAG_FORCENOUSESSOURCE))
+        if (0 == (Flags & FLAG_FORCENOUSESSOURCE))
         {
-          CreateBase(Out, 1, Flags, SourceBpp);
+            CreateBase(Out, 1, Flags, SourceBpp);
         }
-      CreateBase(Out, 0, Flags, Bpp);
-      CreateCounts(Out, Bpp);
-      MARK(Out);
+        CreateBase(Out, 0, Flags, Bpp);
+        CreateCounts(Out, Bpp);
+        MARK(Out);
     }
-  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+    if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      if (0 == (Flags & FLAG_BOTTOMUP))
+        if (0 == (Flags & FLAG_BOTTOMUP))
         {
-          Output(Out, "PatternY = (BltInfo->DestRect.top - BltInfo->BrushOrigin.y) %%\n");
-          Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
+            Output(Out, "PatternY = (BltInfo->DestRect.top - BltInfo->BrushOrigin.y) %%\n");
+            Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
         }
-      else
+        else
         {
-          Output(Out, "PatternY = (BltInfo->DestRect.bottom - 1 -\n");
-          Output(Out, "            BltInfo->BrushOrigin.y) %%\n");
-          Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
+            Output(Out, "PatternY = (BltInfo->DestRect.bottom - 1 -\n");
+            Output(Out, "            BltInfo->BrushOrigin.y) %%\n");
+            Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cy;\n");
         }
     }
-  if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
-      0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
+    if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
+            0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
     {
-      Output(Out, "CenterCount = %u * (BltInfo->DestRect.right -\n", Bpp >> 3);
-      Output(Out, "                   BltInfo->DestRect.left);\n");
+        Output(Out, "CenterCount = %u * (BltInfo->DestRect.right -\n", Bpp >> 3);
+        Output(Out, "                   BltInfo->DestRect.left);\n");
     }
-  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+    if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "BasePatternX = (BltInfo->DestRect.left - BltInfo->BrushOrigin.x) %%\n");
-      Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
-    }
-
-  Output(Out, "for (LineIndex = 0; LineIndex < LineCount; LineIndex++)\n");
-  Output(Out, "{\n");
-  if (ROPCODE_SRCCOPY != RopInfo->RopCode ||
-      0 == (Flags & FLAG_TRIVIALXLATE) || Bpp != SourceBpp)
-    {
-      if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
-        {
-          Output(Out, "SourcePtr = (PULONG) SourceBase;\n");
-          if (SourceBpp <= 16)
-            {
-            Output(Out, "RawSource = *SourcePtr++;\n");
-            Output(Out, "SourcePixels = BaseSourcePixels;\n");
-            }
-        }
-      Output(Out, "DestPtr = (PULONG) DestBase;\n");
+        Output(Out, "BasePatternX = (BltInfo->DestRect.left - BltInfo->BrushOrigin.x) %%\n");
+        Output(Out, "           BltInfo->PatternSurface->sizlBitmap.cx;\n");
     }
 
-  if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
-   {
-    Output(Out, "PatternX = BasePatternX;\n");
-   }
-
-  if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
-      0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
+    Output(Out, "for (LineIndex = 0; LineIndex < LineCount; LineIndex++)\n");
+    Output(Out, "{\n");
+    if (ROPCODE_SRCCOPY != RopInfo->RopCode ||
+            0 == (Flags & FLAG_TRIVIALXLATE) || Bpp != SourceBpp)
     {
-      Output(Out, "RtlMoveMemory(DestBase, SourceBase, CenterCount);\n");
-      Output(Out, "\n");
+        if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
+        {
+            Output(Out, "SourcePtr = (PULONG) SourceBase;\n");
+            if (SourceBpp <= 16)
+            {
+                Output(Out, "RawSource = *SourcePtr++;\n");
+                Output(Out, "SourcePixels = BaseSourcePixels;\n");
+            }
+        }
+        Output(Out, "DestPtr = (PULONG) DestBase;\n");
     }
-  else
+
+    if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "\n");
-      if (32 != Bpp)
+        Output(Out, "PatternX = BasePatternX;\n");
+    }
+
+    if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
+            0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
+    {
+        Output(Out, "RtlMoveMemory(DestBase, SourceBase, CenterCount);\n");
+        Output(Out, "\n");
+    }
+    else
+    {
+        Output(Out, "\n");
+        if (32 != Bpp)
         {
-          if (16 == Bpp)
+            if (16 == Bpp)
             {
-            Output(Out, "if (0 != LeftCount)\n");
+                Output(Out, "if (0 != LeftCount)\n");
             }
-          else
+            else
             {
-            Output(Out, "for (i = 0; i < LeftCount; i++)\n");
+                Output(Out, "for (i = 0; i < LeftCount; i++)\n");
             }
-          Output(Out, "{\n");
-          CreateSetSinglePixel(Out, Bpp, RopInfo,
-                               (16 == Bpp ? Flags | FLAG_FORCERAWSOURCEAVAIL :
-                               Flags), SourceBpp);
-          MARK(Out);
-          Output(Out, "}\n");
-          Output(Out, "\n");
+            Output(Out, "{\n");
+            CreateSetSinglePixel(Out, Bpp, RopInfo,
+                                 (16 == Bpp ? Flags | FLAG_FORCERAWSOURCEAVAIL :
+                                  Flags), SourceBpp);
+            MARK(Out);
+            Output(Out, "}\n");
+            Output(Out, "\n");
         }
-      Output(Out, "for (i = 0; i < CenterCount; i++)\n");
-      Output(Out, "{\n");
-      if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
+        Output(Out, "for (i = 0; i < CenterCount; i++)\n");
+        Output(Out, "{\n");
+        if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
         {
-          for (Partial = 0; Partial < 32 / Bpp; Partial++)
+            for (Partial = 0; Partial < 32 / Bpp; Partial++)
             {
-              CreateGetSource(Out, Bpp, RopInfo, Flags, SourceBpp,
-                              Partial * Bpp);
-              MARK(Out);
+                CreateGetSource(Out, Bpp, RopInfo, Flags, SourceBpp,
+                                Partial * Bpp);
+                MARK(Out);
             }
-          Output(Out, "\n");
+            Output(Out, "\n");
         }
-      if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+        if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
         {
-          for (Partial = 0; Partial < 32 / Bpp; Partial++)
+            for (Partial = 0; Partial < 32 / Bpp; Partial++)
             {
-              if (0 == Partial)
+                if (0 == Partial)
                 {
-                  Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
+                    Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
                 }
-              else
+                else
                 {
-                  Output(Out, "Pattern |= DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY) << %u;\n", Partial * Bpp);
+                    Output(Out, "Pattern |= DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY) << %u;\n", Partial * Bpp);
                 }
-              Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
-              Output(Out, "{\n");
-              Output(Out, "PatternX -= BltInfo->PatternSurface->sizlBitmap.cx;\n");
-              Output(Out, "}\n");
+                Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
+                Output(Out, "{\n");
+                Output(Out, "PatternX -= BltInfo->PatternSurface->sizlBitmap.cx;\n");
+                Output(Out, "}\n");
             }
-          Output(Out, "\n");
+            Output(Out, "\n");
         }
-      CreateOperation(Out, Bpp, RopInfo, SourceBpp, 32);
-      Output(Out, ";\n");
-      MARK(Out);
-      Output(Out, "\n");
-      Output(Out, "DestPtr++;\n");
-      Output(Out, "}\n");
-      Output(Out, "\n");
-      if (32 != Bpp)
+        CreateOperation(Out, Bpp, RopInfo, SourceBpp, 32);
+        Output(Out, ";\n");
+        MARK(Out);
+        Output(Out, "\n");
+        Output(Out, "DestPtr++;\n");
+        Output(Out, "}\n");
+        Output(Out, "\n");
+        if (32 != Bpp)
         {
-          if (16 == Bpp)
+            if (16 == Bpp)
             {
-              Output(Out, "if (0 != RightCount)\n");
+                Output(Out, "if (0 != RightCount)\n");
             }
-          else
+            else
             {
-              Output(Out, "for (i = 0; i < RightCount; i++)\n");
+                Output(Out, "for (i = 0; i < RightCount; i++)\n");
             }
-          Output(Out, "{\n");
-          CreateSetSinglePixel(Out, Bpp, RopInfo, Flags, SourceBpp);
-          MARK(Out);
-          Output(Out, "}\n");
-          Output(Out, "\n");
+            Output(Out, "{\n");
+            CreateSetSinglePixel(Out, Bpp, RopInfo, Flags, SourceBpp);
+            MARK(Out);
+            Output(Out, "}\n");
+            Output(Out, "\n");
         }
-      if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
+        if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
         {
-          if (0 == (Flags & FLAG_BOTTOMUP))
+            if (0 == (Flags & FLAG_BOTTOMUP))
             {
-              Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cy <= ++PatternY)\n");
-              Output(Out, "{\n");
-              Output(Out, "PatternY -= BltInfo->PatternSurface->sizlBitmap.cy;\n");
-              Output(Out, "}\n");
+                Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cy <= ++PatternY)\n");
+                Output(Out, "{\n");
+                Output(Out, "PatternY -= BltInfo->PatternSurface->sizlBitmap.cy;\n");
+                Output(Out, "}\n");
             }
-          else
+            else
             {
-              Output(Out, "if (0 == PatternY--)\n");
-              Output(Out, "{\n");
-              Output(Out, "PatternY = BltInfo->PatternSurface->sizlBitmap.cy - 1;\n");
-              Output(Out, "}\n");
+                Output(Out, "if (0 == PatternY--)\n");
+                Output(Out, "{\n");
+                Output(Out, "PatternY = BltInfo->PatternSurface->sizlBitmap.cy - 1;\n");
+                Output(Out, "}\n");
             }
         }
     }
-  if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
+    if (RopInfo->UsesSource && 0 == (Flags & FLAG_FORCENOUSESSOURCE))
     {
-      Output(Out, "SourceBase %c= BltInfo->SourceSurface->lDelta;\n",
-             0 == (Flags & FLAG_BOTTOMUP) ? '+' : '-');
+        Output(Out, "SourceBase %c= BltInfo->SourceSurface->lDelta;\n",
+               0 == (Flags & FLAG_BOTTOMUP) ? '+' : '-');
     }
-  Output(Out, "DestBase %c= BltInfo->DestSurface->lDelta;\n",
-         0 == (Flags & FLAG_BOTTOMUP) ? '+' : '-');
-  Output(Out, "}\n");
+    Output(Out, "DestBase %c= BltInfo->DestSurface->lDelta;\n",
+           0 == (Flags & FLAG_BOTTOMUP) ? '+' : '-');
+    Output(Out, "}\n");
 }
 
 static void
 CreateActionBlock(FILE *Out, unsigned Bpp, PROPINFO RopInfo,
                   int Flags)
 {
-  static unsigned SourceBpp[ ] =
+    static unsigned SourceBpp[ ] =
     { 1, 4, 8, 16, 24, 32 };
-  unsigned BppIndex;
+    unsigned BppIndex;
 
-  MARK(Out);
-  if (RopInfo->UsesSource)
+    MARK(Out);
+    if (RopInfo->UsesSource)
     {
-      if (ROPCODE_GENERIC == RopInfo->RopCode)
+        if (ROPCODE_GENERIC == RopInfo->RopCode)
         {
-          Output(Out, "if (UsesSource)\n");
-          Output(Out, "{\n");
+            Output(Out, "if (UsesSource)\n");
+            Output(Out, "{\n");
         }
-      Output(Out, "switch (BltInfo->SourceSurface->iBitmapFormat)\n");
-      Output(Out, "{\n");
-      for (BppIndex = 0;
-           BppIndex < sizeof(SourceBpp) / sizeof(unsigned);
-           BppIndex++)
+        Output(Out, "switch (BltInfo->SourceSurface->iBitmapFormat)\n");
+        Output(Out, "{\n");
+        for (BppIndex = 0;
+                BppIndex < sizeof(SourceBpp) / sizeof(unsigned);
+                BppIndex++)
         {
-          Output(Out, "case BMF_%uBPP:\n", SourceBpp[BppIndex]);
-          Output(Out, "{\n");
-          if (Bpp == SourceBpp[BppIndex])
+            Output(Out, "case BMF_%uBPP:\n", SourceBpp[BppIndex]);
+            Output(Out, "{\n");
+            if (Bpp == SourceBpp[BppIndex])
             {
-              Output(Out, "if (NULL == BltInfo->XlateSourceToDest ||\n");
-              Output(Out, "    0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL))\n");
-              Output(Out, "{\n");
-              Output(Out, "if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)\n");
-              Output(Out, "{\n");
-              CreateBitCase(Out, Bpp, RopInfo,
-                            Flags | FLAG_TRIVIALXLATE,
-                            SourceBpp[BppIndex]);
-              MARK(Out);
-              Output(Out, "}\n");
-              Output(Out, "else\n");
-              Output(Out, "{\n");
-              CreateBitCase(Out, Bpp, RopInfo,
-                            Flags | FLAG_BOTTOMUP | FLAG_TRIVIALXLATE,
-                            SourceBpp[BppIndex]);
-              MARK(Out);
-              Output(Out, "}\n");
-              Output(Out, "}\n");
-              Output(Out, "else\n");
-              Output(Out, "{\n");
-              Output(Out, "if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)\n");
-              Output(Out, "{\n");
-              CreateBitCase(Out, Bpp, RopInfo, Flags, SourceBpp[BppIndex]);
-              MARK(Out);
-              Output(Out, "}\n");
-              Output(Out, "else\n");
-              Output(Out, "{\n");
-              CreateBitCase(Out, Bpp, RopInfo,
-                            Flags | FLAG_BOTTOMUP,
-                            SourceBpp[BppIndex]);
-              MARK(Out);
-              Output(Out, "}\n");
-              Output(Out, "}\n");
+                Output(Out, "if (NULL == BltInfo->XlateSourceToDest ||\n");
+                Output(Out, "    0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL))\n");
+                Output(Out, "{\n");
+                Output(Out, "if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)\n");
+                Output(Out, "{\n");
+                CreateBitCase(Out, Bpp, RopInfo,
+                              Flags | FLAG_TRIVIALXLATE,
+                              SourceBpp[BppIndex]);
+                MARK(Out);
+                Output(Out, "}\n");
+                Output(Out, "else\n");
+                Output(Out, "{\n");
+                CreateBitCase(Out, Bpp, RopInfo,
+                              Flags | FLAG_BOTTOMUP | FLAG_TRIVIALXLATE,
+                              SourceBpp[BppIndex]);
+                MARK(Out);
+                Output(Out, "}\n");
+                Output(Out, "}\n");
+                Output(Out, "else\n");
+                Output(Out, "{\n");
+                Output(Out, "if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)\n");
+                Output(Out, "{\n");
+                CreateBitCase(Out, Bpp, RopInfo, Flags, SourceBpp[BppIndex]);
+                MARK(Out);
+                Output(Out, "}\n");
+                Output(Out, "else\n");
+                Output(Out, "{\n");
+                CreateBitCase(Out, Bpp, RopInfo,
+                              Flags | FLAG_BOTTOMUP,
+                              SourceBpp[BppIndex]);
+                MARK(Out);
+                Output(Out, "}\n");
+                Output(Out, "}\n");
             }
-          else
+            else
             {
-              CreateBitCase(Out, Bpp, RopInfo, Flags,
-                            SourceBpp[BppIndex]);
-              MARK(Out);
+                CreateBitCase(Out, Bpp, RopInfo, Flags,
+                              SourceBpp[BppIndex]);
+                MARK(Out);
             }
-          Output(Out, "break;\n");
-          Output(Out, "}\n");
+            Output(Out, "break;\n");
+            Output(Out, "}\n");
         }
-      Output(Out, "}\n");
-      if (ROPCODE_GENERIC == RopInfo->RopCode)
+        Output(Out, "}\n");
+        if (ROPCODE_GENERIC == RopInfo->RopCode)
         {
-          Output(Out, "}\n");
-          Output(Out, "else\n");
-          Output(Out, "{\n");
-          CreateBitCase(Out, Bpp, RopInfo, Flags | FLAG_FORCENOUSESSOURCE, 0);
-          MARK(Out);
-          Output(Out, "}\n");
+            Output(Out, "}\n");
+            Output(Out, "else\n");
+            Output(Out, "{\n");
+            CreateBitCase(Out, Bpp, RopInfo, Flags | FLAG_FORCENOUSESSOURCE, 0);
+            MARK(Out);
+            Output(Out, "}\n");
         }
     }
-  else
+    else
     {
-      CreateBitCase(Out, Bpp, RopInfo, Flags, 0);
+        CreateBitCase(Out, Bpp, RopInfo, Flags, 0);
     }
 }
 
 static void
 CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
 {
-  int First;
-  unsigned Partial;
+    int First;
+    unsigned Partial;
 
-  MARK(Out);
-  Output(Out, "\n");
-  Output(Out, "static void\n");
-  PrintRoutineName(Out, Bpp, RopInfo);
-  Output(Out, "(PBLTINFO BltInfo)\n");
-  Output(Out, "{\n");
-  if (ROPCODE_BLACKNESS == RopInfo->RopCode)
+    MARK(Out);
+    Output(Out, "\n");
+    Output(Out, "static void\n");
+    PrintRoutineName(Out, Bpp, RopInfo);
+    Output(Out, "(PBLTINFO BltInfo)\n");
+    Output(Out, "{\n");
+    if (ROPCODE_BLACKNESS == RopInfo->RopCode)
     {
-      Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
-                  "&BltInfo->DestRect, 0x0);\n", Bpp);
+        Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
+               "&BltInfo->DestRect, 0x0);\n", Bpp);
     }
-  else if (ROPCODE_WHITENESS == RopInfo->RopCode)
+    else if (ROPCODE_WHITENESS == RopInfo->RopCode)
     {
-      Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
-                  "&BltInfo->DestRect, ~0);\n", Bpp);
+        Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
+               "&BltInfo->DestRect, ~0);\n", Bpp);
     }
-  else if (ROPCODE_NOOP == RopInfo->RopCode)
+    else if (ROPCODE_NOOP == RopInfo->RopCode)
     {
-      Output(Out, "return;\n");
+        Output(Out, "return;\n");
     }
-  else
+    else
     {
-      Output(Out, "ULONG LineIndex, LineCount;\n");
-      Output(Out, "ULONG i;\n");
-      if (RopInfo->UsesPattern)
+        Output(Out, "ULONG LineIndex, LineCount;\n");
+        Output(Out, "ULONG i;\n");
+        if (RopInfo->UsesPattern)
         {
-          Output(Out, "ULONG PatternX =0, PatternY = 0, BasePatternX = 0;\n");
+            Output(Out, "LONG PatternX =0, PatternY = 0, BasePatternX = 0;\n");
         }
-      First = 1;
-      if (RopInfo->UsesSource)
+        First = 1;
+        if (RopInfo->UsesSource)
         {
-          Output(Out, "ULONG Source = 0");
-          First = 0;
+            Output(Out, "ULONG Source = 0");
+            First = 0;
         }
-      if (RopInfo->UsesPattern)
+        if (RopInfo->UsesPattern)
         {
-          Output(Out, "%s Pattern = 0", First ? "ULONG" : ",");
-          First = 0;
+            Output(Out, "%s Pattern = 0", First ? "ULONG" : ",");
+            First = 0;
         }
-      if (! First)
+        if (! First)
         {
-          Output(Out, ";\n");
+            Output(Out, ";\n");
         }
-      Output(Out, "char *DestBase;\n");
-      Output(Out, "PULONG DestPtr;\n");
-      if (RopInfo->UsesSource)
+        Output(Out, "char *DestBase;\n");
+        Output(Out, "PULONG DestPtr;\n");
+        if (RopInfo->UsesSource)
         {
-          Output(Out, "char *SourceBase;\n");
-          Output(Out, "PULONG SourcePtr;\n");
-          Output(Out, "ULONG RawSource;\n");
-          Output(Out, "unsigned SourcePixels, BaseSourcePixels;\n");
+            Output(Out, "char *SourceBase;\n");
+            Output(Out, "PULONG SourcePtr;\n");
+            Output(Out, "ULONG RawSource;\n");
+            Output(Out, "unsigned SourcePixels, BaseSourcePixels;\n");
         }
-      if (32 == Bpp)
+        if (32 == Bpp)
         {
-          Output(Out, "ULONG CenterCount;\n");
+            Output(Out, "ULONG CenterCount;\n");
         }
-      else
+        else
         {
-          Output(Out, "ULONG LeftCount, CenterCount, RightCount;\n");
+            Output(Out, "ULONG LeftCount, CenterCount, RightCount;\n");
         }
-      if (ROPCODE_GENERIC == RopInfo->RopCode)
+        if (ROPCODE_GENERIC == RopInfo->RopCode)
         {
-          Output(Out, "BOOLEAN UsesSource, UsesPattern;\n");
-          Output(Out, "\n");
-          Output(Out, "UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);\n");
-          Output(Out, "UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);\n");
+            Output(Out, "BOOLEAN UsesSource, UsesPattern;\n");
+            Output(Out, "\n");
+            Output(Out, "UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);\n");
+            Output(Out, "UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);\n");
         }
-      Output(Out, "\n");
-      if (! RopInfo->UsesSource)
+        Output(Out, "\n");
+        if (! RopInfo->UsesSource)
         {
-          CreateBase(Out, 0, 0, Bpp);
-          CreateCounts(Out, Bpp);
-          MARK(Out);
+            CreateBase(Out, 0, 0, Bpp);
+            CreateCounts(Out, Bpp);
+            MARK(Out);
         }
-      Output(Out, "LineCount = BltInfo->DestRect.bottom - BltInfo->DestRect.top;\n");
+        Output(Out, "LineCount = BltInfo->DestRect.bottom - BltInfo->DestRect.top;\n");
 
-      Output(Out, "\n");
-      if (RopInfo->UsesPattern)
+        Output(Out, "\n");
+        if (RopInfo->UsesPattern)
         {
-          if (ROPCODE_GENERIC == RopInfo->RopCode)
+            if (ROPCODE_GENERIC == RopInfo->RopCode)
             {
-              Output(Out, "if (UsesPattern && NULL != BltInfo->PatternSurface)\n");
+                Output(Out, "if (UsesPattern && NULL != BltInfo->PatternSurface)\n");
             }
-          else
+            else
             {
-              Output(Out, "if (NULL != BltInfo->PatternSurface)\n");
+                Output(Out, "if (NULL != BltInfo->PatternSurface)\n");
             }
-          Output(Out, "{\n");
-          CreateActionBlock(Out, Bpp, RopInfo, FLAG_PATTERNSURFACE);
-          MARK(Out);
-          Output(Out, "}\n");
-          Output(Out, "else\n");
-          Output(Out, "{\n");
-          if (ROPCODE_GENERIC == RopInfo->RopCode)
+            Output(Out, "{\n");
+            CreateActionBlock(Out, Bpp, RopInfo, FLAG_PATTERNSURFACE);
+            MARK(Out);
+            Output(Out, "}\n");
+            Output(Out, "else\n");
+            Output(Out, "{\n");
+            if (ROPCODE_GENERIC == RopInfo->RopCode)
             {
-              Output(Out, "if (UsesPattern)\n");
-              Output(Out, "{\n");
+                Output(Out, "if (UsesPattern)\n");
+                Output(Out, "{\n");
             }
-          for (Partial = 0; Partial < 32 / Bpp; Partial++)
+            for (Partial = 0; Partial < 32 / Bpp; Partial++)
             {
-              if (0 == Partial)
+                if (0 == Partial)
                 {
-                  Output(Out, "if (!BltInfo->Brush)\n");
-                  Output(Out, "{\n");
-                  Output(Out, "Pattern = 0;\n");
-                  Output(Out, "}\n");
-                  Output(Out, "else\n");
-                  Output(Out, "{\n");
-                  Output(Out, "Pattern = BltInfo->Brush->iSolidColor");
+                    Output(Out, "if (!BltInfo->Brush)\n");
+                    Output(Out, "{\n");
+                    Output(Out, "Pattern = 0;\n");
+                    Output(Out, "}\n");
+                    Output(Out, "else\n");
+                    Output(Out, "{\n");
+                    Output(Out, "Pattern = BltInfo->Brush->iSolidColor");
                 }
-              else
+                else
                 {
-                  Output(Out, "          (BltInfo->Brush->iSolidColor << %d)",
-                         Partial * Bpp);
+                    Output(Out, "          (BltInfo->Brush->iSolidColor << %d)",
+                           Partial * Bpp);
                 }
-              if (32 / Bpp <= Partial + 1)
+                if (32 / Bpp <= Partial + 1)
                 {
-                  Output(Out, ";\n");
-                  Output(Out, "}\n");
+                    Output(Out, ";\n");
+                    Output(Out, "}\n");
                 }
-              else
+                else
                 {
-                  Output(Out, " |\n");
+                    Output(Out, " |\n");
                 }
             }
-          if (ROPCODE_PATINVERT == RopInfo->RopCode ||
-              ROPCODE_MERGECOPY == RopInfo->RopCode)
+            if (ROPCODE_PATINVERT == RopInfo->RopCode ||
+                    ROPCODE_MERGECOPY == RopInfo->RopCode)
             {
-              Output(Out, "if (0 == Pattern)\n");
-              Output(Out, "{\n");
-              if (ROPCODE_MERGECOPY == RopInfo->RopCode)
+                Output(Out, "if (0 == Pattern)\n");
+                Output(Out, "{\n");
+                if (ROPCODE_MERGECOPY == RopInfo->RopCode)
                 {
-                  Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
-                              "&BltInfo->DestRect, 0x0);\n", Bpp);
+                    Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
+                           "&BltInfo->DestRect, 0x0);\n", Bpp);
                 }
-              Output(Out, "return;\n");
-              Output(Out, "}\n");
+                Output(Out, "return;\n");
+                Output(Out, "}\n");
             }
-          else if (ROPCODE_PATPAINT == RopInfo->RopCode)
+            else if (ROPCODE_PATPAINT == RopInfo->RopCode)
             {
-              Output(Out, "if ((~0) == Pattern)\n");
-              Output(Out, "{\n");
-              Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
-                          "&BltInfo->DestRect, ~0);\n", Bpp);
-              Output(Out, "return;\n");
-              Output(Out, "}\n");
+                Output(Out, "if ((~0) == Pattern)\n");
+                Output(Out, "{\n");
+                Output(Out, "DIB_%uBPP_ColorFill(BltInfo->DestSurface, "
+                       "&BltInfo->DestRect, ~0);\n", Bpp);
+                Output(Out, "return;\n");
+                Output(Out, "}\n");
             }
-          if (ROPCODE_GENERIC == RopInfo->RopCode)
+            if (ROPCODE_GENERIC == RopInfo->RopCode)
             {
-              Output(Out, "}\n");
+                Output(Out, "}\n");
             }
-          CreateActionBlock(Out, Bpp, RopInfo, 0);
-          MARK(Out);
-          Output(Out, "}\n");
+            CreateActionBlock(Out, Bpp, RopInfo, 0);
+            MARK(Out);
+            Output(Out, "}\n");
         }
-      else
+        else
         {
-          CreateActionBlock(Out, Bpp, RopInfo, 0);
-          MARK(Out);
+            CreateActionBlock(Out, Bpp, RopInfo, 0);
+            MARK(Out);
         }
     }
-  Output(Out, "}\n");
+    Output(Out, "}\n");
 }
 
 static void
 CreateTable(FILE *Out, unsigned Bpp)
 {
-  unsigned RopCode;
+    unsigned RopCode;
 
-  MARK(Out);
-  Output(Out, "\n");
-  Output(Out, "static void (*PrimitivesTable[256])(PBLTINFO) =\n");
-  Output(Out, "{\n");
-  for (RopCode = 0; RopCode < 256; RopCode++)
+    MARK(Out);
+    Output(Out, "\n");
+    Output(Out, "static void (*PrimitivesTable[256])(PBLTINFO) =\n");
+    Output(Out, "{\n");
+    for (RopCode = 0; RopCode < 256; RopCode++)
     {
-      PrintRoutineName(Out, Bpp, FindRopInfo(RopCode));
-      if (RopCode < 255)
+        PrintRoutineName(Out, Bpp, FindRopInfo(RopCode));
+        if (RopCode < 255)
         {
-          Output(Out, ",");
+            Output(Out, ",");
         }
-      Output(Out, "\n");
+        Output(Out, "\n");
     }
-  Output(Out, "};\n");
+    Output(Out, "};\n");
 }
 
 static void
 CreateBitBlt(FILE *Out, unsigned Bpp)
 {
-  MARK(Out);
-  Output(Out, "\n");
-  Output(Out, "BOOLEAN\n");
-  Output(Out, "DIB_%uBPP_BitBlt(PBLTINFO BltInfo)\n", Bpp);
-  Output(Out, "{\n");
-  Output(Out, "PrimitivesTable[BltInfo->Rop4 & 0xff](BltInfo);\n");
-  Output(Out, "\n");
-  Output(Out, "return TRUE;\n");
-  Output(Out, "}\n");
+    MARK(Out);
+    Output(Out, "\n");
+    Output(Out, "BOOLEAN\n");
+    Output(Out, "DIB_%uBPP_BitBlt(PBLTINFO BltInfo)\n", Bpp);
+    Output(Out, "{\n");
+    Output(Out, "PrimitivesTable[BltInfo->Rop4 & 0xff](BltInfo);\n");
+    Output(Out, "\n");
+    Output(Out, "return TRUE;\n");
+    Output(Out, "}\n");
 }
 
 static void
 Generate(char *OutputDir, unsigned Bpp)
 {
-  FILE *Out;
-  unsigned RopCode;
-  PROPINFO RopInfo;
-  char *FileName;
+    FILE *Out;
+    unsigned RopCode;
+    PROPINFO RopInfo;
+    char *FileName;
 
-  FileName = malloc(strlen(OutputDir) + 12);
-  if (NULL == FileName)
+    FileName = malloc(strlen(OutputDir) + 12);
+    if (NULL == FileName)
     {
-      fprintf(stderr, "Out of memory\n");
-      exit(1);
+        fprintf(stderr, "Out of memory\n");
+        exit(1);
     }
-  strcpy(FileName, OutputDir);
-  if ('/' != FileName[strlen(FileName) - 1])
+    strcpy(FileName, OutputDir);
+    if ('/' != FileName[strlen(FileName) - 1])
     {
-      strcat(FileName, "/");
+        strcat(FileName, "/");
     }
-  sprintf(FileName + strlen(FileName), "dib%ugen.c", Bpp);
+    sprintf(FileName + strlen(FileName), "dib%ugen.c", Bpp);
 
-  Out = fopen(FileName, "w");
-  free(FileName);
-  if (NULL == Out)
+    Out = fopen(FileName, "w");
+    free(FileName);
+    if (NULL == Out)
     {
-      perror("Error opening output file");
-      exit(1);
+        perror("Error opening output file");
+        exit(1);
     }
 
-  MARK(Out);
-  Output(Out, "/* This is a generated file. Please do not edit */\n");
-  Output(Out, "\n");
-  Output(Out, "#include <win32k.h>\n");
-  CreateShiftTables(Out);
+    MARK(Out);
+    Output(Out, "/* This is a generated file. Please do not edit */\n");
+    Output(Out, "\n");
+    Output(Out, "#include <win32k.h>\n");
+    CreateShiftTables(Out);
 
-  RopInfo = FindRopInfo(ROPCODE_GENERIC);
-  CreatePrimitive(Out, Bpp, RopInfo);
-  for (RopCode = 0; RopCode < 256; RopCode++)
+    RopInfo = FindRopInfo(ROPCODE_GENERIC);
+    CreatePrimitive(Out, Bpp, RopInfo);
+    for (RopCode = 0; RopCode < 256; RopCode++)
     {
-      RopInfo = FindRopInfo(RopCode);
-      if (NULL != RopInfo)
+        RopInfo = FindRopInfo(RopCode);
+        if (NULL != RopInfo)
         {
-          CreatePrimitive(Out, Bpp, RopInfo);
+            CreatePrimitive(Out, Bpp, RopInfo);
         }
     }
-  CreateTable(Out, Bpp);
-  CreateBitBlt(Out, Bpp);
+    CreateTable(Out, Bpp);
+    CreateBitBlt(Out, Bpp);
 
-  fclose(Out);
+    fclose(Out);
 }
 
 int
 main(int argc, char *argv[])
 {
-  unsigned Index;
-  static unsigned DestBpp[] =
+    unsigned Index;
+    static unsigned DestBpp[] =
     { 8, 16, 32 };
 
-  if (argc < 2)
-    return 0;
+    if (argc < 2)
+        return 0;
 
-  for (Index = 0; Index < sizeof(DestBpp) / sizeof(DestBpp[0]); Index++)
+    for (Index = 0; Index < sizeof(DestBpp) / sizeof(DestBpp[0]); Index++)
     {
-      Generate(argv[1], DestBpp[Index]);
+        Generate(argv[1], DestBpp[Index]);
     }
 
-  return 0;
+    return 0;
 }

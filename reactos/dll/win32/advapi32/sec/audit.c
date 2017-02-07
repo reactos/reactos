@@ -156,11 +156,9 @@ ObjectCloseAuditAlarmA(LPCSTR SubsystemName,
     UNICODE_STRING Name;
     NTSTATUS Status;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&Name,
-                                              (PCHAR)SubsystemName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&Name, SubsystemName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -216,11 +214,9 @@ ObjectDeleteAuditAlarmA(LPCSTR SubsystemName,
     UNICODE_STRING Name;
     NTSTATUS Status;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&Name,
-                                              (PCHAR)SubsystemName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&Name, SubsystemName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 

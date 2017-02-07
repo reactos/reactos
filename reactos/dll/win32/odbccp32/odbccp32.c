@@ -522,8 +522,12 @@ BOOL WINAPI SQLInstallDriverManagerW(LPWSTR lpszPath, WORD cbPathMax,
     UINT len;
     WCHAR path[MAX_PATH];
 
-    clear_errors();
     TRACE("(%p %d %p)\n", lpszPath, cbPathMax, pcbPathOut);
+
+    if (cbPathMax < MAX_PATH)
+        return FALSE;
+
+    clear_errors();
 
     len = GetSystemDirectoryW(path, MAX_PATH);
 
@@ -545,8 +549,12 @@ BOOL WINAPI SQLInstallDriverManager(LPSTR lpszPath, WORD cbPathMax,
     WORD len, cbOut = 0;
     WCHAR path[MAX_PATH];
 
-    clear_errors();
     TRACE("(%p %d %p)\n", lpszPath, cbPathMax, pcbPathOut);
+
+    if (cbPathMax < MAX_PATH)
+        return FALSE;
+
+    clear_errors();
 
     ret = SQLInstallDriverManagerW(path, MAX_PATH, &cbOut);
     if (ret)
@@ -836,26 +844,26 @@ BOOL WINAPI SQLRemoveDriverW(LPCWSTR lpszDriver, BOOL fRemoveDSN,
                LPDWORD lpdwUsageCount)
 {
     clear_errors();
-    FIXME("\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    FIXME("stub\n");
+    if (lpdwUsageCount) *lpdwUsageCount = 1;
+    return TRUE;
 }
 
 BOOL WINAPI SQLRemoveDriver(LPCSTR lpszDriver, BOOL fRemoveDSN,
                LPDWORD lpdwUsageCount)
 {
     clear_errors();
-    FIXME("\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    FIXME("stub\n");
+    if (lpdwUsageCount) *lpdwUsageCount = 1;
+    return TRUE;
 }
 
 BOOL WINAPI SQLRemoveDriverManager(LPDWORD pdwUsageCount)
 {
     clear_errors();
-    FIXME("\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    FIXME("stub\n");
+    if (pdwUsageCount) *pdwUsageCount = 1;
+    return TRUE;
 }
 
 BOOL WINAPI SQLRemoveDSNFromIniW(LPCWSTR lpszDSN)

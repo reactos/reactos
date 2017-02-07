@@ -119,7 +119,7 @@ void THEMING_Initialize (void)
     static const WCHAR refDataPropName[] = 
         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
 
-    if (!IsThemeActive()) return; // If so, un-register the class then register it again.
+    if (!IsThemeActive()) return;
 
     atSubclassProp = GlobalAddAtomW (subclassPropName);
     atRefDataProp = GlobalAddAtomW (refDataPropName);
@@ -129,11 +129,14 @@ void THEMING_Initialize (void)
         WNDCLASSEXW class;
 
         class.cbSize = sizeof(class);
-        class.style |= CS_GLOBALCLASS;
-        GetClassInfoExW (NULL, subclasses[i].className, &class);
+        if (!GetClassInfoExW (NULL, subclasses[i].className, &class))
+        {
+            ERR("Could not retrieve information for class %s\n",
+                debugstr_w (subclasses[i].className));
+            continue;
+        }
         originalProcs[i] = class.lpfnWndProc;
         class.lpfnWndProc = subclassProcs[i];
-        class.hInstance = COMCTL32_hModule; // Always set the instance so it can be found again.
         
         if (!class.lpfnWndProc)
         {

@@ -1,0 +1,490 @@
+/*
+ * Resources for Common Dialogs
+ *
+ * Copyright 1999 Bertho Stultiens
+ * Copyright 1999 Klaas van Gend
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "cdlg.h"
+#include "filedlgbrowser.h"
+
+LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_FILENOTFOUND        "Dosiero ne estis trovita"
+    IDS_VERIFYFILE          "Kontrolu la øustecon je havigita dosiernomo."
+    IDS_CREATEFILE          "Dosiero estas neekzistanta\n\
+Æu vi volas krei dosieron?"
+    IDS_OVERWRITEFILE       "Dosiero estas jam ekzistanta.\n\
+Æu vi volas superskribi øin?"
+    IDS_INVALID_FILENAME_TITLE "Nekorekta(j) tipo(j) en vojo"
+    IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn:\n\
+ / : < > |"
+    IDS_PATHNOTEXISTING     "Vojo estas neekzistanta"
+    IDS_FILENOTEXISTING     "Dosiero estas neekzistanta"
+}
+
+STRINGTABLE
+{
+    IDS_UPFOLDER         "Suriru da unu nivelo"
+    IDS_NEWFOLDER        "Kreu Novan Dosieujon"
+    IDS_LISTVIEW         "Listo"
+    IDS_REPORTVIEW       "Detale"
+    IDS_TODESKTOP        "Foliu Desktop"
+}
+
+STRINGTABLE
+{
+    PD32_PRINT_TITLE       "Presu"
+
+    PD32_VALUE_UREADABLE                  "Nelegebla Entry"
+    PD32_INVALID_PAGE_RANGE "Æi tiu valoro ne estas en la paøo.\n\
+Enigu valoron inter %d kaj %d."
+    PD32_FROM_NOT_ABOVE_TO                "La 'de:' valoro ne povas superi la 'øis:' valoron."
+    PD32_MARGINS_OVERLAP                  "Marøenoj surmetiøas inter si aý estas ekster paperfolio.\n\
+Difinu denove la marøenojn."
+    PD32_NR_OF_COPIES_EMPTY               "La nombrvaloro je 'Nombro da &ekzempleroj' ne povas esti malplena."
+    PD32_TOO_LARGE_COPIES                 "La via printilo ne povas presi tiel granda nombro da ekzempleroj\n\
+Enigu valoron inter 1 kaj %d."
+    PD32_PRINT_ERROR                      "Okazis printila eroro."
+    PD32_NO_DEFAULT_PRINTER               "Ne estas defaýlta printilo."
+    PD32_CANT_FIND_PRINTER                "Mi ne povas trovi la printilon."
+    PD32_OUT_OF_MEMORY                    "La memoro estas elæerpita."
+    PD32_GENERIC_ERROR                    "Okazis eroro."
+    PD32_DRIVER_UNKNOWN                   "Nekonata printilzorgilo."
+    PD32_NO_DEVICES                       "Antaý ol vi povos plenumi printiltaskojn kvazaý impozi paøon aý presi dokumenton, estas necese ke vi instalu printilon. Oni konsilas instali øin kaj reprovi."
+
+    PD32_DEFAULT_PRINTER                  "Defaýlta Printilo; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d dokumento(j) estas en presvico"
+    PD32_MARGINS_IN_INCHES                "Marøenoj [inches]"
+    PD32_MARGINS_IN_MILLIMETERS           "Marøenoj [mm]"
+    PD32_MILLIMETERS                      "mm"
+
+    PD32_PRINTER_STATUS_READY             "Preta"
+    PD32_PRINTER_STATUS_PAUSED            "Paýse; "
+    PD32_PRINTER_STATUS_ERROR             "Eroro; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Nuliga atendado; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Blokita papero; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Elæerpita papero; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Mane enþovo de papero; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papera problemo; "
+    PD32_PRINTER_STATUS_OFFLINE           "Nekonektita printilo; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Aktiva; "
+    PD32_PRINTER_STATUS_BUSY              "Okupita printilo; "
+    PD32_PRINTER_STATUS_PRINTING          "Nun presata; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Eljreja pleto estas plena; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Ne disponebla; "
+    PD32_PRINTER_STATUS_WAITING           "Atendando; "
+    PD32_PRINTER_STATUS_PROCESSING        "Procezo; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Preparado; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Varmigo de la printilo; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Kseroprintila nivelo estas basa; "
+    PD32_PRINTER_STATUS_NO_TONER          "Neniu kseroprintilo; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Paøa 'punt'; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrompita far uzanto; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Elæerpita memoro; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "La printila pordo estas malfermita; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nekonata pres-servanto; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Energiþpare; "
+}
+
+STRINGTABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       ""
+    IDS_FONT_BOLD          ""
+    IDS_FONT_ITALIC        ""
+    IDS_FONT_BOLD_ITALIC   ""
+}
+
+STRINGTABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Nigro"
+    IDS_COLOR_MAROON    "Duonruøbruna koloro"
+    IDS_COLOR_GREEN     "Verdo"
+    IDS_COLOR_OLIVE     "Olivverdo"
+    IDS_COLOR_NAVY      "Ultramara bluo"
+    IDS_COLOR_PURPLE    "Purpurruøo"
+    IDS_COLOR_TEAL      "Kreka koloro"
+    IDS_COLOR_GRAY      "Grizo"
+    IDS_COLOR_SILVER    "Arøento"
+    IDS_COLOR_RED       "Ruøo"
+    IDS_COLOR_LIME      "Limeta koloro"
+    IDS_COLOR_YELLOW    "Flavo"
+    IDS_COLOR_BLUE      "Bluo"
+    IDS_COLOR_FUCHSIA   "Fuksia koloro"
+    IDS_COLOR_AQUA      "Akvo"
+    IDS_COLOR_WHITE     "Blanko"
+}
+
+STRINGTABLE
+{
+    IDS_FONT_SIZE   "Elektu tiparan grandecvaloron inter %d kaj %d punktoj."
+    IDS_SAVE_BUTTON "Kon&servu"
+    IDS_SAVE_IN     "Konservu &en:"
+    IDS_SAVE        "Konservu"
+    IDS_SAVE_AS     "Konservu"
+    IDS_OPEN_FILE   "Malfermu Dosieron"
+}
+
+/*
+ * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
+ */
+
+OPEN_FILE DIALOG 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Malfermu"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Dosier&nomo:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Vojo:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Dosier&speco:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Drajvo:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Malfermu", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Helpo", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Nur &legebla", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+SAVE_FILE DIALOG 36, 24, 275, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Konservu kiel..."
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Dosier&nomo:", stc3, 6, 6, 76, 9
+ EDITTEXT edt1, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
+ LISTBOX lst1, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "&Vojo:", -1, 110, 6, 92, 9
+ LTEXT "", stc1, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
+ LISTBOX lst2, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
+ LTEXT "Dosier&speco:", stc2, 6, 104, 90, 9
+ COMBOBOX cmb1, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ LTEXT "&Drajvo:", stc4, 110, 104, 92, 9
+ COMBOBOX cmb2, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Konservu", IDOK, 208, 6, 60, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL, 208, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Helpo", pshHelp, 208, 46, 60, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "Nur &legebla", chx1, 208, 68, 65, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT DIALOG 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Presu"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Printilo:", stc1, 6, 6, 40, 9
+ LTEXT "", stc2, 60, 6, 150, 9
+ GROUPBOX "Etendiøon", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "æ&iujn", rad1, 16, 45, 60, 12
+ RADIOBUTTON "&elekton", rad2, 16, 60, 60, 12
+ RADIOBUTTON "&paøojn", rad3, 16, 75, 60, 12
+ DEFPUSHBUTTON "Presu", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aranøu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "de:", stc3, 60, 80, 30, 9
+ LTEXT "øis:", stc4, 120, 80, 30, 9
+ LTEXT "&Kvalito:", stc5, 6, 100, 76, 9
+ COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ CHECKBOX "Presu &dosieren", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Mallarøtipe", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT_SETUP DIALOG 36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Presadaj Agordoj"
+FONT 8, "MS Shell Dlg"
+{
+ GROUPBOX "Printilo", grp1, 6, 6, 180, 72, BS_GROUPBOX
+ RADIOBUTTON "&Implicita Presilo", rad1, 16, 16, 150, 12
+ LTEXT "[none]", stc1, 35, 30, 120, 9
+ RADIOBUTTON "&Specifa Printilo", rad2, 16, 44, 150, 12
+ COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ DEFPUSHBUTTON "Bone", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aranøu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Formato", grp2, 6, 82, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "&Vertikala", rad3, 50, 95, 50, 12
+ RADIOBUTTON "&Horizontala", rad4, 50, 110, 50, 12
+ ICON "LANDSCAP", stc10, 10, 95, 32, 32
+ ICON "PORTRAIT", stc11, 10, 95, 32, 32
+ GROUPBOX "Papero", grp3, 116, 82, 178, 50, BS_GROUPBOX
+ LTEXT "&Dimensio", stc2, 126, 95, 35, 9
+ LTEXT "&Fonto", stc3, 126, 110, 35, 9
+ COMBOBOX cmb2, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+ COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_FONT DIALOG  13, 54, 274, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tiparo"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Tiparo:",stc1 ,6,3,90,9
+    COMBOBOX        cmb1, 6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "Tipara St&ilo:",stc2 ,108,3,60,9
+    COMBOBOX        cmb2,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
+    LTEXT           "&Dimensio:",stc3,179,3,32,9
+    COMBOBOX        cmb3,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
+                    WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
+    DEFPUSHBUTTON   "Bone",IDOK,218,6,50,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Rezigni",IDCANCEL,218,23,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Apliku", psh3,218,40,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Helpo" , pshHelp,218,57,50,14,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Eficoj",grp1,6,72,84,36,WS_GROUP
+    CHECKBOX	    "Stre&ko", chx1, 10,82,78,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX 	    "S&ubstreko", chx2, 10,94,78,10, BS_AUTOCHECKBOX
+    LTEXT           "&Koloro:", stc4 ,6,114,80,9
+    COMBOBOX        cmb4,6,124,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Ekzemplo",grp2,98,72,120,36,WS_GROUP
+    CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Scri&pt:",stc7 ,98,114,40,9
+    COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
+		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
+}
+
+
+CHOOSE_COLOR DIALOG 36, 24, 300, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Koloro"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Normala koloraro:",   stc1, 4,    4,  140, 10
+ LTEXT "&Persona koloraro:",  stc2, 4,   106, 140, 10
+ LTEXT "Sol&idkoloro",  stc3, 150, 151,  48, 10
+ LTEXT   "&Ruøo", 726 /*1094*/,247,126,27,10
+ EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Verdo",727/*1095*/,247,140,27,10
+ EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT   "&Bluo",728 /*1096*/,247,154,27,10
+ EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Farbo" ,723 /*1091*/,200,126,24,10
+ EDITTEXT 703, 224,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Saturo" ,724 /*1092*/,200,140,24,10
+ EDITTEXT 704, 224,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT  "&Helo" ,725 /*1093*/,200,154,24,10
+ EDITTEXT 705, 224,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
+ CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
+ CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
+ CONTROL "" ,710,"STATIC",WS_BORDER|SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,4,118,116
+ CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
+ CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
+ DEFPUSHBUTTON "Bone",  IDOK,  4, 167, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Helpo", pshHelp,100,166, 44, 14
+ PUSHBUTTON "&Aldonu al Koloraro",    712/*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Forv&iþu Koloraron >>", 719/*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Sol&idkoloro",713,300,200,4,14   /* just a dummy */
+}
+
+
+FINDDLGORD DIALOG 36, 24, 276, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Seræu"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Seræu:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Nur tutan &vorton", chx1, 4, 26, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Atentu &Usklecon", chx2, 4, 42, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ GROUPBOX "Direkto", grp1, 127, 26, 78, 28
+ CONTROL "&Supre", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 131, 38, 35, 12
+ CONTROL "&Sube", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 163, 38, 35, 12
+
+ DEFPUSHBUTTON "&Pluseræu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Rezigni", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Helpo", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+REPLACEDLGORD DIALOG 36, 24, 276, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Anstataýigu"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "&Seræu:", -1, 4, 8, 52, 8
+ EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ LTEXT "&per:", -1, 4, 26, 52, 8
+ EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Nur tutan &vorton", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Atentu &Usklecon", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+
+ DEFPUSHBUTTON "&Pluseræu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Anstataýigu", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Anstataýigu æ&iujn", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Rezigni", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Helpo", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+PRINT32 DIALOG  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Presu"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "Bone",     IDOK,     176,164, 50,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Rezigni", IDCANCEL, 230,164, 50,14, WS_GROUP
+    PUSHBUTTON      "&Helpo",  pshHelp,  50, 161, 50,14, WS_GROUP
+
+    GROUPBOX        "Printilo",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Prezu kiel &dosiero", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,36,90,16
+    PUSHBUTTON      "&Ecoj",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nomo:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Stato:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 120,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Speco:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Kie:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Komento:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Ekzempleroj",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Nombro da &ekzempleroj:",stc5,168,105,68,8
+    ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "Laý&kajere",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Etendiøon",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "æ&iujn",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&paøojn",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&elekton",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "de:",         stc2,  52,124,  20,8
+    RTEXT           "øis:",           stc3,  99,124,  20,8
+}
+
+PRINT32_SETUP DIALOG  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Presadaj Agordoj"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Bone",IDOK,176,156,50,14,WS_GROUP
+    PUSHBUTTON      "Rezigni",IDCANCEL,230,156,50,14
+/*    PUSHBUTTON      "Network...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Printilo",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Ecoj",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Nomo:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Stato:",        stc8,  16, 36,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc12, 65, 36, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Speco:",          stc7,  16, 48,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc11, 65, 48, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Kie:",         stc10, 16, 60,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc14, 65, 60, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Komento:",       stc9,  16, 72,  47,10, SS_NOPREFIX
+    LTEXT           "",               stc13, 65, 72, 212,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Papero",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "&Dimensio:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Fonto:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Formato",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "&Vertikala",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "&Horizontala",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+PAGESETUPDLGORD DIALOG 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Impozu Paøon"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Papero", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Dimensio:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "P&leto:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Formato", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Vertikala", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Horizontala", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Marøenoj", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&Dekstra:", stc15, 88, 172, 30, 8
+  EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Dekstra:", stc16, 159, 172, 30, 8
+  EDITTEXT edt6, 190, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Supre:", stc17, 88, 192, 30, 8
+  EDITTEXT edt5, 119, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "Su&ba:", stc18, 159, 192, 30, 8
+  EDITTEXT edt7, 190, 190, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "Bone", IDOK, 70, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Rezigni", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "&Printilo..", psh3, 182, 220, 50, 14
+END
+
+NEWFILEOPENORD DIALOG 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Malfermu"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"Seræu &en:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Dosier&nomo:",IDC_FILENAMESTATIC,5,112,56,16, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,63,110,150,12,ES_AUTOHSCROLL
+
+    LTEXT	"Dosier&speco:",IDC_FILETYPESTATIC,5,130,56,16, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,63,128,150,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Nur &legebla",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,63,148,150,10
+
+    DEFPUSHBUTTON	"&Malfermu",		 IDOK,222,110,54,14
+    PUSHBUTTON		"Rezigni",		 IDCANCEL,222,128,54,14
+    PUSHBUTTON		"&Helpo",		 pshHelp,222,145,54,14
+}
+
+NEWFILEOPENV3ORD DIALOG 0, 0, 440, 300
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN |
+      WS_THICKFRAME
+CAPTION "Malfermu"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "&Dosiero", IDC_FILENAMESTATIC, 160, 240, 60, 9, SS_RIGHT
+    EDITTEXT        IDC_FILENAME, 226, 240, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP
+
+    LTEXT           "Dosier&speco:", IDC_FILETYPESTATIC, 160, 256, 60, 9, SS_RIGHT
+    COMBOBOX        IDC_FILETYPE, 226, 256, 100, 12,  WS_CHILD | WS_VISIBLE | WS_TABSTOP |
+                    CBS_HASSTRINGS | CBS_DROPDOWNLIST
+
+    DEFPUSHBUTTON   "&Malfermu",  IDOK,     350, 240, 40, 14, WS_GROUP
+    PUSHBUTTON      "Rezigni", IDCANCEL, 395, 240, 40, 14
+    PUSHBUTTON      "&Helpo",  pshHelp,  350, 272, 40, 14
+}

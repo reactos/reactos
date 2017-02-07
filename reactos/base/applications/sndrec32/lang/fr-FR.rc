@@ -32,21 +32,21 @@ BEGIN
     MENUITEM "todo2",                       0
     POPUP "?"
     BEGIN
-        MENUITEM "A propos...",                  ID__ABOUT
+        MENUITEM "À propos...",                  ID__ABOUT
     END
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "Enregistreur de son"
+    IDS_APP_TITLE           "Enregistreur de Son"
     IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_STRPOS              "Position: %.2f s"
-    IDS_STRDUR              "Durée: %.2f s"
-    IDS_STRBUF              "Buffer: %.2f kb"
+    IDS_STRPOS              "Position : %.2f s"
+    IDS_STRDUR              "Durée : %.2f s"
+    IDS_STRBUF              "Buffer : %.2f kb"
     IDS_STRFMT              "%.1f kHz %u bits"
     IDS_STRMONO             "mono"
     IDS_STRSTEREO           "stéréo"

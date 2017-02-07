@@ -41,7 +41,7 @@ ULONG MaxWorkingSetTransferPackets = MAX_WORKINGSET_TRANSFER_PACKETS_Consumer;
  *
  *      Allocate/initialize TRANSFER_PACKETs and related resources.
  */
-NTSTATUS InitializeTransferPackets(PDEVICE_OBJECT Fdo)
+NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo)
 {
     PCOMMON_DEVICE_EXTENSION commonExt = Fdo->DeviceExtension;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
@@ -132,8 +132,7 @@ NTSTATUS InitializeTransferPackets(PDEVICE_OBJECT Fdo)
     return status;
 }
 
-
-VOID DestroyAllTransferPackets(PDEVICE_OBJECT Fdo)
+VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -151,8 +150,7 @@ VOID DestroyAllTransferPackets(PDEVICE_OBJECT Fdo)
     ASSERT(fdoData->NumTotalTransferPackets == 0);
 }
 
-
-PTRANSFER_PACKET NewTransferPacket(PDEVICE_OBJECT Fdo)
+PTRANSFER_PACKET NTAPI NewTransferPacket(PDEVICE_OBJECT Fdo)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -188,12 +186,11 @@ PTRANSFER_PACKET NewTransferPacket(PDEVICE_OBJECT Fdo)
     return newPkt;
 }
 
-
 /*
  *  DestroyTransferPacket
  *
  */
-VOID DestroyTransferPacket(PTRANSFER_PACKET Pkt)
+VOID NTAPI DestroyTransferPacket(PTRANSFER_PACKET Pkt)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -218,8 +215,7 @@ VOID DestroyTransferPacket(PTRANSFER_PACKET Pkt)
     ExFreePool(Pkt);
 }
 
-
-VOID EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
+VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -324,14 +320,13 @@ VOID EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt)
   
 }
 
-
-PTRANSFER_PACKET DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNeeded)
+PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNeeded)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PTRANSFER_PACKET pkt;
     PSINGLE_LIST_ENTRY slistEntry;
-    KIRQL oldIrql;
+    //KIRQL oldIrql;
 
     slistEntry = InterlockedPopEntrySList(&fdoData->FreeTransferPacketsList);
     if (slistEntry){
@@ -365,8 +360,6 @@ PTRANSFER_PACKET DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNe
     return pkt;
 }
 
-
-
 /*
  *  SetupReadWriteTransferPacket
  *
@@ -377,11 +370,11 @@ PTRANSFER_PACKET DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNe
  *        The Irp is set up in SubmitTransferPacket because it must be reset
  *        for each packet submission.
  */
-VOID SetupReadWriteTransferPacket(  PTRANSFER_PACKET Pkt, 
-                                            PVOID Buf, 
-                                            ULONG Len, 
-                                            LARGE_INTEGER DiskLocation,
-                                            PIRP OriginalIrp)
+VOID NTAPI SetupReadWriteTransferPacket(PTRANSFER_PACKET Pkt, 
+                                        PVOID Buf, 
+                                        ULONG Len, 
+                                        LARGE_INTEGER DiskLocation,
+                                        PIRP OriginalIrp)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -460,13 +453,12 @@ VOID SetupReadWriteTransferPacket(  PTRANSFER_PACKET Pkt,
     Pkt->CompleteOriginalIrpWhenLastPacketCompletes = TRUE;
 }
 
-
 /*
  *  SubmitTransferPacket
  *
  *        Set up the IRP for the TRANSFER_PACKET submission and send it down.
  */
-VOID SubmitTransferPacket(PTRANSFER_PACKET Pkt)
+VOID NTAPI SubmitTransferPacket(PTRANSFER_PACKET Pkt)
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = Pkt->Fdo->DeviceExtension;
     PDEVICE_OBJECT nextDevObj = commonExtension->LowerDeviceObject;
@@ -508,8 +500,7 @@ VOID SubmitTransferPacket(PTRANSFER_PACKET Pkt)
     IoCallDriver(nextDevObj, Pkt->Irp);
 }
 
-
-NTSTATUS TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context)
 {
     PTRANSFER_PACKET pkt = (PTRANSFER_PACKET)Context;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = pkt->Fdo->DeviceExtension;
@@ -718,13 +709,12 @@ NTSTATUS TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Co
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 /*
  *  SetupEjectionTransferPacket
  *
  *      Set up a transferPacket for a synchronous Ejection Control transfer.
  */
-VOID SetupEjectionTransferPacket(   TRANSFER_PACKET *Pkt,
+VOID NTAPI SetupEjectionTransferPacket(   TRANSFER_PACKET *Pkt,
                                         BOOLEAN PreventMediaRemoval,
                                         PKEVENT SyncEventPtr,
                                         PIRP OriginalIrp)
@@ -762,14 +752,13 @@ VOID SetupEjectionTransferPacket(   TRANSFER_PACKET *Pkt,
     Pkt->SyncEventPtr = SyncEventPtr;
     Pkt->CompleteOriginalIrpWhenLastPacketCompletes = FALSE;
 }
-                                
 
 /*
  *  SetupModeSenseTransferPacket
  *
  *      Set up a transferPacket for a synchronous Mode Sense transfer.
  */
-VOID SetupModeSenseTransferPacket(   TRANSFER_PACKET *Pkt,
+VOID NTAPI SetupModeSenseTransferPacket(TRANSFER_PACKET *Pkt,
                                         PKEVENT SyncEventPtr,
                                         PVOID ModeSenseBuffer,
                                         UCHAR ModeSenseBufferLen,
@@ -814,17 +803,16 @@ VOID SetupModeSenseTransferPacket(   TRANSFER_PACKET *Pkt,
     Pkt->CompleteOriginalIrpWhenLastPacketCompletes = FALSE;
 }
 
-
 /*
  *  SetupDriveCapacityTransferPacket
  *
  *      Set up a transferPacket for a synchronous Drive Capacity transfer.
  */
-VOID SetupDriveCapacityTransferPacket(   TRANSFER_PACKET *Pkt,
-                                        PVOID ReadCapacityBuffer,
-                                        ULONG ReadCapacityBufferLen,
-                                        PKEVENT SyncEventPtr,
-                                        PIRP OriginalIrp)
+VOID NTAPI SetupDriveCapacityTransferPacket(TRANSFER_PACKET *Pkt,
+                                            PVOID ReadCapacityBuffer,
+                                            ULONG ReadCapacityBufferLen,
+                                            PKEVENT SyncEventPtr,
+                                            PIRP OriginalIrp)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Pkt->Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -859,7 +847,6 @@ VOID SetupDriveCapacityTransferPacket(   TRANSFER_PACKET *Pkt,
     Pkt->SyncEventPtr = SyncEventPtr;
     Pkt->CompleteOriginalIrpWhenLastPacketCompletes = FALSE;
 }
-
 
 #if 0
     /*
@@ -907,5 +894,3 @@ VOID SetupDriveCapacityTransferPacket(   TRANSFER_PACKET *Pkt,
         Pkt->CompleteOriginalIrpWhenLastPacketCompletes = FALSE;
     }
 #endif
-
-

@@ -10,7 +10,7 @@ add_definitions(
     -DNDIS_LEGACY_PROTOCOL
     -DNDIS_MINIPORT_DRIVER)
 
-spec2def(ndis.sys ndis.spec)
+spec2def(ndis.sys ndis.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     ndis/30stubs.c
@@ -43,4 +43,4 @@ add_importlibs(ndis ntoskrnl hal)
 add_pch(ndis include/ndissys.h)
 
 add_cd_file(TARGET ndis DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(ndis.spec)
+

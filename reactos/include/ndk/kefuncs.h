@@ -209,6 +209,28 @@ KiIpiServiceRoutine(
 );
 
 //
+// Generic DPC Routines
+//
+VOID
+NTAPI
+KeGenericCallDpc(
+    IN PKDEFERRED_ROUTINE Routine,
+    IN PVOID Context
+);
+
+VOID
+NTAPI
+KeSignalCallDpcDone(
+    IN PVOID SystemArgument1
+);
+
+BOOLEAN
+NTAPI
+KeSignalCallDpcSynchronize(
+    IN PVOID SystemArgument2
+);
+
+//
 // ARC Configuration Functions. Only enabled if you have ARC Support
 //
 #ifdef _ARC_

@@ -9,8 +9,8 @@
 
 static __inline__ BOOLEAN
 InterlockedBitTestAndSet(
-  IN LONG volatile *Base,
-  IN LONG Bit)
+    _Inout_updates_bytes_((Bit+7)/8) _Interlocked_operand_ LONG volatile *Base,
+    _In_ LONG Bit)
 {
 #if defined(_M_IX86)
   LONG OldBit;
@@ -28,8 +28,8 @@ InterlockedBitTestAndSet(
 
 static __inline__ BOOLEAN
 InterlockedBitTestAndReset(
-  IN LONG volatile *Base,
-  IN LONG Bit)
+    _Inout_updates_bytes_((Bit+7)/8) _Interlocked_operand_ LONG volatile *Base,
+    _In_ LONG Bit)
 {
 #if defined(_M_IX86)
   LONG OldBit;
@@ -57,6 +57,8 @@ InterlockedBitTestAndReset(
 #define InterlockedBitTestAndReset _interlockedbittestandreset
 
 #ifdef _M_AMD64
+#define BitScanForward64 _BitScanForward64
+#define BitScanReverse64 _BitScanReverse64
 #define BitTest64 _bittest64
 #define BitTestAndComplement64 _bittestandcomplement64
 #define BitTestAndSet64 _bittestandset64
@@ -74,35 +76,35 @@ NTKERNELAPI
 LONG
 FASTCALL
 InterlockedIncrement(
-  IN OUT LONG volatile *Addend);
+    _Inout_ _Interlocked_operand_ LONG volatile *Addend);
 
 NTKERNELAPI
 LONG
 FASTCALL
 InterlockedDecrement(
-  IN OUT LONG volatile *Addend);
+    _Inout_ _Interlocked_operand_ LONG volatile *Addend);
 
 NTKERNELAPI
 LONG
 FASTCALL
 InterlockedCompareExchange(
-  IN OUT LONG volatile *Destination,
-  IN LONG Exchange,
-  IN LONG Comparand);
+    _Inout_ _Interlocked_operand_ LONG volatile *Destination,
+  _In_ LONG Exchange,
+  _In_ LONG Comparand);
 
 NTKERNELAPI
 LONG
 FASTCALL
 InterlockedExchange(
-  IN OUT LONG volatile *Destination,
-  IN LONG Value);
+    _Inout_ _Interlocked_operand_ LONG volatile *Destination,
+    _In_ LONG Value);
 
 NTKERNELAPI
 LONG
 FASTCALL
 InterlockedExchangeAdd(
-  IN OUT LONG volatile *Addend,
-  IN LONG  Value);
+    _Inout_ _Interlocked_operand_ LONG volatile *Addend,
+    _In_ LONG Value);
 
 #else /* !defined(NO_INTERLOCKED_INTRINSICS) */
 
@@ -180,8 +182,8 @@ InterlockedExchangeAdd(
 FORCEINLINE
 LONG64
 InterlockedAdd64(
-  IN OUT LONG64 volatile *Addend,
-  IN LONG64 Value)
+    _Inout_ _Interlocked_operand_ LONG64 volatile *Addend,
+    _In_ LONG64 Value)
 {
   return InterlockedExchangeAdd64(Addend, Value) + Value;
 }

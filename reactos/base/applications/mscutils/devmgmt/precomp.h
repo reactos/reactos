@@ -10,6 +10,9 @@
 #include <cfgmgr32.h>
 #include <commctrl.h>
 #include <dll/devmgr/devmgr.h>
+#include <initguid.h>
+#include <cguid.h>
+#include <devguid.h>
 #include "resource.h"
 
 #ifdef _MSC_VER
@@ -17,6 +20,14 @@
 #endif
 
 #define MAX_DEV_LEN 256
+
+typedef enum
+{
+    DevicesByType,
+    DevicesByConnection,
+    RessourcesByType,
+    RessourcesByConnection
+} DISPLAY_TYPE;
 
 typedef struct _MAIN_WND_INFO
 {
@@ -27,6 +38,9 @@ typedef struct _MAIN_WND_INFO
     HWND  hProgDlg;
     HMENU hShortcutMenu;
     int   nCmdShow;
+
+    DISPLAY_TYPE Display;
+    BOOL bShowHidden;
 
     /* status flags */
     UINT InMenuLoop : 1;
@@ -58,7 +72,8 @@ HWND CreateMainWindow(LPCTSTR lpCaption, int nCmdShow);
 VOID FreeDeviceStrings(HWND hTreeView);
 VOID OpenPropSheet(HWND hTreeView, HTREEITEM hItem);
 HTREEITEM InitTreeView(HWND hTreeView);
-VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot);
+VOID ListDevicesByType(HWND hTreeView, HTREEITEM hRoot, BOOL bShowHidden);
+VOID ListDevicesByConnection(HWND hTreeView, HTREEITEM hRoot, BOOL bShowHidden);
 
 
 /* misc.c */

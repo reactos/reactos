@@ -3,9 +3,6 @@
  *
  * Copyright 2004 Christian Costa
  *
- * This file contains the (internal) driver registration functions,
- * driver enumeration APIs and DirectDraw creation functions.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -32,6 +29,7 @@
 #include "winerror.h"
 
 #include "ole2.h"
+#include "rpcproxy.h"
 
 #include "amstream_private.h"
 #include "amstream.h"
@@ -40,6 +38,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 
+static HINSTANCE instance;
 static DWORD dll_ref = 0;
 
 /* For the moment, do nothing here. */
@@ -47,6 +46,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
     switch(fdwReason) {
         case DLL_PROCESS_ATTACH:
+            instance = hInstDLL;
             DisableThreadLibraryCalls(hInstDLL);
 	    break;
 	case DLL_PROCESS_DETACH:
@@ -206,4 +206,20 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 HRESULT WINAPI DllCanUnloadNow(void)
 {
     return dll_ref != 0 ? S_FALSE : S_OK;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (AMSTREAM.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (AMSTREAM.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

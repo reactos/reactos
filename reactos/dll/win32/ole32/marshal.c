@@ -52,6 +52,37 @@ extern const CLSID CLSID_DfMarshal;
  * when the proxy disconnects or is destroyed */
 #define SORFP_NOLIFETIMEMGMT SORF_OXRES2
 
+/* imported object / proxy manager */
+struct proxy_manager
+{
+  const IMultiQIVtbl *lpVtbl;
+  const IMarshalVtbl *lpVtblMarshal;
+  const IClientSecurityVtbl *lpVtblCliSec;
+  struct apartment *parent; /* owning apartment (RO) */
+  struct list entry;        /* entry in apartment (CS parent->cs) */
+  OXID oxid;                /* object exported ID (RO) */
+  OXID_INFO oxid_info;      /* string binding, ipid of rem unknown and other information (RO) */
+  OID oid;                  /* object ID (RO) */
+  struct list interfaces;   /* imported interfaces (CS cs) */
+  LONG refs;                /* proxy reference count (LOCK) */
+  CRITICAL_SECTION cs;      /* thread safety for this object and children */
+  ULONG sorflags;           /* STDOBJREF flags (RO) */
+  IRemUnknown *remunk;      /* proxy to IRemUnknown used for lifecycle management (CS cs) */
+  HANDLE remoting_mutex;    /* mutex used for synchronizing access to IRemUnknown */
+  MSHCTX dest_context;      /* context used for activating optimisations (LOCK) */
+  void *dest_context_data;  /* reserved context value (LOCK) */
+};
+
+static inline struct proxy_manager *impl_from_IMarshal( IMarshal *iface )
+{
+    return (struct proxy_manager *)((char*)iface - FIELD_OFFSET(struct proxy_manager, lpVtblMarshal));
+}
+
+static inline struct proxy_manager *impl_from_IClientSecurity( IClientSecurity *iface )
+{
+    return (struct proxy_manager *)((char*)iface - FIELD_OFFSET(struct proxy_manager, lpVtblCliSec));
+}
+
 static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
                                 MSHCTX dest_context, void *dest_context_data,
                                 REFIID riid, const OXID_INFO *oxid_info,
@@ -352,19 +383,19 @@ static HRESULT WINAPI StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwR
 
 static HRESULT WINAPI Proxy_QueryInterface(IMarshal *iface, REFIID riid, void **ppvObject)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    struct proxy_manager *This = impl_from_IMarshal( iface );
     return IMultiQI_QueryInterface((IMultiQI *)&This->lpVtbl, riid, ppvObject);
 }
 
 static ULONG WINAPI Proxy_AddRef(IMarshal *iface)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    struct proxy_manager *This = impl_from_IMarshal( iface );
     return IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
 }
 
 static ULONG WINAPI Proxy_Release(IMarshal *iface)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    struct proxy_manager *This = impl_from_IMarshal( iface );
     return IMultiQI_Release((IMultiQI *)&This->lpVtbl);
 }
 
@@ -372,7 +403,7 @@ static HRESULT WINAPI Proxy_MarshalInterface(
     LPMARSHAL iface, IStream *pStm, REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    struct proxy_manager *This = impl_from_IMarshal( iface );
     HRESULT hr;
     struct ifproxy *ifproxy;
 
@@ -497,19 +528,19 @@ static const IMarshalVtbl ProxyMarshal_Vtbl =
 
 static HRESULT WINAPI ProxyCliSec_QueryInterface(IClientSecurity *iface, REFIID riid, void **ppvObject)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblCliSec, iface);
+    struct proxy_manager *This = impl_from_IClientSecurity( iface );
     return IMultiQI_QueryInterface((IMultiQI *)&This->lpVtbl, riid, ppvObject);
 }
 
 static ULONG WINAPI ProxyCliSec_AddRef(IClientSecurity *iface)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblCliSec, iface);
+    struct proxy_manager *This = impl_from_IClientSecurity( iface );
     return IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
 }
 
 static ULONG WINAPI ProxyCliSec_Release(IClientSecurity *iface)
 {
-    ICOM_THIS_MULTI(struct proxy_manager, lpVtblCliSec, iface);
+    struct proxy_manager *This = impl_from_IClientSecurity( iface );
     return IMultiQI_Release((IMultiQI *)&This->lpVtbl);
 }
 

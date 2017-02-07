@@ -119,6 +119,8 @@ TuiDisplayMenu(PCSTR MenuItemList[],
             //
             break;
         }
+
+        MachHwIdle();
     }
 
     //
@@ -151,7 +153,7 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
         //
         // Get the string length and make it become the new width if necessary
         //
-        Length = strlen(MenuInfo->MenuItemList[i]);
+        Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
         if (Length > Width) Width = Length;
     }
 
@@ -248,7 +250,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         // Copy the integral time text string, and remove the last 2 chars
         //
         strcpy(TempString, UiTimeText);
-        i = strlen(TempString);
+        i = (ULONG)strlen(TempString);
         TempString[i - 2] = 0;
 
         //
@@ -271,7 +273,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
             //
             // Display it in the center of the menu
             //
-            UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
+            UiDrawText(MenuInfo->Right - (ULONG)strlen(MenuLineText) - 1,
                        MenuInfo->Bottom,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
@@ -303,7 +305,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         //
         if (UiCenterMenu)
         {
-            UiDrawText(MenuInfo->Right - strlen(MenuLineText) - 1,
+            UiDrawText(MenuInfo->Right - (ULONG)strlen(MenuLineText) - 1,
                        MenuInfo->Bottom,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
@@ -364,7 +366,7 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
         // how many spaces will be to the left and right
         //
         SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
-                     strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+                     (ULONG)strlen(MenuInfo->MenuItemList[MenuItemNumber]);
         SpaceLeft = (SpaceTotal / 2) + 1;
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 

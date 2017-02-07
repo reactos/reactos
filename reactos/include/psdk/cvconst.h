@@ -530,6 +530,19 @@ enum CV_HREG_e
     CV_AMD64_R13        = 341,
     CV_AMD64_R14        = 342,
     CV_AMD64_R15        = 343,
+
+    /* Wine extension */
+    CV_SPARC_NOREG      = CV_REG_NONE,
+    CV_SPARC_G0         = 10, /* includes g0 to g7 */
+    CV_SPARC_O0         = 18, /* includes o0 to o7 */
+    CV_SPARC_L0         = 26, /* includes l0 to l7 */
+    CV_SPARC_I0         = 34, /* includes i0 to i7 */
+    CV_SPARC_PSR        = 42,
+    CV_SPARC_PC         = 43,
+    CV_SPARC_NPC        = 44,
+    CV_SPARC_Y          = 45,
+    CV_SPARC_WIM        = 46,
+    CV_SPARC_TBR        = 47,
 };
 
 typedef enum
@@ -559,5 +572,11 @@ typedef enum CV_call_e
     CV_CALL_GENERIC,
     CV_CALL_ALPHACALL,
     CV_CALL_PPCCALL,
+    CV_CALL_SHCALL,
+    CV_CALL_ARMCALL,
+    CV_CALL_AM33CALL,
+    CV_CALL_TRICALL,
+    CV_CALL_SH5CALL,
+    CV_CALL_M32RCALL,
     CV_CALL_RESERVED,
 } CV_call_e;

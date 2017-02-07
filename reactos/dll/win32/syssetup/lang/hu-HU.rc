@@ -22,105 +22,105 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "‹dvˆzl¸nk a ReactOS telepÌtıben.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "A ReactOS telepÌtı segÌtsÈgÈvel feltelepÌtj¸k a ReactOS rendszert a gÈpedre. A telepÌtı elˆbb ˆsszegy˚jt p·r inform·ciÛt, majd vÈglegesÌtj¸k a telepÌtÈst. ", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Kattints a Tov·bb gombra a folytat·shoz.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "√údv√∂zl√ºnk a ReactOS telep√≠t√µben.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "A ReactOS telep√≠t√µ seg√≠ts√©g√©vel feltelep√≠tj√ºk a ReactOS rendszert a g√©pedre. A telep√≠t√µ el√∂bb √∂sszegy√ªjt p√°r inform√°ci√≥t, majd v√©gleges√≠tj√ºk a telep√≠t√©st. ", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Kattints a Tov√°bb gombra a folytat√°shoz.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "A ReactOS fejlesztık szeretnÈnek kˆszˆnetet mondani az al·bbi Open Source projekteknek amiket (rÈszben) felhaszn·ltak a ReactOS fejlesztÈsÈhez:",
+    LTEXT           "A ReactOS fejleszt√µk szeretn√©nek k√∂sz√∂netet mondani az al√°bbi Open Source projekteknek amiket (r√©szben) felhaszn√°ltak a ReactOS fejleszt√©s√©hez:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "A ReactOS a GPL licenszÈvel rendelkezik, Ìgy felhaszn·l·s·hoz Ès terjesztÈsÈhez ezt a licenszt kell figyelembe venni.",
+    LTEXT           "A ReactOS a GPL licensz√©vel rendelkezik, √≠gy felhaszn√°l√°s√°hoz √©s terjeszt√©s√©hez ezt a licenszt kell figyelembe venni.",
                     IDC_STATIC,15,110,227,19
-    PUSHBUTTON      "&Licensz megtekintÈse...",IDC_VIEWGPL,200,120,90,19
-    LTEXT           "Kattints a Tov·bb gombra a folytat·shoz.",IDC_STATIC,15,136,170,17
+    PUSHBUTTON      "&Licensz megtekint√©se...",IDC_VIEWGPL,200,120,90,19
+    LTEXT           "Kattints a Tov√°bb gombra a folytat√°shoz.",IDC_STATIC,15,136,170,17
 END
 
 
 IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Add meg a neved Ès ha van ilyen a cÈged nevÈt.",
+    LTEXT "Add meg a neved √©s ha van ilyen a c√©ged nev√©t.",
           IDC_STATIC, 54, 7, 242, 21
-    LTEXT "&NÈv:", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "&N√©v:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&CÈg neve:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&C√©g neve:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 
 IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Adj egy nevet a sz·mÌtÛgÈpednek, ami nem tˆbb mint 15 bet˚. Ha h·lÛzaton vagy, akkor ennek a nÈvnek egyedinek kell lennie.",
+    LTEXT "Adj egy nevet a sz√°m√≠t√≥g√©pednek, ami nem t√∂bb mint 15 bet√ª. Ha h√°l√≥zaton vagy, akkor ennek a n√©vnek egyedinek kell lennie.",
           IDC_STATIC, 54, 7, 250, 24
-    LTEXT "&Sz·mÌtÛgÈp nÈv:", IDC_STATIC, 54, 38, 75, 8
+    LTEXT "&Sz√°m√≠t√≥g√©p n√©v:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "A telepÌtı lÈtrehoz egy felhaszn·lÛi fiÛkot, a Rendszergazd·t. Ezzel a fiÛkkal teljes jogod van a sz·mÌtÛgÈped felett.", IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Adj meg egy jelszÛt, ami nem tˆbb mint 14 karakter.", IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&JelszÛ:", IDC_STATIC, 54, 104, 75, 8
+    LTEXT "A telep√≠t√µ l√©trehoz egy felhaszn√°l√≥i fi√≥kot, a Rendszergazd√°t. Ezzel a fi√≥kkal teljes jogod van a sz√°m√≠t√≥g√©ped felett.", IDC_STATIC, 54, 57, 250, 25
+    LTEXT "Adj meg egy jelsz√≥t, ami nem t√∂bb mint 14 karakter.", IDC_STATIC, 54, 87, 250, 8
+    LTEXT "&Jelsz√≥:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&MegerısÌtÈs:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "&Meger√µs√≠t√©s:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
 IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "A rendszer ter¸leti be·llÌt·sa meghat·rozz·k a haszn·lni kÌv·nt nyelvet. A ter¸leti be·llÌt·sok hat·rozz·k meg, hogy a sz·mok, valuta Ès d·tum inform·ciÛk hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
+    LTEXT "A rendszer ter√ºleti be√°ll√≠t√°sa meghat√°rozz√°k a haszn√°lni k√≠v√°nt nyelvet. A ter√ºleti be√°ll√≠t√°sok hat√°rozz√°k meg, hogy a sz√°mok, valuta √©s d√°tum inform√°ci√≥k hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
     LTEXT "", IDC_LOCALETEXT, 53, 35, 250, 16
-    LTEXT "A ter¸leti be·llÌt·s megv·ltoztat·s·hoz kattints\na Kiv·laszt·s gombra.", IDC_STATIC, 53, 56, 184, 16
-    PUSHBUTTON "&Kiv·laszt·s...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "A billenty˚zet kioszt·s hat·rozza meg a gombok m˚kˆdÈsÈt.", IDC_STATIC, 53, 86, 253, 8
+    LTEXT "A ter√ºleti be√°ll√≠t√°s megv√°ltoztat√°s√°hoz kattints\na Kiv√°laszt√°s gombra.", IDC_STATIC, 53, 56, 184, 16
+    PUSHBUTTON "&Kiv√°laszt√°s...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+    LTEXT "A billenty√ªzet kioszt√°s hat√°rozza meg a gombok m√ªk√∂d√©s√©t.", IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "A kioszt·s megv·ltoztat·s·hoz kattints a Kioszt·s gombra.", IDC_STATIC, 53, 126, 230, 8
-    PUSHBUTTON "&Kioszt·s...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    LTEXT "A kioszt√°s megv√°ltoztat√°s√°hoz kattints a Kioszt√°s gombra.", IDC_STATIC, 53, 126, 230, 8
+    PUSHBUTTON "&Kioszt√°s...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
 
 
 IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "D·tum Ès idı", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "D√°tum √©s id√µ", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "IdızÛna", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Id√µz√≥na", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Automatikus ·t·ll·s a ny·ri idısz·mÌt·sra",
+    AUTOCHECKBOX "Automatikus √°t√°ll√°s a ny√°ri id√µsz√°m√≠t√°sra",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -132,13 +132,13 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "A ReactOS telepÌtÈsÈnek befejezÈse"
+CAPTION "A ReactOS telep√≠t√©s√©nek befejez√©se"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A telepÌtÈs befejezÈse", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Sikeresen feltelepÌtetted a ReactOS rendszert.\n\nHa a befejezÈsre kattintasz, a sz·mÌtÛgÈped ˙jraindul.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "A telep√≠t√©s befejez√©se", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Sikeresen feltelep√≠tetted a ReactOS rendszert.\n\nHa a befejez√©sre kattintasz, a sz√°m√≠t√≥g√©ped √∫jraindul.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-	LTEXT "Ha van CD vagy DVD lemez a meghajtÛdban, vedd ki, Ès ut·nna kattints a BefejezÈs gombra.", IDC_STATIC, 115, 169, 195, 17
+	LTEXT "Ha van CD vagy DVD lemez a meghajt√≥dban, vedd ki, √©s ut√°nna kattints a Befejez√©s gombra.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -147,14 +147,14 @@ this was taken out in rev 18813
 
 IDD_RESTART DIALOGEX 6, 18, 245, 116
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "ReactOS TelepÌtı"
+CAPTION "ReactOS Telep√≠t√µ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sikeresen feltelepÌtetted a ReactOS rendszert.", IDC_STATIC, 13, 12, 212, 16
-    LTEXT "A folytat·shoz ˙jra kell indÌtani a rendszert. A sz·mÌtÛgÈp 15 m·sodperc m˙lva ˙jraindul, vagy azonnal ha r·kattintasz az ⁄jraindÌt·s gombra.", IDC_STATIC, 13, 33, 212, 32
+    LTEXT "Sikeresen feltelep√≠tetted a ReactOS rendszert.", IDC_STATIC, 13, 12, 212, 16
+    LTEXT "A folytat√°shoz √∫jra kell ind√≠tani a rendszert. A sz√°m√≠t√≥g√©p 15 m√°sodperc m√∫lva √∫jraindul, vagy azonnal ha r√°kattintasz az √öjraind√≠t√°s gombra.", IDC_STATIC, 13, 33, 212, 32
 //    GROUPBOX "", -1, 7, 3, 231, 106
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8
-    PUSHBUTTON "&⁄jraindÌt·s", IDOK, 98, 87, 50, 14
+    PUSHBUTTON "&√öjraind√≠t√°s", IDOK, 98, 87, 50, 14
 END*/
 
 
@@ -180,16 +180,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "KˆszˆnetnyÌlv·nÌt·s"
-    IDS_ACKSUBTITLE      "Akik nÈlk¸l nem jˆhetett volna lÈtre a ReactOS, Ès licensz inform·ciÛk"
-    IDS_OWNERTITLE       "A ReactOS testreszab·sa"
-    IDS_OWNERSUBTITLE    "Ezt az inform·ciÛt felfogja haszn·lni a ReactOS, hogy szemÈlyessÈ tegye a rendszert."
-    IDS_COMPUTERTITLE    "Sz·mÌtÛgÈp nÈv Ès rendszergazda jelszava"
-    IDS_COMPUTERSUBTITLE "Musz·j megadnod egy sz·mÌtÛgÈp nevet Ès a rendszergazda jelszav·t."
-    IDS_LOCALETITLE      "Ter¸leti be·llÌt·sok"
-    IDS_LOCALESUBTITLE   "Be·llÌthatod, hogy a ReactOS milyen ter¸leti Ès nyelvibe·llÌt·sokkal m˚kˆdjˆn."
-    IDS_DATETIMETITLE    "D·tum Ès idı"
-    IDS_DATETIMESUBTITLE "Be·llÌthatod a sz·mÌtÛgÈp d·tum·t Ès Ûr·j·t."
+    IDS_ACKTITLE         "K√∂sz√∂netny√≠lv√°n√≠t√°s"
+    IDS_ACKSUBTITLE      "Akik n√©lk√ºl nem j√∂hetett volna l√©tre a ReactOS, √©s licensz inform√°ci√≥k"
+    IDS_OWNERTITLE       "A ReactOS testreszab√°sa"
+    IDS_OWNERSUBTITLE    "Ezt az inform√°ci√≥t felfogja haszn√°lni a ReactOS, hogy szem√©lyess√© tegye a rendszert."
+    IDS_COMPUTERTITLE    "Sz√°m√≠t√≥g√©p n√©v √©s rendszergazda jelszava"
+    IDS_COMPUTERSUBTITLE "Musz√°j megadnod egy sz√°m√≠t√≥g√©p nevet √©s a rendszergazda jelszav√°t."
+    IDS_LOCALETITLE      "Ter√ºleti be√°ll√≠t√°sok"
+    IDS_LOCALESUBTITLE   "Be√°ll√≠thatod, hogy a ReactOS milyen ter√ºleti √©s nyelvibe√°ll√≠t√°sokkal m√ªk√∂dj√∂n."
+    IDS_DATETIMETITLE    "D√°tum √©s id√µ"
+    IDS_DATETIMESUBTITLE "Be√°ll√≠thatod a sz√°m√≠t√≥g√©p d√°tum√°t √©s √≥r√°j√°t."
     IDS_PROCESSTITLE     "Process page title"
     IDS_PROCESSSUBTITLE  "Process page subtitle"
 END
@@ -219,8 +219,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"J·tÈkok"
-    IDS_CMT_SOLITAIRE	"Paszi·nsz"
+    IDS_GAMES		"J√°t√©kok"
+    IDS_CMT_SOLITAIRE	"Paszi√°nsz"
     IDS_CMT_WINEMINE	"WineMine"
 	IDS_CMT_SPIDER      "Spider Solitaire"
 END
@@ -251,14 +251,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP           "ReactOS TelepÌtı"
-    IDS_UNKNOWN_ERROR           "Hiba lÈpett fel, de nemtudni annak ok·t"
-    IDS_REGISTERING_COMPONENTS  "Komponensek regisztr·ciÛja..."
+    IDS_REACTOS_SETUP           "ReactOS Telep√≠t√µ"
+    IDS_UNKNOWN_ERROR           "Hiba l√©pett fel, de nemtudni annak ok√°t"
+    IDS_REGISTERING_COMPONENTS  "Komponensek regisztr√°ci√≥ja..."
     IDS_LOADLIBRARY_FAILED      "LoadLibrary hiba: "
     IDS_GETPROCADDR_FAILED      "GetProcAddr hiba: "
     IDS_REGSVR_FAILED           "DllRegisterServer hiba: "
     IDS_DLLINSTALL_FAILED       "DllInstall hiba: "
-    IDS_TIMEOUT                 "A regisztr·ciÛ t˙llÈpte az idıkorl·tot"
+    IDS_TIMEOUT                 "A regisztr√°ci√≥ t√∫ll√©pte az id√µkorl√°tot"
     IDS_REASON_UNKNOWN          ""
 END
 

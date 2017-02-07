@@ -1,7 +1,5 @@
 @ stdcall AddMIMEFileTypesPS(ptr ptr)
 @ stub AutodialHookCallback
-@ stub -private DllCanUnloadNow
-@ stub -private DllGetClassObject
 @ stub DummyEntryPoint
 @ stub DummyEntryPointA
 @ stdcall FileProtocolHandler(long ptr str long) FileProtocolHandlerA
@@ -13,8 +11,8 @@
 @ stub MailToProtocolHandlerA
 @ stub NewsProtocolHandler
 @ stub NewsProtocolHandlerA
-@ stub OpenURL
-@ stub OpenURLA
+@ stdcall OpenURL(long long str long) OpenURLA
+@ stdcall OpenURLA(long long str long)
 @ stdcall TelnetProtocolHandler(long str) TelnetProtocolHandlerA
 @ stdcall TelnetProtocolHandlerA(long str)
 @ stub TranslateURLA

@@ -97,13 +97,13 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
              IN PMMADDRESS_NODE Parent,
              IN TABLE_SEARCH_RESULT Result)
 {
-    PMMVAD Vad;
+    PMMVAD_LONG Vad;
 
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
 
     /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
-    Vad = (PMMVAD)NewNode;
+    Vad = (PMMVAD_LONG)NewNode;
     if (Vad->u.VadFlags.Spare == 0)
     {
         NTSTATUS Status;
@@ -129,14 +129,13 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         if (Vad->ControlArea == NULL)
         {
             /* We store the reactos MEMORY_AREA here */
-            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
             Vad->FirstPrototypePte = (PMMPTE)MemoryArea;
         }
         else
         {
             /* This is a section VAD. Store the MAREA here for now */
-            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
-            Vad->ControlArea->WaitingForDeletion = (PVOID)MemoryArea;
+            ASSERT(Vad->u4.Banked == (PVOID)0xDEADBABE);
+            Vad->u4.Banked = (PVOID)MemoryArea;
         }
     }
 }
@@ -164,10 +163,25 @@ MiInsertVad(IN PMMVAD Vad,
 
 VOID
 NTAPI
+MiInsertBasedSection(IN PSECTION Section)
+{
+    TABLE_SEARCH_RESULT Result;
+    PMMADDRESS_NODE Parent = NULL;
+    ASSERT(Section->Address.EndingVpn >= Section->Address.StartingVpn);
+
+    /* Find the parent VAD and where this child should be inserted */
+    Result = RtlpFindAvlTableNodeOrParent(&MmSectionBasedRoot, (PVOID)Section->Address.StartingVpn, &Parent);
+    ASSERT(Result != TableFoundNode);
+    ASSERT((Parent != NULL) || (Result == TableEmptyTree));
+    MiInsertNode(&MmSectionBasedRoot, &Section->Address, Parent, Result);
+}
+
+VOID
+NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
-    PMMVAD Vad;
+    PMMVAD_LONG Vad;
 
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
@@ -184,7 +198,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
     }
 
     /* Free the node from ReactOS view as well */
-    Vad = (PMMVAD)Node;
+    Vad = (PMMVAD_LONG)Node;
     if (Vad->u.VadFlags.Spare == 0)
     {
         PMEMORY_AREA MemoryArea;
@@ -199,12 +213,15 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         else
         {
             /* This is a section VAD. We store the ReactOS MEMORY_AREA here */
-            MemoryArea = (PMEMORY_AREA)Vad->ControlArea->WaitingForDeletion;
+            MemoryArea = (PMEMORY_AREA)Vad->u4.Banked;
         }
 
         /* Make sure one actually still exists */
         if (MemoryArea)
         {
+            /* Make sure we have not already freed it */
+            ASSERT(MemoryArea != (PVOID)0xDEADBAB1);
+
             /* Get the process */
             Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
 
@@ -214,6 +231,18 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
 
             /* Free it */
             MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
+
+            /* Check if this is VM VAD */
+            if (Vad->ControlArea == NULL)
+            {
+                /* Delete the pointer to it */
+                Vad->FirstPrototypePte = (PVOID)0xDEADBAB1;
+            }
+            else
+            {
+                /* Delete the pointer to it */
+                Vad->u4.Banked = (PVOID)0xDEADBAB1;
+            }
         }
     }
 }
@@ -380,7 +409,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     /* Compute page length, make sure the boundary address is valid */
     Length = ROUND_TO_PAGES(Length);
     PageCount = Length >> PAGE_SHIFT;
-    if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
+    if ((BoundaryAddress + 1) < Length) return TableFoundNode;
 
     /* Check if the table is empty */
     if (Table->NumberGenericTableElements == 0)
@@ -455,6 +484,103 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     *Base = 0;
     *Parent = NULL;
     return TableFoundNode;
+}
+
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeDownBasedTree(IN SIZE_T Length,
+                                     IN ULONG_PTR BoundaryAddress,
+                                     IN ULONG_PTR Alignment,
+                                     IN PMM_AVL_TABLE Table,
+                                     OUT PULONG_PTR Base)
+{
+    PMMADDRESS_NODE Node, LowestNode;
+    ULONG_PTR LowVpn, BestVpn;
+
+    /* Sanity checks */
+    ASSERT(Table == &MmSectionBasedRoot);
+    ASSERT(BoundaryAddress);
+    ASSERT(BoundaryAddress <= ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
+
+    /* Compute page length, make sure the boundary address is valid */
+    Length = ROUND_TO_PAGES(Length);
+    if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
+
+    /* Check if the table is empty */
+    BestVpn = ROUND_UP(BoundaryAddress + 1 - Length, Alignment);
+    if (Table->NumberGenericTableElements == 0)
+    {
+        /* Tree is empty, the candidate address is already the best one */
+        *Base = BestVpn;
+        return STATUS_SUCCESS;
+    }
+
+    /* Go to the right-most node which should be the biggest address */
+    Node = Table->BalancedRoot.RightChild;
+    while (RtlRightChildAvl(Node)) Node = RtlRightChildAvl(Node);
+
+    /* Check if we can fit in here */
+    LowVpn = ROUND_UP(Node->EndingVpn, Alignment);
+    if ((LowVpn < BoundaryAddress) && (Length < (BoundaryAddress - LowVpn)))
+    {
+        /* Return the address */
+        *Base = ROUND_UP(BoundaryAddress - Length, Alignment);
+        return STATUS_SUCCESS;
+    }
+
+    /* Now loop the Vad nodes */
+    do
+    {
+        /* Break out if we've reached the last node */
+        LowestNode = MiGetPreviousNode(Node);
+        if (!LowestNode) break;
+
+        /* Check if this node could contain the requested address */
+        LowVpn = ROUND_UP(LowestNode->EndingVpn + 1, Alignment);
+        if ((LowestNode->EndingVpn < BestVpn) &&
+            (Length <= (Node->StartingVpn - LowVpn)))
+        {
+            /* Check if it fits in perfectly */
+            if ((BestVpn > LowestNode->EndingVpn) &&
+                (BoundaryAddress < Node->StartingVpn))
+            {
+                /* Return the optimal VPN address */
+                *Base = BestVpn;
+                return STATUS_SUCCESS;
+            }
+
+            /* It doesn't, check if it can partly fit */
+            if (Node->StartingVpn > LowVpn)
+            {
+                /* Return an aligned base address within this node */
+                *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+                return STATUS_SUCCESS;
+            }
+        }
+
+        /* Move to the next node */
+        Node = LowestNode;
+    } while (TRUE);
+
+    /* Check if there's enough space before the lowest Vad */
+    if ((Node->StartingVpn > (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) &&
+        ((Node->StartingVpn - (ULONG_PTR)MI_LOWEST_VAD_ADDRESS) > Length))
+    {
+        /* Check if it fits in perfectly */
+        if (BoundaryAddress < Node->StartingVpn)
+        {
+            /* Return the optimal VPN address */
+            *Base = BestVpn;
+            return STATUS_SUCCESS;
+        }
+
+        /* Return an aligned base address within this node */
+        *Base = ROUND_UP(Node->StartingVpn - Length, Alignment);
+        return STATUS_SUCCESS;
+    }
+
+    /* No address space left at all */
+    return STATUS_NO_MEMORY;
 }
 
 /* EOF */

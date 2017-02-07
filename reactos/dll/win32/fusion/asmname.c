@@ -39,7 +39,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
 typedef struct {
-    const IAssemblyNameVtbl *lpIAssemblyNameVtbl;
+    IAssemblyName IAssemblyName_iface;
 
     LPWSTR path;
 
@@ -67,10 +67,15 @@ static const WCHAR procarch[] = {'p','r','o','c','e','s','s','o','r',
 
 #define CHARS_PER_PUBKEY 16
 
+static inline IAssemblyNameImpl *impl_from_IAssemblyName(IAssemblyName *iface)
+{
+    return CONTAINING_RECORD(iface, IAssemblyNameImpl, IAssemblyName_iface);
+}
+
 static HRESULT WINAPI IAssemblyNameImpl_QueryInterface(IAssemblyName *iface,
                                                        REFIID riid, LPVOID *ppobj)
 {
-    IAssemblyNameImpl *This = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *This = impl_from_IAssemblyName(iface);
 
     TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
 
@@ -90,7 +95,7 @@ static HRESULT WINAPI IAssemblyNameImpl_QueryInterface(IAssemblyName *iface,
 
 static ULONG WINAPI IAssemblyNameImpl_AddRef(IAssemblyName *iface)
 {
-    IAssemblyNameImpl *This = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *This = impl_from_IAssemblyName(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
@@ -100,7 +105,7 @@ static ULONG WINAPI IAssemblyNameImpl_AddRef(IAssemblyName *iface)
 
 static ULONG WINAPI IAssemblyNameImpl_Release(IAssemblyName *iface)
 {
-    IAssemblyNameImpl *This = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *This = impl_from_IAssemblyName(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
@@ -111,6 +116,7 @@ static ULONG WINAPI IAssemblyNameImpl_Release(IAssemblyName *iface)
         HeapFree(GetProcessHeap(), 0, This->displayname);
         HeapFree(GetProcessHeap(), 0, This->name);
         HeapFree(GetProcessHeap(), 0, This->culture);
+        HeapFree(GetProcessHeap(), 0, This->procarch);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -131,7 +137,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetProperty(IAssemblyName *iface,
                                                     LPVOID pvProperty,
                                                     LPDWORD pcbProperty)
 {
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *name = impl_from_IAssemblyName(iface);
 
     TRACE("(%p, %d, %p, %p)\n", iface, PropertyId, pvProperty, pcbProperty);
 
@@ -222,7 +228,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetDisplayName(IAssemblyName *iface,
                                                        LPDWORD pccDisplayName,
                                                        DWORD dwDisplayFlags)
 {
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *name = impl_from_IAssemblyName(iface);
     WCHAR verstr[30];
     DWORD size;
     LPWSTR cultureval = 0;
@@ -362,7 +368,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetName(IAssemblyName *iface,
                                                 LPDWORD lpcwBuffer,
                                                 WCHAR *pwzName)
 {
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *name = impl_from_IAssemblyName(iface);
 
     TRACE("(%p, %p, %p)\n", iface, lpcwBuffer, pwzName);
 
@@ -383,7 +389,7 @@ static HRESULT WINAPI IAssemblyNameImpl_GetVersion(IAssemblyName *iface,
                                                    LPDWORD pdwVersionHi,
                                                    LPDWORD pdwVersionLow)
 {
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
+    IAssemblyNameImpl *name = impl_from_IAssemblyName(iface);
 
     TRACE("(%p, %p, %p)\n", iface, pdwVersionHi, pdwVersionLow);
 
@@ -430,11 +436,16 @@ static const IAssemblyNameVtbl AssemblyNameVtbl = {
 };
 
 /* Internal methods */
+static inline IAssemblyNameImpl *unsafe_impl_from_IAssemblyName(IAssemblyName *iface)
+{
+    assert(iface->lpVtbl == &AssemblyNameVtbl);
+
+    return impl_from_IAssemblyName(iface);
+}
+
 HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path)
 {
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
-
-    assert(name->lpIAssemblyNameVtbl == &AssemblyNameVtbl);
+    IAssemblyNameImpl *name = unsafe_impl_from_IAssemblyName(iface);
 
     name->path = strdupW(path);
     if (!name->path)
@@ -446,9 +457,7 @@ HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path)
 HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len)
 {
     ULONG buffer_size = *len;
-    IAssemblyNameImpl *name = (IAssemblyNameImpl *)iface;
-
-    assert(name->lpIAssemblyNameVtbl == &AssemblyNameVtbl);
+    IAssemblyNameImpl *name = unsafe_impl_from_IAssemblyName(iface);
 
     if (!name->path)
         return S_OK;
@@ -561,7 +570,10 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
     str = strdupW(szAssemblyName);
     save = str;
     if (!str)
-        return E_OUTOFMEMORY;
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
 
     ptr = strchrW(str, ',');
     if (ptr) *ptr = '\0';
@@ -575,7 +587,10 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
 
     name->name = strdupW(str);
     if (!name->name)
-        return E_OUTOFMEMORY;
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
 
     if (!ptr)
         goto done;
@@ -621,7 +636,8 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
         else if (!lstrcmpW(str, procarch))
         {
             name->procarch = strdupW(ptr);
-            hr = S_OK;
+            if (!name->procarch)
+                hr = E_OUTOFMEMORY;
         }
 
         if (FAILED(hr))
@@ -650,7 +666,7 @@ HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *ppAssemblyNameObj,
     IAssemblyNameImpl *name;
     HRESULT hr;
 
-    TRACE("(%p, %s, %08x, %p) stub!\n", ppAssemblyNameObj,
+    TRACE("(%p, %s, %08x, %p)\n", ppAssemblyNameObj,
           debugstr_w(szAssemblyName), dwFlags, pvReserved);
 
     if (!ppAssemblyNameObj)
@@ -664,7 +680,7 @@ HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *ppAssemblyNameObj,
     if (!name)
         return E_OUTOFMEMORY;
 
-    name->lpIAssemblyNameVtbl = &AssemblyNameVtbl;
+    name->IAssemblyName_iface.lpVtbl = &AssemblyNameVtbl;
     name->ref = 1;
 
     hr = parse_display_name(name, szAssemblyName);
@@ -674,7 +690,7 @@ HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *ppAssemblyNameObj,
         return hr;
     }
 
-    *ppAssemblyNameObj = (IAssemblyName *)name;
+    *ppAssemblyNameObj = &name->IAssemblyName_iface;
 
     return S_OK;
 }

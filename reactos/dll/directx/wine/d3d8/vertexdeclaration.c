@@ -193,7 +193,7 @@ size_t parse_token(const DWORD* pToken)
 
         default:
             TRACE(" 0x%08x UNKNOWN\n", token);
-            /* argg error */
+            /* arg error */
     }
 
     return tokenlen;
@@ -303,10 +303,10 @@ static const wined3d_usage_t wined3d_usage_lookup[] = {
 
 /* TODO: find out where rhw (or positionT) is for declaration8 */
 static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size,
-        WINED3DVERTEXELEMENT **wined3d_elements)
+        struct wined3d_vertex_element **wined3d_elements)
 {
+    struct wined3d_vertex_element *element;
     const DWORD *token = d3d8_elements;
-    WINED3DVERTEXELEMENT *element;
     D3DVSD_TOKENTYPE token_type;
     unsigned int element_count = 0;
     WORD stream = 0;
@@ -315,7 +315,7 @@ static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3
     TRACE("d3d8_elements %p, wined3d_elements %p\n", d3d8_elements, wined3d_elements);
 
     /* 128 should be enough for anyone... */
-    *wined3d_elements = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 128 * sizeof(WINED3DVERTEXELEMENT));
+    *wined3d_elements = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 128 * sizeof(**wined3d_elements));
     while (D3DVSD_END() != *token)
     {
         token_type = ((*token & D3DVSD_TOKENTYPEMASK) >> D3DVSD_TOKENTYPESHIFT);
@@ -380,7 +380,7 @@ static const struct wined3d_parent_ops d3d8_vertexdeclaration_wined3d_parent_ops
 HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration8Impl *declaration,
         IDirect3DDevice8Impl *device, const DWORD *elements, DWORD shader_handle)
 {
-    WINED3DVERTEXELEMENT *wined3d_elements;
+    struct wined3d_vertex_element *wined3d_elements;
     UINT wined3d_element_count;
     HRESULT hr;
 

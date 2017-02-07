@@ -26,8 +26,8 @@ Revision History:
 #include "classp.h"
 #include "debug.h"
 
-PIRP ClassRemoveCScanList(IN PCSCAN_LIST List);
-VOID ClasspInitializeCScanList(IN PCSCAN_LIST List);
+PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List);
+VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List);
 
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(PAGE, ClassDeleteSrbLookasideList)
@@ -39,10 +39,6 @@ typedef struct _CSCAN_LIST_ENTRY {
     ULONGLONG BlockNumber;
 } CSCAN_LIST_ENTRY, *PCSCAN_LIST_ENTRY;
 
-
-
-
-
 /*
  *  ClassSplitRequest
  *
@@ -51,7 +47,7 @@ typedef struct _CSCAN_LIST_ENTRY {
  *      StartIo routine when the transfer size is too large for the hardware.
  *      We map it to our new read/write handler.
  */
-VOID ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes)
+VOID NTAPI ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -69,7 +65,6 @@ VOID ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes
 
     ServiceTransferRequest(Fdo, Irp);
 } 
-
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -100,6 +95,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassIoCompleteAssociated(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -313,7 +309,6 @@ ClassIoCompleteAssociated(
 
 } // end ClassIoCompleteAssociated()
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 RetryRequest()
@@ -342,6 +337,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 RetryRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -443,7 +439,6 @@ RetryRequest(
     return;
 } // end RetryRequest()
 
-
 /*++
 
 ClassBuildRequest()
@@ -477,6 +472,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassBuildRequest(
     PDEVICE_OBJECT Fdo,
     PIRP Irp
@@ -504,8 +500,8 @@ ClassBuildRequest(
 
 } // end ClassBuildRequest()
 
-
 VOID
+NTAPI
 ClasspBuildRequestEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PIRP Irp,
@@ -731,8 +727,7 @@ Return Value:
 
 }
 
-
-VOID ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
+VOID NTAPI ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
 {
     PCSCAN_LIST_ENTRY t;
 
@@ -776,8 +771,7 @@ VOID ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
 
 }
 
-
-VOID ClassInsertCScanList(IN PCSCAN_LIST List, IN PIRP Irp, IN ULONGLONG BlockNumber, IN BOOLEAN LowPriority)
+VOID NTAPI ClassInsertCScanList(IN PCSCAN_LIST List, IN PIRP Irp, IN ULONGLONG BlockNumber, IN BOOLEAN LowPriority)
 /*++
 
 Routine Description:
@@ -829,11 +823,8 @@ Return Value:
     return;
 }
 
-
-
-
-VOID ClassFreeOrReuseSrb(   IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-                            IN PSCSI_REQUEST_BLOCK Srb)
+VOID NTAPI ClassFreeOrReuseSrb(IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+                               IN PSCSI_REQUEST_BLOCK Srb)
 /*++
 
 Routine Description:
@@ -858,8 +849,8 @@ Return Value:
 {
     PCLASS_PRIVATE_FDO_DATA privateData = FdoExtension->PrivateFdoData;
     PCOMMON_DEVICE_EXTENSION commonExt = &FdoExtension->CommonExtension;
-    KIRQL oldIrql;
-    PIRP blockedIrp;
+    //KIRQL oldIrql;
+    //PIRP blockedIrp;
 
     // This function is obsolete, but still called by DISK.SYS .
     // DBGWARN(("ClassFreeOrReuseSrb is OBSOLETE !"));
@@ -887,7 +878,6 @@ Return Value:
     }
 }
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDeleteSrbLookasideList()
@@ -909,7 +899,7 @@ Return Value:
     None
 
 --*/
-VOID ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
+VOID NTAPI ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
 {
     PAGED_CODE();
 
@@ -924,7 +914,6 @@ VOID ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
         DBGWARN(("ClassDeleteSrbLookasideList: attempt to delete uninitialized or freed srblookasidelist"));
     }
 } 
-
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -952,8 +941,8 @@ Note:
 
 --*/
 
-VOID ClassInitializeSrbLookasideList(   IN PCOMMON_DEVICE_EXTENSION CommonExtension,
-                                        IN ULONG NumberElements)
+VOID NTAPI ClassInitializeSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension,
+                                           IN ULONG NumberElements)
 {
     PAGED_CODE();
 
@@ -976,10 +965,7 @@ VOID ClassInitializeSrbLookasideList(   IN PCOMMON_DEVICE_EXTENSION CommonExtens
     
 } 
 
-
-
-
-VOID ClasspInitializeCScanList(IN PCSCAN_LIST List)
+VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List)
 {
     PAGED_CODE();
     RtlZeroMemory(List, sizeof(CSCAN_LIST));
@@ -987,9 +973,7 @@ VOID ClasspInitializeCScanList(IN PCSCAN_LIST List)
     InitializeListHead(&(List->NextSweep));
 }
 
-
-
-VOID ClasspStartNextSweep(PCSCAN_LIST List)
+VOID NTAPI ClasspStartNextSweep(PCSCAN_LIST List)
 {
     ASSERT(IsListEmpty(&(List->CurrentSweep)) == TRUE);
 
@@ -1024,9 +1008,7 @@ VOID ClasspStartNextSweep(PCSCAN_LIST List)
     return;
 }
 
-
-
-PIRP ClassRemoveCScanList(IN PCSCAN_LIST List)
+PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List)
 {
     PCSCAN_LIST_ENTRY entry;
 
@@ -1057,4 +1039,3 @@ PIRP ClassRemoveCScanList(IN PCSCAN_LIST List)
 
     return CONTAINING_RECORD(entry, IRP, Tail.Overlay.DriverContext);
 }
-

@@ -47,7 +47,7 @@ _tWinMain(HINSTANCE hThisInstance,
             /* pump the message queue */
             while( GetMessage( &Msg, NULL, 0, 0 ) )
             {
-                //if(! IsDialogMessage(hProgDlg, &Msg) )
+                //if ( !hProgDlg || !IsWindow(hProgDlg) || !IsDialogMessage(hProgDlg, &Msg) )
                 //{
                     TranslateMessage(&Msg);
                     DispatchMessage(&Msg);

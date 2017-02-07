@@ -543,7 +543,6 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
   /* Extract the caption */
   psInfo->proppage[index].pszText = p;
   TRACE("Tab %d %s\n",index,debugstr_w( p ));
-  p += lstrlenW( p ) + 1;
 
   if (dwFlags & PSP_USETITLE)
   {
@@ -2412,28 +2411,6 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   return FALSE;
 }
 
-BOOL CALLBACK
-EnumChildProc(HWND hwnd, LPARAM lParam)
-{
-    WCHAR szType[20];
-    RealGetWindowClassW(hwnd, szType, 20);
-
-    if (strcmpW(szType, WC_EDITW) == 0)
-    {
-        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
-        {
-            SetFocus(hwnd);
-            return FALSE;
-        }
-    } 
-    else
-    {
-        EnumChildWindows(hwnd, EnumChildProc, 0);
-    }
-
-    return TRUE;
-}
-
 /******************************************************************************
  *            PROPSHEET_SetWizButtons
  *
@@ -2448,6 +2425,9 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
+  HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
+  INT iDefItem = 0;
+  HWND hwndFocus;
 
   TRACE("%d\n", dwFlags);
 
@@ -2485,30 +2465,21 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
     EnableWindow(hwndFinish, TRUE);
 
-  /* set the default pushbutton to an enabled button and give it focus */
+  /* set the default pushbutton to an enabled button */
   if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-    SetFocus(hwndFinish);
-  }
+    iDefItem = IDC_FINISH_BUTTON;
   else if (dwFlags & PSWIZB_NEXT)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-    SetFocus(hwndNext);
-  }
+    iDefItem = IDC_NEXT_BUTTON;
   else if (dwFlags & PSWIZB_BACK)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-    SetFocus(hwndBack);
-  }
+    iDefItem = IDC_BACK_BUTTON;
   else
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-    SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
-  }
+    iDefItem = IDCANCEL;
+  SendMessageW(hwndDlg, DM_SETDEFID, iDefItem, 0);
 
-  /* Now try to find an edit control that deserves focus */
-  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
+  /* Set focus if no control has it */
+  hwndFocus = GetFocus();
+  if (!hwndFocus || hwndFocus == hwndCancel)
+    SetFocus(GetDlgItem(hwndDlg, iDefItem));
 }
 
 /******************************************************************************
@@ -3100,6 +3071,12 @@ BOOL WINAPI DestroyPropertySheetPage(HPROPSHEETPAGE hPropPage)
   if ((psp->dwFlags & PSP_USETITLE) && !IS_INTRESOURCE( psp->pszTitle ))
      Free ((LPVOID)psp->pszTitle);
 
+  if ((psp->dwFlags & PSP_USEHEADERTITLE) && !IS_INTRESOURCE( psp->pszHeaderTitle ))
+     Free ((LPVOID)psp->pszHeaderTitle);
+
+  if ((psp->dwFlags & PSP_USEHEADERSUBTITLE) && !IS_INTRESOURCE( psp->pszHeaderSubTitle ))
+     Free ((LPVOID)psp->pszHeaderSubTitle);
+
   Free(hPropPage);
 
   return TRUE;
@@ -3238,17 +3215,20 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
     WCHAR szBuffer[256];
     int nLength;
 
-    if (psInfo->active_page < 0) return 1;
     hdc = hdcParam ? hdcParam : BeginPaint(hwnd, &ps);
     if (!hdc) return 1;
 
     hdcSrc = CreateCompatibleDC(0);
-    ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[psInfo->active_page].hpage;
 
     if (psInfo->ppshheader.dwFlags & PSH_USEHPLWATERMARK) 
 	hOldPal = SelectPalette(hdc, psInfo->ppshheader.hplWatermark, FALSE);
 
-    if ( (!(ppshpage->dwFlags & PSP_HIDEHEADER)) &&
+    if (psInfo->active_page < 0)
+        ppshpage = NULL;
+    else
+        ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[psInfo->active_page].hpage;
+
+    if ( (ppshpage && !(ppshpage->dwFlags & PSP_HIDEHEADER)) &&
 	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
 	 (psInfo->ppshheader.dwFlags & PSH_HEADER) ) 
     {
@@ -3355,7 +3335,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	SelectObject(hdcSrc, hbmp);
     }
 
-    if ( (ppshpage->dwFlags & PSP_HIDEHEADER) &&
+    if ( (ppshpage && (ppshpage->dwFlags & PSP_HIDEHEADER)) &&
 	 (psInfo->ppshheader.dwFlags & (PSH_WIZARD97_OLD | PSH_WIZARD97_NEW)) &&
 	 (psInfo->ppshheader.dwFlags & PSH_WATERMARK) ) 
     {

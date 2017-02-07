@@ -17,7 +17,7 @@
 
 #define MAXKEY 256
 #define MAXVALUE 256
-#define NUM_SETTINGS 4
+#define NUM_SETTINGS 6
 extern LPWSTR lpSettings[];
 
 typedef struct _SETTINGS

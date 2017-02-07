@@ -71,7 +71,6 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtBootPathName[MAX_PATH+1];
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
-    ARC_DISK_SIGNATURE_EX ArcDiskSignature[];
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
@@ -162,12 +161,12 @@ BOOLEAN
 MempAllocatePageTables();
 
 BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-				IN ULONG NumberOfPages,
+MempSetupPaging(IN PFN_NUMBER StartPage,
+				IN PFN_NUMBER NumberOfPages,
 				IN BOOLEAN KernelMapping);
 
 VOID
-MempUnmapPage(ULONG Page);
+MempUnmapPage(PFN_NUMBER Page);
 
 VOID
 MempDump();

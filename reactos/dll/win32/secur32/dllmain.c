@@ -11,22 +11,30 @@
 /* INCLUDES ******************************************************************/
 #include <precomp.h>
 
-void SECUR32_initializeProviders(void);
-void SECUR32_freeProviders(void);
+/* GLOBALS *******************************************************************/
+
+HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
 {
-    switch (Reason)
-    {
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hInstance);
-        SECUR32_initializeProviders();
-        break;
-    case DLL_PROCESS_DETACH:
-        SECUR32_freeProviders();
-        break;
-    }
+   switch (Reason)
+     {
+      case DLL_PROCESS_ATTACH:
+	Secur32Heap = RtlCreateHeap(0, NULL, 0, 4096, NULL, NULL);
+	if (Secur32Heap == 0)
+	  {
+	     return(FALSE);
+	  }
+	break;
+
+      case DLL_PROCESS_DETACH:
+	if (!RtlDestroyHeap(Secur32Heap))
+	  {
+	     return(FALSE);
+	  }
+	break;
+     }
    return(TRUE);
 }

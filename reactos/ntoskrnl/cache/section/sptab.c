@@ -23,6 +23,34 @@
  * PROGRAMMERS:     arty
  */
 
+/*
+
+This file implements the section page table.  It relies on rtl generic table
+functionality to provide access to 256-page chunks.  Calls to
+MiSetPageEntrySectionSegment and MiGetPageEntrySectionSegment must be
+synchronized by holding the segment lock.
+
+Each page table entry is a ULONG as in x86.
+
+Bit 1 is used as a swap entry indication as in the main page table.
+Bit 2 is used as a dirty indication.  A dirty page will eventually be written
+back to the file.
+Bits 3-11 are used as a map count in the legacy mm code, Note that zero is
+illegal, as the legacy code does not take advantage of segment rmaps.
+Therefore, every segment page is mapped in at least one address space, and
+MmUnsharePageEntry is quite complicated.  In addition, the page may also be
+owned by the legacy cache manager, giving an implied additional reference.
+Upper bits are a PFN_NUMBER.
+
+These functions, in addition to maintaining the segment page table also
+automatically maintain the segment rmap by calling MmSetSectionAssociation
+and MmDeleteSectionAssociation.  Segment rmaps are discussed in rmap.c.  The
+upshot is that it is impossible to have a page properly registered in a segment
+page table and not also found in a segment rmap that can be found from the
+paging machinery.
+
+*/
+
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -43,7 +71,7 @@ MiSectionPageTableAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
     Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'MmPt');
-    DPRINT("MiSectionPageTableAllocate(%d) => %p\n", Bytes, Result);
+    //DPRINT("MiSectionPageTableAllocate(%d) => %p\n", Bytes, Result);
     return Result;
 }
 
@@ -52,26 +80,30 @@ VOID
 NTAPI
 MiSectionPageTableFree(PRTL_GENERIC_TABLE Table, PVOID Data)
 {
-    DPRINT("MiSectionPageTableFree(%p)\n", Data);
+    //DPRINT("MiSectionPageTableFree(%p)\n", Data);
     ExFreePoolWithTag(Data, 'MmPt');
 }
 
 static
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
-MiSectionPageTableCompare(PRTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
+MiSectionPageTableCompare(PRTL_GENERIC_TABLE Table,
+                          PVOID PtrA,
+                          PVOID PtrB)
 {
     PLARGE_INTEGER A = PtrA, B = PtrB;
-    BOOLEAN Result = (A->QuadPart < B->QuadPart) ? GenericLessThan : 
+    BOOLEAN Result = (A->QuadPart < B->QuadPart) ? GenericLessThan :
         (A->QuadPart == B->QuadPart) ? GenericEqual : GenericGreaterThan;
 
+#if 0
     DPRINT
         ("Compare: %08x%08x vs %08x%08x => %s\n",
          A->u.HighPart, A->u.LowPart,
          B->u.HighPart, B->u.LowPart,
          Result == GenericLessThan ? "GenericLessThan" :
-         Result == GenericGreaterThan ? "GenericGreaterThan" : 
+         Result == GenericGreaterThan ? "GenericGreaterThan" :
             "GenericEqual");
+#endif
 
     return Result;
 }
@@ -79,188 +111,258 @@ MiSectionPageTableCompare(PRTL_GENERIC_TABLE Table, PVOID PtrA, PVOID PtrB)
 static
 PCACHE_SECTION_PAGE_TABLE
 NTAPI
-MiSectionPageTableGet
-(PRTL_GENERIC_TABLE Table, 
- PLARGE_INTEGER FileOffset)
+MiSectionPageTableGet(PRTL_GENERIC_TABLE Table,
+                      PLARGE_INTEGER FileOffset)
 {
     LARGE_INTEGER SearchFileOffset;
-	PCACHE_SECTION_PAGE_TABLE PageTable;
-    SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
+    PCACHE_SECTION_PAGE_TABLE PageTable;
+    SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart,
+                                           ENTRIES_PER_ELEMENT * PAGE_SIZE);
     PageTable = RtlLookupElementGenericTable(Table, &SearchFileOffset);
-	DPRINT
-		("MiSectionPageTableGet(%08x,%08x%08x)\n",
-		 Table,
-		 FileOffset->HighPart,
-		 FileOffset->LowPart);
-	return PageTable;
+
+    DPRINT("MiSectionPageTableGet(%08x,%08x%08x)\n",
+           Table,
+           FileOffset->HighPart,
+           FileOffset->LowPart);
+
+    return PageTable;
 }
 
 static
 PCACHE_SECTION_PAGE_TABLE
 NTAPI
-MiSectionPageTableGetOrAllocate
-(PRTL_GENERIC_TABLE Table, 
- PLARGE_INTEGER FileOffset)
+MiSectionPageTableGetOrAllocate(PRTL_GENERIC_TABLE Table,
+                                PLARGE_INTEGER FileOffset)
 {
     LARGE_INTEGER SearchFileOffset;
-    PCACHE_SECTION_PAGE_TABLE PageTableSlice = 
-        MiSectionPageTableGet(Table, FileOffset);
+    CACHE_SECTION_PAGE_TABLE SectionZeroPageTable;
+    PCACHE_SECTION_PAGE_TABLE PageTableSlice = MiSectionPageTableGet(Table,
+                                                                     FileOffset);
+    /* Please zero memory when taking away zero initialization. */
+    RtlZeroMemory(&SectionZeroPageTable, sizeof(CACHE_SECTION_PAGE_TABLE));
     if (!PageTableSlice)
     {
-		CACHE_SECTION_PAGE_TABLE SectionZeroPageTable = { };
-        SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
+        SearchFileOffset.QuadPart = ROUND_DOWN(FileOffset->QuadPart,
+                                               ENTRIES_PER_ELEMENT * PAGE_SIZE);
         SectionZeroPageTable.FileOffset = SearchFileOffset;
         SectionZeroPageTable.Refcount = 1;
-        PageTableSlice = RtlInsertElementGenericTable
-            (Table, &SectionZeroPageTable, sizeof(SectionZeroPageTable), NULL);
-        DPRINT
-            ("Allocate page table %x (%08x%08x)\n", 
-             PageTableSlice,
-             PageTableSlice->FileOffset.u.HighPart,
-             PageTableSlice->FileOffset.u.LowPart);
+        PageTableSlice = RtlInsertElementGenericTable(Table,
+                                                      &SectionZeroPageTable,
+                                                      sizeof(SectionZeroPageTable),
+                                                      NULL);
         if (!PageTableSlice) return NULL;
+        DPRINT("Allocate page table %x (%08x%08x)\n",
+               PageTableSlice,
+               PageTableSlice->FileOffset.u.HighPart,
+               PageTableSlice->FileOffset.u.LowPart);
     }
     return PageTableSlice;
 }
 
 VOID
 NTAPI
-MiInitializeSectionPageTable(PMM_CACHE_SECTION_SEGMENT Segment)
+MiInitializeSectionPageTable(PMM_SECTION_SEGMENT Segment)
 {
-    RtlInitializeGenericTable
-        (&Segment->PageTable,
-         MiSectionPageTableCompare,
-         MiSectionPageTableAllocate,
-         MiSectionPageTableFree,
-         NULL);
+    RtlInitializeGenericTable(&Segment->PageTable,
+                              MiSectionPageTableCompare,
+                              MiSectionPageTableAllocate,
+                              MiSectionPageTableFree,
+                              NULL);
+
     DPRINT("MiInitializeSectionPageTable(%p)\n", &Segment->PageTable);
 }
 
 NTSTATUS
 NTAPI
-_MiSetPageEntryCacheSectionSegment
-(PMM_CACHE_SECTION_SEGMENT Segment,
- PLARGE_INTEGER Offset,
- ULONG Entry,
- const char *file,
- int line)
+_MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+                              PLARGE_INTEGER Offset,
+                              ULONG_PTR Entry,
+                              const char *file,
+                              int line)
 {
-    ULONG PageIndex, OldEntry;
+    ULONG_PTR PageIndex, OldEntry;
     PCACHE_SECTION_PAGE_TABLE PageTable;
-    PageTable = 
-        MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
+
+    ASSERT(Segment->Locked);
+    ASSERT(!IS_SWAP_FROM_SSE(Entry) || !IS_DIRTY_SSE(Entry));
+
+    if (Entry && !IS_SWAP_FROM_SSE(Entry))
+        MmGetRmapListHeadPage(PFN_FROM_SSE(Entry));
+
+    PageTable = MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
+
     if (!PageTable) return STATUS_NO_MEMORY;
-	ASSERT(MiSectionPageTableGet(&Segment->PageTable, Offset));
-	PageTable->Segment = Segment;
-    PageIndex = 
-        (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
-	OldEntry = PageTable->PageEntries[PageIndex];
-	if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry)) {
-		MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
-	}
-	if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
-		MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
-	}
+
+    ASSERT(MiSectionPageTableGet(&Segment->PageTable, Offset));
+
+    PageTable->Segment = Segment;
+    PageIndex = (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
+    OldEntry = PageTable->PageEntries[PageIndex];
+
+    DPRINT("MiSetPageEntrySectionSegment(%p,%08x%08x,%x=>%x)\n",
+            Segment,
+            Offset->u.HighPart,
+            Offset->u.LowPart,
+            OldEntry,
+            Entry);
+
+    if (PFN_FROM_SSE(Entry) == PFN_FROM_SSE(OldEntry)) {
+        /* Nothing */
+    } else if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
+        ASSERT(!OldEntry || IS_SWAP_FROM_SSE(OldEntry));
+        MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+    } else if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry)) {
+        ASSERT(!Entry || IS_SWAP_FROM_SSE(Entry));
+        MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+    } else if (IS_SWAP_FROM_SSE(Entry)) {
+        ASSERT(!IS_SWAP_FROM_SSE(OldEntry) || 
+               SWAPENTRY_FROM_SSE(OldEntry) == MM_WAIT_ENTRY);
+        if (OldEntry && SWAPENTRY_FROM_SSE(OldEntry) != MM_WAIT_ENTRY)
+            MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+    } else if (IS_SWAP_FROM_SSE(OldEntry)) {
+        ASSERT(!IS_SWAP_FROM_SSE(Entry));
+        if (Entry)
+            MmSetSectionAssociation(PFN_FROM_SSE(OldEntry), Segment, Offset);
+    } else {
+        /* We should not be replacing a page like this */
+        ASSERT(FALSE);
+    }
     PageTable->PageEntries[PageIndex] = Entry;
-    DPRINT
-        ("MiSetPageEntrySectionSegment(%p,%08x%08x,%x) %s:%d\n",
-         Segment, Offset->u.HighPart, Offset->u.LowPart, Entry, file, line);
     return STATUS_SUCCESS;
 }
 
-ULONG
+ULONG_PTR
 NTAPI
-_MiGetPageEntryCacheSectionSegment
-(PMM_CACHE_SECTION_SEGMENT Segment,
- PLARGE_INTEGER Offset,
- const char *file,
- int line)
+_MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+                              PLARGE_INTEGER Offset,
+                              const char *file,
+                              int line)
 {
     LARGE_INTEGER FileOffset;
-    ULONG PageIndex, Result;
+    ULONG_PTR PageIndex, Result;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
-    FileOffset.QuadPart = 
-        ROUND_DOWN(Offset->QuadPart, ENTRIES_PER_ELEMENT * PAGE_SIZE);
+    ASSERT(Segment->Locked);
+    FileOffset.QuadPart = ROUND_DOWN(Offset->QuadPart,
+                                     ENTRIES_PER_ELEMENT * PAGE_SIZE);
     PageTable = MiSectionPageTableGet(&Segment->PageTable, &FileOffset);
     if (!PageTable) return 0;
-    PageIndex = 
-        (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
+    PageIndex = (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
     Result = PageTable->PageEntries[PageIndex];
 #if 0
     DPRINTC
         ("MiGetPageEntrySectionSegment(%p,%08x%08x) => %x %s:%d\n",
          Segment,
-         FileOffset.u.HighPart, 
+         FileOffset.u.HighPart,
          FileOffset.u.LowPart + PageIndex * PAGE_SIZE,
          Result,
-		 file, line);
+         file, line);
 #endif
     return Result;
 }
 
+/*
+
+Destroy the rtl generic table that serves as the section's page table.  Call
+the FreePage function for each non-zero entry in the section page table as
+we go.  Note that the page table is still techinally valid until after all
+pages are destroyed, as we don't finally destroy the table until we've free
+each slice.  There is no order guarantee for deletion of individual elements
+although it's in-order as written now.
+
+*/
+
 VOID
 NTAPI
-MiFreePageTablesSectionSegment
-(PMM_CACHE_SECTION_SEGMENT Segment, FREE_SECTION_PAGE_FUN FreePage)
+MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
+                               FREE_SECTION_PAGE_FUN FreePage)
 {
     PCACHE_SECTION_PAGE_TABLE Element;
     DPRINT("MiFreePageTablesSectionSegment(%p)\n", &Segment->PageTable);
     while ((Element = RtlGetElementGenericTable(&Segment->PageTable, 0))) {
-        DPRINT
-            ("Delete table for %x -> %08x%08x\n", 
-			 Segment,
-             Element->FileOffset.u.HighPart, 
-             Element->FileOffset.u.LowPart);
-		if (FreePage)
-		{
-			int i;
-			for (i = 0; i < ENTRIES_PER_ELEMENT; i++)
-			{
-				ULONG Entry;
-				LARGE_INTEGER Offset;
-				Offset.QuadPart = Element->FileOffset.QuadPart + i * PAGE_SIZE;
-				Entry = Element->PageEntries[i];
-				if (Entry && !IS_SWAP_FROM_SSE(Entry))
-				{
-					DPRINTC("Freeing page %x:%x @ %x\n", Segment, Entry, Offset.LowPart);
-					FreePage(Segment, &Offset);
-				}
-			}
-		}
-		DPRINT("Remove memory\n");
+        DPRINT("Delete table for <%wZ> %x -> %08x%08x\n",
+               Segment->FileObject ? &Segment->FileObject->FileName : NULL,
+               Segment,
+               Element->FileOffset.u.HighPart,
+               Element->FileOffset.u.LowPart);
+        if (FreePage)
+        {
+            ULONG i;
+            for (i = 0; i < ENTRIES_PER_ELEMENT; i++)
+            {
+                ULONG_PTR Entry;
+                LARGE_INTEGER Offset;
+                Offset.QuadPart = Element->FileOffset.QuadPart + i * PAGE_SIZE;
+                Entry = Element->PageEntries[i];
+                if (Entry && !IS_SWAP_FROM_SSE(Entry))
+                {
+                    DPRINT("Freeing page %x:%x @ %x\n",
+                           Segment,
+                           Entry,
+                           Offset.LowPart);
+
+                    FreePage(Segment, &Offset);
+                }
+            }
+        }
+        DPRINT("Remove memory\n");
         RtlDeleteElementGenericTable(&Segment->PageTable, Element);
     }
-	DPRINT("Done\n");
+    DPRINT("Done\n");
 }
 
-PMM_CACHE_SECTION_SEGMENT
-NTAPI
-MmGetSectionAssociation(PFN_NUMBER Page, PLARGE_INTEGER Offset)
-{
-	ULONG RawOffset;
-    PMM_CACHE_SECTION_SEGMENT Segment = NULL;
-    PCACHE_SECTION_PAGE_TABLE PageTable;
-	
-	PageTable = (PCACHE_SECTION_PAGE_TABLE)MmGetSegmentRmap(Page, &RawOffset);
-	if (PageTable)
-	{
-		Segment = PageTable->Segment;
-		Offset->QuadPart = PageTable->FileOffset.QuadPart + (RawOffset << PAGE_SHIFT);
-	}
+/*
 
-    return(Segment);
+Retrieves the MM_SECTION_SEGMENT and fills in the LARGE_INTEGER Offset given
+by the caller that corresponds to the page specified.  This uses
+MmGetSegmentRmap to find the rmap belonging to the segment itself, and uses
+the result as a pointer to a 256-entry page table structure.  The rmap also
+includes 8 bits of offset information indication one of 256 page entries that
+the rmap corresponds to.  This information together gives us an exact offset
+into the file, as well as the MM_SECTION_SEGMENT pointer stored in the page
+table slice.
+
+NULL is returned is there is no segment rmap for the page.
+
+*/
+
+PMM_SECTION_SEGMENT
+NTAPI
+MmGetSectionAssociation(PFN_NUMBER Page,
+                        PLARGE_INTEGER Offset)
+{
+    ULONG RawOffset;
+    PMM_SECTION_SEGMENT Segment = NULL;
+    PCACHE_SECTION_PAGE_TABLE PageTable;
+
+    PageTable = (PCACHE_SECTION_PAGE_TABLE)MmGetSegmentRmap(Page,
+                                                            &RawOffset);
+    if (PageTable)
+    {
+        Segment = PageTable->Segment;
+        Offset->QuadPart = PageTable->FileOffset.QuadPart +
+                           (RawOffset << PAGE_SHIFT);
+    }
+
+    return Segment;
 }
 
 NTSTATUS
 NTAPI
-MmSetSectionAssociation(PFN_NUMBER Page, PMM_CACHE_SECTION_SEGMENT Segment, PLARGE_INTEGER Offset)
+MmSetSectionAssociation(PFN_NUMBER Page,
+                        PMM_SECTION_SEGMENT Segment,
+                        PLARGE_INTEGER Offset)
 {
     PCACHE_SECTION_PAGE_TABLE PageTable;
-	ULONG ActualOffset;
-	PageTable = MiSectionPageTableGet(&Segment->PageTable, Offset);
-	ASSERT(PageTable);
-	ActualOffset = (ULONG)(Offset->QuadPart - PageTable->FileOffset.QuadPart);
-	MmInsertRmap(Page, (PEPROCESS)PageTable, (PVOID)(RMAP_SEGMENT_MASK | (ActualOffset >> PAGE_SHIFT)));
-	return STATUS_SUCCESS;
+    ULONG ActualOffset;
+
+    PageTable = MiSectionPageTableGet(&Segment->PageTable, Offset);
+    ASSERT(PageTable);
+
+    ActualOffset = (ULONG)(Offset->QuadPart - PageTable->FileOffset.QuadPart);
+    MmInsertRmap(Page,
+                 (PEPROCESS)PageTable,
+                 (PVOID)(RMAP_SEGMENT_MASK | (ActualOffset >> PAGE_SHIFT)));
+
+    return STATUS_SUCCESS;
 }

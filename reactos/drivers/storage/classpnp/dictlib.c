@@ -35,6 +35,7 @@ typedef struct _DICTIONARY_HEADER {
 
 
 VOID
+NTAPI
 InitializeDictionary(
     IN PDICTIONARY Dictionary
     )
@@ -45,8 +46,8 @@ InitializeDictionary(
     return;
 }
 
-
 BOOLEAN
+NTAPI
 TestDictionarySignature(
     IN PDICTIONARY Dictionary
     )
@@ -55,6 +56,7 @@ TestDictionarySignature(
 }
 
 NTSTATUS
+NTAPI
 AllocateDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key,
@@ -132,8 +134,8 @@ AllocateDictionaryEntry(
     return status;
 }
 
-
 PVOID
+NTAPI
 GetDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key
@@ -164,8 +166,8 @@ GetDictionaryEntry(
     return data;
 }
 
-
 VOID
+NTAPI
 FreeDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN PVOID Entry
@@ -208,5 +210,3 @@ FreeDictionaryEntry(
     return;
 
 }
-
-

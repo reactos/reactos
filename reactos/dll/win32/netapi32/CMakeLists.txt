@@ -2,7 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(netapi32.dll netapi32.spec)
+spec2def(netapi32.dll netapi32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     access.c
@@ -29,4 +29,4 @@ target_link_libraries(netapi32 wine)
 add_importlibs(netapi32 iphlpapi ws2_32 advapi32 msvcrt kernel32 ntdll)
 
 add_cd_file(TARGET netapi32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(netapi32.spec)
+

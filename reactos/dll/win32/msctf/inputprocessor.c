@@ -782,7 +782,7 @@ HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut
 }
 
 /**************************************************
- * IEnumGUID implementaion for ITfInputProcessorProfiles::EnumInputProcessorInfo
+ * IEnumGUID implementation for ITfInputProcessorProfiles::EnumInputProcessorInfo
  **************************************************/
 static void ProfilesEnumGuid_Destructor(ProfilesEnumGuid *This)
 {
@@ -935,7 +935,7 @@ static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut)
 }
 
 /**************************************************
- * IEnumTfLanguageProfiles implementaion
+ * IEnumTfLanguageProfiles implementation
  **************************************************/
 static void EnumTfLanguageProfiles_Destructor(EnumTfLanguageProfiles *This)
 {

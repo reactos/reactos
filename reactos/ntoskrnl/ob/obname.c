@@ -1120,7 +1120,7 @@ ObQueryNameString(IN PVOID Object,
             ObjectNameInfo->Name.MaximumLength = (USHORT)(NameSize +
                                                           sizeof(UNICODE_NULL));
             ObjectNameInfo->Name.Buffer = ObjectName;
-            _SEH2_YIELD(return STATUS_SUCCESS);
+            Status = STATUS_SUCCESS;
         }
         else
         {
@@ -1206,6 +1206,32 @@ ObQueryDeviceMapInformation(IN PEPROCESS Process,
                   sizeof(ObSystemDeviceMap->DriveType));
 
     KeReleaseGuardedMutex(&ObpDeviceMapLock);
+}
+
+NTSTATUS
+NTAPI
+ObIsDosDeviceLocallyMapped(
+    IN ULONG Index,
+    OUT PUCHAR DosDeviceState)
+{
+    /* check parameters */
+    if (Index < 1 || Index > 26)
+    {
+        /* invalid index */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* acquire lock */
+    KeAcquireGuardedMutex(&ObpDeviceMapLock);
+
+    /* get drive mapping status */
+    *DosDeviceState = (ObSystemDeviceMap->DriveMap & (1 << Index)) != 0;
+
+    /* release lock */
+    KeReleaseGuardedMutex(&ObpDeviceMapLock);
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

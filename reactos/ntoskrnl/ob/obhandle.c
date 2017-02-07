@@ -2457,6 +2457,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     /* Capture all the info */
     Status = ObpCaptureObjectCreateInformation(ObjectAttributes,
                                                AccessMode,
+                                               AccessMode,
                                                TRUE,
                                                &TempBuffer->ObjectCreateInfo,
                                                &ObjectName);

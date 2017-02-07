@@ -19,7 +19,7 @@
 
 /* GLOBALS ********************************************************************/
 
-POBJECT_TYPE SepTokenObjectType = NULL;
+POBJECT_TYPE SeTokenObjectType = NULL;
 ERESOURCE SepTokenLock;
 
 TOKEN_SOURCE SeSystemTokenSource = {"*SYSTEM*", {0}};
@@ -234,13 +234,13 @@ SepDuplicateToken(PTOKEN Token,
     ULONG uLength;
     ULONG i;
     PVOID EndMem;
-    PTOKEN AccessToken;
+    PTOKEN AccessToken = NULL;
     NTSTATUS Status;
 
     PAGED_CODE();
 
     Status = ObCreateObject(PreviousMode,
-                            SepTokenObjectType,
+                            SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -290,10 +290,14 @@ SepDuplicateToken(PTOKEN Token,
     for (i = 0; i < Token->UserAndGroupCount; i++)
         uLength += RtlLengthSid(Token->UserAndGroups[i].Sid);
 
-    AccessToken->UserAndGroups =
-    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
-                                               uLength,
-                                               TAG_TOKEN_USERS);
+    AccessToken->UserAndGroups = ExAllocatePoolWithTag(PagedPool,
+                                                       uLength,
+                                                       TAG_TOKEN_USERS);
+    if (AccessToken->UserAndGroups == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
 
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
@@ -304,48 +308,69 @@ SepDuplicateToken(PTOKEN Token,
                                           EndMem,
                                           &EndMem,
                                           &uLength);
-    if (NT_SUCCESS(Status))
-    {
-        Status = SepFindPrimaryGroupAndDefaultOwner(
-                                                    AccessToken,
-                                                    Token->PrimaryGroup,
-                                                    0);
-    }
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (NT_SUCCESS(Status))
-    {
-        AccessToken->PrivilegeCount = Token->PrivilegeCount;
+    Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
+                                                Token->PrimaryGroup,
+                                                0);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-        uLength = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
-        AccessToken->Privileges =
-        (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
+    AccessToken->PrivilegeCount = Token->PrivilegeCount;
+
+    uLength = AccessToken->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+    AccessToken->Privileges = ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
                                                     TAG_TOKEN_PRIVILAGES);
-
-        for (i = 0; i < AccessToken->PrivilegeCount; i++)
-        {
-            RtlCopyLuid(&AccessToken->Privileges[i].Luid,
-                        &Token->Privileges[i].Luid);
-            AccessToken->Privileges[i].Attributes =
-            Token->Privileges[i].Attributes;
-        }
-
-        if (Token->DefaultDacl)
-        {
-            AccessToken->DefaultDacl =
-            (PACL) ExAllocatePoolWithTag(PagedPool,
-                                         Token->DefaultDacl->AclSize,
-                                         TAG_TOKEN_ACL);
-            memcpy(AccessToken->DefaultDacl,
-                   Token->DefaultDacl,
-                   Token->DefaultDacl->AclSize);
-        }
+    if (AccessToken->Privileges == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
-    if (NT_SUCCESS(Status))
+    for (i = 0; i < AccessToken->PrivilegeCount; i++)
     {
-        *NewAccessToken = AccessToken;
-        return(STATUS_SUCCESS);
+        RtlCopyLuid(&AccessToken->Privileges[i].Luid,
+                    &Token->Privileges[i].Luid);
+        AccessToken->Privileges[i].Attributes =
+        Token->Privileges[i].Attributes;
+    }
+
+    if (Token->DefaultDacl)
+    {
+        AccessToken->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
+                                                         Token->DefaultDacl->AclSize,
+                                                         TAG_TOKEN_ACL);
+        if (AccessToken->DefaultDacl == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        memcpy(AccessToken->DefaultDacl,
+               Token->DefaultDacl,
+               Token->DefaultDacl->AclSize);
+    }
+
+    *NewAccessToken = AccessToken;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (AccessToken)
+        {
+            if (AccessToken->UserAndGroups)
+                ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
+
+            if (AccessToken->Privileges)
+                ExFreePoolWithTag(AccessToken->Privileges, TAG_TOKEN_PRIVILAGES);
+
+            if (AccessToken->DefaultDacl)
+                ExFreePoolWithTag(AccessToken->DefaultDacl, TAG_TOKEN_ACL);
+
+            ObDereferenceObject(AccessToken);
+        }
     }
 
     return Status;
@@ -494,7 +519,7 @@ SepInitializeTokenImplementation(VOID)
     ObjectTypeInitializer.ValidAccessMask = TOKEN_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = SepDeleteToken;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SepTokenObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SeTokenObjectType);
 }
 
 VOID
@@ -588,7 +613,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         return Status;
 
     Status = ObCreateObject(PreviousMode,
-                            SepTokenObjectType,
+                            SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -636,10 +661,14 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     for (i = 0; i < GroupCount; i++)
         uLength += RtlLengthSid(Groups[i].Sid);
 
-    AccessToken->UserAndGroups =
-    (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
-                                               uLength,
-                                               TAG_TOKEN_USERS);
+    AccessToken->UserAndGroups = ExAllocatePoolWithTag(PagedPool,
+                                                       uLength,
+                                                       TAG_TOKEN_USERS);
+    if (AccessToken->UserAndGroups == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
 
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
 
@@ -650,65 +679,71 @@ SepCreateToken(OUT PHANDLE TokenHandle,
                                           EndMem,
                                           &EndMem,
                                           &uLength);
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlCopySidAndAttributesArray(GroupCount,
-                                              Groups,
-                                              uLength,
-                                              &AccessToken->UserAndGroups[1],
-                                              EndMem,
-                                              &EndMem,
-                                              &uLength);
-    }
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (NT_SUCCESS(Status))
-    {
-        Status = SepFindPrimaryGroupAndDefaultOwner(
-                                                    AccessToken,
-                                                    PrimaryGroup,
-                                                    Owner);
-    }
+    Status = RtlCopySidAndAttributesArray(GroupCount,
+                                          Groups,
+                                          uLength,
+                                          &AccessToken->UserAndGroups[1],
+                                          EndMem,
+                                          &EndMem,
+                                          &uLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-    if (NT_SUCCESS(Status))
-    {
-        uLength = PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
-        AccessToken->Privileges =
-        (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
+    Status = SepFindPrimaryGroupAndDefaultOwner(AccessToken,
+                                                PrimaryGroup,
+                                                Owner);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    uLength = PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+    AccessToken->Privileges = ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
                                                     TAG_TOKEN_PRIVILAGES);
+    if (AccessToken->Privileges == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
 
-        if (PreviousMode != KernelMode)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory(AccessToken->Privileges,
-                              Privileges,
-                              PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-        }
-        else
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
         {
             RtlCopyMemory(AccessToken->Privileges,
                           Privileges,
                           PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        RtlCopyMemory(AccessToken->Privileges,
+                      Privileges,
+                      PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
     }
 
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    AccessToken->DefaultDacl = ExAllocatePoolWithTag(PagedPool,
+                                                     DefaultDacl->AclSize,
+                                                     TAG_TOKEN_ACL);
+    if (AccessToken->DefaultDacl == NULL)
     {
-        AccessToken->DefaultDacl =
-        (PACL) ExAllocatePoolWithTag(PagedPool,
-                                     DefaultDacl->AclSize,
-                                     TAG_TOKEN_ACL);
-        memcpy(AccessToken->DefaultDacl,
-               DefaultDacl,
-               DefaultDacl->AclSize);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
+
+    RtlCopyMemory(AccessToken->DefaultDacl,
+                  DefaultDacl,
+                  DefaultDacl->AclSize);
 
     if (!SystemToken)
     {
@@ -727,6 +762,24 @@ SepCreateToken(OUT PHANDLE TokenHandle,
     {
         /* Return pointer instead of handle */
         *TokenHandle = (HANDLE)AccessToken;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (AccessToken)
+        {
+            if (AccessToken->UserAndGroups)
+                ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
+
+            if (AccessToken->Privileges)
+                ExFreePoolWithTag(AccessToken->Privileges, TAG_TOKEN_PRIVILAGES);
+
+            if (AccessToken->DefaultDacl)
+                ExFreePoolWithTag(AccessToken->DefaultDacl, TAG_TOKEN_ACL);
+
+            ObDereferenceObject(AccessToken);
+        }
     }
 
     return Status;
@@ -1035,7 +1088,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        (TokenInformationClass == TokenSource) ? TOKEN_QUERY_SOURCE : TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -1602,7 +1655,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        NeededAccess,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -1845,7 +1898,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 
     Status = ObReferenceObjectByHandle(ExistingTokenHandle,
                                        TOKEN_DUPLICATE,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        &HandleInformation);
@@ -2047,7 +2100,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_ADJUST_PRIVILEGES | (PreviousState != NULL ? TOKEN_QUERY : 0),
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -2474,7 +2527,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     else
     {
         Status = ObOpenObjectByPointer(Token, HandleAttributes,
-                                       NULL, DesiredAccess, SepTokenObjectType,
+                                       NULL, DesiredAccess, SeTokenObjectType,
                                        PreviousMode, &hToken);
     }
 
@@ -2561,7 +2614,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
 
     Status = ObReferenceObjectByHandle(FirstTokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&FirstToken,
                                        NULL);
@@ -2570,7 +2623,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
 
     Status = ObReferenceObjectByHandle(SecondTokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&SecondToken,
                                        NULL);

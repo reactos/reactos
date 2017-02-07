@@ -5,7 +5,7 @@ list(APPEND SOURCE
     mszip.cxx
     raw.cxx)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 add_executable(cabman ${SOURCE})
 

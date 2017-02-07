@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "&Exportovat do souboru registru...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Načíst strom registru...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Uvolnit strom registru...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Načíst strom registru...",              ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Uvolnit strom registru...",             ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Připojit síťový registr...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Nelze odstranit všechny vybrané položky!"
     IDS_ERR_RENVAL_CAPTION  "Chyba při přejmenování položky"
     IDS_ERR_RENVAL_TOEMPTY  "Nelze přejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Nový klíč #%d"
     IDS_NEW_VALUE           "Nová hodnota #%d"
 END
@@ -389,9 +391,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Soubor registru"
-    IDS_FLT_REGFILES        "Soubory registru"
+    IDS_FLT_REGFILES        "Soubory registru (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Soubory registru Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Soubory registru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Všechny soubory (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

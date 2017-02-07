@@ -190,7 +190,7 @@ PspAssignPrimaryToken(IN PEPROCESS Process,
         /* Reference it from the handle */
         Status = ObReferenceObjectByHandle(Token,
                                            TOKEN_ASSIGN_PRIMARY,
-                                           SepTokenObjectType,
+                                           SeTokenObjectType,
                                            ExGetPreviousMode(),
                                            &NewToken,
                                            NULL);
@@ -231,7 +231,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
         /* Reference it */
         Status = ObReferenceObjectByHandle(TokenHandle,
                                            TOKEN_ASSIGN_PRIMARY,
-                                           SepTokenObjectType,
+                                           SeTokenObjectType,
                                            PreviousMode,
                                            (PVOID*)&NewToken,
                                            NULL);
@@ -380,7 +380,7 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
                                        HandleAttributes,
                                        NULL,
                                        DesiredAccess,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        &hToken);
         ObDereferenceObject(Token);
@@ -494,7 +494,7 @@ PsAssignImpersonationToken(IN PETHREAD Thread,
     /* Get the token object */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_IMPERSONATE,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        KeGetPreviousMode(),
                                        (PVOID*)&Token,
                                        NULL);

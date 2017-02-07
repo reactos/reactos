@@ -262,7 +262,7 @@ static HRESULT WINAPI Context_RequestEditSession (ITfContext *iface,
 
     if (!This->pITextStoreACP)
     {
-        FIXME("No ITextStoreACP avaliable\n");
+        FIXME("No ITextStoreACP available\n");
         *phrSession = E_FAIL;
         return E_FAIL;
     }

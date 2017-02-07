@@ -53,11 +53,11 @@ ULONG MemoryTypeCount = sizeof(MemoryTypeArray) / sizeof(MemoryTypeArray[0]);
 #endif
 
 PVOID	PageLookupTableAddress = NULL;
-ULONG		TotalPagesInLookupTable = 0;
-ULONG		FreePagesInLookupTable = 0;
-ULONG		LastFreePageHint = 0;
-ULONG MmLowestPhysicalPage = 0xFFFFFFFF;
-ULONG MmHighestPhysicalPage = 0;
+PFN_NUMBER TotalPagesInLookupTable = 0;
+PFN_NUMBER FreePagesInLookupTable = 0;
+PFN_NUMBER LastFreePageHint = 0;
+PFN_NUMBER MmLowestPhysicalPage = 0xFFFFFFFF;
+PFN_NUMBER MmHighestPhysicalPage = 0;
 
 PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 ULONG BiosMemoryMapEntryCount;
@@ -232,15 +232,15 @@ PCSTR MmGetSystemMemoryMapTypeString(TYPE_OF_MEMORY Type)
 }
 #endif
 
-ULONG MmGetPageNumberFromAddress(PVOID Address)
+PFN_NUMBER MmGetPageNumberFromAddress(PVOID Address)
 {
 	return ((ULONG_PTR)Address) / MM_PAGE_SIZE;
 }
 
-ULONG MmGetAddressablePageCountIncludingHoles(VOID)
+PFN_NUMBER MmGetAddressablePageCountIncludingHoles(VOID)
 {
     const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
-    ULONG PageCount;
+    PFN_NUMBER PageCount;
 
     //
     // Go through the whole memory map to get max address
@@ -277,12 +277,12 @@ ULONG MmGetAddressablePageCountIncludingHoles(VOID)
     return PageCount;
 }
 
-PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
+PVOID MmFindLocationForPageLookupTable(PFN_NUMBER TotalPageCount)
 {
     const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
-    ULONG PageLookupTableSize;
-    ULONG PageLookupTablePages;
-    ULONG PageLookupTableStartPage = 0;
+    SIZE_T PageLookupTableSize;
+    PFN_NUMBER PageLookupTablePages;
+    PFN_NUMBER PageLookupTableStartPage = 0;
     PVOID PageLookupTableMemAddress = NULL;
 
     // Calculate how much pages we need to keep the page lookup table
@@ -316,11 +316,11 @@ PVOID MmFindLocationForPageLookupTable(ULONG TotalPageCount)
     return PageLookupTableMemAddress;
 }
 
-VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
+VOID MmInitPageLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
     const FREELDR_MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
-    ULONG PageLookupTableStartPage;
-    ULONG PageLookupTablePageCount;
+    PFN_NUMBER PageLookupTableStartPage;
+    PFN_NUMBER PageLookupTablePageCount;
 
     TRACE("MmInitPageLookupTable()\n");
 
@@ -359,10 +359,10 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
     MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, LoaderFirmwareTemporary);
 }
 
-VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY PageAllocated)
+VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY PageAllocated)
 {
-	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							Index;
+	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+	PFN_NUMBER Index;
 	TRACE("MmMarkPagesInLookupTable()\n");
 
     /* Validate the range */
@@ -389,10 +389,10 @@ VOID MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG Page
 	TRACE("MmMarkPagesInLookupTable() Done\n");
 }
 
-VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType)
+VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER StartPage, PFN_NUMBER PageCount, TYPE_OF_MEMORY MemoryType)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							Index;
+	PFN_NUMBER					Index;
 
     StartPage -= MmLowestPhysicalPage;
 	for (Index=StartPage; Index<(StartPage+PageCount); Index++)
@@ -402,11 +402,11 @@ VOID MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG 
 	}
 }
 
-ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
+PFN_NUMBER MmCountFreePagesInLookupTable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							Index;
-	ULONG							FreePageCount;
+	PFN_NUMBER							Index;
+	PFN_NUMBER							FreePageCount;
 
 	FreePageCount = 0;
 	for (Index=0; Index<TotalPageCount; Index++)
@@ -420,11 +420,11 @@ ULONG MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
 	return FreePageCount;
 }
 
-ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd)
+PFN_NUMBER MmFindAvailablePages(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, BOOLEAN FromEnd)
 {
 	PPAGE_LOOKUP_TABLE_ITEM RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG AvailablePagesSoFar;
-	ULONG Index;
+	PFN_NUMBER AvailablePagesSoFar;
+	PFN_NUMBER Index;
 
 	if (LastFreePageHint > TotalPageCount)
 	{
@@ -479,11 +479,11 @@ ULONG MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG Pa
 	return 0;
 }
 
-ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, ULONG LastPage)
+PFN_NUMBER MmFindAvailablePagesBeforePage(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PFN_NUMBER PagesNeeded, PFN_NUMBER LastPage)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							AvailablePagesSoFar;
-	ULONG							Index;
+	PFN_NUMBER					AvailablePagesSoFar;
+	PFN_NUMBER					Index;
 
 	if (LastPage > TotalPageCount)
 	{
@@ -512,10 +512,10 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 	return 0;
 }
 
-VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
+VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, PFN_NUMBER TotalPageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							Index;
+	PFN_NUMBER							Index;
 
 	for (Index=TotalPageCount-1; Index>0; Index--)
 	{
@@ -527,11 +527,11 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
 	}
 }
 
-BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount)
+BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCount, PVOID PageAddress, PFN_NUMBER PageCount)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
-	ULONG							StartPage;
-	ULONG							Index;
+	PFN_NUMBER							StartPage;
+	PFN_NUMBER							Index;
 
 	StartPage = MmGetPageNumberFromAddress(PageAddress);
 

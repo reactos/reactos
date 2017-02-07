@@ -69,7 +69,9 @@ HAL_DISPATCH HalDispatchTable =
     (pHalEndMirroring)NULL,
     (pHalMirrorPhysicalMemory)NULL,
     (pHalEndOfBoot)NULL,
-    (pHalMirrorVerify)NULL
+    (pHalMirrorVerify)NULL,
+    (pHalGetAcpiTable)NULL,
+    (pHalSetPciErrorHandlerCallback)NULL
 };
 
 HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =

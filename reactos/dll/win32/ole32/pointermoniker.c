@@ -40,17 +40,22 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /* PointerMoniker data structure */
 typedef struct PointerMonikerImpl{
 
-    const IMonikerVtbl*  lpvtbl;  /* VTable relative to the IMoniker interface.*/
+    IMoniker IMoniker_iface;
 
     LONG ref; /* reference counter for this object */
 
     IUnknown *pObject; /* custom marshaler */
 } PointerMonikerImpl;
 
+static inline PointerMonikerImpl *impl_from_IMoniker(IMoniker *iface)
+{
+return CONTAINING_RECORD(iface, PointerMonikerImpl, IMoniker_iface);
+}
+
 static HRESULT WINAPI
 PointerMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -84,7 +89,7 @@ PointerMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 static ULONG WINAPI
 PointerMonikerImpl_AddRef(IMoniker* iface)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -97,7 +102,7 @@ PointerMonikerImpl_AddRef(IMoniker* iface)
 static ULONG WINAPI
 PointerMonikerImpl_Release(IMoniker* iface)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -194,7 +199,7 @@ static HRESULT WINAPI
 PointerMonikerImpl_BindToObject(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLeft,
                              REFIID riid, VOID** ppvResult)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,riid,ppvResult);
 
@@ -211,7 +216,7 @@ static HRESULT WINAPI
 PointerMonikerImpl_BindToStorage(IMoniker* iface, IBindCtx* pbc, IMoniker* pmkToLeft,
                               REFIID riid, VOID** ppvResult)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p,%p,%p,%p)\n",iface,pbc,pmkToLeft,riid,ppvResult);
 
@@ -336,7 +341,7 @@ PointerMonikerImpl_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoni
 static HRESULT WINAPI
 PointerMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
     DWORD mkSys;
 
     TRACE("(%p,%p)\n",iface,pmkOtherMoniker);
@@ -348,7 +353,7 @@ PointerMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
 
     if (mkSys==MKSYS_POINTERMONIKER)
     {
-        PointerMonikerImpl *pOtherMoniker = (PointerMonikerImpl *)pmkOtherMoniker;
+        PointerMonikerImpl *pOtherMoniker = impl_from_IMoniker(pmkOtherMoniker);
         return This->pObject == pOtherMoniker->pObject ? S_OK : S_FALSE;
     }
     else
@@ -360,12 +365,12 @@ PointerMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
  ******************************************************************************/
 static HRESULT WINAPI PointerMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
 
     if (pdwHash==NULL)
         return E_POINTER;
 
-    *pdwHash = (DWORD)This->pObject;
+    *pdwHash = PtrToUlong(This->pObject);
 
     return S_OK;
 }
@@ -467,7 +472,7 @@ PointerMonikerImpl_ParseDisplayName(IMoniker* iface, IBindCtx* pbc,
                                  IMoniker* pmkToLeft, LPOLESTR pszDisplayName,
                                  ULONG* pchEaten, IMoniker** ppmkOut)
 {
-    PointerMonikerImpl *This = (PointerMonikerImpl *)iface;
+    PointerMonikerImpl *This = impl_from_IMoniker(iface);
     HRESULT hr;
     IParseDisplayName *pPDN;
 
@@ -543,8 +548,8 @@ static void PointerMonikerImpl_Construct(PointerMonikerImpl* This, IUnknown *pun
     TRACE("(%p)\n",This);
 
     /* Initialize the virtual function table. */
-    This->lpvtbl       = &VT_PointerMonikerImpl;
-    This->ref          = 1;
+    This->IMoniker_iface.lpVtbl = &VT_PointerMonikerImpl;
+    This->ref = 1;
     if (punk)
         IUnknown_AddRef(punk);
     This->pObject      = punk;
@@ -580,7 +585,7 @@ HRESULT WINAPI CreatePointerMoniker(LPUNKNOWN punk, LPMONIKER *ppmk)
     }
 
     PointerMonikerImpl_Construct(This, punk);
-    *ppmk = (IMoniker *)&This->lpvtbl;
+    *ppmk = &This->IMoniker_iface;
     return S_OK;
 }
 

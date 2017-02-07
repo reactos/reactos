@@ -1,55 +1,55 @@
-@ stub SamAddMemberToAlias
+@ stdcall SamAddMemberToAlias(ptr ptr)
 @ stub SamAddMemberToGroup
 @ stub SamAddMultipleMembersToAlias
 @ stub SamChangePasswordUser2
 @ stub SamChangePasswordUser3
 @ stub SamChangePasswordUser
-@ stub SamCloseHandle
-@ stub SamConnect
+@ stdcall SamCloseHandle(ptr)
+@ stdcall SamConnect(ptr ptr long ptr)
 @ stub SamConnectWithCreds
-@ stub SamCreateAliasInDomain
-@ stub SamCreateGroupInDomain
+@ stdcall SamCreateAliasInDomain(ptr ptr long ptr ptr)
+@ stdcall SamCreateGroupInDomain(ptr ptr long ptr ptr)
 @ stub SamCreateUser2InDomain
-@ stub SamCreateUserInDomain
+@ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
 @ stub SamDeleteAlias
 @ stub SamDeleteGroup
 @ stub SamDeleteUser
-@ stub SamEnumerateAliasesInDomain
-@ stub SamEnumerateDomainsInSamServer
+@ stdcall SamEnumerateAliasesInDomain(ptr ptr ptr long ptr)
+@ stdcall SamEnumerateDomainsInSamServer(ptr ptr ptr long ptr)
 @ stub SamEnumerateGroupsInDomain
 @ stub SamEnumerateUsersInDomain
-@ stub SamFreeMemory
-@ stub SamGetAliasMembership
+@ stdcall SamFreeMemory(ptr)
+@ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
 @ stub SamGetCompatibilityMode
 @ stub SamGetDisplayEnumerationIndex
 @ stub SamGetGroupsForUser
-@ stub SamGetMembersInAlias
+@ stdcall SamGetMembersInAlias(ptr ptr ptr)
 @ stub SamGetMembersInGroup
-@ stub SamLookupDomainInSamServer
+@ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
 @ stub SamLookupIdsInDomain
-@ stub SamLookupNamesInDomain
-@ stub SamOpenAlias
-@ stub SamOpenDomain
-@ stub SamOpenGroup
-@ stub SamOpenUser
+@ stdcall SamLookupNamesInDomain(ptr long ptr ptr ptr)
+@ stdcall SamOpenAlias(ptr long long ptr)
+@ stdcall SamOpenDomain(ptr long ptr ptr)
+@ stdcall SamOpenGroup(ptr long long ptr)
+@ stdcall SamOpenUser(ptr long long ptr)
 @ stub SamQueryDisplayInformation
-@ stub SamQueryInformationAlias
-@ stub SamQueryInformationDomain
-@ stub SamQueryInformationGroup
-@ stub SamQueryInformationUser
+@ stdcall SamQueryInformationAlias(ptr long ptr)
+@ stdcall SamQueryInformationDomain(ptr long ptr)
+@ stdcall SamQueryInformationGroup(ptr long ptr)
+@ stdcall SamQueryInformationUser(ptr long ptr)
 @ stub SamQuerySecurityObject
 @ stub SamRemoveMemberFromAlias
 @ stub SamRemoveMemberFromForeignDomain
 @ stub SamRemoveMemberFromGroup
 @ stub SamRemoveMultipleMembersFromAlias
 @ stub SamRidToSid
-@ stub SamSetInformationAlias
-@ stub SamSetInformationDomain
-@ stub SamSetInformationGroup
-@ stub SamSetInformationUser
+@ stdcall SamSetInformationAlias(ptr long ptr)
+@ stdcall SamSetInformationDomain(ptr long ptr)
+@ stdcall SamSetInformationGroup(ptr long ptr)
+@ stdcall SamSetInformationUser(ptr long ptr)
 @ stub SamSetMemberAttributesOfGroup
 @ stub SamSetSecurityObject
-@ stub SamShutdownSamServer
+@ stdcall SamShutdownSamServer(ptr)
 @ stub SamTestPrivateFunctionsDomain
 @ stub SamTestPrivateFunctionsUser
 @ stub SamiChangeKeys
@@ -63,10 +63,3 @@
 @ stub SamiSetBootKeyInformation
 @ stub SamiSetDSRMPassword
 @ stub SamiSetDSRMPasswordOWF
-
-@ stdcall SamInitializeSAM()
-@ stdcall SamGetDomainSid(ptr)
-@ stdcall SamSetDomainSid(ptr)
-@ stdcall SamCreateUser(wstr wstr ptr)
-@ stdcall SamCheckUserPassword(wstr wstr)
-@ stdcall SamGetUserSid(wstr ptr)

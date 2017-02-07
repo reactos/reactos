@@ -422,18 +422,18 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                 break;
 
             case WM_SYSCOLORCHANGE:
+            case WM_SETTINGCHANGE:
             {
-                InvalidateRect(pThis->hWnd,
-                               NULL,
-                               TRUE);
-
-                if (pThis->hWndShellView != NULL)
+                if (uMsg == WM_SYSCOLORCHANGE || wParam == SPI_SETDESKWALLPAPER || wParam == 0)
                 {
-                    /* Forward the message */
-                    SendMessageW(pThis->hWndShellView,
-                                 WM_SYSCOLORCHANGE,
-                                 wParam,
-                                 lParam);
+                    if (pThis->hWndShellView != NULL)
+                    {
+                        /* Forward the message */
+                        SendMessageW(pThis->hWndShellView,
+                                     uMsg,
+                                     wParam,
+                                     lParam);
+                    }
                 }
                 break;
             }

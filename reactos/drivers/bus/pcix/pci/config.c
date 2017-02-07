@@ -205,12 +205,12 @@ PciQueryForPciBusInterface(IN PPCI_FDO_EXTENSION FdoExtension)
         }
 
         /* Dereference the device object because we took a reference earlier */
-        ObfDereferenceObject(AttachedDevice);
+        ObDereferenceObject(AttachedDevice);
     }
     else
     {
         /* Failure path, dereference the device object and set failure code */
-        if (AttachedDevice) ObfDereferenceObject(AttachedDevice);
+        if (AttachedDevice) ObDereferenceObject(AttachedDevice);
         ExFreePoolWithTag(PciInterface, 0);
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }

@@ -248,3 +248,21 @@ CcUninitializeCacheMap (
     return NT_SUCCESS(CcRosReleaseFileCache(FileObject));
 #endif
 }
+
+BOOLEAN
+NTAPI
+CcGetFileSizes
+(IN PFILE_OBJECT FileObject,
+ IN PCC_FILE_SIZES FileSizes)
+{
+  PBCB Bcb;
+	
+  Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
+
+  if (!Bcb)
+	  return FALSE;
+
+  FileSizes->AllocationSize = Bcb->AllocationSize;
+  FileSizes->FileSize = FileSizes->ValidDataLength = Bcb->FileSize;
+  return TRUE;
+}

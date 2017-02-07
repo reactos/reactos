@@ -132,14 +132,14 @@ static cookie *COOKIE_findCookie(cookie_domain *domain, LPCWSTR lpszCookieName)
 /* removes a cookie from the list, if its the last cookie we also remove the domain */
 static void COOKIE_deleteCookie(cookie *deadCookie, BOOL deleteDomain)
 {
-    HeapFree(GetProcessHeap(), 0, deadCookie->lpCookieName);
-    HeapFree(GetProcessHeap(), 0, deadCookie->lpCookieData);
+    heap_free(deadCookie->lpCookieName);
+    heap_free(deadCookie->lpCookieData);
     list_remove(&deadCookie->entry);
 
     /* special case: last cookie, lets remove the domain to save memory */
     if (list_empty(&deadCookie->parent->cookie_list) && deleteDomain)
         COOKIE_deleteDomain(deadCookie->parent);
-    HeapFree(GetProcessHeap(), 0, deadCookie);
+    heap_free(deadCookie);
 }
 
 /* allocates a domain and adds it to the end */
@@ -251,13 +251,12 @@ static void COOKIE_deleteDomain(cookie_domain *deadDomain)
         COOKIE_deleteCookie(LIST_ENTRY(cursor, cookie, entry), FALSE);
         list_remove(cursor);
     }
-
-    HeapFree(GetProcessHeap(), 0, deadDomain->lpCookieDomain);
-    HeapFree(GetProcessHeap(), 0, deadDomain->lpCookiePath);
+    heap_free(deadDomain->lpCookieDomain);
+    heap_free(deadDomain->lpCookiePath);
 
     list_remove(&deadDomain->entry);
 
-    HeapFree(GetProcessHeap(), 0, deadDomain);
+    heap_free(deadDomain);
 }
 
 BOOL get_cookie(const WCHAR *host, const WCHAR *path, WCHAR *cookie_data, DWORD *size)
@@ -406,11 +405,9 @@ BOOL WINAPI InternetGetCookieA(LPCSTR lpszUrl, LPCSTR lpszCookieName,
                                     lpCookieData, *lpdwSize, NULL, NULL );
         }
     }
-
-    HeapFree( GetProcessHeap(), 0, szCookieData );
-    HeapFree( GetProcessHeap(), 0, name );
-    HeapFree( GetProcessHeap(), 0, url );
-
+    heap_free( szCookieData );
+    heap_free( name );
+    heap_free( url );
     return r;
 }
 
@@ -447,12 +444,11 @@ BOOL set_cookie(LPCWSTR domain, LPCWSTR path, LPCWSTR cookie_name, LPCWSTR cooki
         if (!(ptr = strchrW(ptr,';'))) break;
         *ptr++ = 0;
 
-        if (value != data)
-            HeapFree(GetProcessHeap(), 0, value);
+        if (value != data) heap_free(value);
         value = heap_alloc((ptr - data) * sizeof(WCHAR));
         if (value == NULL)
         {
-            HeapFree(GetProcessHeap(), 0, data);
+            heap_free(data);
             ERR("could not allocate the cookie value buffer\n");
             return FALSE;
         }
@@ -521,8 +517,8 @@ BOOL set_cookie(LPCWSTR domain, LPCWSTR path, LPCWSTR cookie_name, LPCWSTR cooki
             thisCookieDomain = COOKIE_addDomain(domain, path);
         else
         {
-            HeapFree(GetProcessHeap(),0,data);
-            if (value != data) HeapFree(GetProcessHeap(), 0, value);
+            heap_free(data);
+            if (value != data) heap_free(value);
             return TRUE;
         }
     }
@@ -535,13 +531,12 @@ BOOL set_cookie(LPCWSTR domain, LPCWSTR path, LPCWSTR cookie_name, LPCWSTR cooki
 
     if (!expired && !COOKIE_addCookie(thisCookieDomain, cookie_name, value, expiry))
     {
-        HeapFree(GetProcessHeap(),0,data);
-        if (value != data) HeapFree(GetProcessHeap(), 0, value);
+        heap_free(data);
+        if (value != data) heap_free(value);
         return FALSE;
     }
-
-    HeapFree(GetProcessHeap(),0,data);
-    if (value != data) HeapFree(GetProcessHeap(), 0, value);
+    heap_free(data);
+    if (value != data) heap_free(value);
     return TRUE;
 }
 
@@ -559,7 +554,7 @@ BOOL WINAPI InternetSetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
     LPCWSTR lpCookieData)
 {
     BOOL ret;
-    WCHAR hostName[2048], path[2048];
+    WCHAR hostName[INTERNET_MAX_HOST_NAME_LENGTH], path[INTERNET_MAX_PATH_LENGTH];
 
     TRACE("(%s,%s,%s)\n", debugstr_w(lpszUrl),
         debugstr_w(lpszCookieName), debugstr_w(lpCookieData));
@@ -593,7 +588,7 @@ BOOL WINAPI InternetSetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
 
         ret = set_cookie(hostName, path, cookie, data);
 
-        HeapFree(GetProcessHeap(), 0, cookie);
+        heap_free(cookie);
         return ret;
     }
     return set_cookie(hostName, path, lpszCookieName, lpCookieData);
@@ -625,10 +620,9 @@ BOOL WINAPI InternetSetCookieA(LPCSTR lpszUrl, LPCSTR lpszCookieName,
 
     r = InternetSetCookieW( url, name, data );
 
-    HeapFree( GetProcessHeap(), 0, data );
-    HeapFree( GetProcessHeap(), 0, name );
-    HeapFree( GetProcessHeap(), 0, url );
-
+    heap_free( data );
+    heap_free( name );
+    heap_free( url );
     return r;
 }
 

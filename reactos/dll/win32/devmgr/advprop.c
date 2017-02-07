@@ -31,9 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* setupapi */
-DWORD WINAPI pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID);
-
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
 typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
 typedef BOOL (WINAPI *PDESTROYPROPERTYSHEETPAGE)(HPROPSHEETPAGE);
@@ -66,6 +63,7 @@ typedef struct _DEVADVPROP_INFO
         UINT Flags;
         struct
         {
+            UINT Extended : 1;
             UINT FreeDevPropSheets : 1;
             UINT CanDisable : 1;
             UINT DeviceStarted : 1;
@@ -2019,7 +2017,8 @@ GetParentNode:
         dap->nDevPropSheets++;
 
     /* include the details page */
-    dap->nDevPropSheets++;
+    if (dap->Extended)
+        dap->nDevPropSheets++;
 
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
@@ -2093,8 +2092,9 @@ GetParentNode:
                 }
             }
 
-            if (1)
+            if (dap->Extended)
             {
+                /* Add the details page */
                 PROPSHEETPAGE pspDetails = {0};
                 pspDetails.dwSize = sizeof(PROPSHEETPAGE);
                 pspDetails.dwFlags = PSP_DEFAULT;
@@ -2117,9 +2117,9 @@ GetParentNode:
                         dap->DevPropSheets[iPage] = NULL;
                     }
                 }
-            }
 
-            /* FIXME: Add the resources page */
+                /* FIXME: Add the resources page */
+            }
 
             /* FIXME: Add the power page */
         }
@@ -2445,6 +2445,7 @@ DisplayDeviceAdvancedProperties(IN HWND hWndParent,
 
     DevAdvPropInfo->IsAdmin = IsUserAdmin();
     DevAdvPropInfo->DoDefaultDevAction = ((dwFlags & DPF_DEVICE_STATUS_ACTION) != 0);
+    DevAdvPropInfo->Extended = ((dwFlags & DPF_EXTENDED) != 0);
 
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags = PSH_PROPTITLE | PSH_NOAPPLYNOW;

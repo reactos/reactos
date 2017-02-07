@@ -411,15 +411,9 @@ StartProcedure(
         }
 
         /* First detect the mouse and then the keyboard!
-           If we do it the other way round, some systems throw away settings like the keyboard translation, when detecting the mouse.
-        
-           Don't detect the mouse if we're in 1st stage setup! */
-        if(!IsFirstStageSetup())
-        {
-            TRACE_(I8042PRT, "Detecting mouse\n");
-            i8042DetectMouse(DeviceExtension);
-        }
-
+           If we do it the other way round, some systems throw away settings like the keyboard translation, when detecting the mouse. */
+        TRACE_(I8042PRT, "Detecting mouse\n");
+        i8042DetectMouse(DeviceExtension);
         TRACE_(I8042PRT, "Detecting keyboard\n");
         i8042DetectKeyboard(DeviceExtension);
 

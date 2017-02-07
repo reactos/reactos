@@ -21,7 +21,7 @@
 
 /* GLOBALS *******************************************************************/
 
-ULONG HalpSystemHardwareFlags;
+ULONG_PTR HalpSystemHardwareFlags;
 KSPIN_LOCK HalpSystemHardwareLock;
 
 /* FUNCTIONS *****************************************************************/
@@ -226,7 +226,7 @@ VOID
 NTAPI
 HalpAcquireCmosSpinLock(VOID)
 {
-    ULONG Flags;
+    ULONG_PTR Flags;
 
     /* Get flags and disable interrupts */
     Flags = __readeflags();
@@ -243,7 +243,7 @@ VOID
 NTAPI
 HalpReleaseCmosSpinLock(VOID)
 {
-    ULONG Flags;
+    ULONG_PTR Flags;
 
     /* Get the flags */
     Flags = HalpSystemHardwareFlags;

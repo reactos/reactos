@@ -396,7 +396,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		STARTUPINFO stui;
 
 		/* build command line for CreateProcess(): FullName + " " + rest */
-		_tcscpy(szFullCmdLine, szFullName);
+        BOOL quoted = !!_tcschr(First, ' ');
+		_tcscpy(szFullCmdLine, quoted ? _T("\"") : _T(""));
+		_tcsncat(szFullCmdLine, First, CMDLINE_LENGTH - _tcslen(szFullCmdLine));
+		_tcsncat(szFullCmdLine, quoted ? _T("\"") : _T(""), CMDLINE_LENGTH - _tcslen(szFullCmdLine));
 
 		if (*rest)
 		{
@@ -1536,15 +1539,15 @@ ExecuteAutoRunFile(HKEY hkeyRoot)
 
     if (RegOpenKeyEx(hkeyRoot,
                     _T("SOFTWARE\\Microsoft\\Command Processor"),
-                    0, 
-                    KEY_READ, 
+                    0,
+                    KEY_READ,
                     &hkey ) == ERROR_SUCCESS)
     {
-	    if(RegQueryValueEx(hkey, 
+	    if(RegQueryValueEx(hkey,
                            _T("AutoRun"),
-                           0, 
-                           0, 
-                           (LPBYTE)autorun, 
+                           0,
+                           0,
+                           (LPBYTE)autorun,
                            &len) == ERROR_SUCCESS)
 	    {
 			if (*autorun)
@@ -1749,10 +1752,10 @@ Initialize()
 	if (!*ptr)
 	{
 		/* If neither /C or /K was given, display a simple version string */
-		ConOutResPrintf(STRING_REACTOS_VERSION, 
+		ConOutResPrintf(STRING_REACTOS_VERSION,
 			_T(KERNEL_RELEASE_STR),
 			_T(KERNEL_VERSION_BUILD_STR));
-		ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team."));
+		ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team.\n"));
 	}
 
 	if (AutoRun)

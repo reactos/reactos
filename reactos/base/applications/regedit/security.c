@@ -447,7 +447,7 @@ ISecurityInformation_fnGetAccessRights(struct ISecurityInformation *this,
                                        ULONG* piDefaultAccess)
 {
     *ppAccess = RegAccess;
-    *pcAccesses = sizeof(RegAccess) / sizeof(RegAccess[0]);
+    *pcAccesses = COUNT_OF(RegAccess);
     *piDefaultAccess = RegDefaultAccess;
     return S_OK;
 }
@@ -475,7 +475,7 @@ ISecurityInformation_fnGetInheritTypes(struct ISecurityInformation *this,
     if (obj->ObjectInfo.dwFlags & SI_CONTAINER)
     {
         *ppInheritTypes = RegInheritTypes;
-        *pcInheritTypes = sizeof(RegInheritTypes) / sizeof(RegInheritTypes[0]);
+        *pcInheritTypes = COUNT_OF(RegInheritTypes);
         return S_OK;
     }
 

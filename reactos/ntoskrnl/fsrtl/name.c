@@ -117,6 +117,12 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         /* Test star */
         else if (Expression->Buffer[ExpressionPosition] == L'*')
         {
+            /* Skip contigous stars */
+            while (ExpressionPosition + 1 < Expression->Length / sizeof(WCHAR) && Expression->Buffer[ExpressionPosition + 1] == L'*')
+            {
+                ExpressionPosition++;
+            }
+
             /* Save star position */
             if (!BackTracking)
             {

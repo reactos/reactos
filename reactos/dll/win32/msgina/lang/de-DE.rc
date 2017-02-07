@@ -14,7 +14,7 @@ CAPTION "Willkommen bei ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
-    LTEXT           "Drücken Sie Strg-Alt-Entf Kombination",IDC_STATIC, 38, 10, 144, 14
+    LTEXT           "DrÃ¼cken Sie Strg-Alt-Entf Kombination",IDC_STATIC, 38, 10, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
@@ -50,7 +50,7 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Willkommen!"
     IDS_LOCKEDSAS "Der Computer ist derzeit gesperrt."
-    IDS_PRESSCTRLALTDELETE "Drücken Sie Strg+Alt+Entf, um sich anzumelden."
+    IDS_PRESSCTRLALTDELETE "DrÃ¼cken Sie Strg+Alt+Entf, um sich anzumelden."
     IDS_ASKFORUSER "Benutzername: "
     IDS_ASKFORPASSWORD "Passwort: "
     IDS_FORCELOGOFF "Dies wird den derzeitigen Benutzer abmelden. Alle ungespeicherten Daten gehen verloren. Fortsetzen?"

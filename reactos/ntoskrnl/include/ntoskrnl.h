@@ -31,6 +31,7 @@
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>
+#include <mountmgr.h>
 #undef NTHALAPI
 #define NTHALAPI __declspec(dllimport)
 #include <ndk/asm.h>

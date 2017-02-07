@@ -1,5 +1,5 @@
 
-spec2def(bootvid.dll bootvid.spec)
+spec2def(bootvid.dll bootvid.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bootvid.rc
@@ -26,4 +26,4 @@ add_importlibs(bootvid ntoskrnl hal)
 add_pch(bootvid precomp.h)
 add_dependencies(bootvid psdk bugcodes)
 add_cd_file(TARGET bootvid DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(bootvid.spec)
+

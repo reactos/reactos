@@ -100,7 +100,7 @@ INT CommandTimer (LPTSTR param)
 
 	nErrorLevel = 0;
 
-	p = split (param, &argc, FALSE);
+	p = split (param, &argc, FALSE, FALSE);
 
 	//read options
 	for (i = 0; i < argc; i++)
@@ -163,7 +163,7 @@ INT CommandTimer (LPTSTR param)
 		if(cS)
 		{
             ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-			ConOutPuts(GetTimeString());
+			ConOutPrintf(_T("%s\n"), GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -183,7 +183,7 @@ INT CommandTimer (LPTSTR param)
 		{
 			cS=FALSE;
 			ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-			ConOutPuts(GetTimeString());
+			ConOutPrintf(_T("%s\n"), GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;
@@ -204,7 +204,7 @@ INT CommandTimer (LPTSTR param)
 		{
 			cS=FALSE;
 			ConOutResPrintf (STRING_TIMER_TIME,clk_n,cS?_T("ON"):_T("OFF"));
-			ConOutPuts(GetTimeString());
+			ConOutPrintf(_T("%s\n"), GetTimeString());
 			PrintElapsedTime(GetTickCount()-cT, iFormat);
 			freep(p);
 			return 0;

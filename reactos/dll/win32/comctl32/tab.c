@@ -52,6 +52,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -63,7 +64,7 @@
 #include "commctrl.h"
 #include "comctl32.h"
 #include "uxtheme.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "wine/debug.h"
 #include <math.h>
 
@@ -110,7 +111,6 @@ typedef struct
   INT        iSelected;       /* the currently selected item */
   INT        iHotTracked;     /* the highlighted item under the mouse */
   INT        uFocus;          /* item which has the focus */
-  TAB_ITEM*  items;           /* pointer to an array of TAB_ITEM's */
   BOOL       DoRedraw;        /* flag for redrawing when tab contents is changed*/
   BOOL       needsScrolling;  /* TRUE if the size of the tabs is greater than
                                * the size of the control */
@@ -122,6 +122,8 @@ typedef struct
   DWORD      exStyle;         /* Extended style used, currently:
                                  TCS_EX_FLATSEPARATORS, TCS_EX_REGISTERDROP */
   DWORD      dwStyle;         /* the cached window GWL_STYLE */
+
+  HDPA       items;           /* dynamic array of TAB_ITEM* pointers */
 } TAB_INFO;
 
 /******************************************************************************
@@ -141,9 +143,6 @@ typedef struct
 #define EXTRA_ICON_PADDING      3
 
 #define TAB_GetInfoPtr(hwnd) ((TAB_INFO *)GetWindowLongPtrW(hwnd,0))
-/* Since items are variable sized, cannot directly access them */
-#define TAB_GetItem(info,i) \
-  ((TAB_ITEM*)((LPBYTE)info->items + (i) * TAB_ITEM_SIZE(info)))
 
 #define GET_DEFAULT_MIN_TAB_WIDTH(infoPtr) (DEFAULT_MIN_TAB_WIDTH - (DEFAULT_PADDING_X - (infoPtr)->uHItemPadding) * 2)
 
@@ -154,6 +153,12 @@ typedef struct
 #define TAB_HOTTRACK_TIMER_INTERVAL   100   /* milliseconds */
 
 static const WCHAR themeClass[] = { 'T','a','b',0 };
+
+static inline TAB_ITEM* TAB_GetItem(const TAB_INFO *infoPtr, INT i)
+{
+    assert(i >= 0 && i < infoPtr->uNumItem);
+    return DPA_GetPtr(infoPtr->items, i);
+}
 
 /******************************************************************************
  * Prototypes
@@ -209,9 +214,8 @@ static void
 TAB_DumpItemInternal(const TAB_INFO *infoPtr, UINT iItem)
 {
     if (TRACE_ON(tab)) {
-	TAB_ITEM *ti;
+	TAB_ITEM *ti = TAB_GetItem(infoPtr, iItem);
 
-	ti = TAB_GetItem(infoPtr, iItem);
 	TRACE("tab %d, dwState=0x%08x, pszText=%s, iImage=%d\n",
 	      iItem, ti->dwState, debugstr_w(ti->pszText), ti->iImage);
 	TRACE("tab %d, rect.left=%d, rect.top(row)=%d\n",
@@ -680,7 +684,8 @@ TAB_LButtonDown (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
           break;
         }
 
-      TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGING);
+      if (TAB_SendSimpleNotify(infoPtr, TCN_SELCHANGING))
+        return 0;
 
       if (pressed)
         TAB_DeselectAll (infoPtr, FALSE);
@@ -702,11 +707,10 @@ TAB_LButtonUp (const TAB_INFO *infoPtr)
   return 0;
 }
 
-static inline LRESULT
-TAB_RButtonDown (const TAB_INFO *infoPtr)
+static inline void
+TAB_RButtonUp (const TAB_INFO *infoPtr)
 {
   TAB_SendSimpleNotify(infoPtr, NM_RCLICK);
-  return 0;
 }
 
 /******************************************************************************
@@ -1766,6 +1770,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     {
         /* this could be considered broken on 64 bit, but that's how it works -
            only first 4 bytes are copied */
+        dis.itemData = 0;
         memcpy(&dis.itemData, (ULONG_PTR*)TAB_GetItem(infoPtr, iItem)->extra, 4);
     }
 
@@ -2113,9 +2118,10 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
               partIndex += 4;
           /* The part also differs on the position of a tab on a line.
            * "Visually" determining the position works well enough. */
+          GetClientRect(infoPtr->hwnd, &r1);
           if(selectedRect.left == 0)
               partIndex += 1;
-          if(selectedRect.right == clRight)
+          if(selectedRect.right == r1.right)
               partIndex += 2;
 
           if (iItem == infoPtr->iSelected)
@@ -2436,6 +2442,9 @@ static void TAB_EnsureSelectionVisible(
   INT iSelected = infoPtr->iSelected;
   INT iOrigLeftmostVisible = infoPtr->leftmostVisible;
 
+  if (iSelected < 0)
+    return;
+
   /* set the items row to the bottommost row or topmost row depending on
    * style */
   if ((infoPtr->uNumRows > 1) && !(infoPtr->dwStyle & TCS_BUTTONS))
@@ -2640,42 +2649,21 @@ TAB_InsertItemT (TAB_INFO *infoPtr, INT iItem, const TCITEMW *pti, BOOL bUnicode
 
   TAB_DumpItemExternalT(pti, iItem, bUnicode);
 
-
-  if (infoPtr->uNumItem == 0) {
-    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr));
-    infoPtr->uNumItem++;
-    infoPtr->iSelected = 0;
+  if (!(item = Alloc(TAB_ITEM_SIZE(infoPtr)))) return FALSE;
+  if (DPA_InsertPtr(infoPtr->items, iItem, item) == -1)
+  {
+      Free(item);
+      return FALSE;
   }
-  else {
-    LPBYTE oldItems = (LPBYTE)infoPtr->items;
 
-    infoPtr->uNumItem++;
-    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
-
-    /* pre insert copy */
-    if (iItem > 0) {
-      memcpy (infoPtr->items, oldItems,
-              iItem * TAB_ITEM_SIZE(infoPtr));
-    }
-
-    /* post insert copy */
-    if (iItem < infoPtr->uNumItem - 1) {
-      memcpy (TAB_GetItem(infoPtr, iItem + 1),
-              oldItems + iItem * TAB_ITEM_SIZE(infoPtr),
-              (infoPtr->uNumItem - iItem - 1) * TAB_ITEM_SIZE(infoPtr));
-
-    }
-
-    if (iItem <= infoPtr->iSelected)
+  if (infoPtr->uNumItem == 0)
+      infoPtr->iSelected = 0;
+  else if (iItem <= infoPtr->iSelected)
       infoPtr->iSelected++;
 
-    Free (oldItems);
-  }
-
-  item = TAB_GetItem(infoPtr, iItem);
+  infoPtr->uNumItem++;
 
   item->pszText = NULL;
-
   if (pti->mask & TCIF_TEXT)
   {
     if (bUnicode)
@@ -2885,64 +2873,49 @@ TAB_GetItemT (TAB_INFO *infoPtr, INT iItem, LPTCITEMW tabItem, BOOL bUnicode)
 
 static LRESULT TAB_DeleteItem (TAB_INFO *infoPtr, INT iItem)
 {
-    BOOL bResult = FALSE;
+    TAB_ITEM *item;
 
     TRACE("(%p, %d)\n", infoPtr, iItem);
 
-    if ((iItem >= 0) && (iItem < infoPtr->uNumItem))
+    if (iItem < 0 || iItem >= infoPtr->uNumItem) return FALSE;
+
+    item = TAB_GetItem(infoPtr, iItem);
+    Free(item->pszText);
+    Free(item);
+    infoPtr->uNumItem--;
+    DPA_DeletePtr(infoPtr->items, iItem);
+
+    TAB_InvalidateTabArea(infoPtr);
+
+    if (infoPtr->uNumItem == 0)
     {
-        TAB_ITEM *item = TAB_GetItem(infoPtr, iItem);
-        LPBYTE oldItems = (LPBYTE)infoPtr->items;
-
-	TAB_InvalidateTabArea(infoPtr);
-        Free(item->pszText);
-	infoPtr->uNumItem--;
-
-	if (!infoPtr->uNumItem)
+        if (infoPtr->iHotTracked >= 0)
         {
-            infoPtr->items = NULL;
-            if (infoPtr->iHotTracked >= 0)
-            {
-                KillTimer(infoPtr->hwnd, TAB_HOTTRACK_TIMER);
-                infoPtr->iHotTracked = -1;
-            }
+            KillTimer(infoPtr->hwnd, TAB_HOTTRACK_TIMER);
+            infoPtr->iHotTracked = -1;
         }
-        else
-	{
-	    infoPtr->items = Alloc(TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
-	    if (iItem > 0)
-	        memcpy(infoPtr->items, oldItems, iItem * TAB_ITEM_SIZE(infoPtr));
-
-	    if (iItem < infoPtr->uNumItem)
-	        memcpy(TAB_GetItem(infoPtr, iItem),
-                       oldItems + (iItem + 1) * TAB_ITEM_SIZE(infoPtr),
-		       (infoPtr->uNumItem - iItem) * TAB_ITEM_SIZE(infoPtr));
-
-            if (iItem <= infoPtr->iHotTracked)
-            {
-                /* When tabs move left/up, the hot track item may change */
-                FIXME("Recalc hot track\n");
-            }
-	}
-	Free(oldItems);
-
-	/* Readjust the selected index */
-	if (iItem == infoPtr->iSelected)
-	    infoPtr->iSelected = -1;
-	else if (iItem < infoPtr->iSelected)
-	    infoPtr->iSelected--;
-
-	if (infoPtr->uNumItem == 0)
-	    infoPtr->iSelected = -1;
-
-	/* Reposition and repaint tabs */
-	TAB_SetItemBounds(infoPtr);
-
-	bResult = TRUE;
+        infoPtr->iSelected = -1;
+    }
+    else
+    {
+        if (iItem <= infoPtr->iHotTracked)
+        {
+            /* When tabs move left/up, the hot track item may change */
+            FIXME("Recalc hot track\n");
+        }
     }
 
-    return bResult;
+    /* adjust the selected index */
+    if (iItem == infoPtr->iSelected)
+        infoPtr->iSelected = -1;
+    else if (iItem < infoPtr->iSelected)
+        infoPtr->iSelected--;
+
+    /* reposition and repaint tabs */
+    TAB_SetItemBounds(infoPtr);
+
+    return TRUE;
 }
 
 static inline LRESULT TAB_DeleteAllItems (TAB_INFO *infoPtr)
@@ -3063,7 +3036,7 @@ static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
   infoPtr->uHItemPadding_s = 6;
   infoPtr->uVItemPadding_s = 3;
   infoPtr->hFont           = 0;
-  infoPtr->items           = 0;
+  infoPtr->items           = DPA_Create(8);
   infoPtr->hcurArrow       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
   infoPtr->iSelected       = -1;
   infoPtr->iHotTracked     = -1;
@@ -3147,16 +3120,22 @@ static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
 static LRESULT
 TAB_Destroy (TAB_INFO *infoPtr)
 {
-  UINT iItem;
+  INT iItem;
 
   SetWindowLongPtrW(infoPtr->hwnd, 0, 0);
 
-  if (infoPtr->items) {
-    for (iItem = 0; iItem < infoPtr->uNumItem; iItem++) {
-      Free (TAB_GetItem(infoPtr, iItem)->pszText);
-    }
-    Free (infoPtr->items);
+  for (iItem = infoPtr->uNumItem - 1; iItem >= 0; iItem--)
+  {
+      TAB_ITEM *tab = TAB_GetItem(infoPtr, iItem);
+
+      DPA_DeletePtr(infoPtr->items, iItem);
+      infoPtr->uNumItem--;
+
+      Free(tab->pszText);
+      Free(tab);
   }
+  DPA_Destroy(infoPtr->items);
+  infoPtr->items = NULL;
 
   if (infoPtr->hwndToolTip)
     DestroyWindow (infoPtr->hwndToolTip);
@@ -3450,8 +3429,9 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
       return SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, wParam, lParam);
 
-    case WM_RBUTTONDOWN:
-      return TAB_RButtonDown (infoPtr);
+    case WM_RBUTTONUP:
+      TAB_RButtonUp (infoPtr);
+      return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
     case WM_MOUSEMOVE:
       return TAB_MouseMove (infoPtr, wParam, lParam);

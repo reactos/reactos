@@ -661,46 +661,6 @@ ScmDeleteMarkedServices(VOID)
 }
 
 
-VOID
-WaitForLSA(VOID)
-{
-    HANDLE hEvent;
-    DWORD dwError;
-
-    DPRINT("WaitForLSA() called\n");
-
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"LSA_RPC_SERVER_ACTIVE");
-    if (hEvent == NULL)
-    {
-        dwError = GetLastError();
-        DPRINT1("Failed to create the notication event (Error %lu)\n", dwError);
-
-        if (dwError == ERROR_ALREADY_EXISTS)
-        {
-            hEvent = OpenEventW(SYNCHRONIZE,
-                                FALSE,
-                                L"LSA_RPC_SERVER_ACTIVE");
-            if (hEvent != NULL)
-            {
-               DPRINT1("Could not open the notification event!\n");
-               return;
-            }
-        }
-    }
-
-    DPRINT("Wait for LSA!\n");
-    WaitForSingleObject(hEvent, INFINITE);
-    DPRINT("LSA is available!\n");
-
-    CloseHandle(hEvent);
-
-    DPRINT("WaitForLSA() done\n");
-}
-
-
 DWORD
 ScmCreateServiceDatabase(VOID)
 {
@@ -772,8 +732,8 @@ ScmCreateServiceDatabase(VOID)
 
     RegCloseKey(hServicesKey);
 
-    /* Wait for LSA */
-    WaitForLSA();
+    /* Wait for the LSA server */
+    ScmWaitForLsa();
 
     /* Delete services that are marked for delete */
     ScmDeleteMarkedServices();
@@ -1156,8 +1116,8 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    PacketSize = sizeof(SCM_CONTROL_PACKET);
-    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+    PacketSize = sizeof(SCM_CONTROL_PACKET) +
+                 (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
 
     /* Calculate the required packet size for the start arguments */
     if (argc > 0 && argv != NULL)
@@ -1180,7 +1140,9 @@ ScmSendStartCommand(PSERVICE Service,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwSize = PacketSize;
-    ControlPacket->dwControl = SERVICE_CONTROL_START;
+    ControlPacket->dwControl = (Service->Status.dwServiceType & SERVICE_WIN32_OWN_PROCESS)
+                               ? SERVICE_CONTROL_START_OWN
+                               : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
 
@@ -1617,6 +1579,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
     LPCWSTR ErrorLogStrings[2];
+    WCHAR szErrorBuffer[32];
 
     DPRINT("ScmStartService() called\n");
 
@@ -1681,8 +1644,10 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     {
         if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
+            /* Log a failed service start */
+            swprintf(szErrorBuffer, L"%lu", dwError);
             ErrorLogStrings[0] = Service->lpServiceName;
-            ErrorLogStrings[1] = L"Test";
+            ErrorLogStrings[1] = szErrorBuffer;
             ScmLogError(EVENT_SERVICE_START_FAILED,
                         2,
                         ErrorLogStrings);

@@ -4,6 +4,7 @@ ClassGUID = {00000000-0000-0000-0000-000000000000}
 
 [DeviceInfsToInstall]
 battery.inf
+bth.inf
 cdrom.inf
 cpu.inf
 disk.inf
@@ -11,8 +12,11 @@ display.inf
 fdc.inf
 hal.inf
 hdc.inf
+input.inf
 keyboard.inf
+legcydrv.inf
 machine.inf
+monitor.inf
 msmouse.inf
 NET_NIC.inf
 ports.inf
@@ -24,11 +28,12 @@ ks.inf
 
 [RegistrationPhase2]
 RegisterDlls = OleControlDlls
+AddReg=Classes
 
 [OleControlDlls]
+11,,atl.dll,1
 11,,actxprxy.dll,1
 11,,amstream.dll,1
-11,,atl.dll,1
 11,,avifil32.dll,1
 11,,browseui.dll,1
 11,,comcat.dll,1
@@ -85,3 +90,16 @@ RegisterDlls = OleControlDlls
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
+
+[Strings]
+MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"
+Mci32Str="Software\Microsoft\Windows NT\CurrentVersion\MCI32"
+Desktop="Control Panel\Desktop"
+Metrics="Control Panel\Desktop\WindowMetrics"
+CurrentVersion="Software\Microsoft\Windows\CurrentVersion"
+CurrentVersionNT="Software\Microsoft\Windows NT\CurrentVersion"
+FontSubStr="Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes"
+Control="System\CurrentControlSet\Control"
+
+[Classes]
+HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"

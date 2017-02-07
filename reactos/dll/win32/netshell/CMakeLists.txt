@@ -2,18 +2,19 @@ add_definitions(-D_NETSHELL_)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+set_cpp()
 set_rc_compiler()
 spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
-    netshell.c
-    shfldr_netconnect.c
-    enumlist.c
+    netshell.cpp
+    shfldr_netconnect.cpp
+    enumlist.cpp
     netshell.rc
-    classfactory.c
-    connectmanager.c
-    lanconnectui.c
-    lanstatusui.c
+    classfactory.cpp
+    connectmanager.cpp
+    lanconnectui.cpp
+    lanstatusui.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/netshell_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 

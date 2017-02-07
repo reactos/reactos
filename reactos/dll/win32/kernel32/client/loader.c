@@ -1026,9 +1026,9 @@ LoadModule(LPCSTR lpModuleName,
         }
 
         /* Wait up to 30 seconds for the process to become idle */
-        if (lpfnGlobalRegisterWaitForInputIdle)
+        if (UserWaitForInputIdleRoutine)
         {
-            lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 30000);
+            UserWaitForInputIdleRoutine(ProcessInformation.hProcess, 30000);
         }
 
         /* Close handles */

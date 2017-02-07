@@ -15,6 +15,36 @@
 
 /* FUNCTIONS ***************************************************************/
 
+NTSTATUS
+NTAPI
+RtlpStartThread(IN PTHREAD_START_ROUTINE Function,
+                IN PVOID Parameter,
+                OUT PHANDLE ThreadHandle)
+{
+    /* Create a native worker thread -- used for SMSS, CSRSS, etc... */
+    return RtlCreateUserThread(NtCurrentProcess(),
+                               NULL,
+                               TRUE,
+                               0,
+                               0,
+                               0,
+                               Function,
+                               Parameter,
+                               ThreadHandle,
+                               NULL);
+}
+
+NTSTATUS
+NTAPI
+RtlpExitThread(IN NTSTATUS ExitStatus)
+{
+    /* Kill a native worker thread -- used for SMSS, CSRSS, etc... */
+    return NtTerminateThread(NtCurrentThread(), ExitStatus);
+}
+
+PRTL_START_POOL_THREAD RtlpStartThreadFunc = RtlpStartThread;
+PRTL_EXIT_POOL_THREAD RtlpExitThreadFunc = RtlpExitThread;
+
 #define MAX_WORKERTHREADS   0x100
 #define WORKERTHREAD_CREATION_THRESHOLD 0x5
 
@@ -141,19 +171,11 @@ RtlpStartWorkerThread(PTHREAD_START_ROUTINE StartRoutine)
     Timeout.QuadPart = -10000LL; /* Wait for 100ms */
 
     /* Start the thread */
-    Status = RtlCreateUserThread(NtCurrentProcess(),
-                                 NULL,
-                                 FALSE,
-                                 0,
-                                 0,
-                                 0,
-                                 StartRoutine,
-                                 (PVOID)&WorkerInitialized,
-                                 &ThreadHandle,
-                                 NULL);
-
+    Status = RtlpStartThreadFunc(StartRoutine, (PVOID)&WorkerInitialized, &ThreadHandle);
     if (NT_SUCCESS(Status))
     {
+        NtResumeThread(ThreadHandle, NULL);
+        
         /* Poll until the thread got a chance to initialize */
         while (WorkerInitialized == 0)
         {
@@ -568,7 +590,7 @@ InitFailed:
         InterlockedExchange((PLONG)Parameter,
                             1);
 
-        RtlExitUserThread(Status);
+        RtlpExitThreadFunc(Status);
         return 0;
     }
 
@@ -647,7 +669,7 @@ Wait:
     }
 
     NtClose(ThreadInfo.ThreadHandle);
-    RtlExitUserThread(Status);
+    RtlpExitThreadFunc(Status);
     return 0;
 }
 
@@ -670,7 +692,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
                              1);
 
         /* Oops, too many worker threads... */
-        RtlExitUserThread(Status);
+        RtlpExitThreadFunc(Status);
         return 0;
     }
 
@@ -743,7 +765,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
         }
     }
 
-    RtlExitUserThread(Status);
+    RtlpExitThreadFunc(Status);
     return 0;
 
 }
@@ -891,4 +913,17 @@ RtlSetIoCompletionCallback(IN HANDLE FileHandle,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+RtlSetThreadPoolStartFunc(IN PRTL_START_POOL_THREAD StartPoolThread,
+                          IN PRTL_EXIT_POOL_THREAD ExitPoolThread)
+{
+    RtlpStartThreadFunc = StartPoolThread;
+    RtlpExitThreadFunc = ExitPoolThread;
+    return STATUS_SUCCESS;
 }

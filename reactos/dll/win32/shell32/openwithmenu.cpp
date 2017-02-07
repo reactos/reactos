@@ -3,6 +3,7 @@
  *
  * Copyright 2007 Johannes Anderwald <janderwald@reactos.org>
  * Copyright 2009 Andrew Hill
+ * Copyright 2012 Rafal Harabien
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,6 +28,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 // [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system]
 // "NoInternetOpenWith"=dword:00000001
 //
+
+BOOL PathIsExeW(LPCWSTR lpszPath);
 
 class COpenWithList
 {
@@ -908,7 +911,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
 
         /* Add filename to label */
         cchBuf = GetDlgItemTextW(hwnd, 14001, wszBuf, _countof(wszBuf));
-        StringCchCopyW(wszBuf + cchBuf, _countof(wszBuf) - cchBuf, m_pInfo->pcszFile);
+        StringCchCopyW(wszBuf + cchBuf, _countof(wszBuf) - cchBuf, PathFindFileNameW(m_pInfo->pcszFile));
         SetDlgItemTextW(hwnd, 14001, wszBuf);
 
         /* Load applications from registry */
@@ -918,7 +921,7 @@ VOID COpenWithDialog::Init(HWND hwnd)
         /* Init treeview */
         m_hTreeView = GetDlgItem(hwnd, 14002);
         m_hImgList = ImageList_Create(16, 16, 0, m_pAppList->GetCount() + 1, m_pAppList->GetCount() + 1);
-        TreeView_SetImageList(m_hTreeView, m_hImgList, TVSIL_NORMAL);
+        (void)TreeView_SetImageList(m_hTreeView, m_hImgList, TVSIL_NORMAL);
 
         /* If there are some recommendations add parent nodes: Recommended and Others */
         UINT cRecommended = m_pAppList->GetRecommendedCount();
@@ -1000,12 +1003,12 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                     pThis->Browse();
                     return TRUE;
                 }
-                case 14005: /* ok */
+                case IDOK: /* ok */
                 {
                     pThis->Accept();
                     return TRUE;
                 }
-                case 14006: /* cancel */
+                case IDCANCEL: /* cancel */
                     DestroyWindow(hwndDlg);
                     return TRUE;
                 default:
@@ -1016,7 +1019,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
              switch (((LPNMHDR)lParam)->code)
              {
                 case TVN_SELCHANGED:
-                    EnableWindow(GetDlgItem(hwndDlg, 14005), pThis->GetCurrentApp() ? TRUE : FALSE);
+                    EnableWindow(GetDlgItem(hwndDlg, IDOK), pThis->GetCurrentApp() ? TRUE : FALSE);
                     break;
                 case NM_DBLCLK:
                 case NM_RETURN:
@@ -1157,44 +1160,47 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
     UINT idCmdLast,
     UINT uFlags)
 {
-    MENUITEMINFOW mii;
-    WCHAR wszBuf[100];
-    INT DefaultPos;
-
     TRACE("hMenu %p indexMenu %u idFirst %u idLast %u uFlags %u\n", hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
-    if (!LoadStringW(shell32_hInstance, IDS_OPEN_WITH, wszBuf, _countof(wszBuf)))
+    INT DefaultPos = GetMenuDefaultItem(hMenu, TRUE, 0);
+
+    WCHAR wszName[100];
+    UINT NameId = (DefaultPos == -1 ? IDS_OPEN : IDS_OPEN_WITH);
+    if (!LoadStringW(shell32_hInstance, NameId, wszName, _countof(wszName)))
     {
         ERR("Failed to load string\n");
         return E_FAIL;
     }
 
-    /* Init cmd id */
+    /* Init first cmd id and submenu */
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
+    m_hSubMenu = NULL;
 
-    /* Load applications list */
-    m_pAppList->Load();
-    m_pAppList->LoadRecommended(m_wszPath);
-
-    /* Create submenu only if the is some choice */
-    if (m_pAppList->GetRecommendedCount() > 1)
+    /* If we are going to be default item, we shouldn't be submenu */
+    if (DefaultPos != -1)
     {
-        m_hSubMenu = CreatePopupMenu();
-
-        for(unsigned i = 0; i < m_pAppList->GetCount(); ++i)
+        /* Load applications list */
+        m_pAppList->Load();
+        m_pAppList->LoadRecommended(m_wszPath);
+        
+        /* Create submenu only if there is more than one application and menu has a default item */
+        if (m_pAppList->GetRecommendedCount() > 1)
         {
-            COpenWithList::SApp *pApp = m_pAppList->GetList() + i;
-            if (pApp->bRecommended)
-                AddApp(pApp);
+            m_hSubMenu = CreatePopupMenu();
+
+            for(UINT i = 0; i < m_pAppList->GetCount(); ++i)
+            {
+                COpenWithList::SApp *pApp = m_pAppList->GetList() + i;
+                if (pApp->bRecommended)
+                    AddApp(pApp);
+            }
+
+            AddChooseProgramItem();
         }
-
-        AddChooseProgramItem();
     }
-    else
-        m_hSubMenu = NULL;
 
-    DefaultPos = GetMenuDefaultItem(hMenu, TRUE, 0);
-
+    /* Insert menu item */
+    MENUITEMINFOW mii;
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE;
@@ -1208,14 +1214,15 @@ HRESULT WINAPI COpenWithMenu::QueryContextMenu(
         mii.wID = m_idCmdLast;
 
     mii.fType = MFT_STRING;
-    mii.dwTypeData = (LPWSTR)wszBuf;
-    mii.cch = wcslen(wszBuf);
+    mii.dwTypeData = (LPWSTR)wszName;
+    mii.cch = wcslen(wszName);
 
     mii.fState = MFS_ENABLED;
     if (DefaultPos == -1)
         mii.fState |= MFS_DEFAULT;
 
-    InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii);
+    if (!InsertMenuItemW(hMenu, DefaultPos + 1, TRUE, &mii))
+        return E_FAIL;
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst + 1);
 }
@@ -1349,9 +1356,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
     TRACE("szPath %s\n", debugstr_w(m_wszPath));
 
     pwszExt = PathFindExtensionW(m_wszPath);
-    if (!_wcsicmp(pwszExt, L".exe") || !_wcsicmp(pwszExt, L".com") ||
-        !_wcsicmp(pwszExt, L".scr") || !_wcsicmp(pwszExt, L".bat") ||
-        !_wcsicmp(pwszExt, L".cmd") || !_wcsicmp(pwszExt, L".lnk"))
+    if (PathIsExeW(pwszExt) || !_wcsicmp(pwszExt, L".lnk"))
     {
         TRACE("file is a executable or shortcut\n");
         return E_FAIL;
@@ -1378,7 +1383,7 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
     if (!pDialog)
         return E_OUTOFMEMORY;
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(OPEN_WITH_PROGRAMM_DLG), hwndParent, COpenWithDialog::DialogProc, (LPARAM)pDialog);
+    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)pDialog);
     if (hwnd == NULL)
     {
         ERR("Failed to create dialog\n");

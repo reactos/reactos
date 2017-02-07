@@ -47,22 +47,27 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 typedef struct
 {
 
-    const IShellBrowserVtbl *lpVtbl;
-    const ICommDlgBrowserVtbl *lpVtblCommDlgBrowser;
-    const IServiceProviderVtbl *lpVtblServiceProvider;
+    IShellBrowser IShellBrowser_iface;
+    ICommDlgBrowser ICommDlgBrowser_iface;
+    IServiceProvider IServiceProvider_iface;
     LONG ref;                                   /* Reference counter */
     HWND hwndOwner;                             /* Owner dialog of the interface */
 
 } IShellBrowserImpl;
 
+static inline IShellBrowserImpl *impl_from_IShellBrowser(IShellBrowser *iface)
+{
+    return CONTAINING_RECORD(iface, IShellBrowserImpl, IShellBrowser_iface);
+}
+
 static inline IShellBrowserImpl *impl_from_ICommDlgBrowser( ICommDlgBrowser *iface )
 {
-    return (IShellBrowserImpl *)((char*)iface - FIELD_OFFSET(IShellBrowserImpl, lpVtblCommDlgBrowser));
+    return CONTAINING_RECORD(iface, IShellBrowserImpl, ICommDlgBrowser_iface);
 }
 
 static inline IShellBrowserImpl *impl_from_IServiceProvider( IServiceProvider *iface )
 {
-    return (IShellBrowserImpl *)((char*)iface - FIELD_OFFSET(IShellBrowserImpl, lpVtblServiceProvider));
+    return CONTAINING_RECORD(iface, IShellBrowserImpl, IServiceProvider_iface);
 }
 
 /**************************************************************************
@@ -71,12 +76,6 @@ static inline IShellBrowserImpl *impl_from_IServiceProvider( IServiceProvider *i
 static const IShellBrowserVtbl IShellBrowserImpl_Vtbl;
 static const ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl;
 static const IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl;
-
-/**************************************************************************
-*   Local Prototypes
-*/
-
-static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, const IShellView *ppshv);
 
 /*
  *   Helper functions
@@ -203,15 +202,15 @@ IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner)
     sb->hwndOwner = hwndOwner;
 
     /* Initialisation of the vTables */
-    sb->lpVtbl = &IShellBrowserImpl_Vtbl;
-    sb->lpVtblCommDlgBrowser = &IShellBrowserImpl_ICommDlgBrowser_Vtbl;
-    sb->lpVtblServiceProvider = &IShellBrowserImpl_IServiceProvider_Vtbl;
+    sb->IShellBrowser_iface.lpVtbl = &IShellBrowserImpl_Vtbl;
+    sb->ICommDlgBrowser_iface.lpVtbl = &IShellBrowserImpl_ICommDlgBrowser_Vtbl;
+    sb->IServiceProvider_iface.lpVtbl = &IShellBrowserImpl_IServiceProvider_Vtbl;
     SHGetSpecialFolderLocation(hwndOwner, CSIDL_DESKTOP,
                                &fodInfos->ShellInfos.pidlAbsCurrent);
 
     TRACE("%p\n", sb);
 
-    return (IShellBrowser *) sb;
+    return &sb->IShellBrowser_iface;
 }
 
 /***************************************************************************
@@ -221,7 +220,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
                                             REFIID riid,
                                             LPVOID *ppvObj)
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n\t%s\n", This, debugstr_guid(riid));
 
@@ -239,12 +238,9 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
     }
 
     else if(IsEqualIID(riid, &IID_ICommDlgBrowser))  /*ICommDlgBrowser*/
-    { *ppvObj = &(This->lpVtblCommDlgBrowser);
-    }
-
+        *ppvObj = &This->ICommDlgBrowser_iface;
     else if(IsEqualIID(riid, &IID_IServiceProvider))  /* IServiceProvider */
-    { *ppvObj = &(This->lpVtblServiceProvider);
-    }
+        *ppvObj = &This->IServiceProvider_iface;
 
     if(*ppvObj)
     { IUnknown_AddRef( (IShellBrowser*) *ppvObj);
@@ -259,7 +255,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
 */
 static ULONG WINAPI IShellBrowserImpl_AddRef(IShellBrowser * iface)
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p,%u)\n", This, ref - 1);
@@ -272,7 +268,7 @@ static ULONG WINAPI IShellBrowserImpl_AddRef(IShellBrowser * iface)
 */
 static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p,%u)\n", This, ref + 1);
@@ -303,7 +299,7 @@ static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
 static HRESULT WINAPI IShellBrowserImpl_GetWindow(IShellBrowser * iface,
                                            HWND * phwnd)
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -322,7 +318,7 @@ static HRESULT WINAPI IShellBrowserImpl_GetWindow(IShellBrowser * iface,
 static HRESULT WINAPI IShellBrowserImpl_ContextSensitiveHelp(IShellBrowser * iface,
                                                       BOOL fEnterMode)
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -356,7 +352,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     BOOL bViewHasFocus;
     RECT rectView;
 
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)(pidl=%p,flags=0x%08x)\n", This, pidl, wFlags);
     COMDLG32_DumpSBSPFlags(wFlags);
@@ -485,7 +481,7 @@ static HRESULT WINAPI IShellBrowserImpl_EnableModelessSB(IShellBrowser *iface,
                                               BOOL fEnable)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -501,7 +497,7 @@ static HRESULT WINAPI IShellBrowserImpl_GetControlWindow(IShellBrowser *iface,
                                               HWND *lphwnd)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -517,7 +513,7 @@ static HRESULT WINAPI IShellBrowserImpl_GetViewStateStream(IShellBrowser *iface,
                                                 LPSTREAM *ppStrm)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     FIXME("(%p 0x%08x %p)\n", This, grfMode, ppStrm);
 
@@ -533,7 +529,7 @@ static HRESULT WINAPI IShellBrowserImpl_InsertMenusSB(IShellBrowser *iface,
                                            LPOLEMENUGROUPWIDTHS lpMenuWidths)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -548,7 +544,7 @@ static HRESULT WINAPI IShellBrowserImpl_OnViewWindowActive(IShellBrowser *iface,
                                                 IShellView *ppshv)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -563,7 +559,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryActiveShellView(IShellBrowser *ifac
                                                   IShellView **ppshv)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     FileOpenDlgInfos *fodInfos;
 
@@ -586,7 +582,7 @@ static HRESULT WINAPI IShellBrowserImpl_RemoveMenusSB(IShellBrowser *iface,
                                            HMENU hmenuShared)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -605,7 +601,7 @@ static HRESULT WINAPI IShellBrowserImpl_SendControlMsg(IShellBrowser *iface,
                                             LRESULT *pret)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
     LRESULT lres;
 
     TRACE("(%p)->(0x%08x 0x%08x 0x%08lx 0x%08lx %p)\n", This, id, uMsg, wParam, lParam, pret);
@@ -632,7 +628,7 @@ static HRESULT WINAPI IShellBrowserImpl_SetMenuSB(IShellBrowser *iface,
                                        HWND hwndActiveObject)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -647,7 +643,7 @@ static HRESULT WINAPI IShellBrowserImpl_SetStatusTextSB(IShellBrowser *iface,
                                              LPCOLESTR lpszStatusText)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -664,7 +660,7 @@ static HRESULT WINAPI IShellBrowserImpl_SetToolbarItems(IShellBrowser *iface,
                                              UINT uFlags)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -680,7 +676,7 @@ static HRESULT WINAPI IShellBrowserImpl_TranslateAcceleratorSB(IShellBrowser *if
                                                     WORD wID)
 
 {
-    IShellBrowserImpl *This = (IShellBrowserImpl *)iface;
+    IShellBrowserImpl *This = impl_from_IShellBrowser(iface);
 
     TRACE("(%p)\n", This);
 
@@ -731,7 +727,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_QueryInterface(
 
     TRACE("(%p)\n", This);
 
-    return IShellBrowserImpl_QueryInterface((IShellBrowser *)This,riid,ppvObj);
+    return IShellBrowserImpl_QueryInterface(&This->IShellBrowser_iface,riid,ppvObj);
 }
 
 /**************************************************************************
@@ -743,7 +739,7 @@ static ULONG WINAPI IShellBrowserImpl_ICommDlgBrowser_AddRef(ICommDlgBrowser * i
 
     TRACE("(%p)\n", This);
 
-    return IShellBrowserImpl_AddRef((IShellBrowser *)This);
+    return IShellBrowserImpl_AddRef(&This->IShellBrowser_iface);
 }
 
 /**************************************************************************
@@ -755,7 +751,7 @@ static ULONG WINAPI IShellBrowserImpl_ICommDlgBrowser_Release(ICommDlgBrowser * 
 
     TRACE("(%p)\n", This);
 
-    return IShellBrowserImpl_Release((IShellBrowser *)This);
+    return IShellBrowserImpl_Release(&This->IShellBrowser_iface);
 }
 
 /**************************************************************************
@@ -784,9 +780,9 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
         IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, (LPCITEMIDLIST *)&pidl, &ulAttr);
 	if (ulAttr & (SFGAO_FOLDER | SFGAO_HASSUBFOLDER) )
 	{
-          hRes = IShellBrowser_BrowseObject((IShellBrowser *)This,pidl,SBSP_RELATIVE);
-          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
-              SendCustomDlgNotificationMessage(This->hwndOwner, CDN_FOLDERCHANGE);
+            hRes = IShellBrowser_BrowseObject(&This->IShellBrowser_iface,pidl,SBSP_RELATIVE);
+            if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+                SendCustomDlgNotificationMessage(This->hwndOwner, CDN_FOLDERCHANGE);
 	}
         else
 	{
@@ -802,6 +798,32 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
     }
 
     return E_FAIL;
+}
+
+/**************************************************************************
+*  IShellBrowserImpl_OnSelChange
+*/
+static HRESULT IShellBrowserImpl_OnSelChange(IShellBrowserImpl *This, const IShellView *ppshv)
+{
+    FileOpenDlgInfos *fodInfos;
+
+    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
+    TRACE("(%p do=%p view=%p)\n", This, fodInfos->Shell.FOIDataObject, fodInfos->Shell.FOIShellView);
+
+    /* release old selections */
+    if (fodInfos->Shell.FOIDataObject)
+        IDataObject_Release(fodInfos->Shell.FOIDataObject);
+
+    /* get a new DataObject from the ShellView */
+    if(FAILED(IShellView_GetItemObject(fodInfos->Shell.FOIShellView, SVGIO_SELECTION,
+                                       &IID_IDataObject, (void**)&fodInfos->Shell.FOIDataObject)))
+        return E_FAIL;
+
+    FILEDLG95_FILENAME_FillFromSelection(This->hwndOwner);
+
+    if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+        SendCustomDlgNotificationMessage(This->hwndOwner, CDN_SELCHANGE);
+    return S_OK;
 }
 
 /**************************************************************************
@@ -838,7 +860,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
             }
             break;
         case CDBOSC_SELCHANGE:
-            return IShellBrowserImpl_ICommDlgBrowser_OnSelChange(iface,ppshv);
+            return IShellBrowserImpl_OnSelChange(This, ppshv);
         case CDBOSC_RENAME:
 	    /* nothing to do */
             break;
@@ -938,34 +960,6 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
 
 }
 
-/**************************************************************************
-*  IShellBrowserImpl_ICommDlgBrowser_OnSelChange
-*/
-static HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, const IShellView *ppshv)
-{
-    FileOpenDlgInfos *fodInfos;
-
-    IShellBrowserImpl *This = impl_from_ICommDlgBrowser(iface);
-
-    fodInfos = GetPropA(This->hwndOwner,FileOpenDlgInfosStr);
-    TRACE("(%p do=%p view=%p)\n", This, fodInfos->Shell.FOIDataObject, fodInfos->Shell.FOIShellView);
-
-    /* release old selections */
-    if (fodInfos->Shell.FOIDataObject)
-      IDataObject_Release(fodInfos->Shell.FOIDataObject);
-
-    /* get a new DataObject from the ShellView */
-    if(FAILED(IShellView_GetItemObject(fodInfos->Shell.FOIShellView, SVGIO_SELECTION,
-                              &IID_IDataObject, (LPVOID*)&fodInfos->Shell.FOIDataObject)))
-      return E_FAIL;
-
-    FILEDLG95_FILENAME_FillFromSelection(This->hwndOwner);
-
-    if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
-        SendCustomDlgNotificationMessage(This->hwndOwner, CDN_SELCHANGE);
-    return S_OK;
-}
-
 static const ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl =
 {
         /* IUnknown */
@@ -997,7 +991,7 @@ static HRESULT WINAPI IShellBrowserImpl_IServiceProvider_QueryInterface(
 
     FIXME("(%p)\n", This);
 
-    return IShellBrowserImpl_QueryInterface((IShellBrowser *)This,riid,ppvObj);
+    return IShellBrowserImpl_QueryInterface(&This->IShellBrowser_iface,riid,ppvObj);
 }
 
 /**************************************************************************
@@ -1009,7 +1003,7 @@ static ULONG WINAPI IShellBrowserImpl_IServiceProvider_AddRef(IServiceProvider *
 
     FIXME("(%p)\n", This);
 
-    return IShellBrowserImpl_AddRef((IShellBrowser *)This);
+    return IShellBrowserImpl_AddRef(&This->IShellBrowser_iface);
 }
 
 /**************************************************************************
@@ -1021,7 +1015,7 @@ static ULONG WINAPI IShellBrowserImpl_IServiceProvider_Release(IServiceProvider 
 
     FIXME("(%p)\n", This);
 
-    return IShellBrowserImpl_Release((IShellBrowser *)This);
+    return IShellBrowserImpl_Release(&This->IShellBrowser_iface);
 }
 
 /**************************************************************************
@@ -1047,9 +1041,8 @@ static HRESULT WINAPI IShellBrowserImpl_IServiceProvider_QueryService(
 
     *ppv = NULL;
     if(guidService && IsEqualIID(guidService, &SID_STopLevelBrowser))
-    {
-      return IShellBrowserImpl_QueryInterface((IShellBrowser *)This,riid,ppv);
-    }
+        return IShellBrowserImpl_QueryInterface(&This->IShellBrowser_iface,riid,ppv);
+
     FIXME("(%p) unknown interface requested\n", This);
     return E_NOINTERFACE;
 

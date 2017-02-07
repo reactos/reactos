@@ -464,8 +464,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         /* Assume no section object */
         SectionObject = NULL;
 
-        /* Is the parent the initial process? */
-        if (Parent != PsInitialSystemProcess)
+        /* Is the parent the initial process?
+         * Check for NULL also, as at initialization PsInitialSystemProcess is NULL */
+        if (Parent != PsInitialSystemProcess && (Parent != NULL))
         {
             /* It's not, so acquire the process rundown */
             if (ExAcquireRundownProtection(&Parent->RundownProtect))
@@ -1113,7 +1114,8 @@ ULONG
 NTAPI
 PsGetCurrentProcessSessionId(VOID)
 {
-    return PsGetCurrentProcess()->Session;
+    // FIXME: this is broken!
+    return PtrToUlong(PsGetCurrentProcess()->Session);
 }
 
 /*

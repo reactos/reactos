@@ -5,7 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dinput.dll dinput.spec)
+spec2def(dinput.dll dinput.spec ADD_IMPORTLIB)
 
 add_library(dinput SHARED
     data_formats.c
@@ -37,4 +37,4 @@ add_importlibs(dinput
     ntdll)
 
 add_cd_file(TARGET dinput DESTINATION reactos/system32 FOR all)
-add_importlib_target(dinput.spec)
+

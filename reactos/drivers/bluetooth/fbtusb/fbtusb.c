@@ -49,7 +49,7 @@ NTSTATUS NTAPI DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Un
     registryPath->Buffer        = (PWSTR) ExAllocatePool(PagedPool, registryPath->MaximumLength);
 
     if (!registryPath->Buffer)
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: Failed to allocate memory for registryPath\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
         goto DriverEntry_Exit;
@@ -90,7 +90,7 @@ VOID NTAPI FreeBT_DriverUnload(IN PDRIVER_OBJECT DriverObject)
 
     registryPath = &Globals.FreeBT_RegistryPath;
     if(registryPath->Buffer)
-	{
+    {
         ExFreePool(registryPath->Buffer);
         registryPath->Buffer = NULL;
 
@@ -107,68 +107,68 @@ VOID NTAPI FreeBT_DriverUnload(IN PDRIVER_OBJECT DriverObject)
 // to initialise
 NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    NTSTATUS			ntStatus;
-    PDEVICE_OBJECT		deviceObject;
-    PDEVICE_EXTENSION	deviceExtension;
-    POWER_STATE			state;
-    KIRQL				oldIrql;
-	UNICODE_STRING		uniDeviceName;
-	WCHAR				wszDeviceName[255]={0};
-	UNICODE_STRING		uniDosDeviceName;
-	LONG				instanceNumber=0;
+    NTSTATUS            ntStatus;
+    PDEVICE_OBJECT      deviceObject;
+    PDEVICE_EXTENSION   deviceExtension;
+    POWER_STATE         state;
+    //KIRQL               oldIrql;
+    UNICODE_STRING      uniDeviceName;
+    WCHAR               wszDeviceName[255]={0};
+    UNICODE_STRING      uniDosDeviceName;
+    LONG                instanceNumber=0;
 
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_AddDevice: Entered\n"));
 
     deviceObject = NULL;
 
-	swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
-	RtlInitUnicodeString(&uniDeviceName, wszDeviceName);
-	ntStatus=STATUS_OBJECT_NAME_COLLISION;
-	while (instanceNumber<99 && !NT_SUCCESS(ntStatus))
-	{
-		swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
-		uniDeviceName.Length = wcslen(wszDeviceName) * sizeof(WCHAR);
-		FreeBT_DbgPrint(1, ("FBTUSB: Attempting to create device %ws\n", wszDeviceName));
-		ntStatus = IoCreateDevice(
-						DriverObject,                   // our driver object
-						sizeof(DEVICE_EXTENSION),       // extension size for us
-						&uniDeviceName,					// name for this device
-						FILE_DEVICE_UNKNOWN,
-						0,								// device characteristics
-						FALSE,                          // Not exclusive
-						&deviceObject);                 // Our device object
+    swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
+    RtlInitUnicodeString(&uniDeviceName, wszDeviceName);
+    ntStatus=STATUS_OBJECT_NAME_COLLISION;
+    while (instanceNumber<99 && !NT_SUCCESS(ntStatus))
+    {
+        swprintf(wszDeviceName, L"\\Device\\FbtUsb%02d", instanceNumber);
+        uniDeviceName.Length = wcslen(wszDeviceName) * sizeof(WCHAR);
+        FreeBT_DbgPrint(1, ("FBTUSB: Attempting to create device %ws\n", wszDeviceName));
+        ntStatus = IoCreateDevice(
+                        DriverObject,                   // our driver object
+                        sizeof(DEVICE_EXTENSION),       // extension size for us
+                        &uniDeviceName,                 // name for this device
+                        FILE_DEVICE_UNKNOWN,
+                        0,                              // device characteristics
+                        FALSE,                          // Not exclusive
+                        &deviceObject);                 // Our device object
 
-		if (!NT_SUCCESS(ntStatus))
-			instanceNumber++;
+        if (!NT_SUCCESS(ntStatus))
+            instanceNumber++;
 
-	}
+    }
 
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: Failed to create device object\n"));
         return ntStatus;
 
     }
 
-	FreeBT_DbgPrint(1, ("FBTUSB: Created device %ws\n", wszDeviceName));
+    FreeBT_DbgPrint(1, ("FBTUSB: Created device %ws\n", wszDeviceName));
 
     deviceExtension = (PDEVICE_EXTENSION) deviceObject->DeviceExtension;
     deviceExtension->FunctionalDeviceObject = deviceObject;
     deviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
     deviceObject->Flags |= DO_DIRECT_IO;
 
-	swprintf(deviceExtension->wszDosDeviceName, L"\\DosDevices\\FbtUsb%02d", instanceNumber);
-	RtlInitUnicodeString(&uniDosDeviceName, deviceExtension->wszDosDeviceName);
-	ntStatus=IoCreateSymbolicLink(&uniDosDeviceName, &uniDeviceName);
-	if (!NT_SUCCESS(ntStatus))
-	{
-		FreeBT_DbgPrint(1, ("FBTUSB: Failed to create symbolic link %ws to %ws, status=0x%08x\n", deviceExtension->wszDosDeviceName, wszDeviceName, ntStatus));
-		IoDeleteDevice(deviceObject);
-		return ntStatus;
+    swprintf(deviceExtension->wszDosDeviceName, L"\\DosDevices\\FbtUsb%02d", instanceNumber);
+    RtlInitUnicodeString(&uniDosDeviceName, deviceExtension->wszDosDeviceName);
+    ntStatus=IoCreateSymbolicLink(&uniDosDeviceName, &uniDeviceName);
+    if (!NT_SUCCESS(ntStatus))
+    {
+        FreeBT_DbgPrint(1, ("FBTUSB: Failed to create symbolic link %ws to %ws, status=0x%08x\n", deviceExtension->wszDosDeviceName, wszDeviceName, ntStatus));
+        IoDeleteDevice(deviceObject);
+        return ntStatus;
 
-	}
+    }
 
-	FreeBT_DbgPrint(1, ("FBTUSB: Created symbolic link %ws\n", deviceExtension->wszDosDeviceName));
+    FreeBT_DbgPrint(1, ("FBTUSB: Created symbolic link %ws\n", deviceExtension->wszDosDeviceName));
 
     KeInitializeSpinLock(&deviceExtension->DevStateLock);
 
@@ -205,10 +205,10 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
     // Delegating to WMILIB
     ntStatus = FreeBT_WmiRegistration(deviceExtension);
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WmiRegistration failed with %X\n", ntStatus));
         IoDeleteDevice(deviceObject);
-		IoDeleteSymbolicLink(&uniDosDeviceName);
+        IoDeleteSymbolicLink(&uniDosDeviceName);
         return ntStatus;
 
     }
@@ -216,7 +216,7 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
 
     // Set the flags as underlying PDO
     if (PhysicalDeviceObject->Flags & DO_POWER_PAGABLE)
-	{
+    {
         deviceObject->Flags |= DO_POWER_PAGABLE;
 
     }
@@ -237,12 +237,12 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
     // attachment chain.  This is where all the IRPs should be routed.
     deviceExtension->TopOfStackDeviceObject = IoAttachDeviceToDeviceStack(deviceObject, PhysicalDeviceObject);
     if (NULL == deviceExtension->TopOfStackDeviceObject)
-	{
+    {
 #ifdef ENABLE_WMI
         FreeBT_WmiDeRegistration(deviceExtension);
 #endif
         IoDeleteDevice(deviceObject);
-		IoDeleteSymbolicLink(&uniDosDeviceName);
+        IoDeleteSymbolicLink(&uniDosDeviceName);
         return STATUS_NO_SUCH_DEVICE;
 
     }
@@ -253,37 +253,37 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
                                          NULL,
                                          &deviceExtension->InterfaceName);
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
 #ifdef ENABLE_WMI
         FreeBT_WmiDeRegistration(deviceExtension);
 #endif
         IoDetachDevice(deviceExtension->TopOfStackDeviceObject);
         IoDeleteDevice(deviceObject);
-		IoDeleteSymbolicLink(&uniDosDeviceName);
+        IoDeleteSymbolicLink(&uniDosDeviceName);
         return ntStatus;
 
     }
 
     if (IoIsWdmVersionAvailable(1, 0x20))
-	{
+    {
         deviceExtension->WdmVersion = WinXpOrBetter;
 
     }
 
     else if (IoIsWdmVersionAvailable(1, 0x10))
-	{
+    {
         deviceExtension->WdmVersion = Win2kOrBetter;
 
     }
 
     else if (IoIsWdmVersionAvailable(1, 0x5))
-	{
+    {
         deviceExtension->WdmVersion = WinMeOrBetter;
 
     }
 
     else if (IoIsWdmVersionAvailable(1, 0x0))
-	{
+    {
         deviceExtension->WdmVersion = Win98OrBetter;
 
     }
@@ -292,14 +292,14 @@ NTSTATUS NTAPI FreeBT_AddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJEC
     deviceExtension->SSEnable = 0;
 
     // WinXP only: check the registry flag indicating whether
-	// the device should selectively suspend when idle
+    // the device should selectively suspend when idle
     if (WinXpOrBetter == deviceExtension->WdmVersion)
-	{
+    {
         FreeBT_GetRegistryDword(FREEBT_REGISTRY_PARAMETERS_PATH,
                                  L"BulkUsbEnable",
                                  (PULONG)(&deviceExtension->SSRegistryEnable));
         if (deviceExtension->SSRegistryEnable)
-		{
+        {
             // initialize DPC
             KeInitializeDpc(&deviceExtension->DeferredProcCall, DpcRoutine, deviceObject);
 

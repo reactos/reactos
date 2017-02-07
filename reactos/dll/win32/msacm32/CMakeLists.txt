@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(msacm32.dll msacm32.spec)
+spec2def(msacm32.dll msacm32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     driver.c
@@ -26,6 +26,6 @@ add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
 add_dependencies(msacm32 psdk)
 
 add_cd_file(TARGET msacm32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(msacm32.spec)
+
 
 add_subdirectory(msacm32.drv)

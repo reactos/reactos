@@ -1,62 +1,108 @@
 #pragma once
 
 #include <ntddk.h>
-#include <usb.h>
-
-/* USB Command Register */
-#define EHCI_USBCMD         0x00
-#define EHCI_USBSTS         0x04
-#define EHCI_USBINTR            0x08
-#define EHCI_FRINDEX            0x0C
-#define EHCI_CTRLDSSEGMENT      0x10
-#define EHCI_PERIODICLISTBASE       0x14
-#define EHCI_ASYNCLISTBASE      0x18
-#define EHCI_CONFIGFLAG         0x40
-#define EHCI_PORTSC         0x44
-
-/* USB Interrupt Register Flags 32 Bits */
-#define EHCI_USBINTR_INTE       0x01
-#define EHCI_USBINTR_ERR        0x02
-#define EHCI_USBINTR_PC         0x04
-#define EHCI_USBINTR_FLROVR     0x08
-#define EHCI_USBINTR_HSERR      0x10
-#define EHCI_USBINTR_ASYNC      0x20
-/* Bits 6:31 Reserved */
-
-/* Status Register Flags 32 Bits */
-#define EHCI_STS_INT            0x01
-#define EHCI_STS_ERR            0x02
-#define EHCI_STS_PCD            0x04
-#define EHCI_STS_FLR            0x08
-#define EHCI_STS_FATAL          0x10
-#define EHCI_STS_IAA            0x20
-/* Bits 11:6 Reserved */
-#define EHCI_STS_HALT           0x1000
-#define EHCI_STS_RECL           0x2000
-#define EHCI_STS_PSS            0x4000
-#define EHCI_STS_ASS            0x8000
-#define EHCI_ERROR_INT ( EHCI_STS_FATAL | EHCI_STS_ERR )
 
 
-/* Last bit in QUEUE ELEMENT TRANSFER DESCRIPTOR Next Pointer */
-/* Used for Queue Element Transfer Descriptor Pointers
-   and Queue Head Horizontal Link Pointers */
+//
+// Host Controller Capability Registers
+//
+#define EHCI_CAPLENGTH                  0x00
+#define EHCI_HCIVERSION                 0x02
+#define EHCI_HCSPARAMS                  0x04
+#define EHCI_HCCPARAMS                  0x08
+#define EHCI_HCSP_PORTROUTE             0x0c
+
+
+//
+// Extended Capabilities
+//
+#define EHCI_ECP_SHIFT                  8
+#define EHCI_ECP_MASK                   0xff
+#define EHCI_LEGSUP_CAPID_MASK          0xff
+#define EHCI_LEGSUP_CAPID               0x01
+#define EHCI_LEGSUP_OSOWNED             (1 << 24)
+#define EHCI_LEGSUP_BIOSOWNED           (1 << 16)
+
+
+//
+// EHCI Operational Registers
+//
+#define EHCI_USBCMD                     0x00
+#define EHCI_USBSTS                     0x04
+#define EHCI_USBINTR                    0x08
+#define EHCI_FRINDEX                    0x0C
+#define EHCI_CTRLDSSEGMENT              0x10
+#define EHCI_PERIODICLISTBASE           0x14
+#define EHCI_ASYNCLISTBASE              0x18
+#define EHCI_CONFIGFLAG                 0x40
+#define EHCI_PORTSC                     0x44
+
+//
+// Interrupt Register Flags
+//
+#define EHCI_USBINTR_INTE               0x01
+#define EHCI_USBINTR_ERR                0x02
+#define EHCI_USBINTR_PC                 0x04
+#define EHCI_USBINTR_FLROVR             0x08
+#define EHCI_USBINTR_HSERR              0x10
+#define EHCI_USBINTR_ASYNC              0x20
+// Bits 6:31 Reserved
+
+//
+// Status Register Flags
+//
+#define EHCI_STS_INT                    0x01
+#define EHCI_STS_ERR                    0x02
+#define EHCI_STS_PCD                    0x04
+#define EHCI_STS_FLR                    0x08
+#define EHCI_STS_FATAL                  0x10
+#define EHCI_STS_IAA                    0x20
+// Bits 11:6 Reserved
+#define EHCI_STS_HALT                   0x1000
+#define EHCI_STS_RECL                   0x2000
+#define EHCI_STS_PSS                    0x4000
+#define EHCI_STS_ASS                    0x8000
+#define EHCI_ERROR_INT                  (EHCI_STS_FATAL | EHCI_STS_ERR)
+
+//
+// Port Register Flags
+//
+#define EHCI_PRT_CONNECTED              0x01
+#define EHCI_PRT_CONNECTSTATUSCHANGE    0x02
+#define EHCI_PRT_ENABLED                0x04
+#define EHCI_PRT_ENABLEDSTATUSCHANGE    0x08
+#define EHCI_PRT_OVERCURRENTACTIVE      0x10
+#define EHCI_PRT_OVERCURRENTCHANGE      0x20
+#define EHCI_PRT_FORCERESUME            0x40
+#define EHCI_PRT_SUSPEND                0x80
+#define EHCI_PRT_RESET                  0x100
+#define EHCI_PRT_LINESTATUSA            0x400
+#define EHCI_PRT_LINESTATUSB            0x800
+#define EHCI_PRT_POWER                  0x1000
+#define EHCI_PRT_RELEASEOWNERSHIP       0x2000
+
+#define EHCI_PORTSC_DATAMASK    0xffffffd1
+
+#define EHCI_IS_LOW_SPEED(x) (((x) & EHCI_PRT_LINESTATUSA) && !((x) & EHCI_PRT_LINESTATUSB))
+//
+// Terminate Pointer used for QueueHeads and Element Transfer Descriptors to mark Pointers as the end
+//
 #define TERMINATE_POINTER       0x01
 
-/* QUEUE ELEMENT TRANSFER DESCRIPTOR, Token defines and structs */
+//
+// QUEUE ELEMENT TRANSFER DESCRIPTOR, defines and structs
+//
 
-/* PIDCodes for QETD_TOKEN
-OR with QUEUE_TRANSFER_DESCRIPTOR Token.PIDCode*/
+//
+// Token Flags
+//
 #define PID_CODE_OUT_TOKEN      0x00
 #define PID_CODE_IN_TOKEN       0x01
 #define PID_CODE_SETUP_TOKEN    0x02
 
-/* Split Transaction States
-OR with QUEUE_TRANSFER_DESCRIPTOR Token.SplitTransactionState */
 #define DO_START_SPLIT          0x00
 #define DO_COMPLETE_SPLIT       0x01
 
-/* Ping States, OR with QUEUE_TRANSFER_DESCRIPTOR Token. */
 #define PING_STATE_DO_OUT       0x00
 #define PING_STATE_DO_PING      0x01
 
@@ -67,8 +113,9 @@ typedef struct _PERIODICFRAMELIST
     ULONG Size;
 } PERIODICFRAMELIST, *PPERIODICFRAMELIST;
 
-
-/* QUEUE ELEMENT TRANSFER DESCRIPTOR TOKEN */
+//
+// QUEUE ELEMENT TRANSFER DESCRIPTOR TOKEN
+//
 typedef struct _QETD_TOKEN_BITS
 {
     ULONG PingState:1;
@@ -87,7 +134,9 @@ typedef struct _QETD_TOKEN_BITS
     ULONG DataToggle:1;
 } QETD_TOKEN_BITS, *PQETD_TOKEN_BITS;
 
-/* QUEUE ELEMENT TRANSFER DESCRIPTOR */
+//
+// QUEUE ELEMENT TRANSFER DESCRIPTOR
+//
 typedef struct _QUEUE_TRANSFER_DESCRIPTOR
 {
     //Hardware
@@ -99,19 +148,22 @@ typedef struct _QUEUE_TRANSFER_DESCRIPTOR
         ULONG DWord;
     } Token;
     ULONG BufferPointer[5];
+    ULONG ExtendedBufferPointer[5];
 
     //Software
-    ULONG BufferPointerVA[5];
     ULONG PhysicalAddr;
-    struct _QUEUE_TRANSFER_DESCRIPTOR *PreviousDescriptor;
-    struct _QUEUE_TRANSFER_DESCRIPTOR *NextDescriptor;
+    LIST_ENTRY DescriptorEntry;
+    ULONG TotalBytesToTransfer;
 } QUEUE_TRANSFER_DESCRIPTOR, *PQUEUE_TRANSFER_DESCRIPTOR;
 
-/* EndPointSpeeds of END_POINT_CHARACTERISTICS */
+C_ASSERT(FIELD_OFFSET(QUEUE_TRANSFER_DESCRIPTOR, PhysicalAddr) == 0x34);
+
+//
+// EndPointSpeeds Flags and END_POINT_CHARACTERISTICS
+//
 #define QH_ENDPOINT_FULLSPEED       0x00
 #define QH_ENDPOINT_LOWSPEED        0x01
 #define QH_ENDPOINT_HIGHSPEED       0x02
-
 typedef struct _END_POINT_CHARACTERISTICS
 {
     ULONG DeviceAddress:7;
@@ -125,60 +177,72 @@ typedef struct _END_POINT_CHARACTERISTICS
     ULONG NakCountReload:4;
 } END_POINT_CHARACTERISTICS, *PEND_POINT_CHARACTERISTICS;
 
+//
+// Capabilities
+//
 typedef struct _END_POINT_CAPABILITIES
 {
     ULONG InterruptScheduleMask:8;
     ULONG SplitCompletionMask:8;
     ULONG HubAddr:6;
     ULONG PortNumber:6;
-    /* Multi */
     ULONG NumberOfTransactionPerFrame:2;
 } END_POINT_CAPABILITIES, *PEND_POINT_CAPABILITIES;
 
-
-/* QUEUE HEAD defines and structs */
-
-/* QUEUE HEAD Select Types, OR with QUEUE_HEAD HorizontalLinkPointer */
-#define QH_TYPE_IDT         0x00
-#define QH_TYPE_QH          0x02
+//
+// QUEUE HEAD Flags and Struct
+//
+#define QH_TYPE_IDT             0x00
+#define QH_TYPE_QH              0x02
 #define QH_TYPE_SITD            0x04
 #define QH_TYPE_FSTN            0x06
 
-/* QUEUE HEAD */
 typedef struct _QUEUE_HEAD
 {
     //Hardware
     ULONG HorizontalLinkPointer;
     END_POINT_CHARACTERISTICS EndPointCharacteristics;
     END_POINT_CAPABILITIES EndPointCapabilities;
-    /* TERMINATE_POINTER not valid for this member */
+    // TERMINATE_POINTER not valid for this member
     ULONG CurrentLinkPointer;
-    /* TERMINATE_POINTER valid */
+    // TERMINATE_POINTER valid
     ULONG NextPointer;
-    /* TERMINATE_POINTER valid, bits 1:4 is NAK_COUNTER */
+    // TERMINATE_POINTER valid, bits 1:4 is NAK_COUNTERd
     ULONG AlternateNextPointer;
-    /* Only DataToggle, InterruptOnComplete, ErrorCounter, PingState valid */
+    // Only DataToggle, InterruptOnComplete, ErrorCounter, PingState valid
     union
     {
         QETD_TOKEN_BITS Bits;
         ULONG DWord;
     } Token;
     ULONG BufferPointer[5];
+    ULONG ExtendedBufferPointer[5];
 
     //Software
     ULONG PhysicalAddr;
-    struct _QUEUE_HEAD *PreviousQueueHead;
-    struct _QUEUE_HEAD *NextQueueHead;
-    ULONG NumberOfTransferDescriptors;
-    PQUEUE_TRANSFER_DESCRIPTOR FirstTransferDescriptor;
-    PQUEUE_TRANSFER_DESCRIPTOR DeadDescriptor;
-    PIRP IrpToComplete;
-    PKEVENT Event;
-    PMDL Mdl;
-    BOOLEAN FreeMdl;    
+    LIST_ENTRY LinkedQueueHeads;
+    LIST_ENTRY TransferDescriptorListHead;
+    PVOID NextQueueHead;
+    PVOID Request;
 } QUEUE_HEAD, *PQUEUE_HEAD;
 
-/* USBCMD register 32 bits */
+C_ASSERT(sizeof(END_POINT_CHARACTERISTICS) == 4);
+C_ASSERT(sizeof(END_POINT_CAPABILITIES) == 4);
+
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, HorizontalLinkPointer) == 0x00);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, EndPointCharacteristics) == 0x04);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, EndPointCapabilities) == 0x08);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, CurrentLinkPointer) == 0xC);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, NextPointer) == 0x10);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, AlternateNextPointer) == 0x14);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, Token) == 0x18);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, BufferPointer) == 0x1C);
+C_ASSERT(FIELD_OFFSET(QUEUE_HEAD, PhysicalAddr) == 0x44);
+
+
+//
+// Command register content
+//
 typedef struct _EHCI_USBCMD_CONTENT
 {
     ULONG Run : 1;
@@ -194,40 +258,7 @@ typedef struct _EHCI_USBCMD_CONTENT
     ULONG Reserved1 : 4;
     ULONG IntThreshold : 8;
     ULONG Reserved2 : 8;
-
 } EHCI_USBCMD_CONTENT, *PEHCI_USBCMD_CONTENT;
-
-typedef struct _EHCI_USBSTS_CONTENT
-{
-    ULONG USBInterrupt:1;
-    ULONG ErrorInterrupt:1;
-    ULONG DetectChangeInterrupt:1;
-    ULONG FrameListRolloverInterrupt:1;
-    ULONG HostSystemErrorInterrupt:1;
-    ULONG AsyncAdvanceInterrupt:1;
-    ULONG Reserved:6;
-    ULONG HCHalted:1;
-    ULONG Reclamation:1;
-    ULONG PeriodicScheduleStatus:1;
-    ULONG AsynchronousScheduleStatus:1;
-} EHCI_USBSTS_CONTEXT, *PEHCI_USBSTS_CONTEXT;
-
-typedef struct _EHCI_USBPORTSC_CONTENT
-{
-    ULONG CurrentConnectStatus:1;
-    ULONG ConnectStatusChange:1;
-    ULONG PortEnabled:1;
-    ULONG PortEnableChanged:1;
-    ULONG OverCurrentActive:1;
-    ULONG OverCurrentChange:1;
-    ULONG ForcePortResume:1;
-    ULONG Suspend:1;
-    ULONG PortReset:1;
-    ULONG Reserved:1;
-    ULONG LineStatus:2;
-    ULONG PortPower:1;
-    ULONG PortOwner:1;
-} EHCI_USBPORTSC_CONTENT, *PEHCI_USBPORTSC_CONTENT;
 
 typedef struct _EHCI_HCS_CONTENT
 {
@@ -265,63 +296,33 @@ typedef struct _EHCI_CAPS {
         EHCI_HCS_CONTENT HCSParams;
         ULONG HCSParamsLong;
     };
-    ULONG HCCParams;
-    UCHAR PortRoute [8];
+    union
+    {
+        EHCI_HCC_CONTENT HCCParams;
+        ULONG HCCParamsLong;
+    };
+    UCHAR PortRoute [15];
 } EHCI_CAPS, *PEHCI_CAPS;
 
-typedef struct _EHCIPORTS
+typedef struct
 {
-    ULONG PortNumber;
-    ULONG PortType;
-    USHORT PortStatus;
-    USHORT PortChange;
-} EHCIPORTS, *PEHCIPORTS;
+    ULONG PortStatus;
+    ULONG PortChange;
+}EHCI_PORT_STATUS;
 
-typedef struct _EHCI_HOST_CONTROLLER
-{
-    PDMA_ADAPTER pDmaAdapter;
-    ULONG MapRegisters;
-    ULONG OpRegisters;
-    EHCI_CAPS ECHICaps;
-    ULONG NumberOfPorts;
-    EHCIPORTS Ports[127];
-    PVOID CommonBufferVA[16];
-    PHYSICAL_ADDRESS CommonBufferPA[16];
-    ULONG CommonBufferSize;
-    PQUEUE_HEAD AsyncListQueue;
-    PQUEUE_HEAD CompletedListQueue;
-    KSPIN_LOCK Lock;
-} EHCI_HOST_CONTROLLER, *PEHCI_HOST_CONTROLLER;
+#define EHCI_INTERRUPT_ENTRIES_COUNT    (10 + 1)
+#define EHCI_VFRAMELIST_ENTRIES_COUNT    128
+#define EHCI_FRAMELIST_ENTRIES_COUNT     1024
 
-ULONG
-ReadControllerStatus(PEHCI_HOST_CONTROLLER hcd);
+#define MAX_AVAILABLE_BANDWIDTH 125 // Microseconds
 
-VOID
-ClearControllerStatus(PEHCI_HOST_CONTROLLER hcd, ULONG Status);
-
-VOID
-GetCapabilities(PEHCI_CAPS PCap, ULONG CapRegister);
-
-VOID
-ResetPort(PEHCI_HOST_CONTROLLER hcd, UCHAR Port);
-
-VOID
-StartEhci(PEHCI_HOST_CONTROLLER hcd);
-
-VOID
-StopEhci(PEHCI_HOST_CONTROLLER hcd);
-
-VOID
-SetAsyncListQueueRegister(PEHCI_HOST_CONTROLLER hcd, ULONG PhysicalAddr);
-
-ULONG
-GetAsyncListQueueRegister(PEHCI_HOST_CONTROLLER hcd);
-
-VOID
-SetPeriodicFrameListRegister(PEHCI_HOST_CONTROLLER hcd, ULONG PhysicalAddr);
-
-ULONG
-GetPeriodicFrameListRegister(PEHCI_HOST_CONTROLLER hcd);
-
-BOOLEAN
-EnumControllerPorts(PEHCI_HOST_CONTROLLER hcd);
+#define EHCI_QH_CAPS_MULT_SHIFT 30			// Transactions per Micro-Frame
+#define EHCI_QH_CAPS_MULT_MASK 0x03
+#define EHCI_QH_CAPS_PORT_SHIFT 23			// Hub Port (Split-Transaction)
+#define EHCI_QH_CAPS_PORT_MASK 0x7f
+#define EHCI_QH_CAPS_HUB_SHIFT 16			// Hub Address (Split-Transaction)
+#define EHCI_QH_CAPS_HUB_MASK  0x7f
+#define EHCI_QH_CAPS_SCM_SHIFT  8			// Split Completion Mask
+#define EHCI_QH_CAPS_SCM_MASK   0xff
+#define EHCI_QH_CAPS_ISM_SHIFT  0			// Interrupt Schedule Mask
+#define EHCI_QH_CAPS_ISM_MASK  0xff

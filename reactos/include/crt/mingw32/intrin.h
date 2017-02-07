@@ -30,6 +30,7 @@
 
 #ifndef RC_INVOKED
 
+#define _PRAGMA_WARNING_SUPPRESS(x) /* Only for MSVC */
 #define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
 
 #ifndef _SIZE_T_DEFINED

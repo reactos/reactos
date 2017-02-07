@@ -24,7 +24,11 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "wincrypt.h"
 
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(mssign);
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
 {
@@ -39,4 +43,34 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
         break;
     }
     return TRUE;
+}
+
+
+HRESULT WINAPI PvkGetCryptProv(HWND hwnd, LPCWSTR pwszCaption, LPCWSTR pwszCapiProvider,
+                    DWORD dwProviderType, LPCWSTR pwszPvkFile, LPCWSTR pwszKeyContainerName,
+                    DWORD *pdwKeySpec, LPWSTR *ppwszTmpContainer, HCRYPTPROV *phCryptProv)
+{
+    FIXME("%p %s %s %d %s %s %p %p %p stub\n", hwnd, debugstr_w(pwszCaption), debugstr_w(pwszCapiProvider),
+                    dwProviderType, debugstr_w(pwszPvkFile), debugstr_w(pwszKeyContainerName),
+                    pdwKeySpec, ppwszTmpContainer, phCryptProv);
+
+    return E_FAIL;
+}
+
+BOOL WINAPI PvkPrivateKeyAcquireContextFromMemory(LPCWSTR pwszProvName, DWORD dwProvType,
+                    BYTE *pbData, DWORD cbData, HWND hwndOwner, LPCWSTR pwszKeyName,
+                    DWORD *pdwKeySpec, HCRYPTPROV *phCryptProv, LPWSTR *ppwszTmpContainer)
+{
+    FIXME("%s %d %p %d %p %s %p %p %p stub\n", debugstr_w(pwszProvName), dwProvType,
+                    pbData, cbData, hwndOwner, debugstr_w(pwszKeyName), pdwKeySpec,
+                    phCryptProv, ppwszTmpContainer);
+
+    return FALSE;
+}
+
+void WINAPI PvkFreeCryptProv(HCRYPTPROV hProv, LPCWSTR pwszCapiProvider, DWORD dwProviderType,
+                    LPWSTR pwszTmpContainer)
+{
+    FIXME("%08lx %s %d %s stub\n", hProv, debugstr_w(pwszCapiProvider), dwProviderType,
+                    debugstr_w(pwszTmpContainer));
 }

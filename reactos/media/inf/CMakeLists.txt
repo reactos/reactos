@@ -3,20 +3,25 @@ list(APPEND INF_FILES
     audio.inf
     battery.inf
     bda.inf
+    bth.inf
     cdrom.inf
     cpu.inf
+    defltws.inf
     disk.inf
     display.inf
     fdc.inf
     font.inf
     hal.inf
     hdc.inf
+    input.inf
     intl.inf
     keyboard.inf
     ks.inf
     kscaptur.inf
     layout.inf
+    legcydrv.inf
     machine.inf
+    monitor.inf
     msmouse.inf
     NET_NIC.inf
     netamd.inf

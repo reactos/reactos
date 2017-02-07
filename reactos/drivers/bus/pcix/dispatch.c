@@ -49,7 +49,7 @@ PciCallDownIrpStack(IN PPCI_FDO_EXTENSION DeviceExtension,
     IoSetCompletionRoutine(Irp, PciSetEventCompletion, &Event, TRUE, TRUE, TRUE);
 
     /* Call the attached device */
-    Status = IofCallDriver(DeviceExtension->AttachedDeviceObject, Irp);
+    Status = IoCallDriver(DeviceExtension->AttachedDeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
         /* Wait for it to complete the request, and get its status */
@@ -83,7 +83,7 @@ PciPassIrpFromFdoToPdo(IN PPCI_FDO_EXTENSION DeviceExtension,
     {
         /* For a normal IRP, just call the next driver in the stack */
         IoSkipCurrentIrpStackLocation(Irp);
-        Status = IofCallDriver(DeviceExtension->AttachedDeviceObject, Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDeviceObject, Irp);
     }
 
     /* Return the status back to the caller */
@@ -245,7 +245,7 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
         if (IoStackLocation->MajorFunction == IRP_MJ_POWER) PoStartNextPowerIrp(Irp);
 
         /* And now this IRP can be completed */
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* And the status returned back to the caller */

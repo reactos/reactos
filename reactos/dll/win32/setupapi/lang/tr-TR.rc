@@ -1,7 +1,7 @@
 /*
  * Turkish resources for SETUPAPI
  *
- * Copyright 2006 Fatih A��c�
+ * Copyright 2006 Fatih Aşıcı - 2012 Arda Tanrıkulu
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,10 +22,10 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 COPYFILEDLGORD DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 20, 20, 208, 105
 STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Dosyalar Kopyalan�yor..."
+CAPTION "Dosyalar Kopyalanıyor..."
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "�ptal", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "İptal", IDCANCEL, 79, 84, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	LTEXT "Kaynak:", -1, 7, 7, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "", SOURCESTRORD, 7, 18, 194, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "Hedef:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -35,7 +35,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUERY_REBOOT_TEXT        "Your computer needs to be rebooted to finish installation. Do you want to proceed?"
-	IDS_QUERY_REBOOT_CAPTION     "Reboot"
-	IDS_INF_FILE                 "Setup Information"
+	IDS_QUERY_REBOOT_TEXT        "Bilgisayarınız kurulumunuz bitirilmesi için yeniden başlatılacak. Onaylıyor musunuz?"
+	IDS_QUERY_REBOOT_CAPTION     "Yeniden Başlat"
+	IDS_INF_FILE                 "Kurulum Bilgisi"
 END

@@ -157,3 +157,22 @@ ULONG WINAPI HttpSetServiceConfiguration( HANDLE handle, HTTP_SERVICE_CONFIG_ID 
     FIXME( "(%p, %d, %p, %d, %p): stub!\n", handle, type, config, length, overlapped );
     return NO_ERROR;
 }
+
+/***********************************************************************
+ *        HttpCreateHttpHandle     (HTTPAPI.@)
+ *
+ * Creates a handle to the HTTP request queue
+ *
+ * PARAMS
+ *   handle     [O] handle to request queue
+ *   reserved   [I] reserved, must be NULL
+ *
+ * RETURNS
+ *   NO_ERROR if function succeeds, or error code if function fails
+ *
+ */
+ULONG WINAPI HttpCreateHttpHandle( PHANDLE handle, ULONG reserved )
+{
+    FIXME( "(%p, %d): stub!\n", handle, reserved);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}

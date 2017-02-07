@@ -161,7 +161,7 @@ static HRESULT register_ocxs_callback(HINF hinf, PCWSTR field, const void *arg)
         hm = LoadLibraryExW(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
         if (hm)
         {
-            if (do_ocx_reg(hm, TRUE) != S_OK)
+            if (do_ocx_reg(hm, TRUE, NULL, NULL) != S_OK)
                 hr = E_FAIL;
 
             FreeLibrary(hm);

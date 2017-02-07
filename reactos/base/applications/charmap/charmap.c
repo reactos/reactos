@@ -11,17 +11,11 @@
 
 #define ID_ABOUT    0x1
 
-typedef struct {
-    BOOL    IsAdvancedView;
-} SETTINGS;
-
 HINSTANCE hInstance;
-HWND      hCharmapDlg;
 HWND      hAdvancedDlg;
 HWND      hStatusWnd;
 HICON     hSmIcon;
 HICON     hBgIcon;
-SETTINGS  Settings;
 
 /* Font-enumeration callback */
 static
@@ -103,7 +97,7 @@ FillFontStyleComboList(HWND hwndCombo)
 }
 
 
-static
+extern
 VOID
 ChangeMapFont(HWND hDlg)
 {
@@ -464,6 +458,7 @@ PanelWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_DESTROY:
+        SaveSettings();
         PostQuitMessage(0);
         return 0;
 
@@ -534,6 +529,7 @@ InitInstance(HINSTANCE hInst)
 
     if (hWnd != NULL)
     {
+        LoadSettings();
         ShowWindow(hWnd, SW_SHOW);
         UpdateWindow(hWnd);
     }

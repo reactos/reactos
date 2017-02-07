@@ -9,29 +9,13 @@
 /* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
-
-#include <assert.h>
-#include <stdarg.h>
-
-#include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
-#include <ntndk.h>
+#include <ndk/rtlfuncs.h>
 #include <lsass/lsass.h>
-#define SECURITY_WIN32
-#define _NO_KSECDD_IMPORT_
+
 #include <ntsecapi.h>
 #include <secext.h>
 #include <security.h>
-#include <ntsecpkg.h>
 #include <sspi.h>
-
-#include "lmcons.h"
-#include "secur32_priv.h"
-#include "thunks.h"
-
-
-extern SecurityFunctionTableA securityFunctionTableA;
-extern SecurityFunctionTableW securityFunctionTableW;
-

@@ -338,11 +338,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         * harddisks. So, we set the buffer to known contents first, then try to
         * read. If the BIOS reports success but the buffer contents haven't
         * changed then we fail anyway */
-    memset((PVOID) DISKREADBUFFER, 0xcd, 512);
+    memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
     while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
         Changed = FALSE;
-        for (i = 0; ! Changed && i < 512; i++)
+        for (i = 0; ! Changed && i < DISKREADBUFFER_SIZE; i++)
         {
             Changed = ((PUCHAR)DISKREADBUFFER)[i] != 0xcd;
         }
@@ -353,7 +353,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
             break;
         }
         DiskCount++;
-        memset((PVOID) DISKREADBUFFER, 0xcd, 512);
+        memset((PVOID) DISKREADBUFFER, 0xcd, DISKREADBUFFER_SIZE);
     }
     DiskReportError(TRUE);
     TRACE("BIOS reports %d harddisk%s\n",
@@ -510,6 +510,11 @@ XboxHwDetect(VOID)
 
   TRACE("DetectHardware() Done\n");
   return SystemKey;
+}
+
+VOID XboxHwIdle(VOID)
+{
+    /* UNIMPLEMENTED */
 }
 
 /* EOF */

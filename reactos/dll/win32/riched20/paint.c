@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
 
-void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *rcUpdate)
+void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate)
 {
   ME_DisplayItem *item;
   ME_Context c;
@@ -71,18 +71,9 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
       ys -= item->member.para.pCell->member.cell.yTextOffset;
     }
 
-    if (!bOnlyNew || (item->member.para.nFlags & MEPF_REPAINT))
-    {
-      /* Draw the pargraph if any of the paragraph is in the update region. */
-      if (ys < rcUpdate->bottom && ye > rcUpdate->top)
-      {
-        ME_DrawParagraph(&c, item);
-        /* Clear the repaint flag if the whole paragraph is in the
-         * update region. */
-        if (rcUpdate->top <= ys && rcUpdate->bottom >= ye)
-          item->member.para.nFlags &= ~MEPF_REPAINT;
-      }
-    }
+    /* Draw the paragraph if any of the paragraph is in the update region. */
+    if (ys < rcUpdate->bottom && ye > rcUpdate->top)
+      ME_DrawParagraph(&c, item);
     item = item->member.para.next_para;
   }
   if (c.pt.y + editor->nTotalLength < c.rcView.bottom)
@@ -93,15 +84,6 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
     rc.left = c.rcView.left;
     rc.bottom = c.rcView.bottom;
     rc.right = c.rcView.right;
-
-    if (bOnlyNew)
-    {
-      /* Only erase region drawn from previous call to ME_PaintContent */
-      if (editor->nTotalLength < editor->nLastTotalLength)
-        rc.bottom = c.pt.y + editor->nLastTotalLength;
-      else
-        SetRectEmpty(&rc);
-    }
 
     IntersectRect(&rc, &rc, rcUpdate);
 
@@ -129,12 +111,10 @@ void ME_Repaint(ME_TextEditor *editor)
     ME_UpdateScrollBar(editor);
     FIXME("ME_Repaint had to call ME_WrapMarkedParagraphs\n");
   }
-  if (!editor->bEmulateVersion10 || (editor->nEventMask & ENM_UPDATE))
-    ME_SendOldNotify(editor, EN_UPDATE);
   ITextHost_TxViewChange(editor->texthost, TRUE);
 }
 
-void ME_UpdateRepaint(ME_TextEditor *editor)
+void ME_UpdateRepaint(ME_TextEditor *editor, BOOL update_now)
 {
   /* Should be called whenever the contents of the control have changed */
   BOOL wrappedParagraphs;
@@ -146,6 +126,8 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   /* Ensure that the cursor is visible */
   ME_EnsureVisible(editor, &editor->pCursors[0]);
 
+  ITextHost_TxViewChange(editor->texthost, update_now);
+
   ME_SendSelChange(editor);
 
   /* send EN_CHANGE if the event mask asks for it */
@@ -155,7 +137,6 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
     ME_SendOldNotify(editor, EN_CHANGE);
     editor->nEventMask |= ENM_CHANGE;
   }
-  ME_Repaint(editor);
 }
 
 void
@@ -170,7 +151,7 @@ ME_RewrapRepaint(ME_TextEditor *editor)
   ME_Repaint(editor);
 }
 
-int ME_twips2pointsX(ME_Context *c, int x)
+int ME_twips2pointsX(const ME_Context *c, int x)
 {
   if (c->editor->nZoomNumerator == 0)
     return x * c->dpi.cx / 1440;
@@ -178,7 +159,7 @@ int ME_twips2pointsX(ME_Context *c, int x)
     return x * c->dpi.cx * c->editor->nZoomNumerator / 1440 / c->editor->nZoomDenominator;
 }
 
-int ME_twips2pointsY(ME_Context *c, int y)
+int ME_twips2pointsY(const ME_Context *c, int y)
 {
   if (c->editor->nZoomNumerator == 0)
     return y * c->dpi.cy / 1440;
@@ -317,7 +298,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText,
       hPen = CreatePen(PS_DOT, 1, rgb);
       break;
     default:
-      WINE_FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
+      FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
       /* fall through */
     case CFU_CF1UNDERLINE: /* this type is supported in the font, do nothing */
     case CFU_UNDERLINENONE:
@@ -490,7 +471,7 @@ static const COLORREF pen_colors[16] = {
   /* Dark gray */       RGB(0x80, 0x80, 0x80),  /* Light gray */      RGB(0xc0, 0xc0, 0xc0),
 };
 
-static int ME_GetBorderPenWidth(ME_Context* c, int idx)
+static int ME_GetBorderPenWidth(const ME_Context* c, int idx)
 {
   int width = border_details[idx].width;
 
@@ -503,7 +484,7 @@ static int ME_GetBorderPenWidth(ME_Context* c, int idx)
   return width;
 }
 
-int ME_GetParaBorderWidth(ME_Context* c, int flags)
+int ME_GetParaBorderWidth(const ME_Context* c, int flags)
 {
   int idx = (flags >> 8) & 0xF;
   int width;
@@ -958,12 +939,9 @@ static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph)
           rc.left = c->pt.x + run->pt.x;
           rc.right = rc.left + run->nWidth;
           rc.top = c->pt.y + para->pt.y + run->pt.y;
-          rc.bottom = rc.bottom + height;
+          rc.bottom = rc.top + height;
           TRACE("rc = (%d, %d, %d, %d)\n", rc.left, rc.top, rc.right, rc.bottom);
-          if (run->nFlags & MERF_SKIPPED)
-            DrawFocusRect(c->hDC, &rc);
-          else
-            FrameRect(c->hDC, &rc, GetSysColorBrush(COLOR_GRAYTEXT));
+          FrameRect(c->hDC, &rc, GetSysColorBrush(COLOR_GRAYTEXT));
         }
         if (visible)
           ME_DrawRun(c, c->pt.x + run->pt.x,
@@ -1096,7 +1074,7 @@ void ME_ScrollRight(ME_TextEditor *editor, int cx)
   ME_HScrollAbs(editor, editor->horz_si.nPos + cx);
 }
 
-/* Calculates the visiblity after a call to SetScrollRange or
+/* Calculates the visibility after a call to SetScrollRange or
  * SetScrollInfo with SIF_RANGE. */
 static BOOL ME_PostSetScrollRangeVisibility(SCROLLINFO *si)
 {
@@ -1279,7 +1257,8 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
 void
 ME_InvalidateSelection(ME_TextEditor *editor)
 {
-  ME_DisplayItem *para1, *para2;
+  ME_DisplayItem *sel_start, *sel_end;
+  ME_DisplayItem *repaint_start = NULL, *repaint_end = NULL;
   int nStart, nEnd;
   int len = ME_GetTextLength(editor);
 
@@ -1289,32 +1268,39 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   if (nStart == nEnd && editor->nLastSelStart == editor->nLastSelEnd)
     return;
   ME_WrapMarkedParagraphs(editor);
-  ME_GetSelectionParas(editor, &para1, &para2);
-  assert(para1->type == diParagraph);
-  assert(para2->type == diParagraph);
+  ME_GetSelectionParas(editor, &sel_start, &sel_end);
+  assert(sel_start->type == diParagraph);
+  assert(sel_end->type == diParagraph);
   /* last selection markers aren't always updated, which means
    * they can point past the end of the document */
   if (editor->nLastSelStart > len || editor->nLastSelEnd > len) {
-    ME_MarkForPainting(editor,
-        ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph),
-        editor->pBuffer->pLast);
+    repaint_start = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
+    repaint_end = editor->pBuffer->pLast;
+    ME_MarkForPainting(editor, repaint_start, repaint_end);
   } else {
     /* if the start part of selection is being expanded or contracted... */
     if (nStart < editor->nLastSelStart) {
-      ME_MarkForPainting(editor, para1, editor->pLastSelStartPara->member.para.next_para);
+      repaint_start = sel_start;
+      repaint_end = editor->pLastSelStartPara->member.para.next_para;
     } else if (nStart > editor->nLastSelStart) {
-      ME_MarkForPainting(editor, editor->pLastSelStartPara, para1->member.para.next_para);
+      repaint_start = editor->pLastSelStartPara;
+      repaint_end = sel_start->member.para.next_para;
     }
+    ME_MarkForPainting(editor, repaint_start, repaint_end);
 
     /* if the end part of selection is being contracted or expanded... */
     if (nEnd < editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, para2, editor->pLastSelEndPara->member.para.next_para);
+      if (!repaint_start) repaint_start = sel_end;
+      repaint_end = editor->pLastSelEndPara->member.para.next_para;
+      ME_MarkForPainting(editor, sel_end, repaint_end);
     } else if (nEnd > editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, editor->pLastSelEndPara, para2->member.para.next_para);
+      if (!repaint_start) repaint_start = editor->pLastSelEndPara;
+      repaint_end = sel_end->member.para.next_para;
+      ME_MarkForPainting(editor, editor->pLastSelEndPara, repaint_end);
     }
   }
 
-  ME_InvalidateMarkedParagraphs(editor);
+  ME_InvalidateMarkedParagraphs(editor, repaint_start, repaint_end);
   /* remember the last invalidated position */
   ME_GetSelectionOfs(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
   ME_GetSelectionParas(editor, &editor->pLastSelStartPara, &editor->pLastSelEndPara);

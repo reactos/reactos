@@ -11,7 +11,6 @@ spec2def(objsel.dll objsel.spec)
 list(APPEND SOURCE
     factory.c
     objsel.c
-    regsvr.c
     objsel.rc
     ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
 
@@ -23,7 +22,6 @@ target_link_libraries(objsel uuid wine)
 
 add_importlibs(objsel
     ole32
-    user32
     advapi32
     msvcrt
     kernel32

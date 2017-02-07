@@ -29,7 +29,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
                        IN ULONG BusSpecificData)
 {
     PBUS_HANDLER Bus;
-    
+
     /* Register the bus handler */
     HalRegisterBusHandler(InterfaceType,
                           BusDataType,
@@ -40,7 +40,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
                           NULL,
                           &Bus);
     if (!Bus) return NULL;
-    
+
     /* Check for a valid interface */
     if (InterfaceType != InterfaceTypeUndefined)
     {
@@ -49,7 +49,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
                                                   sizeof(SUPPORTED_RANGES),
                                                   ' laH');
         RtlZeroMemory(Bus->BusAddresses, sizeof(SUPPORTED_RANGES));
-        
+
         /* Build the data structure */
         Bus->BusAddresses->Version = HAL_SUPPORTED_RANGE_VERSION;
         Bus->BusAddresses->Dma.Limit = 7;
@@ -58,7 +58,7 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
         Bus->BusAddresses->IO.SystemAddressSpace = 1;
         Bus->BusAddresses->PrefetchMemory.Base = 1;
     }
-    
+
     /* Return the bus address */
     return Bus;
 }
@@ -69,13 +69,13 @@ INIT_FUNCTION
 HalpRegisterInternalBusHandlers(VOID)
 {
     PBUS_HANDLER Bus;
-    
+
     /* Only do processor 1 */
     if (KeGetCurrentPrcb()->Number) return;
-    
+
     /* Register root support */
     HalpInitBusHandler();
-    
+
     /* Allocate the system bus */
     Bus = HalpAllocateBusHandler(Internal,
                                  ConfigurationSpaceUndefined,
@@ -87,9 +87,9 @@ HalpRegisterInternalBusHandlers(VOID)
     {
         /* Set it up */
         Bus->GetInterruptVector = HalpGetSystemInterruptVector;
-        Bus->TranslateBusAddress = HalpTranslateSystemBusAddress;        
+        Bus->TranslateBusAddress = HalpTranslateSystemBusAddress;
     }
-    
+
     /* Allocate the CMOS bus */
     Bus = HalpAllocateBusHandler(InterfaceTypeUndefined,
                                  Cmos,
@@ -103,7 +103,7 @@ HalpRegisterInternalBusHandlers(VOID)
         Bus->GetBusData = HalpcGetCmosData;
         Bus->SetBusData = HalpcSetCmosData;
     }
-    
+
     /* Allocate the CMOS bus */
     Bus = HalpAllocateBusHandler(InterfaceTypeUndefined,
                                  Cmos,
@@ -147,7 +147,7 @@ HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
     UNICODE_STRING KeyString;
     ULONG Data = OverrideEnable;
     HANDLE KeyHandle, Handle;
-    
+
     /* Open CCS key */
     RtlInitUnicodeString(&KeyString,
                          L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
@@ -161,27 +161,27 @@ HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
                                      &KeyString,
                                      KEY_ALL_ACCESS,
                                      TRUE);
-        
+
         /* Close root key */
         ZwClose(Handle);
-        
+
         /* Check if PNP BIOS key exists */
         if (NT_SUCCESS(Status))
         {
             /* Set the override value */
-            RtlInitUnicodeString(&KeyString, L"FullDecodeChipsetOverride");           
+            RtlInitUnicodeString(&KeyString, L"FullDecodeChipsetOverride");
             Status = ZwSetValueKey(KeyHandle,
                                    &KeyString,
                                    0,
                                    REG_DWORD,
                                    &Data,
                                    sizeof(Data));
-            
+
             /* Close subkey */
             ZwClose(KeyHandle);
         }
     }
-    
+
     /* Return status */
     return Status;
 }
@@ -195,7 +195,7 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
 {
     PBUS_HANDLER Bus;
     PPCIPBUSDATA BusData;
-    
+
     /* Allocate the bus handler */
     Bus = HalpAllocateBusHandler(PCIBus,
                                  PCIConfiguration,
@@ -203,7 +203,7 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
                                  Internal,
                                  0,
                                  sizeof(PCIPBUSDATA));
-    
+
     /* Set it up */
     Bus->GetBusData = (PGETSETBUSDATA)HalpGetPCIData;
     Bus->SetBusData = (PGETSETBUSDATA)HalpSetPCIData;
@@ -211,10 +211,10 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
     Bus->AdjustResourceList = (PADJUSTRESOURCELIST)HalpAdjustPCIResourceList;
     Bus->AssignSlotResources = (PASSIGNSLOTRESOURCES)HalpAssignPCISlotResources;
     Bus->BusAddresses->Dma.Limit = 0;
-    
+
     /* Get our custom bus data */
     BusData = (PPCIPBUSDATA)Bus->BusData;
-    
+
     /* Setup custom bus data */
     BusData->CommonData.Tag = PCI_DATA_TAG;
     BusData->CommonData.Version = PCI_DATA_VERSION;
@@ -224,45 +224,45 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
     BusData->CommonData.Line2Pin = (PciLine2Pin)HalpPCIISALine2Pin;
     BusData->MaxDevice = PCI_MAX_DEVICES;
     BusData->GetIrqRange = (PciIrqRange)HalpGetISAFixedPCIIrq;
-    
+
     /* Initialize the bitmap */
     RtlInitializeBitMap(&BusData->DeviceConfigured, BusData->ConfiguredBits, 256);
-    
+
     /* Check the type of PCI bus */
     switch (PciType)
     {
         /* Type 1 PCI Bus */
         case 1:
-            
+
             /* Copy the Type 1 handler data */
             RtlCopyMemory(&PCIConfigHandler,
                           &PCIConfigHandlerType1,
                           sizeof(PCIConfigHandler));
-            
+
             /* Set correct I/O Ports */
             BusData->Config.Type1.Address = PCI_TYPE1_ADDRESS_PORT;
             BusData->Config.Type1.Data = PCI_TYPE1_DATA_PORT;
             break;
-            
+
         /* Type 2 PCI Bus */
         case 2:
-            
+
             /* Copy the Type 1 handler data */
             RtlCopyMemory(&PCIConfigHandler,
                           &PCIConfigHandlerType2,
                           sizeof (PCIConfigHandler));
-            
+
             /* Set correct I/O Ports */
             BusData->Config.Type2.CSE = PCI_TYPE2_CSE_PORT;
             BusData->Config.Type2.Forward = PCI_TYPE2_FORWARD_PORT;
             BusData->Config.Type2.Base = PCI_TYPE2_ADDRESS_BASE;
-            
+
             /* Only 16 devices supported, not 32 */
             BusData->MaxDevice = 16;
             break;
-            
+
         default:
-            
+
             /* Invalid type */
             DbgPrint("HAL: Unnkown PCI type\n");
     }
@@ -281,10 +281,10 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
     PPCI_COMMON_CONFIG PciHeader = (PVOID)DataBuffer;
     ULONG i;
     ULONG_PTR Address;
-    
+
     /* Read the PCI header */
     HalpReadPCIConfig(BusHandler, Slot, PciHeader, 0, PCI_COMMON_HDR_LENGTH);
-    
+
     /* Make sure it's a valid device */
     if ((PciHeader->VendorID == PCI_INVALID_VENDORID) ||
         (PCI_CONFIGURATION_TYPE(PciHeader) != PCI_DEVICE_TYPE))
@@ -292,7 +292,7 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
         /* Bail out */
         return FALSE;
     }
-    
+
     /* Make sure interrupt numbers make sense */
     if (((PciHeader->u.type0.InterruptPin) &&
          (PciHeader->u.type0.InterruptPin > 4)) ||
@@ -301,7 +301,7 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
         /* Bail out */
         return FALSE;
     }
-    
+
     /* Now scan PCI BARs */
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -317,7 +317,7 @@ HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
             /* MMIO should be higher than 0x80000 */
             if ((Address > 0xF) && (Address < 0x80000)) return FALSE;
         }
-        
+
         /* Is this a 64-bit address? */
         if (!(Address & PCI_ADDRESS_IO_SPACE) &&
             ((Address & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_64BIT))
@@ -348,7 +348,7 @@ HalpGetChipHacks(IN USHORT VendorId,
     WCHAR Buffer[32];
     KEY_VALUE_PARTIAL_INFORMATION PartialInfo;
     ULONG ResultLength;
-    
+
     /* Setup the object attributes for the key */
     RtlInitUnicodeString(&KeyName,
                          L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET\\"
@@ -358,11 +358,11 @@ HalpGetChipHacks(IN USHORT VendorId,
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-    
+
     /* Open the key */
     Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status)) return Status;
-    
+
     /* Query value */
     swprintf(Buffer, L"%04X%04X", VendorId, DeviceId);
     RtlInitUnicodeString(&ValueName, Buffer);
@@ -379,7 +379,7 @@ HalpGetChipHacks(IN USHORT VendorId,
         *HackFlags = *(PULONG)PartialInfo.Data;
         DbgPrint("\t\tHack Flags: %lx (Hack Revision: %lx-Your Revision: %lx)\n",
                  *HackFlags, HALP_REVISION_FROM_HACK_FLAGS(*HackFlags), RevisionId);
-        
+
         /* Does it apply to this revision? */
         if ((RevisionId) && (RevisionId >= (HALP_REVISION_FROM_HACK_FLAGS(*HackFlags))))
         {
@@ -391,7 +391,7 @@ HalpGetChipHacks(IN USHORT VendorId,
         *HackFlags = HALP_HACK_FLAGS(*HackFlags);
         if (!*HackFlags) DbgPrint("\tNo HackFlags for your chipset's revision!\n");
     }
-    
+
     /* Close the handle and return */
     ZwClose(KeyHandle);
     return Status;
@@ -406,7 +406,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
 {
     ULONG ElementCount, i;
     PPCI_CARD_DESCRIPTOR CardDescriptor;
-    
+
     /* How many PCI Cards that we know about? */
     ElementCount = PciRegistryInfo->ElementCount;
     if (!ElementCount) return FALSE;
@@ -417,7 +417,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
     {
         /* Check for flag match */
         if (CardDescriptor->Flags != Flags) continue;
-        
+
         /* Check for VID-PID match */
         if ((CardDescriptor->VendorID != PciData->VendorID) ||
             (CardDescriptor->DeviceID != PciData->DeviceID))
@@ -433,16 +433,16 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
             /* Skip */
             continue;
         }
-        
+
         /* Check what kind of device this is */
         switch (PCI_CONFIGURATION_TYPE(PciData))
         {
             /* CardBUS Bridge */
             case PCI_CARDBUS_BRIDGE_TYPE:
-                
+
                 /* This means the real device header is in the device-specific data */
                 PciData = (PPCI_COMMON_CONFIG)PciData->DeviceSpecific;
-                
+
             /* Normal PCI device */
             case PCI_DEVICE_TYPE:
 
@@ -453,7 +453,7 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                     /* Skip */
                     continue;
                 }
-                
+
                 /* Check for subsystem match, if requested */
                 if ((CardDescriptor->Flags & HALP_CHECK_CARD_SUBSYSTEM_ID) &&
                     (CardDescriptor->SubsystemID != PciData->u.type0.SubSystemID))
@@ -461,19 +461,19 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                     /* Skip */
                     continue;
                 }
-                
+
                 /* You made it! */
                 return TRUE;
-                
+
             /* PCI Bridge -- don't bother */
             case PCI_BRIDGE_TYPE:
             default:
-             
+
                 /* Recognize it */
                 return TRUE;
         }
     }
-    
+
     /* This means the card isn't recognized */
     return FALSE;
 }
@@ -490,43 +490,43 @@ HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
         /* The device is nice enough to admit it */
         return TRUE;
     }
-    
+
     /* Symphony 82C101 */
     if (PciData->VendorID == 0x1C1C) return TRUE;
-    
+
     /* ALi MS4803 or M5219 */
     if ((PciData->VendorID == 0x10B9) &&
         ((PciData->DeviceID == 0x5215) || (PciData->DeviceID == 0x5219)))
     {
         return TRUE;
     }
-    
+
     /* Appian Technology */
     if ((PciData->VendorID == 0x1097) && (PciData->DeviceID == 0x38)) return TRUE;
-    
+
     /* Compaq Triflex Dual EIDE Controller */
     if ((PciData->VendorID == 0xE11) && (PciData->DeviceID == 0xAE33)) return TRUE;
-    
+
     /* Micron PC Tech RZ1000 */
     if ((PciData->VendorID == 0x1042) && (PciData->DeviceID == 0x1000)) return TRUE;
-    
+
     /* SiS 85C601 or 5513 [IDE] */
     if ((PciData->VendorID == 0x1039) &&
         ((PciData->DeviceID == 0x601) || (PciData->DeviceID == 0x5513)))
     {
         return TRUE;
     }
-    
+
     /* Symphony Labs W83769F */
     if ((PciData->VendorID == 0x10AD) &&
         ((PciData->DeviceID == 0x1) || (PciData->DeviceID == 0x150)))
     {
         return TRUE;
     }
-    
+
     /* UMC UM8673F */
     if ((PciData->VendorID == 0x1060) && (PciData->DeviceID == 0x101)) return TRUE;
-    
+
     /* You've survived */
     return FALSE;
 }
@@ -544,7 +544,7 @@ HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
              (PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
              (PciData->SubClass == PCI_SUBCLASS_BR_CARDBUS)));
 }
-    
+
 BOOLEAN
 NTAPI
 INIT_FUNCTION
@@ -556,14 +556,14 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
     UCHAR DataBuffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_CONFIG PciData = (PPCI_COMMON_CONFIG)DataBuffer;
     PBUS_HANDLER BusHandler;
-    
+
     /* Loop PCI buses */
     PciSlot.u.bits.Reserved = 0;
     for (i = 0; i < *BusCount; i++)
     {
         /* Get the bus handler */
         BusHandler = HalHandlerForBus(PCIBus, i);
-        
+
         /* Loop every device */
         for (j = 0; j < PCI_MAX_DEVICES; j++)
         {
@@ -573,27 +573,27 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
             {
                 /* Build the final slot structure */
                 PciSlot.u.bits.FunctionNumber = k;
-                
+
                 /* Read the configuration information */
                 HalpReadPCIConfig(BusHandler,
                                   PciSlot,
                                   PciData,
                                   0,
                                   PCI_COMMON_HDR_LENGTH);
-                
+
                 /* Skip if this is an invalid function */
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
-                
+
                 /* Make sure that this is a PCI bridge or a cardbus bridge */
                 if (!HalpIsBridgeDevice(PciData)) continue;
-                
+
                 /* Not supported */
                 if (!WarningsGiven[2]++) DPRINT1("Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
                 continue;
             }
         }
     }
-    
+
     /* If we exited the loop, then there's no bridge to worry about */
     return FALSE;
 }
@@ -611,7 +611,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
     {
         /* Get PCI bus handler */
         Bus = HalHandlerForBus(PCIBus, i);
-        
+
         /* Loop all parent buses */
         ParentBus = Bus->ParentHandler;
         while (ParentBus)
@@ -629,7 +629,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
     {
         /* Get PCI bus handler */
         Bus = HalHandlerForBus(PCIBus, i);
-        
+
         /* Check if this is a PCI 2.2 Bus with Subtractive Decode */
         if (!((PPCIPBUSDATA)Bus->BusData)->Subtractive)
         {
@@ -643,7 +643,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
                     /* Should trim addresses */
                     if (!WarningsGiven[1]++) DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
                 }
-            
+
                 /* Check the next parent */
                 ParentBus = ParentBus->ParentHandler;
             }
@@ -655,7 +655,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
     {
         /* Get the PCI bus handler */
         Bus = HalHandlerForBus(PCIBus, i);
-        
+
         /* Sort and combine (trim) bus address range information */
         DPRINT("Warning: Bus addresses not being optimized!\n");
     }
@@ -673,7 +673,7 @@ ShowSize(ULONG x)
         DbgPrint("%d", (int) x);
     }
     else if (x < 1048576)
-    {   
+    {
         DbgPrint("%dK", (int)(x / 1024));
     }
     else if (x < 0x80000000)
@@ -694,16 +694,16 @@ HalpDebugPciDumpBus(IN ULONG i,
                     IN ULONG j,
                     IN ULONG k,
                     IN PPCI_COMMON_CONFIG PciData)
-{   
+{
     extern CHAR ClassTable[3922];
     extern CHAR VendorTable[642355];
     PCHAR p, ClassName, SubClassName, VendorName, ProductName, SubVendorName;
     ULONG Length;
     CHAR LookupString[16] = "";
-    CHAR bSubClassName[32] = "";
-    CHAR bVendorName[32] = "";
-    CHAR bProductName[32] = "Unknown device";
-    CHAR bSubVendorName[32] = "Unknown";
+    CHAR bSubClassName[64] = "";
+    CHAR bVendorName[64] = "";
+    CHAR bProductName[128] = "Unknown device";
+    CHAR bSubVendorName[128] = "Unknown";
     ULONG Size, Mem, b;
 
     /* Isolate the class name */
@@ -739,7 +739,7 @@ HalpDebugPciDumpBus(IN ULONG i,
         if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;
         strncpy(bVendorName, VendorName, Length);
         bVendorName[Length] = '\0';
-        
+
         /* Isolate the product name */
         sprintf(LookupString, "\t%04x", PciData->DeviceID);
         ProductName = strstr(VendorName, LookupString);
@@ -752,7 +752,7 @@ HalpDebugPciDumpBus(IN ULONG i,
             if (Length >= sizeof(bProductName)) Length = sizeof(bProductName) - 1;
             strncpy(bProductName, ProductName, Length);
             bProductName[Length] = '\0';
-            
+
             /* Isolate the subvendor and subsystem name */
             sprintf(LookupString,
                     "\t\t%04x %04x  ",
@@ -789,17 +789,20 @@ HalpDebugPciDumpBus(IN ULONG i,
              bSubVendorName,
              PciData->u.type0.SubVendorID,
              PciData->u.type0.SubSystemID);
-    
+
     /* Print out and decode flags */
     DbgPrint("\tFlags:");
     if (PciData->Command & PCI_ENABLE_BUS_MASTER) DbgPrint(" bus master,");
     if (PciData->Status & PCI_STATUS_66MHZ_CAPABLE) DbgPrint(" 66MHz,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x000) DbgPrint(" fast devsel,");
     if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x200) DbgPrint(" medium devsel,");
-    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x400) DbgPrint(" fast devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x400) DbgPrint(" slow devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x600) DbgPrint(" unknown devsel,");
     DbgPrint(" latency %d", PciData->LatencyTimer);
     if (PciData->u.type0.InterruptPin != 0 &&
         PciData->u.type0.InterruptLine != 0 &&
         PciData->u.type0.InterruptLine != 0xFF) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
+    else if (PciData->u.type0.InterruptPin != 0) DbgPrint(", IRQ assignment required");
     DbgPrint("\n");
 
     /* Scan addresses */
@@ -809,24 +812,24 @@ HalpDebugPciDumpBus(IN ULONG i,
         /* Check for a BAR */
         Mem = PciData->u.type0.BaseAddresses[b];
         if (Mem)
-        {   
+        {
             /* Decode the address type */
             if (Mem & PCI_ADDRESS_IO_SPACE)
             {
-                /* Decode the size */
+                /* Guess the size */
                 Size = 1 << 2;
                 while (!(Mem & Size) && (Size)) Size <<= 1;
-                
+
                 /* Print it out */
                 DbgPrint("\tI/O ports at %04lx", Mem & PCI_ADDRESS_IO_ADDRESS_MASK);
                 ShowSize(Size);
             }
             else
             {
-                /* Decode the size */
+                /* Guess the size */
                 Size = 1 << 8;
                 while (!(Mem & Size) && (Size)) Size <<= 1;
-                
+
                 /* Print it out */
                 DbgPrint("\tMemory at %08lx (%d-bit, %sprefetchable)",
                          Mem & PCI_ADDRESS_MEMORY_ADDRESS_MASK,
@@ -855,24 +858,24 @@ HalpInitializePciBus(VOID)
     ULONG HackFlags;
     BOOLEAN ExtendedAddressDecoding = FALSE;
     NTSTATUS Status;
-    
+
     /* Query registry information */
     PciRegistryInfo = HalpQueryPciRegistryInfo();
     if (!PciRegistryInfo) return;
-    
+
     /* Initialize the PCI configuration lock */
     KeInitializeSpinLock(&HalpPCIConfigLock);
-    
+
     /* Get the type and free the info structure */
     PciType = PciRegistryInfo->HardwareMechanism & 0xF;
-    
+
     /* Check if this is a type 2 PCI bus with at least one bus */
     if ((PciRegistryInfo->NoBuses) && (PciType == 2))
     {
         /* Setup the PCI slot */
         PciSlot.u.bits.Reserved = 0;
         PciSlot.u.bits.FunctionNumber = 0;
-        
+
         /* Loop all slots */
         for (i = 0; i < 32; i++)
         {
@@ -880,26 +883,26 @@ HalpInitializePciBus(VOID)
             PciType = 2;
             BusHandler = HalpAllocateAndInitPciBusHandler(2, 0, TRUE);
             if (!BusHandler) break;
-            
+
             /* Now check if it's valid */
             if (HalpIsValidPCIDevice(BusHandler, PciSlot)) break;
-            
+
             /* Heh, the BIOS lied... try Type 1 */
             PciType = 1;
             BusHandler = HalpAllocateAndInitPciBusHandler(1, 0, TRUE);
             if (!BusHandler) break;
-            
+
             /* Now check if it's valid */
             if (HalpIsValidPCIDevice(BusHandler, PciSlot)) break;
-            
+
             /* Keep trying */
             PciType = 2;
         }
-        
+
         /* Now allocate the correct kind of handler */
         HalpAllocateAndInitPciBusHandler(PciType, 0, FALSE);
     }
-    
+
     /* Okay, now loop all PCI bridges */
     do
     {
@@ -915,10 +918,10 @@ HalpInitializePciBus(VOID)
         }
         /* Go to the next bridge */
     } while (HalpGetPciBridgeConfig(PciType, &PciRegistryInfo->NoBuses));
-             
+
     /* Now build correct address range informaiton */
     HalpFixupPciSupportedRanges(PciRegistryInfo->NoBuses);
-    
+
     /* Loop every bus */
     DbgPrint("\n====== PCI BUS HARDWARE DETECTION =======\n\n");
     PciSlot.u.bits.Reserved = 0;
@@ -936,20 +939,20 @@ HalpInitializePciBus(VOID)
             {
                 /* Build the final slot structure */
                 PciSlot.u.bits.FunctionNumber = k;
-                
+
                 /* Read the configuration information */
                 HalpReadPCIConfig(BusHandler,
                                   PciSlot,
                                   PciData,
                                   0,
                                   PCI_COMMON_HDR_LENGTH);
-                
+
                 /* Skip if this is an invalid function */
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
-                
+
                 /* Print out the entry */
                 HalpDebugPciDumpBus(i, j, k, PciData);
-                
+
                 /* Check if this is a Cardbus bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
                 {
@@ -957,12 +960,12 @@ HalpInitializePciBus(VOID)
                     DbgPrint("\tDevice is a PCI Cardbus Bridge. It will not work!\n");
                     continue;
                 }
-                
+
                 /* Check if this is a PCI device */
                 if (PCI_CONFIGURATION_TYPE(PciData) != PCI_BRIDGE_TYPE)
                 {
                     /* Check if it has an interrupt pin and line registered */
-                    if ((PciData->u.type1.InterruptPin) && 
+                    if ((PciData->u.type1.InterruptPin) &&
                         (PciData->u.type1.InterruptLine))
                     {
                         /* Check if this interrupt line is connected to the bus */
@@ -979,7 +982,7 @@ HalpInitializePciBus(VOID)
                         }
                     }
                 }
-                
+
                 /* Check for broken Intel chips */
                 if (PciData->VendorID == 0x8086)
                 {
@@ -991,7 +994,7 @@ HalpInitializePciBus(VOID)
                         DbgPrint("\tDevice is a broken Intel 82430 PCI Controller. It will not work!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for broken 82378 PCI-to-ISA Bridge */
                     if ((PciData->DeviceID == 0x0484) &&
                         (PciData->RevisionID <= 3))
@@ -1000,7 +1003,7 @@ HalpInitializePciBus(VOID)
                         DbgPrint("\tDevice is a broken Intel 82378 PCI-to-ISA Bridge. It will not work!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for broken 82450 PCI Bridge */
                     if ((PciData->DeviceID == 0x84C4) &&
                         (PciData->RevisionID <= 4))
@@ -1009,7 +1012,7 @@ HalpInitializePciBus(VOID)
                         continue;
                     }
                 }
-                
+
                 /* Do we know this card? */
                 if (!ExtendedAddressDecoding)
                 {
@@ -1023,7 +1026,7 @@ HalpInitializePciBus(VOID)
                         ExtendedAddressDecoding = TRUE;
                     }
                 }
-                
+
                 /* Check if this is a USB controller */
                 if ((PciData->BaseClass == PCI_CLASS_SERIAL_BUS_CTLR) &&
                     (PciData->SubClass == PCI_SUBCLASS_SB_USB))
@@ -1034,14 +1037,14 @@ HalpInitializePciBus(VOID)
                         DbgPrint("\tDevice is an OHCI (USB) PCI Expansion Card. Turn off Legacy USB in your BIOS!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for Intel UHCI controller */
                     if (PciData->VendorID == 0x8086)
                     {
                         DbgPrint("\tDevice is an Intel UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for VIA UHCI controller */
                     if (PciData->VendorID == 0x1106)
                     {
@@ -1049,7 +1052,7 @@ HalpInitializePciBus(VOID)
                         continue;
                     }
                 }
-                
+
                 /* Now check the registry for chipset hacks */
                 Status = HalpGetChipHacks(PciData->VendorID,
                                           PciData->DeviceID,
@@ -1063,21 +1066,21 @@ HalpInitializePciBus(VOID)
                         DbgPrint("This chipset has broken ACPI IRQ Routing! Be aware!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for broken ACPI timer */
                     if (HackFlags & HAL_PCI_CHIP_HACK_BROKEN_ACPI_TIMER)
                     {
                          DbgPrint("This chipset has a broken ACPI timer! Be aware!\n\n");
                          continue;
                     }
-                    
+
                     /* Check for hibernate-disable */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_HIBERNATE)
                     {
                         DbgPrint("This chipset has a broken PCI device which is incompatible with hibernation. Be aware!\n\n");
                         continue;
                     }
-                    
+
                     /* Check for USB controllers that generate SMIs */
                     if (HackFlags & HAL_PCI_CHIP_HACK_USB_SMI_DISABLE)
                     {
@@ -1085,19 +1088,19 @@ HalpInitializePciBus(VOID)
                         continue;
                     }
                 }
-                
+
                 /* Terminate the entry */
                 DbgPrint("\n");
             }
         }
     }
-    
+
     /* Initialize NMI Crash Flag */
     HalpGetNMICrashFlag();
-        
+
     /* Free the registry data */
     ExFreePoolWithTag(PciRegistryInfo, TAG_HAL);
-    
+
     /* Tell PnP if this hard supports correct decoding */
     HalpMarkChipsetDecode(ExtendedAddressDecoding);
     DbgPrint("====== PCI BUS DETECTION COMPLETE =======\n\n");
@@ -1147,7 +1150,7 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     NTSTATUS Status;
     PAGED_CODE();
     DPRINT1("Slot assignment for %d on bus %d\n", BusType, BusNumber);
-    
+
     /* Find the handler */
     Handler = HalReferenceHandlerForBus(BusType, BusNumber);
     if (!Handler) return STATUS_NOT_FOUND;
@@ -1161,7 +1164,7 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                                           DeviceObject,
                                           SlotNumber,
                                           AllocatedResources);
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
@@ -1183,24 +1186,24 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     /* Make sure we have a context */
     if (!Context) return FALSE;
     ASSERT((*Context) || (NextBus == TRUE));
-    
+
     /* Read the context */
     ContextValue = *Context;
-    
+
     /* Find the bus handler */
     Handler = HalpContextToBusHandler(ContextValue);
     if (!Handler) return FALSE;
-    
+
     /* Check if this is an ongoing lookup */
     if (NextBus)
     {
         /* Get the HAL bus handler */
         BusHandler = CONTAINING_RECORD(Handler, HAL_BUS_HANDLER, Handler);
         NextEntry = &BusHandler->AllHandlers;
-        
+
         /* Get the next one if we were already with one */
         if (ContextValue) NextEntry = NextEntry->Flink;
-        
+
         /* Start scanning */
         while (TRUE)
         {
@@ -1211,7 +1214,7 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                 *Context = 1;
                 return FALSE;
             }
-            
+
             /* Call this translator */
             BusHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
             if (HalTranslateBusAddress(BusHandler->Handler.InterfaceType,
@@ -1219,23 +1222,23 @@ HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                                        BusAddress,
                                        AddressSpace,
                                        TranslatedAddress)) break;
-            
+
             /* Try the next one */
             NextEntry = NextEntry->Flink;
         }
-        
+
         /* If we made it, we're done */
         *Context = (ULONG_PTR)Handler;
         return TRUE;
     }
-    
+
     /* Try the first one through */
     if (!HalTranslateBusAddress(Handler->InterfaceType,
                                 Handler->BusNumber,
                                 BusAddress,
                                 AddressSpace,
                                 TranslatedAddress)) return FALSE;
-    
+
     /* Remember for next time */
     *Context = (ULONG_PTR)Handler;
     return TRUE;
@@ -1251,7 +1254,7 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
 {
     PBUS_HANDLER Handler;
     BOOLEAN Status;
-    
+
     /* Find the handler */
     Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
     if (!(Handler) || !(Handler->TranslateBusAddress))
@@ -1259,14 +1262,14 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
         DPRINT1("No translator Interface: %x, Bus: %x, Handler: %x!\n", InterfaceType, BusNumber, Handler);
         return FALSE;
     }
-    
+
     /* Do the assignment */
     Status = Handler->TranslateBusAddress(Handler,
                                           Handler,
                                           BusAddress,
                                           AddressSpace,
                                           TranslatedAddress);
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
@@ -1284,17 +1287,17 @@ HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
     PBUS_HANDLER Handler;
     ULONG Status;
     PAGED_CODE();
-    
+
     /* Find the handler */
     Handler = HalReferenceHandlerForBus((*ResourceList)->InterfaceType,
                                         (*ResourceList)->BusNumber);
     if (!Handler) return STATUS_SUCCESS;
-    
+
     /* Do the assignment */
     Status = Handler->AdjustResourceList(Handler,
                                          Handler,
                                          ResourceList);
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
@@ -1315,7 +1318,7 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                        IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
     PAGED_CODE();
-    
+
     /* Check the bus type */
     if (BusType != PCIBus)
     {
@@ -1377,11 +1380,11 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
 {
     PBUS_HANDLER Handler;
     ULONG Status;
-    
+
     /* Find the handler */
     Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
     if (!Handler) return 0;
-    
+
     /* Do the assignment */
     Status = Handler->GetBusData(Handler,
                                  Handler,
@@ -1389,7 +1392,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                                  Buffer,
                                  Offset,
                                  Length);
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;
@@ -1410,15 +1413,15 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
     PBUS_HANDLER Handler;
     ULONG Vector;
     PAGED_CODE();
-    
+
     /* Defaults */
     *Irql = 0;
     *Affinity = 0;
-    
+
     /* Find the handler */
     Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
     if (!Handler) return 0;
-    
+
     /* Do the assignment */
     Vector = Handler->GetInterruptVector(Handler,
                                          Handler,
@@ -1435,7 +1438,7 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                 VECTOR2IRQL(IRQ2VECTOR(BusInterruptLevel)),
                 IRQ2VECTOR(BusInterruptLevel));
     }
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Vector;
@@ -1475,11 +1478,11 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
 {
     PBUS_HANDLER Handler;
     ULONG Status;
-    
+
     /* Find the handler */
     Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
     if (!Handler) return 0;
-    
+
     /* Do the assignment */
     Status = Handler->SetBusData(Handler,
                                  Handler,
@@ -1487,7 +1490,7 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                                  Buffer,
                                  Offset,
                                  Length);
-    
+
     /* Dereference the handler and return */
     HalDereferenceBusHandler(Handler);
     return Status;

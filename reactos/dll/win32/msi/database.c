@@ -61,10 +61,11 @@ typedef struct tagMSITRANSFORM {
 
 typedef struct tagMSISTREAM {
     struct list entry;
+    IStorage *stg;
     IStream *stm;
 } MSISTREAM;
 
-static UINT find_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
+static UINT find_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
 {
     MSISTREAM *stream;
 
@@ -72,6 +73,8 @@ static UINT find_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
     {
         HRESULT r;
         STATSTG stat;
+
+        if (stream->stg != stg) continue;
 
         r = IStream_Stat( stream->stm, &stat, 0 );
         if( FAILED( r ) )
@@ -94,11 +97,11 @@ static UINT find_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT clone_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
+UINT msi_clone_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStream **stm )
 {
     IStream *stream;
 
-    if (find_open_stream( db, name, &stream ) == ERROR_SUCCESS)
+    if (find_open_stream( db, stg, name, &stream ) == ERROR_SUCCESS)
     {
         HRESULT r;
         LARGE_INTEGER pos;
@@ -124,15 +127,16 @@ static UINT clone_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
     return ERROR_FUNCTION_FAILED;
 }
 
-UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
+UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     HRESULT r;
+    IStorage *stg;
     WCHAR decoded[MAX_STREAM_NAME_LEN];
 
     decode_streamname( stname, decoded );
     TRACE("%s -> %s\n", debugstr_w(stname), debugstr_w(decoded));
 
-    if (clone_open_stream( db, stname, stm ) == ERROR_SUCCESS)
+    if (msi_clone_open_stream( db, db->storage, stname, stm ) == ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
     r = IStorage_OpenStream( db->storage, stname, NULL,
@@ -146,18 +150,21 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
             r = IStorage_OpenStream( transform->stg, stname, NULL,
                                      STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
             if (SUCCEEDED(r))
+            {
+                stg = transform->stg;
                 break;
+            }
         }
     }
+    else stg = db->storage;
 
     if( SUCCEEDED(r) )
     {
         MSISTREAM *stream;
 
-        stream = msi_alloc( sizeof(MSISTREAM) );
-        if( !stream )
-            return ERROR_NOT_ENOUGH_MEMORY;
-
+        if (!(stream = msi_alloc( sizeof(MSISTREAM) ))) return ERROR_NOT_ENOUGH_MEMORY;
+        stream->stg = stg;
+        IStream_AddRef( stg );
         stream->stm = *stm;
         IStream_AddRef( *stm );
         list_add_tail( &db->streams, &stream->entry );
@@ -178,7 +185,7 @@ static void free_transforms( MSIDATABASE *db )
     }
 }
 
-void db_destroy_stream( MSIDATABASE *db, LPCWSTR stname )
+void msi_destroy_stream( MSIDATABASE *db, const WCHAR *stname )
 {
     MSISTREAM *stream, *stream2;
 
@@ -200,8 +207,9 @@ void db_destroy_stream( MSIDATABASE *db, LPCWSTR stname )
 
             list_remove( &stream->entry );
             IStream_Release( stream->stm );
+            IStream_Release( stream->stg );
+            IStorage_DestroyElement( stream->stg, stname );
             msi_free( stream );
-            IStorage_DestroyElement( db->storage, stname );
             CoTaskMemFree( stat.pwcsName );
             break;
         }
@@ -213,10 +221,10 @@ static void free_streams( MSIDATABASE *db )
 {
     while( !list_empty( &db->streams ) )
     {
-        MSISTREAM *s = LIST_ENTRY( list_head( &db->streams ),
-                                   MSISTREAM, entry );
+        MSISTREAM *s = LIST_ENTRY(list_head( &db->streams ), MSISTREAM, entry);
         list_remove( &s->entry );
         IStream_Release( s->stm );
+        IStream_Release( s->stg );
         msi_free( s );
     }
 }
@@ -248,11 +256,6 @@ static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
     {
         DeleteFileW( db->deletefile );
         msi_free( db->deletefile );
-    }
-    if (db->localfile)
-    {
-        DeleteFileW( db->localfile );
-        msi_free( db->localfile );
     }
 }
 
@@ -355,7 +358,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     else if( szPersist == MSIDBOPEN_TRANSACT )
     {
         r = StgOpenStorage( szDBPath, NULL,
-              STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, NULL, 0, &stg);
+              STGM_TRANSACTED|STGM_READWRITE|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     }
     else if( szPersist == MSIDBOPEN_DIRECT )
     {
@@ -370,7 +373,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     if( FAILED( r ) || !stg )
     {
-        FIXME("open failed r = %08x for %s\n", r, debugstr_w(szDBPath));
+        WARN("open failed r = %08x for %s\n", r, debugstr_w(szDBPath));
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -416,6 +419,8 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         lstrcpyW( path, save_path );
 
     db->path = strdupW( path );
+    db->media_transform_offset = MSI_INITIAL_MEDIA_TRANSFORM_OFFSET;
+    db->media_transform_disk_id = MSI_INITIAL_MEDIA_TRANSFORM_DISKID;
 
     if( TRACE_ON( msi ) )
         enum_stream_names( stg );
@@ -499,7 +504,7 @@ end:
     return r;
 }
 
-static LPWSTR msi_read_text_archive(LPCWSTR path)
+static LPWSTR msi_read_text_archive(LPCWSTR path, DWORD *len)
 {
     HANDLE file;
     LPSTR data = NULL;
@@ -511,15 +516,17 @@ static LPWSTR msi_read_text_archive(LPCWSTR path)
         return NULL;
 
     size = GetFileSize( file, NULL );
-    data = msi_alloc( size + 1 );
-    if (!data)
-        goto done;
+    if (!(data = msi_alloc( size ))) goto done;
 
-    if (!ReadFile( file, data, size, &read, NULL ))
-        goto done;
+    if (!ReadFile( file, data, size, &read, NULL ) || read != size) goto done;
 
-    data[size] = '\0';
-    wdata = strdupAtoW( data );
+    while (!data[size - 1]) size--;
+    *len = MultiByteToWideChar( CP_ACP, 0, data, size, NULL, 0 );
+    if ((wdata = msi_alloc( (*len + 1) * sizeof(WCHAR) )))
+    {
+        MultiByteToWideChar( CP_ACP, 0, data, size, wdata, *len );
+        wdata[*len] = 0;
+    }
 
 done:
     CloseHandle( file );
@@ -527,21 +534,22 @@ done:
     return wdata;
 }
 
-static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries)
+static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries, DWORD *len)
 {
     LPWSTR ptr = *line, save;
-    DWORD i, count = 1;
+    DWORD i, count = 1, chars_left = *len;
 
     *entries = NULL;
 
     /* stay on this line */
-    while (*ptr && *ptr != '\n')
+    while (chars_left && *ptr != '\n')
     {
         /* entries are separated by tabs */
         if (*ptr == '\t')
             count++;
 
         ptr++;
+        chars_left--;
     }
 
     *entries = msi_alloc(count * sizeof(LPWSTR));
@@ -549,28 +557,48 @@ static void msi_parse_line(LPWSTR *line, LPWSTR **entries, DWORD *num_entries)
         return;
 
     /* store pointers into the data */
+    chars_left = *len;
     for (i = 0, ptr = *line; i < count; i++)
     {
-        while (*ptr && *ptr == '\r') ptr++;
+        while (chars_left && *ptr == '\r')
+        {
+            ptr++;
+            chars_left--;
+        }
         save = ptr;
 
-        while (*ptr && *ptr != '\t' && *ptr != '\n' && *ptr != '\r') ptr++;
+        while (chars_left && *ptr != '\t' && *ptr != '\n' && *ptr != '\r')
+        {
+            if (!*ptr) *ptr = '\n'; /* convert embedded nulls to \n */
+            if (ptr > *line && *ptr == '\x19' && *(ptr - 1) == '\x11')
+            {
+                *ptr = '\n';
+                *(ptr - 1) = '\r';
+            }
+            ptr++;
+            chars_left--;
+        }
 
         /* NULL-separate the data */
         if (*ptr == '\n' || *ptr == '\r')
         {
-            while (*ptr == '\n' || *ptr == '\r')
-                *(ptr++) = '\0';
+            while (chars_left && (*ptr == '\n' || *ptr == '\r'))
+            {
+                *(ptr++) = 0;
+                chars_left--;
+            }
         }
         else if (*ptr)
-            *ptr++ = '\0';
-
+        {
+            *(ptr++) = 0;
+            chars_left--;
+        }
         (*entries)[i] = save;
     }
 
     /* move to the next line if there's more, else EOF */
     *line = ptr;
-
+    *len = chars_left;
     if (num_entries)
         *num_entries = count;
 }
@@ -630,6 +658,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
         {
             case 'l':
                 lstrcpyW(extra, type_notnull);
+                /* fall through */
             case 'L':
                 lstrcatW(extra, localizable);
                 type = type_char;
@@ -637,12 +666,14 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                 break;
             case 's':
                 lstrcpyW(extra, type_notnull);
+                /* fall through */
             case 'S':
                 type = type_char;
                 sprintfW(size, size_fmt, ptr);
                 break;
             case 'i':
                 lstrcpyW(extra, type_notnull);
+                /* fall through */
             case 'I':
                 if (len <= 2)
                     type = type_int;
@@ -657,6 +688,7 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
                 break;
             case 'v':
                 lstrcpyW(extra, type_notnull);
+                /* fall through */
             case 'V':
                 type = type_object;
                 break;
@@ -906,12 +938,12 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     lstrcatW( path, szBackSlash );
     lstrcatW( path, file );
 
-    data = msi_read_text_archive( path );
+    data = msi_read_text_archive( path, &len );
 
     ptr = data;
-    msi_parse_line( &ptr, &columns, &num_columns );
-    msi_parse_line( &ptr, &types, &num_types );
-    msi_parse_line( &ptr, &labels, &num_labels );
+    msi_parse_line( &ptr, &columns, &num_columns, &len );
+    msi_parse_line( &ptr, &types, &num_types, &len );
+    msi_parse_line( &ptr, &labels, &num_labels, &len );
 
     if (num_columns == 1 && !columns[0][0] && num_labels == 1 && !labels[0][0] &&
         num_types == 2 && !strcmpW( types[1], forcecodepage ))
@@ -934,9 +966,9 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     }
 
     /* read in the table records */
-    while (*ptr)
+    while (len)
     {
-        msi_parse_line( &ptr, &records[num_records], NULL );
+        msi_parse_line( &ptr, &records[num_records], NULL, &len );
 
         num_records++;
         temp_records = msi_realloc(records, (num_records + 1) * sizeof(LPWSTR *));
@@ -1490,11 +1522,9 @@ static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
 static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
                                     LPWSTR table, MSIRECORD *rec)
 {
-    LPWSTR query = NULL, clause = NULL;
-    LPWSTR ptr = NULL, val;
-    LPCWSTR setptr;
-    DWORD size = 1, oldsize;
-    LPCWSTR key;
+    LPWSTR query = NULL, clause = NULL, val;
+    LPCWSTR setptr, key;
+    DWORD size, oldsize;
     MSIRECORD *keys;
     UINT r, i, count;
 
@@ -1510,11 +1540,11 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
     if (r != ERROR_SUCCESS)
         return NULL;
 
-    clause = msi_alloc_zero(size * sizeof(WCHAR));
+    clause = msi_alloc_zero(sizeof(WCHAR));
     if (!clause)
         goto done;
 
-    ptr = clause;
+    size = 1;
     count = MSI_RecordGetFieldCount(keys);
     for (i = 1; i <= count; i++)
     {
@@ -1535,8 +1565,7 @@ static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
             goto done;
         }
 
-        ptr = clause + oldsize - 1;
-        sprintfW(ptr, setptr, key, val);
+        sprintfW(clause + oldsize - 1, setptr, key, val);
         msi_free(val);
     }
 
@@ -1852,12 +1881,12 @@ done:
 static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
                               struct list *tabledata)
 {
-    UINT r;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','_','T','a','b','l','e','s','`',0};
     MSIQUERY *view;
     MERGEDATA data;
-
-    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ',
-        'F','R','O','M',' ','`','_','T','a','b','l','e','s','`',0};
+    UINT r;
 
     r = MSI_DatabaseOpenViewW(merge, query, &view);
     if (r != ERROR_SUCCESS)
@@ -1867,7 +1896,6 @@ static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
     data.merge = merge;
     data.tabledata = tabledata;
     r = MSI_IterateRecords(view, NULL, merge_diff_tables, &data);
-
     msiobj_release(&view->hdr);
     return r;
 }

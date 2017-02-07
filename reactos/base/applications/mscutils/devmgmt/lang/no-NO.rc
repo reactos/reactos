@@ -1,4 +1,4 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
@@ -16,10 +16,12 @@ BEGIN
   END
   POPUP "Vis"
   BEGIN
-    MENUITEM "Enheter etter type",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Enheter etter tilkobling",   IDC_STATIC, GRAYED
-    MENUITEM "Ressurser etter type",       IDC_STATIC, GRAYED
-    MENUITEM "Ressurser etter tilkobling", IDC_STATIC, GRAYED
+    MENUITEM "Enheter etter type",         IDC_DEVBYTYPE
+    MENUITEM "Enheter etter tilkobling",   IDC_DEVBYCONN
+    MENUITEM "Ressurser etter type",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ressurser etter tilkobling", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",        IDC_SHOWHIDDEN
   END
   POPUP "Hjelp"
   BEGIN

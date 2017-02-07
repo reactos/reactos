@@ -1464,7 +1464,7 @@ RtlpPageHeapCreate(ULONG Flags,
     }
 
     /* Start preparing the 1st page. Fill it with the default filler */
-    RtlFillMemory(Base, PAGE_SIZE, DPH_FILL);
+    RtlFillMemoryUlong(Base, PAGE_SIZE, DPH_FILL);
 
     /* Set flags in the "HEAP" structure */
     HeapPtr = (PHEAP)Base;

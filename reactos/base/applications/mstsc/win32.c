@@ -958,6 +958,56 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
 
 }
 
+static INT
+GetPortNumber(PCHAR szAddress)
+{
+    PCHAR szPort;
+    INT iPort = TCP_PORT_RDP;
+
+    szPort = strtok(szAddress, ":");
+
+    if (szPort != NULL)
+    {
+        szPort = strtok(NULL, ":");
+
+        if (szPort != NULL)
+        {
+            iPort = atoi(szPort);
+
+            if (iPort <= 0 || iPort > 0xFFFF)
+                iPort = TCP_PORT_RDP;
+        }
+    }
+
+    return iPort;
+}
+
+static VOID
+SetDomainAndUsername(PCHAR pName)
+{
+    PCHAR pDomain;
+    PCHAR pUsername;
+
+    strcpy(g_domain, "");
+    strcpy(g_username, "");
+
+    pDomain = strtok(pName, "\\");
+
+    if(pDomain == NULL)
+        return;
+
+    pUsername = strtok(NULL, "\\");
+
+    if(pUsername == NULL)
+    {
+        strcpy(g_username, pDomain);
+        return;
+    }
+
+    strcpy(g_username, pUsername);
+    strcpy(g_domain, pDomain);
+    return;
+}
 
 static BOOL
 ParseCommandLine(LPWSTR lpCmdLine,
@@ -977,8 +1027,10 @@ ParseCommandLine(LPWSTR lpCmdLine,
     }
     else
     {
-        /* default to 16bpp */
+        /* default to screen size, 16bpp */
         SetIntegerToSettings(pRdpSettings, L"session bpp", 16);
+        SetIntegerToSettings(pRdpSettings, L"desktopwidth", GetSystemMetrics(SM_CXSCREEN));
+        SetIntegerToSettings(pRdpSettings, L"desktopheight", GetSystemMetrics(SM_CYSCREEN));
 
         lpToken = wcstok(lpStr, szSeps);
         while (lpToken)
@@ -1005,6 +1057,10 @@ ParseCommandLine(LPWSTR lpCmdLine,
             {
                 lpToken += 2;
                 SetIntegerToSettings(pRdpSettings, L"desktopheight", _wtoi(lpToken));
+            }
+            else if (*lpToken == L'f')
+            {
+                SetIntegerToSettings(pRdpSettings, L"screen mode id", 2);
             }
 
             lpToken = wcstok(NULL, szSeps);
@@ -1051,18 +1107,29 @@ wWinMain(HINSTANCE hInstance,
 
                     uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
 
+                    /* GetPortNumber also removes possible trailing port number from address */
+                    g_tcp_port_rdp = GetPortNumber(szValue);
                     strcpy(g_servername, szValue);
-                    //g_port = 3389;
-                    strcpy(g_username, "");
+                    uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"username"));
+                    SetDomainAndUsername(szValue);
                     strcpy(g_password, "");
                     g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
                     if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
-                    g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
-                    g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
                     g_screen_width = GetSystemMetrics(SM_CXSCREEN);
                     g_screen_height = GetSystemMetrics(SM_CYSCREEN);
-                    g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
-                    g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+                    g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
+                    g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
+                    if (GetIntegerFromSettings(pRdpSettings, L"screen mode id") == 2)
+                    {
+                        g_fullscreen = 1;
+                        g_xoff = 0;
+                        g_yoff = 0;
+                    }
+                    else
+                    {
+                        g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
+                        g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+                    }
 
                     ui_main();
                     ret = 0;

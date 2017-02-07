@@ -5,7 +5,7 @@ Name = Mozilla Firefox 3.0
 Version = 3.0.19
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
-Size = 7.2M
+Size = 7.16MB
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
 URLDownload = http://svn.reactos.org/packages/Firefox%20Setup%203.0.19.exe
@@ -13,17 +13,14 @@ CDPath = none
 
 [Section.0405]
 Description = Nejpopulárnější a jeden z nejlepších svobodných webových prohlížečů.
-Size = 7.0M
 URLSite = http://www.mozilla-europe.org/cs/
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
-Size = 7.0M
 URLSite = http://www.mozilla-europe.org/de/
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
-Size = 7.0M
 URLSite = http://www.mozilla-europe.org/es/
 
 [Section.040c]
@@ -32,17 +29,18 @@ URLSite = http://www.mozilla-europe.org/fr/
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
-Size = 7.0M
 URLSite = http://www.mozilla-europe.org/no/
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
-Size = 7.9M
 URLSite = http://www.mozilla-europe.org/pl/
+
+[Section.0418]
+Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
+URLSite = http://www.mozilla-europe.org/ro/
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 7.8M
 URLSite = http://www.mozilla-europe.org/ru/
 
 [Section.041b] 
@@ -51,5 +49,4 @@ URLSite = http://www.mozilla-europe.org/sk/
 
 [Section.0422]
 Description = Найпопулярніший та один з кращих безплатних веб-браузерів.
-Size = 7.4M
 URLSite = http://www.mozilla-europe.org/uk/

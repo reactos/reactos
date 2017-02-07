@@ -226,6 +226,14 @@ extern int getopt_long_only (int ___argc, char *const *___argv,
 size_t getpagesize(void);
 #endif  /* HAVE_GETPAGESIZE */
 
+#if !defined(HAVE_ISINF) && !defined(_ISINF) && !defined(isinf)
+int isinf(double x);
+#endif
+
+#if !defined(HAVE_ISNAN) && !defined(_ISNAN) && !defined(isnan)
+int isnan(double x);
+#endif
+
 #ifndef HAVE_LSTAT
 int lstat(const char *file_name, struct stat *buf);
 #endif /* HAVE_LSTAT */

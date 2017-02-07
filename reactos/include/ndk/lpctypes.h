@@ -25,6 +25,15 @@ Author:
 #include <umtypes.h>
 //#include <pstypes.h>
 
+#ifndef NTOS_MODE_USER
+
+//
+// Kernel Exported Object Types
+//
+extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
+
+#endif // !NTOS_MODE_USER
+
 //
 // Internal helper macro
 //

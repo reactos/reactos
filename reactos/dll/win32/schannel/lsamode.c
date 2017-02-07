@@ -24,15 +24,10 @@
 #define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
-#define SECURITY_WIN32
 #include "sspi.h"
 #include "ntsecapi.h"
 #include "ntsecpkg.h"
 #include "schannel.h"
-
-#define SCHANNEL_COMMENT_A "Schannel Security Package\0"
-#define SCHANNEL_COMMENT_W L"Schannel Security Package\0"
-#define SCHANNEL_COMMENT __MINGW_NAME_UAW(SCHANNEL_COMMENT)
 
 #include "wine/debug.h"
 
@@ -41,7 +36,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(schannel);
 /***********************************************************************
  *              SpGetInfoUnified
  */
-static NTSTATUS NTAPI SpGetInfoUnified(PSecPkgInfo PackageInfo)
+static NTSTATUS WINAPI SpGetInfoUnified(PSecPkgInfoW PackageInfo)
 {
     TRACE("(%p)\n", PackageInfo);
 
@@ -53,16 +48,19 @@ static NTSTATUS NTAPI SpGetInfoUnified(PSecPkgInfo PackageInfo)
     PackageInfo->wVersion   = 1;
     PackageInfo->wRPCID     = UNISP_RPC_ID;
     PackageInfo->cbMaxToken = 0x4000;
-    PackageInfo->Name       = UNISP_NAME;
-    PackageInfo->Comment    = UNISP_NAME;
+    PackageInfo->Name       = (LPWSTR)UNISP_NAME_W;
+    PackageInfo->Comment    = (LPWSTR)UNISP_NAME_W;
 
     return STATUS_SUCCESS;
 }
 
+static SEC_WCHAR schannelCommentW[] = { 'S','c','h','a','n','n','e','l',
+     ' ','S','e','c','u','r','i','t','y',' ','P','a','c','k','a','g','e',0 };
+
 /***********************************************************************
  *              SpGetInfoSChannel
  */
-static NTSTATUS NTAPI SpGetInfoSChannel(PSecPkgInfo PackageInfo)
+static NTSTATUS WINAPI SpGetInfoSChannel(PSecPkgInfoW PackageInfo)
 {
     TRACE("(%p)\n", PackageInfo);
 
@@ -74,8 +72,8 @@ static NTSTATUS NTAPI SpGetInfoSChannel(PSecPkgInfo PackageInfo)
     PackageInfo->wVersion   = 1;
     PackageInfo->wRPCID     = UNISP_RPC_ID;
     PackageInfo->cbMaxToken = 0x4000;
-    PackageInfo->Name       = SCHANNEL_NAME;
-    PackageInfo->Comment    = SCHANNEL_COMMENT;
+    PackageInfo->Name       = (LPWSTR)SCHANNEL_NAME_W;
+    PackageInfo->Comment    = schannelCommentW;
 
     return STATUS_SUCCESS;
 }
@@ -112,6 +110,11 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
     NULL, /* ChangeAccountPassword */
+    NULL, /* QueryMetaData */
+    NULL, /* ExchangeMetaData */
+    NULL, /* GetCredUIContext */
+    NULL, /* UpdateCredentials */
+    NULL, /* ValidateTargetInfo */
   }, {
     NULL, /* InitializePackage */
     NULL, /* LsaLogonUser */
@@ -143,6 +146,11 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
     NULL, /* ChangeAccountPassword */
+    NULL, /* QueryMetaData */
+    NULL, /* ExchangeMetaData */
+    NULL, /* GetCredUIContext */
+    NULL, /* UpdateCredentials */
+    NULL, /* ValidateTargetInfo */
   }
 };
 
@@ -154,7 +162,7 @@ NTSTATUS WINAPI SpLsaModeInitialize(ULONG LsaVersion, PULONG PackageVersion,
 {
     TRACE("(%u, %p, %p, %p)\n", LsaVersion, PackageVersion, ppTables, pcTables);
 
-    *PackageVersion = SECPKG_INTERFACE_VERSION_4;
+    *PackageVersion = SECPKG_INTERFACE_VERSION_6;
     *pcTables = 2;
     *ppTables = secPkgFunctionTable;
 

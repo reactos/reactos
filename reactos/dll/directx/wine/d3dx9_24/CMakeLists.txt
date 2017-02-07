@@ -1,6 +1,6 @@
 set_rc_compiler()
 
-spec2def(d3dx9_24.dll d3dx9_24.spec)
+spec2def(d3dx9_24.dll d3dx9_24.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     d3dx9_24_main.c
@@ -30,4 +30,4 @@ add_importlibs(d3dx9_24
 
 add_dependencies(d3dx9_24 wineheaders)
 add_cd_file(TARGET d3dx9_24 DESTINATION reactos/system32 FOR all)
-add_importlib_target(d3dx9_24.spec libd3dx9_36)
+

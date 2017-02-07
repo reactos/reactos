@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(pdh.dll pdh.spec)
+spec2def(pdh.dll pdh.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     pdh_main.c
@@ -19,6 +19,6 @@ set_module_type(pdh win32dll ENTRYPOINT 0 )
 target_link_libraries(pdh wine)
 
 add_importlibs(pdh kernel32 ntdll msvcrt)
-add_importlib_target(pdh.spec)
+
 
 add_cd_file(TARGET pdh DESTINATION reactos/system32 FOR all)

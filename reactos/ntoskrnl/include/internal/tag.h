@@ -5,8 +5,9 @@
 #define TAG_BCB   ' BCB'
 #define TAG_IBCB  'BCBi'
 
-/* formely located in include/callback.h */
-#define CALLBACK_TAG        'KBLC'
+/* Executive Callbacks */
+#define TAG_CALLBACK_ROUTINE_BLOCK 'brbC'
+#define TAG_CALLBACK_REGISTRATION  'eRBC'
 
 /* formely located in dbg/dbgkobj.c */
 #define TAG_DEBUG_EVENT     'EgbD'

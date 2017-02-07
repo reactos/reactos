@@ -584,8 +584,8 @@ MD       Erstellt ein Verzeichnis.\n\
 MKDIR    Erstellt ein Verzeichnis.\n\
 MKLINK   Erzeugt eine Dateisystemverknüpfung.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
-         ein anderes.\n\
-PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
+         ein anderes.\n"
+STRING_HELP2, "PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
 PAUSE    Hält die Ausführung einer Batchdatei an und zeigt eine Meldung an.\n\
 POPD     Wechselt zu dem Verzeichnis, das durch PUSHD gespeichert wurde.\n\
 PROMPT   Ändert die Eingabeaufforderung.\n\
@@ -599,8 +599,8 @@ REPLACE  Ersetzt Dateien.\n\
 RMDIR    Löscht ein Verzeichnis.\n\
 SCREEN   Bewegt den Cursor und optional die Ausgabe.\n\
 SET      Setzt oder löscht die Umgebungsvariablen bzw. zeigt sie an.\n\
-SHIFT    Verändert die Position ersetzbarer Parameter in Batchdateien.\n"
-STRING_HELP2, "START    Startet ein eigenes Fenster, um ein bestimmtes Programm oder einen\n\
+SHIFT    Verändert die Position ersetzbarer Parameter in Batchdateien.\n\
+START    Startet ein eigenes Fenster, um ein bestimmtes Programm oder einen\n\
          Befehl auszuführen.\n\
 TIME     Zeigt die Systemzeit an bzw. legt sie fest.\n\
 TIMER    Erlaubt die Benutzung von bis zu 10 Stoppuhren\n\

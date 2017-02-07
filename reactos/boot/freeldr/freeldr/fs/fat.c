@@ -1338,7 +1338,8 @@ BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG 
 	//
 	// Seek to right position
 	//
-	Position.QuadPart = SectorNumber * 512;
+	Position.HighPart = SectorNumber >> 23;
+	Position.LowPart = SectorNumber << 9;
 	ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
 	if (ret != ESUCCESS)
 	{

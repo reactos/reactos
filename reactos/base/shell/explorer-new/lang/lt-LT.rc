@@ -9,7 +9,16 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Rodyti darbastali", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Atšaukti", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Užduociu tvarkytuvas", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Užrakinti užduočių juostą", ID_LOCKTASKBAR
         MENUITEM "&Parametrai", ID_SHELL_CMD_PROPERTIES

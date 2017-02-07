@@ -70,7 +70,7 @@ HidD_FlushQueue(IN HANDLE HidDeviceObject)
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_FLUSH_QUEUE,
                          NULL, 0,
                          NULL, 0,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -150,7 +150,7 @@ HidD_GetFeature(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_FEATURE,
                          NULL, 0,
                          ReportBuffer, ReportBufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -182,7 +182,7 @@ HidD_GetInputReport(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_INPUT_REPORT,
                          NULL, 0,
                          ReportBuffer, ReportBufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -201,7 +201,7 @@ HidD_GetManufacturerString(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_MANUFACTURER_STRING,
                          NULL, 0,
                          Buffer, BufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -219,7 +219,7 @@ HidD_GetNumInputBuffers(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_GET_NUM_DEVICE_INPUT_BUFFERS,
                          NULL, 0,
                          NumberBuffers, sizeof(ULONG),
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -238,7 +238,7 @@ HidD_GetPhysicalDescriptor(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_GET_PHYSICAL_DESCRIPTOR,
                          NULL, 0,
                          Buffer, BufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -254,7 +254,7 @@ HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
 {
   HID_COLLECTION_INFORMATION hci;
   DWORD RetLen;
-  BOOL Ret;
+  BOOLEAN Ret;
 
   if(PreparsedData == NULL)
   {
@@ -279,7 +279,7 @@ HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
   Ret = DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_COLLECTION_DESCRIPTOR,
                         NULL, 0,
                         *PreparsedData, hci.DescriptorSize,
-                        &RetLen, NULL);
+                        &RetLen, NULL) != 0;
 
   if(!Ret)
   {
@@ -312,7 +312,7 @@ HidD_GetProductString(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_PRODUCT_STRING,
                          NULL, 0,
                          Buffer, BufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -331,7 +331,7 @@ HidD_GetSerialNumberString(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_SERIALNUMBER_STRING,
                          NULL, 0,
                          Buffer, BufferLength,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -394,7 +394,7 @@ HidD_SetFeature(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_SET_FEATURE,
                          ReportBuffer, ReportBufferLength,
                          NULL, 0,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -412,7 +412,7 @@ HidD_SetNumInputBuffers(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_SET_NUM_DEVICE_INPUT_BUFFERS,
                          &NumberBuffers, sizeof(ULONG),
                          NULL, 0,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
 
 
@@ -431,7 +431,112 @@ HidD_SetOutputReport(IN HANDLE HidDeviceObject,
   return DeviceIoControl(HidDeviceObject, IOCTL_HID_SET_OUTPUT_REPORT,
                          ReportBuffer, ReportBufferLength,
                          NULL, 0,
-                         &RetLen, NULL);
+                         &RetLen, NULL) != 0;
 }
+
+/*
+ * HidD_GetIndexedString							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+BOOLEAN WINAPI
+HidD_GetIndexedString(IN HANDLE HidDeviceObject,
+                      IN ULONG StringIndex,
+                      OUT PVOID Buffer,
+                      IN ULONG BufferLength)
+{
+  DWORD RetLen;
+  return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_INDEXED_STRING,
+                         &StringIndex, sizeof(ULONG),
+                         Buffer, BufferLength,
+                         &RetLen, NULL) != 0;
+}
+
+/*
+ * HidD_GetMsGenreDescriptor							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+BOOLEAN WINAPI
+HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
+                          OUT PVOID Buffer,
+                          IN ULONG BufferLength)
+{
+  DWORD RetLen;
+  return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_MS_GENRE_DESCRIPTOR,
+                         0, 0,
+                         Buffer, BufferLength,
+                         &RetLen, NULL) != 0;
+}
+
+/*
+ * HidD_GetConfiguration							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+BOOLEAN WINAPI
+HidD_GetConfiguration(IN HANDLE HidDeviceObject,
+                      OUT PHIDD_CONFIGURATION Configuration,
+                      IN ULONG ConfigurationLength)
+{
+
+  // magic cookie
+  Configuration->cookie = (PVOID)HidD_GetConfiguration;
+
+  return DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_DRIVER_CONFIG,
+                         0, 0,
+                         &Configuration->size, ConfigurationLength - sizeof(ULONG),
+                         (PULONG)&Configuration->cookie, NULL) != 0;
+}
+
+/*
+ * HidD_SetConfiguration							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+BOOLEAN WINAPI
+HidD_SetConfiguration(IN HANDLE HidDeviceObject,
+                      IN PHIDD_CONFIGURATION Configuration,
+                      IN ULONG ConfigurationLength)
+{
+    BOOLEAN Ret = FALSE;
+
+    if (Configuration->cookie == (PVOID)HidD_GetConfiguration)
+    {
+        Ret = DeviceIoControl(HidDeviceObject, IOCTL_HID_SET_DRIVER_CONFIG,
+                              0, 0,
+                              (PVOID)&Configuration->size, ConfigurationLength - sizeof(ULONG),
+                              (PULONG)&Configuration->cookie, NULL) != 0;
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    return Ret;
+}
+
+/*
+ * HidP_GetUsagesEx							EXPORTED
+ *
+ * @implemented
+ */
+HIDAPI
+NTSTATUS WINAPI
+HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
+                 IN USHORT LinkCollection,
+                 OUT PUSAGE_AND_PAGE ButtonList,
+                 IN OUT ULONG *UsageLength,
+                 IN PHIDP_PREPARSED_DATA PreparsedData,
+                 IN PCHAR Report,
+                 IN ULONG ReportLength)
+{
+    return HidP_GetUsages(ReportType, ButtonList->UsagePage, LinkCollection, &ButtonList->Usage, UsageLength, PreparsedData, Report, ReportLength);
+}
+
 
 /* EOF */

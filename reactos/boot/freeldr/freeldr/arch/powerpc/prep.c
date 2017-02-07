@@ -118,6 +118,12 @@ PCONFIGURATION_COMPONENT_DATA PpcPrepHwDetect() {
   return SystemKey;
 }
 
+VOID
+PpcPrepHwIdle(VOID)
+{
+    /* UNIMPLEMENTED */
+}
+
 void PpcPrepInit()
 {
     MachVtbl.ConsPutChar = PpcPrepPutChar;
@@ -139,6 +145,7 @@ void PpcPrepInit()
 
     MachVtbl.GetMemoryMap = PpcPrepGetMemoryMap;
     MachVtbl.HwDetect = PpcPrepHwDetect;
+    MachVtbl.HwIdle = PcPrepHwIdle;
 
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
 

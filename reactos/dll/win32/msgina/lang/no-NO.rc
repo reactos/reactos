@@ -19,7 +19,7 @@ END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Logg på ReactOS"
+CAPTION "Logg pÃ¥ ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,59
@@ -38,8 +38,8 @@ CAPTION "ReactOS-sikkerhet"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,247,53
-    LTEXT           "Hva vil du gjøre?",IDC_STATIC, 92, 60, 87, 8
-    PUSHBUTTON      "Lås datamaskinen...",IDC_LOCK, 7, 76, 74, 14
+    LTEXT           "Hva vil du gjÃ¸re?",IDC_STATIC, 92, 60, 87, 8
+    PUSHBUTTON      "LÃ¥s datamaskinen...",IDC_LOCK, 7, 76, 74, 14
     PUSHBUTTON      "Logg av...",IDC_LOGOFF, 86, 76, 78, 14
     PUSHBUTTON      "Avslutt...",IDC_SHUTDOWN, 170, 76, 70, 14
     PUSHBUTTON      "Oppgavebehandling...",IDC_TASKMGR, 86, 95, 78, 14
@@ -49,9 +49,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Velkommen!"
-    IDS_LOCKEDSAS "Datamaskinen er låst"
-    IDS_PRESSCTRLALTDELETE "Trykk Control+Alt+Delete for å logge på."
+    IDS_LOCKEDSAS "Datamaskinen er lÃ¥st"
+    IDS_PRESSCTRLALTDELETE "Trykk Control+Alt+Delete for Ã¥ logge pÃ¥."
     IDS_ASKFORUSER "Brukernavn: "
     IDS_ASKFORPASSWORD "Passord: "
-    IDS_FORCELOGOFF "Dette vil logge av gjeldende bruker, alle ulagrede data vil gå tapt. Fortsette?"
+    IDS_FORCELOGOFF "Dette vil logge av gjeldende bruker, alle ulagrede data vil gÃ¥ tapt. Fortsette?"
 END

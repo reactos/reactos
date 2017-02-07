@@ -358,7 +358,7 @@
 @ stub LsaEnumerateAccounts
 @ stdcall LsaEnumerateAccountsWithUserRight(ptr ptr ptr ptr)
 @ stub LsaEnumeratePrivileges
-@ stub LsaEnumeratePrivilegesOfAccount
+@ stdcall LsaEnumeratePrivilegesOfAccount(ptr ptr)
 @ stdcall LsaEnumerateTrustedDomains(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateTrustedDomainsEx(ptr ptr ptr long ptr)
 @ stdcall LsaFreeMemory(ptr)
@@ -479,8 +479,8 @@
 @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
 @ stdcall RegCreateKeyW(long wstr ptr)
 @ stdcall RegDeleteKeyA(long str)
-@ stdcall RegDeleteKeyExA(long str long long)
-@ stdcall RegDeleteKeyExW(long wstr long long)
+;@ stdcall RegDeleteKeyExA(long str long long)
+;@ stdcall RegDeleteKeyExW(long wstr long long)
 @ stdcall RegDeleteKeyW(long wstr)
 @ stdcall RegDeleteKeyValueA(ptr str str)
 @ stdcall RegDeleteKeyValueW(ptr wstr wstr)

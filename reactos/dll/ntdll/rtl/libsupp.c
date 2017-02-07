@@ -562,4 +562,18 @@ RtlWow64EnableFsRedirectionEx(IN PVOID Wow64FsEnableRedirection,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlComputeImportTableHash(IN HANDLE FileHandle,
+                          OUT PCHAR Hash,
+                          IN ULONG ImporTTableHashSize)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

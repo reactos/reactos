@@ -41,8 +41,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #define CUSTOM_ACTION_TYPE_MASK 0x3F
-static const WCHAR c_collen[] = {'C',':','\\',0};
-static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
 typedef struct tagMSIRUNNINGACTION
 {
@@ -51,31 +49,6 @@ typedef struct tagMSIRUNNINGACTION
     BOOL   process;
     LPWSTR name;
 } MSIRUNNINGACTION;
-
-static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
-                               LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
-                               LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType23(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType37_38(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType5_6(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType21_22(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
-static UINT HANDLE_CustomType53_54(MSIPACKAGE *package, LPCWSTR source,
-                                LPCWSTR target, const INT type, LPCWSTR action);
 
 typedef UINT (WINAPI *MsiCustomActionEntryPoint)( MSIHANDLE );
 
@@ -90,6 +63,62 @@ static CRITICAL_SECTION_DEBUG msi_custom_action_cs_debug =
 static CRITICAL_SECTION msi_custom_action_cs = { &msi_custom_action_cs_debug, -1, 0, 0, 0, 0 };
 
 static struct list msi_pending_custom_actions = LIST_INIT( msi_pending_custom_actions );
+
+UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action )
+{
+    UINT count;
+    WCHAR **newbuf = NULL;
+
+    if (script >= SCRIPT_MAX)
+    {
+        FIXME("Unknown script requested %u\n", script);
+        return ERROR_FUNCTION_FAILED;
+    }
+    TRACE("Scheduling action %s in script %u\n", debugstr_w(action), script);
+
+    count = package->script->ActionCount[script];
+    package->script->ActionCount[script]++;
+    if (count != 0) newbuf = msi_realloc( package->script->Actions[script],
+                                          package->script->ActionCount[script] * sizeof(WCHAR *) );
+    else newbuf = msi_alloc( sizeof(WCHAR *) );
+
+    newbuf[count] = strdupW( action );
+    package->script->Actions[script] = newbuf;
+    return ERROR_SUCCESS;
+}
+
+UINT msi_register_unique_action( MSIPACKAGE *package, const WCHAR *action )
+{
+    UINT count;
+    WCHAR **newbuf = NULL;
+
+    if (!package->script) return FALSE;
+
+    TRACE("Registering %s as unique action\n", debugstr_w(action));
+
+    count = package->script->UniqueActionsCount;
+    package->script->UniqueActionsCount++;
+    if (count != 0) newbuf = msi_realloc( package->script->UniqueActions,
+                                          package->script->UniqueActionsCount * sizeof(WCHAR *) );
+    else newbuf = msi_alloc( sizeof(WCHAR *) );
+
+    newbuf[count] = strdupW( action );
+    package->script->UniqueActions = newbuf;
+    return ERROR_SUCCESS;
+}
+
+BOOL msi_action_is_unique( const MSIPACKAGE *package, const WCHAR *action )
+{
+    UINT i;
+
+    if (!package->script) return FALSE;
+
+    for (i = 0; i < package->script->UniqueActionsCount; i++)
+    {
+        if (!strcmpW( package->script->UniqueActions[i], action )) return TRUE;
+    }
+    return FALSE;
+}
 
 static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR action, UINT options)
 {
@@ -117,13 +146,13 @@ static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR acti
     }
     else if (options & msidbCustomActionTypeOncePerProcess)
     {
-        if (check_unique_action(package,action))
+        if (msi_action_is_unique(package, action))
         {
             TRACE("Skipping action due to msidbCustomActionTypeOncePerProcess option.\n");
             return FALSE;
         }
         else
-            register_unique_action(package,action);
+            msi_register_unique_action(package, action);
     }
 
     return TRUE;
@@ -176,191 +205,6 @@ static void set_deferred_action_props(MSIPACKAGE *package, LPWSTR deferred_data)
     msi_set_property(package->db, szProductCode, beg);
 }
 
-UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL execute)
-{
-    UINT rc = ERROR_SUCCESS;
-    MSIRECORD * row = 0;
-    static const WCHAR ExecSeqQuery[] =
-    {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-     '`','C','u','s','t','o' ,'m','A','c','t','i','o','n','`',
-     ' ','W','H','E','R','E',' ','`','A','c','t','i' ,'o','n','`',' ',
-     '=',' ','\'','%','s','\'',0};
-    UINT type;
-    LPCWSTR source, target;
-    LPWSTR ptr, deferred_data = NULL;
-    LPWSTR action_copy = strdupW(action);
-    WCHAR *deformated=NULL;
-
-    /* deferred action: [properties]Action */
-    if ((ptr = strrchrW(action_copy, ']')))
-    {
-        deferred_data = action_copy;
-        action = ptr + 1;
-    }
-
-    row = MSI_QueryGetRecord( package->db, ExecSeqQuery, action );
-    if (!row)
-    {
-        msi_free(action_copy);
-        return ERROR_CALL_NOT_IMPLEMENTED;
-    }
-
-    type = MSI_RecordGetInteger(row,2);
-
-    source = MSI_RecordGetString(row,3);
-    target = MSI_RecordGetString(row,4);
-
-    TRACE("Handling custom action %s (%x %s %s)\n",debugstr_w(action),type,
-          debugstr_w(source), debugstr_w(target));
-
-    /* handle some of the deferred actions */
-    if (type & msidbCustomActionTypeTSAware)
-        FIXME("msidbCustomActionTypeTSAware not handled\n");
-
-    if (type & msidbCustomActionTypeInScript)
-    {
-        if (type & msidbCustomActionTypeNoImpersonate)
-            WARN("msidbCustomActionTypeNoImpersonate not handled\n");
-
-        if (!execute)
-        {
-            LPWSTR actiondata = msi_dup_property(package->db, action);
-            LPWSTR usersid = msi_dup_property(package->db, szUserSID);
-            LPWSTR prodcode = msi_dup_property(package->db, szProductCode);
-            LPWSTR deferred = msi_get_deferred_action(action, actiondata, usersid, prodcode);
-
-            if (type & msidbCustomActionTypeCommit)
-            {
-                TRACE("Deferring commit action\n");
-                schedule_action(package, COMMIT_SCRIPT, deferred);
-            }
-            else if (type & msidbCustomActionTypeRollback)
-            {
-                FIXME("Deferring rollback only action\n");
-                schedule_action(package, ROLLBACK_SCRIPT, deferred);
-            }
-            else
-            {
-                TRACE("Deferring action\n");
-                schedule_action(package, INSTALL_SCRIPT, deferred);
-            }
-
-            rc = ERROR_SUCCESS;
-            msi_free(actiondata);
-            msi_free(usersid);
-            msi_free(prodcode);
-            msi_free(deferred);
-            goto end;
-        }
-        else
-        {
-            LPWSTR actiondata = msi_dup_property( package->db, action );
-
-            if (type & msidbCustomActionTypeInScript)
-                package->scheduled_action_running = TRUE;
-
-            if (type & msidbCustomActionTypeCommit)
-                package->commit_action_running = TRUE;
-
-            if (type & msidbCustomActionTypeRollback)
-                package->rollback_action_running = TRUE;
-
-            if (deferred_data)
-                set_deferred_action_props(package, deferred_data);
-            else if (actiondata)
-                msi_set_property(package->db, szCustomActionData, actiondata);
-            else
-                msi_set_property(package->db, szCustomActionData, szEmpty);
-
-            msi_free(actiondata);
-        }
-        if (type & msidbCustomActionTypeRollback)
-        {
-            FIXME("Rollbacks not supported yet\n");
-            rc = ERROR_SUCCESS;
-            goto end;
-        }
-    }
-    else if (!check_execution_scheduling_options(package,action,type))
-    {
-        rc = ERROR_SUCCESS;
-        goto end;
-    }
-
-    switch (type & CUSTOM_ACTION_TYPE_MASK)
-    {
-        case 1: /* DLL file stored in a Binary table stream */
-            rc = HANDLE_CustomType1(package,source,target,type,action);
-            break;
-        case 2: /* EXE file stored in a Binary table stream */
-            rc = HANDLE_CustomType2(package,source,target,type,action);
-            break;
-        case 18: /*EXE file installed with package */
-            rc = HANDLE_CustomType18(package,source,target,type,action);
-            break;
-        case 19: /* Error that halts install */
-            rc = HANDLE_CustomType19(package,source,target,type,action);
-            break;
-        case 17:
-            rc = HANDLE_CustomType17(package,source,target,type,action);
-            break;
-        case 23: /* installs another package in the source tree */
-            deformat_string(package,target,&deformated);
-            rc = HANDLE_CustomType23(package,source,deformated,type,action);
-            msi_free(deformated);
-            break;
-        case 50: /*EXE file specified by a property value */
-            rc = HANDLE_CustomType50(package,source,target,type,action);
-            break;
-        case 34: /*EXE to be run in specified directory */
-            rc = HANDLE_CustomType34(package,source,target,type,action);
-            break;
-        case 35: /* Directory set with formatted text. */
-            deformat_string(package,target,&deformated);
-            MSI_SetTargetPathW(package, source, deformated);
-            msi_free(deformated);
-            break;
-        case 51: /* Property set with formatted text. */
-            if (!source)
-                break;
-
-            deformat_string(package,target,&deformated);
-            rc = msi_set_property( package->db, source, deformated );
-            if (rc == ERROR_SUCCESS && !strcmpW( source, cszSourceDir ))
-                msi_reset_folders( package, TRUE );
-            msi_free(deformated);
-            break;
-	case 37: /* JScript/VBScript text stored in target column. */
-	case 38:
-	    rc = HANDLE_CustomType37_38(package,source,target,type,action);
-	    break;
-	case 5:
-	case 6: /* JScript/VBScript file stored in a Binary table stream. */
-	    rc = HANDLE_CustomType5_6(package,source,target,type,action);
-	    break;
-	case 21: /* JScript/VBScript file installed with the product. */
-	case 22:
-	    rc = HANDLE_CustomType21_22(package,source,target,type,action);
-	    break;
-	case 53: /* JScript/VBScript text specified by a property value. */
-	case 54:
-	    rc = HANDLE_CustomType53_54(package,source,target,type,action);
-	    break;
-        default:
-            FIXME("UNHANDLED ACTION TYPE %i (%s %s)\n",
-             type & CUSTOM_ACTION_TYPE_MASK, debugstr_w(source),
-             debugstr_w(target));
-    }
-
-end:
-    package->scheduled_action_running = FALSE;
-    package->commit_action_running = FALSE;
-    package->rollback_action_running = FALSE;
-    msi_free(action_copy);
-    msiobj_release(&row->hdr);
-    return rc;
-}
-
 static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL dll )
 {
     static const WCHAR query[] = {
@@ -375,7 +219,7 @@ static MSIBINARY *create_temp_binary( MSIPACKAGE *package, LPCWSTR source, BOOL 
     DWORD sz = MAX_PATH, write;
     UINT r;
 
-    if (msi_get_property(package->db, cszTempFolder, fmt, &sz) != ERROR_SUCCESS)
+    if (msi_get_property(package->db, szTempFolder, fmt, &sz) != ERROR_SUCCESS)
         GetTempPathW(MAX_PATH, fmt);
 
     if (!GetTempFileNameW( fmt, szMsi, 0, tmpfile ))
@@ -464,6 +308,7 @@ static UINT custom_get_process_return( HANDLE process )
     DWORD rc = 0;
 
     GetExitCodeProcess( process, &rc );
+    TRACE("exit code is %u\n", rc);
     if (rc != 0)
         return ERROR_FUNCTION_FAILED;
     return ERROR_SUCCESS;
@@ -678,22 +523,22 @@ static UINT get_action_info( const GUID *guid, INT *type, MSIHANDLE *handle,
 #ifdef __i386__
 extern UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE handle );
 __ASM_GLOBAL_FUNC( CUSTOMPROC_wrapper,
-	"pushl %ebp\n\t"
-	__ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
-	__ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
-	"movl %esp,%ebp\n\t"
-	__ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
-	"pushl 12(%ebp)\n\t"
-	"movl 8(%ebp),%eax\n\t"
-	"call *%eax\n\t"
-	"leave\n\t"
-	__ASM_CFI(".cfi_def_cfa %esp,4\n\t")
-	__ASM_CFI(".cfi_same_value %ebp\n\t")
-	"ret" )
+    "pushl %ebp\n\t"
+    __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+    __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
+    "movl %esp,%ebp\n\t"
+    __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
+    "pushl 12(%ebp)\n\t"
+    "movl 8(%ebp),%eax\n\t"
+    "call *%eax\n\t"
+    "leave\n\t"
+    __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
+    __ASM_CFI(".cfi_same_value %ebp\n\t")
+    "ret" )
 #else
 static inline UINT CUSTOMPROC_wrapper( MsiCustomActionEntryPoint proc, MSIHANDLE handle )
 {
-	return proc(handle);
+    return proc(handle);
 }
 #endif
 
@@ -889,20 +734,16 @@ static UINT HANDLE_CustomType23(MSIPACKAGE *package, LPCWSTR source,
     msi_custom_action_info *info;
     WCHAR package_path[MAX_PATH];
     DWORD size;
-    UINT r;
 
     size = MAX_PATH;
-    msi_get_property(package->db, cszSourceDir, package_path, &size);
+    msi_get_property(package->db, szSourceDir, package_path, &size);
     lstrcatW(package_path, szBackSlash);
     lstrcatW(package_path, source);
 
     TRACE("Installing package %s concurrently\n", debugstr_w(package_path));
 
     info = do_msidbCAConcurrentInstall(package, type, package_path, target, action);
-
-    r = wait_thread_handle(info);
-    release_custom_action_data( info );
-    return r;
+    return wait_thread_handle(info);
 }
 
 static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
@@ -910,7 +751,6 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
 {
     msi_custom_action_info *info;
     MSIBINARY *binary;
-    UINT r;
 
     if (!(binary = get_temp_binary( package, source, TRUE )))
         return ERROR_FUNCTION_FAILED;
@@ -918,62 +758,93 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
     TRACE("Calling function %s from %s\n", debugstr_w(target), debugstr_w(binary->tmpfile));
 
     info = do_msidbCustomActionTypeDll( package, type, binary->tmpfile, target, action );
+    return wait_thread_handle( info );
+}
 
-    r = wait_thread_handle( info );
-    release_custom_action_data( info );
-    return r;
+static HANDLE execute_command( const WCHAR *app, WCHAR *arg, const WCHAR *dir )
+{
+    static const WCHAR dotexeW[] = {'.','e','x','e',0};
+    STARTUPINFOW si;
+    PROCESS_INFORMATION info;
+    WCHAR *exe = NULL, *cmd = NULL, *p;
+    BOOL ret;
+
+    if (app)
+    {
+        int len_arg = 0;
+        DWORD len_exe;
+
+        if (!(exe = msi_alloc( MAX_PATH * sizeof(WCHAR) ))) return INVALID_HANDLE_VALUE;
+        len_exe = SearchPathW( NULL, app, dotexeW, MAX_PATH, exe, NULL );
+        if (len_exe >= MAX_PATH)
+        {
+            msi_free( exe );
+            if (!(exe = msi_alloc( len_exe * sizeof(WCHAR) ))) return INVALID_HANDLE_VALUE;
+            len_exe = SearchPathW( NULL, app, dotexeW, len_exe, exe, NULL );
+        }
+        if (!len_exe)
+        {
+            WARN("can't find executable %u\n", GetLastError());
+            msi_free( exe );
+            return INVALID_HANDLE_VALUE;
+        }
+
+        if (arg) len_arg = strlenW( arg );
+        if (!(cmd = msi_alloc( (len_exe + len_arg + 4) * sizeof(WCHAR) )))
+        {
+            msi_free( exe );
+            return INVALID_HANDLE_VALUE;
+        }
+        p = cmd;
+        if (strchrW( exe, ' ' ))
+        {
+            *p++ = '\"';
+            memcpy( p, exe, len_exe * sizeof(WCHAR) );
+            p += len_exe;
+            *p++ = '\"';
+            *p = 0;
+        }
+        else
+        {
+            strcpyW( p, exe );
+            p += len_exe;
+        }
+        if (arg)
+        {
+            *p++ = ' ';
+            memcpy( p, arg, len_arg * sizeof(WCHAR) );
+            p[len_arg] = 0;
+        }
+    }
+    memset( &si, 0, sizeof(STARTUPINFOW) );
+    ret = CreateProcessW( exe, exe ? cmd : arg, NULL, NULL, FALSE, 0, NULL, dir, &si, &info );
+    msi_free( cmd );
+    msi_free( exe );
+    if (!ret)
+    {
+        WARN("unable to execute command %u\n", GetLastError());
+        return INVALID_HANDLE_VALUE;
+    }
+    CloseHandle( info.hThread );
+    return info.hProcess;
 }
 
 static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action)
 {
-    STARTUPINFOW si;
-    PROCESS_INFORMATION info;
-    BOOL rc;
-    INT len;
-    WCHAR *deformated = NULL;
-    WCHAR *cmd;
-    static const WCHAR spc[] = {' ',0};
     MSIBINARY *binary;
-    UINT r;
+    HANDLE handle;
+    WCHAR *arg;
 
-    memset(&si,0,sizeof(STARTUPINFOW));
+    if (!(binary = get_temp_binary( package, source, FALSE ))) return ERROR_FUNCTION_FAILED;
 
-    if (!(binary = get_temp_binary( package, source, FALSE )))
-        return ERROR_FUNCTION_FAILED;
+    deformat_string( package, target, &arg );
+    TRACE("exe %s arg %s\n", debugstr_w(binary->tmpfile), debugstr_w(arg));
 
-    deformat_string(package,target,&deformated);
-
-    len = strlenW( binary->tmpfile ) + 2;
-    if (deformated)
-        len += strlenW(deformated);
-
-    cmd = msi_alloc(sizeof(WCHAR)*len);
-
-    strcpyW( cmd, binary->tmpfile );
-    if (deformated)
-    {
-        strcatW(cmd,spc);
-        strcatW(cmd,deformated);
-        msi_free(deformated);
-    }
-
-    TRACE("executing exe %s\n", debugstr_w(cmd));
-
-    rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
-                  c_collen, &si, &info);
-    msi_free(cmd);
-
-    if ( !rc )
-    {
-        ERR("Unable to execute command %s\n", debugstr_w(cmd));
-        return ERROR_SUCCESS;
-    }
-    CloseHandle( info.hThread );
-
-    r = wait_process_handle(package, type, info.hProcess, action);
-
-    return r;
+    handle = execute_command( binary->tmpfile, arg, szCRoot );
+    msi_free( arg );
+    if (handle == INVALID_HANDLE_VALUE) return ERROR_SUCCESS;
+    return wait_process_handle( package, type, handle, action );
 }
 
 static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
@@ -981,11 +852,10 @@ static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
 {
     msi_custom_action_info *info;
     MSIFILE *file;
-    UINT r;
 
     TRACE("%s %s\n", debugstr_w(source), debugstr_w(target));
 
-    file = get_loaded_file( package, source );
+    file = msi_get_loaded_file( package, source );
     if (!file)
     {
         ERR("invalid file key %s\n", debugstr_w( source ));
@@ -993,63 +863,25 @@ static UINT HANDLE_CustomType17(MSIPACKAGE *package, LPCWSTR source,
     }
 
     info = do_msidbCustomActionTypeDll( package, type, file->TargetPath, target, action );
-
-    r = wait_thread_handle( info );
-    release_custom_action_data( info );
-    return r;
+    return wait_thread_handle( info );
 }
 
 static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action)
 {
-    STARTUPINFOW si;
-    PROCESS_INFORMATION info;
-    BOOL rc;
-    WCHAR *deformated;
-    WCHAR *cmd;
-    INT len;
-    static const WCHAR spc[] = {' ',0};
     MSIFILE *file;
+    HANDLE handle;
+    WCHAR *arg;
 
-    memset(&si,0,sizeof(STARTUPINFOW));
+    if (!(file = msi_get_loaded_file( package, source ))) return ERROR_FUNCTION_FAILED;
 
-    file = get_loaded_file(package,source);
-    if( !file )
-        return ERROR_FUNCTION_FAILED;
+    deformat_string( package, target, &arg );
+    TRACE("exe %s arg %s\n", debugstr_w(file->TargetPath), debugstr_w(arg));
 
-    len = lstrlenW( file->TargetPath );
-
-    deformat_string(package,target,&deformated);
-    if (deformated)
-        len += strlenW(deformated);
-    len += 2;
-
-    cmd = msi_alloc(len * sizeof(WCHAR));
-
-    lstrcpyW( cmd, file->TargetPath);
-    if (deformated)
-    {
-        strcatW(cmd, spc);
-        strcatW(cmd, deformated);
-
-        msi_free(deformated);
-    }
-
-    TRACE("executing exe %s\n", debugstr_w(cmd));
-
-    rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
-                  c_collen, &si, &info);
-
-    if ( !rc )
-    {
-        ERR("Unable to execute command %s\n", debugstr_w(cmd));
-        msi_free(cmd);
-        return ERROR_SUCCESS;
-    }
-    msi_free(cmd);
-    CloseHandle( info.hThread );
-
-    return wait_process_handle(package, type, info.hProcess, action);
+    handle = execute_command( file->TargetPath, arg, szCRoot );
+    msi_free( arg );
+    if (handle == INVALID_HANDLE_VALUE) return ERROR_SUCCESS;
+    return wait_process_handle( package, type, handle, action );
 }
 
 static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
@@ -1071,11 +903,11 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
     if( row )
     {
         LPCWSTR error = MSI_RecordGetString( row, 1 );
-        if ((gUILevel & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
+        if ((package->ui_level & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
             MessageBoxW( NULL, error, NULL, MB_OK );
         msiobj_release( &row->hdr );
     }
-    else if ((gUILevel & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
+    else if ((package->ui_level & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
         MessageBoxW( NULL, deformated, NULL, MB_OK );
 
     msi_free( deformated );
@@ -1086,100 +918,39 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
 static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action)
 {
-    STARTUPINFOW si;
-    PROCESS_INFORMATION info;
-    WCHAR *prop;
-    BOOL rc;
-    WCHAR *deformated;
-    WCHAR *cmd;
-    INT len;
-    static const WCHAR spc[] = {' ',0};
+    WCHAR *exe, *arg;
+    HANDLE handle;
 
-    memset(&si,0,sizeof(STARTUPINFOW));
-    memset(&info,0,sizeof(PROCESS_INFORMATION));
+    if (!(exe = msi_dup_property( package->db, source ))) return ERROR_SUCCESS;
 
-    prop = msi_dup_property( package->db, source );
-    if (!prop)
-        return ERROR_SUCCESS;
+    deformat_string( package, target, &arg );
+    TRACE("exe %s arg %s\n", debugstr_w(exe), debugstr_w(arg));
 
-    deformat_string(package,target,&deformated);
-    len = strlenW(prop) + 2;
-    if (deformated)
-         len += strlenW(deformated);
-
-    cmd = msi_alloc(sizeof(WCHAR)*len);
-
-    strcpyW(cmd,prop);
-    if (deformated)
-    {
-        strcatW(cmd,spc);
-        strcatW(cmd,deformated);
-
-        msi_free(deformated);
-    }
-    msi_free(prop);
-
-    TRACE("executing exe %s\n", debugstr_w(cmd));
-
-    rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
-                  c_collen, &si, &info);
-
-    if ( !rc )
-    {
-        ERR("Unable to execute command %s\n", debugstr_w(cmd));
-        msi_free(cmd);
-        return ERROR_SUCCESS;
-    }
-    msi_free(cmd);
-
-    CloseHandle( info.hThread );
-
-    return wait_process_handle(package, type, info.hProcess, action);
+    handle = execute_command( exe, arg, szCRoot );
+    msi_free( arg );
+    if (handle == INVALID_HANDLE_VALUE) return ERROR_SUCCESS;
+    return wait_process_handle( package, type, handle, action );
 }
 
 static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action)
 {
-    LPWSTR workingdir, filename;
-    STARTUPINFOW si;
-    PROCESS_INFORMATION info;
-    BOOL rc;
+    const WCHAR *workingdir;
+    HANDLE handle;
+    WCHAR *cmd;
 
-    memset(&si, 0, sizeof(STARTUPINFOW));
+    workingdir = msi_get_target_folder( package, source );
+    if (!workingdir) return ERROR_FUNCTION_FAILED;
 
-    workingdir = resolve_target_folder( package, source, FALSE, TRUE, NULL );
-    if (!workingdir)
-        return ERROR_FUNCTION_FAILED;
+    deformat_string( package, target, &cmd );
+    if (!cmd) return ERROR_FUNCTION_FAILED;
 
-    deformat_string(package, target, &filename);
+    TRACE("cmd %s dir %s\n", debugstr_w(cmd), debugstr_w(workingdir));
 
-    if (!filename)
-    {
-        msi_free(workingdir);
-        return ERROR_FUNCTION_FAILED;
-    }
-
-    TRACE("executing exe %s with working directory %s\n",
-          debugstr_w(filename), debugstr_w(workingdir));
-
-    rc = CreateProcessW(NULL, filename, NULL, NULL, FALSE, 0, NULL,
-                        workingdir, &si, &info);
-
-    if ( !rc )
-    {
-        ERR("Unable to execute command %s with working directory %s\n",
-            debugstr_w(filename), debugstr_w(workingdir));
-        msi_free(filename);
-        msi_free(workingdir);
-        return ERROR_SUCCESS;
-    }
-
-    msi_free(filename);
-    msi_free(workingdir);
-
-    CloseHandle( info.hThread );
-
-    return wait_process_handle(package, type, info.hProcess, action);
+    handle = execute_command( NULL, cmd, workingdir );
+    msi_free( cmd );
+    if (handle == INVALID_HANDLE_VALUE) return ERROR_SUCCESS;
+    return wait_process_handle( package, type, handle, action );
 }
 
 static DWORD ACTION_CallScript( const GUID *guid )
@@ -1263,16 +1034,12 @@ static msi_custom_action_info *do_msidbCustomActionTypeScript(
 static UINT HANDLE_CustomType37_38(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action)
 {
-    UINT r;
     msi_custom_action_info *info;
 
     TRACE("%s %s\n", debugstr_w(source), debugstr_w(target));
 
     info = do_msidbCustomActionTypeScript( package, type, target, NULL, action );
-
-    r = wait_thread_handle( info );
-    release_custom_action_data( info );
-    return r;
+    return wait_thread_handle( info );
 }
 
 static UINT HANDLE_CustomType5_6(MSIPACKAGE *package, LPCWSTR source,
@@ -1296,12 +1063,10 @@ static UINT HANDLE_CustomType5_6(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_FUNCTION_FAILED;
 
     r = MSI_RecordReadStream(row, 2, NULL, &sz);
-    if (r != ERROR_SUCCESS)
-	return r;
+    if (r != ERROR_SUCCESS) return r;
 
-    buffer = msi_alloc(sizeof(CHAR)*(sz+1));
-    if (!buffer)
-	return ERROR_FUNCTION_FAILED;
+    buffer = msi_alloc( sz + 1 );
+    if (!buffer) return ERROR_FUNCTION_FAILED;
 
     r = MSI_RecordReadStream(row, 2, buffer, &sz);
     if (r != ERROR_SUCCESS)
@@ -1317,7 +1082,6 @@ static UINT HANDLE_CustomType5_6(MSIPACKAGE *package, LPCWSTR source,
 
     info = do_msidbCustomActionTypeScript( package, type, bufferw, target, action );
     r = wait_thread_handle( info );
-    release_custom_action_data( info );
 
 done:
     msi_free(bufferw);
@@ -1339,39 +1103,35 @@ static UINT HANDLE_CustomType21_22(MSIPACKAGE *package, LPCWSTR source,
 
     TRACE("%s %s\n", debugstr_w(source), debugstr_w(target));
 
-    file = get_loaded_file(package,source);
+    file = msi_get_loaded_file(package, source);
     if (!file)
     {
-	ERR("invalid file key %s\n", debugstr_w(source));
-	return ERROR_FUNCTION_FAILED;
+        ERR("invalid file key %s\n", debugstr_w(source));
+        return ERROR_FUNCTION_FAILED;
     }
 
     hFile = CreateFileW(file->TargetPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-	return ERROR_FUNCTION_FAILED;
+    if (hFile == INVALID_HANDLE_VALUE) return ERROR_FUNCTION_FAILED;
 
     sz = GetFileSize(hFile, &szHighWord);
     if (sz == INVALID_FILE_SIZE || szHighWord != 0)
     {
-	CloseHandle(hFile);
-	return ERROR_FUNCTION_FAILED;
+        CloseHandle(hFile);
+        return ERROR_FUNCTION_FAILED;
     }
-
-    buffer = msi_alloc(sizeof(CHAR)*(sz+1));
+    buffer = msi_alloc( sz + 1 );
     if (!buffer)
     {
-	CloseHandle(hFile);
-	return ERROR_FUNCTION_FAILED;
+        CloseHandle(hFile);
+        return ERROR_FUNCTION_FAILED;
     }
-
     bRet = ReadFile(hFile, buffer, sz, &read, NULL);
     CloseHandle(hFile);
     if (!bRet)
     {
-	r = ERROR_FUNCTION_FAILED;
+        r = ERROR_FUNCTION_FAILED;
         goto done;
     }
-
     buffer[read] = 0;
     bufferw = strdupAtoW(buffer);
     if (!bufferw)
@@ -1379,10 +1139,8 @@ static UINT HANDLE_CustomType21_22(MSIPACKAGE *package, LPCWSTR source,
         r = ERROR_FUNCTION_FAILED;
         goto done;
     }
-
     info = do_msidbCustomActionTypeScript( package, type, bufferw, target, action );
     r = wait_thread_handle( info );
-    release_custom_action_data( info );
 
 done:
     msi_free(bufferw);
@@ -1395,19 +1153,219 @@ static UINT HANDLE_CustomType53_54(MSIPACKAGE *package, LPCWSTR source,
 {
     msi_custom_action_info *info;
     WCHAR *prop;
-    UINT r;
 
     TRACE("%s %s\n", debugstr_w(source), debugstr_w(target));
 
     prop = msi_dup_property( package->db, source );
-    if (!prop)
-	return ERROR_SUCCESS;
+    if (!prop) return ERROR_SUCCESS;
 
     info = do_msidbCustomActionTypeScript( package, type, prop, NULL, action );
     msi_free(prop);
-    r = wait_thread_handle( info );
-    release_custom_action_data( info );
-    return r;
+    return wait_thread_handle( info );
+}
+
+static BOOL action_type_matches_script( MSIPACKAGE *package, UINT type, UINT script )
+{
+    switch (script)
+    {
+    case SCRIPT_NONE:
+    case SCRIPT_INSTALL:
+        return !(type & msidbCustomActionTypeCommit) && !(type & msidbCustomActionTypeRollback);
+    case SCRIPT_COMMIT:
+        return (type & msidbCustomActionTypeCommit);
+    case SCRIPT_ROLLBACK:
+        return (type & msidbCustomActionTypeRollback);
+    default:
+        ERR("unhandled script %u\n", script);
+    }
+    return FALSE;
+}
+
+static UINT defer_custom_action( MSIPACKAGE *package, const WCHAR *action, UINT type )
+{
+    WCHAR *actiondata = msi_dup_property( package->db, action );
+    WCHAR *usersid = msi_dup_property( package->db, szUserSID );
+    WCHAR *prodcode = msi_dup_property( package->db, szProductCode );
+    WCHAR *deferred = msi_get_deferred_action( action, actiondata, usersid, prodcode );
+
+    if (!deferred)
+    {
+        msi_free( actiondata );
+        msi_free( usersid );
+        msi_free( prodcode );
+        return ERROR_OUTOFMEMORY;
+    }
+    if (type & msidbCustomActionTypeCommit)
+    {
+        TRACE("deferring commit action\n");
+        msi_schedule_action( package, SCRIPT_COMMIT, deferred );
+    }
+    else if (type & msidbCustomActionTypeRollback)
+    {
+        TRACE("deferring rollback action\n");
+        msi_schedule_action( package, SCRIPT_ROLLBACK, deferred );
+    }
+    else
+    {
+        TRACE("deferring install action\n");
+        msi_schedule_action( package, SCRIPT_INSTALL, deferred );
+    }
+
+    msi_free( actiondata );
+    msi_free( usersid );
+    msi_free( prodcode );
+    msi_free( deferred );
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_CustomAction(MSIPACKAGE *package, LPCWSTR action, UINT script, BOOL execute)
+{
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','C','u','s','t','o','m','A','c','t','i','o','n','`',' ','W','H','E','R','E',' ',
+        '`','A','c','t','i' ,'o','n','`',' ','=',' ','\'','%','s','\'',0};
+    UINT rc = ERROR_SUCCESS;
+    MSIRECORD *row;
+    UINT type;
+    LPCWSTR source, target;
+    LPWSTR ptr, deferred_data = NULL;
+    LPWSTR deformated = NULL, action_copy = strdupW(action);
+
+    /* deferred action: [properties]Action */
+    if ((ptr = strrchrW(action_copy, ']')))
+    {
+        deferred_data = action_copy;
+        action = ptr + 1;
+    }
+
+    row = MSI_QueryGetRecord( package->db, query, action );
+    if (!row)
+    {
+        msi_free(action_copy);
+        return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+
+    type = MSI_RecordGetInteger(row,2);
+    source = MSI_RecordGetString(row,3);
+    target = MSI_RecordGetString(row,4);
+
+    TRACE("Handling custom action %s (%x %s %s)\n",debugstr_w(action),type,
+          debugstr_w(source), debugstr_w(target));
+
+    /* handle some of the deferred actions */
+    if (type & msidbCustomActionTypeTSAware)
+        FIXME("msidbCustomActionTypeTSAware not handled\n");
+
+    if (type & msidbCustomActionTypeInScript)
+    {
+        if (type & msidbCustomActionTypeNoImpersonate)
+            WARN("msidbCustomActionTypeNoImpersonate not handled\n");
+
+        if (!execute || !action_type_matches_script( package, type, script ))
+        {
+            rc = defer_custom_action( package, action, type );
+            goto end;
+        }
+        else
+        {
+            LPWSTR actiondata = msi_dup_property( package->db, action );
+
+            if (type & msidbCustomActionTypeInScript)
+                package->scheduled_action_running = TRUE;
+
+            if (type & msidbCustomActionTypeCommit)
+                package->commit_action_running = TRUE;
+
+            if (type & msidbCustomActionTypeRollback)
+                package->rollback_action_running = TRUE;
+
+            if (deferred_data)
+                set_deferred_action_props(package, deferred_data);
+            else if (actiondata)
+                msi_set_property(package->db, szCustomActionData, actiondata);
+            else
+                msi_set_property(package->db, szCustomActionData, szEmpty);
+
+            msi_free(actiondata);
+        }
+    }
+    else if (!check_execution_scheduling_options(package,action,type))
+    {
+        rc = ERROR_SUCCESS;
+        goto end;
+    }
+
+    switch (type & CUSTOM_ACTION_TYPE_MASK)
+    {
+        case 1: /* DLL file stored in a Binary table stream */
+            rc = HANDLE_CustomType1(package,source,target,type,action);
+            break;
+        case 2: /* EXE file stored in a Binary table stream */
+            rc = HANDLE_CustomType2(package,source,target,type,action);
+            break;
+        case 18: /*EXE file installed with package */
+            rc = HANDLE_CustomType18(package,source,target,type,action);
+            break;
+        case 19: /* Error that halts install */
+            rc = HANDLE_CustomType19(package,source,target,type,action);
+            break;
+        case 17:
+            rc = HANDLE_CustomType17(package,source,target,type,action);
+            break;
+        case 23: /* installs another package in the source tree */
+            deformat_string(package,target,&deformated);
+            rc = HANDLE_CustomType23(package,source,deformated,type,action);
+            msi_free(deformated);
+            break;
+        case 50: /*EXE file specified by a property value */
+            rc = HANDLE_CustomType50(package,source,target,type,action);
+            break;
+        case 34: /*EXE to be run in specified directory */
+            rc = HANDLE_CustomType34(package,source,target,type,action);
+            break;
+        case 35: /* Directory set with formatted text. */
+            deformat_string(package,target,&deformated);
+            MSI_SetTargetPathW(package, source, deformated);
+            msi_free(deformated);
+            break;
+        case 51: /* Property set with formatted text. */
+            if (!source)
+                break;
+
+            deformat_string(package,target,&deformated);
+            rc = msi_set_property( package->db, source, deformated );
+            if (rc == ERROR_SUCCESS && !strcmpW( source, szSourceDir ))
+                msi_reset_folders( package, TRUE );
+            msi_free(deformated);
+            break;
+    case 37: /* JScript/VBScript text stored in target column. */
+    case 38:
+        rc = HANDLE_CustomType37_38(package,source,target,type,action);
+        break;
+    case 5:
+    case 6: /* JScript/VBScript file stored in a Binary table stream. */
+        rc = HANDLE_CustomType5_6(package,source,target,type,action);
+        break;
+    case 21: /* JScript/VBScript file installed with the product. */
+    case 22:
+        rc = HANDLE_CustomType21_22(package,source,target,type,action);
+        break;
+    case 53: /* JScript/VBScript text specified by a property value. */
+    case 54:
+        rc = HANDLE_CustomType53_54(package,source,target,type,action);
+        break;
+    default:
+        FIXME("unhandled action type %u (%s %s)\n", type & CUSTOM_ACTION_TYPE_MASK,
+              debugstr_w(source), debugstr_w(target));
+    }
+
+end:
+    package->scheduled_action_running = FALSE;
+    package->commit_action_running = FALSE;
+    package->rollback_action_running = FALSE;
+    msi_free(action_copy);
+    msiobj_release(&row->hdr);
+    return rc;
 }
 
 void ACTION_FinishCustomActions(const MSIPACKAGE* package)
@@ -1453,8 +1411,14 @@ void ACTION_FinishCustomActions(const MSIPACKAGE* package)
         msi_dialog_check_messages( wait_handles[i] );
         CloseHandle( wait_handles[i] );
     }
-
     msi_free( wait_handles );
+
+    EnterCriticalSection( &msi_custom_action_cs );
+    LIST_FOR_EACH_ENTRY_SAFE( info, cursor, &msi_pending_custom_actions, msi_custom_action_info, entry )
+    {
+        if (info->package == package) release_custom_action_data( info );
+    }
+    LeaveCriticalSection( &msi_custom_action_cs );
 }
 
 typedef struct _msi_custom_remote_impl {

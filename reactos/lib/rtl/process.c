@@ -84,7 +84,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     {
         /* Give 1MB starting at 0x4 */
         BaseAddress = (PVOID)4;
-        EnviroSize = 1024 * 1024;
+        EnviroSize = (1024 * 1024) - 256;
         Status = ZwAllocateVirtualMemory(ProcessHandle,
                                          &BaseAddress,
                                          0,
@@ -362,16 +362,19 @@ RtlSetProcessIsCritical(IN BOOLEAN NewValue,
                         OUT PBOOLEAN OldValue OPTIONAL,
                         IN BOOLEAN NeedBreaks)
 {
-    ULONG BreakOnTermination = FALSE;
+    ULONG BreakOnTermination;
 
-    if (OldValue)
-        *OldValue = FALSE;
+    /* Initialize to FALSE */
+    if (OldValue) *OldValue = FALSE;
 
     /* Fail, if the critical breaks flag is required but is not set */
-    if (NeedBreaks == TRUE &&
+    if ((NeedBreaks) &&
         !(NtCurrentPeb()->NtGlobalFlag & FLG_ENABLE_SYSTEM_CRIT_BREAKS))
+    {
         return STATUS_UNSUCCESSFUL;
+    }
 
+    /* Check if the caller wants the old value */
     if (OldValue)
     {
         /* Query and return the old break on termination flag for the process */

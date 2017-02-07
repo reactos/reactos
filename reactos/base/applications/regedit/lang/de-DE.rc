@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "&Exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Zweig laden...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Zweig entladen...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Zweig laden...",              ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Zweig entladen...",           ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Mit Netzwerkregistrierung verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -351,8 +351,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Fehler"
-    IDS_WARNING		    "Warnung"
+    IDS_ERROR               "Fehler"
+    IDS_WARNING             "Warnung"
     IDS_BAD_KEY             "Kann den Schlüssel '%s' nicht lesen"
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
     IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typs (%ld) nicht ändern"
@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Es konnten nicht alle Werte gelöscht werden!"
     IDS_ERR_RENVAL_CAPTION  "Fehler beim Umbenennen des Wertes"
     IDS_ERR_RENVAL_TOEMPTY  "Kann %s nicht umbenennen. Der angegebene Name ist leer."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Wiederherstellen des Schlüssels bestätigen"
+    IDS_QUERY_IMPORT_HIVE_MSG     "Ein Schlüssel wird über den aktuell ausgewählten Schlüssel wiederhergestellt.\nAlle Werte und Unterschlüssel dieses Schlüssels werden dabei gelöscht.\nMöchten Sie den Vorgang fortsetzen?"
     IDS_NEW_KEY             "Neuer Schlüssel #%d"
     IDS_NEW_VALUE           "Neuer Wert #%d"
 END
@@ -389,9 +391,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Registrierungsdatei"
-    IDS_FLT_REGFILES        "Registrierungsdateien"
+    IDS_FLT_REGFILES        "Registrierungsdateien (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4-Registrierungsdateien (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry-Hive-Dateien (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4-Registrierungsdateien (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Alle Dateien (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

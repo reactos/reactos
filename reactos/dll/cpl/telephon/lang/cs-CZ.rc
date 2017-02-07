@@ -2,6 +2,6 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "NastavenÌ telefonu a modemu"
-	IDS_CPLSYSTEMDESCRIPTION "Zde lze konfigurovat pravidla pro vyt·ËenÌ telefonnÌch ËÌsel a nastavenÌ modemu."
+	IDS_CPLSYSTEMNAME "Nastaven√≠ telefonu a modemu"
+	IDS_CPLSYSTEMDESCRIPTION "Zde lze konfigurovat pravidla pro vyt√°ƒçen√≠ telefonn√≠ch ƒç√≠sel a nastaven√≠ modemu."
 END

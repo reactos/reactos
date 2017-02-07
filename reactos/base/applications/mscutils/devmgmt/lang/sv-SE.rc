@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:      ReactOS MSCUTILS
  * FILE:         base\applications\mscutils\devmgmt\lang\sv-SE.rc
  * PURPOSE:      Swedish resource file
@@ -23,10 +23,12 @@ BEGIN
   END
   POPUP "Visa"
   BEGIN
-    MENUITEM "Enheter efter typ",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Enheter efter koppling",   IDC_STATIC, GRAYED
-    MENUITEM "Resurcer efter typ",       IDC_STATIC, GRAYED
-    MENUITEM "Resurcer efter koppling", IDC_STATIC, GRAYED
+    MENUITEM "Enheter efter typ",       IDC_DEVBYTYPE
+    MENUITEM "Enheter efter koppling",  IDC_DEVBYCONN
+    MENUITEM "Resurcer efter typ",      IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resurcer efter koppling", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",     IDC_SHOWHIDDEN
   END
   POPUP "Hjälp"
   BEGIN

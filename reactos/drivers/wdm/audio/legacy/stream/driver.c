@@ -226,7 +226,7 @@ StreamClassDebugAssert(
     IN PCHAR AssertText,
     IN ULONG AssertValue)
 {
-#ifdef DBG
+#if DBG
     DbgBreakPoint();
 #endif
 }
@@ -241,7 +241,7 @@ StreamClassDebugPrint(
     IN PCCHAR DebugMessage,
     ...)
 {
-#ifdef DBG
+#if DBG
     va_list ap;
 
     if (DebugPrintLevel <=STREAMDEBUG_LEVEL)

@@ -36,7 +36,7 @@ static const CHAR *reg_class_names[] =
     "HKEY_CURRENT_CONFIG", "HKEY_CURRENT_USER", "HKEY_DYN_DATA"
 };
 
-#define REG_CLASS_NUMBER (sizeof(reg_class_names) / sizeof(reg_class_names[0]))
+#define REG_CLASS_NUMBER (COUNT_OF(reg_class_names))
 
 const WCHAR* reg_class_namesW[REG_CLASS_NUMBER] =
 {
@@ -290,7 +290,7 @@ static void REGPROC_unescape_string(WCHAR* str)
                 str[val_idx] = str[str_idx];
                 break;
             default:
-                fprintf(stderr,"Warning! Unrecognized escape sequence: \\%c'\n",
+                fprintf(stderr,"Warning! Unrecognized escape sequence: \\%C'\n",
                 str[str_idx]);
                 str[val_idx] = str[str_idx];
                 break;

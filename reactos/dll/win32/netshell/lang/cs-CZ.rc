@@ -2,48 +2,48 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "ObecnÈ nastavenÌ"
+CAPTION "Obecn√© nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
-    LTEXT "P¯ipojit prost¯ednictvÌm:", -1, 9,9,217,8
+    LTEXT "P≈ôipojit prost≈ôednictv√≠m:", -1, 9,9,217,8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Nastavit", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "VybranÈ komponenty jsou pouûÌv·ny tÌmto p¯ipojenÌm:", -1, 9, 59, 217, 8
+    LTEXT "Vybran√© komponenty jsou pou≈æ√≠v√°ny t√≠mto p≈ôipojen√≠m:", -1, 9, 59, 217, 8
     PUSHBUTTON "&Instalovat", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Odstranit", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Po p¯ipojenÌ zobrazit ikonu na hlavnÌm panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Upozornit, kdyû toto p¯ipojenÌ bude mÌt omezenou nebo û·dnou konektivitu", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Po p≈ôipojen√≠ zobrazit ikonu na hlavn√≠m panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Upozornit p≈ôi omezen√©m nebo ≈æ√°dn√©m p≈ôipojen√≠", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "ObecnÈ nastavenÌ"
+CAPTION "Obecn√© nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
 IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
-CAPTION "ObecnÈ nastavenÌ"
+CAPTION "Obecn√© nastaven√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "SpojenÌ", -1, 9, 8, 182, 58, BS_GROUPBOX
+    GROUPBOX "Spojen√≠", -1, 9, 8, 182, 58, BS_GROUPBOX
     LTEXT "Stav:", -1, 19, 20, 60, 8
-    LTEXT "Doba p¯ipojenÌ:", -1, 19, 34, 60, 8
+    LTEXT "Doba p≈ôipojen√≠:", -1, 19, 34, 60, 8
     LTEXT "Rychlost:", -1, 19, 48, 60, 8
     GROUPBOX "Aktivita", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Odesl·no", -1, 26, 90, 60, 8
+    RTEXT "Odesl√°no", -1, 26, 90, 60, 8
     ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "P¯ijato", -1, 149, 90, 37, 8
-    LTEXT "Byt˘:", -1, 17, 115, 32, 8
+    LTEXT "P≈ôijato", -1, 149, 90, 37, 8
+    LTEXT "Byt≈Ø:", -1, 17, 115, 32, 8
     RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
     RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
     PUSHBUTTON "&Vlastnosti", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
-    PUSHBUTTON "&Zak·zat", IDC_ENDISABLE, 66, 150, 50, 14
+    PUSHBUTTON "&Zak√°zat", IDC_ENDISABLE, 66, 150, 50, 14
     RTEXT "",IDC_STATUS,83,20,98,8
     RTEXT "",IDC_DURATION,83,34,98,8
     RTEXT "",IDC_SPEED,83,48,98,8
@@ -54,11 +54,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Podpora"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Stav p¯ipojenÌ", -1, 9, 8, 200, 88, BS_GROUPBOX
+    GROUPBOX "Stav p≈ôipojen√≠", -1, 9, 8, 200, 88, BS_GROUPBOX
     LTEXT "Typ adresy:", -1, 22, 20, 80, 8
     LTEXT "IP adresa:", -1, 22, 34, 80, 8
-    LTEXT "Maska podsÌtÏ:", -1, 22, 48, 80, 8
-    LTEXT "V˝chozÌ br·na:", -1, 22, 62, 80, 8
+    LTEXT "Maska pods√≠tƒõ:", -1, 22, 48, 80, 8
+    LTEXT "V√Ωchoz√≠ br√°na:", -1, 22, 62, 80, 8
 
     RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
@@ -70,49 +70,49 @@ END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Podrobnosti sÌùovÈho p¯ipojenÌ"
+CAPTION "Podrobnosti s√≠≈•ov√©ho p≈ôipojen√≠"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Podrobnosti sÌùovÈho p¯ipojenÌ:", -1, 15, 9, 170, 12
+    LTEXT "&Podrobnosti s√≠≈•ov√©ho p≈ôipojen√≠:", -1, 15, 9, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
-    PUSHBUTTON "&zav¯Ìt", IDC_CLOSE, 125, 165, 62, 14
+    PUSHBUTTON "&zav≈ô√≠t", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Fyzick· adresa"
+    IDS_PHYSICAL_ADDRESS        "Fyzick√° adresa"
     IDS_IP_ADDRESS              "IP Adresa"
-    IDS_SUBNET_MASK             "Maska podsÌtÏ"
-    IDS_DEF_GATEWAY             "V˝chozÌ br·na"
+    IDS_SUBNET_MASK             "Maska pods√≠tƒõ"
+    IDS_DEF_GATEWAY             "V√Ωchoz√≠ br√°na"
     IDS_DHCP_SERVER             "DHCP server"
-    IDS_LEASE_OBTAINED          "Zap˘jËeno"
-    IDS_LEASE_EXPIRES           "Zap˘jËenÌ vypröÌ"
+    IDS_LEASE_OBTAINED          "Zap≈Øjƒçeno"
+    IDS_LEASE_EXPIRES           "Zap≈Øjƒçen√≠ vypr≈°√≠"
     IDS_DNS_SERVERS             "DNS servery"
     IDS_WINS_SERVERS            "WINS servery"
     IDS_PROPERTY                "Vlastnost"
     IDS_VALUE                   "Hodnota"
-    IDS_NETWORKCONNECTION       "SÌùov· p¯ipojenÌ"
-    IDS_SHV_COLUMN_NAME         "N·zev"
+    IDS_NETWORKCONNECTION       "S√≠≈•ov√° p≈ôipojen√≠"
+    IDS_SHV_COLUMN_NAME         "N√°zev"
     IDS_SHV_COLUMN_TYPE         "Typ"
     IDS_SHV_COLUMN_STATE        "Status"
-    IDS_SHV_COLUMN_DEVNAME      "N·zev za¯ÌzenÌ"
-    IDS_SHV_COLUMN_PHONE        "TelefonnÌ ËÌslo nebo adresa hostitele"
-    IDS_SHV_COLUMN_OWNER        "VlastnÌk"
-    IDS_TYPE_ETHERNET           "LAN nebo vysokorychlostnÌ internet"
+    IDS_SHV_COLUMN_DEVNAME      "N√°zev za≈ô√≠zen√≠"
+    IDS_SHV_COLUMN_PHONE        "Telefonn√≠ ƒç√≠slo nebo adresa hostitele"
+    IDS_SHV_COLUMN_OWNER        "Vlastn√≠k"
+    IDS_TYPE_ETHERNET           "LAN nebo vysokorychlostn√≠ internet"
     IDS_STATUS_NON_OPERATIONAL  "Vypnuto"
-    IDS_STATUS_UNREACHABLE      "Nep¯ipojeno"
-    IDS_STATUS_DISCONNECTED     "SÌùov˝ kabel byl odpojen"
-    IDS_STATUS_CONNECTING       "ZÌsk·v·m sÌùovou adresu"
-    IDS_STATUS_CONNECTED        "P¯ipojeno"
-    IDS_STATUS_OPERATIONAL      "P¯ipojeno"
+    IDS_STATUS_UNREACHABLE      "Nep≈ôipojeno"
+    IDS_STATUS_DISCONNECTED     "S√≠≈•ov√Ω kabel byl odpojen"
+    IDS_STATUS_CONNECTING       "Z√≠sk√°v√°m s√≠≈•ovou adresu"
+    IDS_STATUS_CONNECTED        "P≈ôipojeno"
+    IDS_STATUS_OPERATIONAL      "P≈ôipojeno"
 
     IDS_NET_ACTIVATE            "Zapnout"
     IDS_NET_DEACTIVATE          "Vypnout"
     IDS_NET_STATUS              "Status"
     IDS_NET_REPAIR              "Opravit"
-    IDS_NET_CREATELINK          "Vytvo¯it z·stupce"
+    IDS_NET_CREATELINK          "Vytvo≈ôit z√°stupce"
     IDS_NET_DELETE              "Smazat"
-    IDS_NET_RENAME              "P¯ejmenovat"
+    IDS_NET_RENAME              "P≈ôejmenovat"
     IDS_NET_PROPERTIES          "Vlasnosti"
 
     IDS_FORMAT_BIT              "%u Bit/s"
@@ -120,7 +120,7 @@ BEGIN
     IDS_FORMAT_MBIT             "%u MBit/s"
     IDS_FORMAT_GBIT             "%u GBit/s"
     IDS_DURATION_DAY            "%d Den %s"
-    IDS_DURATION_DAYS           "%d Dn˘ %s"
-    IDS_ASSIGNED_DHCP           "P¯i¯azeno DHCP"
-    IDS_ASSIGNED_MANUAL         "RuËnÏ nastaveno"
+    IDS_DURATION_DAYS           "%d Dn≈Ø %s"
+    IDS_ASSIGNED_DHCP           "P≈ôi≈ôazeno DHCP"
+    IDS_ASSIGNED_MANUAL         "Ruƒçnƒõ nastaveno"
 END

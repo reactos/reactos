@@ -35,8 +35,8 @@
 #include "winnls.h"
 #include "commctrl.h"
 
-extern HMODULE COMCTL32_hModule;
-extern HBRUSH  COMCTL32_hPattern55AABrush;
+extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
+extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;
 
 /* has a value of: 0, CCS_TOP, CCS_NOMOVEY, CCS_BOTTOM */
 #define CCS_LAYOUT_MASK 0x3
@@ -140,19 +140,19 @@ typedef struct
     COLORREF clrInfoText;           /* COLOR_INFOTEXT                      */
 } COMCTL32_SysColor;
 
-extern COMCTL32_SysColor  comctl32_color;
+extern COMCTL32_SysColor  comctl32_color DECLSPEC_HIDDEN;
 
 /* Internal function */
-HWND COMCTL32_CreateToolTip (HWND);
-VOID COMCTL32_RefreshSysColors(void);
-void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark, BOOL bHorizontal);
-void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight, COLORREF crBackground);
-void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm);
-BOOL COMCTL32_IsReflectedMessage(UINT uMsg);
-INT  Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen);
-INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen);
-BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc);
-BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc);
+HWND COMCTL32_CreateToolTip (HWND) DECLSPEC_HIDDEN;
+VOID COMCTL32_RefreshSysColors(void) DECLSPEC_HIDDEN;
+void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark, BOOL bHorizontal) DECLSPEC_HIDDEN;
+void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight, COLORREF crBackground) DECLSPEC_HIDDEN;
+void COMCTL32_GetFontMetrics(HFONT hFont, TEXTMETRICW *ptm) DECLSPEC_HIDDEN;
+BOOL COMCTL32_IsReflectedMessage(UINT uMsg) DECLSPEC_HIDDEN;
+INT  Str_GetPtrWtoA (LPCWSTR lpSrc, LPSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
+INT  Str_GetPtrAtoW (LPCSTR lpSrc, LPWSTR lpDest, INT nMaxLen) DECLSPEC_HIDDEN;
+BOOL Str_SetPtrAtoW (LPWSTR *lppDest, LPCSTR lpSrc) DECLSPEC_HIDDEN;
+BOOL Str_SetPtrWtoA (LPSTR *lppDest, LPCWSTR lpSrc) DECLSPEC_HIDDEN;
 
 #define COMCTL32_VERSION_MINOR 81
 
@@ -185,56 +185,56 @@ INT  WINAPI Str_GetPtrW (LPCWSTR, LPWSTR, INT);
 LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet);
 BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2);
 
-extern void ANIMATE_Register(void);
-extern void ANIMATE_Unregister(void);
-extern void COMBOEX_Register(void);
-extern void COMBOEX_Unregister(void);
-extern void DATETIME_Register(void);
-extern void DATETIME_Unregister(void);
-extern void FLATSB_Register(void);
-extern void FLATSB_Unregister(void);
-extern void HEADER_Register(void);
-extern void HEADER_Unregister(void);
-extern void HOTKEY_Register(void);
-extern void HOTKEY_Unregister(void);
-extern void IPADDRESS_Register(void);
-extern void IPADDRESS_Unregister(void);
-extern void LISTVIEW_Register(void);
-extern void LISTVIEW_Unregister(void);
-extern void MONTHCAL_Register(void);
-extern void MONTHCAL_Unregister(void);
-extern void NATIVEFONT_Register(void);
-extern void NATIVEFONT_Unregister(void);
-extern void PAGER_Register(void);
-extern void PAGER_Unregister(void);
-extern void PROGRESS_Register(void);
-extern void PROGRESS_Unregister(void);
-extern void REBAR_Register(void);
-extern void REBAR_Unregister(void);
-extern void STATUS_Register(void);
-extern void STATUS_Unregister(void);
-extern void SYSLINK_Register(void);
-extern void SYSLINK_Unregister(void);
-extern void TAB_Register(void);
-extern void TAB_Unregister(void);
-extern void TOOLBAR_Register(void);
-extern void TOOLBAR_Unregister(void);
-extern void TOOLTIPS_Register(void);
-extern void TOOLTIPS_Unregister(void);
-extern void TRACKBAR_Register(void);
-extern void TRACKBAR_Unregister(void);
-extern void TREEVIEW_Register(void);
-extern void TREEVIEW_Unregister(void);
-extern void UPDOWN_Register(void);
-extern void UPDOWN_Unregister(void);
+extern void ANIMATE_Register(void) DECLSPEC_HIDDEN;
+extern void ANIMATE_Unregister(void) DECLSPEC_HIDDEN;
+extern void COMBOEX_Register(void) DECLSPEC_HIDDEN;
+extern void COMBOEX_Unregister(void) DECLSPEC_HIDDEN;
+extern void DATETIME_Register(void) DECLSPEC_HIDDEN;
+extern void DATETIME_Unregister(void) DECLSPEC_HIDDEN;
+extern void FLATSB_Register(void) DECLSPEC_HIDDEN;
+extern void FLATSB_Unregister(void) DECLSPEC_HIDDEN;
+extern void HEADER_Register(void) DECLSPEC_HIDDEN;
+extern void HEADER_Unregister(void) DECLSPEC_HIDDEN;
+extern void HOTKEY_Register(void) DECLSPEC_HIDDEN;
+extern void HOTKEY_Unregister(void) DECLSPEC_HIDDEN;
+extern void IPADDRESS_Register(void) DECLSPEC_HIDDEN;
+extern void IPADDRESS_Unregister(void) DECLSPEC_HIDDEN;
+extern void LISTVIEW_Register(void) DECLSPEC_HIDDEN;
+extern void LISTVIEW_Unregister(void) DECLSPEC_HIDDEN;
+extern void MONTHCAL_Register(void) DECLSPEC_HIDDEN;
+extern void MONTHCAL_Unregister(void) DECLSPEC_HIDDEN;
+extern void NATIVEFONT_Register(void) DECLSPEC_HIDDEN;
+extern void NATIVEFONT_Unregister(void) DECLSPEC_HIDDEN;
+extern void PAGER_Register(void) DECLSPEC_HIDDEN;
+extern void PAGER_Unregister(void) DECLSPEC_HIDDEN;
+extern void PROGRESS_Register(void) DECLSPEC_HIDDEN;
+extern void PROGRESS_Unregister(void) DECLSPEC_HIDDEN;
+extern void REBAR_Register(void) DECLSPEC_HIDDEN;
+extern void REBAR_Unregister(void) DECLSPEC_HIDDEN;
+extern void STATUS_Register(void) DECLSPEC_HIDDEN;
+extern void STATUS_Unregister(void) DECLSPEC_HIDDEN;
+extern void SYSLINK_Register(void) DECLSPEC_HIDDEN;
+extern void SYSLINK_Unregister(void) DECLSPEC_HIDDEN;
+extern void TAB_Register(void) DECLSPEC_HIDDEN;
+extern void TAB_Unregister(void) DECLSPEC_HIDDEN;
+extern void TOOLBAR_Register(void) DECLSPEC_HIDDEN;
+extern void TOOLBAR_Unregister(void) DECLSPEC_HIDDEN;
+extern void TOOLTIPS_Register(void) DECLSPEC_HIDDEN;
+extern void TOOLTIPS_Unregister(void) DECLSPEC_HIDDEN;
+extern void TRACKBAR_Register(void) DECLSPEC_HIDDEN;
+extern void TRACKBAR_Unregister(void) DECLSPEC_HIDDEN;
+extern void TREEVIEW_Register(void) DECLSPEC_HIDDEN;
+extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
+extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
+extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
 
 
-int MONTHCAL_MonthLength(int month, int year);
-int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
+int MONTHCAL_MonthLength(int month, int year) DECLSPEC_HIDDEN;
+int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace) DECLSPEC_HIDDEN;
 
-extern void THEMING_Initialize(void);
-extern void THEMING_Uninitialize(void);
-extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM);
-extern void THEMING_SetSubclassData(HWND, ULONG_PTR);
+extern void THEMING_Initialize(void) DECLSPEC_HIDDEN;
+extern void THEMING_Uninitialize(void) DECLSPEC_HIDDEN;
+extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM) DECLSPEC_HIDDEN;
+extern void THEMING_SetSubclassData(HWND, ULONG_PTR) DECLSPEC_HIDDEN;
 
 #endif  /* __WINE_COMCTL32_H */

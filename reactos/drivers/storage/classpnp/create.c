@@ -35,16 +35,18 @@ PUCHAR LockTypeStrings[] = {
 
 
 PFILE_OBJECT_EXTENSION
+NTAPI
 ClasspGetFsContext(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PFILE_OBJECT FileObject
     );
 
 VOID
+NTAPI
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext
     );
-
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, ClassCreateClose)
 #pragma alloc_text(PAGE, ClasspCreateClose)
@@ -55,6 +57,7 @@ ClasspCleanupDisableMcn(
 #endif
 
 NTSTATUS
+NTAPI
 ClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -119,8 +122,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 ClasspCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -292,8 +295,8 @@ Return Value:
     return status;
 }
 
-
 VOID
+NTAPI
 ClasspCleanupProtectedLocks(
     IN PFILE_OBJECT_EXTENSION FsContext
     )
@@ -403,8 +406,8 @@ ClasspCleanupProtectedLocks(
     return;
 }
 
-
 VOID
+NTAPI
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext
     )
@@ -439,7 +442,6 @@ ClasspCleanupDisableMcn(
     return;
 }
 
-
 #if 1
 /*
  *  BUGBUG REMOVE this old function implementation as soon as the 
@@ -447,6 +449,7 @@ ClasspCleanupDisableMcn(
  *                  are resolved.
  */
 NTSTATUS
+NTAPI
 ClasspEjectionControl(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -738,7 +741,8 @@ ClasspEjectionControl(
  *      HOWEVER, it seems to cause pagefile initialization to fail during boot
  *      for some reason.  Need to resolve this before switching to this function.
  */
-NTSTATUS  
+NTSTATUS
+NTAPI
 ClasspEjectionControl(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -965,6 +969,7 @@ ClasspEjectionControl(
 #endif
 
 PFILE_OBJECT_EXTENSION
+NTAPI
 ClasspGetFsContext(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PFILE_OBJECT FileObject
@@ -974,4 +979,3 @@ ClasspGetFsContext(
     return GetDictionaryEntry(&(CommonExtension->FileObjectDictionary),
                               (ULONGLONG) FileObject);
 }
-

@@ -107,13 +107,15 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_SetPrivateData(IDirect3DVolume
         REFGUID refguid, const void *pData, DWORD SizeOfData, DWORD Flags)
 {
     IDirect3DVolumeTexture9Impl *This = impl_from_IDirect3DVolumeTexture9(iface);
+    struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %u, flags %#x.\n",
             iface, debugstr_guid(refguid), pData, SizeOfData, Flags);
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_set_private_data(This->wined3d_texture, refguid, pData, SizeOfData, Flags);
+    resource = wined3d_texture_get_resource(This->wined3d_texture);
+    hr = wined3d_resource_set_private_data(resource, refguid, pData, SizeOfData, Flags);
     wined3d_mutex_unlock();
 
     return hr;
@@ -123,13 +125,15 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_GetPrivateData(IDirect3DVolume
         REFGUID refguid, void *pData, DWORD *pSizeOfData)
 {
     IDirect3DVolumeTexture9Impl *This = impl_from_IDirect3DVolumeTexture9(iface);
+    struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, guid %s, data %p, data_size %p.\n",
             iface, debugstr_guid(refguid), pData, pSizeOfData);
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_get_private_data(This->wined3d_texture, refguid, pData, pSizeOfData);
+    resource = wined3d_texture_get_resource(This->wined3d_texture);
+    hr = wined3d_resource_get_private_data(resource, refguid, pData, pSizeOfData);
     wined3d_mutex_unlock();
 
     return hr;
@@ -139,12 +143,14 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_FreePrivateData(IDirect3DVolum
         REFGUID refguid)
 {
     IDirect3DVolumeTexture9Impl *This = impl_from_IDirect3DVolumeTexture9(iface);
+    struct wined3d_resource *resource;
     HRESULT hr;
 
     TRACE("iface %p, guid %s.\n", iface, debugstr_guid(refguid));
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_free_private_data(This->wined3d_texture, refguid);
+    resource = wined3d_texture_get_resource(This->wined3d_texture);
+    hr = wined3d_resource_free_private_data(resource, refguid);
     wined3d_mutex_unlock();
 
     return hr;
@@ -192,16 +198,9 @@ static void WINAPI IDirect3DVolumeTexture9Impl_PreLoad(IDirect3DVolumeTexture9 *
 
 static D3DRESOURCETYPE WINAPI IDirect3DVolumeTexture9Impl_GetType(IDirect3DVolumeTexture9 *iface)
 {
-    IDirect3DVolumeTexture9Impl *This = impl_from_IDirect3DVolumeTexture9(iface);
-    D3DRESOURCETYPE type;
-
     TRACE("iface %p.\n", iface);
 
-    wined3d_mutex_lock();
-    type = wined3d_texture_get_type(This->wined3d_texture);
-    wined3d_mutex_unlock();
-
-    return type;
+    return D3DRTYPE_VOLUMETEXTURE;
 }
 
 static DWORD WINAPI IDirect3DVolumeTexture9Impl_SetLOD(IDirect3DVolumeTexture9 *iface, DWORD LODNew)
@@ -255,7 +254,7 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_SetAutoGenFilterType(IDirect3D
     TRACE("iface %p, filter_type %#x.\n", iface, FilterType);
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_set_autogen_filter_type(This->wined3d_texture, (WINED3DTEXTUREFILTERTYPE)FilterType);
+    hr = wined3d_texture_set_autogen_filter_type(This->wined3d_texture, (enum wined3d_texture_filter_type)FilterType);
     wined3d_mutex_unlock();
 
     return hr;
@@ -305,7 +304,7 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_GetLevelDesc(IDirect3DVolumeTe
         wined3d_resource_get_desc(sub_resource, &wined3d_desc);
         desc->Format = d3dformat_from_wined3dformat(wined3d_desc.format);
         desc->Type = wined3d_desc.resource_type;
-        desc->Usage = wined3d_desc.usage;
+        desc->Usage = wined3d_desc.usage & WINED3DUSAGE_MASK;
         desc->Pool = wined3d_desc.pool;
         desc->Width = wined3d_desc.width;
         desc->Height = wined3d_desc.height;
@@ -387,7 +386,7 @@ static HRESULT WINAPI IDirect3DVolumeTexture9Impl_AddDirtyBox(IDirect3DVolumeTex
     TRACE("iface %p, dirty_box %p.\n", iface, dirty_box);
 
     wined3d_mutex_lock();
-    hr = wined3d_texture_add_dirty_region(texture->wined3d_texture, 0, (const WINED3DBOX *)dirty_box);
+    hr = wined3d_texture_add_dirty_region(texture->wined3d_texture, 0, (const struct wined3d_box *)dirty_box);
     wined3d_mutex_unlock();
 
     return hr;

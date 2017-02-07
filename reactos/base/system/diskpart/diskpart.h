@@ -138,9 +138,9 @@ BOOL inactive_main(INT argc, WCHAR **argv);
 VOID help_inactive(INT argc, WCHAR **argv);
 
 /* interpreter.c */
-BOOL interpret_script(WCHAR *line);
-BOOL interpret_cmd(INT argc, WCHAR **argv);
-VOID interpret_main(VOID);
+BOOL InterpretScript(WCHAR *line);
+BOOL InterpretCmd(INT argc, WCHAR **argv);
+VOID InterpretMain(VOID);
 
 /* list.c */
 BOOL list_main(INT argc, WCHAR **argv);

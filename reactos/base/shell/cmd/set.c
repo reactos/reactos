@@ -96,6 +96,7 @@ INT cmd_set (LPTSTR param)
 				if (*lpOutput != _T('='))
 					ConOutPuts(lpOutput);
 				lpOutput += _tcslen(lpOutput) + 1;
+				ConOutPuts(_T("\r\n"));
 			}
 			FreeEnvironmentStrings (lpEnv);
 		}
@@ -184,6 +185,7 @@ INT cmd_set (LPTSTR param)
 				if (!_tcsnicmp(lpOutput, param, p - param))
 				{
 					ConOutPuts(lpOutput);
+					ConOutPuts(_T("\r\n"));
 					bFound = TRUE;
 				}
 				lpOutput += _tcslen(lpOutput) + 1;
@@ -212,7 +214,7 @@ ident_len ( LPCTSTR p )
 		while ( __iscsym(*p2) )
 			++p2;
 	}
-	return p2-p;
+	return (INT)(p2-p);
 }
 
 #define PARSE_IDENT(ident,identlen,p) \

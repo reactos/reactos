@@ -150,3 +150,38 @@ DWORD WINAPI DsMakeSpnA(LPCSTR svc_class, LPCSTR svc_name,
 
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+/***********************************************************************
+ *             DsMakeSpnA (NTDSAPI.@)
+ */
+DWORD WINAPI DsGetSpnA(DS_SPN_NAME_TYPE ServType, LPCSTR Servlass, LPCSTR ServName,
+                       USHORT InstPort, USHORT nInstanceNames,
+                       LPCSTR *pInstanceNames, const USHORT *pInstancePorts,
+                       DWORD *pSpn, LPSTR **pszSpn)
+{
+    FIXME("(%d,%s,%s,%d,%d,%p,%p,%p,%p): stub!\n", ServType,
+            debugstr_a(Servlass), debugstr_a(ServName), InstPort,
+            nInstanceNames, pInstanceNames, pInstancePorts, pSpn, pszSpn);
+
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *             DsServerRegisterSpnA (NTDSAPI.@)
+ */
+DWORD WINAPI DsServerRegisterSpnA(DS_SPN_WRITE_OP operation, LPCSTR ServiceClass, LPCSTR UserObjectDN)
+{
+    FIXME("(%d,%s,%s): stub!\n", operation,
+            debugstr_a(ServiceClass), debugstr_a(UserObjectDN));
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *             DsServerRegisterSpnW (NTDSAPI.@)
+ */
+DWORD WINAPI DsServerRegisterSpnW(DS_SPN_WRITE_OP operation, LPCWSTR ServiceClass, LPCWSTR UserObjectDN)
+{
+    FIXME("(%d,%s,%s): stub!\n", operation,
+            debugstr_w(ServiceClass), debugstr_w(UserObjectDN));
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}

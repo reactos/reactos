@@ -5,7 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dinput8.dll dinput8.spec)
+spec2def(dinput8.dll dinput8.spec ADD_IMPORTLIB)
 
 add_library(dinput8 SHARED
     dinput8_main.c
@@ -32,4 +32,4 @@ add_importlibs(dinput8
 add_dependencies(dinput8 psdk)
 
 add_cd_file(TARGET dinput8 DESTINATION reactos/system32 FOR all)
-add_importlib_target(dinput8.spec)
+

@@ -298,6 +298,7 @@ void* CDECL calloc(size_t size, size_t count)
  */
 void CDECL free(void* ptr)
 {
+  if(ptr == NULL) return;
   HeapFree(GetProcessHeap(),0,ptr);
 }
 

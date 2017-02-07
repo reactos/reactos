@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/amd64/ctxswitch.S
  * PURPOSE:         Thread Context Switching
- * 
+ *
  * PROGRAMMER:      Timo kreuzer (timo.kreuzer@reactos.org)
  */
 
@@ -12,46 +12,66 @@
 #include <asm.inc>
 #include <ksamd64.inc>
 
+EXTERN KiSwapContextResume:PROC
+
 /* FUNCTIONS ****************************************************************/
 
 .code64
 
-/*++
- * KiThreadStartup
+/*!
+ * \name KiThreadStartup
  *
+ * \brief
  *     The KiThreadStartup routine is the beginning of any thread.
  *
- * Params:
- *     SystemRoutine - Pointer to the System Startup Routine. Either 
- *                     PspUserThreadStartup or PspSystemThreadStartup
+ * VOID
+ * KiThreadStartup(
+ *     IN PKSTART_ROUTINE StartRoutine<rcx>,
+ *     IN PVOID StartContext<rdx>,
+ *     IN PVOID P3<r8>,
+ *     IN PVOID P4<r9>,
+ *     IN PVOID SystemRoutine);
  *
- *     StartRoutine - For Kernel Threads only, specifies the starting execution
- *                    point of the new thread.
+ * \param StartRoutine
+ *     For Kernel Threads only, specifies the starting execution point
+ *     of the new thread.
  *
- *     StartContext - For Kernel Threads only, specifies a pointer to variable
- *                    context data to be sent to the StartRoutine above.
+ * \param StartContext
+ *     For Kernel Threads only, specifies a pointer to variable
+ *     context data to be sent to the StartRoutine above.
  *
- *     UserThread - Indicates whether or not this is a user thread. This tells
- *                  us if the thread has a context or not.
+ * \param P3, P4 - not used atm
  *
- *     TrapFrame - Pointer to the KTHREAD to which the caller wishes to
- *           switch from.
+ * \param SystemRoutine
+ *     Pointer to the System Startup Routine.
+ *     Either PspUserThreadStartup or PspSystemThreadStartup
  *
- * Returns:
+ * \return
  *     Should never return for a system thread. Returns through the System Call
  *     Exit Dispatcher for a user thread.
  *
- * Remarks:
+ * \remarks
  *     If a return from a system thread is detected, a bug check will occur.
  *
  *--*/
 PUBLIC KiThreadStartup
-KiThreadStartup:
-
-    /*
-     * Clear all the non-volatile registers, so the thread won't be tempted to
-     * expect any static data (like some badly coded usermode/win9x apps do)
+.PROC KiThreadStartup
+    /* KSTART_FRAME is already on the stack when we enter here.
+     * The virtual prolog looks like this:
+     * sub rsp, 5 * 8
+     * mov [rsp + SfP1Home], rcx
+     * mov [rsp + SfP2Home], rdx
+     * mov [rsp + SfP3Home], r8
+     * mov [rsp + SfP4Home], r9
      */
+
+    /* Terminate the unwind chain, by setting rbp as frame pointer,
+       which contains 0 */
+    .setframe rbp, 0
+    .endprolog
+
+    /* Clear all the non-volatile registers, so the thread won't be tempted to
+     * expect any static data (like some badly coded usermode/win9x apps do) */
     xor rbx, rbx
     xor rsi, rsi
     xor rdi, rdi
@@ -67,73 +87,107 @@ KiThreadStartup:
     mov rax, APC_LEVEL
     mov cr8, rax
 
-    /* 
-     * Call the System Routine which is right on our stack now.
-     * After we pop the pointer, the Start Routine/Context is on the 
-     * stack, we pop it as parameters to the System Routine into rcx
-     */
-    pop rax
-    pop rcx
-    call rax
+    /* We have the KSTART_FRAME on the stack, P1Home and P2Home are preloaded
+     * with the parameters for the system routine. The address of the system
+     * routine is stored in P4Home. */
+    mov rcx, [rsp + SfP1Home] /* StartRoutine */
+    mov rdx, [rsp + SfP2Home] /* StartContext */
+    mov r8, [rsp + SfP3Home]  /* ? */
+    call qword ptr [rsp + SfP4Home]     /* SystemRoutine */
 
-    /* The thread returned... was it a user-thread? */
-    pop rcx
+    /* The thread returned. If it was a user-thread, we have a return address
+       and all is well, otherwise this is very bad. */
+    mov rcx, [rsp + SfReturn]
     or rcx, rcx
-    jz BadThread
-
-    /* Yes it was, set our trapframe for the System Call Exit Dispatcher */
-    mov ebp, esp
-
-    /* Exit back to user-mode */
-//    jmp _KiServiceExit2
-UNIMPLEMENTED KiThreadStartup_KiServiceExit2
-
-BadThread:
+    jnz .leave
 
     /* A system thread returned...this is very bad! */
     int 3
 
+.leave:
+    /* It was a user thread, set our trapframe for the System Call Exit Dispatcher */
+    lea rcx, [rsp + 6 * 8 + KEXCEPTION_FRAME_LENGTH]
 
-/*++
- * KiSwapContextInternal 
+    /* Return to the trap exit code */
+    add rsp, 5 * 8
+    ret
+.ENDP
+
+/*!
+ * \name KiSwapContextInternal
  *
+ * \brief
  *     The KiSwapContextInternal routine switches context to another thread.
  *
- * Params:
- *     ESI - Pointer to the KTHREAD to which the caller wishes to
- *           switch to.
- *     EDI - Pointer to the KTHREAD to which the caller wishes to
- *           switch from.
+ * \param rcx
+ *     Pointer to the KTHREAD to which the caller wishes to switch to.
  *
- * Returns:
+ * \param rdx
+ *     Pointer to the KTHREAD to which the caller wishes to switch from.
+ *
+ * \param r8b
+ *     APC bypass
+ *
+ * \return
  *     None.
  *
- * Remarks:
- *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
+ * \remarks
+ *     ...
  *
  *--*/
 PUBLIC KiSwapContextInternal
-KiSwapContextInternal:
-    UNIMPLEMENTED KiSwapContextInternal
+.PROC KiSwapContextInternal
+
+    push rbp
+    .pushreg rbp
+    sub rsp, 6 * 8
+    .allocstack 6 * 8
+    .endprolog
+
+    /* Save APC bypass */
+    mov [rsp + SwApcBypass], r8b
+
+    /* Save kernel stack of old thread */
+    mov [rdx + KTHREAD_KernelStack], rsp
+
+    /* Save new thread in rbp */
+    mov rbp, rcx
+
+    //call KiSwapContextSuspend
+
+    /* Load stack of new thread */
+    mov rsp, [rbp + KTHREAD_KernelStack]
+
+    /* Reload APC bypass */
+    mov r8b, [rsp + SwApcBypass]
+
+    call KiSwapContextResume
+
+    /* Cleanup and return */
+    add rsp, 6 * 8
+    pop rbp
     ret
 
+.ENDP
 
-/**
+
+
+/*!
  * KiSwapContext
  *
  * \brief
  *     The KiSwapContext routine switches context to another thread.
  *
  * BOOLEAN
- * KiSwapContext(PKTHREAD CurrentThread, PKTHREAD TargetThread);
+ * KiSwapContext(KIRQL WaitIrql, PKTHREAD CurrentThread);
  *
- * \param CurrentThread
+ * \param WaitIrql <rcx>
+ *     ...
+ *
+ * \param CurrentThread <rdx>
  *     Pointer to the KTHREAD of the current thread.
- *                    
- * \param TargetThread
- *     Pointer to the KTHREAD to which the caller wishes to switch to.
  *
- * \returns
+ * \return
  *     The WaitStatus of the Target Thread.
  *
  * \remarks
@@ -141,59 +195,74 @@ KiSwapContextInternal:
  *     non-volatile registers so that the Internal function can use all of
  *     them. It will also save the old current thread and set the new one.
  *
- *     The calling thread does not return after KiSwapContextInternal until 
+ *     The calling thread does not return after KiSwapContextInternal until
  *     another thread switches to IT.
  *
  *--*/
 PUBLIC KiSwapContext
-KiSwapContext:
+.PROC KiSwapContext
 
-    /* Save 10 registers */
-    sub rsp, 10 * 8
+    /* Allocate a KEXCEPTION_FRAME on the stack (+8 for proper alignment) */
+    sub rsp, KEXCEPTION_FRAME_LENGTH + 8
+    .allocstack KEXCEPTION_FRAME_LENGTH + 8
 
-    /* Save all the non-volatile ones */
-    mov [rsp+72], r15
-    mov [rsp+64], r14
-    mov [rsp+56], r13
-    mov [rsp+48], r12
-    mov [rsp+40], r11
-    mov [rsp+32], r10
-
-    mov [rsp+24], rbx
-    mov [rsp+16], rsi
-    mov [rsp+8], rdi
-    mov [rsp+0], rbp
-
-    /* Get the PCR */
-    mov rbx, gs:[PcSelf]
-
-    /* Get the current thread */
-    mov rdi, rcx
-
-    /* Get the New Thread */
-    mov rsi, rdx
-
-    /* Get the wait IRQL */
-    movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
+    /* save non-volatiles in KEXCEPTION_FRAME */
+    mov [rsp + KEXCEPTION_FRAME_Rbp], rbp
+    .savereg rbp, KEXCEPTION_FRAME_Rbp
+    mov [rsp + KEXCEPTION_FRAME_Rbx], rbx
+    .savereg rbx, KEXCEPTION_FRAME_Rbx
+    mov [rsp + KEXCEPTION_FRAME_Rdi], rdi
+    .savereg rdi, KEXCEPTION_FRAME_Rdi
+    mov [rsp + KEXCEPTION_FRAME_Rsi], rsi
+    .savereg rsi, KEXCEPTION_FRAME_Rsi
+    mov [rsp + KEXCEPTION_FRAME_R12], r12
+    .savereg r12, KEXCEPTION_FRAME_R12
+    mov [rsp + KEXCEPTION_FRAME_R13], r13
+    .savereg r13, KEXCEPTION_FRAME_R13
+    mov [rsp + KEXCEPTION_FRAME_R14], r14
+    .savereg r14, KEXCEPTION_FRAME_R14
+    mov [rsp + KEXCEPTION_FRAME_R15], r15
+    .savereg r15, KEXCEPTION_FRAME_R15
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm6], xmm6
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm7], xmm7
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm8], xmm8
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm9], xmm9
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm10], xmm10
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm11], xmm11
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm12], xmm12
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm13], xmm13
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm14], xmm14
+    movdqa [rsp + KEXCEPTION_FRAME_Xmm15], xmm15
+    // KEXCEPTION_FRAME_MxCsr
+    .endprolog
 
     /* Do the swap with the registers correctly setup */
+    mov rcx, gs:[PcCurrentThread] /* Pointer to the new thread */
     call KiSwapContextInternal
 
-    /* Restore the registers */
-    mov rbp, [rsp+0]
-    mov rdi, [rsp+8]
-    mov rsi, [rsp+16]
-    mov rbx, [rsp+24]
+    /* restore non-volatile registers */
+    mov rbp, [rsp + KEXCEPTION_FRAME_Rbp]
+    mov rbx, [rsp + KEXCEPTION_FRAME_Rbx]
+    mov rdi, [rsp + KEXCEPTION_FRAME_Rdi]
+    mov rsi, [rsp + KEXCEPTION_FRAME_Rsi]
+    mov r12, [rsp + KEXCEPTION_FRAME_R12]
+    mov r13, [rsp + KEXCEPTION_FRAME_R13]
+    mov r14, [rsp + KEXCEPTION_FRAME_R14]
+    mov r15, [rsp + KEXCEPTION_FRAME_R15]
+    movdqa xmm6, [rsp + KEXCEPTION_FRAME_Xmm6]
+    movdqa xmm7, [rsp + KEXCEPTION_FRAME_Xmm7]
+    movdqa xmm8, [rsp + KEXCEPTION_FRAME_Xmm8]
+    movdqa xmm9, [rsp + KEXCEPTION_FRAME_Xmm9]
+    movdqa xmm10, [rsp + KEXCEPTION_FRAME_Xmm10]
+    movdqa xmm11, [rsp + KEXCEPTION_FRAME_Xmm11]
+    movdqa xmm12, [rsp + KEXCEPTION_FRAME_Xmm12]
+    movdqa xmm13, [rsp + KEXCEPTION_FRAME_Xmm13]
+    movdqa xmm14, [rsp + KEXCEPTION_FRAME_Xmm14]
+    movdqa xmm15, [rsp + KEXCEPTION_FRAME_Xmm15]
 
-    mov r10, [rsp+32]
-    mov r11, [rsp+40]
-    mov r12, [rsp+48]
-    mov r13, [rsp+56]
-    mov r14, [rsp+64]
-    mov r15, [rsp+72]
-
-    /* Clean stack */
-    add esp, 10 * 8
+    /* Clean stack and return */
+    add rsp, KEXCEPTION_FRAME_LENGTH + 8
     ret
+.ENDP
 
 END

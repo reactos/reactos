@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     ReactOS Device Management
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/devmgmt/lang/uk-UA.rc
@@ -24,10 +24,12 @@ BEGIN
   END
   POPUP "Вигляд"
   BEGIN
-    MENUITEM "Пристрої за типом",       IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Пристрої за підключенням",   IDC_STATIC, GRAYED
-    MENUITEM "Ресурси за типом",        IDC_STATIC, GRAYED
-    MENUITEM "Ресурси за підключенням", IDC_STATIC, GRAYED
+    MENUITEM "Пристрої за типом",        IDC_DEVBYTYPE
+    MENUITEM "Пристрої за підключенням", IDC_DEVBYCONN
+    MENUITEM "Ресурси за типом",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурси за підключенням",  IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",      IDC_SHOWHIDDEN
   END
   POPUP "Довідка"
   BEGIN

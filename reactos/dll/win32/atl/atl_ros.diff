@@ -11,3 +11,46 @@ Index: atl_main.c
  
      size = pM->cbSize;
      switch (size)
+Index: registrar.c
+===================================================================
+--- registrar.c	(revision 48273)
++++ registrar.c	(revision 48273)
+@@ -819,6 +819,19 @@
+     return hres;
+ }
+ 
++static HRESULT do_register_server(BOOL do_register)
++{
++    static const WCHAR CLSID_RegistrarW[] =
++            {'C','L','S','I','D','_','R','e','g','i','s','t','r','a','r',0};
++    static const WCHAR atl_dllW[] = {'a','t','l','.','d','l','l',0};
++
++    WCHAR clsid_str[40];
++    const struct _ATL_REGMAP_ENTRY reg_map[] = {{CLSID_RegistrarW, clsid_str}, {NULL,NULL}};
++
++    StringFromGUID2(&CLSID_Registrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
++    return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
++}
++
+ /***********************************************************************
+  *           AtlModuleUpdateRegistryFromResourceD         [ATL.@]
+  *
+@@ -849,7 +862,8 @@
+  */
+ HRESULT WINAPI DllRegisterServer(void)
+ {
+-    return __wine_register_resources( hInst );
++    /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
++    return do_register_server(TRUE);
+ }
+ 
+ /***********************************************************************
+@@ -857,7 +871,7 @@
+  */
+ HRESULT WINAPI DllUnregisterServer(void)
+ {
+-    return __wine_unregister_resources( hInst );
++    return do_register_server(FALSE);
+ }
+ 
+ /***********************************************************************

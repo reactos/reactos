@@ -812,6 +812,7 @@ BackgroundPageProc(HWND hwndDlg,
                             SetWallpaper(pData);
                         if(pData->bClrBackgroundChanged)
                             SetDesktopBackColor(hwndDlg, pData);
+                        SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)_T(""));
                         return TRUE;
 
                     case LVN_ITEMCHANGED:

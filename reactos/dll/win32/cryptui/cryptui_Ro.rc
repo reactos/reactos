@@ -2,8 +2,6 @@
  * cryptui dll resources
  *
  * Copyright 2008 Juan Lang
- * Copyright 2010 Claudia Cotună
- *                Michael Stefaniuc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,9 +20,7 @@
 
 #include "cryptuires.h"
 
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
-
-#pragma code_page(65001)
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
@@ -108,23 +104,34 @@ STRINGTABLE
     IDS_FRIENDLY_NAME_COLUMN "Nume uzual"
     IDS_ALLOWED_PURPOSE_ALL "<Toate>"
     IDS_ALLOWED_PURPOSE_NONE "<Niciunul>"
-    IDS_WARN_REMOVE_MY "Nu veți mai putea decripta sau semna mesaje cu acest certificat.\nSigur doriți să eliminați acest certificat?"
-    IDS_WARN_REMOVE_PLURAL_MY "Nu veți mai putea decripta sau semna mesaje cu aceste certificate.\nSigur doriți să eliminați aceste certificate?"
-    IDS_WARN_REMOVE_ADDRESSBOOK "Nu veți mai putea cripta sau verifica mesaje semnate cu acest certificat.\nSigur doriți să eliminați acest certificat?"
-    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Nu veți mai putea cripta sau verifica mesaje semnate cu aceste certificate.\nSigur doriți să eliminați aceste certificate?"
-    IDS_WARN_REMOVE_CA "Certificatele emise de către această autoritate de certificare nu vor mai fi acreditate.\nSigur doriți să eliminați acest certificat?"
-    IDS_WARN_REMOVE_PLURAL_CA "Certificatele emise de către aceste autorități de certificare nu vor mai fi acreditate.\nSigur doriți să eliminați aceste certificate?"
-    IDS_WARN_REMOVE_ROOT "Certificatele emise de către această autoritate de certificare rădăcină, sau de către orice alte autorități de certificare validate de ea, nu vor mai fi acreditate.\nSigur doriți să eliminați acest certificat rădăcină acreditat?"
-    IDS_WARN_REMOVE_PLURAL_ROOT "Certificatele emise de către aceste autorități de certificare rădăcină, sau de către orice alte autorități de certificare validate de ele, nu vor mai fi acreditate.\nSigur doriți să eliminați aceste certificate rădăcină acreditate?"
-    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Aplicațiile software semnate de către acest editor nu vor mai fi acreditate.\nSigur doriți să eliminați acest certificat?"
-    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Aplicațiile software semnate de către acești editori nu vor mai fi acreditate.\nSigur doriți să eliminați aceste certificate?"
+    IDS_WARN_REMOVE_MY "Nu veți mai putea decripta sau semna mesaje cu acest certificat.\n\
+Sigur doriți să eliminați acest certificat?"
+    IDS_WARN_REMOVE_PLURAL_MY "Nu veți mai putea decripta sau semna mesaje cu aceste certificate.\n\
+Sigur doriți să eliminați aceste certificate?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "Nu veți mai putea cripta sau verifica mesaje semnate cu acest certificat.\n\
+Sigur doriți să eliminați acest certificat?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "Nu veți mai putea cripta sau verifica mesaje semnate cu aceste certificate.\n\
+Sigur doriți să eliminați aceste certificate?"
+    IDS_WARN_REMOVE_CA "Certificatele emise de către această autoritate de certificare nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați acest certificat?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certificatele emise de către aceste autorități de certificare nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați aceste certificate?"
+    IDS_WARN_REMOVE_ROOT "Certificatele emise de către această autoritate de certificare rădăcină, sau de către orice alte autorități de certificare validate de ea, nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați acest certificat rădăcină acreditat?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Certificatele emise de către aceste autorități de certificare rădăcină, sau de către orice alte autorități de certificare validate de ele, nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați aceste certificate rădăcină acreditate?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Aplicațiile software semnate de către acest editor nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați acest certificat?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Aplicațiile software semnate de către acești editori nu vor mai fi acreditate.\n\
+Sigur doriți să eliminați aceste certificate?"
     IDS_WARN_REMOVE_DEFAULT "Sigur doriți să eliminați acest certificat?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Sigur doriți să eliminați aceste certificate?"
     IDS_CERT_MGR "Certificate"
     IDS_FRIENDLY_NAME_NONE "<Niciunul>"
     IDS_PURPOSE_SERVER_AUTH "Asigură identificarea unui calculator de la distanță"
     IDS_PURPOSE_CLIENT_AUTH "Vă dovedește identitatea pentru un calculator de la distanță"
-    IDS_PURPOSE_CODE_SIGNING "Garantează că aplicația provine de la un anumit editor de software\nProtejează aplicația de alterări după publicare"
+    IDS_PURPOSE_CODE_SIGNING "Garantează că aplicația provine de la un anumit editor de software\n\
+Protejează aplicația de alterări după publicare"
     IDS_PURPOSE_EMAIL_PROTECTION "Protejează mesajele de email"
     IDS_PURPOSE_IPSEC "Permite comunicarea securizată pe Internet"
     IDS_PURPOSE_TIMESTAMP_SIGNING "Permite semnarea datelor cu ora curentă"
@@ -183,18 +190,14 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
-  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,8,11,26,26
-  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
-    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W", ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W", ES_READONLY|WS_DISABLED,34,11,212,26
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
-  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W", ES_READONLY|ES_MULTILINE,8,38,238,78
   CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
-  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
-  PUSHBUTTON "&Instalare certificat...", IDC_ADDTOSTORE,93,216,75,14
-  PUSHBUTTON "&Declarația emitentului", IDC_ISSUERSTATEMENT,172,216,75,14
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W", ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "&Instalare certificat...", IDC_ADDTOSTORE,53,216,95,14
+  PUSHBUTTON "&Declarația emitentului", IDC_ISSUERSTATEMENT,152,216,95,14
 END
 
 IDD_DETAIL DIALOG 0, 0, 255, 236
@@ -203,15 +206,12 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Afișează:", -1, 6,12,40,14
-  COMBOBOX IDC_DETAIL_SELECT, 38,10,100,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  COMBOBOX IDC_DETAIL_SELECT, 48,10,100,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
   CONTROL "", IDC_DETAIL_LIST, "SysListView32",
-    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    6,28,241,100
-  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
-    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
-  PUSHBUTTON "&Editare proprietăți...", IDC_EDITPROPERTIES,103,216,70,14
-  PUSHBUTTON "&Copiere în fișier...", IDC_EXPORT,177,216,70,14
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W", ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "&Editare proprietăți...", IDC_EDITPROPERTIES,53,216,95,14
+  PUSHBUTTON "&Copiere în fișier...", IDC_EXPORT,152,216,95,14
 END
 
 IDD_HIERARCHY DIALOG 0, 0, 255, 236
@@ -222,8 +222,8 @@ BEGIN
   GROUPBOX "Cale de certi&ficare", -1,6,10,245,165, BS_GROUPBOX
   CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
     13,22,231,130
-  PUSHBUTTON "&Vizualizează certificat", IDC_VIEWCERTIFICATE,170,156,75,14
-  LTEXT "&Stare certificat:", IDC_CERTIFICATESTATUS,6,183,70,14
+  PUSHBUTTON "&Vizualizează certificat", IDC_VIEWCERTIFICATE,155,156,90,14
+  LTEXT "&Stare certificat:", IDC_CERTIFICATESTATUS,6,183,200,14
   CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
 END
@@ -235,8 +235,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", IDC_USERNOTICE,"RichEdit20W",
     WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
-  PUSHBUTTON "Închide", IDOK,103,216,70,14
-  PUSHBUTTON "Alte &informații", IDC_CPS,177,216,70,14
+  PUSHBUTTON "Închide", IDOK,73,216,85,14
+  PUSHBUTTON "Alte &informații", IDC_CPS,162,216,85,14
 END
 
 IDD_CERT_PROPERTIES_GENERAL DIALOG 0, 0, 255, 236
@@ -245,20 +245,20 @@ STYLE WS_VISIBLE
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "&Nume uzual:", -1, 6,14,60,14
-  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  EDITTEXT IDC_FRIENDLY_NAME, 70,12,181,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Descriere:", -1, 6,32,60,14
-  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Rolurile certificatului", -1,6,48,245,165, BS_GROUPBOX
+  EDITTEXT IDC_DESCRIPTION, 70,30,181,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Rolurile certificatului", -1,6,48,245,185, BS_GROUPBOX
   AUTORADIOBUTTON "Activ&ează toate rolurile acestui certificat",
-    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_ENABLE_ALL_PURPOSES, 12,58,230,14, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Dezact&ivează toate rolurile acestui certificat",
-    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+    IDC_DISABLE_ALL_PURPOSES, 12,70,230,14, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Activează d&oar următoarele roluri ale acestui certificat:",
-    IDC_ENABLE_SELECTED_PURPOSES, 12,82,190,14, BS_AUTORADIOBUTTON
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,230,14, BS_AUTORADIOBUTTON
   CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
-    24,100,220,90
-  PUSHBUTTON "Adăugare &rol...", IDC_ADD_PURPOSE,184,194,60,14
+    24,100,220,106
+  PUSHBUTTON "Adăugare &rol...", IDC_ADD_PURPOSE,174,212,70,14
 END
 
 IDD_ADD_CERT_PURPOSE DIALOG 0,0,200,68
@@ -273,14 +273,13 @@ BEGIN
 END
 
 IDD_SELECT_STORE DIALOG 0,0,200,136
-CAPTION "Selectați depozitul de certificate"
+CAPTION "Selectare depozit de certificate"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Selectați depozitul de certificate pe care doriți să-l utilizați:", IDC_STORE_TEXT, 6,6,190,28
   CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
     6,28,188,70
-  CHECKBOX "Afișea&ză depozitele fizice", IDC_SHOW_PHYSICAL_STORES, 6,102,100,14,
-    BS_AUTOCHECKBOX|WS_TABSTOP
+  CHECKBOX "Afișea&ză depozitele fizice", IDC_SHOW_PHYSICAL_STORES, 6,102,180,14, BS_AUTOCHECKBOX|WS_TABSTOP
   PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
   PUSHBUTTON "Renunță", IDCANCEL, 144,118,50,14
 END
@@ -289,14 +288,9 @@ IDD_IMPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Asistent de importare a certificatelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Bun venit în Asistentul de importare a certificatelor", IDC_IMPORT_TITLE,
-    115,7,195,12
-  LTEXT "Acest asistent vă ajută să importați certificate, liste de certificate revocate și liste de certificate acreditate dintr-un fișier într-un depozit de certificate.",
-    -1, 115,26,195,25
+  LTEXT "Bun venit în Asistentul de importare a certificatelor", IDC_IMPORT_TITLE, 115,7,195,30
   LTEXT "Un certificat poate fi utilizat pentru identificarea proprie sau a calculatorului cu care comunicați.  Poate fi utilizat și pentru autentificare sau pentru a semna mesaje.  Depozitele de certificate sunt colecții de certificate, liste de certificate revocate și liste de certificate acreditate.",
-    -1, 115,56,195,40
-  LTEXT "Pentru a continua, apăsați pe Înainte.",
-    -1, 115,103,195,8
+    -1, 115,40,195,120
 END
 
 IDD_IMPORT_FILE DIALOG 0,0,317,178
@@ -305,7 +299,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Nume &fișier:", -1, 21,1,195,10
   EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  PUSHBUTTON "Naviga&re...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
+  PUSHBUTTON "&Navighează", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
   LTEXT "Notă:  Următoarele formate de fișier pot conține mai multe certificate, liste de certificate revocate sau liste de certificate acreditate:",
     -1, 21,30,265,16
   LTEXT "Standard sintaxă mesaje criptografice/Mesaje PKCS #7 (.p7b)",
@@ -321,13 +315,13 @@ CAPTION "Asistent de importare a certificatelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Wine poate selecta automat depozitul de certificate sau puteți să specificați o locație pentru certificate.",
-    -1, 21,1,195,20
+    -1, 21,1,220,25
   AUTORADIOBUTTON "Selectează &automat depozitul de certificate",
-    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_IMPORT_AUTO_STORE, 31,28,220,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "&Plasează toate certificatele în următorul depozit:",
-    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
-  EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
-  PUSHBUTTON "Naviga&re...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+    IDC_IMPORT_SPECIFY_STORE, 31,42,220,12, BS_AUTORADIOBUTTON
+  EDITTEXT IDC_IMPORT_STORE, 44,61,185,14, ES_READONLY
+  PUSHBUTTON "&Navighează", IDC_IMPORT_BROWSE_STORE, 236,61,60,14
 END
 
 IDD_IMPORT_FINISH DIALOG 0,0,317,178
@@ -350,19 +344,16 @@ CAPTION "Certificate"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Rolul i&ntenționat:", -1, 7,9,100,12
-  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
-    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
-  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
-    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
-  CONTROL "", IDC_MGR_CERTS, "SysListView32",
-    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
-  PUSHBUTTON "&Importare...", IDC_MGR_IMPORT, 7,172,51,14
-  PUSHBUTTON "&Exportare...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
-  PUSHBUTTON "Ște&rge", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
-  PUSHBUTTON "&Avansate...", IDC_MGR_ADVANCED, 277,172,51,14
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14, CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32", WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32", LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "&Importare...", IDC_MGR_IMPORT, 7,172,65,14
+  PUSHBUTTON "&Exportare...", IDC_MGR_EXPORT, 76,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Elimină", IDC_MGR_REMOVE, 145,172,65,14, WS_DISABLED
+  PUSHBUTTON "&Avansate...", IDC_MGR_ADVANCED, 263,172,65,14
   GROUPBOX "Rolurile intenționate ale certificatului", -1,7,194,321,47, BS_GROUPBOX
-  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
-  PUSHBUTTON "&Vizualizare...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  LTEXT "", IDC_MGR_PURPOSES, 13,206,252,32
+  PUSHBUTTON "&Vizualizare", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
   PUSHBUTTON "În&chide", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
 END
 
@@ -385,14 +376,9 @@ IDD_EXPORT_WELCOME DIALOG 0,0,317,143
 CAPTION "Asistent de exportare a certificatelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Bun venit în Asistentul de exportare a certificatelor", IDC_EXPORT_TITLE,
-    115,7,195,12
-  LTEXT "Acest asistent vă ajută să exportați certificate, liste de certificate revocate și liste de certificate acreditate dintr-un depozit de certificate într-un fișier.",
-    -1, 115,26,195,25
+  LTEXT "Bun venit în Asistentul de exportare a certificatelor", IDC_EXPORT_TITLE, 115,7,195,30
   LTEXT "Un certificat poate fi utilizat pentru identificarea proprie sau a calculatorului cu care comunicați.  Poate fi utilizat și pentru autentificare sau pentru a semna mesaje.  Depozitele de certificate sunt colecții de certificate, liste de certificate revocate și liste de certificate acreditate.",
-    -1, 115,56,195,40
-  LTEXT "Pentru a continua, apăsați pe Înainte.",
-    -1, 115,103,195,8
+    -1, 115,40,195,120
 END
 
 IDD_EXPORT_PRIVATE_KEY DIALOG 0,0,317,143
@@ -412,7 +398,7 @@ IDD_EXPORT_PASSWORD DIALOG 0,0,317,143
 CAPTION "Asistent de exportare a certificatelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "&Parola:", -1, 21,1,195,10
+  LTEXT "&Parolă:", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
   LTEXT "&Confirmați parola:", -1, 21,35,195,10
   EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
@@ -424,23 +410,21 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Selectați formatul pe care doriți să îl utilizați:", -1, 21,1,195,10
   AUTORADIOBUTTON "Binar X.509 codificat în &DER (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_EXPORT_FORMAT_DER, 31,18,280,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "X.509 codificat în ba&se64 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_BASE64, 31,30,280,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "Standard sintaxă mesaje &criptografice/Mesaj PKCS #7 (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,280,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Include toate certificatele din calea de certificare, dacă este posibil",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "Schimb de informații &personale/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,280,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Incl&ude toate certificatele din calea de certificare, dacă este posibil",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "Activ&ează criptarea puternică",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "Șterge c&heia privată dacă exportarea reușește",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
-    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,280,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
 IDD_EXPORT_FILE DIALOG 0,0,317,143
@@ -449,7 +433,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Nume &fișier:", -1, 21,1,195,10
   EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
-  PUSHBUTTON "Naviga&re...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+  PUSHBUTTON "&Navighează", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
 IDD_EXPORT_FINISH DIALOG 0,0,317,178

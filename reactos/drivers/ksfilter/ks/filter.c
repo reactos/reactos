@@ -877,7 +877,7 @@ KspHandleDataIntersection(
             break;
         }
 
-        DataRange =  UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
+        DataRange = (PKSDATARANGE)((PUCHAR)DataRange + DataRange->FormatSize);
         /* FIXME make sure its 64 bit aligned */
         ASSERT(((ULONG_PTR)DataRange & 0x7) == 0);
     }
@@ -955,7 +955,7 @@ FilterPinPropertyHandler(
             UNIMPLEMENTED
             Status = STATUS_NOT_FOUND;
     }
-    //DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->PinDescriptorCount, Request->Id, Status);
+    DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->Filter.Descriptor->PinDescriptorsCount, Request->Id, Status);
 
 
     return Status;
@@ -1029,6 +1029,9 @@ IKsFilter_DispatchDeviceIoControl(
             SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
             PropertySet = FilterInstance->Descriptor->AutomationTable->PropertySets;
             PropertyItemSize = FilterInstance->Descriptor->AutomationTable->PropertyItemSize;
+            // FIXME: handle variable sized property items
+            ASSERT(PropertyItemSize == sizeof(KSPROPERTY_ITEM));
+            PropertyItemSize = 0;
         }
 
         /* needed for our property handlers */
@@ -1063,6 +1066,7 @@ IKsFilter_DispatchDeviceIoControl(
     }
 
     RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsFilter_DispatchDeviceIoControl property PinCount %x\n", FilterInstance->Descriptor->PinDescriptorsCount);
     DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x Status %lx ResultLength %lu\n", GuidString.Buffer, Property->Id, Property->Flags, Status, Irp->IoStatus.Information);
     RtlFreeUnicodeString(&GuidString);
 
@@ -1104,6 +1108,7 @@ IKsFilter_CreateDescriptors(
 {
     ULONG Index = 0;
     NTSTATUS Status;
+    PKSNODE_DESCRIPTOR NodeDescriptor;
 
     /* initialize pin descriptors */
     This->FirstPin = NULL;
@@ -1190,8 +1195,8 @@ IKsFilter_CreateDescriptors(
         /* sanity check */
         ASSERT(FilterDescriptor->NodeDescriptors);
 
-        /* FIXME handle variable sized node descriptors */
-        ASSERT(FilterDescriptor->NodeDescriptorSize == sizeof(KSNODE_DESCRIPTOR));
+        /* sanity check */
+        ASSERT(FilterDescriptor->NodeDescriptorSize >= sizeof(KSNODE_DESCRIPTOR));
 
         This->Topology.TopologyNodes = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescriptor->NodeDescriptorsCount);
         /* allocate topology node types array */
@@ -1211,17 +1216,21 @@ IKsFilter_CreateDescriptors(
         }
 
         DPRINT("NodeDescriptorCount %lu\n", FilterDescriptor->NodeDescriptorsCount);
+        NodeDescriptor = (PKSNODE_DESCRIPTOR)FilterDescriptor->NodeDescriptors;
         for(Index = 0; Index < FilterDescriptor->NodeDescriptorsCount; Index++)
         {
-            DPRINT("Index %lu Type %p Name %p\n", Index, FilterDescriptor->NodeDescriptors[Index].Type, FilterDescriptor->NodeDescriptors[Index].Name);
+            DPRINT("Index %lu Type %p Name %p\n", Index, NodeDescriptor->Type, NodeDescriptor->Name);
 
             /* copy topology type */
-            if (FilterDescriptor->NodeDescriptors[Index].Type)
-                RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], FilterDescriptor->NodeDescriptors[Index].Type, sizeof(GUID));
+            if (NodeDescriptor->Type)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], NodeDescriptor->Type, sizeof(GUID));
 
             /* copy topology name */
-            if (FilterDescriptor->NodeDescriptors[Index].Name)
-                RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], FilterDescriptor->NodeDescriptors[Index].Name, sizeof(GUID));
+            if (NodeDescriptor->Name)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], NodeDescriptor->Name, sizeof(GUID));
+
+            // next node descriptor
+            NodeDescriptor = (PKSNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescriptor->NodeDescriptorSize);
         }
     }
     /* done! */

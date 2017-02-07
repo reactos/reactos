@@ -128,7 +128,7 @@ VOID TuiDrawBackdrop(VOID)
 	//
 	// Draw title text
 	//
-	TuiDrawText( (UiScreenWidth / 2) - (strlen(UiTitleBoxTitleText) / 2),
+	TuiDrawText( (UiScreenWidth / 2) - ((ULONG)strlen(UiTitleBoxTitleText) / 2),
 			2,
 			UiTitleBoxTitleText,
 			ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
@@ -332,12 +332,12 @@ VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 
 VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
-	ULONG		TextLength;
+	SIZE_T		TextLength;
 	ULONG		BoxWidth;
 	ULONG		BoxHeight;
 	ULONG		LineBreakCount;
-	ULONG		Index;
-	ULONG		LastIndex;
+	SIZE_T		Index;
+	SIZE_T		LastIndex;
 	ULONG		RealLeft;
 	ULONG		RealTop;
 	ULONG		X;
@@ -361,7 +361,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR
 		{
 			if ((Index - LastIndex) > BoxWidth)
 			{
-				BoxWidth = (Index - LastIndex);
+				BoxWidth = (ULONG)(Index - LastIndex);
 			}
 		}
 	}
@@ -381,7 +381,7 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR
 		}
 		else
 		{
-			X = RealLeft + LastIndex;
+			X = (ULONG)(RealLeft + LastIndex);
 			Y = RealTop;
 			LastIndex++;
 			Temp[0] = TextString[Index];
@@ -393,14 +393,14 @@ VOID TuiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR
 
 VOID TuiDrawStatusText(PCSTR StatusText)
 {
-	ULONG		i;
+	SIZE_T		i;
 
 	TuiDrawText(0, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	TuiDrawText(1, UiScreenHeight-1, StatusText, ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 
 	for (i=strlen(StatusText)+1; i<UiScreenWidth; i++)
 	{
-		TuiDrawText(i, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
+		TuiDrawText((ULONG)i, UiScreenHeight-1, " ", ATTR(UiStatusBarFgColor, UiStatusBarBgColor));
 	}
 
 	VideoCopyOffScreenBufferToVRAM();
@@ -459,7 +459,7 @@ VOID TuiUpdateDateTime(VOID)
 	strcat(DateString, TempString);
 
 	// Draw the date
-	TuiDrawText(UiScreenWidth-strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+	TuiDrawText(UiScreenWidth-(ULONG)strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
 	// Get the hour and change from 24-hour mode to 12-hour
 	if (TimeInfo->Hour > 12)
@@ -498,7 +498,7 @@ VOID TuiUpdateDateTime(VOID)
 	}
 
 	// Draw the time
-	TuiDrawText(UiScreenWidth-strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
+	TuiDrawText(UiScreenWidth-(ULONG)strlen(TimeString)-2, 2, TimeString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 }
 
 VOID TuiSaveScreen(PUCHAR Buffer)
@@ -624,6 +624,8 @@ VOID TuiMessageBoxCritical(PCSTR MessageText)
 		TuiUpdateDateTime();
 
 		VideoCopyOffScreenBufferToVRAM();
+
+		MachHwIdle();
 	}
 
 }
@@ -944,6 +946,8 @@ BOOLEAN TuiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 		TuiUpdateDateTime();
 
 		VideoCopyOffScreenBufferToVRAM();
+
+		MachHwIdle();
 	}
 
 	// Hide the cursor again

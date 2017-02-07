@@ -2,6 +2,6 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Възможности за телефон и модем"
-	IDS_CPLSYSTEMDESCRIPTION "Настройване на модема и на начина на избиране на телефона."
+	IDS_CPLSYSTEMNAME "Р’СЉР·РјРѕР¶РЅРѕСЃС‚Рё Р·Р° С‚РµР»РµС„РѕРЅ Рё РјРѕРґРµРј"
+	IDS_CPLSYSTEMDESCRIPTION "РќР°СЃС‚СЂРѕР№РІР°РЅРµ РЅР° РјРѕРґРµРјР° Рё РЅР° РЅР°С‡РёРЅР° РЅР° РёР·Р±РёСЂР°РЅРµ РЅР° С‚РµР»РµС„РѕРЅР°."
 END

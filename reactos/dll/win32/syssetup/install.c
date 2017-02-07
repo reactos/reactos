@@ -36,9 +36,6 @@ CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
 
 /* GLOBALS ******************************************************************/
 
-PSID DomainSid = NULL;
-PSID AdminSid = NULL;
-
 HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS ****************************************************************/
@@ -227,67 +224,6 @@ CreateShortcutFolder(int csidl, UINT nID, LPTSTR pszName, int cchNameLen)
     return CreateDirectory(szPath, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
 }
 
-static BOOL
-CreateRandomSid(
-    OUT PSID *Sid)
-{
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    LARGE_INTEGER SystemTime;
-    PULONG Seed;
-    NTSTATUS Status;
-
-    NtQuerySystemTime(&SystemTime);
-    Seed = &SystemTime.u.LowPart;
-
-    Status = RtlAllocateAndInitializeSid(
-        &SystemAuthority,
-        4,
-        SECURITY_NT_NON_UNIQUE,
-        RtlUniform(Seed),
-        RtlUniform(Seed),
-        RtlUniform(Seed),
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        Sid);
-    return NT_SUCCESS(Status);
-}
-
-static VOID
-AppendRidToSid(
-    OUT PSID *Dst,
-    IN PSID Src,
-    IN ULONG NewRid)
-{
-    ULONG Rid[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    UCHAR RidCount;
-    ULONG i;
-
-    RidCount = *RtlSubAuthorityCountSid (Src);
-
-    for (i = 0; i < RidCount; i++)
-        Rid[i] = *RtlSubAuthoritySid (Src, i);
-
-    if (RidCount < 8)
-    {
-        Rid[RidCount] = NewRid;
-        RidCount++;
-    }
-
-    RtlAllocateAndInitializeSid(
-        RtlIdentifierAuthoritySid(Src),
-        RidCount,
-        Rid[0],
-        Rid[1],
-        Rid[2],
-        Rid[3],
-        Rid[4],
-        Rid[5],
-        Rid[6],
-        Rid[7],
-        Dst);
-}
 
 static VOID
 CreateTempDir(
@@ -879,7 +815,6 @@ DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
     TCHAR szBuffer[MAX_PATH];
-    DWORD LastError;
     HANDLE token;
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
@@ -892,31 +827,6 @@ InstallReactOS(HINSTANCE hInstance)
         FatalError("InitializeProfiles() failed");
         return 0;
     }
-
-    /* Initialize the Security Account Manager (SAM) */
-    if (!SamInitializeSAM())
-    {
-        FatalError("SamInitializeSAM() failed!");
-        return 0;
-    }
-
-    /* Create the semi-random Domain-SID */
-    if (!CreateRandomSid(&DomainSid))
-    {
-        FatalError("Domain-SID creation failed!");
-        return 0;
-    }
-
-    /* Set the Domain SID (aka Computer SID) */
-    if (!SamSetDomainSid(DomainSid))
-    {
-        FatalError("SamSetDomainSid() failed!");
-        RtlFreeSid(DomainSid);
-        return 0;
-    }
-
-    /* Append the Admin-RID */
-    AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
@@ -956,26 +866,7 @@ InstallReactOS(HINSTANCE hInstance)
 
     InstallWizard();
 
-    /* Create the Administrator account */
-    if (!SamCreateUser(L"Administrator", L"", AdminSid))
-    {
-        /* Check what the error was.
-         * If the Admin Account already exists, then it means Setup
-         * wasn't allowed to finish properly. Instead of rebooting
-         * and not completing it, let it restart instead
-         */
-        LastError = GetLastError();
-        if (LastError != ERROR_USER_EXISTS)
-        {
-            FatalError("SamCreateUser() failed!");
-            RtlFreeSid(AdminSid);
-            RtlFreeSid(DomainSid);
-            return 0;
-        }
-    }
-
-    RtlFreeSid(AdminSid);
-    RtlFreeSid(DomainSid);
+    InstallSecurity();
 
     if (!CreateShortcuts())
     {

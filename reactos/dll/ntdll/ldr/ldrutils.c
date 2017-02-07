@@ -1860,7 +1860,9 @@ LdrpSearchPath(IN PWCHAR *SearchPath,
 
             /* Sanity check */
             TestName.Length = (USHORT)ALIGN_DOWN((BufEnd - Buffer), WCHAR);
+#if 0
             ASSERT(TestName.Length < TestName.MaximumLength);
+#endif
 
             /* Check if the file exists */
             #if 0
@@ -2204,12 +2206,7 @@ lookinhash:
                 {
                     /* Headers match too! Finally ask the kernel to compare mapped files */
                     Status = ZwAreMappedFilesTheSame(CurEntry->DllBase, ViewBase);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        /* Almost identical, but not quite, keep trying */
-                        _SEH2_YIELD(continue;)
-                    }
-                    else
+                    if (NT_SUCCESS(Status))
                     {
                         /* This is our entry!, unmap and return success */
                         *LdrEntry = CurEntry;

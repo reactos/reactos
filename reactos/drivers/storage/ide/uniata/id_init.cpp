@@ -132,6 +132,9 @@ UniataChipDetectChannels(
     case ATA_SILICON_IMAGE_ID:
 
         if(ChipFlags & SIIBUG) {
+            /* work around errata in early chips */
+            ConfigInfo->AlignmentMask = 0x1fff;
+            deviceExtension->MaximumDmaTransferLength = 15 * DEV_BSIZE;
         }
         if(ChipType != SIIMIO) {
             break;
@@ -177,7 +180,8 @@ UniataChipDetectChannels(
         break;
     case ATA_INTEL_ID:
         /* New Intel PATA controllers */
-        if(/*deviceExtension->DevID == 0x27df8086 ||
+        if(g_opt_VirtualMachine != VM_VBOX &&
+           /*deviceExtension->DevID == 0x27df8086 ||
            deviceExtension->DevID == 0x269e8086 ||
            deviceExtension->DevID == ATA_I82801HBM*/
            ChipFlags & I1CH) { 
@@ -855,32 +859,6 @@ for_ugly_chips:
             ULONG IoSize = 0;
             ULONG BaseMemAddress = 0;
 
-            /*
-             * vt6420/1 has problems talking to some drives.  The following
-             * is based on the fix from Joseph Chan <JosephChan@via.com.tw>.
-             *
-             * When host issues HOLD, device may send up to 20DW of data
-             * before acknowledging it with HOLDA and the host should be
-             * able to buffer them in FIFO.  Unfortunately, some WD drives
-             * send upto 40DW before acknowledging HOLD and, in the
-             * default configuration, this ends up overflowing vt6421's
-             * FIFO, making the controller abort the transaction with
-             * R_ERR.
-             *
-             * Rx52[2] is the internal 128DW FIFO Flow control watermark
-             * adjusting mechanism enable bit and the default value 0
-             * means host will issue HOLD to device when the left FIFO
-             * size goes below 32DW.  Setting it to 1 makes the watermark
-             * 64DW.
-             *
-             * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
-             */
-
-            if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
-                KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));
-                ChangePciConfig1(0x52, a | (1 << 2));
-            }
-
             switch(DeviceID) {
             case 0x3149: // VIA 6420
                 KdPrint2((PRINT_PREFIX "VIA 6420\n"));
@@ -1040,11 +1018,18 @@ for_ugly_chips:
             deviceExtension->HwFlags &= ~UNIATA_AHCI;
 
             /* if BAR(5) is IO it should point to SATA interface registers */
-            BaseMemAddress = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
+            if(deviceExtension->DevID == 0x28288086 &&
+                pciData->u.type0.SubVendorID == 0x106b) {
+                BaseMemAddress = 0;
+                KdPrint2((PRINT_PREFIX "Ignore BAR5 on ICH8M Apples\n"));
+            } else {
+                /* Skip BAR(5) on ICH8M Apples, system locks up on access. */
+                BaseMemAddress = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
                                     5, 0, 0x10);
-            if(BaseMemAddress && (*ConfigInfo->AccessRanges)[5].RangeInMemory) {
-                KdPrint2((PRINT_PREFIX "MemIo\n"));
-                MemIo = TRUE;
+                if(BaseMemAddress && (*ConfigInfo->AccessRanges)[5].RangeInMemory) {
+                    KdPrint2((PRINT_PREFIX "MemIo\n"));
+                    MemIo = TRUE;
+                }
             }
             deviceExtension->BaseIoAddressSATA_0.Addr  = BaseMemAddress;
             deviceExtension->BaseIoAddressSATA_0.MemIo = MemIo;
@@ -1589,9 +1574,7 @@ AtapiChipInit(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
-#ifdef _DEBUG
     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
-#endif
     ULONG RevID    =  deviceExtension->RevID;
 //    ULONG i;
 //    BUSMASTER_CONTROLLER_INFORMATION* DevTypeInfo;
@@ -1796,7 +1779,7 @@ AtapiChipInit(
                 if(ChipFlags & I6CH2) {
                     KdPrint2((PRINT_PREFIX "I6CH2\n"));
                     chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
-                    chan->lun[0]->SATA_lun_map = c ? 4 : 5;
+                    chan->lun[0]->SATA_lun_map = c ? 0 : 1;
                     chan->lun[1]->SATA_lun_map = 0;
                 } else {
                     KdPrint2((PRINT_PREFIX "other Intel\n"));
@@ -2158,6 +2141,33 @@ AtapiChipInit(
             if(ChipFlags & (UNIATA_SATA | VIASATA)) {
                 /* enable PCI interrupt */
                 ChangePciConfig2(/*PCIR_COMMAND*/0x04, (a & ~0x0400));
+
+               /*
+                * vt6420/1 has problems talking to some drives.  The following
+                * is based on the fix from Joseph Chan <JosephChan@via.com.tw>.
+                *
+                * When host issues HOLD, device may send up to 20DW of data
+                * before acknowledging it with HOLDA and the host should be
+                * able to buffer them in FIFO.  Unfortunately, some WD drives
+                * send upto 40DW before acknowledging HOLD and, in the
+                * default configuration, this ends up overflowing vt6421's
+                * FIFO, making the controller abort the transaction with
+                * R_ERR.
+                *
+                * Rx52[2] is the internal 128DW FIFO Flow control watermark
+                * adjusting mechanism enable bit and the default value 0
+                * means host will issue HOLD to device when the left FIFO
+                * size goes below 32DW.  Setting it to 1 makes the watermark
+                * 64DW.
+                *
+                * http://www.reactos.org/bugzilla/show_bug.cgi?id=6500
+                */
+
+                if(DeviceID == 0x3149 || DeviceID == 0x3249) {    //vt6420 or vt6421
+                    KdPrint2((PRINT_PREFIX "VIA 642x FIFO\n"));
+                    ChangePciConfig1(0x52, a | (1 << 2));
+                }
+
                 break;
             }
 

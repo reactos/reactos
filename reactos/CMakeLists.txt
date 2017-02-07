@@ -14,6 +14,9 @@ include(include/reactos/version.cmake)
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 cmake_policy(SET CMP0002 NEW)
+if(POLICY CMP0018)
+    cmake_policy(SET CMP0018 OLD)
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -48,11 +51,11 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(MSVC)
         if(ARCH MATCHES i386)
-            add_definitions(/DWIN32 /D_WINDOWS)
+            add_definitions(/D_X86_ /DWIN32 /D_WINDOWS)
         endif()
         add_definitions(/Dinline=__inline)
     else()
-        add_compile_flags("-fshort-wchar")
+        add_compile_flags("-fshort-wchar -Wno-multichar")
     endif()
 
     include_directories(include/host)
@@ -61,7 +64,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(lib)
 
     if(NOT MSVC)
-        export(TARGETS widl wrc gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
         export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
@@ -77,7 +80,10 @@ else()
 
     #useful stuff!
     include(CMakeParseArguments)
-    
+
+    # this is needed as well
+    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
+
     if(ENABLE_CCACHE)
         set(CMAKE_C_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
         set(CMAKE_CXX_USE_RESPONSE_FILE_FOR_INCLUDES OFF)
@@ -102,6 +108,8 @@ else()
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
+    else()
+        add_definitions(-DDBG=0)
     endif()
 
     if(KDBG)
@@ -137,12 +145,18 @@ else()
     elseif(ARCH MATCHES arm)
         add_definitions(-DUSE_COMPILER_EXCEPTIONS)
     endif()
-    
+
     # Activate support for assembly source files
     enable_language(ASM)
 
     # Activate language support for resource files
     enable_language(RC)
+
+    # Localization definitions
+    include(cmake/localization.cmake)
+    set(I18N_DEFS "")
+    # This will set I18N_DEFS for later use
+    set_i18n_language(${I18N_LANG})
 
     # Compiler specific definitions and macros
     if(MSVC)
@@ -155,7 +169,11 @@ else()
     include(cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
-    include(cmake/idl-support.cmake)
+    if (MSVC)
+        include(cmake/midl-support.cmake)
+    else()
+        include(cmake/widl-support.cmake)
+    endif()
 
     if(MSVC AND USE_WDK_HEADERS)
         include_directories(
@@ -186,7 +204,7 @@ else()
             include/reactos
             include/reactos/libs)
     endif()
-    
+
 
     if(ARCH MATCHES arm)
         include_directories(${REACTOS_SOURCE_DIR}/include/reactos/arm)
@@ -219,10 +237,9 @@ else()
     add_subdirectory(modules)
     add_subdirectory(ntoskrnl)
     add_subdirectory(subsystems)
+    add_subdirectory(win32ss)
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
-
-    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
     add_dependency_footer()
 endif()

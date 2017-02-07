@@ -2134,7 +2134,8 @@ static HRESULT WINAPI MimeMessage_IsContentType(
 {
     HRESULT hr;
     IMimeBody *mime_body;
-    TRACE("(%p)->(%p, %s, %s)\n", iface, hBody, pszPriType, pszSubType);
+    TRACE("(%p)->(%p, %s, %s)\n", iface, hBody, debugstr_a(pszPriType),
+          debugstr_a(pszSubType));
 
     hr = IMimeMessage_BindToObject(iface, hBody, &IID_IMimeBody, (void**)&mime_body);
     if(FAILED(hr)) return hr;

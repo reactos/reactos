@@ -110,7 +110,7 @@ public:
     UINT Width;
     UINT Height;
     INT Stride;
-    PixelFormat PixelFormat;
+    Gdiplus::PixelFormat PixelFormat;
     VOID* Scan0;
     UINT_PTR Reserved;
 };

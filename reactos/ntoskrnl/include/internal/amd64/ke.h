@@ -56,6 +56,8 @@
 
 #define AMD64_TSS 9
 
+#define APIC_EOI_REGISTER 0xFFFFFFFFFFFE00B0ULL
+
 #ifndef __ASM__
 
 #include "intrin_i.h"
@@ -67,6 +69,17 @@ typedef struct _KIDT_INIT
     UCHAR IstIndex;
     PVOID ServiceRoutine;
 } KIDT_INIT, *PKIDT_INIT;
+
+#include <pshpack1.h>
+typedef struct _KI_INTERRUPT_DISPATCH_ENTRY
+{
+    UCHAR _Op_nop;
+    UCHAR _Op_push;
+    UCHAR _Vector;
+    UCHAR _Op_jmp;
+    ULONG RelativeAddress;
+} KI_INTERRUPT_DISPATCH_ENTRY, *PKI_INTERRUPT_DISPATCH_ENTRY;
+#include <poppack.h>
 
 extern ULONG Ke386CacheAlignment;
 extern ULONG KeI386NpxPresent;
@@ -95,7 +108,7 @@ extern ULONG KeI386CpuStep;
     ((TrapFrame)->Rip)
 
 #define KiGetLinkedTrapFrame(x) \
-    (PKTRAP_FRAME)((x)->Rdx)
+    (PKTRAP_FRAME)((x)->TrapFrame)
 
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Rax)
@@ -235,11 +248,20 @@ KeQueryInterruptHandler(IN ULONG Vector)
 
 VOID
 FORCEINLINE
+KiSendEOI()
+{
+    /* Write 0 to the apic EOI register */
+    *((volatile ULONG*)APIC_EOI_REGISTER) = 0;
+}
+
+VOID
+FORCEINLINE
 KiEndInterrupt(IN KIRQL Irql,
                IN PKTRAP_FRAME TrapFrame)
 {
     /* Make sure this is from the clock handler */
     ASSERT(TrapFrame->ErrorCode == 0xc10c4);
+    //KeLowerIrql(Irql);
 }
 
 BOOLEAN

@@ -47,7 +47,7 @@ Int386:
 	mov edx, dword ptr cs:[BSS_RegisterSet + REGS_EDX]
 	mov esi, dword ptr cs:[BSS_RegisterSet + REGS_ESI]
 	mov edi, dword ptr cs:[BSS_RegisterSet + REGS_EDI]
-	mov ebp, dword ptr cs:[BSS_RegisterSet + REGS_EBP]
+	// Don't setup ebp, we only use it as output!
 
 	/* Call the interrupt vector */
 	/*int		Int386_vector*/

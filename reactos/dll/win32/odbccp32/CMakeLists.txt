@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(odbccp32.dll odbccp32.spec)
+spec2def(odbccp32.dll odbccp32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     odbccp32.c
@@ -20,5 +20,5 @@ add_importlibs(odbccp32
     kernel32
     ntdll)
 
-add_importlib_target(odbccp32.spec)
+
 add_cd_file(TARGET odbccp32 DESTINATION reactos/system32 FOR all)

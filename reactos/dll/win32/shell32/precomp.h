@@ -82,6 +82,8 @@
 #include "openwithmenu.h"
 #include "newmenu.h"
 #include "startmenu.h"
+#include "filedefext.h"
+#include "drvdefext.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -95,6 +97,5 @@ extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;
 extern const GUID SHELL32_AdvtShortcutProduct;
 extern const GUID SHELL32_AdvtShortcutComponent;
-
 
 #endif

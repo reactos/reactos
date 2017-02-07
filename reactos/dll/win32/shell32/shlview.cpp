@@ -111,6 +111,7 @@ class CDefView :
         void CheckToolbar();
         void SetStyle(DWORD dwAdd, DWORD dwRemove);
         BOOL CreateList();
+        void UpdateListColors();
         BOOL InitList();
         static INT CALLBACK CompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpData);
         static INT CALLBACK ListViewCompareItems(LPVOID lParam1, LPVOID lParam2, LPARAM lpData);
@@ -207,6 +208,7 @@ class CDefView :
         LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
         static ATL::CWndClassInfo& GetWndClassInfo()
         {
@@ -257,6 +259,7 @@ class CDefView :
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         END_MSG_MAP()
 
         BEGIN_COM_MAP(CDefView)
@@ -509,29 +512,42 @@ BOOL CDefView::CreateList()
     ListViewSortInfo.nHeaderID = -1;
     ListViewSortInfo.nLastHeaderID = -1;
 
-    if (FolderSettings.fFlags & FWF_DESKTOP)
-    {
-        /*
-        * FIXME: look at the registry value
-        * HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow
-        * and activate drop shadows if necessary
-        */
-        if (1)
-        {
-            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
-            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
-        }
-        else
-        {
-            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
-            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
-        }
-
-        SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(255, 255, 255));
-    }
+    UpdateListColors();
 
     /*  UpdateShellSettings(); */
     return TRUE;
+}
+
+void CDefView::UpdateListColors()
+{
+    if (FolderSettings.fFlags & FWF_DESKTOP)
+    {
+        /* Check if drop shadows option is enabled */
+        BOOL bDropShadow = FALSE;
+        DWORD cbDropShadow = sizeof(bDropShadow);
+        WCHAR wszBuf[16] = L"";
+
+        RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                     L"ListviewShadow", RRF_RT_DWORD, NULL, &bDropShadow, &cbDropShadow);
+        if (bDropShadow && SystemParametersInfoW(SPI_GETDESKWALLPAPER, _countof(wszBuf), wszBuf, 0) && wszBuf[0])
+        {
+            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
+            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, CLR_NONE);
+            SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(255, 255, 255));
+            SendMessageW(hWndList, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
+        }
+        else
+        {
+            COLORREF crDesktop = GetSysColor(COLOR_DESKTOP);
+            SendMessageW(hWndList, LVM_SETTEXTBKCOLOR, 0, crDesktop);
+            SendMessageW(hWndList, LVM_SETBKCOLOR, 0, crDesktop);
+            if (GetRValue(crDesktop) + GetGValue(crDesktop) + GetBValue(crDesktop) > 128 * 3)
+                SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(0, 0, 0));
+            else
+                SendMessageW(hWndList, LVM_SETTEXTCOLOR, 0, RGB(255, 255, 255));
+            SendMessageW(hWndList, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_TRANSPARENTSHADOWTEXT, 0);
+        }
+    }
 }
 
 /**********************************************************
@@ -775,9 +791,10 @@ BOOLEAN CDefView::LV_RenameItem(LPCITEMIDLIST pidlOld, LPCITEMIDLIST pidlNew)
         SendMessageW(hWndList, LVM_GETITEMW, 0, (LPARAM) &lvItem);
 
         SHFree((LPITEMIDLIST)lvItem.lParam);
-        lvItem.mask = LVIF_PARAM;
+        lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
         lvItem.iItem = nItem;
         lvItem.lParam = (LPARAM) ILClone(ILFindLastID(pidlNew));    /* set the item's data */
+        lvItem.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidlNew, 0);
         SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
         SendMessageW(hWndList, LVM_UPDATE, nItem, 0);
         return TRUE;                    /* FIXME: better handling */
@@ -887,6 +904,9 @@ LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 
 LRESULT CDefView::OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    /* Update desktop labels color */
+    UpdateListColors();
+
     /* Forward WM_SYSCOLORCHANGE to common controls */
     return SendMessageW(hWndList, uMsg, 0, 0);
 }
@@ -1284,7 +1304,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
                         SetMenuDefaultItem(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
 
                     TRACE("-- track popup\n");
-                    uCommand = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_RETURNCMD, x, y, 0, m_hWnd, NULL);
+                    uCommand = TrackPopupMenu(hMenu,
+                                              TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                              x, y, 0, m_hWnd, NULL);
 
                     if (uCommand > 0)
                     {
@@ -1321,7 +1343,9 @@ LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         CDefFolderMenu_Create2(NULL, NULL, cidl, (LPCITEMIDLIST*)apidl, pSFParent, NULL, 0, NULL, (IContextMenu**)&pCM);
         pCM->QueryContextMenu(hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
 
-        uCommand = TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RETURNCMD, x, y, 0, m_hWnd, NULL);
+        uCommand = TrackPopupMenu(hMenu,
+                                  TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+                                  x, y, 0, m_hWnd, NULL);
         DestroyMenu(hMenu);
 
         TRACE("-- (%p)->(uCommand=0x%08x )\n", this, uCommand);
@@ -1397,7 +1421,7 @@ void CDefView::DoActivate(UINT uState)
     TRACE("%p uState=%x\n", this, uState);
 
     /*don't do anything if the state isn't really changing */
-    if (uState == uState)
+    if (this->uState == uState)
     {
         return;
     }
@@ -1460,7 +1484,7 @@ void CDefView::DoActivate(UINT uState)
             pShellBrowser->SetMenuSB(hMenu, 0, m_hWnd);
         }
     }
-    uState = uState;
+    this->uState = uState;
     TRACE("--\n");
 }
 
@@ -1783,9 +1807,11 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                 if (SUCCEEDED(hr) && pidl)
                 {
-                    lvItem.mask = LVIF_PARAM;
+                    lvItem.mask = LVIF_PARAM|LVIF_IMAGE;
                     lvItem.lParam = (LPARAM)pidl;
+                    lvItem.iImage = SHMapPIDLToSystemImageListIndex(pSFParent, pidl, 0);
                     SendMessageW(hWndList, LVM_SETITEMW, 0, (LPARAM) &lvItem);
+                    SendMessageW(hWndList, LVM_UPDATE, lpdi->item.iItem, 0);
 
                     return TRUE;
                 }
@@ -2061,7 +2087,7 @@ LRESULT CDefView::OnChangeNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 }
 
 /**********************************************************
-*  ShellView_DoMeasureItem
+*  CDefView::OnCustomItem
 */
 LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
@@ -2076,6 +2102,15 @@ LRESULT CDefView::OnCustomItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return TRUE;
     else
         return FALSE;
+}
+
+LRESULT CDefView::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    /* Wallpaper setting affects drop shadows effect */
+    if (wParam == SPI_SETDESKWALLPAPER || wParam == 0)
+        UpdateListColors();
+
+    return S_OK;
 }
 
 /**********************************************************
@@ -2144,7 +2179,7 @@ HRESULT WINAPI CDefView::UIActivate(UINT uState)
     TRACE("(%p)->(state=%x) stub\n", this, uState);
 
     /*don't do anything if the state isn't really changing*/
-    if (uState == uState)
+    if (this->uState == uState)
     {
         return S_OK;
     }

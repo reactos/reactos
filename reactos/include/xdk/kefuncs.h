@@ -2,63 +2,86 @@
  *                              Kernel Functions                              *
  ******************************************************************************/
 $if (_WDMDDK_)
+#if defined(_M_IX86)
+$include(x86/ke.h)
+#elif defined(_M_AMD64)
+$include(amd64/ke.h)
+#elif defined(_M_IA64)
+$include(ia64/ke.h)
+#elif defined(_M_PPC)
+$include(ppc/ke.h)
+#elif defined(_M_MIPS)
+$include(mips/ke.h)
+#elif defined(_M_ARM)
+$include(arm/ke.h)
+#else
+#error Unknown Architecture
+#endif
+
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeEvent(
-  OUT PRKEVENT Event,
-  IN EVENT_TYPE Type,
-  IN BOOLEAN State);
+  _Out_ PRKEVENT Event,
+  _In_ EVENT_TYPE Type,
+  _In_ BOOLEAN State);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeClearEvent(
-  IN OUT PRKEVENT Event);
+  _Inout_ PRKEVENT Event);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeInvalidateRangeAllCaches(
-  IN PVOID BaseAddress,
-  IN ULONG Length);
+  _In_ PVOID BaseAddress,
+  _In_ ULONG Length);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
 NTSTATUS
 NTAPI
 KeGetProcessorNumberFromIndex(
-  IN ULONG ProcIndex,
-  OUT PPROCESSOR_NUMBER ProcNumber);
+  _In_ ULONG ProcIndex,
+  _Out_ PPROCESSOR_NUMBER ProcNumber);
 
 ULONG
 NTAPI
 KeGetProcessorIndexFromNumber(
-  IN PPROCESSOR_NUMBER ProcNumber);
+  _In_ PPROCESSOR_NUMBER ProcNumber);
 $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 $if (_WDMDDK_)
 #if defined(_NTDDK_) || defined(_NTIFS_)
+_Maybe_raises_SEH_exception_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ProbeForRead(
-  IN CONST VOID *Address, /* CONST is added */
-  IN SIZE_T Length,
-  IN ULONG Alignment);
+  __in_data_source(USER_MODE) _In_reads_bytes_(Length) CONST VOID *Address, /* CONST is added */
+  _In_ SIZE_T Length,
+  _In_ ULONG Alignment);
 #endif /* defined(_NTDDK_) || defined(_NTIFS_) */
 
+_Maybe_raises_SEH_exception_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 ProbeForWrite(
-  IN PVOID Address,
-  IN SIZE_T Length,
-  IN ULONG Alignment);
+  __in_data_source(USER_MODE) _Inout_updates_bytes_(Length) PVOID Address,
+  _In_ SIZE_T Length,
+  _In_ ULONG Alignment);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
@@ -66,29 +89,36 @@ NTKERNELAPI
 VOID
 NTAPI
 KeSetImportanceDpc(
-  IN OUT PRKDPC Dpc,
-  IN KDPC_IMPORTANCE Importance);
+  _Inout_ PRKDPC Dpc,
+  _In_ KDPC_IMPORTANCE Importance);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KePulseEvent(
-  IN OUT PRKEVENT Event,
-  IN KPRIORITY Increment,
-  IN BOOLEAN Wait);
+  _Inout_ PRKEVENT Event,
+  _In_ KPRIORITY Increment,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeSetBasePriorityThread(
-  IN OUT PRKTHREAD Thread,
-  IN LONG Increment);
+  _Inout_ PRKTHREAD Thread,
+  _In_ LONG Increment);
 
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeEnterCriticalRegion(VOID);
 
+_Releases_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -99,30 +129,34 @@ DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheck(
-  IN ULONG BugCheckCode);
+  _In_ ULONG BugCheckCode);
 $endif(_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if defined(SINGLE_GROUP_LEGACY_API)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeRevertToUserAffinityThread(VOID);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeSetSystemAffinityThread(
-  IN KAFFINITY Affinity);
+  _In_ KAFFINITY Affinity);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeSetTargetProcessorDpc(
-  IN OUT PRKDPC Dpc,
-  IN CCHAR Number);
+  _Inout_ PRKDPC Dpc,
+  _In_ CCHAR Number);
 
 NTKERNELAPI
 KAFFINITY
@@ -135,8 +169,8 @@ NTKERNELAPI
 VOID
 NTAPI
 KeSetTargetProcessorDpc(
-  IN OUT PRKDPC Dpc,
-  IN CCHAR Number);
+  _Inout_ PRKDPC Dpc,
+  _In_ CCHAR Number);
 
 NTKERNELAPI
 KAFFINITY
@@ -145,7 +179,7 @@ KeQueryActiveProcessors(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 #if !defined(_M_AMD64)
@@ -158,37 +192,51 @@ NTKERNELAPI
 VOID
 NTAPI
 KeQuerySystemTime(
-  OUT PLARGE_INTEGER CurrentTime);
+  _Out_ PLARGE_INTEGER CurrentTime);
 #endif /* !_M_AMD64 */
 
 #if !defined(_X86_) && !defined(_M_ARM)
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(DISPATCH_LEVEL)
 NTKERNELAPI
 KIRQL
 NTAPI
 KeAcquireSpinLockRaiseToDpc(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 
 #define KeAcquireSpinLock(SpinLock, OldIrql) \
     *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
 
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeAcquireSpinLockAtDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 
+_Requires_lock_held_(*SpinLock)
+_Releases_lock_(*SpinLock)
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeReleaseSpinLock(
-  IN OUT PKSPIN_LOCK SpinLock,
-  IN KIRQL NewIrql);
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _In_ _IRQL_restores_ KIRQL NewIrql);
 
+_Requires_lock_held_(*SpinLock)
+_Releases_lock_(*SpinLock)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeReleaseSpinLockFromDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 #endif /* !_X86_ */
 
 #if defined(_X86_) && (defined(_WDM_INCLUDED_) || defined(WIN9X_COMPAT_SPINLOCK))
@@ -196,118 +244,132 @@ NTKERNELAPI
 VOID
 NTAPI
 KeInitializeSpinLock(
-  IN PKSPIN_LOCK SpinLock);
+  _Out_ PKSPIN_LOCK SpinLock);
 #else
 FORCEINLINE
 VOID
-KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+KeInitializeSpinLock(_Out_ PKSPIN_LOCK SpinLock)
 {
   /* Clear the lock */
   *SpinLock = 0;
 }
 #endif
 
-//DECLSPEC_NORETURN
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
-  IN ULONG BugCheckCode,
-  IN ULONG_PTR BugCheckParameter1,
-  IN ULONG_PTR BugCheckParameter2,
-  IN ULONG_PTR BugCheckParameter3,
-  IN ULONG_PTR BugCheckParameter4);
+  _In_ ULONG BugCheckCode,
+  _In_ ULONG_PTR BugCheckParameter1,
+  _In_ ULONG_PTR BugCheckParameter2,
+  _In_ ULONG_PTR BugCheckParameter3,
+  _In_ ULONG_PTR BugCheckParameter4);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeCancelTimer(
-  IN OUT PKTIMER);
+  _Inout_ PKTIMER);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeDelayExecutionThread(
-  IN KPROCESSOR_MODE WaitMode,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Interval);
+  _In_ KPROCESSOR_MODE WaitMode,
+  _In_ BOOLEAN Alertable,
+  _In_ PLARGE_INTEGER Interval);
 
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeDeregisterBugCheckCallback(
-  IN OUT PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
+  _Inout_ PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
 
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeEnterCriticalRegion(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeDeviceQueue(
-  OUT PKDEVICE_QUEUE DeviceQueue);
+  _Out_ PKDEVICE_QUEUE DeviceQueue);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeDpc(
-  OUT PRKDPC Dpc,
-  IN PKDEFERRED_ROUTINE DeferredRoutine,
-  IN PVOID DeferredContext OPTIONAL);
+  _Out_ __drv_aliasesMem PRKDPC Dpc,
+  _In_ PKDEFERRED_ROUTINE DeferredRoutine,
+  _In_opt_ __drv_aliasesMem PVOID DeferredContext);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeMutex(
-  OUT PRKMUTEX Mutex,
-  IN ULONG Level);
+  _Out_ PRKMUTEX Mutex,
+  _In_ ULONG Level);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeSemaphore(
-  OUT PRKSEMAPHORE Semaphore,
-  IN LONG Count,
-  IN LONG Limit);
+  _Out_ PRKSEMAPHORE Semaphore,
+  _In_ LONG Count,
+  _In_ LONG Limit);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeTimer(
-  OUT PKTIMER Timer);
+  _Out_ PKTIMER Timer);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeTimerEx(
-  OUT PKTIMER Timer,
-  IN TIMER_TYPE Type);
+  _Out_ PKTIMER Timer,
+  _In_ TIMER_TYPE Type);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInsertByKeyDeviceQueue(
-  IN OUT PKDEVICE_QUEUE DeviceQueue,
-  IN OUT PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-  IN ULONG SortKey);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue,
+  _Inout_ PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
+  _In_ ULONG SortKey);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInsertDeviceQueue(
-  IN OUT PKDEVICE_QUEUE DeviceQueue,
-  IN OUT PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue,
+  _Inout_ PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInsertQueueDpc(
-  IN OUT PRKDPC Dpc,
-  IN PVOID SystemArgument1 OPTIONAL,
-  IN PVOID SystemArgument2 OPTIONAL);
+  _Inout_ PRKDPC Dpc,
+  _In_opt_ PVOID SystemArgument1,
+  _In_opt_ PVOID SystemArgument2);
 
+_Releases_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -317,178 +379,206 @@ NTHALAPI
 LARGE_INTEGER
 NTAPI
 KeQueryPerformanceCounter(
-  OUT PLARGE_INTEGER PerformanceFrequency OPTIONAL);
+  _Out_opt_ PLARGE_INTEGER PerformanceFrequency);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 KPRIORITY
 NTAPI
 KeQueryPriorityThread(
-  IN PRKTHREAD Thread);
+  _In_ PRKTHREAD Thread);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryTimeIncrement(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeReadStateEvent(
-  IN PRKEVENT Event);
+  _In_ PRKEVENT Event);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeReadStateMutex(
-  IN PRKMUTEX Mutex);
+  _In_ PRKMUTEX Mutex);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeReadStateSemaphore(
-  IN PRKSEMAPHORE Semaphore);
+  _In_ PRKSEMAPHORE Semaphore);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeReadStateTimer(
-  IN PKTIMER Timer);
+  _In_ PKTIMER Timer);
 
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeRegisterBugCheckCallback(
-  OUT PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
-  IN PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine,
-  IN PVOID Buffer,
-  IN ULONG Length,
-  IN PUCHAR Component);
+  _Out_ PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
+  _In_ PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine,
+  _In_reads_bytes_opt_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_ PUCHAR Component);
 
+_When_(Wait==0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(Wait==1, _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 LONG
 NTAPI
 KeReleaseMutex(
-  IN OUT PRKMUTEX Mutex,
-  IN BOOLEAN Wait);
+  _Inout_ PRKMUTEX Mutex,
+  _In_ BOOLEAN Wait);
 
+_When_(Wait==0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(Wait==1, _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 LONG
 NTAPI
 KeReleaseSemaphore(
-  IN OUT PRKSEMAPHORE Semaphore,
-  IN KPRIORITY Increment,
-  IN LONG Adjustment,
-  IN BOOLEAN Wait);
+  _Inout_ PRKSEMAPHORE Semaphore,
+  _In_ KPRIORITY Increment,
+  _In_ LONG Adjustment,
+  _In_ _Literal_ BOOLEAN Wait);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 PKDEVICE_QUEUE_ENTRY
 NTAPI
 KeRemoveByKeyDeviceQueue(
-  IN OUT PKDEVICE_QUEUE DeviceQueue,
-  IN ULONG SortKey);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue,
+  _In_ ULONG SortKey);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 PKDEVICE_QUEUE_ENTRY
 NTAPI
 KeRemoveDeviceQueue(
-  IN OUT PKDEVICE_QUEUE DeviceQueue);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeRemoveEntryDeviceQueue(
-  IN OUT PKDEVICE_QUEUE DeviceQueue,
-  IN OUT PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue,
+  _Inout_ PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeRemoveQueueDpc(
-  IN OUT PRKDPC Dpc);
+  _Inout_ PRKDPC Dpc);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeResetEvent(
-  IN OUT PRKEVENT Event);
+  _Inout_ PRKEVENT Event);
 
+_When_(Wait==0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(Wait==1, _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 LONG
 NTAPI
 KeSetEvent(
-  IN OUT PRKEVENT Event,
-  IN KPRIORITY Increment,
-  IN BOOLEAN Wait);
+  _Inout_ PRKEVENT Event,
+  _In_ KPRIORITY Increment,
+  _In_ _Literal_ BOOLEAN Wait);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeSetImportanceDpc(
-  IN OUT PRKDPC Dpc,
-  IN KDPC_IMPORTANCE Importance);
+  _Inout_ PRKDPC Dpc,
+  _In_ KDPC_IMPORTANCE Importance);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 KPRIORITY
 NTAPI
 KeSetPriorityThread(
-  IN OUT PKTHREAD Thread,
-  IN KPRIORITY Priority);
+  _Inout_ PKTHREAD Thread,
+  _In_ KPRIORITY Priority);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeSetTimer(
-  IN OUT PKTIMER Timer,
-  IN LARGE_INTEGER DueTime,
-  IN PKDPC Dpc OPTIONAL);
+  _Inout_ PKTIMER Timer,
+  _In_ LARGE_INTEGER DueTime,
+  _In_opt_ PKDPC Dpc);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeSetTimerEx(
-  IN OUT PKTIMER Timer,
-  IN LARGE_INTEGER DueTime,
-  IN LONG Period OPTIONAL,
-  IN PKDPC Dpc OPTIONAL);
+  _Inout_ PKTIMER Timer,
+  _In_ LARGE_INTEGER DueTime,
+  _In_ LONG Period OPTIONAL,
+  _In_opt_ PKDPC Dpc);
 
 NTHALAPI
 VOID
 NTAPI
 KeStallExecutionProcessor(
-  IN ULONG MicroSeconds);
+  _In_ ULONG MicroSeconds);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeSynchronizeExecution(
-  IN OUT PKINTERRUPT Interrupt,
-  IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
-  IN PVOID SynchronizeContext OPTIONAL);
+  _Inout_ PKINTERRUPT Interrupt,
+  _In_ PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+  _In_opt_ __drv_aliasesMem PVOID SynchronizeContext);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeWaitForMultipleObjects(
-  IN ULONG Count,
-  IN PVOID Object[],
-  IN WAIT_TYPE WaitType,
-  IN KWAIT_REASON WaitReason,
-  IN KPROCESSOR_MODE WaitMode,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  OUT PKWAIT_BLOCK WaitBlockArray OPTIONAL);
+  _In_ ULONG Count,
+  _In_reads_(Count) PVOID Object[],
+  _In_ __drv_strictTypeMatch(__drv_typeConst) WAIT_TYPE WaitType,
+  _In_ __drv_strictTypeMatch(__drv_typeCond) KWAIT_REASON WaitReason,
+  _In_ __drv_strictType(KPROCESSOR_MODE/enum _MODE,__drv_typeConst) KPROCESSOR_MODE WaitMode,
+  _In_ BOOLEAN Alertable,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _Out_opt_ PKWAIT_BLOCK WaitBlockArray);
 
 #define KeWaitForMutexObject KeWaitForSingleObject
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeWaitForSingleObject(
-  IN PVOID Object,
-  IN KWAIT_REASON WaitReason,
-  IN KPROCESSOR_MODE WaitMode,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
+  _In_ _Points_to_data_ PVOID Object,
+  _In_ __drv_strictTypeMatch(__drv_typeCond) KWAIT_REASON WaitReason,
+  _In_ __drv_strictType(KPROCESSOR_MODE/enum _MODE,__drv_typeConst) KPROCESSOR_MODE WaitMode,
+  _In_ BOOLEAN Alertable,
+  _In_opt_ PLARGE_INTEGER Timeout);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
@@ -496,142 +586,185 @@ NTKERNELAPI
 VOID
 NTAPI
 KeInitializeMutant(
-  OUT PRKMUTANT Mutant,
-  IN BOOLEAN InitialOwner);
+  _Out_ PRKMUTANT Mutant,
+  _In_ BOOLEAN InitialOwner);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeReadStateMutant(
-  IN PRKMUTANT Mutant);
+  _In_ PRKMUTANT Mutant);
 
+_When_(Wait==0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(Wait==1, _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 LONG
 NTAPI
 KeReleaseMutant(
-  IN OUT PRKMUTANT Mutant,
-  IN KPRIORITY Increment,
-  IN BOOLEAN Abandoned,
-  IN BOOLEAN Wait);
+  _Inout_ PRKMUTANT Mutant,
+  _In_ KPRIORITY Increment,
+  _In_ BOOLEAN Abandoned,
+  _In_ BOOLEAN Wait);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeQueue(
-  OUT PRKQUEUE Queue,
-  IN ULONG Count);
+  _Out_ PRKQUEUE Queue,
+  _In_ ULONG Count);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeReadStateQueue(
-  IN PRKQUEUE Queue);
+  _In_ PRKQUEUE Queue);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeInsertQueue(
-  IN OUT PRKQUEUE Queue,
-  IN OUT PLIST_ENTRY Entry);
+  _Inout_ PRKQUEUE Queue,
+  _Inout_ PLIST_ENTRY Entry);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONG
 NTAPI
 KeInsertHeadQueue(
-  IN OUT PRKQUEUE Queue,
-  IN OUT PLIST_ENTRY Entry);
+  _Inout_ PRKQUEUE Queue,
+  _Inout_ PLIST_ENTRY Entry);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 PLIST_ENTRY
 NTAPI
 KeRemoveQueue(
-  IN OUT PRKQUEUE Queue,
-  IN KPROCESSOR_MODE WaitMode,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
+  _Inout_ PRKQUEUE Queue,
+  _In_ KPROCESSOR_MODE WaitMode,
+  _In_opt_ PLARGE_INTEGER Timeout);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeAttachProcess(
-  IN OUT PKPROCESS Process);
+  _Inout_ PKPROCESS Process);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
-KeDetachProcess(
-  VOID);
+KeDetachProcess(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PLIST_ENTRY
 NTAPI
 KeRundownQueue(
-  IN OUT PRKQUEUE Queue);
+  _Inout_ PRKQUEUE Queue);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeStackAttachProcess(
-  IN OUT PKPROCESS Process,
-  OUT PKAPC_STATE ApcState);
+  _Inout_ PKPROCESS Process,
+  _Out_ PKAPC_STATE ApcState);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeUnstackDetachProcess(
-  IN PKAPC_STATE ApcState);
+  _In_ PKAPC_STATE ApcState);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 UCHAR
 NTAPI
 KeSetIdealProcessorThread(
-  IN OUT PKTHREAD Thread,
-  IN UCHAR Processor);
+  _Inout_ PKTHREAD Thread,
+  _In_ UCHAR Processor);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeSetKernelStackSwapEnable(
-  IN BOOLEAN Enable);
+  _In_ BOOLEAN Enable);
 
 #if defined(_X86_)
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_raises_(SYNCH_LEVEL)
+_IRQL_saves_
 NTHALAPI
 KIRQL
 FASTCALL
 KeAcquireSpinLockRaiseToSynch(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 #else
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_raises_(SYNCH_LEVEL)
+_IRQL_saves_
 NTKERNELAPI
 KIRQL
 KeAcquireSpinLockRaiseToSynch(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 #endif
-$endif
+$endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 $if (_WDMDDK_)
+_Requires_lock_not_held_(*LockHandle)
+_Acquires_lock_(*LockHandle)
+_Post_same_lock_(*SpinLock, *LockHandle)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_global_(QueuedSpinLock,LockHandle)
+_IRQL_raises_(DISPATCH_LEVEL)
 _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
-  IN OUT PKSPIN_LOCK SpinLock,
-  OUT PKLOCK_QUEUE_HANDLE LockHandle);
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _Out_ PKLOCK_QUEUE_HANDLE LockHandle);
 
+_Requires_lock_not_held_(*LockHandle)
+_Acquires_lock_(*LockHandle)
+_Post_same_lock_(*SpinLock, *LockHandle)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockAtDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock,
-  OUT PKLOCK_QUEUE_HANDLE LockHandle);
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _Out_ PKLOCK_QUEUE_HANDLE LockHandle);
 
+_Requires_lock_not_held_(*Interrupt->ActualLock)
+_Acquires_lock_(*Interrupt->ActualLock)
+_IRQL_requires_max_(HIGH_LEVEL)
+_IRQL_saves_
+_IRQL_raises_(HIGH_LEVEL)
 NTKERNELAPI
 KIRQL
 NTAPI
 KeAcquireInterruptSpinLock(
-  IN OUT PKINTERRUPT Interrupt);
+  _Inout_ PKINTERRUPT Interrupt);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -642,40 +775,54 @@ ULONG
 NTAPI
 KeGetRecommendedSharedDataAlignment(VOID);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryRuntimeThread(
-  IN PKTHREAD Thread,
-  OUT PULONG UserTime);
+  _In_ PKTHREAD Thread,
+  _Out_ PULONG UserTime);
 
+_Requires_lock_held_(*LockHandle)
+_Releases_lock_(*LockHandle)
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(
-  IN PKLOCK_QUEUE_HANDLE LockHandle);
+  _In_ PKLOCK_QUEUE_HANDLE LockHandle);
 
+_Requires_lock_held_(*Interrupt->ActualLock)
+_Releases_lock_(*Interrupt->ActualLock)
+_IRQL_requires_(HIGH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeReleaseInterruptSpinLock(
-  IN OUT PKINTERRUPT Interrupt,
-  IN KIRQL OldIrql);
+  _Inout_ PKINTERRUPT Interrupt,
+  _In_ _IRQL_restores_ KIRQL OldIrql);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 PKDEVICE_QUEUE_ENTRY
 NTAPI
 KeRemoveByKeyDeviceQueueIfBusy(
-  IN OUT PKDEVICE_QUEUE DeviceQueue,
-  IN ULONG SortKey);
+  _Inout_ PKDEVICE_QUEUE DeviceQueue,
+  _In_ ULONG SortKey);
 
+_Requires_lock_held_(*LockHandle)
+_Releases_lock_(*LockHandle)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_restores_global_(QueuedSpinLock,LockHandle)
 _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLock(
-  IN PKLOCK_QUEUE_HANDLE LockHandle);
+  _In_ PKLOCK_QUEUE_HANDLE LockHandle);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -683,25 +830,32 @@ KeAreApcsDisabled(VOID);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_Requires_lock_not_held_(Number)
+_Acquires_lock_(Number)
+_IRQL_raises_(DISPATCH_LEVEL)
 _DECL_HAL_KE_IMPORT
 KIRQL
 FASTCALL
 KeAcquireQueuedSpinLock(
-  IN OUT KSPIN_LOCK_QUEUE_NUMBER Number);
+  _In_ KSPIN_LOCK_QUEUE_NUMBER Number);
 
+_Requires_lock_held_(Number)
+_Releases_lock_(Number)
 _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeReleaseQueuedSpinLock(
-  IN OUT KSPIN_LOCK_QUEUE_NUMBER Number,
-  IN KIRQL OldIrql);
+  _In_ KSPIN_LOCK_QUEUE_NUMBER Number,
+  _In_ KIRQL OldIrql);
 
+_Must_inspect_result_
+_Post_satisfies_(return == 1 || return == 0)
 _DECL_HAL_KE_IMPORT
 LOGICAL
 FASTCALL
 KeTryToAcquireQueuedSpinLock(
-  IN KSPIN_LOCK_QUEUE_NUMBER Number,
-  OUT PKIRQL OldIrql);
+  _In_ KSPIN_LOCK_QUEUE_NUMBER Number,
+  _Out_ _At_(*OldIrql, _IRQL_saves_) PKIRQL OldIrql);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
@@ -709,24 +863,27 @@ $endif (_NTIFS_)
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXPSP1)
 
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeDeregisterBugCheckReasonCallback(
-  IN OUT PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord);
+  _Inout_ PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord);
 
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeRegisterBugCheckReasonCallback(
-  OUT PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
-  IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
-  IN KBUGCHECK_CALLBACK_REASON Reason,
-  IN PUCHAR Component);
+  _Out_ PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
+  _In_ PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
+  _In_ KBUGCHECK_CALLBACK_REASON Reason,
+  _In_ PUCHAR Component);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXPSP1) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -735,55 +892,67 @@ KeFlushQueuedDpcs(VOID);
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 KeRegisterNmiCallback(
-  IN PNMI_CALLBACK CallbackRoutine,
-  IN PVOID Context OPTIONAL);
+  _In_ PNMI_CALLBACK CallbackRoutine,
+  _In_opt_ PVOID Context);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeDeregisterNmiCallback(
-  IN PVOID Handle);
+  _In_ PVOID Handle);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeThreadedDpc(
-  OUT PRKDPC Dpc,
-  IN PKDEFERRED_ROUTINE DeferredRoutine,
-  IN PVOID DeferredContext OPTIONAL);
+  _Out_ PRKDPC Dpc,
+  _In_ PKDEFERRED_ROUTINE DeferredRoutine,
+  _In_opt_ PVOID DeferredContext);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(IPI_LEVEL-1)
 NTKERNELAPI
 ULONG_PTR
 NTAPI
 KeIpiGenericCall(
-  IN PKIPI_BROADCAST_WORKER BroadcastFunction,
-  IN ULONG_PTR Context);
+  _In_ PKIPI_BROADCAST_WORKER BroadcastFunction,
+  _In_ ULONG_PTR Context);
 
+_Requires_lock_not_held_(*SpinLock)
+_Acquires_lock_(*SpinLock)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_
 NTKERNELAPI
 KIRQL
 FASTCALL
 KeAcquireSpinLockForDpc(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ PKSPIN_LOCK SpinLock);
 
+_Requires_lock_held_(*SpinLock)
+_Releases_lock_(*SpinLock)
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseSpinLockForDpc(
-  IN OUT PKSPIN_LOCK SpinLock,
-  IN KIRQL OldIrql);
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _In_ _IRQL_restores_ KIRQL OldIrql);
 
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 KeTestSpinLock(
-  IN PKSPIN_LOCK SpinLock);
+  _In_ PKSPIN_LOCK SpinLock);
 $endif (_WDMDDK_)
 
 $if (_NTDDK_)
@@ -794,83 +963,123 @@ KeInvalidateAllCaches(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
+_Must_inspect_result_
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_Post_satisfies_(return == 1 || return == 0)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 KeTryToAcquireSpinLockAtDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock);
+  _Inout_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return!=0, _Acquires_lock_(*_Curr_))
+    PKSPIN_LOCK SpinLock);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeAreAllApcsDisabled(VOID);
 
+_Acquires_lock_(_Global_critical_region_)
+_Requires_lock_not_held_(*Mutex)
+_Acquires_lock_(*Mutex)
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireGuardedMutex(
-  IN OUT PKGUARDED_MUTEX GuardedMutex);
+  _Inout_ PKGUARDED_MUTEX GuardedMutex);
 
+_Requires_lock_not_held_(*FastMutex)
+_Acquires_lock_(*FastMutex)
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireGuardedMutexUnsafe(
-  IN OUT PKGUARDED_MUTEX GuardedMutex);
+  _Inout_ PKGUARDED_MUTEX GuardedMutex);
 
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeEnterGuardedRegion(VOID);
 
+_Releases_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeLeaveGuardedRegion(VOID);
 
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeInitializeGuardedMutex(
-  OUT PKGUARDED_MUTEX GuardedMutex);
+  _Out_ PKGUARDED_MUTEX GuardedMutex);
 
+_Requires_lock_held_(*FastMutex)
+_Releases_lock_(*FastMutex)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseGuardedMutexUnsafe(
-  IN OUT PKGUARDED_MUTEX GuardedMutex);
+  _Inout_ PKGUARDED_MUTEX GuardedMutex);
 
+_Releases_lock_(_Global_critical_region_)
+_Requires_lock_held_(*Mutex)
+_Releases_lock_(*Mutex)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseGuardedMutex(
-  IN OUT PKGUARDED_MUTEX GuardedMutex);
+  _Inout_ PKGUARDED_MUTEX GuardedMutex);
 
+_Must_inspect_result_
+_Success_(return != FALSE)
+_IRQL_requires_max_(APC_LEVEL)
+_Post_satisfies_(return == 1 || return == 0)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
-  IN OUT PKGUARDED_MUTEX GuardedMutex);
+  _When_ (return, _Requires_lock_not_held_(*_Curr_) _Acquires_exclusive_lock_(*_Curr_)) _Acquires_lock_(_Global_critical_region_)
+  _Inout_ PKGUARDED_MUTEX GuardedMutex);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeExpandKernelStackAndCallout(
-  IN PEXPAND_STACK_CALLOUT Callout,
-  IN PVOID Parameter OPTIONAL,
-  IN SIZE_T Size);
+  _In_ PEXPAND_STACK_CALLOUT Callout,
+  _In_opt_ PVOID Parameter,
+  _In_ SIZE_T Size);
 
+_Acquires_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeEnterGuardedRegion(VOID);
 
+_Releases_lock_(_Global_critical_region_)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
@@ -878,51 +1087,65 @@ KeLeaveGuardedRegion(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)
+_Requires_lock_not_held_(*LockHandle)
+_Acquires_lock_(*LockHandle)
+_Post_same_lock_(*SpinLock, *LockHandle)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_saves_global_(QueuedSpinLock,LockHandle)
 NTKERNELAPI
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockForDpc(
-  IN OUT PKSPIN_LOCK SpinLock,
-  OUT PKLOCK_QUEUE_HANDLE LockHandle);
+  _Inout_ PKSPIN_LOCK SpinLock,
+  _Out_ PKLOCK_QUEUE_HANDLE LockHandle);
 
+_Requires_lock_held_(*LockHandle)
+_Releases_lock_(*LockHandle)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_restores_global_(QueuedSpinLock,LockHandle)
 NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLockForDpc(
-  IN PKLOCK_QUEUE_HANDLE LockHandle);
+  _In_ PKLOCK_QUEUE_HANDLE LockHandle);
 
+_IRQL_requires_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeQueryDpcWatchdogInformation(
-  OUT PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
+  _Out_ PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if defined(SINGLE_GROUP_LEGACY_API)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 KAFFINITY
 NTAPI
 KeSetSystemAffinityThreadEx(
-  IN KAFFINITY Affinity);
+  _In_ KAFFINITY Affinity);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeRevertToUserAffinityThreadEx(
-  IN KAFFINITY Affinity);
+  _In_ KAFFINITY Affinity);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCount(
-  OUT PKAFFINITY ActiveProcessors OPTIONAL);
+  _Out_opt_ PKAFFINITY ActiveProcessors);
 
 NTKERNELAPI
 ULONG
@@ -934,7 +1157,7 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCount(
-  OUT PKAFFINITY ActiveProcessors OPTIONAL);
+  _Out_opt_ PKAFFINITY ActiveProcessors);
 
 NTKERNELAPI
 ULONG
@@ -943,23 +1166,28 @@ KeQueryMaximumProcessorCount(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* SINGLE_GROUP_LEGACY_API */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTIFS_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 KeQueryOwnerMutant(
-  IN PKMUTANT Mutant,
-  OUT PCLIENT_ID ClientId);
+  _In_ PKMUTANT Mutant,
+  _Out_ PCLIENT_ID ClientId);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 ULONG
-KeRemoveQueueEx (
-  IN OUT PKQUEUE Queue,
-  IN KPROCESSOR_MODE WaitMode,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  OUT PLIST_ENTRY *EntryArray,
-  IN ULONG Count);
+NTAPI
+KeRemoveQueueEx(
+  _Inout_ PKQUEUE Queue,
+  _In_ KPROCESSOR_MODE WaitMode,
+  _In_ BOOLEAN Alertable,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _Out_writes_to_(Count, return) PLIST_ENTRY *EntryArray,
+  _In_ ULONG Count);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
@@ -967,64 +1195,80 @@ $endif (_NTIFS_)
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS08)
 
+_IRQL_requires_max_(APC_LEVEL)
 PVOID
+NTAPI
 KeRegisterProcessorChangeCallback(
-  IN PPROCESSOR_CALLBACK_FUNCTION CallbackFunction,
-  IN PVOID CallbackContext OPTIONAL,
-  IN ULONG Flags);
+  _In_ PPROCESSOR_CALLBACK_FUNCTION CallbackFunction,
+  _In_opt_ PVOID CallbackContext,
+  _In_ ULONG Flags);
 
+_IRQL_requires_max_(APC_LEVEL)
 VOID
+NTAPI
 KeDeregisterProcessorChangeCallback(
-  IN PVOID CallbackHandle);
+  _In_ PVOID CallbackHandle);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS08) */
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 ULONG64
 NTAPI
 KeQueryTotalCycleTimeProcess(
-  IN OUT PKPROCESS Process,
-  OUT PULONG64 CycleTimeStamp);
+  _Inout_ PKPROCESS Process,
+  _Out_ PULONG64 CycleTimeStamp);
 
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 ULONG64
 NTAPI
 KeQueryTotalCycleTimeThread(
-  IN OUT PKTHREAD Thread,
-  OUT PULONG64 CycleTimeStamp);
+  _Inout_ PKTHREAD Thread,
+  _Out_ PULONG64 CycleTimeStamp);
 
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeSetTargetProcessorDpcEx(
-  IN OUT PKDPC Dpc,
-  IN PPROCESSOR_NUMBER ProcNumber);
+  _Inout_ PKDPC Dpc,
+  _In_ PPROCESSOR_NUMBER ProcNumber);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeSetSystemGroupAffinityThread(
-  IN PGROUP_AFFINITY Affinity,
-  OUT PGROUP_AFFINITY PreviousAffinity OPTIONAL);
+  _In_ PGROUP_AFFINITY Affinity,
+  _Out_opt_ PGROUP_AFFINITY PreviousAffinity);
 
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 KeRevertToUserGroupAffinityThread(
-  IN PGROUP_AFFINITY PreviousAffinity);
+  _In_ PGROUP_AFFINITY PreviousAffinity);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeSetCoalescableTimer(
-  IN OUT PKTIMER Timer,
-  IN LARGE_INTEGER DueTime,
-  IN ULONG Period,
-  IN ULONG TolerableDelay,
-  IN PKDPC Dpc OPTIONAL);
+  _Inout_ PKTIMER Timer,
+  _In_ LARGE_INTEGER DueTime,
+  _In_ ULONG Period,
+  _In_ ULONG TolerableDelay,
+  _In_opt_ PKDPC Dpc);
 
 NTKERNELAPI
 ULONGLONG
@@ -1035,13 +1279,13 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCountEx(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCountEx(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 USHORT
@@ -1057,27 +1301,27 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryGroupAffinity(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeGetCurrentProcessorNumberEx(
-  OUT PPROCESSOR_NUMBER ProcNumber OPTIONAL);
+  _Out_opt_ PPROCESSOR_NUMBER ProcNumber);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeQueryNodeActiveAffinity(
-  IN USHORT NodeNumber,
-  OUT PGROUP_AFFINITY Affinity OPTIONAL,
-  OUT PUSHORT Count OPTIONAL);
+  _In_ USHORT NodeNumber,
+  _Out_opt_ PGROUP_AFFINITY Affinity,
+  _Out_opt_ PUSHORT Count);
 
 NTKERNELAPI
 USHORT
 NTAPI
 KeQueryNodeMaximumProcessorCount(
-  IN USHORT NodeNumber);
+  _In_ USHORT NodeNumber);
 
 NTKERNELAPI
 USHORT
@@ -1089,51 +1333,60 @@ USHORT
 NTAPI
 KeGetCurrentNodeNumber(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeQueryLogicalProcessorRelationship(
-  IN PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
-  IN LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
-  OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information OPTIONAL,
-  IN OUT PULONG Length);
+  _In_opt_ PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
+  _In_ LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
+  _Out_writes_bytes_opt_(*Length) PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,
+  _Inout_ PULONG Length);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Ret_range_(<=, 0)
+_When_(return==0, _Kernel_float_saved_)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeSaveExtendedProcessorState(
-  IN ULONG64 Mask,
-  OUT PXSTATE_SAVE XStateSave);
+  _In_ ULONG64 Mask,
+  _Out_ _Requires_lock_not_held_(*_Curr_)
+  _When_(return==0, _Acquires_lock_(*_Curr_))
+    PXSTATE_SAVE XStateSave);
 
+_Kernel_float_restored_
 NTKERNELAPI
 VOID
 NTAPI
 KeRestoreExtendedProcessorState(
-  IN PXSTATE_SAVE XStateSave);
+  _In_ _Requires_lock_held_(*_Curr_) _Releases_lock_(*_Curr_)
+    PXSTATE_SAVE XStateSave);
 
 NTSTATUS
 NTAPI
 KeGetProcessorNumberFromIndex(
-  IN ULONG ProcIndex,
-  OUT PPROCESSOR_NUMBER ProcNumber);
+  _In_ ULONG ProcIndex,
+  _Out_ PPROCESSOR_NUMBER ProcNumber);
 
 ULONG
 NTAPI
 KeGetProcessorIndexFromNumber(
-  IN PPROCESSOR_NUMBER ProcNumber);
+  _In_ PPROCESSOR_NUMBER ProcNumber);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCountEx(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCountEx(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 USHORT
@@ -1149,27 +1402,27 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryGroupAffinity(
-  IN USHORT GroupNumber);
+  _In_ USHORT GroupNumber);
 
 NTKERNELAPI
 ULONG
 NTAPI
 KeGetCurrentProcessorNumberEx(
-  OUT PPROCESSOR_NUMBER ProcNumber OPTIONAL);
+  _Out_opt_ PPROCESSOR_NUMBER ProcNumber);
 
 NTKERNELAPI
 VOID
 NTAPI
 KeQueryNodeActiveAffinity(
-  IN USHORT NodeNumber,
-  OUT PGROUP_AFFINITY Affinity OPTIONAL,
-  OUT PUSHORT Count OPTIONAL);
+  _In_ USHORT NodeNumber,
+  _Out_opt_ PGROUP_AFFINITY Affinity,
+  _Out_opt_ PUSHORT Count);
 
 NTKERNELAPI
 USHORT
 NTAPI
 KeQueryNodeMaximumProcessorCount(
-  IN USHORT NodeNumber);
+  _In_ USHORT NodeNumber);
 
 NTKERNELAPI
 USHORT
@@ -1181,33 +1434,36 @@ USHORT
 NTAPI
 KeGetCurrentNodeNumber(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeQueryLogicalProcessorRelationship(
-  IN PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
-  IN LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
-  OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information OPTIONAL,
-  IN OUT PULONG Length);
+  _In_opt_ PPROCESSOR_NUMBER ProcessorNumber,
+  _In_ LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
+  _Out_writes_bytes_opt_(*Length) PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,
+  _Inout_ PULONG Length);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeSetHardwareCounterConfiguration(
-  IN PHARDWARE_COUNTER CounterArray,
-  IN ULONG Count);
+  _In_reads_(Count) PHARDWARE_COUNTER CounterArray,
+  _In_ ULONG Count);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeQueryHardwareCounterConfiguration(
-  OUT PHARDWARE_COUNTER CounterArray,
-  IN ULONG MaximumCount,
-  OUT PULONG Count);
+  _Out_writes_to_(MaximumCount, *Count) PHARDWARE_COUNTER CounterArray,
+  _In_ ULONG MaximumCount,
+  _Out_ PULONG Count);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #if !defined(_IA64_)
 NTHALAPI
@@ -1223,7 +1479,14 @@ KeFlushWriteBuffer(VOID);
 #define KeInitializeCallbackRecord(CallbackRecord) \
   CallbackRecord->State = BufferEmpty;
 
-#if DBG
+#if defined(_PREFAST_)
+
+void __PREfastPagedCode(void);
+void __PREfastPagedCodeLocked(void);
+#define PAGED_CODE() __PREfastPagedCode();
+#define PAGED_CODE_LOCKED() __PREfastPagedCodeLocked();
+
+#elif DBG
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #define PAGED_ASSERT( exp ) NT_ASSERT( exp )
@@ -1238,12 +1501,13 @@ KeFlushWriteBuffer(VOID);
   } \
 }
 
+#define PAGED_CODE_LOCKED() NOP_FUNCTION;
+
 #else
 
-#define PAGED_CODE()
+#define PAGED_CODE() NOP_FUNCTION;
+#define PAGED_CODE_LOCKED() NOP_FUNCTION;
 
 #endif /* DBG */
 
-#define PAGED_CODE_LOCKED() NOP_FUNCTION;
 $endif (_WDMDDK_)
-

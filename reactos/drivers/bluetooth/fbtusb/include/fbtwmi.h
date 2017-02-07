@@ -15,10 +15,10 @@
 
 //#define ENABLE_WMI
 
-NTSTATUS FreeBT_WmiRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS FreeBT_WmiDeRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS FreeBT_DispatchSysCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_QueryWmiRegInfo(
+NTSTATUS NTAPI FreeBT_WmiRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI FreeBT_WmiDeRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI FreeBT_DispatchSysCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_QueryWmiRegInfo(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
     OUT PUNICODE_STRING InstanceName,
@@ -26,7 +26,7 @@ NTSTATUS FreeBT_QueryWmiRegInfo(
     OUT PUNICODE_STRING MofResourceName,
     OUT PDEVICE_OBJECT *Pdo);
 
-NTSTATUS FreeBT_SetWmiDataItem(
+NTSTATUS NTAPI FreeBT_SetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -35,7 +35,7 @@ NTSTATUS FreeBT_SetWmiDataItem(
     IN ULONG          BufferSize,
     IN PUCHAR         Buffer);
 
-NTSTATUS FreeBT_SetWmiDataBlock(
+NTSTATUS NTAPI FreeBT_SetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -43,7 +43,7 @@ NTSTATUS FreeBT_SetWmiDataBlock(
     IN ULONG          BufferSize,
     IN PUCHAR         Buffer);
 
-NTSTATUS FreeBT_QueryWmiDataBlock(
+NTSTATUS NTAPI FreeBT_QueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -53,6 +53,6 @@ NTSTATUS FreeBT_QueryWmiDataBlock(
     IN ULONG          OutBufferSize,
     OUT PUCHAR        Buffer);
 
-PCHAR WMIMinorFunctionString(UCHAR MinorFunction);
+PCHAR NTAPI WMIMinorFunctionString(UCHAR MinorFunction);
 
 #endif

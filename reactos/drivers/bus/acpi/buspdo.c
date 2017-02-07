@@ -552,71 +552,72 @@ Bus_PDO_QueryDeviceText(
     case DeviceTextDescription:
 
         if (!Irp->IoStatus.Information) {
-		  if (wcsstr (DeviceData->HardwareIDs, L"PNP000") != 0)
-			Temp = L"Programmable interrupt controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP010") != 0)
-			Temp = L"System timer";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP020") != 0)
-			Temp = L"DMA controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP03") != 0)
-			Temp = L"Keyboard";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP040") != 0)
-			Temp = L"Parallel port";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP05") != 0)
-			Temp = L"Serial port";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP06") != 0)
-			Temp = L"Disk controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP07") != 0)
-			Temp = L"Disk controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP09") != 0)
-			Temp = L"Display adapter";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A0") != 0)
-			Temp = L"Bus controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0E0") != 0)
-			Temp = L"PCMCIA controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0F") != 0)
-			Temp = L"Mouse device";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP8") != 0)
-			Temp = L"Network adapter";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPA0") != 0)
-			Temp = L"SCSI controller";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPB0") != 0)
-			Temp = L"Multimedia device";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNPC00") != 0)
-			Temp = L"Modem";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0C") != 0)
-			Temp = L"Power Button";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0E") != 0)
-			Temp = L"Sleep Button";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0D") != 0)
-			Temp = L"Lid Switch";
-		  else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C09") != 0)
-			Temp = L"ACPI Embedded Controller";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
-			Temp = L"ACPI Fan";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
-			Temp = L"PCI Root Bridge";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
-			Temp = L"ACPI Battery";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0F") != 0)
-			Temp = L"PCI Interrupt Link";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
-			Temp = L"ACPI Power Resource";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
-			Temp = L"Processor";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
-			Temp = L"ACPI Thermal Zone";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
-			Temp = L"Smart Battery";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
-			Temp = L"AC Adapter";
-		   /* Simply checking if AcpiHandle is NULL eliminates the need to check
-		    * for the 4 different names that ACPI knows the fixed feature button as internally
-		    */
-		   else if (!DeviceData->AcpiHandle)
-			Temp = L"ACPI Fixed Feature Button";
-		  else
-			Temp = L"Other ACPI device";
+          if (wcsstr (DeviceData->HardwareIDs, L"PNP000") != 0)
+            Temp = L"Programmable interrupt controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP010") != 0)
+            Temp = L"System timer";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP020") != 0)
+            Temp = L"DMA controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP03") != 0)
+            Temp = L"Keyboard";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP040") != 0)
+            Temp = L"Parallel port";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP05") != 0)
+            Temp = L"Serial port";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP06") != 0)
+            Temp = L"Disk controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP07") != 0)
+            Temp = L"Disk controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP09") != 0)
+            Temp = L"Display adapter";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A0") != 0)
+            Temp = L"Bus controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0E0") != 0)
+            Temp = L"PCMCIA controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0F") != 0)
+            Temp = L"Mouse device";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP8") != 0)
+            Temp = L"Network adapter";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNPA0") != 0)
+            Temp = L"SCSI controller";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNPB0") != 0)
+            Temp = L"Multimedia device";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNPC00") != 0)
+            Temp = L"Modem";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0C") != 0)
+            Temp = L"Power Button";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0E") != 0)
+            Temp = L"Sleep Button";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0D") != 0)
+            Temp = L"Lid Switch";
+          else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C09") != 0)
+            Temp = L"ACPI Embedded Controller";
+           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0B") != 0)
+            Temp = L"ACPI Fan";
+           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+                    wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0 )
+            Temp = L"PCI Root Bridge";
+           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0A") != 0)
+            Temp = L"ACPI Battery";
+           else if (wcsstr(DeviceData->HardwareIDs, L"PNP0C0F") != 0)
+            Temp = L"PCI Interrupt Link";
+           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_PWR") != 0)
+            Temp = L"ACPI Power Resource";
+           else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
+            Temp = L"Processor";
+           else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
+            Temp = L"ACPI Thermal Zone";
+           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
+            Temp = L"Smart Battery";
+           else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
+            Temp = L"AC Adapter";
+           /* Simply checking if AcpiHandle is NULL eliminates the need to check
+            * for the 4 different names that ACPI knows the fixed feature button as internally
+            */
+           else if (!DeviceData->AcpiHandle)
+            Temp = L"ACPI Fixed Feature Button";
+          else
+            Temp = L"Other ACPI device";
 
             Buffer = ExAllocatePoolWithTag (PagedPool, (wcslen(Temp) + 1) * sizeof(WCHAR), 'IPCA');
 
@@ -647,15 +648,15 @@ Bus_PDO_QueryResources(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	ULONG NumberOfResources = 0;
-	PCM_RESOURCE_LIST ResourceList;
-	PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
-	ACPI_STATUS AcpiStatus;
-	ACPI_BUFFER Buffer;
-	ACPI_RESOURCE* resource;
-	ULONG ResourceListSize;
-	ULONG i;
-	ULONGLONG BusNumber;
+    ULONG NumberOfResources = 0;
+    PCM_RESOURCE_LIST ResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
+    ACPI_STATUS AcpiStatus;
+    ACPI_BUFFER Buffer;
+    ACPI_RESOURCE* resource;
+    ULONG ResourceListSize;
+    ULONG i;
+    ULONGLONG BusNumber;
     struct acpi_device *device;
 
     if (!DeviceData->AcpiHandle)
@@ -666,7 +667,8 @@ Bus_PDO_QueryResources(
     /* A bus number resource is not included in the list of current resources
      * for the root PCI bus so we manually query one here and if we find it
      * we create a resource list and add a bus number descriptor to it */
-    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0)
+    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+        wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0)
     {
         acpi_bus_get_device(DeviceData->AcpiHandle, &device);
 
@@ -735,384 +737,416 @@ Bus_PDO_QueryResources(
       return STATUS_UNSUCCESSFUL;
     }
 
-	resource= Buffer.Pointer;
-	/* Count number of resources */
-	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
-	{
-		switch (resource->Type)
-		{
-			case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-			{
-				ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
-				NumberOfResources += irq_data->InterruptCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IRQ:
-			{
-				ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
-				NumberOfResources += irq_data->InterruptCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_DMA:
-			{
-				ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
-				NumberOfResources += dma_data->ChannelCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS16:
-			case ACPI_RESOURCE_TYPE_ADDRESS32:
-			case ACPI_RESOURCE_TYPE_ADDRESS64:
-			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-			case ACPI_RESOURCE_TYPE_MEMORY24:
-			case ACPI_RESOURCE_TYPE_MEMORY32:
+    resource= Buffer.Pointer;
+    /* Count number of resources */
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
+    {
+        switch (resource->Type)
+        {
+            case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+            {
+                ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
+                if (irq_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                NumberOfResources += irq_data->InterruptCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IRQ:
+            {
+                ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
+                NumberOfResources += irq_data->InterruptCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_DMA:
+            {
+                ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
+                NumberOfResources += dma_data->ChannelCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS16:
+            case ACPI_RESOURCE_TYPE_ADDRESS32:
+            case ACPI_RESOURCE_TYPE_ADDRESS64:
+            case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+            {
+                ACPI_RESOURCE_ADDRESS *addr_res = (ACPI_RESOURCE_ADDRESS*) &resource->Data;
+                if (addr_res->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                NumberOfResources++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY24:
+            case ACPI_RESOURCE_TYPE_MEMORY32:
             case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-			case ACPI_RESOURCE_TYPE_IO:
-			{
-				NumberOfResources++;
-				break;
-			}
-			default:
-			{
-				DPRINT1("Unknown resource type: %d\n", resource->Type);
-				break;
-			}
-		}
-		resource = ACPI_NEXT_RESOURCE(resource);
-	}
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            case ACPI_RESOURCE_TYPE_IO:
+            {
+                NumberOfResources++;
+                break;
+            }
+            default:
+            {
+                DPRINT1("Unknown resource type: %d\n", resource->Type);
+                break;
+            }
+        }
+        resource = ACPI_NEXT_RESOURCE(resource);
+    }
 
-	/* Allocate memory */
-	ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
+    /* Allocate memory */
+    ResourceListSize = sizeof(CM_RESOURCE_LIST) + sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
+    ResourceList = (PCM_RESOURCE_LIST)ExAllocatePoolWithTag(PagedPool, ResourceListSize, 'IPCA');
 
-	if (!ResourceList)
-	{
-		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-	ResourceList->Count = 1;
-	ResourceList->List[0].InterfaceType = Internal; /* FIXME */
-	ResourceList->List[0].BusNumber = 0; /* We're the only ACPI bus device in the system */
-	ResourceList->List[0].PartialResourceList.Version = 1;
-	ResourceList->List[0].PartialResourceList.Revision = 1;
-	ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
-	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+    if (!ResourceList)
+    {
+        ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    ResourceList->Count = 1;
+    ResourceList->List[0].InterfaceType = Internal; /* FIXME */
+    ResourceList->List[0].BusNumber = 0; /* We're the only ACPI bus device in the system */
+    ResourceList->List[0].PartialResourceList.Version = 1;
+    ResourceList->List[0].PartialResourceList.Revision = 1;
+    ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
+    ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
-	/* Fill resources list structure */
+    /* Fill resources list structure */
         resource = Buffer.Pointer;
-	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
-	{
-		switch (resource->Type)
-		{
-			case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-			{
-				ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
-				for (i = 0; i < irq_data->InterruptCount; i++)
-				{
-					ResourceDescriptor->Type = CmResourceTypeInterrupt;
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
+    {
+        switch (resource->Type)
+        {
+            case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+            {
+                ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
+                if (irq_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                for (i = 0; i < irq_data->InterruptCount; i++)
+                {
+                    ResourceDescriptor->Type = CmResourceTypeInterrupt;
 
-					ResourceDescriptor->ShareDisposition =
-					(irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
-					ResourceDescriptor->Flags =
-					(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					ResourceDescriptor->u.Interrupt.Level =
-					ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
-					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
+                    ResourceDescriptor->ShareDisposition =
+                    (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+                    ResourceDescriptor->Flags =
+                    (irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
+                    ResourceDescriptor->u.Interrupt.Level =
+                    ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
+                    ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
-					ResourceDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IRQ:
-			{
-				ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
-				for (i = 0; i < irq_data->InterruptCount; i++)
-				{
-					ResourceDescriptor->Type = CmResourceTypeInterrupt;
+                    ResourceDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IRQ:
+            {
+                ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
+                for (i = 0; i < irq_data->InterruptCount; i++)
+                {
+                    ResourceDescriptor->Type = CmResourceTypeInterrupt;
 
-					ResourceDescriptor->ShareDisposition =
-					(irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
-					ResourceDescriptor->Flags =
-					(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					ResourceDescriptor->u.Interrupt.Level =
-					ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
-					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
+                    ResourceDescriptor->ShareDisposition =
+                    (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+                    ResourceDescriptor->Flags =
+                    (irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
+                    ResourceDescriptor->u.Interrupt.Level =
+                    ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
+                    ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
-					ResourceDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_DMA:
-			{
-				ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
-				for (i = 0; i < dma_data->ChannelCount; i++)
-				{
-					ResourceDescriptor->Type = CmResourceTypeDma;
-					ResourceDescriptor->Flags = 0;
-					switch (dma_data->Type)
-					{
-						case ACPI_TYPE_A: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
-						case ACPI_TYPE_B: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
-						case ACPI_TYPE_F: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
-					}
-					if (dma_data->BusMaster == ACPI_BUS_MASTER)
-						ResourceDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
-					switch (dma_data->Transfer)
-					{
-						case ACPI_TRANSFER_8: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
-						case ACPI_TRANSFER_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
-						case ACPI_TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
-					}
-					ResourceDescriptor->u.Dma.Channel = dma_data->Channels[i];
+                    ResourceDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_DMA:
+            {
+                ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
+                for (i = 0; i < dma_data->ChannelCount; i++)
+                {
+                    ResourceDescriptor->Type = CmResourceTypeDma;
+                    ResourceDescriptor->Flags = 0;
+                    switch (dma_data->Type)
+                    {
+                        case ACPI_TYPE_A: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+                        case ACPI_TYPE_B: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+                        case ACPI_TYPE_F: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+                    }
+                    if (dma_data->BusMaster == ACPI_BUS_MASTER)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+                    switch (dma_data->Transfer)
+                    {
+                        case ACPI_TRANSFER_8: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
+                        case ACPI_TRANSFER_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
+                        case ACPI_TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+                    }
+                    ResourceDescriptor->u.Dma.Channel = dma_data->Channels[i];
 
-					ResourceDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IO:
-			{
-				ACPI_RESOURCE_IO *io_data = (ACPI_RESOURCE_IO*) &resource->Data;
-				ResourceDescriptor->Type = CmResourceTypePort;
-				ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-				ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-				if (io_data->IoDecode == ACPI_DECODE_16)
-					ResourceDescriptor->Flags |= CM_RESOURCE_PORT_16_BIT_DECODE;
-				else
-					ResourceDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
-				ResourceDescriptor->u.Port.Start.QuadPart = io_data->Minimum;
-				ResourceDescriptor->u.Port.Length = io_data->AddressLength;
+                    ResourceDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IO:
+            {
+                ACPI_RESOURCE_IO *io_data = (ACPI_RESOURCE_IO*) &resource->Data;
+                ResourceDescriptor->Type = CmResourceTypePort;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                if (io_data->IoDecode == ACPI_DECODE_16)
+                    ResourceDescriptor->Flags |= CM_RESOURCE_PORT_16_BIT_DECODE;
+                else
+                    ResourceDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
+                ResourceDescriptor->u.Port.Start.QuadPart = io_data->Minimum;
+                ResourceDescriptor->u.Port.Length = io_data->AddressLength;
 
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS16:
-			{
-				ACPI_RESOURCE_ADDRESS16 *addr16_data = (ACPI_RESOURCE_ADDRESS16*) &resource->Data;
-				if (addr16_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypeBusNumber;
-					ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-					ResourceDescriptor->Flags = 0;
-					ResourceDescriptor->u.BusNumber.Start = addr16_data->Minimum;
-					ResourceDescriptor->u.BusNumber.Length = addr16_data->AddressLength;
-				}
-				else if (addr16_data->ResourceType == ACPI_IO_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypePort;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr16_data->Decode == ACPI_POS_DECODE)
-						ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					ResourceDescriptor->u.Port.Start.QuadPart = addr16_data->Minimum;
-					ResourceDescriptor->u.Port.Length = addr16_data->AddressLength;
-				}
-				else
-				{
-					ResourceDescriptor->Type = CmResourceTypeMemory;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = 0;
-					if (addr16_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr16_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}
-					ResourceDescriptor->u.Memory.Start.QuadPart = addr16_data->Minimum;
-					ResourceDescriptor->u.Memory.Length = addr16_data->AddressLength;
-				}
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS32:
-			{
-				ACPI_RESOURCE_ADDRESS32 *addr32_data = (ACPI_RESOURCE_ADDRESS32*) &resource->Data;
-				if (addr32_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypeBusNumber;
-					ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-					ResourceDescriptor->Flags = 0;
-					ResourceDescriptor->u.BusNumber.Start = addr32_data->Minimum;
-					ResourceDescriptor->u.BusNumber.Length = addr32_data->AddressLength;
-				}
-				else if (addr32_data->ResourceType == ACPI_IO_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypePort;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr32_data->Decode == ACPI_POS_DECODE)
-						ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					ResourceDescriptor->u.Port.Start.QuadPart = addr32_data->Minimum;
-					ResourceDescriptor->u.Port.Length = addr32_data->AddressLength;
-				}
-				else
-				{
-					ResourceDescriptor->Type = CmResourceTypeMemory;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = 0;
-					if (addr32_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr32_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}
-					ResourceDescriptor->u.Memory.Start.QuadPart = addr32_data->Minimum;
-					ResourceDescriptor->u.Memory.Length = addr32_data->AddressLength;
-				}
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS64:
-			{
-				ACPI_RESOURCE_ADDRESS64 *addr64_data = (ACPI_RESOURCE_ADDRESS64*) &resource->Data;
-				if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					DPRINT1("64-bit bus address is not supported!\n");
-					ResourceDescriptor->Type = CmResourceTypeBusNumber;
-					ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-					ResourceDescriptor->Flags = 0;
-					ResourceDescriptor->u.BusNumber.Start = (ULONG)addr64_data->Minimum;
-					ResourceDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
-				}
-				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypePort;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr64_data->Decode == ACPI_POS_DECODE)
-						ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					ResourceDescriptor->u.Port.Start.QuadPart = addr64_data->Minimum;
-					ResourceDescriptor->u.Port.Length = addr64_data->AddressLength;
-				}
-				else
-				{
-					ResourceDescriptor->Type = CmResourceTypeMemory;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = 0;
-					if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr64_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}	
-					ResourceDescriptor->u.Memory.Start.QuadPart = addr64_data->Minimum;
-					ResourceDescriptor->u.Memory.Length = addr64_data->AddressLength;
-				}
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-			{
-				ACPI_RESOURCE_EXTENDED_ADDRESS64 *addr64_data = (ACPI_RESOURCE_EXTENDED_ADDRESS64*) &resource->Data;
-				if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					DPRINT1("64-bit bus address is not supported!\n");
-					ResourceDescriptor->Type = CmResourceTypeBusNumber;
-					ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-					ResourceDescriptor->Flags = 0;
-					ResourceDescriptor->u.BusNumber.Start = (ULONG)addr64_data->Minimum;
-					ResourceDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
-				}
-				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
-				{
-					ResourceDescriptor->Type = CmResourceTypePort;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr64_data->Decode == ACPI_POS_DECODE)
-						ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					ResourceDescriptor->u.Port.Start.QuadPart = addr64_data->Minimum;
-					ResourceDescriptor->u.Port.Length = addr64_data->AddressLength;
-				}
-				else
-				{
-					ResourceDescriptor->Type = CmResourceTypeMemory;
-					ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					ResourceDescriptor->Flags = 0;
-					if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr64_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}	
-					ResourceDescriptor->u.Memory.Start.QuadPart = addr64_data->Minimum;
-					ResourceDescriptor->u.Memory.Length = addr64_data->AddressLength;
-				}
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_MEMORY24:
-			{
-				ACPI_RESOURCE_MEMORY24 *mem24_data = (ACPI_RESOURCE_MEMORY24*) &resource->Data;
-				ResourceDescriptor->Type = CmResourceTypeMemory;
-				ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				ResourceDescriptor->Flags = CM_RESOURCE_MEMORY_24;
-				if (mem24_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				ResourceDescriptor->u.Memory.Start.QuadPart = mem24_data->Minimum;
-				ResourceDescriptor->u.Memory.Length = mem24_data->AddressLength;
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            {
+                ACPI_RESOURCE_FIXED_IO *io_data = (ACPI_RESOURCE_FIXED_IO*) &resource->Data;
+                ResourceDescriptor->Type = CmResourceTypePort;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                ResourceDescriptor->u.Port.Start.QuadPart = io_data->Address;
+                ResourceDescriptor->u.Port.Length = io_data->AddressLength;
+                
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS16:
+            {
+                ACPI_RESOURCE_ADDRESS16 *addr16_data = (ACPI_RESOURCE_ADDRESS16*) &resource->Data;
+                if (addr16_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                if (addr16_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypeBusNumber;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareShared;
+                    ResourceDescriptor->Flags = 0;
+                    ResourceDescriptor->u.BusNumber.Start = addr16_data->Minimum;
+                    ResourceDescriptor->u.BusNumber.Length = addr16_data->AddressLength;
+                }
+                else if (addr16_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypePort;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr16_data->Decode == ACPI_POS_DECODE)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    ResourceDescriptor->u.Port.Start.QuadPart = addr16_data->Minimum;
+                    ResourceDescriptor->u.Port.Length = addr16_data->AddressLength;
+                }
+                else
+                {
+                    ResourceDescriptor->Type = CmResourceTypeMemory;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = 0;
+                    if (addr16_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr16_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }
+                    ResourceDescriptor->u.Memory.Start.QuadPart = addr16_data->Minimum;
+                    ResourceDescriptor->u.Memory.Length = addr16_data->AddressLength;
+                }
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS32:
+            {
+                ACPI_RESOURCE_ADDRESS32 *addr32_data = (ACPI_RESOURCE_ADDRESS32*) &resource->Data;
+                if (addr32_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                if (addr32_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypeBusNumber;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareShared;
+                    ResourceDescriptor->Flags = 0;
+                    ResourceDescriptor->u.BusNumber.Start = addr32_data->Minimum;
+                    ResourceDescriptor->u.BusNumber.Length = addr32_data->AddressLength;
+                }
+                else if (addr32_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypePort;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr32_data->Decode == ACPI_POS_DECODE)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    ResourceDescriptor->u.Port.Start.QuadPart = addr32_data->Minimum;
+                    ResourceDescriptor->u.Port.Length = addr32_data->AddressLength;
+                }
+                else
+                {
+                    ResourceDescriptor->Type = CmResourceTypeMemory;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = 0;
+                    if (addr32_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr32_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }
+                    ResourceDescriptor->u.Memory.Start.QuadPart = addr32_data->Minimum;
+                    ResourceDescriptor->u.Memory.Length = addr32_data->AddressLength;
+                }
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS64:
+            {
+                ACPI_RESOURCE_ADDRESS64 *addr64_data = (ACPI_RESOURCE_ADDRESS64*) &resource->Data;
+                if (addr64_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    DPRINT1("64-bit bus address is not supported!\n");
+                    ResourceDescriptor->Type = CmResourceTypeBusNumber;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareShared;
+                    ResourceDescriptor->Flags = 0;
+                    ResourceDescriptor->u.BusNumber.Start = (ULONG)addr64_data->Minimum;
+                    ResourceDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
+                }
+                else if (addr64_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypePort;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr64_data->Decode == ACPI_POS_DECODE)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    ResourceDescriptor->u.Port.Start.QuadPart = addr64_data->Minimum;
+                    ResourceDescriptor->u.Port.Length = addr64_data->AddressLength;
+                }
+                else
+                {
+                    ResourceDescriptor->Type = CmResourceTypeMemory;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = 0;
+                    if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr64_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }    
+                    ResourceDescriptor->u.Memory.Start.QuadPart = addr64_data->Minimum;
+                    ResourceDescriptor->u.Memory.Length = addr64_data->AddressLength;
+                }
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+            {
+                ACPI_RESOURCE_EXTENDED_ADDRESS64 *addr64_data = (ACPI_RESOURCE_EXTENDED_ADDRESS64*) &resource->Data;
+                if (addr64_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    DPRINT1("64-bit bus address is not supported!\n");
+                    ResourceDescriptor->Type = CmResourceTypeBusNumber;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareShared;
+                    ResourceDescriptor->Flags = 0;
+                    ResourceDescriptor->u.BusNumber.Start = (ULONG)addr64_data->Minimum;
+                    ResourceDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
+                }
+                else if (addr64_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    ResourceDescriptor->Type = CmResourceTypePort;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr64_data->Decode == ACPI_POS_DECODE)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    ResourceDescriptor->u.Port.Start.QuadPart = addr64_data->Minimum;
+                    ResourceDescriptor->u.Port.Length = addr64_data->AddressLength;
+                }
+                else
+                {
+                    ResourceDescriptor->Type = CmResourceTypeMemory;
+                    ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    ResourceDescriptor->Flags = 0;
+                    if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr64_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }    
+                    ResourceDescriptor->u.Memory.Start.QuadPart = addr64_data->Minimum;
+                    ResourceDescriptor->u.Memory.Length = addr64_data->AddressLength;
+                }
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY24:
+            {
+                ACPI_RESOURCE_MEMORY24 *mem24_data = (ACPI_RESOURCE_MEMORY24*) &resource->Data;
+                ResourceDescriptor->Type = CmResourceTypeMemory;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                ResourceDescriptor->Flags = CM_RESOURCE_MEMORY_24;
+                if (mem24_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                ResourceDescriptor->u.Memory.Start.QuadPart = mem24_data->Minimum;
+                ResourceDescriptor->u.Memory.Length = mem24_data->AddressLength;
 
-				ResourceDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_MEMORY32:
-			{
-				ACPI_RESOURCE_MEMORY32 *mem32_data = (ACPI_RESOURCE_MEMORY32*) &resource->Data;
-				ResourceDescriptor->Type = CmResourceTypeMemory;
-				ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				ResourceDescriptor->Flags = 0;
-				if (mem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				ResourceDescriptor->u.Memory.Start.QuadPart = mem32_data->Minimum;
-				ResourceDescriptor->u.Memory.Length = mem32_data->AddressLength;
+                ResourceDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY32:
+            {
+                ACPI_RESOURCE_MEMORY32 *mem32_data = (ACPI_RESOURCE_MEMORY32*) &resource->Data;
+                ResourceDescriptor->Type = CmResourceTypeMemory;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                ResourceDescriptor->Flags = 0;
+                if (mem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                ResourceDescriptor->u.Memory.Start.QuadPart = mem32_data->Minimum;
+                ResourceDescriptor->u.Memory.Length = mem32_data->AddressLength;
 
-				ResourceDescriptor++;
-				break;
-			}
+                ResourceDescriptor++;
+                break;
+            }
             case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
             {
                 ACPI_RESOURCE_FIXED_MEMORY32 *memfixed32_data = (ACPI_RESOURCE_FIXED_MEMORY32*) &resource->Data;
-				ResourceDescriptor->Type = CmResourceTypeMemory;
-				ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				ResourceDescriptor->Flags = 0;
-				if (memfixed32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				ResourceDescriptor->u.Memory.Start.QuadPart = memfixed32_data->Address;
-				ResourceDescriptor->u.Memory.Length = memfixed32_data->AddressLength;
+                ResourceDescriptor->Type = CmResourceTypeMemory;
+                ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                ResourceDescriptor->Flags = 0;
+                if (memfixed32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                ResourceDescriptor->u.Memory.Start.QuadPart = memfixed32_data->Address;
+                ResourceDescriptor->u.Memory.Length = memfixed32_data->AddressLength;
                 
-				ResourceDescriptor++;
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-		resource = ACPI_NEXT_RESOURCE(resource);
-	}
+                ResourceDescriptor++;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        resource = ACPI_NEXT_RESOURCE(resource);
+    }
 
     ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
-	Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-	return STATUS_SUCCESS;
+    Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1120,18 +1154,25 @@ Bus_PDO_QueryResourceRequirements(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	ULONG NumberOfResources = 0;
-	ACPI_STATUS AcpiStatus;
-	ACPI_BUFFER Buffer;
-	ACPI_RESOURCE* resource;
-	ULONG i, RequirementsListSize;
-	PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-	PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
-	BOOLEAN CurrentRes = FALSE;
+    ULONG NumberOfResources = 0;
+    ACPI_STATUS AcpiStatus;
+    ACPI_BUFFER Buffer;
+    ACPI_RESOURCE* resource;
+    ULONG i, RequirementsListSize;
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
+    BOOLEAN CurrentRes = FALSE;
 
     PAGED_CODE ();
 
     if (!DeviceData->AcpiHandle)
+    {
+        return Irp->IoStatus.Status;
+    }
+
+    /* Handle the PCI root manually */
+    if (wcsstr(DeviceData->HardwareIDs, L"PNP0A03") != 0 ||
+        wcsstr(DeviceData->HardwareIDs, L"PNP0A08") != 0)
     {
         return Irp->IoStatus.Status;
     }
@@ -1141,7 +1182,7 @@ Bus_PDO_QueryResourceRequirements(
     {
         Buffer.Length = 0;
         if (CurrentRes)
-	    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+        AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
         else
             AcpiStatus = AcpiGetPossibleResources(DeviceData->AcpiHandle, &Buffer);
         if ((!ACPI_SUCCESS(AcpiStatus) && AcpiStatus != AE_BUFFER_OVERFLOW) ||
@@ -1171,403 +1212,438 @@ Bus_PDO_QueryResourceRequirements(
       return STATUS_UNSUCCESSFUL;
     }
 
-	resource= Buffer.Pointer;
-	/* Count number of resources */
-	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
-	{
-		switch (resource->Type)
-		{
-			case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-			{
-				ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
-				NumberOfResources += irq_data->InterruptCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IRQ:
-			{
-				ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
-				NumberOfResources += irq_data->InterruptCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_DMA:
-			{
-				ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
-				NumberOfResources += dma_data->ChannelCount;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS16:
-			case ACPI_RESOURCE_TYPE_ADDRESS32:
-			case ACPI_RESOURCE_TYPE_ADDRESS64:
-			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-			case ACPI_RESOURCE_TYPE_MEMORY24:
-			case ACPI_RESOURCE_TYPE_MEMORY32:
+    resource= Buffer.Pointer;
+    /* Count number of resources */
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
+    {
+        switch (resource->Type)
+        {
+            case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+            {
+                ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
+                if (irq_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                NumberOfResources += irq_data->InterruptCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IRQ:
+            {
+                ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
+                NumberOfResources += irq_data->InterruptCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_DMA:
+            {
+                ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
+                NumberOfResources += dma_data->ChannelCount;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS16:
+            case ACPI_RESOURCE_TYPE_ADDRESS32:
+            case ACPI_RESOURCE_TYPE_ADDRESS64:
+            case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+            {
+                ACPI_RESOURCE_ADDRESS *res_addr = (ACPI_RESOURCE_ADDRESS*) &resource->Data;
+                if (res_addr->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                NumberOfResources++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY24:
+            case ACPI_RESOURCE_TYPE_MEMORY32:
             case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-			case ACPI_RESOURCE_TYPE_IO:
-			{
-				NumberOfResources++;
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-		resource = ACPI_NEXT_RESOURCE(resource);
-	}
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            case ACPI_RESOURCE_TYPE_IO:
+            {
+                NumberOfResources++;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        resource = ACPI_NEXT_RESOURCE(resource);
+    }
 
-	RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePoolWithTag(PagedPool, RequirementsListSize, 'IPCA');
+    RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
+    RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePoolWithTag(PagedPool, RequirementsListSize, 'IPCA');
 
-	if (!RequirementsList)
-	{
-		ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-	RequirementsList->ListSize = RequirementsListSize;
-	RequirementsList->InterfaceType = Internal;
-	RequirementsList->BusNumber = 0;
-	RequirementsList->SlotNumber = 0; /* Not used by WDM drivers */
-	RequirementsList->AlternativeLists = 1;
-	RequirementsList->List[0].Version = 1;
-	RequirementsList->List[0].Revision = 1;
-	RequirementsList->List[0].Count = NumberOfResources;
-	RequirementDescriptor = RequirementsList->List[0].Descriptors;
+    if (!RequirementsList)
+    {
+        ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RequirementsList->ListSize = RequirementsListSize;
+    RequirementsList->InterfaceType = Internal;
+    RequirementsList->BusNumber = 0;
+    RequirementsList->SlotNumber = 0; /* Not used by WDM drivers */
+    RequirementsList->AlternativeLists = 1;
+    RequirementsList->List[0].Version = 1;
+    RequirementsList->List[0].Revision = 1;
+    RequirementsList->List[0].Count = NumberOfResources;
+    RequirementDescriptor = RequirementsList->List[0].Descriptors;
 
-	/* Fill resources list structure */
+    /* Fill resources list structure */
         resource = Buffer.Pointer;
-	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
-	{
-		switch (resource->Type)
-		{
-			case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
-			{
-				ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
-				for (i = 0; i < irq_data->InterruptCount; i++)
-				{
-					RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-					RequirementDescriptor->Type = CmResourceTypeInterrupt;
-					RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
-					RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					RequirementDescriptor->u.Interrupt.MinimumVector =
-					RequirementDescriptor->u.Interrupt.MaximumVector = irq_data->Interrupts[i];
+    while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG && resource->Type != ACPI_RESOURCE_TYPE_END_DEPENDENT)
+    {
+        switch (resource->Type)
+        {
+            case ACPI_RESOURCE_TYPE_EXTENDED_IRQ:
+            {
+                ACPI_RESOURCE_EXTENDED_IRQ *irq_data = (ACPI_RESOURCE_EXTENDED_IRQ*) &resource->Data;
+                if (irq_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                for (i = 0; i < irq_data->InterruptCount; i++)
+                {
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
+                    RequirementDescriptor->Type = CmResourceTypeInterrupt;
+                    RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+                    RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
+                    RequirementDescriptor->u.Interrupt.MinimumVector =
+                    RequirementDescriptor->u.Interrupt.MaximumVector = irq_data->Interrupts[i];
 
-					RequirementDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IRQ:
-			{
-				ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
-				for (i = 0; i < irq_data->InterruptCount; i++)
-				{
-					RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-					RequirementDescriptor->Type = CmResourceTypeInterrupt;
-					RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
-					RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					RequirementDescriptor->u.Interrupt.MinimumVector =
-					RequirementDescriptor->u.Interrupt.MaximumVector = irq_data->Interrupts[i];
+                    RequirementDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IRQ:
+            {
+                ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
+                for (i = 0; i < irq_data->InterruptCount; i++)
+                {
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
+                    RequirementDescriptor->Type = CmResourceTypeInterrupt;
+                    RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
+                    RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
+                    RequirementDescriptor->u.Interrupt.MinimumVector =
+                    RequirementDescriptor->u.Interrupt.MaximumVector = irq_data->Interrupts[i];
 
-					RequirementDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_DMA:
-			{
-				ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
-				for (i = 0; i < dma_data->ChannelCount; i++)
-				{
-					RequirementDescriptor->Type = CmResourceTypeDma;
-					RequirementDescriptor->Flags = 0;
-					switch (dma_data->Type)
-					{
-						case ACPI_TYPE_A: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
-						case ACPI_TYPE_B: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
-						case ACPI_TYPE_F: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
-					}
-					if (dma_data->BusMaster == ACPI_BUS_MASTER)
-						RequirementDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
-					switch (dma_data->Transfer)
-					{
-						case ACPI_TRANSFER_8: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
-						case ACPI_TRANSFER_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
-						case ACPI_TRANSFER_8_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
-					}
+                    RequirementDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_DMA:
+            {
+                ACPI_RESOURCE_DMA *dma_data = (ACPI_RESOURCE_DMA*) &resource->Data;
+                for (i = 0; i < dma_data->ChannelCount; i++)
+                {
+                    RequirementDescriptor->Type = CmResourceTypeDma;
+                    RequirementDescriptor->Flags = 0;
+                    switch (dma_data->Type)
+                    {
+                        case ACPI_TYPE_A: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+                        case ACPI_TYPE_B: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+                        case ACPI_TYPE_F: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+                    }
+                    if (dma_data->BusMaster == ACPI_BUS_MASTER)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+                    switch (dma_data->Transfer)
+                    {
+                        case ACPI_TRANSFER_8: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
+                        case ACPI_TRANSFER_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
+                        case ACPI_TRANSFER_8_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+                    }
 
-					RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-					RequirementDescriptor->u.Dma.MinimumChannel =
-					RequirementDescriptor->u.Dma.MaximumChannel = dma_data->Channels[i];
-					RequirementDescriptor++;
-				}
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_IO:
-			{
-				ACPI_RESOURCE_IO *io_data = (ACPI_RESOURCE_IO*) &resource->Data;
-				RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
-				if (io_data->IoDecode == ACPI_DECODE_16)
-					RequirementDescriptor->Flags |= CM_RESOURCE_PORT_16_BIT_DECODE;
-				else
-					RequirementDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
-				RequirementDescriptor->u.Port.Length = io_data->AddressLength;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				RequirementDescriptor->Type = CmResourceTypePort;
-				RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-				RequirementDescriptor->u.Port.Alignment = io_data->Alignment;
-				RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Minimum;
-				RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum;
+                    RequirementDescriptor->Option = (i == 0) ? IO_RESOURCE_PREFERRED : IO_RESOURCE_ALTERNATIVE;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                    RequirementDescriptor->u.Dma.MinimumChannel =
+                    RequirementDescriptor->u.Dma.MaximumChannel = dma_data->Channels[i];
+                    RequirementDescriptor++;
+                }
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_IO:
+            {
+                ACPI_RESOURCE_IO *io_data = (ACPI_RESOURCE_IO*) &resource->Data;
+                RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                if (io_data->IoDecode == ACPI_DECODE_16)
+                    RequirementDescriptor->Flags |= CM_RESOURCE_PORT_16_BIT_DECODE;
+                else
+                    RequirementDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
+                RequirementDescriptor->u.Port.Length = io_data->AddressLength;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypePort;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                RequirementDescriptor->u.Port.Alignment = io_data->Alignment;
+                RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Minimum;
+                RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum + io_data->AddressLength - 1;
 
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS16:
-			{
-				ACPI_RESOURCE_ADDRESS16 *addr16_data = (ACPI_RESOURCE_ADDRESS16*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				if (addr16_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypeBusNumber;
-					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
-					RequirementDescriptor->Flags = 0;
-					RequirementDescriptor->u.BusNumber.MinBusNumber = addr16_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr16_data->Maximum;
-					RequirementDescriptor->u.BusNumber.Length = addr16_data->AddressLength;
-				}
-				else if (addr16_data->ResourceType == ACPI_IO_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypePort;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr16_data->Decode == ACPI_POS_DECODE)
-						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr16_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr16_data->Maximum;
-					RequirementDescriptor->u.Port.Length = addr16_data->AddressLength;
-				}
-				else
-				{
-					RequirementDescriptor->Type = CmResourceTypeMemory;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = 0;
-					if (addr16_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr16_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}
-					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr16_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr16_data->Maximum;
-					RequirementDescriptor->u.Memory.Length = addr16_data->AddressLength;
-				}
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS32:
-			{
-				ACPI_RESOURCE_ADDRESS32 *addr32_data = (ACPI_RESOURCE_ADDRESS32*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				if (addr32_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypeBusNumber;
-					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
-					RequirementDescriptor->Flags = 0;
-					RequirementDescriptor->u.BusNumber.MinBusNumber = addr32_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = addr32_data->Maximum;
-					RequirementDescriptor->u.BusNumber.Length = addr32_data->AddressLength;
-				}
-				else if (addr32_data->ResourceType == ACPI_IO_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypePort;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr32_data->Decode == ACPI_POS_DECODE)
-						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr32_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr32_data->Maximum;
-					RequirementDescriptor->u.Port.Length = addr32_data->AddressLength;
-				}
-				else
-				{
-					RequirementDescriptor->Type = CmResourceTypeMemory;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = 0;
-					if (addr32_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr32_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}
-					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr32_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr32_data->Maximum;
-					RequirementDescriptor->u.Memory.Length = addr32_data->AddressLength;
-				}
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_ADDRESS64:
-			{
-				ACPI_RESOURCE_ADDRESS64 *addr64_data = (ACPI_RESOURCE_ADDRESS64*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					DPRINT1("64-bit bus address is not supported!\n");
-					RequirementDescriptor->Type = CmResourceTypeBusNumber;
-					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
-					RequirementDescriptor->Flags = 0;
-					RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum;
-					RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
-				}
-				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypePort;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr64_data->Decode == ACPI_POS_DECODE)
-						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum;
-					RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
-				}
-				else
-				{
-					RequirementDescriptor->Type = CmResourceTypeMemory;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = 0;
-					if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr64_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}	
-					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum;
-					RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
-				}
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
-			{
-				ACPI_RESOURCE_EXTENDED_ADDRESS64 *addr64_data = (ACPI_RESOURCE_EXTENDED_ADDRESS64*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
-				{
-					DPRINT1("64-bit bus address is not supported!\n");
-					RequirementDescriptor->Type = CmResourceTypeBusNumber;
-					RequirementDescriptor->ShareDisposition = CmResourceShareShared;
-					RequirementDescriptor->Flags = 0;
-					RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
-					RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum;
-					RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
-				}
-				else if (addr64_data->ResourceType == ACPI_IO_RANGE)
-				{
-					RequirementDescriptor->Type = CmResourceTypePort;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
-					if (addr64_data->Decode == ACPI_POS_DECODE)
-						RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
-					RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum;
-					RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
-				}
-				else
-				{
-					RequirementDescriptor->Type = CmResourceTypeMemory;
-					RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-					RequirementDescriptor->Flags = 0;
-					if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-					else
-						RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-					switch (addr64_data->Info.Mem.Caching)
-					{
-						case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
-						case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
-						case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
-					}	
-					RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
-					RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum;
-					RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
-				}
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_MEMORY24:
-			{
-				ACPI_RESOURCE_MEMORY24 *mem24_data = (ACPI_RESOURCE_MEMORY24*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				RequirementDescriptor->Type = CmResourceTypeMemory;
-				RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				RequirementDescriptor->Flags = CM_RESOURCE_MEMORY_24;
-				if (mem24_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem24_data->Minimum;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem24_data->Maximum;
-				RequirementDescriptor->u.Memory.Length = mem24_data->AddressLength;
-
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_MEMORY32:
-			{
-				ACPI_RESOURCE_MEMORY32 *mem32_data = (ACPI_RESOURCE_MEMORY32*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				RequirementDescriptor->Type = CmResourceTypeMemory;
-				RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				RequirementDescriptor->Flags = 0;
-				if (mem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem32_data->Minimum;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem32_data->Maximum;
-				RequirementDescriptor->u.Memory.Length = mem32_data->AddressLength;
-
-				RequirementDescriptor++;
-				break;
-			}
-            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
-			{
-				ACPI_RESOURCE_FIXED_MEMORY32 *fixedmem32_data = (ACPI_RESOURCE_FIXED_MEMORY32*) &resource->Data;
-				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
-				RequirementDescriptor->Type = CmResourceTypeMemory;
-				RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-				RequirementDescriptor->Flags = 0;
-				if (fixedmem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
-				else
-					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
-				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = fixedmem32_data->Address;
-				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = fixedmem32_data->Address;
-				RequirementDescriptor->u.Memory.Length = fixedmem32_data->AddressLength;
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_FIXED_IO:
+            {
+                ACPI_RESOURCE_FIXED_IO *io_data = (ACPI_RESOURCE_FIXED_IO*) &resource->Data;
+                RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                RequirementDescriptor->u.Port.Length = io_data->AddressLength;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypePort;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+                RequirementDescriptor->u.Port.Alignment = 1;
+                RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Address;
+                RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Address + io_data->AddressLength - 1;
                 
-				RequirementDescriptor++;
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-		resource = ACPI_NEXT_RESOURCE(resource);
-	}
-	ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS16:
+            {
+                ACPI_RESOURCE_ADDRESS16 *addr16_data = (ACPI_RESOURCE_ADDRESS16*) &resource->Data;
+                if (addr16_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                if (addr16_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypeBusNumber;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareShared;
+                    RequirementDescriptor->Flags = 0;
+                    RequirementDescriptor->u.BusNumber.MinBusNumber = addr16_data->Minimum;
+                    RequirementDescriptor->u.BusNumber.MaxBusNumber = addr16_data->Maximum + addr16_data->AddressLength - 1;
+                    RequirementDescriptor->u.BusNumber.Length = addr16_data->AddressLength;
+                }
+                else if (addr16_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypePort;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr16_data->Decode == ACPI_POS_DECODE)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr16_data->Minimum;
+                    RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr16_data->Maximum + addr16_data->AddressLength - 1;
+                    RequirementDescriptor->u.Port.Length = addr16_data->AddressLength;
+                }
+                else
+                {
+                    RequirementDescriptor->Type = CmResourceTypeMemory;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = 0;
+                    if (addr16_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr16_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }
+                    RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr16_data->Minimum;
+                    RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr16_data->Maximum + addr16_data->AddressLength - 1;
+                    RequirementDescriptor->u.Memory.Length = addr16_data->AddressLength;
+                }
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS32:
+            {
+                ACPI_RESOURCE_ADDRESS32 *addr32_data = (ACPI_RESOURCE_ADDRESS32*) &resource->Data;
+                if (addr32_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                if (addr32_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypeBusNumber;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareShared;
+                    RequirementDescriptor->Flags = 0;
+                    RequirementDescriptor->u.BusNumber.MinBusNumber = addr32_data->Minimum;
+                    RequirementDescriptor->u.BusNumber.MaxBusNumber = addr32_data->Maximum + addr32_data->AddressLength - 1;
+                    RequirementDescriptor->u.BusNumber.Length = addr32_data->AddressLength;
+                }
+                else if (addr32_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypePort;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr32_data->Decode == ACPI_POS_DECODE)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr32_data->Minimum;
+                    RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr32_data->Maximum + addr32_data->AddressLength - 1;
+                    RequirementDescriptor->u.Port.Length = addr32_data->AddressLength;
+                }
+                else
+                {
+                    RequirementDescriptor->Type = CmResourceTypeMemory;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = 0;
+                    if (addr32_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr32_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }
+                    RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr32_data->Minimum;
+                    RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr32_data->Maximum + addr32_data->AddressLength - 1;
+                    RequirementDescriptor->u.Memory.Length = addr32_data->AddressLength;
+                }
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_ADDRESS64:
+            {
+                ACPI_RESOURCE_ADDRESS64 *addr64_data = (ACPI_RESOURCE_ADDRESS64*) &resource->Data;
+                if (addr64_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    DPRINT1("64-bit bus address is not supported!\n");
+                    RequirementDescriptor->Type = CmResourceTypeBusNumber;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareShared;
+                    RequirementDescriptor->Flags = 0;
+                    RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
+                    RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
+                }
+                else if (addr64_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypePort;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr64_data->Decode == ACPI_POS_DECODE)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
+                    RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
+                }
+                else
+                {
+                    RequirementDescriptor->Type = CmResourceTypeMemory;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = 0;
+                    if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr64_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }    
+                    RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
+                    RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
+                }
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
+            {
+                ACPI_RESOURCE_EXTENDED_ADDRESS64 *addr64_data = (ACPI_RESOURCE_EXTENDED_ADDRESS64*) &resource->Data;
+                if (addr64_data->ProducerConsumer == ACPI_PRODUCER)
+                    break;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                if (addr64_data->ResourceType == ACPI_BUS_NUMBER_RANGE)
+                {
+                    DPRINT1("64-bit bus address is not supported!\n");
+                    RequirementDescriptor->Type = CmResourceTypeBusNumber;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareShared;
+                    RequirementDescriptor->Flags = 0;
+                    RequirementDescriptor->u.BusNumber.MinBusNumber = (ULONG)addr64_data->Minimum;
+                    RequirementDescriptor->u.BusNumber.MaxBusNumber = (ULONG)addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.BusNumber.Length = addr64_data->AddressLength;
+                }
+                else if (addr64_data->ResourceType == ACPI_IO_RANGE)
+                {
+                    RequirementDescriptor->Type = CmResourceTypePort;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = CM_RESOURCE_PORT_IO;
+                    if (addr64_data->Decode == ACPI_POS_DECODE)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_PORT_POSITIVE_DECODE;
+                    RequirementDescriptor->u.Port.MinimumAddress.QuadPart = addr64_data->Minimum;
+                    RequirementDescriptor->u.Port.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.Port.Length = addr64_data->AddressLength;
+                }
+                else
+                {
+                    RequirementDescriptor->Type = CmResourceTypeMemory;
+                    RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                    RequirementDescriptor->Flags = 0;
+                    if (addr64_data->Info.Mem.WriteProtect == ACPI_READ_ONLY_MEMORY)
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                    else
+                        RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                    switch (addr64_data->Info.Mem.Caching)
+                    {
+                        case ACPI_CACHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_CACHEABLE; break;
+                        case ACPI_WRITE_COMBINING_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_COMBINEDWRITE; break;
+                        case ACPI_PREFETCHABLE_MEMORY: RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_PREFETCHABLE; break;
+                    }    
+                    RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = addr64_data->Minimum;
+                    RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = addr64_data->Maximum + addr64_data->AddressLength - 1;
+                    RequirementDescriptor->u.Memory.Length = addr64_data->AddressLength;
+                }
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY24:
+            {
+                ACPI_RESOURCE_MEMORY24 *mem24_data = (ACPI_RESOURCE_MEMORY24*) &resource->Data;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypeMemory;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                RequirementDescriptor->Flags = CM_RESOURCE_MEMORY_24;
+                if (mem24_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem24_data->Minimum;
+                RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem24_data->Maximum + mem24_data->AddressLength - 1;
+                RequirementDescriptor->u.Memory.Length = mem24_data->AddressLength;
+
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_MEMORY32:
+            {
+                ACPI_RESOURCE_MEMORY32 *mem32_data = (ACPI_RESOURCE_MEMORY32*) &resource->Data;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypeMemory;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                RequirementDescriptor->Flags = 0;
+                if (mem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = mem32_data->Minimum;
+                RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem32_data->Maximum + mem32_data->AddressLength - 1;
+                RequirementDescriptor->u.Memory.Length = mem32_data->AddressLength;
+
+                RequirementDescriptor++;
+                break;
+            }
+            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+            {
+                ACPI_RESOURCE_FIXED_MEMORY32 *fixedmem32_data = (ACPI_RESOURCE_FIXED_MEMORY32*) &resource->Data;
+                RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+                RequirementDescriptor->Type = CmResourceTypeMemory;
+                RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                RequirementDescriptor->Flags = 0;
+                if (fixedmem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+                else
+                    RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+                RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = fixedmem32_data->Address;
+                RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = fixedmem32_data->Address + fixedmem32_data->AddressLength - 1;
+                RequirementDescriptor->u.Memory.Length = fixedmem32_data->AddressLength;
+                
+                RequirementDescriptor++;
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+        resource = ACPI_NEXT_RESOURCE(resource);
+    }
+    ExFreePoolWithTag(Buffer.Pointer, 'IPCA');
 
     Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
 

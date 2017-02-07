@@ -50,35 +50,35 @@ struct InternetTransport
     HWND hwnd;
 };
 
-HRESULT InternetTransport_Init(InternetTransport *This);
-HRESULT InternetTransport_GetServerInfo(InternetTransport *This, LPINETSERVER pInetServer);
+HRESULT InternetTransport_Init(InternetTransport *This) DECLSPEC_HIDDEN;
+HRESULT InternetTransport_GetServerInfo(InternetTransport *This, LPINETSERVER pInetServer) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_InetServerFromAccount(InternetTransport *This,
-    IImnAccount *pAccount, LPINETSERVER pInetServer);
+    IImnAccount *pAccount, LPINETSERVER pInetServer) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_Connect(InternetTransport *This,
-    LPINETSERVER pInetServer, boolean fAuthenticate, boolean fCommandLogging);
-HRESULT InternetTransport_HandsOffCallback(InternetTransport *This);
-HRESULT InternetTransport_DropConnection(InternetTransport *This);
+    LPINETSERVER pInetServer, boolean fAuthenticate, boolean fCommandLogging) DECLSPEC_HIDDEN;
+HRESULT InternetTransport_HandsOffCallback(InternetTransport *This) DECLSPEC_HIDDEN;
+HRESULT InternetTransport_DropConnection(InternetTransport *This) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_GetStatus(InternetTransport *This,
-    IXPSTATUS *pCurrentStatus);
-HRESULT InternetTransport_ChangeStatus(InternetTransport *This, IXPSTATUS Status);
+    IXPSTATUS *pCurrentStatus) DECLSPEC_HIDDEN;
+HRESULT InternetTransport_ChangeStatus(InternetTransport *This, IXPSTATUS Status) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_ReadLine(InternetTransport *This,
-    INETXPORT_COMPLETION_FUNCTION fnCompletion);
+    INETXPORT_COMPLETION_FUNCTION fnCompletion) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_Write(InternetTransport *This, const char *pvData,
-    int cbSize, INETXPORT_COMPLETION_FUNCTION fnCompletion);
+    int cbSize, INETXPORT_COMPLETION_FUNCTION fnCompletion) DECLSPEC_HIDDEN;
 HRESULT InternetTransport_DoCommand(InternetTransport *This,
-    LPCSTR pszCommand, INETXPORT_COMPLETION_FUNCTION fnCompletion);
+    LPCSTR pszCommand, INETXPORT_COMPLETION_FUNCTION fnCompletion) DECLSPEC_HIDDEN;
 
-BOOL InternetTransport_RegisterClass(HINSTANCE hInstance);
-void InternetTransport_UnregisterClass(HINSTANCE hInstance);
+BOOL InternetTransport_RegisterClass(HINSTANCE hInstance) DECLSPEC_HIDDEN;
+void InternetTransport_UnregisterClass(HINSTANCE hInstance) DECLSPEC_HIDDEN;
 
-HRESULT MimeBody_create(IUnknown *outer, void **obj);
-HRESULT MimeAllocator_create(IUnknown *outer, void **obj);
-HRESULT MimeMessage_create(IUnknown *outer, void **obj);
-HRESULT MimeSecurity_create(IUnknown *outer, void **obj);
-HRESULT VirtualStream_create(IUnknown *outer, void **obj);
+HRESULT MimeBody_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
+HRESULT MimeAllocator_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
+HRESULT MimeMessage_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
+HRESULT MimeSecurity_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
+HRESULT VirtualStream_create(IUnknown *outer, void **obj) DECLSPEC_HIDDEN;
 
-HRESULT MimeInternational_Construct(IMimeInternational **internat);
+HRESULT MimeInternational_Construct(IMimeInternational **internat) DECLSPEC_HIDDEN;
 
-HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv);
+HRESULT SMTPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT IMAPTransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT POP3TransportCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;

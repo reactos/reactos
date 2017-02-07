@@ -32,13 +32,15 @@ MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 
 /* Template PTE for prototype page */
 MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
-                      PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)}};
+                      PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << 32)}};
 
-/* Sizes */
-SIZE_T MiNonPagedSystemSize;
+/* Template PTE for decommited page */
+MMPTE MmDecommittedPte = {{MM_DECOMMIT << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 
 /* Address ranges */
 PVOID MiSessionViewEnd;
+PVOID MiSystemPteSpaceStart;
+PVOID MiSystemPteSpaceEnd;
 
 ULONG64 MxPfnSizeInBytes;
 BOOLEAN MiIncludeType[LoaderMaximum];
@@ -69,7 +71,7 @@ MiInitializeSessionSpaceLayout()
 
     /* The view starts right below the session working set (itself below
      * the image area) */
-    MiSessionViewEnd = MI_SESSION_VIEW_END;
+    MiSessionViewEnd = (PVOID)MI_SESSION_VIEW_END;
     MiSessionViewStart = (PCHAR)MiSessionViewEnd - MmSessionViewSize;
     ASSERT(IS_PAGE_ALIGNED(MiSessionViewStart));
 
@@ -110,7 +112,7 @@ MiMapPPEs(
         {
             /* No, map it! */
             TmplPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
-            *PointerPpe = TmplPde;
+            MI_WRITE_VALID_PTE(PointerPpe, TmplPde);
 
             /* Zero out the page table */
             RtlZeroMemory(MiPteToAddress(PointerPpe), PAGE_SIZE);
@@ -137,7 +139,7 @@ MiMapPDEs(
         {
             /* No, map it! */
             TmplPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
-            *PointerPde = TmplPde;
+            MI_WRITE_VALID_PTE(PointerPde, TmplPde);
 
             /* Zero out the page table */
             RtlZeroMemory(MiPteToAddress(PointerPde), PAGE_SIZE);
@@ -164,7 +166,10 @@ MiMapPTEs(
         {
             /* No, map it! */
             TmplPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
-            *PointerPte = TmplPte;
+            MI_WRITE_VALID_PTE(PointerPte, TmplPte);
+
+            /* Zero out the page (FIXME: not always neccessary) */
+            RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
         }
     }
 }
@@ -212,10 +217,10 @@ MiInitializePageTable()
     HyperTemplatePte = TmplPte;
 
     /* Create PDPTs (72 KB) for shared system address space,
-     * skip page tables and hyperspace */
+     * skip page tables TODO: use global pages. */
 
     /* Loop the PXEs */
-    for (PointerPxe = MiAddressToPxe((PVOID)(HYPER_SPACE_END + 1));
+    for (PointerPxe = MiAddressToPxe((PVOID)HYPER_SPACE);
          PointerPxe <= MiAddressToPxe(MI_HIGHEST_SYSTEM_ADDRESS);
          PointerPxe++)
     {
@@ -231,8 +236,16 @@ MiInitializePageTable()
         }
     }
 
-    /* Setup the mapping PPEs and PDEs */
-    MiMapPPEs((PVOID)MI_MAPPING_RANGE_START, (PVOID)MI_MAPPING_RANGE_END);
+    /* Map PPEs for paged pool */
+    MiMapPPEs(MmPagedPoolStart, MmPagedPoolEnd);
+
+    /* Setup 1 PPE for hyper space */
+    MiMapPPEs((PVOID)HYPER_SPACE, (PVOID)HYPER_SPACE_END);
+
+    /* Setup PPEs for system space view */
+    MiMapPPEs(MiSystemViewStart, (PCHAR)MiSystemViewStart + MmSystemViewSize);
+
+    /* Setup the mapping PDEs */
     MiMapPDEs((PVOID)MI_MAPPING_RANGE_START, (PVOID)MI_MAPPING_RANGE_END);
 
     /* Setup the mapping PTEs */
@@ -246,6 +259,10 @@ MiInitializePageTable()
     MiMapPDEs((PVOID)MI_DEBUG_MAPPING, (PVOID)MI_DEBUG_MAPPING);
     MmDebugPte = MiAddressToPte((PVOID)MI_DEBUG_MAPPING);
 #endif
+
+    /* Setup PDE and PTEs for VAD bitmap and working set list */
+    MiMapPDEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
+    MiMapPTEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
 }
 
 VOID
@@ -311,37 +328,32 @@ MiBuildNonPagedPool(VOID)
         MmMaximumNonPagedPoolInBytes = MI_MAX_NONPAGED_POOL_SIZE;
     }
 
-    /* Put non paged pool to the end of the region */
-    MmNonPagedPoolStart = (PCHAR)MmNonPagedPoolEnd - MmMaximumNonPagedPoolInBytes;
+    /* Convert nonpaged pool size from bytes to pages */
+    MmMaximumNonPagedPoolInPages = MmMaximumNonPagedPoolInBytes >> PAGE_SHIFT;
 
-    /* Make sure it doesn't collide with the PFN database */
-    if ((PCHAR)MmNonPagedPoolStart < (PCHAR)MmPfnDatabase + MxPfnSizeInBytes)
-    {
-        /* Put non paged pool after the PFN database */
-        MmNonPagedPoolStart = (PCHAR)MmPfnDatabase + MxPfnSizeInBytes;
-        MmMaximumNonPagedPoolInBytes = (ULONG64)MmNonPagedPoolEnd -
-                                       (ULONG64)MmNonPagedPoolStart;
-    }
-
-    ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolStart));
+    /* Non paged pool starts after the PFN database */
+    MmNonPagedPoolStart = MmPfnDatabase + MxPfnAllocation * PAGE_SIZE;
 
     /* Calculate the nonpaged pool expansion start region */
     MmNonPagedPoolExpansionStart = (PCHAR)MmNonPagedPoolStart +
                                           MmSizeOfNonPagedPoolInBytes;
     ASSERT(IS_PAGE_ALIGNED(MmNonPagedPoolExpansionStart));
 
+    /* And this is where the none paged pool ends */
+    MmNonPagedPoolEnd = (PCHAR)MmNonPagedPoolStart + MmMaximumNonPagedPoolInBytes;
+    ASSERT(MmNonPagedPoolEnd < (PVOID)MM_HAL_VA_START);
+
     /* Map PPEs and PDEs for non paged pool (including expansion) */
     MiMapPPEs(MmNonPagedPoolStart, MmNonPagedPoolEnd);
     MiMapPDEs(MmNonPagedPoolStart, MmNonPagedPoolEnd);
 
     /* Map the nonpaged pool PTEs (without expansion) */
-    MiMapPTEs(MmNonPagedPoolStart, (PUCHAR)MmNonPagedPoolExpansionStart - 1);
+    MiMapPTEs(MmNonPagedPoolStart, (PCHAR)MmNonPagedPoolExpansionStart - 1);
 
     /* Initialize the ARM3 nonpaged pool */
     MiInitializeNonPagedPool();
+    MiInitializeNonPagedPoolThresholds();
 
-    /* Initialize the nonpaged pool */
-    InitializePool(NonPagedPool, 0);
 }
 
 VOID
@@ -353,32 +365,18 @@ MiBuildSystemPteSpace()
 
     /* Use the default numer of system PTEs */
     MmNumberOfSystemPtes = MI_NUMBER_SYSTEM_PTES;
-
-    /* System PTE pool is below the PFN database */
     MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
-    MmNonPagedSystemStart = (PCHAR)MmPfnDatabase - MiNonPagedSystemSize;
-    MmNonPagedSystemStart = MM_ROUND_DOWN(MmNonPagedSystemStart, 512 * PAGE_SIZE);
 
-    /* Don't let it go below the minimum */
-    if (MmNonPagedSystemStart < (PVOID)MI_NON_PAGED_SYSTEM_START_MIN)
-    {
-        /* This is a hard-coded limit in the Windows NT address space */
-        MmNonPagedSystemStart = (PVOID)MI_NON_PAGED_SYSTEM_START_MIN;
+    /* Put system PTEs at the start of the system VA space */
+    MiSystemPteSpaceStart = MmNonPagedSystemStart;
+    MiSystemPteSpaceEnd = (PUCHAR)MiSystemPteSpaceStart + MiNonPagedSystemSize;
 
-        /* Reduce the amount of system PTEs to reach this point */
-        MmNumberOfSystemPtes = (ULONG)(((ULONG64)MmPfnDatabase -
-                                (ULONG64)MmNonPagedSystemStart) >>
-                                PAGE_SHIFT);
-        MmNumberOfSystemPtes--;
-        ASSERT(MmNumberOfSystemPtes > 1000);
-    }
+    /* Map the PPEs and PDEs for the system PTEs */
+    MiMapPPEs(MiSystemPteSpaceStart, MiSystemPteSpaceEnd);
+    MiMapPDEs(MiSystemPteSpaceStart, MiSystemPteSpaceEnd);
 
-    /* Map the PDEs and PPEs for the system PTEs */
-    MiMapPPEs(MI_SYSTEM_PTE_START, MI_SYSTEM_PTE_END);
-    MiMapPDEs(MI_SYSTEM_PTE_START, MI_SYSTEM_PTE_END);
-
-    /* Create the system PTE space */
-    PointerPte = MiAddressToPte(MI_SYSTEM_PTE_START);
+    /* Initialize the system PTE space */
+    PointerPte = MiAddressToPte(MiSystemPteSpaceStart);
     MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
 
     /* Reserve system PTEs for zeroing PTEs and clear them */
@@ -389,19 +387,345 @@ MiBuildSystemPteSpace()
     MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
 }
 
+static
+VOID
+MiSetupPfnForPageTable(
+    PFN_NUMBER PageFrameIndex,
+    PMMPTE PointerPte)
+{
+    PMMPFN Pfn;
+    PMMPDE PointerPde;
+
+    /* Get the pfn entry for this page */
+    Pfn = MiGetPfnEntry(PageFrameIndex);
+
+    /* Check if it's valid memory */
+    if ((PageFrameIndex <= MmHighestPhysicalPage) &&
+        (MmIsAddressValid(Pfn)) &&
+        (Pfn->u3.e1.PageLocation == ActiveAndValid))
+    {
+        /* Setup the PFN entry */
+        Pfn->u1.WsIndex = 0;
+        Pfn->u2.ShareCount++;
+        Pfn->PteAddress = PointerPte;
+        Pfn->OriginalPte = *PointerPte;
+        Pfn->u3.e1.PageLocation = ActiveAndValid;
+        Pfn->u3.e1.CacheAttribute = MiNonCached;
+        Pfn->u3.e2.ReferenceCount = 1;
+        Pfn->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte));
+    }
+
+    /* Increase the shared count of the PFN entry for the PDE */
+    PointerPde = MiAddressToPde(MiPteToAddress(PointerPte));
+    Pfn = MiGetPfnEntry(PFN_FROM_PTE(PointerPde));
+    Pfn->u2.ShareCount++;
+}
+
+VOID
+NTAPI
+MiBuildPfnDatabaseFromPageTables(VOID)
+{
+    PVOID Address = NULL;
+    PFN_NUMBER PageFrameIndex;
+    PMMPDE PointerPde;
+    PMMPTE PointerPte;
+    ULONG k, l;
+    PMMPFN Pfn;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPDE PointerPpe;
+    ULONG j;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPDE PointerPxe;
+    ULONG i;
+#endif
+
+    /* Manual setup of the top level page directory */
+#if (_MI_PAGING_LEVELS == 4)
+    PageFrameIndex = PFN_FROM_PTE(MiAddressToPte(PXE_BASE));
+#elif (_MI_PAGING_LEVELS == 3)
+    PageFrameIndex = PFN_FROM_PTE(MiAddressToPte(PPE_BASE));
+#else
+    PageFrameIndex = PFN_FROM_PTE(MiAddressToPte(PDE_BASE));
+#endif
+    Pfn = MiGetPfnEntry(PageFrameIndex);
+    ASSERT(Pfn->u3.e1.PageLocation == ActiveAndValid);
+    Pfn->u1.WsIndex = 0;
+    Pfn->u2.ShareCount = 1;
+    Pfn->PteAddress = NULL;
+    Pfn->u3.e1.CacheAttribute = MiNonCached;
+    Pfn->u3.e2.ReferenceCount = 1;
+    Pfn->u4.PteFrame = 0;
+
+#if (_MI_PAGING_LEVELS == 4)
+    /* Loop all PXEs in the PML4 */
+    PointerPxe = MiAddressToPxe(Address);
+    for (i = 0; i < PXE_PER_PAGE; i++, PointerPxe++)
+    {
+        /* Skip invalid PXEs */
+        if (!PointerPxe->u.Hard.Valid) continue;
+
+        /* Handle the PFN */
+        PageFrameIndex = PFN_FROM_PXE(PointerPxe);
+        MiSetupPfnForPageTable(PageFrameIndex, PointerPxe);
+
+        /* Get starting VA for this PXE */
+        Address = MiPxeToAddress(PointerPxe);
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Loop all PPEs in this PDP */
+        PointerPpe = MiAddressToPpe(Address);
+        for (j = 0; j < PPE_PER_PAGE; j++, PointerPpe++)
+        {
+            /* Skip invalid PPEs */
+            if (!PointerPpe->u.Hard.Valid) continue;
+
+            /* Handle the PFN */
+            PageFrameIndex = PFN_FROM_PPE(PointerPpe);
+            MiSetupPfnForPageTable(PageFrameIndex, PointerPpe);
+
+            /* Get starting VA for this PPE */
+            Address = MiPpeToAddress(PointerPpe);
+#endif
+            /* Loop all PDEs in this PD */
+            PointerPde = MiAddressToPde(Address);
+            for (k = 0; k < PDE_PER_PAGE; k++, PointerPde++)
+            {
+                /* Skip invalid PDEs */
+                if (!PointerPde->u.Hard.Valid) continue;
+
+                /* Handle the PFN */
+                PageFrameIndex = PFN_FROM_PDE(PointerPde);
+                MiSetupPfnForPageTable(PageFrameIndex, PointerPde);
+
+                /* Get starting VA for this PDE */
+                Address = MiPdeToAddress(PointerPde);
+
+                /* Loop all PTEs in this PT */
+                PointerPte = MiAddressToPte(Address);
+                for (l = 0; l < PTE_PER_PAGE; l++, PointerPte++)
+                {
+                    /* Skip invalid PTEs */
+                    if (!PointerPte->u.Hard.Valid) continue;
+
+                    /* Handle the PFN */
+                    PageFrameIndex = PFN_FROM_PTE(PointerPte);
+                    MiSetupPfnForPageTable(PageFrameIndex, PointerPte);
+                }
+            }
+#if (_MI_PAGING_LEVELS >= 3)
+        }
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    }
+#endif
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiAddDescriptorToDatabase(
+    PFN_NUMBER BasePage,
+    PFN_NUMBER PageCount,
+    TYPE_OF_MEMORY MemoryType)
+{
+    PMMPFN Pfn;
+
+    ASSERT(!MiIsMemoryTypeInvisible(MemoryType));
+
+    /* Check if the memory is free */
+    if (MiIsMemoryTypeFree(MemoryType))
+    {
+        /* Get the last pfn of this descriptor. Note we loop backwards */
+        Pfn = &MmPfnDatabase[BasePage + PageCount - 1];
+
+        /* Loop all pages */
+        while (PageCount--)
+        {
+            /* Add it to the free list */
+            Pfn->u3.e1.CacheAttribute = MiNonCached;
+            MiInsertPageInFreeList(BasePage + PageCount);
+
+            /* Go to the previous page */
+            Pfn--;
+        }
+    }
+    else if (MemoryType == LoaderXIPRom)
+    {
+        Pfn = &MmPfnDatabase[BasePage];
+        while (PageCount--)
+        {
+            /* Make it a pseudo-I/O ROM mapping */
+            Pfn->PteAddress = 0;
+            Pfn->u1.Flink = 0;
+            Pfn->u2.ShareCount = 0;
+            Pfn->u3.e1.PageLocation = 0;
+            Pfn->u3.e1.CacheAttribute = MiNonCached;
+            Pfn->u3.e1.Rom = 1;
+            Pfn->u3.e1.PrototypePte = 1;
+            Pfn->u3.e2.ReferenceCount = 0;
+            Pfn->u4.InPageError = 0;
+            Pfn->u4.PteFrame = 0;
+
+            /* Advance one */
+            Pfn++;
+        }
+    }
+    else if (MemoryType == LoaderBad)
+    {
+        // FIXME: later
+        ASSERT(FALSE);
+    }
+    else
+    {
+        /* For now skip it */
+        DbgPrint("Skipping BasePage=0x%lx, PageCount=0x%lx, MemoryType=%lx\n",
+                 BasePage, PageCount, MemoryType);
+        Pfn = &MmPfnDatabase[BasePage];
+        while (PageCount--)
+        {
+            /* Make an active PFN */
+            Pfn->u3.e1.PageLocation = ActiveAndValid;
+
+            /* Advance one */
+            Pfn++;
+        }
+    }
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY ListEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
+    PFN_NUMBER BasePage, PageCount;
+
+    /* Map the PDEs and PPEs for the pfn database (ignore holes) */
+#if (_MI_PAGING_LEVELS >= 3)
+    MiMapPPEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + MxPfnAllocation - 1);
+#endif
+    MiMapPDEs(MmPfnDatabase, (PUCHAR)MmPfnDatabase + MxPfnAllocation - 1);
+
+    /* First initialize the color tables */
+    MiInitializeColorTables();
+
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the descriptor */
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Skip invisible memory */
+        if (MiIsMemoryTypeInvisible(Descriptor->MemoryType)) continue;
+
+        /* If this is the free descriptor, use the copy instead */
+        if (Descriptor == MxFreeDescriptor) Descriptor = &MxOldFreeDescriptor;
+
+        /* Get the range for this descriptor */
+        BasePage = Descriptor->BasePage;
+        PageCount = Descriptor->PageCount;
+
+        /* Map the pages for the database */
+        MiMapPTEs(&MmPfnDatabase[BasePage],
+                  (PUCHAR)(&MmPfnDatabase[BasePage + PageCount]) - 1);
+
+        /* If this was the free descriptor, skip the next step */
+        if (Descriptor == &MxOldFreeDescriptor) continue;
+
+        /* Add this descriptor to the database */
+        MiAddDescriptorToDatabase(BasePage, PageCount, Descriptor->MemoryType);
+    }
+
+    /* At this point the whole pfn database is mapped. We are about to add the
+       pages from the free descriptor to the database, so from now on we cannot
+       use it anymore. */
+
+    /* Now add the free descriptor */
+    BasePage = MxFreeDescriptor->BasePage;
+    PageCount = MxFreeDescriptor->PageCount;
+    MiAddDescriptorToDatabase(BasePage, PageCount, LoaderFree);
+
+    /* And finally the memory we used */
+    BasePage = MxOldFreeDescriptor.BasePage;
+    PageCount = MxFreeDescriptor->BasePage - BasePage;
+    MiAddDescriptorToDatabase(BasePage, PageCount, LoaderMemoryData);
+
+    /* Reset the descriptor back so we can create the correct memory blocks */
+    *MxFreeDescriptor = MxOldFreeDescriptor;
+}
+
 NTSTATUS
 NTAPI
 INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    KIRQL OldIrql;
 
+    ASSERT(MxPfnAllocation != 0);
+
+    /* Set some hardcoded addresses */
     MmHyperSpaceEnd = (PVOID)HYPER_SPACE_END;
+    MmNonPagedSystemStart = (PVOID)MM_SYSTEM_SPACE_START;
+    MmPfnDatabase = (PVOID)MI_PFN_DATABASE;
+    MmWorkingSetList = (PVOID)MI_WORKING_SET_LIST;
+
+
+//    PrototypePte.u.Proto.Valid = 1
+//    PrototypePte.u.ReadOnly
+//    PrototypePte.u.Prototype
+//    PrototypePte.u.Protection = MM_READWRITE;
+//    PrototypePte.u.ProtoAddress
+    PrototypePte.u.Soft.PageFileHigh = MI_PTE_LOOKUP_NEEDED;
+
 
     MiInitializePageTable();
 
     MiBuildNonPagedPool();
 
     MiBuildSystemPteSpace();
+
+    /* Need to be at DISPATCH_LEVEL for MiInsertPageInFreeList */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Map the PFN database pages */
+    MiBuildPfnDatabase(LoaderBlock);
+
+    /* Now process the page tables */
+    MiBuildPfnDatabaseFromPageTables();
+
+    /* PFNs are initialized now! */
+    MiPfnsInitialized = TRUE;
+
+    //KeLowerIrql(OldIrql);
+
+    /* Need to be at DISPATCH_LEVEL for InitializePool */
+    //KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Initialize the nonpaged pool */
+    InitializePool(NonPagedPool, 0);
+
+    KeLowerIrql(OldIrql);
+
+    /* Initialize the balancer */
+    MmInitializeBalancer((ULONG)MmAvailablePages, 0);
+
+    /* Make sure we have everything we need */
+    ASSERT(MmPfnDatabase);
+    ASSERT(MmNonPagedSystemStart);
+    ASSERT(MmNonPagedPoolStart);
+    ASSERT(MmSizeOfNonPagedPoolInBytes);
+    ASSERT(MmMaximumNonPagedPoolInBytes);
+    ASSERT(MmNonPagedPoolExpansionStart);
+    ASSERT(MmHyperSpaceEnd);
+    ASSERT(MmNumberOfSystemPtes);
+    ASSERT(MiAddressToPde(MmNonPagedPoolStart)->u.Hard.Valid);
+    ASSERT(MiAddressToPte(MmNonPagedPoolStart)->u.Hard.Valid);
 
     return STATUS_SUCCESS;
 }

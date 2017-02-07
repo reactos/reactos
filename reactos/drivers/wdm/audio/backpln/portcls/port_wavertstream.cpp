@@ -161,11 +161,11 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
         return RtlConvertUlongToLargeInteger(0);
     }
 
-    Buffer = (PVOID)UlongToPtr(PtrToUlong(MmGetSystemAddressForMdlSafe(MemoryDescriptorList, LowPagePriority)) + Index * PAGE_SIZE);
+    Buffer = (PUCHAR)MmGetSystemAddressForMdlSafe(MemoryDescriptorList, LowPagePriority) + (Index * PAGE_SIZE);
 
     Addr = MmGetPhysicalAddress(Buffer);
     Address->QuadPart = Addr.QuadPart;
-    Result.QuadPart = (PtrToUlong(Address));
+    Result.QuadPart = (ULONG_PTR)Address;
 
     return Result;
 }

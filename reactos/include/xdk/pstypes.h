@@ -38,7 +38,7 @@ $if (_WDMDDK_)
 #define HIGH_PRIORITY                     31
 #define MAXIMUM_PRIORITY                  32
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 #define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
@@ -152,44 +152,44 @@ typedef struct _PROCESS_ACCESS_TOKEN {
 #define PROCESS_EXCEPTION_PORT_ALL_STATE_FLAGS    ((ULONG_PTR)((1UL << PROCESS_EXCEPTION_PORT_ALL_STATE_BITS) - 1))
 
 typedef struct _PROCESS_EXCEPTION_PORT {
-  IN HANDLE ExceptionPortHandle;
-  IN OUT ULONG StateFlags;
+  _In_ HANDLE ExceptionPortHandle;
+  _Inout_ ULONG StateFlags;
 } PROCESS_EXCEPTION_PORT, *PPROCESS_EXCEPTION_PORT;
 
 typedef VOID
 (NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
-  IN HANDLE ParentId,
-  IN HANDLE ProcessId,
-  IN BOOLEAN Create);
+  _In_ HANDLE ParentId,
+  _In_ HANDLE ProcessId,
+  _In_ BOOLEAN Create);
 
 typedef struct _PS_CREATE_NOTIFY_INFO {
-  IN SIZE_T Size;
+  _In_ SIZE_T Size;
   _ANONYMOUS_UNION union {
-    IN ULONG Flags;
+    _In_ ULONG Flags;
     _ANONYMOUS_STRUCT struct {
-      IN ULONG FileOpenNameAvailable:1;
-      IN ULONG Reserved:31;
+      _In_ ULONG FileOpenNameAvailable:1;
+      _In_ ULONG Reserved:31;
     } DUMMYSTRUCTNAME;
   } DUMMYUNIONNAME;
-  IN HANDLE ParentProcessId;
-  IN CLIENT_ID CreatingThreadId;
-  IN OUT struct _FILE_OBJECT *FileObject;
-  IN PCUNICODE_STRING ImageFileName;
-  IN PCUNICODE_STRING CommandLine OPTIONAL;
-  IN OUT NTSTATUS CreationStatus;
+  _In_ HANDLE ParentProcessId;
+  _In_ CLIENT_ID CreatingThreadId;
+  _Inout_ struct _FILE_OBJECT *FileObject;
+  _In_ PCUNICODE_STRING ImageFileName;
+  _In_opt_ PCUNICODE_STRING CommandLine;
+  _Inout_ NTSTATUS CreationStatus;
 } PS_CREATE_NOTIFY_INFO, *PPS_CREATE_NOTIFY_INFO;
 
 typedef VOID
 (NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE_EX)(
-  IN OUT PEPROCESS Process,
-  IN HANDLE ProcessId,
-  IN PPS_CREATE_NOTIFY_INFO CreateInfo OPTIONAL);
+  _Inout_ PEPROCESS Process,
+  _In_ HANDLE ProcessId,
+  _Inout_opt_ PPS_CREATE_NOTIFY_INFO CreateInfo);
 
 typedef VOID
 (NTAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
-  IN HANDLE ProcessId,
-  IN HANDLE ThreadId,
-  IN BOOLEAN Create);
+  _In_ HANDLE ProcessId,
+  _In_ HANDLE ThreadId,
+  _In_ BOOLEAN Create);
 
 #define IMAGE_ADDRESSING_MODE_32BIT       3
 
@@ -218,9 +218,9 @@ typedef struct _IMAGE_INFO_EX {
 
 typedef VOID
 (NTAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
-  IN PUNICODE_STRING FullImageName,
-  IN HANDLE ProcessId,
-  IN PIMAGE_INFO ImageInfo);
+  _In_ PUNICODE_STRING FullImageName,
+  _In_ HANDLE ProcessId,
+  _In_ PIMAGE_INFO ImageInfo);
 
 #define THREAD_CSWITCH_PMU_DISABLE  FALSE
 #define THREAD_CSWITCH_PMU_ENABLE   TRUE
@@ -447,5 +447,5 @@ typedef struct _PROCESS_HANDLE_TRACING_QUERY {
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
 

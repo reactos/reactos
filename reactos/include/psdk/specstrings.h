@@ -24,9 +24,11 @@
 #define SPECSTRINGS_H
 
 #include <sal.h>
+#include <driverspecs.h>
 
 #define __field_bcount(size) __notnull __byte_writableTo(size)
 #define __field_ecount(size) __notnull __elem_writableTo(size)
+#define __post_invalid _Post_ __notvalid
 
 #define __deref_in
 #define __deref_in_ecount(size)
@@ -43,5 +45,18 @@
 #define __out_awcount(expr,size)
 #define __in_awcount(expr,size)
 #define __nullnullterminated
-#define __analysis_assume(expr)
+#define __in_data_source(src_sym)
+#define __kernel_entry
 
+#if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
+
+#define __inner_data_source(src_raw)        _SA_annotes1(SAL_untrusted_data_source,src_raw)
+#define __out_data_source(src_sym)          _Post_ __inner_data_source(#src_sym)
+#define __analysis_noreturn __declspec(noreturn)
+
+#else
+
+#define __out_data_source(src_sym)
+#define __analysis_noreturn
+
+#endif

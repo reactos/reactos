@@ -37,21 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
 static const WCHAR DllW[] = { 'D','l','l',0 };
 
-static void init_oid_info(void);
-static void free_function_sets(void);
-static void free_oid_info(void);
-
-void crypt_oid_init(void)
-{
-    init_oid_info();
-}
-
-void crypt_oid_free(void)
-{
-    free_function_sets();
-    free_oid_info();
-}
-
 static CRITICAL_SECTION funcSetCS;
 static CRITICAL_SECTION_DEBUG funcSetCSDebug =
 {
@@ -107,6 +92,7 @@ static void free_function_sets(void)
         DeleteCriticalSection(&setCursor->cs);
         CryptMemFree(setCursor);
     }
+    DeleteCriticalSection(&funcSetCS);
 }
 
 /* There is no free function associated with this; therefore, the sets are
@@ -591,7 +577,7 @@ BOOL WINAPI CryptGetDefaultOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
  *             CryptRegisterOIDFunction (CRYPT32.@)
  *
  * Register the DLL and the functions it uses to cover the combination
- * of encoding type, functionname and OID.
+ * of encoding type, function name and OID.
  *
  * PARAMS
  *  dwEncodingType       [I] Encoding type to be used.
@@ -614,8 +600,8 @@ BOOL WINAPI CryptRegisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
     HKEY hKey;
     LPSTR szKey;
 
-    TRACE("(%x, %s, %s, %s, %s)\n", dwEncodingType, pszFuncName,
-     debugstr_a(pszOID), debugstr_w(pwszDll), pszOverrideFuncName);
+    TRACE("(%x, %s, %s, %s, %s)\n", dwEncodingType, debugstr_a(pszFuncName),
+          debugstr_a(pszOID), debugstr_w(pwszDll), debugstr_a(pszOverrideFuncName));
 
     /* Native does nothing pwszDll is NULL */
     if (!pwszDll)
@@ -1476,6 +1462,7 @@ static void free_oid_info(void)
         list_remove(&info->entry);
         CryptMemFree(info);
     }
+    DeleteCriticalSection(&oidInfoCS);
 }
 
 /***********************************************************************
@@ -1617,4 +1604,15 @@ DWORD WINAPI CertOIDToAlgId(LPCSTR pszObjId)
     else
         ret = 0;
     return ret;
+}
+
+void crypt_oid_init(void)
+{
+    init_oid_info();
+}
+
+void crypt_oid_free(void)
+{
+    free_function_sets();
+    free_oid_info();
 }

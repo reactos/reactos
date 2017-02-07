@@ -1,38 +1,259 @@
+Index: commctrl.c
+===================================================================
+--- commctrl.c	(revision 55577)
++++ commctrl.c	(working copy)
+@@ -71,6 +71,19 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
+ 
++#define NAME       L"microsoft.windows.common-controls"
++#define VERSION    L"6.0.2600.2982"
++#define PUBLIC_KEY L"6595b64144ccf1df"
++
++#ifdef __i386__
++#define ARCH L"x86"
++#elif defined __x86_64__
++#define ARCH L"amd64"
++#else
++#define ARCH L"none"
++#endif
++
++static const WCHAR manifest_filename[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION L"_none_deadbeef.manifest";
+ 
+ static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+ 
+@@ -92,6 +105,67 @@
+     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
+ };
+ 
++static BOOL create_manifest(BOOL install)
++{
++    WCHAR *pwszBuf;
++    HRSRC hResInfo;
++    HGLOBAL hResData;
++    PVOID pManifest;
++    DWORD cchBuf, cbManifest, cbWritten;
++    HANDLE hFile;
++    BOOL bRet = FALSE;
++
++    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", RT_MANIFEST);
++    if (!hResInfo)
++        return FALSE;
++
++    cbManifest = SizeofResource(COMCTL32_hModule, hResInfo);
++    if (!cbManifest)
++        return FALSE;
++
++    hResData = LoadResource(COMCTL32_hModule, hResInfo);
++    if (!hResData)
++        return FALSE;
++
++    pManifest = LockResource(hResData);
++    if (!pManifest)
++        return FALSE;
++
++    cchBuf = GetWindowsDirectoryW(NULL, 0) * sizeof(WCHAR) + sizeof(L"\\winsxs\\manifests\\") + sizeof(manifest_filename);
++    pwszBuf = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchBuf * sizeof(WCHAR));
++    if (!pwszBuf)
++        return FALSE;
++
++    GetWindowsDirectoryW(pwszBuf, cchBuf);
++    lstrcatW(pwszBuf, L"\\winsxs");
++    CreateDirectoryW(pwszBuf, NULL);
++    lstrcatW(pwszBuf, L"\\manifests\\");
++    CreateDirectoryW(pwszBuf, NULL);
++    lstrcatW(pwszBuf, manifest_filename);
++    if (install)
++    {
++        hFile = CreateFileW(pwszBuf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
++        if (hFile != INVALID_HANDLE_VALUE)
++        {
++            if (WriteFile(hFile, pManifest, cbManifest, &cbWritten, NULL) && cbWritten == cbManifest)
++                bRet = TRUE;
++
++            CloseHandle(hFile);
++
++            if (!bRet)
++                DeleteFileW(pwszBuf);
++            else
++                TRACE("created %s\n", debugstr_w(pwszBuf));
++        }
++    }
++    else
++        bRet = DeleteFileW(pwszBuf);
++
++    HeapFree(GetProcessHeap(), 0, pwszBuf);
++
++    return bRet;
++}
++
+ 
+ /***********************************************************************
+  * DllMain [Internal]
+@@ -930,6 +1004,12 @@
+ HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
+ {
+     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
++    if (!create_manifest(bInstall))
++    {
++        ERR("create_manifest failed!\n");
++        return HRESULT_FROM_WIN32(GetLastError());
++    }
++        
+     return S_OK;
+ }
+ 
+@@ -1593,12 +1673,114 @@
+  *
+  * Draw text with shadow.
+  */
+-int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD dwFlags,
++int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD dwFlags,
+                           COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset)
+ {
+-    FIXME("(%p, %s, %d, %p, %d, 0x%08x, 0x%08x, %d, %d): stub\n", hdc, debugstr_w(pszText), cch, rect, dwFlags,
+-                                                                  crText, crShadow, ixOffset, iyOffset);
+-    return DrawTextW(hdc, pszText, cch, rect, DT_LEFT);
++    COLORREF crOldText;
++    RECT rcText;
++    INT iRet, x, y, x2, y2;
++    BYTE *pBits;
++    HBITMAP hbm, hbmOld;
++    BITMAPINFO bi;
++    HDC hdcMem;
++    HFONT hOldFont;
++    BLENDFUNCTION bf;
++
++    /* Create 32 bit DIB section for the shadow */
++    ZeroMemory(&bi, sizeof(bi));
++    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
++    bi.bmiHeader.biWidth = prc->right - prc->left + 4;
++    bi.bmiHeader.biHeight = prc->bottom - prc->top + 5; // bottom-up DIB
++    bi.bmiHeader.biPlanes = 1;
++    bi.bmiHeader.biBitCount = 32;
++    bi.bmiHeader.biCompression = BI_RGB;
++    hbm = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, (PVOID*)&pBits, NULL, 0);
++    if(!hbm)
++    {
++        ERR("CreateDIBSection failed\n");
++        return 0;
++    }
++
++    /* Create memory device context for new DIB section and select it */
++    hdcMem = CreateCompatibleDC(hdc);
++    if(!hdcMem)
++    {
++        ERR("CreateCompatibleDC failed\n");
++        DeleteObject(hbm);
++        return 0;
++    }
++
++    hbmOld = (HBITMAP)SelectObject(hdcMem, hbm);
++
++    /* Draw text on our helper bitmap */
++    hOldFont = (HFONT)SelectObject(hdcMem, GetCurrentObject(hdc, OBJ_FONT));
++    SetTextColor(hdcMem, RGB(16, 16, 16));
++    SetBkColor(hdcMem, RGB(0, 0, 0));
++    SetBkMode(hdcMem, TRANSPARENT);
++    SetRect(&rcText, 0, 0, prc->right - prc->left, prc->bottom - prc->top);
++    DrawTextW(hdcMem, pszText, cch, &rcText, dwFlags);
++    SelectObject(hdcMem, hOldFont);
++
++    /* Flush GDI so data pointed by pBits is valid */
++    GdiFlush();
++
++    /* Set alpha of pixels (forget about colors for now. They will be changed in next loop).
++       We copy text image 4*5 times and each time alpha is added */
++    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
++        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
++        {
++            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
++            UINT Alpha = 0;
++
++            for (x2 = x - 4 + 1; x2 <= x; ++x2)
++                for (y2 = y; y2 < y + 5; ++y2)
++                {
++                    if (x2 >= 0 && x2 < bi.bmiHeader.biWidth && y2 >= 0 && y2 < bi.bmiHeader.biHeight)
++                    {
++                        BYTE *pSrc = &pBits[(y2 * bi.bmiHeader.biWidth + x2) * 4];
++                        Alpha += pSrc[0];
++                    }
++                }
++
++            if (Alpha > 255)
++                Alpha = 255;
++            pDest[3] = Alpha;
++        }
++
++    /* Now set the color of each pixel to shadow color * alpha (see GdiAlphaBlend) */
++    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
++        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
++        {
++            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
++            pDest[0] = GetBValue(crShadow) * pDest[3] / 255;
++            pDest[1] = GetGValue(crShadow) * pDest[3] / 255;
++            pDest[2] = GetRValue(crShadow) * pDest[3] / 255;
++        }
++
++    /* Fix ixOffset of the shadow (tested on Win) */
++    ixOffset -= 3;
++    iyOffset -= 3;
++
++    /* Alpha blend helper image to destination DC */
++    bf.BlendOp = AC_SRC_OVER;
++    bf.BlendFlags = 0;
++    bf.SourceConstantAlpha = 255;
++    bf.AlphaFormat = AC_SRC_ALPHA;
++    if (!GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf))
++        ERR("GdiAlphaBlend failed: %lu\n", GetLastError());
++
++    /* Delete the helper bitmap */
++    SelectObject(hdcMem, hbmOld);
++    DeleteObject(hbm);
++    DeleteDC(hdcMem);
++
++    /* Finally draw the text over shadow */
++    crOldText = SetTextColor(hdc, crText);
++    SetBkMode(hdc, TRANSPARENT);
++    iRet = DrawTextW(hdc, pszText, cch, prc, dwFlags);
++    SetTextColor(hdc, crOldText);
++
++    return iRet;
+ }
+ 
+ /***********************************************************************
+@@ -1821,3 +1821,15 @@
+     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
+     return S_OK;
+ }
++
++/***********************************************************************
++ * RegisterClassNameW [COMCTL32.@]
++ *
++ * Register window class again while using as SxS module.
++ */
++BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
++{
++    /* FIXME: actually register redirected user32 class,
++              comctl32 classes are registered by this module anyway */
++    return TRUE;
++}
+
 Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 38890)
 +++ propsheet.c	(working copy)
-@@ -2417,6 +2417,29 @@
-   return FALSE;
- }
+@@ -2425,6 +2425,9 @@
+   HWND hwndBack   = GetDlgItem(hwndDlg, IDC_BACK_BUTTON);
+   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
+   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
++  HWND hwndCancel = GetDlgItem(hwndDlg, IDCANCEL);
++  INT iDefItem = 0;
++  HWND hwndFocus;
  
-+BOOL CALLBACK
-+EnumChildProc(HWND hwnd, LPARAM lParam)
-+{
-+    WCHAR szType[20];
-+    RealGetWindowClassW(hwnd, szType, 20);
-+
-+    if (strcmpW(szType, WC_EDITW) == 0)
-+    {
-+        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
-+        {
-+            SetFocus(hwnd);
-+            return FALSE;
-+        }
-+    } 
-+    else
-+    {
-+        EnumChildWindows(hwnd, EnumChildProc, 0);
-+    }
-+
-+    return TRUE;
-+}
-+
-+
- /******************************************************************************
-  *            PROPSHEET_SetWizButtons
-  *
-@@ -2438,17 +2461,6 @@
+   TRACE("%d\n", dwFlags);
+ 
+@@ -2432,17 +2435,6 @@
    EnableWindow(hwndNext, FALSE);
    EnableWindow(hwndFinish, FALSE);
  
@@ -50,35 +271,26 @@ Index: propsheet.c
    if (dwFlags & PSWIZB_BACK)
      EnableWindow(hwndBack, TRUE);
  
-@@ -2478,6 +2490,31 @@
+@@ -2472,6 +2464,22 @@
    }
    else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
      EnableWindow(hwndFinish, TRUE);
 +
-+  /* set the default pushbutton to an enabled button and give it focus */
++  /* set the default pushbutton to an enabled button */
 +  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-+    SetFocus(hwndFinish);
-+  }
++    iDefItem = IDC_FINISH_BUTTON;
 +  else if (dwFlags & PSWIZB_NEXT)
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-+    SetFocus(hwndNext);
-+  }
++    iDefItem = IDC_NEXT_BUTTON;
 +  else if (dwFlags & PSWIZB_BACK)
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-+    SetFocus(hwndBack);
-+  }
++    iDefItem = IDC_BACK_BUTTON;
 +  else
-+  {
-+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-+    SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
-+  }
++    iDefItem = IDCANCEL;
++  SendMessageW(hwndDlg, DM_SETDEFID, iDefItem, 0);
 +
-+  /* Now try to find an edit control that deserves focus */
-+  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
++  /* Set focus if no control has it */
++  hwndFocus = GetFocus();
++  if (!hwndFocus || hwndFocus == hwndCancel)
++    SetFocus(GetDlgItem(hwndDlg, iDefItem));
  }
  
  /******************************************************************************
@@ -151,7 +363,7 @@ Index: listview.c
  
    /* font */
    HFONT hDefaultFont;
-@@ -1635,8 +1636,19 @@
+@@ -1699,8 +1700,19 @@
  /* used to handle collapse main item column case */
  static inline BOOL LISTVIEW_DrawFocusRect(const LISTVIEW_INFO *infoPtr, HDC hdc)
  {
@@ -173,7 +385,19 @@ Index: listview.c
  }
  
  /* Listview invalidation functions: use _only_ these functions to invalidate */
-@@ -5042,7 +5054,11 @@
+@@ -4698,7 +4710,10 @@
+     if (infoPtr->uView == LV_VIEW_DETAILS && infoPtr->dwLvExStyle & LVS_EX_GRIDLINES)
+         rcLabel.bottom--;
+ 
+-    DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
++    if ((!(lvItem.state & LVIS_SELECTED) || !infoPtr->bFocus) && (infoPtr->dwLvExStyle & LVS_EX_TRANSPARENTSHADOWTEXT))
++        DrawShadowText(hdc, lvItem.pszText, -1, &rcLabel, uFormat, RGB(255, 255, 255), RGB(0, 0, 0), 2, 2);
++    else
++        DrawTextW(hdc, lvItem.pszText, -1, &rcLabel, uFormat);
+ 
+ postpaint:
+     if (cdsubitemmode & CDRF_NOTIFYPOSTPAINT)
+@@ -5117,7 +5132,11 @@
  
      /* Draw marquee rectangle if appropriate */
      if (infoPtr->bMarqueeSelect)
@@ -185,15 +409,15 @@ Index: listview.c
  
      if (cdmode & CDRF_NOTIFYPOSTPAINT)
  	notify_postpaint(infoPtr, &nmlvcd);
-@@ -7856,6 +7872,7 @@
+@@ -7927,6 +7946,7 @@
  {
-     TRACE("(clrBk=%x)\n", clrBk);
+     TRACE("(color=%x)\n", color);
  
 +    infoPtr->bDefaultBkColor = FALSE;
-     if(infoPtr->clrBk != clrBk) {
+     if(infoPtr->clrBk != color) {
  	if (infoPtr->clrBk != CLR_NONE) DeleteObject(infoPtr->hBkBrush);
- 	infoPtr->clrBk = clrBk;
-@@ -9248,6 +9265,7 @@
+ 	infoPtr->clrBk = color;
+@@ -9314,6 +9334,7 @@
    infoPtr->clrText = CLR_DEFAULT;
    infoPtr->clrTextBk = CLR_DEFAULT;
    LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
@@ -201,7 +425,7 @@ Index: listview.c
  
    /* set default values */
    infoPtr->nFocusedItem = -1;
-@@ -11510,6 +11528,11 @@
+@@ -11570,6 +11591,12 @@
  
    case WM_SYSCOLORCHANGE:
      COMCTL32_RefreshSysColors();
@@ -209,6 +433,7 @@ Index: listview.c
 +    {
 +        LISTVIEW_SetBkColor(infoPtr, comctl32_color.clrWindow);
 +        infoPtr->bDefaultBkColor = TRUE;
++        LISTVIEW_InvalidateList(infoPtr);
 +    }
      return 0;
  
@@ -262,3 +487,15 @@ Index: monthcal.c
 
  /* Prev/Next buttons */
  enum nav_direction
+Index: comctl32.spec
+===================================================================
+--- comctl32.spec       (revision 56653)
++++ comctl32.spec       (working copy)
+@@ -188,6 +188,7 @@
+ @ stdcall PropertySheet(ptr) PropertySheetA
+ @ stdcall PropertySheetA(ptr)
+ @ stdcall PropertySheetW(ptr)
++@ stdcall RegisterClassNameW(wstr)
+ @ stdcall TaskDialogIndirect(ptr ptr ptr ptr)
+ @ stdcall UninitializeFlatSB(long)
+ @ stdcall _TrackMouseEvent(ptr)

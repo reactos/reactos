@@ -59,6 +59,7 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
     ExFreePool(Context);
 
     IoFreeIrp(Irp);
+    ObDereferenceObject(DeviceObject);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -547,6 +548,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
                                         NULL);
     if (!Irp)
     {
+        ObDereferenceObject(TopDeviceObject);
         ExFreePool(RequestPowerItem);
         return STATUS_INSUFFICIENT_RESOURCES;
     }

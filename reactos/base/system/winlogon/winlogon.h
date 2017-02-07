@@ -33,7 +33,10 @@
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>
-#include <ntndk.h>
+#include <cmfuncs.h>
+#include <rtlfuncs.h>
+#include <exfuncs.h>
+#include <setypes.h>
 #include <sefuncs.h>
 #include <ntsecapi.h>
 #include <accctrl.h>

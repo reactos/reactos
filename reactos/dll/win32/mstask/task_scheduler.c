@@ -22,6 +22,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
+typedef struct
+{
+    ITaskScheduler ITaskScheduler_iface;
+    LONG ref;
+} TaskSchedulerImpl;
+
+static inline TaskSchedulerImpl *impl_from_ITaskScheduler(ITaskScheduler *iface)
+{
+    return CONTAINING_RECORD(iface, TaskSchedulerImpl, ITaskScheduler_iface);
+}
+
 static void TaskSchedulerDestructor(TaskSchedulerImpl *This)
 {
     TRACE("%p\n", This);
@@ -34,14 +45,14 @@ static HRESULT WINAPI MSTASK_ITaskScheduler_QueryInterface(
         REFIID riid,
         void **ppvObject)
 {
-    TaskSchedulerImpl * This = (TaskSchedulerImpl *)iface;
+    TaskSchedulerImpl * This = impl_from_ITaskScheduler(iface);
 
     TRACE("IID: %s\n", debugstr_guid(riid));
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
             IsEqualGUID(riid, &IID_ITaskScheduler))
     {
-        *ppvObject = &This->lpVtbl;
+        *ppvObject = &This->ITaskScheduler_iface;
         ITaskScheduler_AddRef(iface);
         return S_OK;
     }
@@ -53,7 +64,7 @@ static HRESULT WINAPI MSTASK_ITaskScheduler_QueryInterface(
 static ULONG WINAPI MSTASK_ITaskScheduler_AddRef(
         ITaskScheduler* iface)
 {
-    TaskSchedulerImpl *This = (TaskSchedulerImpl *)iface;
+    TaskSchedulerImpl *This = impl_from_ITaskScheduler(iface);
     TRACE("\n");
     return InterlockedIncrement(&This->ref);
 }
@@ -61,7 +72,7 @@ static ULONG WINAPI MSTASK_ITaskScheduler_AddRef(
 static ULONG WINAPI MSTASK_ITaskScheduler_Release(
         ITaskScheduler* iface)
 {
-    TaskSchedulerImpl * This = (TaskSchedulerImpl *)iface;
+    TaskSchedulerImpl * This = impl_from_ITaskScheduler(iface);
     ULONG ref;
     TRACE("\n");
     ref = InterlockedDecrement(&This->ref);
@@ -178,10 +189,10 @@ HRESULT TaskSchedulerConstructor(LPVOID *ppObj)
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &MSTASK_ITaskSchedulerVtbl;
+    This->ITaskScheduler_iface.lpVtbl = &MSTASK_ITaskSchedulerVtbl;
     This->ref = 1;
 
-    *ppObj = &This->lpVtbl;
+    *ppObj = &This->ITaskScheduler_iface;
     InterlockedIncrement(&dll_ref);
     return S_OK;
 }

@@ -1,10 +1,9 @@
 /*
 * PROJECT:     ReactOS userenv.dll
 * LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/win32/userenv/It.rc
-* PURPOSE:     Italian Translation of dll/win32/userenv/En.rc
-* PROGRAMMERS: Copyright (C) 2004 Eric Kohl
-*              Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
+* FILE:        dll/win32/userenv/lang/it-IT.rc
+* PURPOSE:     Italian Translation of dll/win32/userenv/lang/en-US.rc
+* TRANSLATOR:  Copyright (C) 2007 Daniele Forsi (dforsi at gmail.com) Italian Translation
 *
 * UPDATE HISTORY:
 *    11 Feb 2009: Gabriel Ilardi (gabrielilardi at hotmail.it) - compatibility fixes/update.

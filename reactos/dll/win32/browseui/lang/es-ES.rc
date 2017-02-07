@@ -27,14 +27,14 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "",										264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "Botones e&stándar",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Botones e&stÃ¡ndar",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Barra de direcciones",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Vínculos",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "&VÃ­nculos",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Bloquear las barras de &herramientas",				IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Personalizar...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
         MENUITEM "&Etiquetas",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
-        MENUITEM "Botón Ir a",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+        MENUITEM "BotÃ³n Ir a",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
     END
 END
 
@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
         MENUITEM "&Salir",							IDM_FILE_CLOSE
     END
-    POPUP "&Edición",									FCIDM_MENU_EDIT
+    POPUP "&EdiciÃ³n",									FCIDM_MENU_EDIT
     BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
     END
@@ -58,7 +58,7 @@ BEGIN
         MENUITEM "Bar&ra de estado",						IDM_VIEW_STATUSBAR
         POPUP "Barra del e&xplorador",						IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Búsqueda\tCtrl+Q",             IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&BÃºsqueda\tCtrl+Q",             IDM_EXPLORERBAR_SEARCH
             MENUITEM "&Favoritos\tCtrl+I",          IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Media",                      IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Historial\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
@@ -68,17 +68,17 @@ BEGIN
         MENUITEM "",								FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
         POPUP "&Ir a",								FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Atrás\tAlt+Flecha izquierda",       IDM_GOTO_BACK
+            MENUITEM "&AtrÃ¡s\tAlt+Flecha izquierda",       IDM_GOTO_BACK
             MENUITEM "A&delante\tAlt+RFlecha derecha",   IDM_GOTO_FORWARD
             MENUITEM "&Subir un nivel",               IDM_GOTO_UPONELEVEL
             MENUITEM "",							-1, MFT_SEPARATOR
-            MENUITEM "&Página principal\tAlt+Inicio",        IDM_GOTO_HOMEPAGE
+            MENUITEM "&PÃ¡gina principal\tAlt+Inicio",        IDM_GOTO_HOMEPAGE
         END
         MENUITEM "Actuali&zar",						IDM_VIEW_REFRESH
     END
     POPUP "F&avoritos",								FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Añadir a Favoritos...",			IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "&AÃ±adir a Favoritos...",			IDM_FAVORITES_ADDTOFAVORITES
         MENUITEM "&Organizar Favoritos...",			IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "",								-1, MFT_SEPARATOR
         MENUITEM "(Empty)",							IDM_FAVORITES_EMPTY
@@ -93,7 +93,7 @@ BEGIN
     END
     POPUP "&Ayuda",									FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "¿Es &legal esta copia de ReactOS?",	IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "Â¿Es &legal esta copia de ReactOS?",	IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Acerca de ReactOS",					IDM_HELP_ABOUT
     END
 END
@@ -149,7 +149,7 @@ END
 
 STRINGTABLE
 BEGIN
-    864                       "Contiene comandos de edición."
+    864                       "Contiene comandos de ediciÃ³n."
 END
 
 STRINGTABLE
@@ -181,32 +181,32 @@ END
 
 STRINGTABLE
 BEGIN
-    9250                      "Muestra información sobre el programa, número de versión y copyright."
-    9252                      "Muestra información para debugging."
+    9250                      "Muestra informaciÃ³n sobre el programa, nÃºmero de versiÃ³n y copyright."
+    9252                      "Muestra informaciÃ³n para debugging."
 END
 
 STRINGTABLE
 BEGIN
-    9281                      "Va a la página previa."
-    9282                      "Va a la próxima página."
-    9283                      "Permite cambiar la configuración."
-    9285                      "Va a página de inicio."
+    9281                      "Va a la pÃ¡gina previa."
+    9282                      "Va a la prÃ³xima pÃ¡gina."
+    9283                      "Permite cambiar la configuraciÃ³n."
+    9285                      "Va a pÃ¡gina de inicio."
 END
 
 STRINGTABLE
 BEGIN
     9362                      "Abre la carpeta Organizar Favoritos."
-    9363                      "Añade la página actual a la lista de Favoritos."
+    9363                      "AÃ±ade la pÃ¡gina actual a la lista de Favoritos."
 END
 
 STRINGTABLE
 BEGIN
     9505                      "Muestra u oculta las barras de herramientas."
     9506                      "Muestra u oculta la barra de estado."
-    9508                      "Muestra los botones estándar de la barra de herramientas."
+    9508                      "Muestra los botones estÃ¡ndar de la barra de herramientas."
     9509                      "Muestra la barra de direcciones."
-    9510                      "Muestra la barra de vínculos rápidos."
-    9516                      "Bloquear el tamaño y la posición de las barras de herramientas."
+    9510                      "Muestra la barra de vÃ­nculos rÃ¡pidos."
+    9516                      "Bloquear el tamaÃ±o y la posiciÃ³n de las barras de herramientas."
 END
 
 STRINGTABLE
@@ -217,7 +217,7 @@ END
 STRINGTABLE
 BEGIN
     9552                      "Muestra u oculta una de las barras del explorador."
-    9553                      "Muestra la barra de búsqueda."
+    9553                      "Muestra la barra de bÃºsqueda."
     9554                      "Muestra la barra de favoritos."
     9555                      "Muestra la barra de historial."
     9557                      "Muestra la barra de carpetas."
@@ -226,7 +226,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SMALLICONS            "Iconos pequeños"
+    IDS_SMALLICONS            "Iconos pequeÃ±os"
     IDS_LARGEICONS            "Iconos grandes"
     IDS_SHOWTEXTLABELS        "Muestra etiquetas de texto"
 END
@@ -245,8 +245,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCHLABEL           "Búsqueda"
-    IDS_ADDRESSBANDLABEL      "Dire&cción"
+    IDS_SEARCHLABEL           "BÃºsqueda"
+    IDS_ADDRESSBANDLABEL      "Dire&cciÃ³n"
 END
 
 STRINGTABLE
@@ -266,7 +266,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK                  "Atrás"
+    IDS_BACK                  "AtrÃ¡s"
     IDS_FORWARD               "Adelante"
 END
 

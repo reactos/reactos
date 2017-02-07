@@ -50,16 +50,16 @@
 @ stdcall SymEnumTypes(long long ptr ptr) dbghelp.SymEnumTypes
 @ stdcall SymEnumerateModules64(long ptr ptr) dbghelp.SymEnumerateModules64
 @ stdcall SymEnumerateModules(long ptr ptr) dbghelp.SymEnumerateModules
-@ stdcall SymEnumerateSymbols64(long double ptr ptr) dbghelp.SymEnumerateSymbols64
+@ stdcall SymEnumerateSymbols64(long int64 ptr ptr) dbghelp.SymEnumerateSymbols64
 @ stdcall SymEnumerateSymbols(long long ptr ptr) dbghelp.SymEnumerateSymbols
 @ stub SymEnumerateSymbolsW64
 @ stub SymEnumerateSymbolsW
 @ stdcall SymFindFileInPath(long str str ptr long long long ptr ptr ptr) dbghelp.SymFindFileInPath
 @ stdcall SymFromAddr(long long ptr ptr) dbghelp.SymFromAddr
 @ stdcall SymFromName(long str ptr) dbghelp.SymFromName
-@ stdcall SymFunctionTableAccess64(long double) dbghelp.SymFunctionTableAccess64
+@ stdcall SymFunctionTableAccess64(long int64) dbghelp.SymFunctionTableAccess64
 @ stdcall SymFunctionTableAccess(long long) dbghelp.SymFunctionTableAccess
-@ stdcall SymGetLineFromAddr64(long double ptr ptr) dbghelp.SymGetLineFromAddr64
+@ stdcall SymGetLineFromAddr64(long int64 ptr ptr) dbghelp.SymGetLineFromAddr64
 @ stdcall SymGetLineFromAddr(long long ptr ptr) dbghelp.SymGetLineFromAddr
 @ stub SymGetLineFromName64
 @ stub SymGetLineFromName
@@ -67,15 +67,15 @@
 @ stdcall SymGetLineNext(long ptr) dbghelp.SymGetLineNext
 @ stdcall SymGetLinePrev64(long ptr) dbghelp.SymGetLinePrev64
 @ stdcall SymGetLinePrev(long ptr) dbghelp.SymGetLinePrev
-@ stdcall SymGetModuleBase64(long double) dbghelp.SymGetModuleBase64
+@ stdcall SymGetModuleBase64(long int64) dbghelp.SymGetModuleBase64
 @ stdcall SymGetModuleBase(long long) dbghelp.SymGetModuleBase
-@ stdcall SymGetModuleInfo64(long double ptr) dbghelp.SymGetModuleInfo64
+@ stdcall SymGetModuleInfo64(long int64 ptr) dbghelp.SymGetModuleInfo64
 @ stdcall SymGetModuleInfo(long long ptr) dbghelp.SymGetModuleInfo
-@ stdcall SymGetModuleInfoW64(long double ptr) dbghelp.SymGetModuleInfoW64
+@ stdcall SymGetModuleInfoW64(long int64 ptr) dbghelp.SymGetModuleInfoW64
 @ stdcall SymGetModuleInfoW(long long ptr) dbghelp.SymGetModuleInfoW
 @ stdcall SymGetOptions() dbghelp.SymGetOptions
 @ stdcall SymGetSearchPath(long str long) dbghelp.SymGetSearchPath
-@ stdcall SymGetSymFromAddr64(long double ptr ptr) dbghelp.SymGetSymFromAddr64
+@ stdcall SymGetSymFromAddr64(long int64 ptr ptr) dbghelp.SymGetSymFromAddr64
 @ stdcall SymGetSymFromAddr(long long ptr ptr) dbghelp.SymGetSymFromAddr
 @ stdcall SymGetSymFromName64(long str ptr) dbghelp.SymGetSymFromName64
 @ stdcall SymGetSymFromName(long str ptr) dbghelp.SymGetSymFromName
@@ -86,20 +86,20 @@
 @ stdcall SymGetTypeFromName(long long str ptr) dbghelp.SymGetTypeFromName
 @ stdcall SymGetTypeInfo(long long long long ptr) dbghelp.SymGetTypeInfo
 @ stdcall SymInitialize(long str long) dbghelp.SymInitialize
-@ stdcall SymLoadModule64(long long str str double long) dbghelp.SymLoadModule64
+@ stdcall SymLoadModule64(long long str str int64 long) dbghelp.SymLoadModule64
 @ stdcall SymLoadModule(long long str str long long) dbghelp.SymLoadModule
 @ stdcall SymMatchFileName(str str ptr ptr) dbghelp.SymMatchFileName
 @ stdcall SymMatchString(str str long) dbghelp.SymMatchString
-@ stdcall SymRegisterCallback64(long ptr double) dbghelp.SymRegisterCallback64
+@ stdcall SymRegisterCallback64(long ptr int64) dbghelp.SymRegisterCallback64
 @ stdcall SymRegisterCallback(long ptr ptr) dbghelp.SymRegisterCallback
-@ stdcall SymRegisterFunctionEntryCallback64(ptr ptr double) dbghelp.SymRegisterFunctionEntryCallback64
+@ stdcall SymRegisterFunctionEntryCallback64(ptr ptr int64) dbghelp.SymRegisterFunctionEntryCallback64
 @ stdcall SymRegisterFunctionEntryCallback(ptr ptr ptr) dbghelp.SymRegisterFunctionEntryCallback
 @ stdcall SymSetContext(long ptr ptr) dbghelp.SymSetContext
 @ stdcall SymSetOptions(long) dbghelp.SymSetOptions
 @ stdcall SymSetSearchPath(long str) dbghelp.SymSetSearchPath
 @ stdcall SymUnDName64(ptr str long) dbghelp.SymUnDName64
 @ stdcall SymUnDName(ptr str long) dbghelp.SymUnDName
-@ stdcall SymUnloadModule64(long double) dbghelp.SymUnloadModule64
+@ stdcall SymUnloadModule64(long int64) dbghelp.SymUnloadModule64
 @ stdcall SymUnloadModule(long long) dbghelp.SymUnloadModule
 @ stdcall TouchFileTimes(long ptr)
 @ stdcall UnDecorateSymbolName(str str long long) dbghelp.UnDecorateSymbolName

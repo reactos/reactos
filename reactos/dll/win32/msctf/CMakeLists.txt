@@ -6,8 +6,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(msctf.dll msctf.spec)
 
 list(APPEND SOURCE
@@ -20,7 +18,6 @@ list(APPEND SOURCE
     langbarmgr.c
     msctf.c
     range.c
-    regsvr.c
     threadmgr.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf_stubs.c

@@ -19,9 +19,6 @@
 DWORD DebugTraceLevel = 0;
 #endif /* DBG */
 
-/* To make the linker happy */
-VOID WINAPI KeBugCheck (ULONG BugCheckCode) {}
-
 HINSTANCE g_hInstDll;
 HANDLE GlobalHeap;
 BOOL WsaInitialized = FALSE;    /* TRUE if WSAStartup() has been successfully called */

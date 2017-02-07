@@ -83,12 +83,12 @@ enum object_state
  */
 struct DefaultHandler
 {
-  const IOleObjectVtbl*      lpVtbl;
-  const IUnknownVtbl*        lpvtblIUnknown;
-  const IDataObjectVtbl*     lpvtblIDataObject;
-  const IRunnableObjectVtbl* lpvtblIRunnableObject;
-  const IAdviseSinkVtbl     *lpvtblIAdviseSink;
-  const IPersistStorageVtbl *lpvtblIPersistStorage;
+  IOleObject        IOleObject_iface;
+  IUnknown          IUnknown_iface;
+  IDataObject       IDataObject_iface;
+  IRunnableObject   IRunnableObject_iface;
+  IAdviseSink       IAdviseSink_iface;
+  IPersistStorage   IPersistStorage_iface;
 
   /* Reference count of this object */
   LONG ref;
@@ -148,39 +148,39 @@ typedef struct DefaultHandler DefaultHandler;
 
 static inline DefaultHandler *impl_from_IOleObject( IOleObject *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpVtbl));
+    return CONTAINING_RECORD(iface, DefaultHandler, IOleObject_iface);
 }
 
-static inline DefaultHandler *impl_from_NDIUnknown( IUnknown *iface )
+static inline DefaultHandler *impl_from_IUnknown( IUnknown *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIUnknown));
+    return CONTAINING_RECORD(iface, DefaultHandler, IUnknown_iface);
 }
 
 static inline DefaultHandler *impl_from_IDataObject( IDataObject *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIDataObject));
+    return CONTAINING_RECORD(iface, DefaultHandler, IDataObject_iface);
 }
 
 static inline DefaultHandler *impl_from_IRunnableObject( IRunnableObject *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIRunnableObject));
+    return CONTAINING_RECORD(iface, DefaultHandler, IRunnableObject_iface);
 }
 
 static inline DefaultHandler *impl_from_IAdviseSink( IAdviseSink *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIAdviseSink));
+    return CONTAINING_RECORD(iface, DefaultHandler, IAdviseSink_iface);
 }
 
 static inline DefaultHandler *impl_from_IPersistStorage( IPersistStorage *iface )
 {
-    return (DefaultHandler *)((char*)iface - FIELD_OFFSET(DefaultHandler, lpvtblIPersistStorage));
+    return CONTAINING_RECORD(iface, DefaultHandler, IPersistStorage_iface);
 }
 
 static void DefaultHandler_Destroy(DefaultHandler* This);
 
 static inline BOOL object_is_running(DefaultHandler *This)
 {
-    return IRunnableObject_IsRunning((IRunnableObject*)&This->lpvtblIRunnableObject);
+    return IRunnableObject_IsRunning(&This->IRunnableObject_iface);
 }
 
 /*********************************************************
@@ -201,7 +201,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
             REFIID         riid,
             void**         ppvObject)
 {
-  DefaultHandler *This = impl_from_NDIUnknown(iface);
+  DefaultHandler *This = impl_from_IUnknown(iface);
 
   if (!ppvObject)
     return E_INVALIDARG;
@@ -211,14 +211,14 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
   if (IsEqualIID(&IID_IUnknown, riid))
     *ppvObject = iface;
   else if (IsEqualIID(&IID_IOleObject, riid))
-    *ppvObject = &This->lpVtbl;
+    *ppvObject = &This->IOleObject_iface;
   else if (IsEqualIID(&IID_IDataObject, riid))
-    *ppvObject = &This->lpvtblIDataObject;
+    *ppvObject = &This->IDataObject_iface;
   else if (IsEqualIID(&IID_IRunnableObject, riid))
-    *ppvObject = &This->lpvtblIRunnableObject;
+    *ppvObject = &This->IRunnableObject_iface;
   else if (IsEqualIID(&IID_IPersist, riid) ||
            IsEqualIID(&IID_IPersistStorage, riid))
-    *ppvObject = &This->lpvtblIPersistStorage;
+    *ppvObject = &This->IPersistStorage_iface;
   else if (IsEqualIID(&IID_IViewObject, riid) ||
            IsEqualIID(&IID_IViewObject2, riid) ||
            IsEqualIID(&IID_IOleCache, riid) ||
@@ -230,9 +230,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
   }
   else if (This->inproc_server && This->pOleDelegate)
   {
-    HRESULT hr = IUnknown_QueryInterface(This->pOleDelegate, riid, ppvObject);
-    if (SUCCEEDED(hr))
-      return hr;
+    return IUnknown_QueryInterface(This->pOleDelegate, riid, ppvObject);
   }
 
   /* Check that we obtained an interface. */
@@ -262,7 +260,7 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
 static ULONG WINAPI DefaultHandler_NDIUnknown_AddRef(
             IUnknown*      iface)
 {
-  DefaultHandler *This = impl_from_NDIUnknown(iface);
+  DefaultHandler *This = impl_from_IUnknown(iface);
   return InterlockedIncrement(&This->ref);
 }
 
@@ -277,7 +275,7 @@ static ULONG WINAPI DefaultHandler_NDIUnknown_AddRef(
 static ULONG WINAPI DefaultHandler_NDIUnknown_Release(
             IUnknown*      iface)
 {
-  DefaultHandler *This = impl_from_NDIUnknown(iface);
+  DefaultHandler *This = impl_from_IUnknown(iface);
   ULONG ref;
 
   ref = InterlockedDecrement(&This->ref);
@@ -619,7 +617,7 @@ static HRESULT WINAPI DefaultHandler_DoVerb(
 	    LPCRECT            lprcPosRect)
 {
   DefaultHandler *This = impl_from_IOleObject(iface);
-  IRunnableObject *pRunnableObj = (IRunnableObject *)&This->lpvtblIRunnableObject;
+  IRunnableObject *pRunnableObj = &This->IRunnableObject_iface;
   HRESULT hr;
 
   TRACE("(%d, %p, %p, %d, %p, %s)\n", iVerb, lpmsg, pActiveSite, lindex, hwndParent, wine_dbgstr_rect(lprcPosRect));
@@ -1330,9 +1328,7 @@ static HRESULT WINAPI DefaultHandler_Run(
 
   This->object_state = object_state_running;
 
-  hr = IOleObject_Advise(This->pOleDelegate,
-                         (IAdviseSink *)&This->lpvtblIAdviseSink,
-                         &This->dwAdvConn);
+  hr = IOleObject_Advise(This->pOleDelegate, &This->IAdviseSink_iface, &This->dwAdvConn);
 
   if (SUCCEEDED(hr) && This->clientSite)
     hr = IOleObject_SetClientSite(This->pOleDelegate, This->clientSite);
@@ -1442,7 +1438,7 @@ static ULONG WINAPI DefaultHandler_IAdviseSink_AddRef(
 {
     DefaultHandler *This = impl_from_IAdviseSink(iface);
 
-    return IUnknown_AddRef((IUnknown *)&This->lpvtblIUnknown);
+    return IUnknown_AddRef(&This->IUnknown_iface);
 }
 
 static ULONG WINAPI DefaultHandler_IAdviseSink_Release(
@@ -1450,7 +1446,7 @@ static ULONG WINAPI DefaultHandler_IAdviseSink_Release(
 {
     DefaultHandler *This = impl_from_IAdviseSink(iface);
 
-    return IUnknown_Release((IUnknown *)&This->lpvtblIUnknown);
+    return IUnknown_Release(&This->IUnknown_iface);
 }
 
 static void WINAPI DefaultHandler_IAdviseSink_OnDataChange(
@@ -1921,12 +1917,12 @@ static DefaultHandler* DefaultHandler_Construct(
   if (!This)
     return This;
 
-  This->lpVtbl = &DefaultHandler_IOleObject_VTable;
-  This->lpvtblIUnknown = &DefaultHandler_NDIUnknown_VTable;
-  This->lpvtblIDataObject = &DefaultHandler_IDataObject_VTable;
-  This->lpvtblIRunnableObject = &DefaultHandler_IRunnableObject_VTable;
-  This->lpvtblIAdviseSink = &DefaultHandler_IAdviseSink_VTable;
-  This->lpvtblIPersistStorage = &DefaultHandler_IPersistStorage_VTable;
+  This->IOleObject_iface.lpVtbl = &DefaultHandler_IOleObject_VTable;
+  This->IUnknown_iface.lpVtbl = &DefaultHandler_NDIUnknown_VTable;
+  This->IDataObject_iface.lpVtbl = &DefaultHandler_IDataObject_VTable;
+  This->IRunnableObject_iface.lpVtbl = &DefaultHandler_IRunnableObject_VTable;
+  This->IAdviseSink_iface.lpVtbl = &DefaultHandler_IAdviseSink_VTable;
+  This->IPersistStorage_iface.lpVtbl = &DefaultHandler_IPersistStorage_VTable;
 
   This->inproc_server = (flags & EMBDHLP_INPROC_SERVER) ? TRUE : FALSE;
 
@@ -1943,7 +1939,7 @@ static DefaultHandler* DefaultHandler_Construct(
    * lifetime.
    */
   if (!pUnkOuter)
-    pUnkOuter = (IUnknown*)&This->lpvtblIUnknown;
+    pUnkOuter = &This->IUnknown_iface;
 
   This->outerUnknown = pUnkOuter;
 
@@ -2119,13 +2115,13 @@ HRESULT WINAPI OleCreateEmbeddingHelper(
   /*
    * Make sure it supports the interface required by the caller.
    */
-  hr = IUnknown_QueryInterface((IUnknown*)&newHandler->lpvtblIUnknown, riid, ppvObj);
+  hr = IUnknown_QueryInterface(&newHandler->IUnknown_iface, riid, ppvObj);
 
   /*
    * Release the reference obtained in the constructor. If
    * the QueryInterface was unsuccessful, it will free the class.
    */
-  IUnknown_Release((IUnknown*)&newHandler->lpvtblIUnknown);
+  IUnknown_Release(&newHandler->IUnknown_iface);
 
   return hr;
 }
@@ -2144,10 +2140,15 @@ HRESULT WINAPI OleCreateDefaultHandler(REFCLSID clsid, LPUNKNOWN pUnkOuter,
 
 typedef struct HandlerCF
 {
-    const IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     LONG refs;
     CLSID clsid;
 } HandlerCF;
+
+static inline HandlerCF *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, HandlerCF, IClassFactory_iface);
+}
 
 static HRESULT WINAPI
 HandlerCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
@@ -2165,13 +2166,13 @@ HandlerCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
 
 static ULONG WINAPI HandlerCF_AddRef(LPCLASSFACTORY iface)
 {
-    HandlerCF *This = (HandlerCF *)iface;
+    HandlerCF *This = impl_from_IClassFactory(iface);
     return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI HandlerCF_Release(LPCLASSFACTORY iface)
 {
-    HandlerCF *This = (HandlerCF *)iface;
+    HandlerCF *This = impl_from_IClassFactory(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
         HeapFree(GetProcessHeap(), 0, This);
@@ -2182,7 +2183,7 @@ static HRESULT WINAPI
 HandlerCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
                          REFIID riid, LPVOID *ppv)
 {
-    HandlerCF *This = (HandlerCF *)iface;
+    HandlerCF *This = impl_from_IClassFactory(iface);
     return OleCreateDefaultHandler(&This->clsid, pUnk, riid, ppv);
 }
 
@@ -2205,11 +2206,11 @@ HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
     HRESULT hr;
     HandlerCF *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
-    This->lpVtbl = &HandlerClassFactoryVtbl;
+    This->IClassFactory_iface.lpVtbl = &HandlerClassFactoryVtbl;
     This->refs = 0;
     This->clsid = *rclsid;
 
-    hr = IUnknown_QueryInterface((IUnknown *)&This->lpVtbl, riid, ppv);
+    hr = IUnknown_QueryInterface((IUnknown *)&This->IClassFactory_iface, riid, ppv);
     if (FAILED(hr))
         HeapFree(GetProcessHeap(), 0, This);
 

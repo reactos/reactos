@@ -281,12 +281,18 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
     {
       FileOffset.u.HighPart = 0;
       FileOffset.u.LowPart = VolumeLabelDirIndex * SizeDirEntry;
-      CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
-                 TRUE, &Context, (PVOID*)&Entry);
-      RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
-      CcSetDirtyPinnedData(Context, NULL);
-      CcUnpinData(Context);
-      Status = STATUS_SUCCESS;
+      if (!CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
+                 TRUE, &Context, (PVOID*)&Entry))
+      {
+          Status = STATUS_UNSUCCESSFUL;
+      }
+      else
+      {
+          RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
+          CcSetDirtyPinnedData(Context, NULL);
+          CcUnpinData(Context);
+          Status = STATUS_SUCCESS;
+      }
     }
   }
 

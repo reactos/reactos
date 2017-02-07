@@ -9,95 +9,95 @@ BEGIN
     IDS_TYPE "Typ"
     IDS_MANUFACTURER "Hersteller: %1"
     IDS_LOCATION "Ort: %1"
-    IDS_STATUS "Ger‰testatus: %1"
+    IDS_STATUS "Ger√§testatus: %1"
     IDS_UNKNOWN "Unbekannt"
     IDS_LOCATIONSTR "Ort %1!u! (%2)"
     IDS_DEVCODE " (Code %1!u!)"
     IDS_DEVCODE2 " (Code %2!u!)"
-    IDS_ENABLEDEVICE "Benutze dieses Ger‰t (aktivieren)"
-    IDS_DISABLEDEVICE "Benutze dieses Ger‰t nicht (deaktivieren)"
-    IDS_UNKNOWNDEVICE "Unbekanntes Ger‰t"
-    IDS_NODRIVERLOADED "F¸r dieses Ger‰t sind keine Treiber installiert."
+    IDS_ENABLEDEVICE "Benutze dieses Ger√§t (aktivieren)"
+    IDS_DISABLEDEVICE "Benutze dieses Ger√§t nicht (deaktivieren)"
+    IDS_UNKNOWNDEVICE "Unbekanntes Ger√§t"
+    IDS_NODRIVERLOADED "F√ºr dieses Ger√§t sind keine Treiber installiert."
     IDS_DEVONPARENT "auf %1"
-    IDS_TROUBLESHOOTDEV "Problem &lˆsen..."
-    IDS_ENABLEDEV "Ger‰t &aktivieren"
+    IDS_TROUBLESHOOTDEV "Problem &l√∂sen..."
+    IDS_ENABLEDEV "Ger√§t &aktivieren"
     IDS_REINSTALLDRV "Treiber neu&installieren"
     IDS_PROPERTIES "&Eigenschaften"
     IDS_UPDATEDRV "Treiber &aktualisieren..."
     IDS_REBOOT "Computer neusta&rten..."
-    IDS_NOTAVAILABLE "Nicht verf¸gbar"
+    IDS_NOTAVAILABLE "Nicht verf√ºgbar"
     IDS_NOTDIGITALLYSIGNED "Nicht digital signiert"
-    IDS_NODRIVERS "Es werden keine Treiber f¸r dieses Ger‰t benˆtigt oder es wurden keine Treiber geladen."
+    IDS_NODRIVERS "Es werden keine Treiber f√ºr dieses Ger√§t ben√∂tigt oder es wurden keine Treiber geladen."
 END
 
 /* error messages, source: http://www.z123.org/techsupport/medm.htm */
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Dieses Ger‰t funktioniert einwandfrei."
-    IDS_DEV_NOT_CONFIGURED "Dieses Ger‰t ist nicht richtig konfiguriert."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  konnte den Treiber f¸r dieses Ger‰t nicht laden, weil der Computer zwei $1 Bustypen meldet."
-    IDS_DEV_DEVLOADER_FAILED2 "Der/die $1 Ger‰telader f¸r dieses Ger‰t konnte den Ger‰tetreiber nicht laden."
-    IDS_DEV_OUT_OF_MEMORY "Der Treiber f¸r dieses Ger‰t kˆnnte besch‰digt sein, oder Ihr System verf¸gt ¸ber zu wenig Speicher oder andere Ressourcen."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Dieses Ger‰t arbeitet nicht korrekt, weil einer seiner Treiber oder die Registry besch‰digt ist."
-    IDS_DEV_LACKED_ARBITRATOR "Der Treiber dieses Ger‰tes hat eine Ressource angefragt, die ReactOS nicht behandeln kann."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Ein anderes Ger‰t benutzt bereits die Ressourcen, die dieses Ger‰t benˆtigt."
-    IDS_DEV_FAILED_FILTER "Die Treiber f¸r dieses Ger‰t m¸ssen neu installiert werden."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Dieses Ger‰t arbeitet nicht korrekt, weil ReactOS die Datei $1 nicht laden kann, die die Treiber f¸r dieses Ger‰t l‰dt."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Ger‰t arbeitet nicht korrekt, weil die Datei $1, die die Treiber f¸r dieses Ger‰t l‰dt, defekt ist."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Ger‰tefehler: Versuchen Sie, den Treiber f¸r dieses Ger‰t auszutauschen. Wenn das nicht hilft, sehen Sie in die Ger‰tedokumentation."
-    IDS_DEV_INVALID_DATA "Dieses Ger‰t arbeitet nicht korrekt, weil das BIOS ihres Computers die Ressourcen f¸r dieses Ger‰t falsch angibt."
-    IDS_DEV_INVALID_DATA2 "Dieses Ger‰t arbeitet nicht korrekt, weil das BIOS dieses Ger‰tes die Ressourcen f¸r dieses Ger‰t falsch angibt. "
-    IDS_DEV_FAILED_START "Dieses Ger‰t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
-    IDS_DEV_LIAR "ReactOS hˆrte w‰hrend des Versuchs dieses Ger‰t zu starten auf zu reagieren und wird deshalb nicht wieder versuchen, dieses Ger‰t zu starten.."
-    IDS_DEV_NORMAL_CONFLICT "Dieses Ger‰t kann keine freien $1 Ressourcen zur Benutzung finden."
-    IDS_DEV_NOT_VERIFIED "Dieses Ger‰t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
-    IDS_DEV_NEED_RESTART "Dieses Ger‰t wird erst korrekt funktionieren, wenn Sie den Computer neugestartet haben."
-    IDS_DEV_REENUMERATION "Dieses Ger‰t verursacht einen Ressourcenkonflikt."
-    IDS_DEV_PARTIAL_LOG_CONF "ReactOS konnte nicht alle Ressourcen identifizieren, die dieses Ger‰t benutzt."
+    IDS_DEV_NO_PROBLEM "Dieses Ger√§t funktioniert einwandfrei."
+    IDS_DEV_NOT_CONFIGURED "Dieses Ger√§t ist nicht richtig konfiguriert."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS  konnte den Treiber f√ºr dieses Ger√§t nicht laden, weil der Computer zwei $1 Bustypen meldet."
+    IDS_DEV_DEVLOADER_FAILED2 "Der/die $1 Ger√§telader f√ºr dieses Ger√§t konnte den Ger√§tetreiber nicht laden."
+    IDS_DEV_OUT_OF_MEMORY "Der Treiber f√ºr dieses Ger√§t k√∂nnte besch√§digt sein, oder Ihr System verf√ºgt √ºber zu wenig Speicher oder andere Ressourcen."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Dieses Ger√§t arbeitet nicht korrekt, weil einer seiner Treiber oder die Registry besch√§digt ist."
+    IDS_DEV_LACKED_ARBITRATOR "Der Treiber dieses Ger√§tes hat eine Ressource angefragt, die ReactOS nicht behandeln kann."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Ein anderes Ger√§t benutzt bereits die Ressourcen, die dieses Ger√§t ben√∂tigt."
+    IDS_DEV_FAILED_FILTER "Die Treiber f√ºr dieses Ger√§t m√ºssen neu installiert werden."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Dieses Ger√§t arbeitet nicht korrekt, weil ReactOS die Datei $1 nicht laden kann, die die Treiber f√ºr dieses Ger√§t l√§dt."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Dieses Ger√§t arbeitet nicht korrekt, weil die Datei $1, die die Treiber f√ºr dieses Ger√§t l√§dt, defekt ist."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Ger√§tefehler: Versuchen Sie, den Treiber f√ºr dieses Ger√§t auszutauschen. Wenn das nicht hilft, sehen Sie in die Ger√§tedokumentation."
+    IDS_DEV_INVALID_DATA "Dieses Ger√§t arbeitet nicht korrekt, weil das BIOS ihres Computers die Ressourcen f√ºr dieses Ger√§t falsch angibt."
+    IDS_DEV_INVALID_DATA2 "Dieses Ger√§t arbeitet nicht korrekt, weil das BIOS dieses Ger√§tes die Ressourcen f√ºr dieses Ger√§t falsch angibt. "
+    IDS_DEV_FAILED_START "Dieses Ger√§t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
+    IDS_DEV_LIAR "ReactOS h√∂rte w√§hrend des Versuchs dieses Ger√§t zu starten auf zu reagieren und wird deshalb nicht wieder versuchen, dieses Ger√§t zu starten.."
+    IDS_DEV_NORMAL_CONFLICT "Dieses Ger√§t kann keine freien $1 Ressourcen zur Benutzung finden."
+    IDS_DEV_NOT_VERIFIED "Dieses Ger√§t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
+    IDS_DEV_NEED_RESTART "Dieses Ger√§t wird erst korrekt funktionieren, wenn Sie den Computer neugestartet haben."
+    IDS_DEV_REENUMERATION "Dieses Ger√§t verursacht einen Ressourcenkonflikt."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS konnte nicht alle Ressourcen identifizieren, die dieses Ger√§t benutzt."
     IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
-    IDS_DEV_REINSTALL "Die Treiber f¸r dieses Ger‰t m¸ssen neuinstalliert werden."
-    IDS_DEV_REGISTRY "Die Registrierungsdatenbank kˆnnte besch‰digt sein."
-    IDS_DEV_WILL_BE_REMOVED "ReactOS wird dieses Ger‰t entfernen."
-    IDS_DEV_DISABLED "Dieses Ger‰t ist nicht gestartet."
-    IDS_DEV_DISABLED2 "Dieses Ger‰t ist deaktiviert."
-    IDS_DEV_DEVLOADER_NOT_READY "Der Lader f¸r dieses Ger‰t kann die benˆtigten Treiber nicht laden."
+    IDS_DEV_REINSTALL "Die Treiber f√ºr dieses Ger√§t m√ºssen neuinstalliert werden."
+    IDS_DEV_REGISTRY "Die Registrierungsdatenbank k√∂nnte besch√§digt sein."
+    IDS_DEV_WILL_BE_REMOVED "ReactOS wird dieses Ger√§t entfernen."
+    IDS_DEV_DISABLED "Dieses Ger√§t ist nicht gestartet."
+    IDS_DEV_DISABLED2 "Dieses Ger√§t ist deaktiviert."
+    IDS_DEV_DEVLOADER_NOT_READY "Der Lader f√ºr dieses Ger√§t kann die ben√∂tigten Treiber nicht laden."
     IDS_DEV_DEVLOADER_NOT_READY2 "Diese Grafikkarte funktioniert einwandfrei."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Die Lader f¸r dieses Ger‰t kˆnnen die benˆtigten Treiber nicht laden."
-    IDS_DEV_DEVICE_NOT_THERE "Dieses Ger‰t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
-    IDS_DEV_MOVED "ReactOS ist dabei dieses Ger‰t zu aktivieren."
-    IDS_DEV_TOO_EARLY "ReactOS ist dabei dieses Ger‰t zu aktivieren."
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS kann die Ressourcen f¸r dieses Ger‰t nicht feststellen."
-    IDS_DEV_FAILED_INSTALL "Die Treiber f¸r dieses Ger‰t sind nicht installiert."
-    IDS_DEV_HARDWARE_DISABLED "Dieses Ger‰t ist deaktiviert, weil das BIOS f¸r dieses Ger‰t keine Ressourcen zugeteilt hat."
-    IDS_DEV_CANT_SHARE_IRQ "Dieses Ger‰t benutzt einen Interrupt (IRQ), der bereits von einem anderen Ger‰t benutzt wird und nicht geteilt werden kann. Sie m¸ssen die kollidierenden Einstellungen ‰ndern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
-    IDS_DEV_FAILED_ADD "Dieses Ger‰t arbeitet nicht korrekt, weil $1 nicht korrekt funktioniert."
-    IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber f¸r dieses Ger‰t nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
-    IDS_DEV_TRANSLATION_FAILED "Dieses Ger‰t reagiert nicht auf seinen Treiber."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS kann die Einstellungen f¸r dieses Ger‰t nicht feststellen. Lesen Sie die Dokumentation, die mit diesem Ger‰t kam und benutzen Sie den Reiter ""Ressourcen"" umd die Konfiguration vorzunehmen."
-    IDS_DEV_BIOS_TABLE "Die System-Firmware ihres Computers beinhaltet nicht genug Information um dieses Ger‰t korrekt konfigurieren und benutzen zu kˆnnen. Um dieses Ger‰t benutzen zu kˆnnen, kontaktieren Sie bitte Ihren Computerhersteller um ein Firmware- oder BIOS-Update zu erhalten."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Dieses Ger‰t beantragt einen PCI-Interrupt, ist aber f¸r einen ISA-Interrupt konfiguriert (oder andersherum). Bitte benutzen Sie das System-Setup Programm dieses Computers, um den Interrupt f¸r dieses Ger‰t neu zu konfigurieren."
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS kann den Ger‰tetreiber f¸r dieses Ger‰t nicht initialisieren."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS kann den Ger‰tetreiber f¸r dieses Ger‰t nicht laden, weil eine noch fr¸here Instanz des Ger‰tetreibers im Speicher ist."
-    IDS_DEV_DRIVER_FAILED_LOAD "Der Ger‰tetreiber f¸r diese Hardware kann nicht geladen werden. Der Treiber ist mˆglicherweise besch‰digt oder nicht vorhanden."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS kann dieses Ger‰t nicht ansprechen, weil seine Serviceschl¸ssel-Information nicht in der Registrierungsdatenbank ist oder weil sie falsch ist."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS hat den Ger‰tetreiber f¸r dieses Ger‰t erfolgreich geladen, kann aber das Ger‰t nicht finden."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS kann den Ger‰tetreiber f¸r dieses Ger‰t nicht laden, weil bereits ein identisches Ger‰t installiert ist."
-    IDS_DEV_FAILED_POST_START "ReactOS hat dieses Ger‰t angehalten, weil es Probleme berichtet hat."
-    IDS_DEV_HALTED "Eine Anwendung oder ein Dienst hat dieses Ger‰t heruntergefahren."
-    IDS_DEV_PHANTOM "Dieses Ger‰t ist momentan nicht mit dem Computer verbunden."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS kann auf dieses Ger‰t nicht zugreifen, weil das Betriebssystem heruntergefahren wird."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS kann dieses Ger‰t nicht benutzen, weil es f¸r ""Sicheres Entfernen"" vorbereitet, aber bisher nicht vom Computer entfernt wurde."
-    IDS_DEV_DRIVER_BLOCKED "Die Ausf¸hrung der Software f¸r dieses Ger‰t wurde blockiert, weil bekannt ist, dass sie Probleme mit ReactOS hat. Kontaktieren Sie den Hersteller f¸r einen neuen Treiber."
-    IDS_DEV_REGISTRY_TOO_LARGE "Die neuen Hardwareger‰te kˆnnen nicht gestartet werden, da die Systemstruktur zu groﬂ ist (die Struktur ¸berschreitet die Registrierungsgrˆﬂenbeschr‰nkung)."
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS konnte die Einstellungen f¸r dieses Ger‰t nicht ver‰ndern."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Die Lader f√ºr dieses Ger√§t k√∂nnen die ben√∂tigten Treiber nicht laden."
+    IDS_DEV_DEVICE_NOT_THERE "Dieses Ger√§t ist entweder nicht vorhanden, funktioniert nicht korrekt, oder es sind nicht alle Treiber installiert."
+    IDS_DEV_MOVED "ReactOS ist dabei dieses Ger√§t zu aktivieren."
+    IDS_DEV_TOO_EARLY "ReactOS ist dabei dieses Ger√§t zu aktivieren."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS kann die Ressourcen f√ºr dieses Ger√§t nicht feststellen."
+    IDS_DEV_FAILED_INSTALL "Die Treiber f√ºr dieses Ger√§t sind nicht installiert."
+    IDS_DEV_HARDWARE_DISABLED "Dieses Ger√§t ist deaktiviert, weil das BIOS f√ºr dieses Ger√§t keine Ressourcen zugeteilt hat."
+    IDS_DEV_CANT_SHARE_IRQ "Dieses Ger√§t benutzt einen Interrupt (IRQ), der bereits von einem anderen Ger√§t benutzt wird und nicht geteilt werden kann. Sie m√ºssen die kollidierenden Einstellungen √§ndern, oder den real-mode Treiber entfernen, der den Konflikt verursacht."
+    IDS_DEV_FAILED_ADD "Dieses Ger√§t arbeitet nicht korrekt, weil $1 nicht korrekt funktioniert."
+    IDS_DEV_DISABLED_SERVICE "ReactOS kann die Treiber f√ºr dieses Ger√§t nicht installieren, weil auf das (Netz-)Laufwerk, auf dem die Installationsdateien abgelegt sind, nicht zugegriffen werden kann."
+    IDS_DEV_TRANSLATION_FAILED "Dieses Ger√§t reagiert nicht auf seinen Treiber."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS kann die Einstellungen f√ºr dieses Ger√§t nicht feststellen. Lesen Sie die Dokumentation, die mit diesem Ger√§t kam und benutzen Sie den Reiter ""Ressourcen"" umd die Konfiguration vorzunehmen."
+    IDS_DEV_BIOS_TABLE "Die System-Firmware ihres Computers beinhaltet nicht genug Information um dieses Ger√§t korrekt konfigurieren und benutzen zu k√∂nnen. Um dieses Ger√§t benutzen zu k√∂nnen, kontaktieren Sie bitte Ihren Computerhersteller um ein Firmware- oder BIOS-Update zu erhalten."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Dieses Ger√§t beantragt einen PCI-Interrupt, ist aber f√ºr einen ISA-Interrupt konfiguriert (oder andersherum). Bitte benutzen Sie das System-Setup Programm dieses Computers, um den Interrupt f√ºr dieses Ger√§t neu zu konfigurieren."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS kann den Ger√§tetreiber f√ºr dieses Ger√§t nicht initialisieren."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS kann den Ger√§tetreiber f√ºr dieses Ger√§t nicht laden, weil eine noch fr√ºhere Instanz des Ger√§tetreibers im Speicher ist."
+    IDS_DEV_DRIVER_FAILED_LOAD "Der Ger√§tetreiber f√ºr diese Hardware kann nicht geladen werden. Der Treiber ist m√∂glicherweise besch√§digt oder nicht vorhanden."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS kann dieses Ger√§t nicht ansprechen, weil seine Serviceschl√ºssel-Information nicht in der Registrierungsdatenbank ist oder weil sie falsch ist."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS hat den Ger√§tetreiber f√ºr dieses Ger√§t erfolgreich geladen, kann aber das Ger√§t nicht finden."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS kann den Ger√§tetreiber f√ºr dieses Ger√§t nicht laden, weil bereits ein identisches Ger√§t installiert ist."
+    IDS_DEV_FAILED_POST_START "ReactOS hat dieses Ger√§t angehalten, weil es Probleme berichtet hat."
+    IDS_DEV_HALTED "Eine Anwendung oder ein Dienst hat dieses Ger√§t heruntergefahren."
+    IDS_DEV_PHANTOM "Dieses Ger√§t ist momentan nicht mit dem Computer verbunden."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS kann auf dieses Ger√§t nicht zugreifen, weil das Betriebssystem heruntergefahren wird."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS kann dieses Ger√§t nicht benutzen, weil es f√ºr ""Sicheres Entfernen"" vorbereitet, aber bisher nicht vom Computer entfernt wurde."
+    IDS_DEV_DRIVER_BLOCKED "Die Ausf√ºhrung der Software f√ºr dieses Ger√§t wurde blockiert, weil bekannt ist, dass sie Probleme mit ReactOS hat. Kontaktieren Sie den Hersteller f√ºr einen neuen Treiber."
+    IDS_DEV_REGISTRY_TOO_LARGE "Die neuen Hardwareger√§te k√∂nnen nicht gestartet werden, da die Systemstruktur zu gro√ü ist (die Struktur √ºberschreitet die Registrierungsgr√∂√üenbeschr√§nkung)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS konnte die Einstellungen f√ºr dieses Ger√§t nicht ver√§ndern."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Ger‰teinstanz-ID"
+    IDS_PROP_DEVICEID "Ger√§teinstanz-ID"
     IDS_PROP_HARDWAREIDS "Hardware-IDs"
     IDS_PROP_COMPATIBLEIDS "Kompatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Passende Ger‰te-ID"
+    IDS_PROP_MATCHINGDEVICEID "Passende Ger√§te-ID"
     IDS_PROP_SERVICE "Dienst"
     IDS_PROP_ENUMERATOR "Enumerator"
     IDS_PROP_CAPABILITIES "Eigenschaften"
@@ -107,13 +107,13 @@ BEGIN
     IDS_PROP_EJECTIONRELATIONS "Auswurfsrichtlinien"
     IDS_PROP_REMOVALRELATIONS "Entfernungsrichtlinen"
     IDS_PROP_BUSRELATIONS "Busrichtlinien"
-    IDS_PROP_DEVUPPERFILTERS "Obere Ger‰tefilter"
-    IDS_PROP_DEVLOWERFILTERS "Untere Ger‰tefilter"
+    IDS_PROP_DEVUPPERFILTERS "Obere Ger√§tefilter"
+    IDS_PROP_DEVLOWERFILTERS "Untere Ger√§tefilter"
     IDS_PROP_CLASSUPPERFILTERS "Obere Klassenfilter"
     IDS_PROP_CLASSLOWERFILTERS "Untere Klassenfilter"
     IDS_PROP_CLASSINSTALLER "Klasseninstallationsprogramm"
     IDS_PROP_CLASSCOINSTALLER "Klassen-Coinstallationsprogramm"
-    IDS_PROP_DEVICECOINSTALLER "Ger‰te-Coinstallationsprogramm"
+    IDS_PROP_DEVICECOINSTALLER "Ger√§te-Coinstallationsprogramm"
     IDS_PROP_FIRMWAREREVISION "Firmwarerevision"
     IDS_PROP_CURRENTPOWERSTATE "Aktueller Energiezustand"
     IDS_PROP_POWERCAPABILITIES "Energie-Eigenschaften"
@@ -124,15 +124,15 @@ IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Ger‰te:",IDC_DEVICES,7,6,196,10
+    LTEXT           "&Ger√§te:",IDC_DEVICES,7,6,196,10
     CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
                     LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
-    GROUPBOX        "Ger‰teeigenschaften",IDC_PROPERTIESGROUP,7,76,196,105
+    GROUPBOX        "Ger√§teeigenschaften",IDC_PROPERTIESGROUP,7,76,196,105
     LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_STATUS,14,112,183,30
-    PUSHBUTTON      "Problem &lˆsen...",IDC_TROUBLESHOOT,85,140,54,14,
+    PUSHBUTTON      "Problem &l√∂sen...",IDC_TROUBLESHOOT,85,140,54,14,
                     BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
     PUSHBUTTON      "&Eigenschaften",IDC_PROPERTIES,146,140,50,14
 END
@@ -144,16 +144,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Ger‰tetyp:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Ger√§tetyp:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Hersteller:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Ort:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     GROUPBOX "Ger‰testatus", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+     GROUPBOX "Ger√§testatus", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
      EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-     PUSHBUTTON "Problem &lˆsen...", IDC_DEVPROBLEM, 148, 163, 90, 15
-     LTEXT "Ger‰te&benutzung:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
+     PUSHBUTTON "Problem &l√∂sen...", IDC_DEVPROBLEM, 148, 163, 90, 15
+     LTEXT "Ger√§te&benutzung:", IDC_DEVUSAGELABEL, 7, 188, 222, 8, WS_DISABLED
      COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
@@ -173,7 +173,7 @@ BEGIN
      LTEXT "Signaturgeber:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      PUSHBUTTON "&Treiberdetails...", IDC_DRIVERDETAILS, 7, 106, 70, 15
-     LTEXT "Einzelheiten ¸ber die Treiberdateien anzeigen.", -1, 91, 110, 154, 17, SS_NOPREFIX
+     LTEXT "Einzelheiten √ºber die Treiberdateien anzeigen.", -1, 91, 110, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX DISCARDABLE  0, 0, 224, 230
@@ -228,6 +228,3 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
 END
-
-
-

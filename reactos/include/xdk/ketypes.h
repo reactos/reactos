@@ -73,7 +73,7 @@ typedef struct _PROCESSOR_RELATIONSHIP {
   UCHAR Flags;
   UCHAR Reserved[21];
   USHORT GroupCount;
-  GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
+  _Field_size_(GroupCount) GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
 } PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
 
 typedef struct _NUMA_NODE_RELATIONSHIP {
@@ -264,29 +264,31 @@ typedef enum _KBUGCHECK_CALLBACK_REASON {
 
 struct _KBUGCHECK_REASON_CALLBACK_RECORD;
 
+_Function_class_(KBUGCHECK_REASON_CALLBACK_ROUTINE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI KBUGCHECK_REASON_CALLBACK_ROUTINE)(
-  IN KBUGCHECK_CALLBACK_REASON Reason,
-  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD *Record,
-  IN OUT PVOID ReasonSpecificData,
-  IN ULONG ReasonSpecificDataLength);
+    _In_ KBUGCHECK_CALLBACK_REASON Reason,
+    _In_ struct _KBUGCHECK_REASON_CALLBACK_RECORD *Record,
+    _Inout_ PVOID ReasonSpecificData,
+    _In_ ULONG ReasonSpecificDataLength);
 typedef KBUGCHECK_REASON_CALLBACK_ROUTINE *PKBUGCHECK_REASON_CALLBACK_ROUTINE;
 
 typedef struct _KBUGCHECK_ADD_PAGES {
-  IN OUT PVOID Context;
-  IN OUT ULONG Flags;
-  IN ULONG BugCheckCode;
-  OUT ULONG_PTR Address;
-  OUT ULONG_PTR Count;
+  _Inout_ PVOID Context;
+  _Inout_ ULONG Flags;
+  _In_ ULONG BugCheckCode;
+  _Out_ ULONG_PTR Address;
+  _Out_ ULONG_PTR Count;
 } KBUGCHECK_ADD_PAGES, *PKBUGCHECK_ADD_PAGES;
 
 typedef struct _KBUGCHECK_SECONDARY_DUMP_DATA {
-  IN PVOID InBuffer;
-  IN ULONG InBufferLength;
-  IN ULONG MaximumAllowed;
-  OUT GUID Guid;
-  OUT PVOID OutBuffer;
-  OUT ULONG OutBufferLength;
+  _In_ PVOID InBuffer;
+  _In_ ULONG InBufferLength;
+  _In_ ULONG MaximumAllowed;
+  _Out_ GUID Guid;
+  _Out_ PVOID OutBuffer;
+  _Out_ ULONG OutBufferLength;
 } KBUGCHECK_SECONDARY_DUMP_DATA, *PKBUGCHECK_SECONDARY_DUMP_DATA;
 
 typedef enum _KBUGCHECK_DUMP_IO_TYPE {
@@ -298,10 +300,10 @@ typedef enum _KBUGCHECK_DUMP_IO_TYPE {
 } KBUGCHECK_DUMP_IO_TYPE;
 
 typedef struct _KBUGCHECK_DUMP_IO {
-  IN ULONG64 Offset;
-  IN PVOID Buffer;
-  IN ULONG BufferLength;
-  IN KBUGCHECK_DUMP_IO_TYPE Type;
+  _In_ ULONG64 Offset;
+  _In_ PVOID Buffer;
+  _In_ ULONG BufferLength;
+  _In_ KBUGCHECK_DUMP_IO_TYPE Type;
 } KBUGCHECK_DUMP_IO, *PKBUGCHECK_DUMP_IO;
 
 #define KB_ADD_PAGES_FLAG_VIRTUAL_ADDRESS         0x00000001UL
@@ -325,6 +327,8 @@ typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
   BufferIncomplete
 } KBUGCHECK_BUFFER_DUMP_STATE;
 
+_Function_class_(KBUGCHECK_CALLBACK_ROUTINE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI KBUGCHECK_CALLBACK_ROUTINE)(
   IN PVOID Buffer,
@@ -334,17 +338,19 @@ typedef KBUGCHECK_CALLBACK_ROUTINE *PKBUGCHECK_CALLBACK_ROUTINE;
 typedef struct _KBUGCHECK_CALLBACK_RECORD {
   LIST_ENTRY Entry;
   PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine;
-  PVOID Buffer;
+  _Field_size_bytes_opt_(Length) PVOID Buffer;
   ULONG Length;
   PUCHAR Component;
   ULONG_PTR Checksum;
   UCHAR State;
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
 
+_Function_class_(NMI_CALLBACK)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI NMI_CALLBACK)(
-  IN PVOID Context,
-  IN BOOLEAN Handled);
+  _In_opt_ PVOID Context,
+  _In_ BOOLEAN Handled);
 typedef NMI_CALLBACK *PNMI_CALLBACK;
 
 typedef enum _KE_PROCESSOR_CHANGE_NOTIFY_STATE {
@@ -362,11 +368,13 @@ typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {
 #endif
 } KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;
 
+_IRQL_requires_same_
+_Function_class_(PROCESSOR_CALLBACK_FUNCTION)
 typedef VOID
 (NTAPI PROCESSOR_CALLBACK_FUNCTION)(
-  IN PVOID CallbackContext,
-  IN PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT ChangeContext,
-  IN OUT PNTSTATUS OperationStatus);
+  _In_ PVOID CallbackContext,
+  _In_ PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT ChangeContext,
+  _Inout_ PNTSTATUS OperationStatus);
 typedef PROCESSOR_CALLBACK_FUNCTION *PPROCESSOR_CALLBACK_FUNCTION;
 
 #define KE_PROCESSOR_CHANGE_ADD_EXISTING         1
@@ -455,7 +463,11 @@ typedef struct _KWAIT_BLOCK {
   struct _KWAIT_BLOCK *NextWaitBlock;
   USHORT WaitKey;
   UCHAR WaitType;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
   volatile UCHAR BlockState;
+#else
+  UCHAR SpareByte;
+#endif
 #if defined(_WIN64)
   LONG SpareLong;
 #endif
@@ -468,26 +480,33 @@ typedef enum _KINTERRUPT_MODE {
 
 #define THREAD_WAIT_OBJECTS 3
 
+_IRQL_requires_same_
+_Function_class_(KSTART_ROUTINE)
 typedef VOID
 (NTAPI KSTART_ROUTINE)(
-  IN PVOID StartContext);
+  _In_ PVOID StartContext);
 typedef KSTART_ROUTINE *PKSTART_ROUTINE;
 
 typedef VOID
 (NTAPI *PKINTERRUPT_ROUTINE)(
   VOID);
 
+_Function_class_(KSERVICE_ROUTINE)
+_IRQL_requires_(HIGH_LEVEL)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI KSERVICE_ROUTINE)(
-  IN struct _KINTERRUPT *Interrupt,
-  IN PVOID ServiceContext);
+  _In_ struct _KINTERRUPT *Interrupt,
+  _In_ PVOID ServiceContext);
 typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
+_Function_class_(KMESSAGE_SERVICE_ROUTINE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI KMESSAGE_SERVICE_ROUTINE)(
-  IN struct _KINTERRUPT *Interrupt,
-  IN PVOID ServiceContext,
-  IN ULONG MessageID);
+  _In_ struct _KINTERRUPT *Interrupt,
+  _In_ PVOID ServiceContext,
+  _In_ ULONG MessageID);
 typedef KMESSAGE_SERVICE_ROUTINE *PKMESSAGE_SERVICE_ROUTINE;
 
 typedef enum _KD_OPTION {
@@ -572,9 +591,12 @@ typedef struct _KIPI_COUNTS {
   ULONG GratuitousDPC;
 } KIPI_COUNTS, *PKIPI_COUNTS;
 
+_IRQL_requires_same_
+_Function_class_(KIPI_BROADCAST_WORKER)
+_IRQL_requires_(IPI_LEVEL)
 typedef ULONG_PTR
 (NTAPI KIPI_BROADCAST_WORKER)(
-  IN ULONG_PTR Argument);
+  _In_ ULONG_PTR Argument);
 typedef KIPI_BROADCAST_WORKER *PKIPI_BROADCAST_WORKER;
 
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
@@ -639,12 +661,15 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
 
 #endif /* defined(_AMD64_) */
 
+_Function_class_(KDEFERRED_ROUTINE)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI KDEFERRED_ROUTINE)(
-  IN struct _KDPC *Dpc,
-  IN PVOID DeferredContext OPTIONAL,
-  IN PVOID SystemArgument1 OPTIONAL,
-  IN PVOID SystemArgument2 OPTIONAL);
+  _In_ struct _KDPC *Dpc,
+  _In_opt_ PVOID DeferredContext,
+  _In_opt_ PVOID SystemArgument1,
+  _In_opt_ PVOID SystemArgument2);
 typedef KDEFERRED_ROUTINE *PKDEFERRED_ROUTINE;
 
 typedef enum _KDPC_IMPORTANCE {
@@ -811,9 +836,9 @@ typedef struct _KTIMER {
   ULARGE_INTEGER DueTime;
   LIST_ENTRY TimerListEntry;
   struct _KDPC *Dpc;
-# if !defined(_X86_)
+#if (NTDDI_VERSION >= NTDDI_WIN7) && !defined(_X86_)
   ULONG Processor;
-# endif
+#endif
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 
@@ -825,9 +850,11 @@ typedef enum _LOCK_OPERATION {
 
 #define KTIMER_ACTUAL_LENGTH (FIELD_OFFSET(KTIMER, Period) + sizeof(LONG))
 
+_Function_class_(KSYNCHRONIZE_ROUTINE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI KSYNCHRONIZE_ROUTINE)(
-  IN PVOID SynchronizeContext);
+  _In_ PVOID SynchronizeContext);
 typedef KSYNCHRONIZE_ROUTINE *PKSYNCHRONIZE_ROUTINE;
 
 typedef enum _POOL_TYPE {
@@ -925,7 +952,7 @@ typedef struct _XSTATE_CONTEXT {
   ULONG64 Mask;
   ULONG Length;
   ULONG Reserved1;
-  PXSAVE_AREA Area;
+  _Field_size_bytes_opt_(Length) PXSAVE_AREA Area;
 #if defined(_X86_)
   ULONG Reserved2;
 #endif
@@ -941,7 +968,7 @@ typedef struct _XSTATE_SAVE {
   struct _KTHREAD* Thread;
   UCHAR Level;
   XSTATE_CONTEXT XStateContext;
-#elif defined(_IA64_)
+#elif defined(_IA64_) || defined(_ARM_)
   ULONG Dummy;
 #elif defined(_X86_)
   _ANONYMOUS_UNION union {
@@ -999,24 +1026,26 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
-#define NX_SUPPORT_POLICY_ALWAYSON 1
-#define NX_SUPPORT_POLICY_OPTIN 2
-#define NX_SUPPORT_POLICY_OPTOUT 3
+#define NX_SUPPORT_POLICY_ALWAYSON  1
+#define NX_SUPPORT_POLICY_OPTIN     2
+#define NX_SUPPORT_POLICY_OPTOUT    3
 
+_IRQL_requires_same_
+_Function_class_(EXPAND_STACK_CALLOUT)
 typedef VOID
 (NTAPI EXPAND_STACK_CALLOUT)(
-  IN PVOID Parameter OPTIONAL);
+  _In_opt_ PVOID Parameter);
 typedef EXPAND_STACK_CALLOUT *PEXPAND_STACK_CALLOUT;
 
 typedef VOID
 (NTAPI *PTIMER_APC_ROUTINE)(
-  IN PVOID TimerContext,
-  IN ULONG TimerLowValue,
-  IN LONG TimerHighValue);
+  _In_ PVOID TimerContext,
+  _In_ ULONG TimerLowValue,
+  _In_ LONG TimerHighValue);
 
 typedef enum _TIMER_SET_INFORMATION_CLASS {
   TimerSetCoalescableTimer,
@@ -1025,13 +1054,13 @@ typedef enum _TIMER_SET_INFORMATION_CLASS {
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
-  IN LARGE_INTEGER DueTime;
-  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL;
-  IN PVOID TimerContext OPTIONAL;
-  IN struct _COUNTED_REASON_CONTEXT *WakeContext OPTIONAL;
-  IN ULONG Period OPTIONAL;
-  IN ULONG TolerableDelay;
-  OUT PBOOLEAN PreviousState OPTIONAL;
+  _In_ LARGE_INTEGER DueTime;
+  _In_opt_ PTIMER_APC_ROUTINE TimerApcRoutine;
+  _In_opt_ PVOID TimerContext;
+  _In_opt_ struct _COUNTED_REASON_CONTEXT *WakeContext;
+  _In_opt_ ULONG Period;
+  _In_ ULONG TolerableDelay;
+  _Out_opt_ PBOOLEAN PreviousState;
 } TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
@@ -1182,5 +1211,27 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
+$if (_NTIFS_)
+typedef struct _KAPC_STATE {
+  LIST_ENTRY ApcListHead[MaximumMode];
+  PKPROCESS Process;
+  BOOLEAN KernelApcInProgress;
+  BOOLEAN KernelApcPending;
+  BOOLEAN UserApcPending;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
+
+#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
+
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
+
+typedef struct _KQUEUE {
+  DISPATCHER_HEADER Header;
+  LIST_ENTRY EntryListHead;
+  volatile ULONG CurrentCount;
+  ULONG MaximumCount;
+  LIST_ENTRY ThreadListHead;
+} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
+$endif (_NTIFS_)
 

@@ -1463,8 +1463,8 @@ LPITEMIDLIST _ILCreateGuidFromStrW(LPCWSTR szGUID)
 
 LPITEMIDLIST _ILCreateFromFindDataW( const WIN32_FIND_DATAW *wfd )
 {
-    char    buff[MAX_PATH + 14 +1]; /* see WIN32_FIND_DATA */
-    DWORD   len, len1, wlen, alen;
+    char buff[MAX_PATH + 14 +1]; /* see WIN32_FIND_DATA */
+    DWORD len, len1, wlen, alen, cbData;
     LPITEMIDLIST pidl;
     PIDLTYPE type;
 
@@ -1481,8 +1481,10 @@ LPITEMIDLIST _ILCreateFromFindDataW( const WIN32_FIND_DATAW *wfd )
     type = (wfd->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? PT_FOLDER : PT_VALUE;
 
     wlen = wcslen(wfd->cFileName) + 1;
-    pidl = _ILAlloc(type, sizeof(FileStruct) + (alen + (alen & 1)) +
-                    sizeof(FileStructW) + wlen * sizeof(WCHAR) + sizeof(WORD));
+    cbData = sizeof(FileStruct) - 1 + (alen + (alen & 1)); // Note: szNames field is initially 1 byte long
+    cbData += sizeof(FileStructW) - 1 + wlen * sizeof(WCHAR); // Note: wszName field is initially 1 byte long
+    cbData += sizeof(WORD); // offset to FileStructW
+    pidl = _ILAlloc(type, cbData);
     if (pidl)
     {
         LPPIDLDATA pData = _ILGetDataPointer(pidl);
@@ -1496,7 +1498,7 @@ LPITEMIDLIST _ILCreateFromFindDataW( const WIN32_FIND_DATAW *wfd )
         memcpy(fs->szNames, buff, alen);
 
         fsw = (FileStructW*)(pData->u.file.szNames + alen + (alen & 0x1));
-        fsw->cbLen = sizeof(FileStructW) + wlen * sizeof(WCHAR) + sizeof(WORD);
+        fsw->cbLen = sizeof(FileStructW) - 1 + wlen * sizeof(WCHAR) + sizeof(WORD);
         FileTimeToDosDateTime( &wfd->ftCreationTime, &fsw->uCreationDate, &fsw->uCreationTime);
         FileTimeToDosDateTime( &wfd->ftLastAccessTime, &fsw->uLastAccessDate, &fsw->uLastAccessTime);
         memcpy(fsw->wszName, wfd->cFileName, wlen * sizeof(WCHAR));
@@ -2115,7 +2117,7 @@ FileStructW* _ILGetFileStructW(LPCITEMIDLIST pidl) {
             cbOffset > pidl->mkid.cb - sizeof(cbOffset) - sizeof(FileStructW) ||
             pidl->mkid.cb != cbOffset + pFileStructW->cbLen)
     {
-        WARN("Invalid pidl format (cbOffset = %d)!\n", cbOffset);
+        ERR("Invalid pidl format (cbOffset = %d)!\n", cbOffset);
         return NULL;
     }
 

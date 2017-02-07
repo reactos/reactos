@@ -56,7 +56,7 @@ INT cmd_type (LPTSTR param)
 		return 1;
 	}
 
-	argv = split (param, &argc, TRUE);
+	argv = split (param, &argc, TRUE, FALSE);
 
 	for(i = 0; i < argc; i++)
 	{
@@ -128,6 +128,7 @@ INT cmd_type (LPTSTR param)
 			}
 		}
 
+		ConOutPuts(_T("\n"));
 		CloseHandle(hFile);
 	}
 

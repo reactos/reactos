@@ -28,8 +28,6 @@
 #include "objbase.h"
 #include "sti.h"
 
-#include "sti_private.h"
-
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
@@ -44,33 +42,41 @@ static const WCHAR registeredAppsLaunchPath[] = {
     'R','e','g','i','s','t','e','r','e','d',' ','A','p','p','l','i','c','a','t','i','o','n','s',0
 };
 
-static inline stillimage *impl_from_StillImageW(IStillImageW *iface)
+typedef struct _stillimage
 {
-    return (stillimage *)((char*)iface - FIELD_OFFSET(stillimage, lpVtbl));
+    IStillImageW IStillImageW_iface;
+    IUnknown IUnknown_iface;
+    IUnknown *pUnkOuter;
+    LONG ref;
+} stillimage;
+
+static inline stillimage *impl_from_IStillImageW(IStillImageW *iface)
+{
+    return CONTAINING_RECORD(iface, stillimage, IStillImageW_iface);
 }
 
 static HRESULT WINAPI stillimagew_QueryInterface(IStillImageW *iface, REFIID riid, void **ppvObject)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     TRACE("(%p %s %p)\n", This, debugstr_guid(riid), ppvObject);
     return IUnknown_QueryInterface(This->pUnkOuter, riid, ppvObject);
 }
 
 static ULONG WINAPI stillimagew_AddRef(IStillImageW *iface)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     return IUnknown_AddRef(This->pUnkOuter);
 }
 
 static ULONG WINAPI stillimagew_Release(IStillImageW *iface)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     return IUnknown_Release(This->pUnkOuter);
 }
 
 static HRESULT WINAPI stillimagew_Initialize(IStillImageW *iface, HINSTANCE hinst, DWORD dwVersion)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     TRACE("(%p, %p, 0x%X)\n", This, hinst, dwVersion);
     return S_OK;
 }
@@ -78,7 +84,7 @@ static HRESULT WINAPI stillimagew_Initialize(IStillImageW *iface, HINSTANCE hins
 static HRESULT WINAPI stillimagew_GetDeviceList(IStillImageW *iface, DWORD dwType, DWORD dwFlags,
                                                 DWORD *pdwItemsReturned, LPVOID *ppBuffer)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %u, 0x%X, %p, %p): stub\n", This, dwType, dwFlags, pdwItemsReturned, ppBuffer);
     return E_NOTIMPL;
 }
@@ -86,7 +92,7 @@ static HRESULT WINAPI stillimagew_GetDeviceList(IStillImageW *iface, DWORD dwTyp
 static HRESULT WINAPI stillimagew_GetDeviceInfo(IStillImageW *iface, LPWSTR pwszDeviceName,
                                                 LPVOID *ppBuffer)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %p): stub\n", This, debugstr_w(pwszDeviceName), ppBuffer);
     return E_NOTIMPL;
 }
@@ -94,7 +100,7 @@ static HRESULT WINAPI stillimagew_GetDeviceInfo(IStillImageW *iface, LPWSTR pwsz
 static HRESULT WINAPI stillimagew_CreateDevice(IStillImageW *iface, LPWSTR pwszDeviceName, DWORD dwMode,
                                                PSTIDEVICEW *pDevice, LPUNKNOWN pUnkOuter)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %u, %p, %p): stub\n", This, debugstr_w(pwszDeviceName), dwMode, pDevice, pUnkOuter);
     return E_NOTIMPL;
 }
@@ -102,7 +108,7 @@ static HRESULT WINAPI stillimagew_CreateDevice(IStillImageW *iface, LPWSTR pwszD
 static HRESULT WINAPI stillimagew_GetDeviceValue(IStillImageW *iface, LPWSTR pwszDeviceName, LPWSTR pValueName,
                                                  LPDWORD pType, LPBYTE pData, LPDWORD cbData)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %s, %p, %p, %p): stub\n", This, debugstr_w(pwszDeviceName), debugstr_w(pValueName),
         pType, pData, cbData);
     return E_NOTIMPL;
@@ -111,7 +117,7 @@ static HRESULT WINAPI stillimagew_GetDeviceValue(IStillImageW *iface, LPWSTR pws
 static HRESULT WINAPI stillimagew_SetDeviceValue(IStillImageW *iface, LPWSTR pwszDeviceName, LPWSTR pValueName,
                                                  DWORD type, LPBYTE pData, DWORD cbData)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %s, %u, %p, %u): stub\n", This, debugstr_w(pwszDeviceName), debugstr_w(pValueName),
         type, pData, cbData);
     return E_NOTIMPL;
@@ -120,7 +126,7 @@ static HRESULT WINAPI stillimagew_SetDeviceValue(IStillImageW *iface, LPWSTR pws
 static HRESULT WINAPI stillimagew_GetSTILaunchInformation(IStillImageW *iface, LPWSTR pwszDeviceName,
                                                           DWORD *pdwEventCode, LPWSTR pwszEventName)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %p, %p, %p): stub\n", This, pwszDeviceName,
         pdwEventCode, pwszEventName);
     return E_NOTIMPL;
@@ -136,7 +142,7 @@ static HRESULT WINAPI stillimagew_RegisterLaunchApplication(IStillImageW *iface,
     HKEY registeredAppsKey = NULL;
     DWORD ret;
     HRESULT hr = S_OK;
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
 
     TRACE("(%p, %s, %s)\n", This, debugstr_w(pwszAppName), debugstr_w(pwszCommandLine));
 
@@ -165,7 +171,7 @@ static HRESULT WINAPI stillimagew_RegisterLaunchApplication(IStillImageW *iface,
 
 static HRESULT WINAPI stillimagew_UnregisterLaunchApplication(IStillImageW *iface, LPWSTR pwszAppName)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     HKEY registeredAppsKey = NULL;
     DWORD ret;
     HRESULT hr = S_OK;
@@ -188,7 +194,7 @@ static HRESULT WINAPI stillimagew_UnregisterLaunchApplication(IStillImageW *ifac
 static HRESULT WINAPI stillimagew_EnableHwNotifications(IStillImageW *iface, LPCWSTR pwszDeviceName,
                                                         BOOL bNewState)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %u): stub\n", This, debugstr_w(pwszDeviceName), bNewState);
     return E_NOTIMPL;
 }
@@ -196,14 +202,14 @@ static HRESULT WINAPI stillimagew_EnableHwNotifications(IStillImageW *iface, LPC
 static HRESULT WINAPI stillimagew_GetHwNotificationState(IStillImageW *iface, LPCWSTR pwszDeviceName,
                                                          BOOL *pbCurrentState)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %p): stub\n", This, debugstr_w(pwszDeviceName), pbCurrentState);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI stillimagew_RefreshDeviceBus(IStillImageW *iface, LPCWSTR pwszDeviceName)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s): stub\n", This, debugstr_w(pwszDeviceName));
     return E_NOTIMPL;
 }
@@ -211,7 +217,7 @@ static HRESULT WINAPI stillimagew_RefreshDeviceBus(IStillImageW *iface, LPCWSTR 
 static HRESULT WINAPI stillimagew_LaunchApplicationForDevice(IStillImageW *iface, LPWSTR pwszDeviceName,
                                                              LPWSTR pwszAppName, LPSTINOTIFY pStiNotify)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %s, %s, %p): stub\n", This, debugstr_w(pwszDeviceName), debugstr_w(pwszAppName),
         pStiNotify);
     return E_NOTIMPL;
@@ -219,14 +225,14 @@ static HRESULT WINAPI stillimagew_LaunchApplicationForDevice(IStillImageW *iface
 
 static HRESULT WINAPI stillimagew_SetupDeviceParameters(IStillImageW *iface, PSTI_DEVICE_INFORMATIONW pDevInfo)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %p): stub\n", This, pDevInfo);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI stillimagew_WriteToErrorLog(IStillImageW *iface, DWORD dwMessageType, LPCWSTR pszMessage)
 {
-    stillimage *This = impl_from_StillImageW(iface);
+    stillimage *This = impl_from_IStillImageW(iface);
     FIXME("(%p, %u, %s): stub\n", This, dwMessageType, debugstr_w(pszMessage));
     return E_NOTIMPL;
 }
@@ -253,21 +259,21 @@ static const struct IStillImageWVtbl stillimagew_vtbl =
     stillimagew_WriteToErrorLog
 };
 
-static inline stillimage *impl_from_InternalUnknown(IUnknown *iface)
+static inline stillimage *impl_from_IUnknown(IUnknown *iface)
 {
-    return (stillimage *)((char*)iface - FIELD_OFFSET(stillimage, lpInternalUnkVtbl));
+    return CONTAINING_RECORD(iface, stillimage, IUnknown_iface);
 }
 
 static HRESULT WINAPI Internal_QueryInterface(IUnknown *iface, REFIID riid, void **ppvObject)
 {
-    stillimage *This = impl_from_InternalUnknown(iface);
+    stillimage *This = impl_from_IUnknown(iface);
 
     TRACE("(%p %s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if (IsEqualGUID(riid, &IID_IUnknown))
         *ppvObject = iface;
     else if (IsEqualGUID(riid, &IID_IStillImageW))
-        *ppvObject = &This->lpVtbl;
+        *ppvObject = &This->IStillImageW_iface;
     else
     {
         if (IsEqualGUID(riid, &IID_IStillImageA))
@@ -284,14 +290,14 @@ static HRESULT WINAPI Internal_QueryInterface(IUnknown *iface, REFIID riid, void
 
 static ULONG WINAPI Internal_AddRef(IUnknown *iface)
 {
-    stillimage *This = impl_from_InternalUnknown(iface);
+    stillimage *This = impl_from_IUnknown(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI Internal_Release(IUnknown *iface)
 {
     ULONG ref;
-    stillimage *This = impl_from_InternalUnknown(iface);
+    stillimage *This = impl_from_IUnknown(iface);
 
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0)
@@ -328,21 +334,21 @@ HRESULT WINAPI StiCreateInstanceW(HINSTANCE hinst, DWORD dwVer, PSTIW *ppSti, LP
     This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(stillimage));
     if (This)
     {
-        This->lpVtbl = &stillimagew_vtbl;
-        This->lpInternalUnkVtbl = &internal_unk_vtbl;
+        This->IStillImageW_iface.lpVtbl = &stillimagew_vtbl;
+        This->IUnknown_iface.lpVtbl = &internal_unk_vtbl;
         if (pUnkOuter)
             This->pUnkOuter = pUnkOuter;
         else
-            This->pUnkOuter = (IUnknown*) &This->lpInternalUnkVtbl;
+            This->pUnkOuter = &This->IUnknown_iface;
         This->ref = 1;
 
-        hr = IStillImage_Initialize((IStillImageW*) &This->lpVtbl, hinst, dwVer);
+        hr = IStillImage_Initialize(&This->IStillImageW_iface, hinst, dwVer);
         if (SUCCEEDED(hr))
         {
             if (pUnkOuter)
-                *ppSti = (IStillImageW*) &This->lpInternalUnkVtbl;
+                *ppSti = (IStillImageW*) &This->IUnknown_iface;
             else
-                *ppSti = (IStillImageW*) &This->lpVtbl;
+                *ppSti = &This->IStillImageW_iface;
         }
     }
     else

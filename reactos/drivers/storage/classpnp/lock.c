@@ -79,6 +79,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 ClassAcquireRemoveLockEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN OPTIONAL PVOID Tag,
@@ -209,6 +210,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassReleaseRemoveLock(
     IN PDEVICE_OBJECT DeviceObject,
     IN OPTIONAL PIRP Tag
@@ -372,6 +374,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassCompleteRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

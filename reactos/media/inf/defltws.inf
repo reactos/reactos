@@ -1,0 +1,9 @@
+; defltws.inf
+; Default security settings for ReactOS Workstation
+
+[Version]
+Signature = "$Windows NT$"
+
+[Privilege Rights]
+SeAssignPrimaryTokenPrivilege = S-1-5-19, S-1-5-20
+SeAuditPrivilege = S-1-5-19, S-1-5-20

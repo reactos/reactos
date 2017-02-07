@@ -27,6 +27,10 @@ SIZE_T MmAllocatedNonPagedPool;
 ULONG MmSpecialPoolTag;
 ULONG MmConsumedPoolPercentage;
 BOOLEAN MmProtectFreedNonPagedPool;
+SLIST_HEADER MiNonPagedPoolSListHead;
+ULONG MiNonPagedPoolSListMaximum = 4;
+SLIST_HEADER MiPagedPoolSListHead;
+ULONG MiPagedPoolSListMaximum = 8;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -278,6 +282,34 @@ MiInitializeNonPagedPool(VOID)
     PAGED_CODE();
 
     //
+    // Initialize the pool S-LISTs as well as their maximum count. In general,
+    // we'll allow 8 times the default on a 2GB system, and two times the default
+    // on a 1GB system.
+    //
+    InitializeSListHead(&MiPagedPoolSListHead);
+    InitializeSListHead(&MiNonPagedPoolSListHead);
+    if (MmNumberOfPhysicalPages >= ((2 * _1GB) /PAGE_SIZE))
+    {
+        MiNonPagedPoolSListMaximum *= 8;
+        MiPagedPoolSListMaximum *= 8;
+    }
+    else if (MmNumberOfPhysicalPages >= (_1GB /PAGE_SIZE))
+    {
+        MiNonPagedPoolSListMaximum *= 2;
+        MiPagedPoolSListMaximum *= 2;
+    }
+
+    //
+    // However if debugging options for the pool are enabled, turn off the S-LIST
+    // to reduce the risk of messing things up even more
+    //
+    if (MmProtectFreedNonPagedPool)
+    {
+        MiNonPagedPoolSListMaximum = 0;
+        MiPagedPoolSListMaximum = 0;
+    }
+
+    //
     // We keep 4 lists of free pages (4 lists help avoid contention)
     //
     for (i = 0; i < MI_MAX_FREE_PAGE_LISTS; i++)
@@ -369,6 +401,17 @@ MiInitializeNonPagedPool(VOID)
                            NonPagedPoolExpansion);
 }
 
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(IN PVOID PoolAddress)
+{
+    //
+    // Use a simple bounds check
+    //
+    return (PoolAddress >= MmPagedPoolStart) && (PoolAddress <= MmPagedPoolEnd) ?
+            PagedPool : NonPagedPool;
+}
+
 PVOID
 NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
@@ -395,10 +438,30 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     SizeInPages = (PFN_COUNT)BYTES_TO_PAGES(SizeInBytes);
 
     //
+    // Check for overflow
+    //
+    if (SizeInPages == 0)
+    {
+        //
+        // Fail
+        //
+        return NULL;
+    }
+
+    //
     // Handle paged pool
     //
     if ((PoolType & BASE_POOL_TYPE_MASK) == PagedPool)
     {
+        //
+        // If only one page is being requested, try to grab it from the S-LIST
+        //
+        if ((SizeInPages == 1) && (ExQueryDepthSList(&MiPagedPoolSListHead)))
+        {
+            BaseVa = InterlockedPopEntrySList(&MiPagedPoolSListHead);
+            if (BaseVa) return BaseVa;
+        }
+
         //
         // Lock the paged pool mutex
         //
@@ -597,6 +660,15 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         // Return the allocation address to the caller
         //
         return BaseVa;
+    }
+
+    //
+    // If only one page is being requested, try to grab it from the S-LIST
+    //
+    if ((SizeInPages == 1) && (ExQueryDepthSList(&MiNonPagedPoolSListHead)))
+    {
+        BaseVa = InterlockedPopEntrySList(&MiNonPagedPoolSListHead);
+        if (BaseVa) return BaseVa;
     }
 
     //
@@ -850,9 +922,16 @@ MiFreePoolPages(IN PVOID StartingVa)
         while (!RtlTestBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, End)) End++;
 
         //
-        // Now calculate the total number of pages this allocation spans
+        // Now calculate the total number of pages this allocation spans. If it's
+        // only one page, add it to the S-LIST instead of freeing it
         //
         NumberOfPages = End - i + 1;
+        if ((NumberOfPages == 1) &&
+            (ExQueryDepthSList(&MiPagedPoolSListHead) < MiPagedPoolSListMaximum))
+        {
+            InterlockedPushEntrySList(&MiPagedPoolSListHead, StartingVa);
+            return 1;
+        }
 
         /* Delete the actual pages */
         PointerPte = MmPagedPoolInfo.FirstPteForPagedPool + i;
@@ -887,10 +966,18 @@ MiFreePoolPages(IN PVOID StartingVa)
     }
 
     //
-    // Get the first PTE and its corresponding PFN entry
+    // Get the first PTE and its corresponding PFN entry. If this is also the
+    // last PTE, meaning that this allocation was only for one page, push it into
+    // the S-LIST instead of freeing it
     //
     StartPte = PointerPte = MiAddressToPte(StartingVa);
     StartPfn = Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
+    if ((Pfn1->u3.e1.EndOfAllocation == 1) &&
+        (ExQueryDepthSList(&MiNonPagedPoolSListHead) < MiNonPagedPoolSListMaximum))
+    {
+        InterlockedPushEntrySList(&MiNonPagedPoolSListHead, StartingVa);
+        return 1;
+    }
 
     //
     // Loop until we find the last PTE
@@ -1172,6 +1259,107 @@ MiRaisePoolQuota(IN POOL_TYPE PoolType,
     UNIMPLEMENTED;
     *NewMaxQuota = CurrentMaxQuota + 65536;
     return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MiInitializeSessionPool(VOID)
+{
+    PMMPTE PointerPde, PointerPte, LastPte, LastPde;
+    PFN_NUMBER PageFrameIndex, PdeCount;
+    PPOOL_DESCRIPTOR PoolDescriptor;
+    PMM_SESSION_SPACE SessionGlobal;
+    PMM_PAGED_POOL_INFO PagedPoolInfo;
+    NTSTATUS Status;
+    ULONG Index, PoolSize, BitmapSize;
+    PAGED_CODE();
+
+    /* Lock session pool */
+    SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+    KeInitializeGuardedMutex(&SessionGlobal->PagedPoolMutex);
+
+    /* Setup a valid pool descriptor */
+    PoolDescriptor = &MmSessionSpace->PagedPool;
+    ExInitializePoolDescriptor(PoolDescriptor,
+                               PagedPoolSession,
+                               0,
+                               0,
+                               &SessionGlobal->PagedPoolMutex);
+
+    /* Setup the pool addresses */
+    MmSessionSpace->PagedPoolStart = (PVOID)MiSessionPoolStart;
+    MmSessionSpace->PagedPoolEnd = (PVOID)((ULONG_PTR)MiSessionPoolEnd - 1);
+    DPRINT1("Session Pool Start: 0x%p End: 0x%p\n",
+            MmSessionSpace->PagedPoolStart, MmSessionSpace->PagedPoolEnd);
+
+    /* Reset all the counters */
+    PagedPoolInfo = &MmSessionSpace->PagedPoolInfo;
+    PagedPoolInfo->PagedPoolCommit = 0;
+    PagedPoolInfo->PagedPoolHint = 0;
+    PagedPoolInfo->AllocatedPagedPool = 0;
+
+    /* Compute PDE and PTE addresses */
+    PointerPde = MiAddressToPde(MmSessionSpace->PagedPoolStart);
+    PointerPte = MiAddressToPte(MmSessionSpace->PagedPoolStart);
+    LastPde = MiAddressToPde(MmSessionSpace->PagedPoolEnd);
+    LastPte = MiAddressToPte(MmSessionSpace->PagedPoolEnd);
+
+    /* Write them down */
+    MmSessionSpace->PagedPoolBasePde = PointerPde;
+    PagedPoolInfo->FirstPteForPagedPool = PointerPte;
+    PagedPoolInfo->LastPteForPagedPool = LastPte;
+    PagedPoolInfo->NextPdeForPagedPoolExpansion = PointerPde + 1;
+
+    /* Zero the PDEs */
+    PdeCount = LastPde - PointerPde;
+    RtlZeroMemory(PointerPde, (PdeCount + 1) * sizeof(MMPTE));
+
+    /* Initialize the PFN for the PDE */
+    Status = MiInitializeAndChargePfn(&PageFrameIndex,
+                                      PointerPde,
+                                      MmSessionSpace->SessionPageDirectoryIndex,
+                                      TRUE);
+    ASSERT(NT_SUCCESS(Status) == TRUE);
+
+    /* Initialize the first page table */
+    Index = (ULONG_PTR)MmSessionSpace->PagedPoolStart - (ULONG_PTR)MmSessionBase;
+    Index >>= 22;
+    ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
+    MmSessionSpace->PageTables[Index] = *PointerPde;
+
+    /* Bump up counters */
+    InterlockedIncrementSizeT(&MmSessionSpace->NonPageablePages);
+    InterlockedIncrementSizeT(&MmSessionSpace->CommittedPages);
+
+    /* Compute the size of the pool in pages, and of the bitmap for it */
+    PoolSize = MmSessionPoolSize >> PAGE_SHIFT;
+    BitmapSize = sizeof(RTL_BITMAP) + ((PoolSize + 31) / 32) * sizeof(ULONG);
+
+    /* Allocate and initialize the bitmap to track allocations */
+    PagedPoolInfo->PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
+                                                                  BitmapSize,
+                                                                  '  mM');
+    ASSERT(PagedPoolInfo->PagedPoolAllocationMap != NULL);
+    RtlInitializeBitMap(PagedPoolInfo->PagedPoolAllocationMap,
+                        (PULONG)(PagedPoolInfo->PagedPoolAllocationMap + 1),
+                        PoolSize);
+
+    /* Set all bits, but clear the first page table's worth */
+    RtlSetAllBits(PagedPoolInfo->PagedPoolAllocationMap);
+    RtlClearBits(PagedPoolInfo->PagedPoolAllocationMap, 0, PTE_PER_PAGE);
+
+    /* Allocate and initialize the bitmap to track free space */
+    PagedPoolInfo->EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                                                BitmapSize,
+                                                                '  mM');
+    ASSERT(PagedPoolInfo->EndOfPagedPoolBitmap != NULL);
+    RtlInitializeBitMap(PagedPoolInfo->EndOfPagedPoolBitmap,
+                        (PULONG)(PagedPoolInfo->EndOfPagedPoolBitmap + 1),
+                        PoolSize);
+
+    /* Clear all the bits and return success */
+    RtlClearAllBits(PagedPoolInfo->EndOfPagedPoolBitmap);
+    return STATUS_SUCCESS;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

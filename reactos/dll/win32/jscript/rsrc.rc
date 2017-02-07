@@ -22,24 +22,60 @@ REGINST REGINST jscript.inf
 /* @makedep: jsglobal.tlb */
 1 TYPELIB jsglobal.tlb
 
-#include "jscript_En.rc"
-#include "jscript_Pl.rc"
+#ifdef LANGUAGE_EN_US
+    #include "jscript_En.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "jscript_Pl.rc"
+#endif
 
 /* UTF-8 */
-#include "jscript_Da.rc"
-#include "jscript_De.rc"
-#include "jscript_Es.rc"
-#include "jscript_Fr.rc"
-#include "jscript_Hu.rc"
-#include "jscript_It.rc"
-#include "jscript_Ja.rc"
-#include "jscript_Ko.rc"
-#include "jscript_Lt.rc"
-#include "jscript_Nl.rc"
-#include "jscript_No.rc"
-#include "jscript_Pt.rc"
-#include "jscript_Ro.rc"
-#include "jscript_Ru.rc"
-#include "jscript_Si.rc"
-#include "jscript_Uk.rc"
+#ifdef LANGUAGE_DA_DK
+    #include "jscript_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "jscript_De.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "jscript_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "jscript_Fr.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "jscript_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "jscript_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "jscript_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "jscript_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "jscript_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "jscript_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "jscript_No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "jscript_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "jscript_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "jscript_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "jscript_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "jscript_Uk.rc"
+#endif
 

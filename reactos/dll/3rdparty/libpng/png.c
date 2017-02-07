@@ -1,7 +1,7 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.5.5 [September 22, 2011]
+ * Last changed in libpng 1.5.7 [December 15, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_5_5 Your_png_h_is_not_version_1_5_5;
+typedef png_libpng_version_1_5_9 Your_png_h_is_not_version_1_5_9;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -121,14 +121,14 @@ png_calculate_crc(png_structp png_ptr, png_const_bytep ptr, png_size_t length)
 {
    int need_crc = 1;
 
-   if (png_ptr->chunk_name[0] & 0x20)                     /* ancillary */
+   if (PNG_CHUNK_ANCILLIARY(png_ptr->chunk_name))
    {
       if ((png_ptr->flags & PNG_FLAG_CRC_ANCILLARY_MASK) ==
           (PNG_FLAG_CRC_ANCILLARY_USE | PNG_FLAG_CRC_ANCILLARY_NOWARN))
          need_crc = 0;
    }
 
-   else                                                    /* critical */
+   else /* critical */
    {
       if (png_ptr->flags & PNG_FLAG_CRC_CRITICAL_IGNORE)
          need_crc = 0;
@@ -599,9 +599,19 @@ png_convert_to_rfc1123(png_structp png_ptr, png_const_timep ptime)
    if (png_ptr == NULL)
       return (NULL);
 
+   if (ptime->year > 9999 /* RFC1123 limitation */ ||
+       ptime->month == 0    ||  ptime->month > 12  ||
+       ptime->day   == 0    ||  ptime->day   > 31  ||
+       ptime->hour  > 23    ||  ptime->minute > 59 ||
+       ptime->second > 60)
+   {
+      png_warning(png_ptr, "Ignoring invalid time value");
+      return (NULL);
+   }
+
    {
       size_t pos = 0;
-      char number_buf[5]; /* enough for a four digit year */
+      char number_buf[5]; /* enough for a four-digit year */
 
 #     define APPEND_STRING(string)\
          pos = png_safecat(png_ptr->time_buffer, sizeof png_ptr->time_buffer,\
@@ -612,17 +622,17 @@ png_convert_to_rfc1123(png_structp png_ptr, png_const_timep ptime)
          if (pos < (sizeof png_ptr->time_buffer)-1)\
             png_ptr->time_buffer[pos++] = (ch)
 
-      APPEND_NUMBER(PNG_NUMBER_FORMAT_u, (unsigned)ptime->day % 32);
+      APPEND_NUMBER(PNG_NUMBER_FORMAT_u, (unsigned)ptime->day);
       APPEND(' ');
-      APPEND_STRING(short_months[(ptime->month - 1) % 12]);
+      APPEND_STRING(short_months[(ptime->month - 1)]);
       APPEND(' ');
       APPEND_NUMBER(PNG_NUMBER_FORMAT_u, ptime->year);
       APPEND(' ');
-      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->hour % 24);
+      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->hour);
       APPEND(':');
-      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->minute % 60);
+      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->minute);
       APPEND(':');
-      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->second % 61);
+      APPEND_NUMBER(PNG_NUMBER_FORMAT_02u, (unsigned)ptime->second);
       APPEND_STRING(" +0000"); /* This reliably terminates the buffer */
 
 #     undef APPEND
@@ -645,13 +655,13 @@ png_get_copyright(png_const_structp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-     "libpng version 1.5.5 - September 22, 2011" PNG_STRING_NEWLINE \
+     "libpng version 1.5.9 - February 18, 2012" PNG_STRING_NEWLINE \
      "Copyright (c) 1998-2011 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE;
 #  else
-      return "libpng version 1.5.5 - September 22, 2011\
+      return "libpng version 1.5.9 - February 18, 2012\
       Copyright (c) 1998-2011 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
@@ -698,25 +708,43 @@ png_get_header_version(png_const_structp png_ptr)
 #endif
 }
 
-#if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
-#  ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
 int PNGAPI
 png_handle_as_unknown(png_structp png_ptr, png_const_bytep chunk_name)
 {
    /* Check chunk_name and return "keep" value if it's on the list, else 0 */
-   int i;
-   png_bytep p;
-   if (png_ptr == NULL || chunk_name == NULL || png_ptr->num_chunk_list<=0)
-      return 0;
+   png_const_bytep p, p_end;
 
-   p = png_ptr->chunk_list + png_ptr->num_chunk_list*5 - 5;
-   for (i = png_ptr->num_chunk_list; i; i--, p -= 5)
+   if (png_ptr == NULL || chunk_name == NULL || png_ptr->num_chunk_list <= 0)
+      return PNG_HANDLE_CHUNK_AS_DEFAULT;
+
+   p_end = png_ptr->chunk_list;
+   p = p_end + png_ptr->num_chunk_list*5; /* beyond end */
+
+   /* The code is the fifth byte after each four byte string.  Historically this
+    * code was always searched from the end of the list, so it should continue
+    * to do so in case there are duplicated entries.
+    */
+   do /* num_chunk_list > 0, so at least one */
+   {
+      p -= 5;
       if (!png_memcmp(chunk_name, p, 4))
-        return ((int)*(p + 4));
-   return 0;
+         return p[4];
+   }
+   while (p > p_end);
+
+   return PNG_HANDLE_CHUNK_AS_DEFAULT;
 }
-#  endif
-#endif /* defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED) */
+
+int /* PRIVATE */
+png_chunk_unknown_handling(png_structp png_ptr, png_uint_32 chunk_name)
+{
+   png_byte chunk_string[5];
+
+   PNG_CSTRING_FROM_CHUNK(chunk_string, chunk_name);
+   return png_handle_as_unknown(png_ptr, chunk_string);
+}
+#endif
 
 #ifdef PNG_READ_SUPPORTED
 /* This function, added to libpng-1.0.6g, is untested. */
@@ -2146,9 +2174,9 @@ png_64bit_product (long v1, long v2, unsigned long *hi_product,
 static png_uint_32
 png_8bit_l2[128] =
 {
-#  if PNG_DO_BC
+#  ifdef PNG_DO_BC
       for (i=128;i<256;++i) { .5 - l(i/255)/l(2)*65536*65536; }
-#  endif
+#  else
    4270715492U, 4222494797U, 4174646467U, 4127164793U, 4080044201U, 4033279239U,
    3986864580U, 3940795015U, 3895065449U, 3849670902U, 3804606499U, 3759867474U,
    3715449162U, 3671346997U, 3627556511U, 3584073329U, 3540893168U, 3498011834U,
@@ -2171,6 +2199,8 @@ png_8bit_l2[128] =
    324227938U, 298676034U, 273229066U, 247886176U, 222646516U, 197509248U,
    172473545U, 147538590U, 122703574U, 97967701U, 73330182U, 48790236U,
    24347096U, 0U
+#  endif
+
 #if 0
    /* The following are the values for 16-bit tables - these work fine for the
     * 8-bit conversions but produce very slightly larger errors in the 16-bit
@@ -2305,7 +2335,7 @@ png_log16bit(png_uint_32 x)
  * integer bits (the top 4) simply determine a shift.
  *
  * The worst case is the 16-bit distinction between 65535 and 65534, this
- * requires perhaps spurious accuracty in the decoding of the logarithm to
+ * requires perhaps spurious accuracy in the decoding of the logarithm to
  * distinguish log2(65535/65534.5) - 10^-5 or 17 bits.  There is little chance
  * of getting this accuracy in practice.
  *
@@ -2316,17 +2346,18 @@ png_log16bit(png_uint_32 x)
 static png_uint_32
 png_32bit_exp[16] =
 {
-#  if PNG_DO_BC
+#  ifdef PNG_DO_BC
       for (i=0;i<16;++i) { .5 + e(-i/16*l(2))*2^32; }
-#  endif
+#  else
    /* NOTE: the first entry is deliberately set to the maximum 32-bit value. */
    4294967295U, 4112874773U, 3938502376U, 3771522796U, 3611622603U, 3458501653U,
    3311872529U, 3171459999U, 3037000500U, 2908241642U, 2784941738U, 2666869345U,
    2553802834U, 2445529972U, 2341847524U, 2242560872U
+#  endif
 };
 
 /* Adjustment table; provided to explain the numbers in the code below. */
-#if PNG_DO_BC
+#ifdef PNG_DO_BC
 for (i=11;i>=0;--i){ print i, " ", (1 - e(-(2^i)/65536*l(2))) * 2^(32-i), "\n"}
    11 44937.64284865548751208448
    10 45180.98734845585101160448
@@ -2489,7 +2520,7 @@ png_gamma_significant(png_fixed_point gamma_val)
 }
 
 /* Internal function to build a single 16-bit table - the table consists of
- * 'num' 256 entry subtables, where 'num' is determined by 'shift' - the amount
+ * 'num' 256-entry subtables, where 'num' is determined by 'shift' - the amount
  * to shift the input values right (or 16-number_of_signifiant_bits).
  *
  * The caller is responsible for ensuring that the table gets cleaned up on
@@ -2576,9 +2607,9 @@ png_build_16to8_table(png_structp png_ptr, png_uint_16pp *ptable,
    png_uint_16pp table = *ptable =
        (png_uint_16pp)png_calloc(png_ptr, num * png_sizeof(png_uint_16p));
 
-   /* 'num' is the number of tables and also the number of low bits of low
-    * bits of the input 16-bit value used to select a table.  Each table is
-    * itself index by the high 8 bits of the value.
+   /* 'num' is the number of tables and also the number of low bits of the
+    * input 16-bit value used to select a table.  Each table is itself indexed
+    * by the high 8 bits of the value.
     */
    for (i = 0; i < num; i++)
       table[i] = (png_uint_16p)png_malloc(png_ptr,
@@ -2629,7 +2660,7 @@ png_build_16to8_table(png_structp png_ptr, png_uint_16pp *ptable,
 
 /* Build a single 8-bit table: same as the 16-bit case but much simpler (and
  * typically much faster).  Note that libpng currently does no sBIT processing
- * (apparently contrary to the spec) so a 256 entry table is always generated.
+ * (apparently contrary to the spec) so a 256-entry table is always generated.
  */
 static void
 png_build_8bit_table(png_structp png_ptr, png_bytepp ptable,
@@ -2645,6 +2676,60 @@ png_build_8bit_table(png_structp png_ptr, png_bytepp ptable,
       table[i] = (png_byte)i;
 }
 
+/* Used from png_read_destroy and below to release the memory used by the gamma
+ * tables.
+ */
+void /* PRIVATE */
+png_destroy_gamma_table(png_structp png_ptr)
+{
+   png_free(png_ptr, png_ptr->gamma_table);
+   png_ptr->gamma_table = NULL;
+
+   if (png_ptr->gamma_16_table != NULL)
+   {
+      int i;
+      int istop = (1 << (8 - png_ptr->gamma_shift));
+      for (i = 0; i < istop; i++)
+      {
+         png_free(png_ptr, png_ptr->gamma_16_table[i]);
+      }
+   png_free(png_ptr, png_ptr->gamma_16_table);
+   png_ptr->gamma_16_table = NULL;
+   }
+
+#if defined(PNG_READ_BACKGROUND_SUPPORTED) || \
+   defined(PNG_READ_ALPHA_MODE_SUPPORTED) || \
+   defined(PNG_READ_RGB_TO_GRAY_SUPPORTED)
+   png_free(png_ptr, png_ptr->gamma_from_1);
+   png_ptr->gamma_from_1 = NULL;
+   png_free(png_ptr, png_ptr->gamma_to_1);
+   png_ptr->gamma_to_1 = NULL;
+
+   if (png_ptr->gamma_16_from_1 != NULL)
+   {
+      int i;
+      int istop = (1 << (8 - png_ptr->gamma_shift));
+      for (i = 0; i < istop; i++)
+      {
+         png_free(png_ptr, png_ptr->gamma_16_from_1[i]);
+      }
+   png_free(png_ptr, png_ptr->gamma_16_from_1);
+   png_ptr->gamma_16_from_1 = NULL;
+   }
+   if (png_ptr->gamma_16_to_1 != NULL)
+   {
+      int i;
+      int istop = (1 << (8 - png_ptr->gamma_shift));
+      for (i = 0; i < istop; i++)
+      {
+         png_free(png_ptr, png_ptr->gamma_16_to_1[i]);
+      }
+   png_free(png_ptr, png_ptr->gamma_16_to_1);
+   png_ptr->gamma_16_to_1 = NULL;
+   }
+#endif /* READ_BACKGROUND || READ_ALPHA_MODE || RGB_TO_GRAY */
+}
+
 /* We build the 8- or 16-bit gamma tables here.  Note that for 16-bit
  * tables, we don't make a full table if we are reducing to 8-bit in
  * the future.  Note also how the gamma_16 tables are segmented so that
@@ -2654,6 +2739,18 @@ void /* PRIVATE */
 png_build_gamma_table(png_structp png_ptr, int bit_depth)
 {
   png_debug(1, "in png_build_gamma_table");
+
+  /* Remove any existing table; this copes with multiple calls to
+   * png_read_update_info.  The warning is because building the gamma tables
+   * multiple times is a performance hit - it's harmless but the ability to call
+   * png_read_update_info() multiple times is new in 1.5.6 so it seems sensible
+   * to warn if the app introduces such a hit.
+   */
+  if (png_ptr->gamma_table != NULL || png_ptr->gamma_16_table != NULL)
+  {
+    png_warning(png_ptr, "gamma table being rebuilt");
+    png_destroy_gamma_table(png_ptr);
+  }
 
   if (bit_depth <= 8)
   {
@@ -2699,7 +2796,7 @@ png_build_gamma_table(png_structp png_ptr, int bit_depth)
       * Where 'iv' is the input color value and 'ov' is the output value -
       * pow(iv, gamma).
       *
-      * Thus the gamma table consists of up to 256 256 entry tables.  The table
+      * Thus the gamma table consists of up to 256 256-entry tables.  The table
       * is selected by the (8-gamma_shift) most significant of the low 8 bits of
       * the color value then indexed by the upper 8 bits:
       *

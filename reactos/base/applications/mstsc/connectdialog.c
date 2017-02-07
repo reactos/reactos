@@ -27,7 +27,6 @@ HINSTANCE hInst;
 static VOID ReLoadGeneralPage(PINFO pInfo);
 static VOID ReLoadDisplayPage(PINFO pInfo);
 
-
 static VOID
 DoOpenFile(PINFO pInfo)
 {
@@ -99,6 +98,61 @@ OnTabWndSelChange(PINFO pInfo)
 
 
 static VOID
+LoadUsernameHint(HWND hDlg, INT iCur)
+{
+    WCHAR szValue[MAXVALUE+1000];
+    WCHAR szName[MAX_KEY_NAME];
+    WCHAR szKeyName[] = L"Software\\Microsoft\\Terminal Server Client\\Servers";
+    PWCHAR lpAddress;
+    HKEY hKey;
+    HKEY hSubKey;
+    LONG lRet = ERROR_SUCCESS;
+    INT iIndex = 0;
+    DWORD dwSize = MAX_KEY_NAME;
+
+    SendDlgItemMessageW(hDlg, IDC_SERVERCOMBO, CB_GETLBTEXT, (WPARAM)iCur, (LPARAM)szValue);
+
+    /* remove possible port number */
+    lpAddress = wcstok(szValue, L":");
+
+    if (lpAddress == NULL)
+        return;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      szKeyName,
+                      0,
+                      KEY_READ,
+                      &hKey) == ERROR_SUCCESS)
+    {
+        while (lRet == ERROR_SUCCESS)
+        {
+            dwSize = MAX_KEY_NAME;
+
+            lRet = RegEnumKeyExW(hKey, iIndex, szName, &dwSize, NULL, NULL, NULL, NULL);
+
+            if(lRet == ERROR_SUCCESS && wcscmp(szName, lpAddress) == 0)
+            {
+                if(RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+                    break;
+
+                dwSize = MAXVALUE;
+
+                if(RegQueryValueExW(hKey, L"UsernameHint", 0,  NULL, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS)
+                {
+                    SetDlgItemTextW(hDlg, IDC_NAMEEDIT, szValue);
+                }
+
+                RegCloseKey(hSubKey);
+                break;
+            }
+            iIndex++;
+        }
+        RegCloseKey(hKey);
+    }
+}
+
+
+static VOID
 FillServerAddesssCombo(PINFO pInfo)
 {
     HKEY hKey;
@@ -107,6 +161,7 @@ FillServerAddesssCombo(PINFO pInfo)
     LONG ret = ERROR_SUCCESS;
     DWORD size;
     INT i = 0;
+    BOOL found = FALSE;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       KeyName,
@@ -152,6 +207,7 @@ FillServerAddesssCombo(PINFO pInfo)
                                                 CB_ADDSTRING,
                                                 0,
                                                 (LPARAM)lpAddress);
+                            found = TRUE;
                         }
 
                         HeapFree(GetProcessHeap(),
@@ -177,6 +233,17 @@ FillServerAddesssCombo(PINFO pInfo)
                             0,
                             (LPARAM)Name);
     }
+
+    if(found)
+    {
+        SendDlgItemMessageW(pInfo->hGeneralPage,
+                            IDC_SERVERCOMBO,
+                            CB_SETCURSEL,
+                            0,
+                            0);
+        LoadUsernameHint(pInfo->hGeneralPage, 0);
+    }
+
 }
 
 
@@ -192,6 +259,16 @@ ReLoadGeneralPage(PINFO pInfo)
     {
         SetDlgItemTextW(pInfo->hGeneralPage,
                         IDC_SERVERCOMBO,
+                        lpText);
+    }
+
+    /* set user name */
+    lpText = GetStringFromSettings(pInfo->pRdpSettings,
+                                   L"username");
+    if (lpText)
+    {
+        SetDlgItemTextW(pInfo->hGeneralPage,
+                        IDC_NAMEEDIT,
                         lpText);
     }
 }
@@ -279,15 +356,18 @@ GeneralDlgProc(HWND hDlg,
                                                   CB_GETCURSEL,
                                                   0,
                                                   0);
-                        cur++;
 
                         last = SendDlgItemMessageW(hDlg,
                                                    IDC_SERVERCOMBO,
                                                    CB_GETCOUNT,
                                                    0,
                                                    0);
-                        if (cur == last)
+                        if ((cur + 1) == last)
                             MessageBoxW(hDlg, L"SMB is not yet supported", L"RDP error", MB_ICONERROR);
+                        else
+                        {
+                            LoadUsernameHint(hDlg, cur);
+                        }
                     }
                     break;
 
@@ -455,7 +535,7 @@ AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICEW DisplayDevice)
 
     newEntry->Resolutions = HeapAlloc(GetProcessHeap(),
                                       0,
-                                      ResolutionsCount * sizeof(RESOLUTION_INFO));
+                                      ResolutionsCount * (sizeof(RESOLUTION_INFO) + 1));
     if (!newEntry->Resolutions) goto ByeBye;
 
     newEntry->ResolutionsCount = ResolutionsCount;
@@ -473,6 +553,11 @@ AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICEW DisplayDevice)
             i++;
         }
     }
+
+    /* fullscreen */
+    newEntry->Resolutions[i].dmPelsWidth = GetSystemMetrics(SM_CXSCREEN);
+    newEntry->Resolutions[i].dmPelsHeight = GetSystemMetrics(SM_CYSCREEN);
+
     descriptionSize = (wcslen(DisplayDevice->DeviceString) + 1) * sizeof(WCHAR);
     description = HeapAlloc(GetProcessHeap(), 0, descriptionSize);
     if (!description) goto ByeBye;
@@ -677,8 +762,11 @@ ReLoadDisplayPage(PINFO pInfo)
 {
     DWORD index;
     INT width, height, pos = 0;
-    INT bpp, num, i;
+    INT bpp, num, i, screenmode;
     BOOL bSet = FALSE;
+
+    /* get fullscreen info */
+    screenmode = GetIntegerFromSettings(pInfo->pRdpSettings, L"screen mode id");
 
     /* set trackbar position */
     width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
@@ -686,13 +774,24 @@ ReLoadDisplayPage(PINFO pInfo)
 
     if (width != -1 && height != -1)
     {
-        for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
+        if(screenmode == 2)
         {
-            if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
-                pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
+            pos = SendDlgItemMessageW(pInfo->hDisplayPage,
+                                      IDC_GEOSLIDER,
+                                      TBM_GETRANGEMAX,
+                                      0,
+                                      0);
+        }
+        else
+        {
+            for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
             {
-                pos = index;
-                break;
+                if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
+                    pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
+                {
+                    pos = index;
+                    break;
+                }
             }
         }
     }

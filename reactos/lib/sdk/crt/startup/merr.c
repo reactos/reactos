@@ -8,8 +8,6 @@
 #include <math.h>
 #include <stdio.h>
 
-int __defaultmatherr = 0;
-
 typedef int (__cdecl *fUserMathErr)(struct _exception *);
 static fUserMathErr stUserMathErr;
 
@@ -20,7 +18,7 @@ void __mingw_raise_matherr (int typ, const char *name, double a1, double a2,
   if (!stUserMathErr)
     return;
   ex.type = typ;
-  ex.name = name;
+  ex.name = (char*)name;
   ex.arg1 = a1;
   ex.arg2 = a2;
   ex.retval = rslt;
@@ -71,7 +69,7 @@ _matherr (struct _exception *pexcept)
 	break;
     }
 
-  fprintf(stderr, "_matherr(): %s in %s(%g, %g)  (retval=%g)\n", 
+  __mingw_fprintf (stderr, "_matherr(): %s in %s(%g, %g)  (retval=%g)\n", 
 	  type, pexcept->name, pexcept->arg1, pexcept->arg2, pexcept->retval);
   return 0;
 }

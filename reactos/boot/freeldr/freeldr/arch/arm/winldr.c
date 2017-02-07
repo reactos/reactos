@@ -80,14 +80,14 @@ PKPDR_PAGE PdrPage;
 /* FUNCTIONS **************************************************************/
 
 BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-		        IN ULONG NumberOfPages)
+MempSetupPaging(IN PFN_NUMBER StartPage,
+		        IN PFN_COUNT NumberOfPages)
 {
     return TRUE;
 }
 
 VOID
-MempUnmapPage(IN ULONG Page)
+MempUnmapPage(IN PFN_NUMBER Page)
 {
     return;
 }

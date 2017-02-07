@@ -32,12 +32,6 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
-#include <wininet.h>
-
 #if defined(__MINGW32__) || defined (_MSC_VER)
 # include <ws2tcpip.h>
 # ifndef EADDRINUSE
@@ -82,6 +76,12 @@
 # define ioctlsocket ioctl
 #endif /* defined(__MINGW32__) || defined (_MSC_VER) */
 
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "wininet.h"
+#include "winternl.h"
 #include "wine/unicode.h"
 
 #include "rpc.h"
@@ -1869,7 +1869,7 @@ typedef struct _RpcHttpAsyncData
 {
     LONG refs;
     HANDLE completion_event;
-    INTERNET_BUFFERS inet_buffers;
+    INTERNET_BUFFERSA inet_buffers;
     void *destination_buffer; /* the address that inet_buffers.lpvBuffer will be
                                * copied into when the call completes */
     CRITICAL_SECTION cs;

@@ -326,6 +326,7 @@ CheckVolume(
     NtDrivePath[wcslen(NtDrivePath)-1] = 0;
     RtlInitUnicodeString(&DrivePathU, NtDrivePath);
 
+    DPRINT("AUTOCHK: Checking %wZ\n", &DrivePathU);
     Status = ChkdskFunc(&DrivePathU,
                         TRUE, // FixErrors
                         TRUE, // Verbose

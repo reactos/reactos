@@ -1576,13 +1576,17 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     }
     else
     {
-        /* let's assume utf-8 for now */
-        size_t len;
-        WCHAR *new_buff;
+        /* TODO: this doesn't handle arbitrary encodings */
+        ANSI_STRING xmlA;
+        UNICODE_STRING xmlW;
+
+        ASSERT(size < MAXUSHORT);
+        xmlA.Buffer = (PCHAR)buffer;
+        xmlA.Length = xmlA.MaximumLength = (USHORT)size;
 
         _SEH2_TRY
         {
-            len = mbstowcs(NULL, buffer, size);
+            status = RtlAnsiStringToUnicodeString(&xmlW, &xmlA, TRUE);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1591,23 +1595,18 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         }
         _SEH2_END;
 
-        DPRINT("len = %x\n", len);
-
-        if (len == -1)
+        if (!NT_SUCCESS(status))
         {
-            DPRINT1( "utf-8 conversion failed\n" );
+            DPRINT1("RtlAnsiStringToUnicodeString failed with %lx\n", status);
             return STATUS_SXS_CANT_GEN_ACTCTX;
         }
-        if (!(new_buff = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, len)))
-            return STATUS_NO_MEMORY;
+        ASSERT(xmlW.Buffer != NULL);
 
-        mbstowcs( new_buff, buffer, size);
-        xmlbuf.ptr = new_buff;
-
-        xmlbuf.end = xmlbuf.ptr + len / sizeof(WCHAR);
+        xmlbuf.ptr = xmlW.Buffer;
+        xmlbuf.end = xmlbuf.ptr + xmlW.Length / sizeof(WCHAR);
         status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
 
-        RtlFreeHeap( RtlGetProcessHeap(), 0, new_buff );
+        RtlFreeUnicodeString(&xmlW);
     }
     return status;
 }

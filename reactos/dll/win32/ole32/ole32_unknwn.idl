@@ -23,3 +23,11 @@
 cpp_quote("#if 0    /* oleaut32_unknwn.idl hack */")
 #include "unknwn.idl"
 cpp_quote("#endif   /* oleaut32_unknwn.idl hack */")
+
+#ifdef __WIDL__
+[
+    threading(both),
+    uuid(00000320-0000-0000-c000-000000000046)
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }
+#endif

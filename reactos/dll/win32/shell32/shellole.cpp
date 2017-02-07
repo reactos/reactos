@@ -248,7 +248,7 @@ HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
  * SEE ALSO
  *     CoTaskMemAlloc, SHLoadOLE
  */
-LPVOID WINAPI SHAlloc(DWORD len)
+LPVOID WINAPI SHAlloc(SIZE_T len)
 {
     LPVOID ret;
 
@@ -596,7 +596,7 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
         grfFlags, grfMode, dwDisposition, ppstg, puCodePage);
 
     hres = psstg->Open(fmtid, grfMode, ppstg);
- 
+
      switch (dwDisposition)
      {
          case CREATE_ALWAYS:
@@ -608,16 +608,16 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
                      return hres;
                  hres = E_FAIL;
              }
- 
+
          case OPEN_ALWAYS:
          case CREATE_NEW:
              if (FAILED(hres))
                  hres = psstg->Create(fmtid, pclsid, grfFlags, grfMode, ppstg);
- 
+
          case OPEN_EXISTING:
              if (FAILED(hres))
                  return hres;
- 
+
              if (puCodePage)
              {
                  prop.ulKind = PRSPEC_PROPID;
@@ -629,7 +629,7 @@ EXTERN_C HRESULT WINAPI SHPropStgCreate(IPropertySetStorage *psstg, REFFMTID fmt
                      *puCodePage = ret.iVal;
              }
      }
- 
+
      return S_OK;
 }
 
@@ -641,32 +641,32 @@ EXTERN_C HRESULT WINAPI SHPropStgReadMultiple(IPropertyStorage *pps, UINT uCodeP
 {
     STATPROPSETSTG stat;
     HRESULT hres;
- 
+
     FIXME("%p %u %u %p %p\n", pps, uCodePage, cpspec, rgpspec, rgvar);
- 
+
     memset(rgvar, 0, cpspec*sizeof(PROPVARIANT));
     hres = pps->ReadMultiple(cpspec, rgpspec, rgvar);
     if (FAILED(hres))
         return hres;
- 
+
     if (!uCodePage)
     {
         PROPSPEC prop;
         PROPVARIANT ret;
- 
+
         prop.ulKind = PRSPEC_PROPID;
         prop.propid = PID_CODEPAGE;
         hres = pps->ReadMultiple(1, &prop, &ret);
         if(FAILED(hres) || ret.vt!=VT_I2)
             return S_OK;
- 
+
         uCodePage = ret.iVal;
     }
- 
+
     hres = pps->Stat(&stat);
     if (FAILED(hres))
         return S_OK;
- 
+
     /* TODO: do something with codepage and stat */
     return S_OK;
 }
@@ -680,20 +680,20 @@ EXTERN_C HRESULT WINAPI SHPropStgWriteMultiple(IPropertyStorage *pps, UINT *uCod
     STATPROPSETSTG stat;
     UINT codepage;
     HRESULT hres;
- 
+
     FIXME("%p %p %u %p %p %d\n", pps, uCodePage, cpspec, rgpspec, rgvar, propidNameFirst);
- 
+
     hres = pps->Stat(&stat);
     if (FAILED(hres))
         return hres;
- 
+
     if (uCodePage && *uCodePage)
         codepage = *uCodePage;
     else
     {
         PROPSPEC prop;
         PROPVARIANT ret;
- 
+
         prop.ulKind = PRSPEC_PROPID;
         prop.propid = PID_CODEPAGE;
         hres = pps->ReadMultiple(1, &prop, &ret);
@@ -701,14 +701,14 @@ EXTERN_C HRESULT WINAPI SHPropStgWriteMultiple(IPropertyStorage *pps, UINT *uCod
             return hres;
         if (ret.vt!=VT_I2 || !ret.iVal)
             return E_FAIL;
- 
+
         codepage = ret.iVal;
         if (uCodePage)
             *uCodePage = codepage;
     }
- 
+
     /* TODO: do something with codepage and stat */
- 
+
     hres = pps->WriteMultiple(cpspec, rgpspec, rgvar, propidNameFirst);
     return hres;
 }

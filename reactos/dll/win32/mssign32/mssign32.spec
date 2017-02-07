@@ -2,11 +2,11 @@
 @ stub -private DllUnregisterServer
 @ stub FreeCryptProvFromCert
 @ stub GetCryptProvFromCert
-@ stub PvkFreeCryptProv
-@ stub PvkGetCryptProv
+@ stdcall PvkFreeCryptProv(ptr wstr long wstr)
+@ stdcall PvkGetCryptProv(ptr wstr wstr long wstr wstr ptr ptr ptr)
 @ stub PvkPrivateKeyAcquireContext
 @ stub PvkPrivateKeyAcquireContextA
-@ stub PvkPrivateKeyAcquireContextFromMemory
+@ stdcall PvkPrivateKeyAcquireContextFromMemory(wstr long ptr long ptr wstr ptr ptr ptr)
 @ stub PvkPrivateKeyAcquireContextFromMemoryA
 @ stub PvkPrivateKeyLoad
 @ stub PvkPrivateKeyLoadA

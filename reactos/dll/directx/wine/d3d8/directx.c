@@ -123,7 +123,7 @@ static HRESULT WINAPI IDirect3D8Impl_GetAdapterIdentifier(LPDIRECT3D8 iface, UIN
         DWORD Flags, D3DADAPTER_IDENTIFIER8 *pIdentifier)
 {
     IDirect3D8Impl *This = impl_from_IDirect3D8(iface);
-    WINED3DADAPTER_IDENTIFIER adapter_id;
+    struct wined3d_adapter_identifier adapter_id;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, flags %#x, identifier %p.\n",
@@ -175,7 +175,8 @@ static HRESULT WINAPI IDirect3D8Impl_EnumAdapterModes(LPDIRECT3D8 iface, UINT Ad
             iface, Adapter, Mode, pMode);
 
     wined3d_mutex_lock();
-    hr = wined3d_enum_adapter_modes(This->WineD3D, Adapter, WINED3DFMT_UNKNOWN, Mode, (WINED3DDISPLAYMODE *)pMode);
+    hr = wined3d_enum_adapter_modes(This->WineD3D, Adapter, WINED3DFMT_UNKNOWN,
+            Mode, (struct wined3d_display_mode *)pMode);
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr)) pMode->Format = d3dformat_from_wined3dformat(pMode->Format);
@@ -193,7 +194,7 @@ static HRESULT WINAPI IDirect3D8Impl_GetAdapterDisplayMode(LPDIRECT3D8 iface, UI
             iface, Adapter, pMode);
 
     wined3d_mutex_lock();
-    hr = wined3d_get_adapter_display_mode(This->WineD3D, Adapter, (WINED3DDISPLAYMODE *)pMode);
+    hr = wined3d_get_adapter_display_mode(This->WineD3D, Adapter, (struct wined3d_display_mode *)pMode);
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr)) pMode->Format = d3dformat_from_wined3dformat(pMode->Format);
@@ -223,34 +224,26 @@ static HRESULT WINAPI IDirect3D8Impl_CheckDeviceFormat(LPDIRECT3D8 iface, UINT A
         D3DFORMAT CheckFormat)
 {
     IDirect3D8Impl *This = impl_from_IDirect3D8(iface);
+    enum wined3d_resource_type wined3d_rtype;
     HRESULT hr;
-    WINED3DRESOURCETYPE WineD3DRType;
 
     TRACE("iface %p, adapter %u, device_type %#x, adapter_format %#x, usage %#x, resource_type %#x, format %#x.\n",
             iface, Adapter, DeviceType, AdapterFormat, Usage, RType, CheckFormat);
 
-    if(CheckFormat == D3DFMT_R8G8B8)
-    {
-        /* See comment in dlls/d3d9/directx.c, IDirect3D9Impl_CheckDeviceFormat for details */
-        WARN("D3DFMT_R8G8B8 is not available on windows, returning D3DERR_NOTAVAILABLE\n");
-        return D3DERR_NOTAVAILABLE;
-    }
-
-
     switch(RType) {
         case D3DRTYPE_VERTEXBUFFER:
         case D3DRTYPE_INDEXBUFFER:
-            WineD3DRType = WINED3DRTYPE_BUFFER;
+            wined3d_rtype = WINED3D_RTYPE_BUFFER;
             break;
 
         default:
-            WineD3DRType = RType;
+            wined3d_rtype = RType;
             break;
     }
 
     wined3d_mutex_lock();
     hr = wined3d_check_device_format(This->WineD3D, Adapter, DeviceType, wined3dformat_from_d3dformat(AdapterFormat),
-            Usage, WineD3DRType, wined3dformat_from_d3dformat(CheckFormat), SURFACE_OPENGL);
+            Usage, wined3d_rtype, wined3dformat_from_d3dformat(CheckFormat), SURFACE_OPENGL);
     wined3d_mutex_unlock();
 
     return hr;
@@ -268,7 +261,8 @@ static HRESULT WINAPI IDirect3D8Impl_CheckDeviceMultiSampleType(IDirect3D8 *ifac
 
     wined3d_mutex_lock();
     hr = wined3d_check_device_multisample_type(This->WineD3D, Adapter, DeviceType,
-            wined3dformat_from_d3dformat(SurfaceFormat), Windowed, (WINED3DMULTISAMPLE_TYPE)MultiSampleType, NULL);
+            wined3dformat_from_d3dformat(SurfaceFormat), Windowed,
+            (enum wined3d_multisample_type)MultiSampleType, NULL);
     wined3d_mutex_unlock();
 
     return hr;
@@ -296,12 +290,14 @@ static HRESULT WINAPI IDirect3D8Impl_CheckDepthStencilMatch(IDirect3D8 *iface, U
 void fixup_caps(WINED3DCAPS *caps)
 {
     /* D3D8 doesn't support SM 2.0 or higher, so clamp to 1.x */
-    if (caps->PixelShaderVersion > D3DPS_VERSION(1,4)) {
+    if (caps->PixelShaderVersion)
         caps->PixelShaderVersion = D3DPS_VERSION(1,4);
-    }
-    if (caps->VertexShaderVersion > D3DVS_VERSION(1,1)) {
+    else
+        caps->PixelShaderVersion = D3DPS_VERSION(0,0);
+    if (caps->VertexShaderVersion)
         caps->VertexShaderVersion = D3DVS_VERSION(1,1);
-    }
+    else
+        caps->VertexShaderVersion = D3DVS_VERSION(0,0);
     caps->MaxVertexShaderConst = min(D3D8_MAX_VERTEX_SHADER_CONSTANTF, caps->MaxVertexShaderConst);
 
     caps->StencilCaps &= ~WINED3DSTENCILCAPS_TWOSIDED;
@@ -368,7 +364,7 @@ static HRESULT WINAPI IDirect3D8Impl_CreateDevice(IDirect3D8 *iface, UINT adapte
         return E_OUTOFMEMORY;
     }
 
-    hr = device_init(object, This->WineD3D, adapter, device_type, focus_window, flags, parameters);
+    hr = device_init(object, This, This->WineD3D, adapter, device_type, focus_window, flags, parameters);
     if (FAILED(hr))
     {
         WARN("Failed to initialize device, hr %#x.\n", hr);

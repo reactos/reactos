@@ -56,8 +56,11 @@
 //
 // Identifies a Kernel Handle
 //
-#define KERNEL_HANDLE_FLAG                              \
-    ((ULONG_PTR)1 << ((sizeof(HANDLE) * 8) - 1))
+#ifdef _WIN64
+#define KERNEL_HANDLE_FLAG 0xFFFFFFFF80000000ULL
+#else
+#define KERNEL_HANDLE_FLAG 0x80000000
+#endif
 #define ObIsKernelHandle(Handle, ProcessorMode)         \
     (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&      \
     ((ProcessorMode) == KernelMode))
@@ -559,6 +562,7 @@ NTAPI
 ObpCaptureObjectCreateInformation(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
+    IN KPROCESSOR_MODE CreatorMode,
     IN BOOLEAN AllocateFromLookaside,
     IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
     OUT PUNICODE_STRING ObjectName

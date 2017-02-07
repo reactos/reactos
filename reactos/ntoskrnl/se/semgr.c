@@ -705,6 +705,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 *GrantedAccess, DesiredAccess, GenericMapping);
         //*AccessStatus = STATUS_ACCESS_DENIED;
         //return FALSE;
+        *GrantedAccess = DesiredAccess;
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
@@ -946,7 +947,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);

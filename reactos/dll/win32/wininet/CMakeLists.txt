@@ -4,11 +4,10 @@ add_definitions(
     -D_WINE
     -Dclose=_close)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine
+                    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
-spec2def(wininet.dll wininet.spec)
-
-set_rc_compiler()
+spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cookie.c
@@ -29,12 +28,7 @@ list(APPEND SOURCE
 add_library(wininet SHARED ${SOURCE})
 
 set_module_type(wininet win32dll)
-target_link_libraries(wininet wine ${PSEH_LIB})
-add_delay_importlibs(wininet secur32 crypt32)
+target_link_libraries(wininet wine ${PSEH_LIB} zlib)
+add_delay_importlibs(wininet secur32 crypt32 cryptui)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
-add_importlib_target(wininet.spec)
-
-if(NOT MSVC)
-    allow_warnings(wininet)
-endif()

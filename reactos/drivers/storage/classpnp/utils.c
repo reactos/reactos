@@ -24,18 +24,14 @@ Revision History:
 #include "classp.h"
 #include "debug.h"
 
-
-
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(PAGE, ClassGetDeviceParameter)
     #pragma alloc_text(PAGE, ClassScanForSpecial)
     #pragma alloc_text(PAGE, ClassSetDeviceParameter)
 #endif
 
-
-
 // custom string match -- careful!
-BOOLEAN ClasspMyStringMatches(IN PCHAR StringToMatch OPTIONAL, IN PCHAR TargetString)
+BOOLEAN NTAPI ClasspMyStringMatches(IN PCHAR StringToMatch OPTIONAL, IN PCHAR TargetString)
 {
     ULONG length;  // strlen returns an int, not size_t (!)
     PAGED_CODE();
@@ -54,8 +50,7 @@ BOOLEAN ClasspMyStringMatches(IN PCHAR StringToMatch OPTIONAL, IN PCHAR TargetSt
     return (strncmp(StringToMatch, TargetString, length) == 0);
 }
 
-
-VOID ClassGetDeviceParameter(
+VOID NTAPI ClassGetDeviceParameter(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PWSTR SubkeyName OPTIONAL,
     IN PWSTR ParameterName,
@@ -139,8 +134,7 @@ VOID ClassGetDeviceParameter(
 
 } // end ClassGetDeviceParameter()
 
-
-NTSTATUS ClassSetDeviceParameter(
+NTSTATUS NTAPI ClassSetDeviceParameter(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PWSTR SubkeyName OPTIONAL,
     IN PWSTR ParameterName,
@@ -210,7 +204,6 @@ NTSTATUS ClassSetDeviceParameter(
 
 } // end ClassSetDeviceParameter()
 
-
 /*
  *  ClassScanForSpecial
  *
@@ -218,7 +211,7 @@ NTSTATUS ClassSetDeviceParameter(
  *      hardware based upon id strings.  it does not check the registry.
  */
 
-VOID ClassScanForSpecial(
+VOID NTAPI ClassScanForSpecial(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN CLASSPNP_SCAN_FOR_SPECIAL_INFO DeviceList[],
     IN PCLASS_SCAN_FOR_SPECIAL_HANDLER Function)
@@ -228,7 +221,7 @@ VOID ClassScanForSpecial(
     PUCHAR productId;
     PUCHAR productRevision;
     UCHAR nullString[] = "";
-    ULONG j;
+    //ULONG j;
 
     PAGED_CODE();
     ASSERT(DeviceList);
@@ -312,7 +305,6 @@ VOID ClassScanForSpecial(
 
 } // end ClasspScanForSpecialByInquiry()
 
-
 //
 // In order to provide better performance without the need to reboot,
 // we need to implement a self-adjusting method to set and clear the
@@ -338,6 +330,7 @@ VOID ClassScanForSpecial(
 //
 
 VOID
+NTAPI
 ClasspPerfIncrementErrorCount(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -389,6 +382,7 @@ ClasspPerfIncrementErrorCount(
 }
 
 VOID
+NTAPI
 ClasspPerfIncrementSuccessfulIo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -484,8 +478,7 @@ ClasspPerfIncrementSuccessfulIo(
     return;
 }
 
-
-PMDL BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen)
+PMDL NTAPI BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen)
 {
     PMDL mdl;
 
@@ -514,13 +507,11 @@ PMDL BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen)
     return mdl;
 }
 
-
-VOID FreeDeviceInputMdl(PMDL Mdl)
+VOID NTAPI FreeDeviceInputMdl(PMDL Mdl)
 {
     MmUnlockPages(Mdl);
     IoFreeMdl(Mdl);
 }
-
 
 #if 0
     VOID
@@ -561,5 +552,3 @@ VOID FreeDeviceInputMdl(PMDL Mdl)
         return;
     }
 #endif
-
-

@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(shlwapi.dll shlwapi.spec)
+spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     assoc.c
@@ -32,4 +32,4 @@ target_link_libraries(shlwapi wine uuid)
 add_delay_importlibs(shlwapi userenv oleaut32 ole32 comctl32 comdlg32 mpr mlang urlmon shell32 winmm version)
 add_importlibs(shlwapi user32 gdi32 advapi32 msvcrt wininet kernel32 ntdll)
 add_cd_file(TARGET shlwapi DESTINATION reactos/system32 FOR all)
-add_importlib_target(shlwapi.spec)
+

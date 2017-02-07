@@ -1,0 +1,263 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{B596CC9F-56E5-419E-A622-E01BB457431E}'
+        {
+            '2.0' = s 'WUAPI 2.0 Type Library'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{2EE48F22-AF3C-405F-8970-F71BE12EE9A2}' = s 'IAutomaticUpdatesSettings'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{673425BF-C082-4C7C-BDFD-569464B8E0CE}' = s 'IAutomaticUpdates'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{174C81FE-AECD-4DAE-B8A0-2C6318DD86A8}' = s 'IWebProxy'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{816858A4-260D-4260-933A-2585F1ABC76B}' = s 'IUpdateSession'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{7C907864-346C-4AEB-8F3F-57DA289F969F}' = s 'IImageInformation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{81DDC1B8-9D35-47A6-B471-5B80F519223B}' = s 'ICategory'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{3A56BFB8-576C-43F7-9335-FE4838FD7E37}' = s 'ICategoryCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{EFF90582-2DDC-480F-A06D-60F3FBC362C3}' = s 'IStringCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{A376DD5E-09D4-427F-AF7C-FED5B6E1C1D6}' = s 'IUpdateException'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{503626A3-8E14-4729-9355-0FE664BD2321}' = s 'IUpdateExceptionCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{46297823-9940-4C09-AED9-CD3EA6D05968}' = s 'IUpdateIdentity'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{D9A59339-E245-4DBD-9686-4D5763E39624}' = s 'IInstallationBehavior'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{54A2CB2D-9A0C-48B6-8A50-9ABB69EE2D02}' = s 'IUpdateDownloadContent'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{BC5513C8-B3B8-4BF7-A4D4-361C0D8C88BA}' = s 'IUpdateDownloadContentCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{6A92B07A-D821-4682-B423-5C805022CC4D}' = s 'IUpdate'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{07F7438C-7709-4CA5-B518-91279288134E}' = s 'IUpdateCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{7366EA16-7A1A-4EA2-B042-973D3E9CD99B}' = s 'ISearchJob'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{D40CFF62-E08C-4498-941A-01E25F0FD33C}' = s 'ISearchResult'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{BE56A644-AF0E-4E0E-A311-C1D8E695CBFF}' = s 'IUpdateHistoryEntry'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{A7F04F3C-A290-435B-AADF-A116C3357A5C}' = s 'IUpdateHistoryEntryCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{8F45ABF1-F9AE-4B95-A933-F0F66E5056EA}' = s 'IUpdateSearcher'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{BF99AF76-B575-42AD-8AA4-33CBB5477AF1}' = s 'IUpdateDownloadResult'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{D31A5BAC-F719-4178-9DBB-5E2CB47FD18A}' = s 'IDownloadProgress'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{C574DE85-7358-43F6-AAE8-8697E62D8BA7}' = s 'IDownloadJob'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{DAA4FDD0-4727-4DBE-A1E7-745DCA317144}' = s 'IDownloadResult'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{68F1C6F9-7ECC-4666-A464-247FE12496C3}' = s 'IUpdateDownloader'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{D940F0F8-3CBB-4FD0-993F-471E7F2328AD}' = s 'IUpdateInstallationResult'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{345C8244-43A3-4E32-A368-65F073B76F36}' = s 'IInstallationProgress'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{5C209F0B-BAD5-432A-9556-4699BED2638A}' = s 'IInstallationJob'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{A43C56D6-7451-48D4-AF96-B6CD2D0D9B7A}' = s 'IInstallationResult'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{7B929C68-CCDC-4226-96B1-8724600B54C2}' = s 'IUpdateInstaller'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+        '{ADE87BF7-7B56-4275-8FAB-B9B0E591844B}' = s 'ISystemInformation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}' { val Version = s '2.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{BFE18E9C-6D87-4450-B37C-E02F0B373803}' = s 'AutomaticUpdates Class'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Microsoft.Update.AutoUpdate.1'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}'
+            Version = s '2.0'
+            VersionIndependentProgId = s 'Microsoft.Update.AutoUpdate'
+        }
+        '{4CB43D7F-7EEE-4906-8698-60DA1C38F2FE}' = s 'UpdateSession Class'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Microsoft.Update.Session.1'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}'
+            Version = s '2.0'
+            VersionIndependentProgId = s 'Microsoft.Update.Session'
+        }
+        '{C01B9BA0-BEA7-41BA-B604-D0A36F469133}' = s 'SystemInformation Class'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Microsoft.Update.SystemInfo.1'
+            TypeLib = s '{B596CC9F-56E5-419E-A622-E01BB457431E}'
+            Version = s '2.0'
+            VersionIndependentProgId = s 'Microsoft.Update.SystemInfo'
+        }
+    }
+    'Microsoft.Update.AutoUpdate.1' = s 'AutomaticUpdates Class'
+    {
+        CLSID = s '{BFE18E9C-6D87-4450-B37C-E02F0B373803}'
+    }
+    'Microsoft.Update.AutoUpdate' = s 'AutomaticUpdates Class'
+    {
+        CLSID = s '{BFE18E9C-6D87-4450-B37C-E02F0B373803}'
+        CurVer = s 'Microsoft.Update.AutoUpdate.1'
+    }
+    'Microsoft.Update.Session.1' = s 'UpdateSession Class'
+    {
+        CLSID = s '{4CB43D7F-7EEE-4906-8698-60DA1C38F2FE}'
+    }
+    'Microsoft.Update.Session' = s 'UpdateSession Class'
+    {
+        CLSID = s '{4CB43D7F-7EEE-4906-8698-60DA1C38F2FE}'
+        CurVer = s 'Microsoft.Update.Session.1'
+    }
+    'Microsoft.Update.SystemInfo.1' = s 'SystemInformation Class'
+    {
+        CLSID = s '{C01B9BA0-BEA7-41BA-B604-D0A36F469133}'
+    }
+    'Microsoft.Update.SystemInfo' = s 'SystemInformation Class'
+    {
+        CLSID = s '{C01B9BA0-BEA7-41BA-B604-D0A36F469133}'
+        CurVer = s 'Microsoft.Update.SystemInfo.1'
+    }
+}

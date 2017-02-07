@@ -24,6 +24,7 @@ Revision History:
 #include "classp.h"
 
 NTSTATUS
+NTAPI
 ClassSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -121,6 +122,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -225,7 +227,7 @@ ClassSystemControl(
             PGUIDREGINFO guidList;
             PWMIREGINFOW wmiRegInfo;
             PWMIREGGUIDW wmiRegGuid;
-            PDEVICE_OBJECT pdo;
+            //PDEVICE_OBJECT pdo;
             PUNICODE_STRING regPath;
             PWCHAR stringPtr;
             ULONG retSize;
@@ -551,6 +553,7 @@ Return Value:
 --*/
 SCSIPORTAPI
 NTSTATUS
+NTAPI
 ClassWmiCompleteRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -561,7 +564,7 @@ ClassWmiCompleteRequest(
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
-    UCHAR MinorFunction;
+    //UCHAR MinorFunction;
     PUCHAR buffer;
     ULONG retSize;
     UCHAR minorFunction;
@@ -715,6 +718,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassWmiFireEvent(
     IN PDEVICE_OBJECT DeviceObject,
     IN LPGUID Guid,

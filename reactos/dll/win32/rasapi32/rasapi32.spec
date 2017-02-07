@@ -21,7 +21,7 @@
 @ stdcall RasEnumDevicesA(ptr ptr ptr)
 @ stdcall RasEnumDevicesW(ptr ptr ptr)
 @ stdcall RasEnumEntriesA(str str ptr ptr ptr)
-@ stdcall RasEnumEntriesW(str str ptr ptr ptr)
+@ stdcall RasEnumEntriesW(wstr wstr ptr ptr ptr)
 @ stub RasEnumEntriesWow
 @ stdcall RasGetAutodialAddressA(str ptr ptr ptr ptr)
 @ stdcall RasGetAutodialAddressW(wstr ptr ptr ptr ptr)

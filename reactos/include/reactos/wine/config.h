@@ -1,5 +1,3 @@
-#include "reactos/buildno.h"
-
 #define __WINE_CONFIG_H
 
 /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
@@ -197,7 +195,7 @@
 /* #undef HAVE_FUTIMESAT */
 
 /* Define to 1 if you have the `getaddrinfo' function. */
-/* #undef HAVE_GETADDRINFO */
+#define HAVE_GETADDRINFO 1
 
 /* Define to 1 if you have the `getattrlist' function. */
 /* #undef HAVE_GETATTRLIST */
@@ -299,10 +297,10 @@
 #define HAVE_IO_H 1
 
 /* Define to 1 if you have the `isinf' function. */
-#define HAVE_ISINF 1
+/* #undef HAVE_ISINF */
 
 /* Define to 1 if you have the `isnan' function. */
-#define HAVE_ISNAN 1
+/* #undef HAVE_ISNAN */
 
 /* Define to 1 if you have the <jack/jack.h> header file. */
 /* #undef HAVE_JACK_JACK_H */
@@ -1135,10 +1133,16 @@
 /* #undef HAVE_XRENDERSETPICTURETRANSFORM */
 
 /* Define to 1 if you have the `z' library (-lz). */
-/* #define HAVE_ZLIB 1 */
+#define HAVE_ZLIB 1
 
 /* Define to 1 if you have the <zlib.h> header file. */
-/* #define HAVE_ZLIB_H 1 */
+#define HAVE_ZLIB_H 1
+
+/* Define to 1 if you have the `_finite' function. */
+#define HAVE__FINITE 1
+
+/* Define to 1 if you have the `_isnan' function. */
+#define HAVE__ISNAN 1
 
 /* Define to 1 if you have the `_pclose' function. */
 #define HAVE__PCLOSE 1

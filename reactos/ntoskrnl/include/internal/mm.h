@@ -49,7 +49,6 @@ extern PMMPTE MmDebugPte;
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
-struct _MM_PAGEOP;
 typedef ULONG_PTR SWAPENTRY;
 
 //
@@ -74,7 +73,7 @@ typedef ULONG_PTR SWAPENTRY;
 #endif
 
 #define MEMORY_AREA_SECTION_VIEW            (1)
-#define MEMORY_AREA_VIRTUAL_MEMORY          (8)
+#define MEMORY_AREA_CACHE                   (2)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
@@ -83,12 +82,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_CORE_DUMP_TYPE_NONE              (0x0)
 #define MM_CORE_DUMP_TYPE_MINIMAL           (0x1)
 #define MM_CORE_DUMP_TYPE_FULL              (0x2)
-
-#define MM_PAGEOP_PAGEIN                    (1)
-#define MM_PAGEOP_PAGEOUT                   (2)
-#define MM_PAGEOP_PAGESYNCH                 (3)
-#define MM_PAGEOP_ACCESSFAULT               (4)
-#define MM_PAGEOP_CHANGEPROTECT             (5)
 
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
@@ -186,6 +179,10 @@ typedef ULONG_PTR SWAPENTRY;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+//
+// Wait entry for marking pages that are being serviced
+//
+#define MM_WAIT_ENTRY            0x7ffffc00
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
@@ -193,29 +190,28 @@ typedef ULONG_PTR SWAPENTRY;
 #define InterlockedExchangePte(PointerPte, Value) \
     InterlockedExchange((PLONG)(PointerPte), Value)
 
-typedef struct
-{
-    ULONG Entry[NR_SECTION_PAGE_ENTRIES];
-} SECTION_PAGE_TABLE, *PSECTION_PAGE_TABLE;
-
-typedef struct
-{
-    PSECTION_PAGE_TABLE PageTables[NR_SECTION_PAGE_TABLES];
-} SECTION_PAGE_DIRECTORY, *PSECTION_PAGE_DIRECTORY;
-
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONG FileOffset;		/* start offset into the file for image sections */
-    ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
-    ULONG RawLength;		/* length of the segment which is part of the mapped file */
-    SIZE_T Length;			/* absolute length of the segment */
-    ULONG Protection;
     FAST_MUTEX Lock;		/* lock which protects the page directory */
+	PFILE_OBJECT FileObject;
+    LARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
+    LARGE_INTEGER Length;			/* absolute length of the segment */
     ULONG ReferenceCount;
-    SECTION_PAGE_DIRECTORY PageDirectory;
+	ULONG CacheCount;
+    ULONG Protection;
     ULONG Flags;
-    ULONG Characteristics;
     BOOLEAN WriteCopy;
+	BOOLEAN Locked;
+
+	struct
+	{
+		ULONGLONG FileOffset;		/* start offset into the file for image sections */
+		ULONG_PTR VirtualAddress;	/* start offset into the address range for image sections */
+		ULONG Characteristics;
+	} Image;
+
+	LIST_ENTRY ListOfSegments;
+	RTL_GENERIC_TABLE PageTable;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
@@ -250,8 +246,6 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
-struct _MM_CACHE_SECTION_SEGMENT;
-
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -270,15 +264,10 @@ typedef struct _MEMORY_AREA
         struct
         {
             ROS_SECTION_OBJECT* Section;
-            ULONG ViewOffset;
+            LARGE_INTEGER ViewOffset;
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
         } SectionData;
-		struct
-		{
-            LARGE_INTEGER ViewOffset;
-            struct _MM_CACHE_SECTION_SEGMENT *Segment;
-		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
@@ -422,37 +411,6 @@ extern MMPFNLIST MmFreePageListHead;
 extern MMPFNLIST MmStandbyPageListHead;
 extern MMPFNLIST MmModifiedPageListHead;
 extern MMPFNLIST MmModifiedNoWritePageListHead;
-
-typedef struct _MM_PAGEOP
-{
-  /* Type of operation. */
-  ULONG OpType;
-  /* Number of threads interested in this operation. */
-  ULONG ReferenceCount;
-  /* Event that will be set when the operation is completed. */
-  KEVENT CompletionEvent;
-  /* Status of the operation once it is completed. */
-  NTSTATUS Status;
-  /* TRUE if the operation was abandoned. */
-  BOOLEAN Abandoned;
-  /* The memory area to be affected by the operation. */
-  PMEMORY_AREA MArea;
-  ULONG Hash;
-  struct _MM_PAGEOP* Next;
-  struct _ETHREAD* Thread;
-  /*
-   * These fields are used to identify the operation if it is against a
-   * virtual memory area.
-   */
-  HANDLE Pid;
-  PVOID Address;
-  /*
-   * These fields are used to identify the operation if it is against a
-   * section mapping.
-   */
-  PMM_SECTION_SEGMENT Segment;
-  ULONG Offset;
-} MM_PAGEOP, *PMM_PAGEOP;
 
 typedef struct _MM_MEMORY_CONSUMER
 {
@@ -945,7 +903,7 @@ MmPageOutVirtualMemory(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    struct _MM_PAGEOP* PageOp
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -981,7 +939,7 @@ MmWritePageVirtualMemory(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
-    PMM_PAGEOP PageOp
+    PFN_NUMBER Page
 );
 
 /* kmap.c ********************************************************************/
@@ -1001,8 +959,8 @@ ExAllocatePageWithPhysPage(PFN_NUMBER Page);
 NTSTATUS
 NTAPI
 MiCopyFromUserPage(
-    PFN_NUMBER Page,
-    PVOID SourceAddress
+    PFN_NUMBER NewPage,
+    PFN_NUMBER OldPage
 );
 
 NTSTATUS
@@ -1014,38 +972,6 @@ MiZeroPage(PFN_NUMBER Page);
 PVOID
 FASTCALL
 MmSafeReadPtr(PVOID Source);
-
-/* pageop.c ******************************************************************/
-
-VOID
-NTAPI
-MmReleasePageOp(PMM_PAGEOP PageOp);
-
-PMM_PAGEOP
-NTAPI
-MmGetPageOp(
-    PMEMORY_AREA MArea,
-    HANDLE Pid,
-    PVOID Address,
-    PMM_SECTION_SEGMENT Segment,
-    ULONG Offset,
-    ULONG OpType,
-    BOOLEAN First
-);
-
-PMM_PAGEOP
-NTAPI
-MmCheckForPageOp(
-    PMEMORY_AREA MArea,
-    HANDLE Pid,
-    PVOID Address,
-    PMM_SECTION_SEGMENT Segment,
-    ULONG Offset
-);
-
-VOID
-NTAPI
-MmInitializePageOp(VOID);
 
 /* process.c *****************************************************************/
 
@@ -1341,6 +1267,13 @@ MmIsPagePresent(
     PVOID Address
 );
 
+BOOLEAN
+NTAPI
+MmIsDisabledPage(
+    struct _EPROCESS* Process,
+    PVOID Address
+);
+
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID);
@@ -1505,7 +1438,15 @@ MmReleaseMmInfo(struct _EPROCESS *Process);
 
 NTSTATUS
 NTAPI
-Mmi386ReleaseMmInfo(struct _EPROCESS *Process);
+MmSetExecuteOptions(IN ULONG ExecuteOptions);
+
+NTSTATUS
+NTAPI
+MmGetExecuteOptions(IN PULONG ExecuteOptions);
+
+VOID
+NTAPI
+MmDeleteProcessPageDirectory(struct _EPROCESS *Process);
 
 VOID
 NTAPI
@@ -1647,7 +1588,8 @@ NTAPI
 MmNotPresentFaultSectionView(
     PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
-    PVOID Address
+    PVOID Address,
+    BOOLEAN Locked
 );
 
 NTSTATUS
@@ -1656,7 +1598,7 @@ MmPageOutSectionView(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    struct _MM_PAGEOP *PageOp
+    ULONG_PTR Entry
 );
 
 NTSTATUS
@@ -1770,13 +1712,17 @@ VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 0);
+    //Thread->OwnsProcessAddressSpaceExclusive = TRUE;
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
+    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 1);
     KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
+    //Thread->OwnsProcessAddressSpaceExclusive = 0;
 }
 
 FORCEINLINE

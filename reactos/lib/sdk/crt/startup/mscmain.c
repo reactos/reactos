@@ -7,20 +7,24 @@
 #include <windows.h>
 #include <stdlib.h>
 
-int __mingw_init_ehandler (void)
+void _pei386_runtime_relocator(void)
+{
+}
+
+int __mingw_init_ehandler(void)
 {
     /* Nothing to do */
     return 1;
 }
 
 void
-__do_global_dtors (void)
+__do_global_dtors(void)
 {
 
 }
 
 void
-__do_global_ctors (void)
+__do_global_ctors(void)
 {
 
 }
@@ -35,7 +39,7 @@ _CRT_INIT0(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 static int initialized = 0;
 
 void
-__main (void)
+__main(void)
 {
     if (!initialized)
     {

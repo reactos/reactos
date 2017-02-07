@@ -14,35 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-/* DR Registers in the CONTEXT structure */
-UCHAR KiDebugRegisterContextOffsets[9] =
-{
-    FIELD_OFFSET(CONTEXT, Dr0),
-    FIELD_OFFSET(CONTEXT, Dr1),
-    FIELD_OFFSET(CONTEXT, Dr2),
-    FIELD_OFFSET(CONTEXT, Dr3),
-    0,
-    0,
-    FIELD_OFFSET(CONTEXT, Dr6),
-    FIELD_OFFSET(CONTEXT, Dr7),
-    0,
-};
-
-/* DR Registers in the KTRAP_FRAME structure */
-UCHAR KiDebugRegisterTrapOffsets[9] =
-{
-    FIELD_OFFSET(KTRAP_FRAME, Dr0),
-    FIELD_OFFSET(KTRAP_FRAME, Dr1),
-    FIELD_OFFSET(KTRAP_FRAME, Dr2),
-    FIELD_OFFSET(KTRAP_FRAME, Dr3),
-    0,
-    0,
-    FIELD_OFFSET(KTRAP_FRAME, Dr6),
-    FIELD_OFFSET(KTRAP_FRAME, Dr7),
-    0,
-};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -153,8 +124,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
         if (Mask != NewMask)
         {
             /* Update it */
-            KeGetCurrentThread()->Header.DebugActive =
-                (BOOLEAN)NewMask;
+            KeGetCurrentThread()->Header.DebugActive = (UCHAR)NewMask;
         }
     }
 
@@ -312,11 +282,11 @@ Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     ULONG_PTR Stack;
     ULONG EFlags;
-    
+
     /* Get the current thread's stack */
     Thread = KeGetCurrentThread();
     Stack = (ULONG_PTR)Thread->InitialStack;
-    
+
     /* Check if we are in V8086 mode */
     if (!(TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
@@ -324,17 +294,17 @@ Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame)
         Stack -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) -
                   FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
     }
-    
+
     /* Bias the stack for the FPU area */
     Stack -= sizeof(FX_SAVE_AREA);
-    
+
     /* Disable interrupts */
     EFlags = __readeflags();
     _disable();
-    
+
     /* Set new ESP0 value in the TSS */
     KeGetPcr()->TSS->Esp0 = Stack;
-    
+
     /* Restore old interrupt state */
     __writeeflags(EFlags);
 }
@@ -352,7 +322,6 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     BOOLEAN V86Switch = FALSE;
     KIRQL OldIrql;
     ULONG DrMask = 0;
-    PVOID SafeDr;
 
     /* Do this at APC_LEVEL */
     OldIrql = KeGetCurrentIrql();
@@ -584,26 +553,35 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle the Debug Registers */
-    if (0 && (ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    if ((ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
-        /* Loop DR registers */
-        for (i = 0; i < 4; i++)
+        /* Copy Dr0 - Dr4 */
+        TrapFrame->Dr0 = Context->Dr0;
+        TrapFrame->Dr1 = Context->Dr1;
+        TrapFrame->Dr2 = Context->Dr2;
+        TrapFrame->Dr3 = Context->Dr3;
+
+        /* If we're in user-mode */
+        if (PreviousMode != KernelMode)
         {
-            /* Sanitize the context DR Address */
-            SafeDr = Ke386SanitizeDr(KiDrFromContext(i, Context), PreviousMode);
-
-            /* Save it in the trap frame */
-            *KiDrFromTrapFrame(i, TrapFrame) = SafeDr;
-
-            /* Check if this DR address is active and add it in the DR mask */
-            if (SafeDr) DrMask |= DR_MASK(i);
+            /* Make sure, no Dr address is above user space */
+            if (Context->Dr0 > (ULONG)MmHighestUserAddress) TrapFrame->Dr0 = 0;
+            if (Context->Dr1 > (ULONG)MmHighestUserAddress) TrapFrame->Dr1 = 0;
+            if (Context->Dr2 > (ULONG)MmHighestUserAddress) TrapFrame->Dr2 = 0;
+            if (Context->Dr3 > (ULONG)MmHighestUserAddress) TrapFrame->Dr3 = 0;
         }
 
-        /* Now save and sanitize DR6 */
+        /* Now sanitize and save DR6 */
         TrapFrame->Dr6 = Context->Dr6 & DR6_LEGAL;
+
+        /* Update the Dr active mask */
+        if (TrapFrame->Dr0) DrMask |= DR_MASK(0);
+        if (TrapFrame->Dr1) DrMask |= DR_MASK(1);
+        if (TrapFrame->Dr2) DrMask |= DR_MASK(2);
+        if (TrapFrame->Dr3) DrMask |= DR_MASK(3);
         if (TrapFrame->Dr6) DrMask |= DR_MASK(6);
 
-        /* Save and sanitize DR7 */
+        /* Sanitize and save DR7 */
         TrapFrame->Dr7 = Context->Dr7 & DR7_LEGAL;
         KiRecordDr7(&TrapFrame->Dr7, &DrMask);
 
@@ -611,7 +589,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
         if (PreviousMode != KernelMode)
         {
             /* Save the mask */
-            KeGetCurrentThread()->Header.DebugActive = (DrMask != 0);
+            KeGetCurrentThread()->Header.DebugActive = (UCHAR)DrMask;
         }
     }
 
@@ -962,7 +940,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* User mode exception, was it first-chance? */
         if (FirstChance)
         {
-            /* 
+            /*
              * Break into the kernel debugger unless a user mode debugger
              * is present or user mode exceptions are ignored, except if this
              * is a debug service which we must always pass to KD
@@ -1132,7 +1110,7 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
         ExceptionRecord.ExceptionInformation[1] = Parameter2;
         ExceptionRecord.ExceptionInformation[2] = Parameter3;
     }
-    
+
     /* Now go dispatch the exception */
     KiDispatchException(&ExceptionRecord,
                         NULL,

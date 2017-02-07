@@ -16,6 +16,9 @@ int     inode_ratio = 4096;
 
 BOOLEAN bLocked = FALSE;
 
+/* This is needed for the ext2fs driver to mount the volume */
+#define ZAP_BOOTBLOCK
+
 /* FUNCTIONS *************************************************************/
 
 int int_log2(int arg)
@@ -197,8 +200,6 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
                 sect, sect + nsect - 1);
         return false;
     }
-
-    memset(buf, 0, (ULONG)nsect * SECTOR_SIZE);
     
 #define BSD_DISKMAGIC   (0x82564557UL)  /* The disk magic number */
 #define BSD_MAGICDISK   (0x57455682UL)  /* The disk magic number reversed */
@@ -216,6 +217,8 @@ bool zap_sector(PEXT2_FILESYS Ext2Sys, int sect, int nsect)
         if ((*magic == BSD_DISKMAGIC) ||   (*magic == BSD_MAGICDISK))
                 goto clean_up;
     }
+
+    memset(buf, 0, (ULONG)nsect * SECTOR_SIZE);
 
     // Write buf to disk
     Ext2WriteDisk( Ext2Sys,
@@ -928,6 +931,7 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
     blocks = Ext2Sb.s_blocks_count;
 
 #ifdef ZAP_BOOTBLOCK
+    DPRINT1("Mke2fs: zeroing volume boot record\n");
     zap_sector(&FileSys, 0, 2);
 #endif
 

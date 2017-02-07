@@ -45,10 +45,38 @@ Bus_PlugInDevice (
     for (entry = FdoData->ListOfPDOs.Flink;
         entry != &FdoData->ListOfPDOs; entry = entry->Flink)
     {
-            pdoData = CONTAINING_RECORD (entry, PDO_DEVICE_DATA, Link);
-            //dont duplicate devices
-            if(pdoData->AcpiHandle == Device->handle)
+        struct acpi_device *CurrentDevice;
+
+        pdoData = CONTAINING_RECORD (entry, PDO_DEVICE_DATA, Link);
+
+        //dont duplicate devices
+        if (pdoData->AcpiHandle == Device->handle)
+            return STATUS_SUCCESS;
+
+        //check everything but fixed feature devices
+        if (pdoData->AcpiHandle)
+            acpi_bus_get_device(pdoData->AcpiHandle, &CurrentDevice);
+        else
+            continue;
+
+        //check if the HID matches
+        if (!strcmp(Device->pnp.hardware_id, CurrentDevice->pnp.hardware_id))
+        {
+            //check if UID exists for both and matches
+            if (Device->flags.unique_id && CurrentDevice->flags.unique_id &&
+                !strcmp(Device->pnp.unique_id, CurrentDevice->pnp.unique_id))
+            {
+                /* We have a UID on both but they're the same so we have to ignore it */
+                DPRINT1("Detected duplicate device: %hs %hs\n", Device->pnp.hardware_id, Device->pnp.unique_id);
                 return STATUS_SUCCESS;
+            }
+            else if (!Device->flags.unique_id && !CurrentDevice->flags.unique_id)
+            {
+                /* No UID so we can only legally have 1 of these devices */
+                DPRINT1("Detected duplicate device: %hs\n", Device->pnp.hardware_id);
+                return STATUS_SUCCESS;
+            }
+        }
     }
 
     DPRINT("Exposing PDO\n"

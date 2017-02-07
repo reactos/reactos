@@ -75,6 +75,53 @@ AppendSystemPostfix(LPWSTR lpName,
 }
 
 
+static
+BOOL
+AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
+{
+    BOOL bRet = FALSE;
+    HANDLE Token;
+    TOKEN_PRIVILEGES TokenPriv;
+
+    DPRINT("AcquireRemoveRestorePrivilege(%d)\n", bAcquire);
+
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &Token))
+    {
+        TokenPriv.PrivilegeCount = 1;
+        TokenPriv.Privileges[0].Attributes = (bAcquire ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &TokenPriv.Privileges[0].Luid))
+        {
+            bRet = AdjustTokenPrivileges(Token, FALSE, &TokenPriv, 0, NULL, NULL);
+
+            if (!bRet)
+            {
+                DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
+            }
+            else if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+            {
+                DPRINT1("AdjustTokenPrivileges() succeeded, but with not all privileges assigned\n");
+                bRet = FALSE;
+            }
+        }
+        else
+        {
+            DPRINT1("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
+        }
+
+        CloseHandle(Token);
+    }
+    else
+    {
+        DPRINT1("OpenProcessToken() failed with error %lu\n", GetLastError());
+    }
+
+    return bRet;
+}
+
+
 BOOL
 WINAPI
 CreateUserProfileA(PSID Sid,
@@ -82,13 +129,11 @@ CreateUserProfileA(PSID Sid,
 {
     UNICODE_STRING UserName;
     BOOL bResult;
-    NTSTATUS Status;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&UserName,
-                                              (LPSTR)lpUserName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&UserName,
+                                          (LPSTR)lpUserName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -97,67 +142,6 @@ CreateUserProfileA(PSID Sid,
     RtlFreeUnicodeString(&UserName);
 
     return bResult;
-}
-
-
-static
-BOOL
-AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
-{
-    HANDLE Process;
-    HANDLE Token;
-    PTOKEN_PRIVILEGES TokenPriv;
-    BOOL bRet;
-
-    DPRINT("AcquireRemoveRestorePrivilege(%d)\n", bAcquire);
-
-    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
-    if (!Process)
-    {
-        DPRINT1("OpenProcess() failed with error %lu\n", GetLastError());
-        return FALSE;
-    }
-    bRet = OpenProcessToken(Process, TOKEN_ADJUST_PRIVILEGES, &Token);
-    CloseHandle(Process);
-    if (!bRet)
-    {
-        DPRINT1("OpenProcessToken() failed with error %lu\n", GetLastError());
-        return FALSE;
-    }
-    TokenPriv = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges) + sizeof(LUID_AND_ATTRIBUTES));
-    if (!TokenPriv)
-    {
-        DPRINT1("Failed to allocate mem for token privileges\n");
-        CloseHandle(Token);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-    TokenPriv->PrivilegeCount = 1;
-    TokenPriv->Privileges[0].Attributes = bAcquire ? SE_PRIVILEGE_ENABLED : 0;
-    if (!LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &TokenPriv->Privileges[0].Luid))
-    {
-        DPRINT1("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, TokenPriv);
-        CloseHandle(Token);
-        return FALSE;
-    }
-    bRet = AdjustTokenPrivileges(
-        Token,
-        FALSE,
-        TokenPriv,
-        0,
-        NULL,
-        NULL);
-    HeapFree(GetProcessHeap(), 0, TokenPriv);
-    CloseHandle(Token);
-
-    if (!bRet)
-    {
-        DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 
@@ -177,6 +161,7 @@ CreateUserProfileW(PSID Sid,
     DWORD dwDisposition;
     UINT i;
     HKEY hKey;
+    BOOL bRet = TRUE;
     LONG Error;
 
     DPRINT("CreateUserProfileW() called\n");
@@ -317,9 +302,8 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Create non-expanded user profile path */
@@ -337,10 +321,9 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
         RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Set 'Sid' value */
@@ -353,13 +336,12 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
         RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
-    RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
     /* Create user hive name */
     wcscpy(szBuffer, szUserProfilePath);
@@ -368,9 +350,10 @@ CreateUserProfileW(PSID Sid,
     /* Acquire restore privilege */
     if (!AcquireRemoveRestorePrivilege(TRUE))
     {
+        Error = GetLastError();
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Create new user hive */
@@ -381,26 +364,58 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Initialize user hive */
     if (!CreateUserHive(SidString, szUserProfilePath))
     {
-        DPRINT1("Error: %lu\n", GetLastError());
-        LocalFree((HLOCAL)SidString);
-        return FALSE;
+        Error = GetLastError();
+        DPRINT1("Error: %lu\n", Error);
+        bRet = FALSE;
     }
 
+    /* Unload the hive */
+    AcquireRemoveRestorePrivilege(TRUE);
     RegUnLoadKeyW(HKEY_USERS, SidString);
+    AcquireRemoveRestorePrivilege(FALSE);
 
+Done:
     LocalFree((HLOCAL)SidString);
+    SetLastError((DWORD)Error);
 
     DPRINT("CreateUserProfileW() done\n");
 
-    return TRUE;
+    return bRet;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExA(IN PSID pSid,
+                     IN LPCSTR lpUserName,
+                     IN LPCSTR lpUserHive OPTIONAL,
+                     OUT LPSTR lpProfileDir OPTIONAL,
+                     IN DWORD dwDirSize,
+                     IN BOOL bWin9xUpg)
+{
+    DPRINT1("CreateUserProfileExA() not implemented!\n");
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExW(IN PSID pSid,
+                     IN LPCWSTR lpUserName,
+                     IN LPCWSTR lpUserHive OPTIONAL,
+                     OUT LPWSTR lpProfileDir OPTIONAL,
+                     IN DWORD dwDirSize,
+                     IN BOOL bWin9xUpg)
+{
+    DPRINT1("CreateUserProfileExW() not implemented!\n");
+    return FALSE;
 }
 
 
@@ -913,11 +928,111 @@ CheckForLoadedProfile(HANDLE hToken)
 
 BOOL
 WINAPI
-LoadUserProfileA(HANDLE hToken,
-                 LPPROFILEINFOA lpProfileInfo)
+LoadUserProfileA(IN HANDLE hToken,
+                 IN OUT LPPROFILEINFOA lpProfileInfo)
 {
-    DPRINT ("LoadUserProfileA() not implemented\n");
-    return FALSE;
+    BOOL bResult = FALSE;
+    PROFILEINFOW ProfileInfoW = {0};
+    int len;
+
+    DPRINT("LoadUserProfileA() called\n");
+
+    /* Check profile info */
+    if (!lpProfileInfo || (lpProfileInfo->dwSize != sizeof(PROFILEINFOA)) ||
+        (lpProfileInfo->lpUserName == NULL) || (lpProfileInfo->lpUserName[0] == 0))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Convert the structure to UNICODE... */
+    ProfileInfoW.dwSize = sizeof(PROFILEINFOW);
+    ProfileInfoW.dwFlags = lpProfileInfo->dwFlags;
+
+    if (lpProfileInfo->lpUserName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpUserName, -1, NULL, 0);
+        ProfileInfoW.lpUserName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpUserName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpUserName, -1, ProfileInfoW.lpUserName, len);
+    }
+
+    if (lpProfileInfo->lpProfilePath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpProfilePath, -1, NULL, 0);
+        ProfileInfoW.lpProfilePath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpProfilePath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpProfilePath, -1, ProfileInfoW.lpProfilePath, len);
+    }
+
+    if (lpProfileInfo->lpDefaultPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpDefaultPath, -1, NULL, 0);
+        ProfileInfoW.lpDefaultPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpDefaultPath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpDefaultPath, -1, ProfileInfoW.lpDefaultPath, len);
+    }
+
+    if (lpProfileInfo->lpServerName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpServerName, -1, NULL, 0);
+        ProfileInfoW.lpServerName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpServerName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpServerName, -1, ProfileInfoW.lpServerName, len);
+    }
+
+    if ((ProfileInfoW.dwFlags & PI_APPLYPOLICY) != 0 && lpProfileInfo->lpPolicyPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpPolicyPath, -1, NULL, 0);
+        ProfileInfoW.lpPolicyPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpPolicyPath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpPolicyPath, -1, ProfileInfoW.lpPolicyPath, len);
+    }
+
+    /* ... and call the UNICODE function */
+    bResult = LoadUserProfileW(hToken, &ProfileInfoW);
+
+    /* Save the returned value */
+    lpProfileInfo->hProfile = ProfileInfoW.hProfile;
+
+cleanup:
+    /* Memory cleanup */
+    if (ProfileInfoW.lpUserName)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpUserName);
+
+    if (ProfileInfoW.lpProfilePath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpProfilePath);
+
+    if (ProfileInfoW.lpDefaultPath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpDefaultPath);
+
+    if (ProfileInfoW.lpServerName)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpServerName);
+
+    if ((ProfileInfoW.dwFlags & PI_APPLYPOLICY) != 0 && ProfileInfoW.lpPolicyPath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpPolicyPath);
+
+    return bResult;
 }
 
 
@@ -943,7 +1058,7 @@ LoadUserProfileW(IN HANDLE hToken,
         (lpProfileInfo->lpUserName == NULL) || (lpProfileInfo->lpUserName[0] == 0))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return TRUE;
+        return FALSE;
     }
 
     /* Don't load a profile twice */
@@ -1116,7 +1231,7 @@ UnloadUserProfile(HANDLE hToken,
 
     if (hProfile == NULL)
     {
-        DPRINT1("Invalide profile handle\n");
+        DPRINT1("Invalid profile handle\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -1162,15 +1277,17 @@ UnloadUserProfile(HANDLE hToken,
     return TRUE;
 }
 
+
 BOOL
 WINAPI
 DeleteProfileW(LPCWSTR lpSidString,
                LPCWSTR lpProfilePath,
                LPCWSTR lpComputerName)
 {
-   DPRINT1("DeleteProfileW() not implemented!\n");
-   return FALSE;
+    DPRINT1("DeleteProfileW() not implemented!\n");
+    return FALSE;
 }
+
 
 BOOL
 WINAPI
@@ -1178,8 +1295,49 @@ DeleteProfileA(LPCSTR lpSidString,
                LPCSTR lpProfilePath,
                LPCSTR lpComputerName)
 {
-   DPRINT1("DeleteProfileA() not implemented!\n");
-   return FALSE;
+    BOOL bResult;
+    UNICODE_STRING SidString, ProfilePath, ComputerName;
+
+    DPRINT("DeleteProfileA() called\n");
+
+    /* Conversion to UNICODE */
+    if (lpSidString)
+        RtlCreateUnicodeStringFromAsciiz(&SidString,
+                                         (LPSTR)lpSidString);
+
+    if (lpProfilePath)
+        RtlCreateUnicodeStringFromAsciiz(&ProfilePath,
+                                         (LPSTR)lpProfilePath);
+
+    if (lpComputerName)
+        RtlCreateUnicodeStringFromAsciiz(&ComputerName,
+                                         (LPSTR)lpComputerName);
+
+    /* Call the UNICODE function */
+    bResult = DeleteProfileW(SidString.Buffer,
+                             ProfilePath.Buffer,
+                             ComputerName.Buffer);
+
+    /* Memory cleanup */
+    if (lpSidString)
+        RtlFreeUnicodeString(&SidString);
+
+    if (lpProfilePath)
+        RtlFreeUnicodeString(&ProfilePath);
+
+    if (lpComputerName)
+        RtlFreeUnicodeString(&ComputerName);
+
+    return bResult;
+}
+
+
+BOOL
+WINAPI
+GetProfileType(OUT PDWORD pdwFlags)
+{
+    DPRINT1("GetProfileType() not implemented!\n");
+    return FALSE;
 }
 
 /* EOF */

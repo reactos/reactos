@@ -64,21 +64,27 @@ MmGetDeviceObjectForFile(IN PFILE_OBJECT FileObject)
     return IoGetRelatedDeviceObject(FileObject);
 }
 
+/*
+
+Note:
+This completion function is really required. Paging io completion does almost
+nothing, including freeing the mdls.
+
+*/
 NTSTATUS
 NTAPI
-MiSimpleReadComplete
-(PDEVICE_OBJECT DeviceObject,
- PIRP Irp,
- PVOID Context)
+MiSimpleReadComplete(PDEVICE_OBJECT DeviceObject,
+                     PIRP Irp,
+                     PVOID Context)
 {
     PMDL Mdl = Irp->MdlAddress;
 
-   /* Unlock MDL Pages, page 167. */
-	DPRINT("MiSimpleReadComplete %x\n", Irp);
+    /* Unlock MDL Pages, page 167. */
+    DPRINT("MiSimpleReadComplete %p\n", Irp);
     while (Mdl)
     {
-		DPRINT("MDL Unlock %x\n", Mdl);
-		MmUnlockPages(Mdl);
+        DPRINT("MDL Unlock %p\n", Mdl);
+        MmUnlockPages(Mdl);
         Mdl = Mdl->Next;
     }
 
@@ -93,17 +99,23 @@ MiSimpleReadComplete
     return STATUS_SUCCESS;
 }
 
+/*
+
+MiSimpleRead is a convenience function that provides either paging or non
+paging reads.  The caching and mm systems use this in paging mode, where
+a completion function is required as above.  The Paging BOOLEAN determines
+whether the read is issued as a paging read or as an ordinary buffered read.
+
+*/
+
 NTSTATUS
 NTAPI
-MiSimpleRead
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PVOID Buffer,
- ULONG Length,
-#ifdef __ROS_DWARF__
- BOOLEAN Paging,
-#endif
- PIO_STATUS_BLOCK ReadStatus)
+MiSimpleRead(PFILE_OBJECT FileObject,
+             PLARGE_INTEGER FileOffset,
+             PVOID Buffer,
+             ULONG Length,
+             BOOLEAN Paging,
+             PIO_STATUS_BLOCK ReadStatus)
 {
     NTSTATUS Status;
     PIRP Irp = NULL;
@@ -117,87 +129,83 @@ MiSimpleRead
     ASSERT(ReadStatus);
 
     DeviceObject = MmGetDeviceObjectForFile(FileObject);
-	ReadStatus->Status = STATUS_INTERNAL_ERROR;
-	ReadStatus->Information = 0;
+    ReadStatus->Status = STATUS_INTERNAL_ERROR;
+    ReadStatus->Information = 0;
 
     ASSERT(DeviceObject);
 
-    DPRINT
-		("PAGING READ: FileObject %x <%wZ> Offset %08x%08x Length %d\n",
-		 &FileObject,
-		 &FileObject->FileName,
-		 FileOffset->HighPart,
-		 FileOffset->LowPart,
-		 Length);
+    DPRINT("PAGING READ: FileObject %p <%wZ> Offset %08x%08x Length %d\n",
+           FileObject,
+           &FileObject->FileName,
+           FileOffset->HighPart,
+           FileOffset->LowPart,
+           Length);
 
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
 
-    Irp = IoBuildAsynchronousFsdRequest
-		(IRP_MJ_READ,
-		 DeviceObject,
-		 Buffer,
-		 Length,
-		 FileOffset,
-		 ReadStatus);
+    Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_READ,
+                                        DeviceObject,
+                                        Buffer,
+                                        Length,
+                                        FileOffset,
+                                        ReadStatus);
 
     if (!Irp)
     {
-		return STATUS_NO_MEMORY;
+        return STATUS_NO_MEMORY;
     }
 
-#ifndef __ROS_DWARF__
-    Irp->Flags |= IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
-#else
     Irp->Flags |= (Paging ? IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE : 0) | IRP_SYNCHRONOUS_API;
-#endif
 
     Irp->UserEvent = &ReadWait;
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
-	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
+    IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
 
-#ifdef __ROS_DWARF__
-    ObReferenceObject(FileObject);
-#endif
+    /* Non paging case, the FileObject will be dereferenced at completion */
+    if (!Paging)
+        ObReferenceObject(FileObject);
 
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
-		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
-		if (!NT_SUCCESS
-			(KeWaitForSingleObject
-			 (&ReadWait,
-			  Suspended,
-			  KernelMode,
-			  FALSE,
-			  NULL)))
-		{
-			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-			ASSERT(FALSE);
-			return Status;
-		}
+        DPRINT("KeWaitForSingleObject(&ReadWait)\n");
+        if (!NT_SUCCESS(KeWaitForSingleObject(&ReadWait,
+                                              Suspended,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL)))
+        {
+            DPRINT1("Warning: Failed to wait for synchronous IRP\n");
+            ASSERT(FALSE);
+            return Status;
+        }
     }
 
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
-	Status =
-		ReadStatus->Status == STATUS_END_OF_FILE ?
-		STATUS_SUCCESS : ReadStatus->Status;
+    Status = ReadStatus->Status == STATUS_END_OF_FILE ? STATUS_SUCCESS : ReadStatus->Status;
     return Status;
 }
 
+/*
+
+Convenience function for writing from kernel space.  This issues a paging
+write in all cases.
+
+*/
+
 NTSTATUS
 NTAPI
-_MiSimpleWrite
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PVOID Buffer,
- ULONG Length,
- PIO_STATUS_BLOCK ReadStatus,
- const char *File,
- int Line)
+_MiSimpleWrite(PFILE_OBJECT FileObject,
+               PLARGE_INTEGER FileOffset,
+               PVOID Buffer,
+               ULONG Length,
+               PIO_STATUS_BLOCK ReadStatus,
+               const char *File,
+               int Line)
 {
     NTSTATUS Status;
     PIRP Irp = NULL;
@@ -210,32 +218,29 @@ _MiSimpleWrite
     ASSERT(Buffer);
     ASSERT(ReadStatus);
 
-    ObReferenceObject(FileObject);
-	DeviceObject = MmGetDeviceObjectForFile(FileObject);
+    DeviceObject = MmGetDeviceObjectForFile(FileObject);
     ASSERT(DeviceObject);
 
-    DPRINT
-		("PAGING WRITE: FileObject %x Offset %x Length %d (%s:%d)\n",
-		 &FileObject,
-		 FileOffset->LowPart,
-		 Length,
-		 File,
-		 Line);
+    DPRINT("PAGING WRITE: FileObject %x <%wZ> Offset %x Length %d (%s:%d)\n",
+           FileObject,
+           &FileObject->FileName,
+           FileOffset->LowPart,
+           Length,
+           File,
+           Line);
 
     KeInitializeEvent(&ReadWait, NotificationEvent, FALSE);
 
-    Irp = IoBuildAsynchronousFsdRequest
-		(IRP_MJ_WRITE,
-		 DeviceObject,
-		 Buffer,
-		 Length,
-		 FileOffset,
-		 ReadStatus);
+    Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_WRITE,
+                                        DeviceObject,
+                                        Buffer,
+                                        Length,
+                                        FileOffset,
+                                        ReadStatus);
 
     if (!Irp)
     {
-		ObDereferenceObject(FileObject);
-		return STATUS_NO_MEMORY;
+        return STATUS_NO_MEMORY;
     }
 
     Irp->Flags = IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO | IRP_NOCACHE | IRP_SYNCHRONOUS_API;
@@ -244,31 +249,27 @@ _MiSimpleWrite
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     IrpSp = IoGetNextIrpStackLocation(Irp);
-	IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
+    IrpSp->Control |= SL_INVOKE_ON_SUCCESS | SL_INVOKE_ON_ERROR;
     IrpSp->FileObject = FileObject;
     IrpSp->CompletionRoutine = MiSimpleReadComplete;
 
-	DPRINT("Call Driver\n");
+    DPRINT("Call Driver\n");
     Status = IoCallDriver(DeviceObject, Irp);
-	DPRINT("Status %x\n", Status);
-
-	ObDereferenceObject(FileObject);
+    DPRINT("Status %x\n", Status);
 
     if (Status == STATUS_PENDING)
     {
-		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
-		if (!NT_SUCCESS
-			(KeWaitForSingleObject
-			 (&ReadWait,
-			  Suspended,
-			  KernelMode,
-			  FALSE,
-			  NULL)))
-		{
-			DPRINT1("Warning: Failed to wait for synchronous IRP\n");
-			ASSERT(FALSE);
-			return Status;
-		}
+        DPRINT("KeWaitForSingleObject(&ReadWait)\n");
+        if (!NT_SUCCESS(KeWaitForSingleObject(&ReadWait,
+                                              Suspended,
+                                              KernelMode,
+                                              FALSE,
+                                              NULL)))
+        {
+            DPRINT1("Warning: Failed to wait for synchronous IRP\n");
+            ASSERT(FALSE);
+            return Status;
+        }
     }
 
     DPRINT("Paging IO Done: %08x\n", ReadStatus->Status);
@@ -278,44 +279,60 @@ _MiSimpleWrite
 extern KEVENT MpwThreadEvent;
 FAST_MUTEX MiWriteMutex;
 
+/*
+
+Function which uses MiSimpleWrite to write back a single page to a file.
+The page in question does not need to be mapped.  This function could be
+made a bit more efficient by avoiding the copy and making a system space
+mdl.
+
+*/
+
 NTSTATUS
 NTAPI
-_MiWriteBackPage
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- ULONG Length,
- PFN_NUMBER Page,
- const char *File,
- int Line)
+_MiWriteBackPage(PFILE_OBJECT FileObject,
+                 PLARGE_INTEGER FileOffset,
+                 ULONG Length,
+                 PFN_NUMBER Page,
+                 const char *File,
+                 int Line)
 {
-	NTSTATUS Status;
-	PVOID Hyperspace;
-	IO_STATUS_BLOCK Iosb;
-	KIRQL OldIrql;
-	PVOID PageBuffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
+    NTSTATUS Status;
+    PVOID Hyperspace;
+    IO_STATUS_BLOCK Iosb;
+    KIRQL OldIrql;
+    PVOID PageBuffer = ExAllocatePool(NonPagedPool, PAGE_SIZE);
 
-	if (!PageBuffer) return STATUS_NO_MEMORY;
+    if (!PageBuffer) return STATUS_NO_MEMORY;
 
-	KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-	Hyperspace = MmCreateHyperspaceMapping(Page);
-	RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
-	MmDeleteHyperspaceMapping(Hyperspace);
-	KeLowerIrql(OldIrql);
+    Hyperspace = MiMapPageInHyperSpace(PsGetCurrentProcess(), Page, &OldIrql);
+    if (!Hyperspace)
+    {
+        ExFreePool(PageBuffer);
+        return STATUS_NO_MEMORY;
+    }
+    RtlCopyMemory(PageBuffer, Hyperspace, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(PsGetCurrentProcess(), Hyperspace, OldIrql);
 
-	DPRINT1("MiWriteBackPage(%wZ,%08x%08x,%s:%d)\n", &FileObject->FileName, FileOffset->u.HighPart, FileOffset->u.LowPart, File, Line);
-	Status = MiSimpleWrite
-		(FileObject,
-		 FileOffset,
-		 PageBuffer,
-		 Length,
-		 &Iosb);
+    DPRINT("MiWriteBackPage(%wZ,%08x%08x,%s:%d)\n",
+           &FileObject->FileName,
+           FileOffset->u.HighPart,
+           FileOffset->u.LowPart,
+           File,
+           Line);
 
-	ExFreePool(PageBuffer);
+    Status = MiSimpleWrite(FileObject,
+                           FileOffset,
+                           PageBuffer,
+                           Length,
+                           &Iosb);
 
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("MiSimpleWrite failed (%x)\n", Status);
-	}
+    ExFreePool(PageBuffer);
 
-	return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiSimpleWrite failed (%x)\n", Status);
+    }
+
+    return Status;
 }

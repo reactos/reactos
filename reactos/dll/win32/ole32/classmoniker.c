@@ -43,16 +43,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /* ClassMoniker data structure */
 typedef struct ClassMoniker
 {
-    const IMonikerVtbl*  lpVtbl;  /* VTable relative to the IMoniker interface.*/
-    const IROTDataVtbl*  lpVtblRotData;  /* VTable relative to the IROTData interface.*/
-    LONG ref; /* reference counter for this object */
+    IMoniker IMoniker_iface;
+    IROTData IROTData_iface;
+    LONG ref;
     CLSID clsid; /* clsid identified by this moniker */
     IUnknown *pMarshal; /* custom marshaler */
 } ClassMoniker;
 
-static inline IMoniker *impl_from_IROTData( IROTData *iface )
+static inline ClassMoniker *impl_from_IMoniker(IMoniker *iface)
 {
-    return (IMoniker *)((char*)iface - FIELD_OFFSET(ClassMoniker, lpVtblRotData));
+    return CONTAINING_RECORD(iface, ClassMoniker, IMoniker_iface);
+}
+
+static inline ClassMoniker *impl_from_IROTData(IROTData *iface)
+{
+    return CONTAINING_RECORD(iface, ClassMoniker, IROTData_iface);
 }
 
 /*******************************************************************************
@@ -60,7 +65,7 @@ static inline IMoniker *impl_from_IROTData( IROTData *iface )
  *******************************************************************************/
 static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -80,7 +85,7 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
         *ppvObject = iface;
     }
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = &This->lpVtblRotData;
+        *ppvObject = &This->IROTData_iface;
     else if (IsEqualIID(&IID_IMarshal, riid))
     {
         HRESULT hr = S_OK;
@@ -106,7 +111,7 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
  ******************************************************************************/
 static ULONG WINAPI ClassMoniker_AddRef(IMoniker* iface)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -132,7 +137,7 @@ static HRESULT ClassMoniker_Destroy(ClassMoniker* This)
  ******************************************************************************/
 static ULONG WINAPI ClassMoniker_Release(IMoniker* iface)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -179,7 +184,7 @@ static HRESULT WINAPI ClassMoniker_IsDirty(IMoniker* iface)
  ******************************************************************************/
 static HRESULT WINAPI ClassMoniker_Load(IMoniker* iface,IStream* pStm)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
     HRESULT hr;
     DWORD zero;
 
@@ -197,11 +202,9 @@ static HRESULT WINAPI ClassMoniker_Load(IMoniker* iface,IStream* pStm)
 /******************************************************************************
  *        ClassMoniker_Save
  ******************************************************************************/
-static HRESULT WINAPI ClassMoniker_Save(IMoniker* iface,
-                                 IStream* pStm,/* pointer to the stream where the object is to be saved */
-                                 BOOL fClearDirty)/* Specifies whether to clear the dirty flag */
+static HRESULT WINAPI ClassMoniker_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
     HRESULT hr;
     DWORD zero = 0;
 
@@ -235,7 +238,7 @@ static HRESULT WINAPI ClassMoniker_BindToObject(IMoniker* iface,
                                             REFIID riid,
                                             VOID** ppvResult)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
     BIND_OPTS2 bindopts;
     IClassActivator *pActivator;
     HRESULT hr;
@@ -425,7 +428,7 @@ static HRESULT WINAPI ClassMoniker_IsEqual(IMoniker* iface,IMoniker* pmkOtherMon
  ******************************************************************************/
 static HRESULT WINAPI ClassMoniker_Hash(IMoniker* iface,DWORD* pdwHash)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)\n", pdwHash);
 
@@ -532,7 +535,7 @@ static HRESULT WINAPI ClassMoniker_GetDisplayName(IMoniker* iface,
                                               IMoniker* pmkToLeft,
                                               LPOLESTR *ppszDisplayName)
 {
-    ClassMoniker *This = (ClassMoniker *)iface;
+    ClassMoniker *This = impl_from_IMoniker(iface);
     static const WCHAR wszClsidPrefix[] = {'c','l','s','i','d',':',0};
 
     TRACE("(%p, %p, %p)\n", pbc, pmkToLeft, ppszDisplayName);
@@ -593,11 +596,11 @@ static HRESULT WINAPI ClassMoniker_IsSystemMoniker(IMoniker* iface,DWORD* pwdMks
 static HRESULT WINAPI ClassMonikerROTData_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObject)
 {
 
-    IMoniker *This = impl_from_IROTData(iface);
+    ClassMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
 
-    return ClassMoniker_QueryInterface(This, riid, ppvObject);
+    return ClassMoniker_QueryInterface(&This->IMoniker_iface, riid, ppvObject);
 }
 
 /***********************************************************************
@@ -605,11 +608,11 @@ static HRESULT WINAPI ClassMonikerROTData_QueryInterface(IROTData *iface,REFIID 
  */
 static ULONG WINAPI ClassMonikerROTData_AddRef(IROTData *iface)
 {
-    IMoniker *This = impl_from_IROTData(iface);
+    ClassMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
-    return ClassMoniker_AddRef(This);
+    return ClassMoniker_AddRef(&This->IMoniker_iface);
 }
 
 /***********************************************************************
@@ -617,11 +620,11 @@ static ULONG WINAPI ClassMonikerROTData_AddRef(IROTData *iface)
  */
 static ULONG WINAPI ClassMonikerROTData_Release(IROTData* iface)
 {
-    IMoniker *This = impl_from_IROTData(iface);
+    ClassMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
-    return ClassMoniker_Release(This);
+    return ClassMoniker_Release(&This->IMoniker_iface);
 }
 
 /******************************************************************************
@@ -632,7 +635,7 @@ static HRESULT WINAPI ClassMonikerROTData_GetComparisonData(IROTData* iface,
                                                          ULONG cbMax,
                                                          ULONG* pcbData)
 {
-    ClassMoniker *This = (ClassMoniker *)impl_from_IROTData(iface);
+    ClassMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p, %u, %p)\n", pbData, cbMax, pcbData);
 
@@ -696,8 +699,8 @@ static HRESULT ClassMoniker_Construct(ClassMoniker* This, REFCLSID rclsid)
     TRACE("(%p,%s)\n",This,debugstr_guid(rclsid));
 
     /* Initialize the virtual function table. */
-    This->lpVtbl        = &ClassMonikerVtbl;
-    This->lpVtblRotData = &ROTDataVtbl;
+    This->IMoniker_iface.lpVtbl = &ClassMonikerVtbl;
+    This->IROTData_iface.lpVtbl = &ROTDataVtbl;
     This->ref           = 0;
     This->clsid         = *rclsid;
     This->pMarshal      = NULL;
@@ -728,11 +731,12 @@ HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker **ppmk)
         return hr;
     }
 
-    return ClassMoniker_QueryInterface((IMoniker *)newClassMoniker, &IID_IMoniker, (void**)ppmk);
+    return ClassMoniker_QueryInterface(&newClassMoniker->IMoniker_iface, &IID_IMoniker,
+                                       (void**)ppmk);
 }
 
-HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
-                                           LPDWORD pchEaten, LPMONIKER *ppmk)
+HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName, LPDWORD pchEaten,
+                                           IMoniker **ppmk)
 {
     HRESULT hr;
     LPCWSTR s = strchrW(szDisplayName, ':');

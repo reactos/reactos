@@ -153,6 +153,7 @@ ObFindHandleForObject(
     OUT PHANDLE Handle
 );
 
+NTKERNELAPI
 VOID
 NTAPI
 ObDereferenceObjectDeferDelete(

@@ -47,82 +47,83 @@ typedef struct _RTL_RANGE_ENTRY
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
-	     IN ULONGLONG Start,
-	     IN ULONGLONG End,
-	     IN UCHAR Attributes,
-	     IN ULONG Flags,
-	     IN PVOID UserData OPTIONAL,
-	     IN PVOID Owner OPTIONAL)
+NTSTATUS
+NTAPI
+RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
+            IN ULONGLONG Start,
+            IN ULONGLONG End,
+            IN UCHAR Attributes,
+            IN ULONG Flags,
+            IN PVOID UserData OPTIONAL,
+            IN PVOID Owner OPTIONAL)
 {
-  PRTL_RANGE_ENTRY RangeEntry;
-  //PRTL_RANGE_ENTRY Previous;
-  PRTL_RANGE_ENTRY Current;
-  PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY RangeEntry;
+    //PRTL_RANGE_ENTRY Previous;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
 
-  if (Start > End)
-    return STATUS_INVALID_PARAMETER;
+    if (Start > End)
+        return STATUS_INVALID_PARAMETER;
 
-  /* Create new range entry */
-  RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
-  if (RangeEntry == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    /* Create new range entry */
+    RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
+    if (RangeEntry == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  /* Initialize range entry */
-  RangeEntry->Range.Start = Start;
-  RangeEntry->Range.End = End;
-  RangeEntry->Range.Attributes = Attributes;
-  RangeEntry->Range.UserData = UserData;
-  RangeEntry->Range.Owner = Owner;
+    /* Initialize range entry */
+    RangeEntry->Range.Start = Start;
+    RangeEntry->Range.End = End;
+    RangeEntry->Range.Attributes = Attributes;
+    RangeEntry->Range.UserData = UserData;
+    RangeEntry->Range.Owner = Owner;
 
-  RangeEntry->Range.Flags = 0;
-  if (Flags & RTL_RANGE_LIST_ADD_SHARED)
-    RangeEntry->Range.Flags |= RTL_RANGE_SHARED;
+    RangeEntry->Range.Flags = 0;
+    if (Flags & RTL_RANGE_LIST_ADD_SHARED)
+        RangeEntry->Range.Flags |= RTL_RANGE_SHARED;
 
-  /* Insert range entry */
-  if (RangeList->Count == 0)
+    /* Insert range entry */
+    if (RangeList->Count == 0)
     {
-      InsertTailList (&RangeList->ListHead,
-		      &RangeEntry->Entry);
-      RangeList->Count++;
-      RangeList->Stamp++;
-      return STATUS_SUCCESS;
+        InsertTailList(&RangeList->ListHead,
+                       &RangeEntry->Entry);
+        RangeList->Count++;
+        RangeList->Stamp++;
+        return STATUS_SUCCESS;
     }
-  else
+    else
     {
-      //Previous = NULL;
-      Entry = RangeList->ListHead.Flink;
-      while (Entry != &RangeList->ListHead)
-	{
-	  Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-	  if (Current->Range.Start > RangeEntry->Range.End)
-	    {
-	      /* Insert before current */
-	      DPRINT ("Insert before current\n");
-	      InsertTailList (&Current->Entry,
-			      &RangeEntry->Entry);
+         //Previous = NULL;
+        Entry = RangeList->ListHead.Flink;
+        while (Entry != &RangeList->ListHead)
+        {
+            Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+            if (Current->Range.Start > RangeEntry->Range.End)
+            {
+                /* Insert before current */
+                DPRINT("Insert before current\n");
+                InsertTailList(&Current->Entry,
+                               &RangeEntry->Entry);
 
-	      RangeList->Count++;
-	      RangeList->Stamp++;
-	      return STATUS_SUCCESS;
-	    }
+                RangeList->Count++;
+                RangeList->Stamp++;
+                return STATUS_SUCCESS;
+            }
 
-	  //Previous = Current;
-	  Entry = Entry->Flink;
-	}
+            //Previous = Current;
+            Entry = Entry->Flink;
+        }
 
-      DPRINT ("Insert tail\n");
-      InsertTailList (&RangeList->ListHead,
-		      &RangeEntry->Entry);
-      RangeList->Count++;
-      RangeList->Stamp++;
-      return STATUS_SUCCESS;
+        DPRINT("Insert tail\n");
+        InsertTailList(&RangeList->ListHead,
+                       &RangeEntry->Entry);
+        RangeList->Count++;
+        RangeList->Stamp++;
+        return STATUS_SUCCESS;
     }
 
-  RtlpFreeMemory(RangeEntry, 0);
+    RtlpFreeMemory(RangeEntry, 0);
 
-  return STATUS_UNSUCCESSFUL;
+    return STATUS_UNSUCCESSFUL;
 }
 
 
@@ -142,40 +143,41 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
-		  IN PRTL_RANGE_LIST RangeList)
+NTSTATUS
+NTAPI
+RtlCopyRangeList(OUT PRTL_RANGE_LIST CopyRangeList,
+                 IN PRTL_RANGE_LIST RangeList)
 {
-  PRTL_RANGE_ENTRY Current;
-  PRTL_RANGE_ENTRY NewEntry;
-  PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY Current;
+    PRTL_RANGE_ENTRY NewEntry;
+    PLIST_ENTRY Entry;
 
-  CopyRangeList->Flags = RangeList->Flags;
+    CopyRangeList->Flags = RangeList->Flags;
 
-  Entry = RangeList->ListHead.Flink;
-  while (Entry != &RangeList->ListHead)
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
-      NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
-      if (NewEntry == NULL)
-	return STATUS_INSUFFICIENT_RESOURCES;
+        NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
+        if (NewEntry == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-      RtlCopyMemory (&NewEntry->Range,
-		     &Current->Range,
-		     sizeof(RTL_RANGE_ENTRY));
+        RtlCopyMemory(&NewEntry->Range,
+                      &Current->Range,
+                      sizeof(RTL_RANGE_ENTRY));
 
-      InsertTailList (&CopyRangeList->ListHead,
-		      &NewEntry->Entry);
+        InsertTailList(&CopyRangeList->ListHead,
+                       &NewEntry->Entry);
 
-      CopyRangeList->Count++;
+        CopyRangeList->Count++;
 
-      Entry = Entry->Flink;
+        Entry = Entry->Flink;
     }
 
-  CopyRangeList->Stamp++;
+    CopyRangeList->Stamp++;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -196,30 +198,31 @@ RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
-		       IN PVOID Owner)
+NTSTATUS
+NTAPI
+RtlDeleteOwnersRanges(IN OUT PRTL_RANGE_LIST RangeList,
+                      IN PVOID Owner)
 {
-  PRTL_RANGE_ENTRY Current;
-  PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
 
-  Entry = RangeList->ListHead.Flink;
-  while (Entry != &RangeList->ListHead)
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (Current->Range.Owner == Owner)
-	{
-	  RemoveEntryList (Entry);
-	  RtlpFreeMemory(Current, 0);
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+        if (Current->Range.Owner == Owner)
+        {
+            RemoveEntryList (Entry);
+            RtlpFreeMemory(Current, 0);
 
-	  RangeList->Count--;
-	  RangeList->Stamp++;
-	}
+            RangeList->Count--;
+            RangeList->Stamp++;
+        }
 
-      Entry = Entry->Flink;
+        Entry = Entry->Flink;
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -241,36 +244,37 @@ RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
-		IN ULONGLONG Start,
-		IN ULONGLONG End,
-		IN PVOID Owner)
+NTSTATUS
+NTAPI
+RtlDeleteRange(IN OUT PRTL_RANGE_LIST RangeList,
+               IN ULONGLONG Start,
+               IN ULONGLONG End,
+               IN PVOID Owner)
 {
-  PRTL_RANGE_ENTRY Current;
-  PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
 
-  Entry = RangeList->ListHead.Flink;
-  while (Entry != &RangeList->ListHead)
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (Current->Range.Start == Start &&
-	  Current->Range.End == End &&
-	  Current->Range.Owner == Owner)
-	{
-	  RemoveEntryList (Entry);
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+        if (Current->Range.Start == Start &&
+            Current->Range.End == End &&
+            Current->Range.Owner == Owner)
+        {
+            RemoveEntryList(Entry);
 
-	  RtlpFreeMemory(Current, 0);
+            RtlpFreeMemory(Current, 0);
 
-	  RangeList->Count--;
-	  RangeList->Stamp++;
-	  return STATUS_SUCCESS;
-	}
+            RangeList->Count--;
+            RangeList->Stamp++;
+            return STATUS_SUCCESS;
+        }
 
-      Entry = Entry->Flink;
+        Entry = Entry->Flink;
     }
 
-  return STATUS_RANGE_NOT_FOUND;
+    return STATUS_RANGE_NOT_FOUND;
 }
 
 
@@ -301,86 +305,87 @@ RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlFindRange (IN PRTL_RANGE_LIST RangeList,
-	      IN ULONGLONG Minimum,
-	      IN ULONGLONG Maximum,
-	      IN ULONG Length,
-	      IN ULONG Alignment,
-	      IN ULONG Flags,
-	      IN UCHAR AttributeAvailableMask,
-	      IN PVOID Context OPTIONAL,
-	      IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-	      OUT PULONGLONG Start)
+NTSTATUS
+NTAPI
+RtlFindRange(IN PRTL_RANGE_LIST RangeList,
+             IN ULONGLONG Minimum,
+             IN ULONGLONG Maximum,
+             IN ULONG Length,
+             IN ULONG Alignment,
+             IN ULONG Flags,
+             IN UCHAR AttributeAvailableMask,
+             IN PVOID Context OPTIONAL,
+             IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+             OUT PULONGLONG Start)
 {
-  PRTL_RANGE_ENTRY CurrentEntry;
-  PRTL_RANGE_ENTRY NextEntry;
-  PLIST_ENTRY Entry;
-  ULONGLONG RangeMin;
-  ULONGLONG RangeMax;
+    PRTL_RANGE_ENTRY CurrentEntry;
+    PRTL_RANGE_ENTRY NextEntry;
+    PLIST_ENTRY Entry;
+    ULONGLONG RangeMin;
+    ULONGLONG RangeMax;
 
-  if (Alignment == 0 || Length == 0)
+    if (Alignment == 0 || Length == 0)
     {
-      return STATUS_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
     }
 
-  if (IsListEmpty(&RangeList->ListHead))
+    if (IsListEmpty(&RangeList->ListHead))
     {
-      *Start = ROUND_DOWN (Maximum - (Length - 1), Alignment);
-      return STATUS_SUCCESS;
+        *Start = ROUND_DOWN(Maximum - (Length - 1), Alignment);
+        return STATUS_SUCCESS;
     }
 
-  NextEntry = NULL;
-  Entry = RangeList->ListHead.Blink;
-  while (Entry != &RangeList->ListHead)
+    NextEntry = NULL;
+    Entry = RangeList->ListHead.Blink;
+    while (Entry != &RangeList->ListHead)
     {
-      CurrentEntry = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+        CurrentEntry = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
-      RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-      if (RangeMax + (Length - 1) < Minimum)
-	{
-	  return STATUS_RANGE_NOT_FOUND;
-	}
+        RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
+        if (RangeMax + (Length - 1) < Minimum)
+        {
+            return STATUS_RANGE_NOT_FOUND;
+        }
 
-      RangeMin = ROUND_DOWN (RangeMax - (Length - 1), Alignment);
-      if (RangeMin < Minimum ||
-	  (RangeMax - RangeMin) < (Length - 1))
-	{
-	  return STATUS_RANGE_NOT_FOUND;
-	}
+        RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
+        if (RangeMin < Minimum ||
+            (RangeMax - RangeMin) < (Length - 1))
+        {
+            return STATUS_RANGE_NOT_FOUND;
+        }
 
-      DPRINT("RangeMax: %I64x\n", RangeMax);
-      DPRINT("RangeMin: %I64x\n", RangeMin);
+        DPRINT("RangeMax: %I64x\n", RangeMax);
+        DPRINT("RangeMin: %I64x\n", RangeMin);
 
-      if (RangeMin > CurrentEntry->Range.End)
-	{
-	  *Start = RangeMin;
-	  return STATUS_SUCCESS;
-	}
+        if (RangeMin > CurrentEntry->Range.End)
+        {
+            *Start = RangeMin;
+            return STATUS_SUCCESS;
+        }
 
-      NextEntry = CurrentEntry;
-      Entry = Entry->Blink;
+        NextEntry = CurrentEntry;
+        Entry = Entry->Blink;
     }
 
-  RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
-  if (RangeMax + (Length - 1) < Minimum)
+    RangeMax = NextEntry ? (NextEntry->Range.Start - 1) : Maximum;
+    if (RangeMax + (Length - 1) < Minimum)
     {
-      return STATUS_RANGE_NOT_FOUND;
+        return STATUS_RANGE_NOT_FOUND;
     }
 
-  RangeMin = ROUND_DOWN (RangeMax - (Length - 1), Alignment);
-  if (RangeMin < Minimum ||
-      (RangeMax - RangeMin) < (Length - 1))
+    RangeMin = ROUND_DOWN(RangeMax - (Length - 1), Alignment);
+    if (RangeMin < Minimum ||
+        (RangeMax - RangeMin) < (Length - 1))
     {
-      return STATUS_RANGE_NOT_FOUND;
+        return STATUS_RANGE_NOT_FOUND;
     }
 
-  DPRINT("RangeMax: %I64x\n", RangeMax);
-  DPRINT("RangeMin: %I64x\n", RangeMin);
+    DPRINT("RangeMax: %I64x\n", RangeMax);
+    DPRINT("RangeMin: %I64x\n", RangeMin);
 
-  *Start = RangeMin;
+    *Start = RangeMin;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -399,25 +404,26 @@ RtlFindRange (IN PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-VOID NTAPI
-RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
+VOID
+NTAPI
+RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList)
 {
-  PLIST_ENTRY Entry;
-  PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY Current;
 
-  while (!IsListEmpty(&RangeList->ListHead))
+    while (!IsListEmpty(&RangeList->ListHead))
     {
-      Entry = RemoveHeadList (&RangeList->ListHead);
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+        Entry = RemoveHeadList(&RangeList->ListHead);
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
-      DPRINT ("Range start: %I64u\n", Current->Range.Start);
-      DPRINT ("Range end:   %I64u\n", Current->Range.End);
+        DPRINT ("Range start: %I64u\n", Current->Range.Start);
+        DPRINT ("Range end:   %I64u\n", Current->Range.End);
 
-      RtlpFreeMemory(Current, 0);
+        RtlpFreeMemory(Current, 0);
     }
 
-  RangeList->Flags = 0;
-  RangeList->Count = 0;
+    RangeList->Flags = 0;
+    RangeList->Count = 0;
 }
 
 
@@ -438,25 +444,27 @@ RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
-		  OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-		  OUT PRTL_RANGE *Range)
+NTSTATUS
+NTAPI
+RtlGetFirstRange(IN PRTL_RANGE_LIST RangeList,
+                 OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+                 OUT PRTL_RANGE *Range)
 {
-  Iterator->RangeListHead = &RangeList->ListHead;
-  Iterator->MergedHead = NULL;
-  Iterator->Stamp = RangeList->Stamp;
-  if (IsListEmpty(&RangeList->ListHead))
+    Iterator->RangeListHead = &RangeList->ListHead;
+    Iterator->MergedHead = NULL;
+    Iterator->Stamp = RangeList->Stamp;
+
+    if (IsListEmpty(&RangeList->ListHead))
     {
-      Iterator->Current = NULL;
-      *Range = NULL;
-      return STATUS_NO_MORE_ENTRIES;
+        Iterator->Current = NULL;
+        *Range = NULL;
+        return STATUS_NO_MORE_ENTRIES;
     }
 
-  Iterator->Current = RangeList->ListHead.Flink;
-  *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
+    Iterator->Current = RangeList->ListHead.Flink;
+    *Range = &((PRTL_RANGE_ENTRY)Iterator->Current)->Range;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -478,34 +486,35 @@ RtlGetFirstRange (IN PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
-		 OUT PRTL_RANGE *Range,
-		 IN BOOLEAN MoveForwards)
+NTSTATUS
+NTAPI
+RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
+                OUT PRTL_RANGE *Range,
+                IN BOOLEAN MoveForwards)
 {
-  PRTL_RANGE_LIST RangeList;
-  PLIST_ENTRY Next;
+    PRTL_RANGE_LIST RangeList;
+    PLIST_ENTRY Next;
 
-  RangeList = CONTAINING_RECORD(Iterator->RangeListHead, RTL_RANGE_LIST, ListHead);
-  if (Iterator->Stamp != RangeList->Stamp)
-    return STATUS_INVALID_PARAMETER;
+    RangeList = CONTAINING_RECORD(Iterator->RangeListHead, RTL_RANGE_LIST, ListHead);
+    if (Iterator->Stamp != RangeList->Stamp)
+        return STATUS_INVALID_PARAMETER;
 
-  if (MoveForwards)
+    if (MoveForwards)
     {
-      Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
+        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
     }
-  else
+    else
     {
-      Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Blink;
+        Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Blink;
     }
 
-  if (Next == Iterator->RangeListHead)
-    return STATUS_NO_MORE_ENTRIES;
+    if (Next == Iterator->RangeListHead)
+        return STATUS_NO_MORE_ENTRIES;
 
-  Iterator->Current = Next;
-  *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
+    Iterator->Current = Next;
+    *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -524,13 +533,14 @@ RtlGetNextRange (IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
  *
  * @implemented
  */
-VOID NTAPI
-RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
+VOID
+NTAPI
+RtlInitializeRangeList(IN OUT PRTL_RANGE_LIST RangeList)
 {
-  InitializeListHead (&RangeList->ListHead);
-  RangeList->Flags = 0;
-  RangeList->Count = 0;
-  RangeList->Stamp = 0;
+    InitializeListHead(&RangeList->ListHead);
+    RangeList->Flags = 0;
+    RangeList->Count = 0;
+    RangeList->Stamp = 0;
 }
 
 
@@ -550,78 +560,79 @@ RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
-		    IN PRTL_RANGE_LIST RangeList)
+NTSTATUS
+NTAPI
+RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
+                   IN PRTL_RANGE_LIST RangeList)
 {
-  PRTL_RANGE_ENTRY Previous;
-  PRTL_RANGE_ENTRY Current;
-  PLIST_ENTRY Entry;
-  NTSTATUS Status;
+    PRTL_RANGE_ENTRY Previous;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status;
 
-  /* Don't invert an empty range list */
-  if (IsListEmpty(&RangeList->ListHead))
+    /* Don't invert an empty range list */
+    if (IsListEmpty(&RangeList->ListHead))
     {
-      return STATUS_SUCCESS;
+        return STATUS_SUCCESS;
     }
 
-  /* Add leading and intermediate ranges */
-  Previous = NULL;
-  Entry = RangeList->ListHead.Flink;
-  while (Entry != &RangeList->ListHead)
+    /* Add leading and intermediate ranges */
+    Previous = NULL;
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
 
-      if (Previous == NULL)
-	{
-	  if (Current->Range.Start != (ULONGLONG)0)
-	    {
-	      Status = RtlAddRange (InvertedRangeList,
-				    (ULONGLONG)0,
-				    Current->Range.Start - 1,
-				    0,
-				    0,
-				    NULL,
-				    NULL);
-	      if (!NT_SUCCESS(Status))
-	        return Status;
-	    }
-	}
-      else
-	{
-	  if (Previous->Range.End + 1 != Current->Range.Start)
-	    {
-	      Status = RtlAddRange (InvertedRangeList,
-				    Previous->Range.End + 1,
-				    Current->Range.Start - 1,
-				    0,
-				    0,
-				    NULL,
-				    NULL);
-	      if (!NT_SUCCESS(Status))
-	        return Status;
-	    }
-	}
+        if (Previous == NULL)
+        {
+            if (Current->Range.Start != (ULONGLONG)0)
+            {
+                Status = RtlAddRange(InvertedRangeList,
+                                     (ULONGLONG)0,
+                                     Current->Range.Start - 1,
+                                     0,
+                                     0,
+                                     NULL,
+                                     NULL);
+                if (!NT_SUCCESS(Status))
+                    return Status;
+            }
+        }
+        else
+        {
+            if (Previous->Range.End + 1 != Current->Range.Start)
+            {
+                Status = RtlAddRange(InvertedRangeList,
+                                     Previous->Range.End + 1,
+                                     Current->Range.Start - 1,
+                                     0,
+                                     0,
+                                     NULL,
+                                     NULL);
+                if (!NT_SUCCESS(Status))
+                    return Status;
+            }
+        }
 
-      Previous = Current;
-      Entry = Entry->Flink;
+        Previous = Current;
+        Entry = Entry->Flink;
     }
 
-  /* Add trailing range */
-  if (Previous->Range.End + 1 != (ULONGLONG)-1)
+    /* Add trailing range */
+    if (Previous->Range.End + 1 != (ULONGLONG)-1)
     {
-      Status = RtlAddRange (InvertedRangeList,
-			    Previous->Range.End + 1,
-			    (ULONGLONG)-1,
-			    0,
-			    0,
-			    NULL,
-			    NULL);
-      if (!NT_SUCCESS(Status))
-        return Status;
+        Status = RtlAddRange(InvertedRangeList,
+                             Previous->Range.End + 1,
+                             (ULONGLONG)-1,
+                             0,
+                             0,
+                             NULL,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+            return Status;
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -650,45 +661,47 @@ RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
-		     IN ULONGLONG Start,
-		     IN ULONGLONG End,
-		     IN ULONG Flags,
-		     IN UCHAR AttributeAvailableMask,
-		     IN PVOID Context OPTIONAL,
-		     IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
-		     OUT PBOOLEAN Available)
+NTSTATUS
+NTAPI
+RtlIsRangeAvailable(IN PRTL_RANGE_LIST RangeList,
+                    IN ULONGLONG Start,
+                    IN ULONGLONG End,
+                    IN ULONG Flags,
+                    IN UCHAR AttributeAvailableMask,
+                    IN PVOID Context OPTIONAL,
+                    IN PRTL_CONFLICT_RANGE_CALLBACK Callback OPTIONAL,
+                    OUT PBOOLEAN Available)
 {
-  PRTL_RANGE_ENTRY Current;
-  PLIST_ENTRY Entry;
+    PRTL_RANGE_ENTRY Current;
+    PLIST_ENTRY Entry;
 
-  *Available = TRUE;
+    *Available = TRUE;
 
-  Entry = RangeList->ListHead.Flink;
-  while (Entry != &RangeList->ListHead)
+    Entry = RangeList->ListHead.Flink;
+    while (Entry != &RangeList->ListHead)
     {
-      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (!((Current->Range.Start >= End && Current->Range.End > End) ||
-	    (Current->Range.Start <= Start && Current->Range.End < Start &&
-	     (!(Flags & RTL_RANGE_SHARED) ||
-	      !(Current->Range.Flags & RTL_RANGE_SHARED)))))
-	{
-	  if (Callback != NULL)
-	    {
-	      *Available = Callback (Context,
-				     &Current->Range);
-	    }
-	  else
-	    {
-	      *Available = FALSE;
-	    }
-	}
+        Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
 
-      Entry = Entry->Flink;
+        if (!((Current->Range.Start >= End && Current->Range.End > End) ||
+              (Current->Range.Start <= Start && Current->Range.End < Start &&
+               (!(Flags & RTL_RANGE_SHARED) ||
+                !(Current->Range.Flags & RTL_RANGE_SHARED)))))
+        {
+            if (Callback != NULL)
+            {
+                *Available = Callback(Context,
+                                      &Current->Range);
+            }
+            else
+            {
+                *Available = FALSE;
+            }
+        }
+
+        Entry = Entry->Flink;
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -710,49 +723,50 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
-NTSTATUS NTAPI
-RtlMergeRangeLists (OUT PRTL_RANGE_LIST MergedRangeList,
-		    IN PRTL_RANGE_LIST RangeList1,
-		    IN PRTL_RANGE_LIST RangeList2,
-		    IN ULONG Flags)
+NTSTATUS
+NTAPI
+RtlMergeRangeLists(OUT PRTL_RANGE_LIST MergedRangeList,
+                   IN PRTL_RANGE_LIST RangeList1,
+                   IN PRTL_RANGE_LIST RangeList2,
+                   IN ULONG Flags)
 {
-  RTL_RANGE_LIST_ITERATOR Iterator;
-  PRTL_RANGE Range;
-  NTSTATUS Status;
+    RTL_RANGE_LIST_ITERATOR Iterator;
+    PRTL_RANGE Range;
+    NTSTATUS Status;
 
-  /* Copy range list 1 to the merged range list */
-  Status = RtlCopyRangeList (MergedRangeList,
-			     RangeList1);
-  if (!NT_SUCCESS(Status))
-    return Status;
+    /* Copy range list 1 to the merged range list */
+    Status = RtlCopyRangeList(MergedRangeList,
+                              RangeList1);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-  /* Add range list 2 entries to the merged range list */
-  Status = RtlGetFirstRange (RangeList2,
-			     &Iterator,
-			     &Range);
-  if (!NT_SUCCESS(Status))
-    return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
+    /* Add range list 2 entries to the merged range list */
+    Status = RtlGetFirstRange(RangeList2,
+                              &Iterator,
+                              &Range);
+    if (!NT_SUCCESS(Status))
+        return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
 
-  while (TRUE)
+    while (TRUE)
     {
-      Status = RtlAddRange (MergedRangeList,
-			    Range->Start,
-			    Range->End,
-			    Range->Attributes,
-			    Range->Flags | Flags,
-			    Range->UserData,
-			    Range->Owner);
-      if (!NT_SUCCESS(Status))
-        break;
+        Status = RtlAddRange(MergedRangeList,
+                             Range->Start,
+                             Range->End,
+                             Range->Attributes,
+                             Range->Flags | Flags,
+                             Range->UserData,
+                             Range->Owner);
+        if (!NT_SUCCESS(Status))
+            break;
 
-      Status = RtlGetNextRange (&Iterator,
-				&Range,
-				TRUE);
-      if (!NT_SUCCESS(Status))
-        break;
+        Status = RtlGetNextRange(&Iterator,
+                                 &Range,
+                                 TRUE);
+        if (!NT_SUCCESS(Status))
+            break;
     }
 
-  return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
+    return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
 }
 
 /* EOF */

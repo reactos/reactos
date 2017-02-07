@@ -46,7 +46,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
             if (!FCB->Recv.Window)
                 Status = STATUS_NO_MEMORY;
         }
-        
+
         if (NT_SUCCESS(Status))
         {
             Status = TdiReceiveDatagram(&FCB->ReceiveIrp.InFlightRequest,
@@ -58,7 +58,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                                         &FCB->ReceiveIrp.Iosb,
                                         PacketSocketRecvComplete,
                                         FCB);
-            
+
             /* We don't want to wait for this read to complete. */
             if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
         }
@@ -71,7 +71,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
 NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	      PIO_STACK_LOCATION IrpSp) {
+              PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -81,24 +81,25 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
     if( !(BindReq = LockRequest( Irp, IrpSp )) )
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0 );
+        return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+                                       Irp, 0 );
 
     if( FCB->LocalAddress ) ExFreePool( FCB->LocalAddress );
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
     if( FCB->LocalAddress )
-	Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
-					 FCB->LocalAddress );
+        Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
+                                         FCB->LocalAddress );
 
     if( NT_SUCCESS(Status) )
-	Status = WarmSocketForBind( FCB );
+        Status = WarmSocketForBind( FCB );
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
     if (NT_SUCCESS(Status))
         FCB->State = SOCKET_STATE_BOUND;
 
     /* MSAFD relies on us returning the address file handle in the IOSB */
-    return UnlockAndMaybeComplete( FCB, Status, Irp, (ULONG_PTR)FCB->AddressFile.Handle );
+    return UnlockAndMaybeComplete( FCB, Status, Irp,
+                                   (ULONG_PTR)FCB->AddressFile.Handle );
 }
 

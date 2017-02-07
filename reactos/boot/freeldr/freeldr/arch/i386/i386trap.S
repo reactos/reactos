@@ -97,7 +97,7 @@ i386CommonExceptionHandler:
     lea eax, [esp + (21 * 4)] // KTRAP_FRAME
     push esp // KSPECIAL_REGISTERS
     push eax
-    push i386ExceptionIndex
+    push dword ptr ds:[i386ExceptionIndex]
     call _i386PrintExceptionText@12
 
 	cli
@@ -109,24 +109,16 @@ i386ExceptionHandlerHang:
 
 MACRO(TRAP_STUB, function, index)
     PUBLIC VAL(function)
-#ifdef _USE_ML
-    function:
-#else
-    \function:
-#endif
+    &function:
     push 0 // Fake error code
-	mov dword ptr i386ExceptionIndex, VAL(index)
+	mov dword ptr ds:[i386ExceptionIndex], VAL(index)
 	jmp i386CommonExceptionHandler
 ENDM
 
 MACRO(TRAP_STUB2, function, index)
     PUBLIC VAL(function)
-#ifdef _USE_ML
-    function:
-#else
-    \function:
-#endif
-	mov dword ptr i386ExceptionIndex, VAL(index)
+    &function:
+	mov dword ptr ds:[i386ExceptionIndex], VAL(index)
 	jmp i386CommonExceptionHandler
 ENDM
 

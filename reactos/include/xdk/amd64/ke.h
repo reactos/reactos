@@ -45,6 +45,7 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
+#define MemoryBarrier __faststorefence
 #define FastFence __faststorefence
 #define LoadFence _mm_lfence
 #define MemoryFence _mm_mfence
@@ -73,7 +74,7 @@ FORCEINLINE
 VOID
 KeLowerIrql(IN KIRQL NewIrql)
 {
-  //ASSERT(KeGetCurrentIrql() >= NewIrql);
+  ASSERT((KIRQL)__readcr8() >= NewIrql);
   __writecr8(NewIrql);
 }
 
@@ -84,7 +85,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
   KIRQL OldIrql;
 
   OldIrql = (KIRQL)__readcr8();
-  //ASSERT(OldIrql <= NewIrql);
+  ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;
 }

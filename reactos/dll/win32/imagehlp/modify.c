@@ -35,8 +35,8 @@ static WORD CalcCheckSum(DWORD StartValue, LPVOID BaseAddress, DWORD WordCount);
 /***********************************************************************
  *		BindImage (IMAGEHLP.@)
  */
-BOOL IMAGEAPI BindImage(
-  LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath)
+BOOL WINAPI BindImage(
+  PCSTR ImageName, PCSTR DllPath, PCSTR SymbolPath)
 {
   return BindImageEx(0, ImageName, DllPath, SymbolPath, NULL);
 }
@@ -44,8 +44,8 @@ BOOL IMAGEAPI BindImage(
 /***********************************************************************
  *		BindImageEx (IMAGEHLP.@)
  */
-BOOL IMAGEAPI BindImageEx(
-  DWORD Flags, LPSTR ImageName, LPSTR DllPath, LPSTR SymbolPath,
+BOOL WINAPI BindImageEx(
+  DWORD Flags, PCSTR ImageName, PCSTR DllPath, PCSTR SymbolPath,
   PIMAGEHLP_STATUS_ROUTINE StatusRoutine)
 {
   FIXME("(%d, %s, %s, %s, %p): stub\n",
@@ -157,8 +157,8 @@ PIMAGE_NT_HEADERS WINAPI CheckSumMappedFile(
 /***********************************************************************
  *		MapFileAndCheckSumA (IMAGEHLP.@)
  */
-DWORD IMAGEAPI MapFileAndCheckSumA(
-  LPSTR Filename, PDWORD HeaderSum, PDWORD CheckSum)
+DWORD WINAPI MapFileAndCheckSumA(
+  PCSTR Filename, PDWORD HeaderSum, PDWORD CheckSum)
 {
   HANDLE hFile;
   HANDLE hMapping;
@@ -223,8 +223,8 @@ DWORD IMAGEAPI MapFileAndCheckSumA(
 /***********************************************************************
  *		MapFileAndCheckSumW (IMAGEHLP.@)
  */
-DWORD IMAGEAPI MapFileAndCheckSumW(
-  PWSTR Filename, LPDWORD HeaderSum, LPDWORD CheckSum)
+DWORD WINAPI MapFileAndCheckSumW(
+  PCWSTR Filename, PDWORD HeaderSum, PDWORD CheckSum)
 {
   HANDLE hFile;
   HANDLE hMapping;
@@ -289,8 +289,8 @@ DWORD IMAGEAPI MapFileAndCheckSumW(
 /***********************************************************************
  *		ReBaseImage (IMAGEHLP.@)
  */
-BOOL IMAGEAPI ReBaseImage(
-  LPSTR CurrentImageName, LPSTR SymbolPath, BOOL fReBase,
+BOOL WINAPI ReBaseImage(
+  PCSTR CurrentImageName, PCSTR SymbolPath, BOOL fReBase,
   BOOL fRebaseSysfileOk, BOOL fGoingDown, ULONG CheckImageSize,
   ULONG *OldImageSize, ULONG_PTR *OldImageBase, ULONG *NewImageSize,
   ULONG_PTR *NewImageBase, ULONG TimeStamp)
@@ -330,9 +330,9 @@ VOID WINAPI RemoveRelocations(PCHAR ImageName)
 /***********************************************************************
  *		SplitSymbols (IMAGEHLP.@)
  */
-BOOL IMAGEAPI SplitSymbols(
-  LPSTR ImageName, LPSTR SymbolsPath,
-  LPSTR SymbolFilePath, ULONG Flags)
+BOOL WINAPI SplitSymbols(
+  PSTR ImageName, PCSTR SymbolsPath,
+  PSTR SymbolFilePath, ULONG Flags)
 {
   FIXME("(%s, %s, %s, %d): stub\n",
     debugstr_a(ImageName), debugstr_a(SymbolsPath),
@@ -345,9 +345,9 @@ BOOL IMAGEAPI SplitSymbols(
 /***********************************************************************
  *		UpdateDebugInfoFile (IMAGEHLP.@)
  */
-BOOL IMAGEAPI UpdateDebugInfoFile(
-  LPSTR ImageFileName, LPSTR SymbolPath,
-  LPSTR DebugFilePath, PIMAGE_NT_HEADERS32 NtHeaders)
+BOOL WINAPI UpdateDebugInfoFile(
+  PCSTR ImageFileName, PCSTR SymbolPath,
+  PSTR DebugFilePath, PIMAGE_NT_HEADERS32 NtHeaders)
 {
   FIXME("(%s, %s, %s, %p): stub\n",
     debugstr_a(ImageFileName), debugstr_a(SymbolPath),
@@ -360,8 +360,8 @@ BOOL IMAGEAPI UpdateDebugInfoFile(
 /***********************************************************************
  *		UpdateDebugInfoFileEx (IMAGEHLP.@)
  */
-BOOL IMAGEAPI UpdateDebugInfoFileEx(
-  LPSTR ImageFileName, LPSTR SymbolPath, LPSTR DebugFilePath,
+BOOL WINAPI UpdateDebugInfoFileEx(
+  PCSTR ImageFileName, PCSTR SymbolPath, PSTR DebugFilePath,
   PIMAGE_NT_HEADERS32 NtHeaders, DWORD OldChecksum)
 {
   FIXME("(%s, %s, %s, %p, %d): stub\n",

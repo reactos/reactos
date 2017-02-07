@@ -1,4 +1,4 @@
-/* TRANSLATOR:   Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+﻿/* TRANSLATOR:   Mário Kačmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  14-02-2008
  * LAST CHANGE:  29-08-2008
  */
@@ -21,10 +21,12 @@ BEGIN
   END
   POPUP "Zobraziť"
   BEGIN
-    MENUITEM "Zariadenia podľa typu",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Zariadenia podľa pripojenia",   IDC_STATIC, GRAYED
-    MENUITEM "Prostriedky podľa typu",       IDC_STATIC, GRAYED
-    MENUITEM "Prostriedky podľa pripojenia", IDC_STATIC, GRAYED
+    MENUITEM "Zariadenia podľa typu",        IDC_DEVBYTYPE
+    MENUITEM "Zariadenia podľa pripojenia",  IDC_DEVBYCONN
+    MENUITEM "Prostriedky podľa typu",       IDC_RESBYTYPE, GRAYED
+    MENUITEM "Prostriedky podľa pripojenia", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",          IDC_SHOWHIDDEN
   END
   POPUP "Pomocník"
   BEGIN

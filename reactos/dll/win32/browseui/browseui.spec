@@ -1,7 +1,7 @@
 @   stdcall -private DllCanUnloadNow()
 @   stdcall -private DllGetClassObject(ptr ptr ptr)
 @   stdcall -private DllGetVersion(ptr)
-@   stdcall DllInstall(long wstr)
+@   stdcall -private DllInstall(long wstr)
 @   stdcall -private DllRegisterServer()
 @   stdcall -private DllUnregisterServer()
 101 stdcall -noname InitOCHostClass(long)

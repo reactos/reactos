@@ -423,7 +423,7 @@ typedef struct __DOSDATE
 {
    USHORT Day:5;
    USHORT Month:4;
-   USHORT Year:5;
+   USHORT Year:7;
 }
 DOSDATE, *PDOSDATE;
 

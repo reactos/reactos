@@ -35,7 +35,7 @@ CAPTION "Configurare lupă"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Î&nchide",            IDOK,96,161,50,14
-    PUSHBUTTON      "&Manual",             IDC_BUTTON_HELP,38,161,50,14
+    PUSHBUTTON      "&Manual…",            IDC_BUTTON_HELP,38,161,50,14
     LTEXT           "Factorul de mărire:", IDC_STATIC,6,8,65,8
     COMBOBOX                               IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Urmărire",            IDC_STATIC,7,25,139,59

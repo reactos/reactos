@@ -85,7 +85,7 @@ VOID
 NTAPI
 RtlFillMemory (
    PVOID Destination,
-   ULONG Length,
+   SIZE_T Length,
    UCHAR Fill
 )
 {
@@ -101,12 +101,12 @@ VOID
 NTAPI
 RtlFillMemoryUlong (
    PVOID Destination,
-   ULONG Length,
+   SIZE_T Length,
    ULONG Fill
 )
 {
    PULONG Dest  = Destination;
-   ULONG  Count = Length / sizeof(ULONG);
+   SIZE_T Count = Length / sizeof(ULONG);
 
    while (Count > 0)
    {
@@ -126,7 +126,7 @@ NTAPI
 RtlMoveMemory (
    PVOID    Destination,
    CONST VOID  * Source,
-   ULONG    Length
+   SIZE_T   Length
 )
 {
    memmove (
@@ -160,7 +160,7 @@ VOID
 NTAPI
 RtlZeroMemory (
    PVOID Destination,
-   ULONG Length
+   SIZE_T Length
 )
 {
    RtlFillMemory (

@@ -46,17 +46,42 @@ IDB_CERT_WATERMARK BITMAP certwatermark.bmp
 /* @makedep: certheader.bmp */
 IDB_CERT_HEADER BITMAP certheader.bmp
 
-#include "cryptui_En.rc"
-#include "cryptui_Ko.rc"
-#include "cryptui_Pl.rc"
-
 /* UTF-8 */
-#include "cryptui_De.rc"
-#include "cryptui_Fr.rc"
-#include "cryptui_It.rc"
-#include "cryptui_Lt.rc"
-#include "cryptui_Nl.rc"
-#include "cryptui_No.rc"
-#include "cryptui_Pt.rc"
-#include "cryptui_Ro.rc"
-#include "cryptui_Uk.rc"
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "cryptui_En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "cryptui_Ko.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "cryptui_Pl.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "cryptui_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "cryptui_Fr.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "cryptui_It.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "cryptui_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "cryptui_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "cryptui_No.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "cryptui_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "cryptui_Ro.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "cryptui_Uk.rc"
+#endif

@@ -88,6 +88,7 @@
 #define IDS_HELP_CMD_DESC_UNIQUEID          97
 
 #define IDS_ERROR_MSG_NO_SCRIPT             104
+#define IDS_ERROR_MSG_BAD_ARG               98
 
 #define IDS_HELP_CMD_ACTIVE                 105
 #define IDS_HELP_CMD_ADD                    106

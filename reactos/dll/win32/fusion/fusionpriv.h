@@ -428,16 +428,16 @@ typedef struct
 struct tagASSEMBLY;
 typedef struct tagASSEMBLY ASSEMBLY;
 
-HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file);
-HRESULT assembly_release(ASSEMBLY *assembly);
-HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name);
-HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path);
-HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version);
-BYTE assembly_get_architecture(ASSEMBLY *assembly);
-HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token);
+HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file) DECLSPEC_HIDDEN;
+HRESULT assembly_release(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
+HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name) DECLSPEC_HIDDEN;
+HRESULT assembly_get_path(const ASSEMBLY *assembly, LPWSTR *path) DECLSPEC_HIDDEN;
+HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version) DECLSPEC_HIDDEN;
+BYTE assembly_get_architecture(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
+HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token) DECLSPEC_HIDDEN;
 
-extern HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path);
-extern HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len);
+extern HRESULT IAssemblyName_SetPath(IAssemblyName *iface, LPCWSTR path) DECLSPEC_HIDDEN;
+extern HRESULT IAssemblyName_GetPath(IAssemblyName *iface, LPWSTR buf, ULONG *len) DECLSPEC_HIDDEN;
 
 static inline LPWSTR strdupW(LPCWSTR src)
 {
@@ -461,7 +461,7 @@ static inline void token_to_str(BYTE *bytes, LPWSTR str)
 {
     DWORD i;
 
-    static const WCHAR hexval[16] = {
+    static const WCHAR hexval[] = {
         '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'
     };
 

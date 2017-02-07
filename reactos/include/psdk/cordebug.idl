@@ -1,0 +1,1041 @@
+/*
+ * Copyright (C) 2011 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "objidl.idl";
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef CreateProcess")
+cpp_quote("#endif")
+
+interface ICorDebugAppDomain;
+interface ICorDebugAppDomainEnum;
+interface ICorDebugAssembly;
+interface ICorDebugAssemblyEnum;
+interface ICorDebugBreakpoint;
+interface ICorDebugBreakpointEnum;
+interface ICorDebugChain;
+interface ICorDebugChainEnum;
+interface ICorDebugClass;
+interface ICorDebugCode;
+interface ICorDebugContext;
+interface ICorDebugEditAndContinueSnapshot;
+interface ICorDebugEditAndContinueErrorInfo;
+interface ICorDebugEnum;
+interface ICorDebugErrorInfoEnum;
+interface ICorDebugEval;
+interface ICorDebugFrame;
+interface ICorDebugFrameEnum;
+interface ICorDebugFunction;
+interface ICorDebugFunctionBreakpoint;
+interface ICorDebugManagedCallback;
+interface ICorDebugManagedCallback2;
+interface ICorDebugMDA;
+interface ICorDebugModule;
+interface ICorDebugModuleBreakpoint;
+interface ICorDebugModuleEnum;
+interface ICorDebugObjectEnum;
+interface ICorDebugObjectValue;
+interface ICorDebugProcess;
+interface ICorDebugProcessEnum;
+interface ICorDebugRegisterSet;
+interface ICorDebugStepper;
+interface ICorDebugStepperEnum;
+interface ICorDebugThreadEnum;
+interface ICorDebugUnmanagedCallback;
+interface ICorDebugValue;
+interface ICorDebugValueBreakpoint;
+
+
+typedef [wire_marshal(unsigned long)] void *HPROCESS;
+typedef [wire_marshal(unsigned long)] void *HTHREAD;
+
+/* These are defined in corhrd.idl but used here. */
+cpp_quote("#if 0")
+
+typedef UINT32 mdToken;
+typedef mdToken mdModule;
+typedef SIZE_T  mdScope;
+typedef mdToken mdTypeDef;
+typedef mdToken mdSourceFile;
+typedef mdToken mdMemberRef;
+typedef mdToken mdMethodDef;
+typedef mdToken mdFieldDef;
+typedef mdToken mdSignature;
+typedef ULONG CorElementType;
+typedef SIZE_T PCCOR_SIGNATURE;
+
+typedef SIZE_T LPDEBUG_EVENT;
+
+typedef SIZE_T LPSTARTUPINFOW;
+typedef SIZE_T LPPROCESS_INFORMATION;
+
+cpp_quote("#endif")
+
+typedef ULONG64 CORDB_ADDRESS;
+typedef ULONG64 CORDB_REGISTER;
+
+typedef UINT64 TASKID;
+typedef DWORD CONNID;
+
+
+cpp_quote("#ifndef _COR_IL_MAP")
+cpp_quote("#define _COR_IL_MAP")
+
+typedef struct _COR_IL_MAP
+{
+    ULONG32 oldOffset;
+    ULONG32 newOffset;
+    BOOL    fAccurate;
+} COR_IL_MAP;
+
+cpp_quote("#endif /* _COR_IL_MAP */")
+
+cpp_quote("#ifndef _COR_DEBUG_IL_TO_NATIVE_MAP_")
+cpp_quote("#define _COR_DEBUG_IL_TO_NATIVE_MAP_")
+
+typedef enum CorDebugIlToNativeMappingTypes
+{
+    NO_MAPPING = -1,
+    PROLOG     = -2,
+    EPILOG     = -3
+} CorDebugIlToNativeMappingTypes;
+
+typedef struct COR_DEBUG_IL_TO_NATIVE_MAP
+{
+    ULONG32 ilOffset;
+    ULONG32 nativeStartOffset;
+    ULONG32 nativeEndOffset;
+} COR_DEBUG_IL_TO_NATIVE_MAP;
+
+cpp_quote("#endif /* _COR_DEBUG_IL_TO_NATIVE_MAP_ */")
+
+
+typedef enum CorDebugThreadState
+{
+    THREAD_RUN,
+    THREAD_SUSPEND
+} CorDebugThreadState;
+
+typedef enum CorDebugCreateProcessFlags
+{
+    DEBUG_NO_SPECIAL_OPTIONS        = 0x0000
+} CorDebugCreateProcessFlags;
+
+[
+    object,
+    local,
+    uuid(CC7BCAF7-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugValue : IUnknown
+{
+    HRESULT GetType([out] CorElementType *pType);
+    HRESULT GetSize([out] ULONG32 *pSize);
+    HRESULT GetAddress([out] CORDB_ADDRESS *pAddress);
+    HRESULT CreateBreakpoint([out] ICorDebugValueBreakpoint **ppBreakpoint);
+};
+
+[
+    object,
+    local,
+    uuid(938c6d66-7fb6-4f69-b389-425b8987329b),
+    pointer_default(unique)
+]
+interface ICorDebugThread : IUnknown
+{
+    HRESULT GetProcess([out] ICorDebugProcess **ppProcess);
+    HRESULT GetID([out] DWORD *pdwThreadId);
+    HRESULT GetHandle([out] HTHREAD *phThreadHandle);
+    HRESULT GetAppDomain([out] ICorDebugAppDomain **ppAppDomain);
+    HRESULT SetDebugState([in] CorDebugThreadState state);
+    HRESULT GetDebugState([out] CorDebugThreadState *pState);
+
+    typedef enum CorDebugUserState
+    {
+        USER_STOP_REQUESTED     = 0x01,
+        USER_SUSPEND_REQUESTED  = 0x02,
+        USER_BACKGROUND         = 0x04,
+        USER_UNSTARTED          = 0x08,
+        USER_STOPPED            = 0x10,
+        USER_WAIT_SLEEP_JOIN    = 0x20,
+        USER_SUSPENDED          = 0x40,
+
+        USER_UNSAFE_POINT       = 0x80,
+    } CorDebugUserState;
+
+    HRESULT GetUserState([out] CorDebugUserState *pState);
+    HRESULT GetCurrentException([out] ICorDebugValue **ppExceptionObject);
+    HRESULT ClearCurrentException();
+    HRESULT CreateStepper([out] ICorDebugStepper **ppStepper);
+    HRESULT EnumerateChains([out] ICorDebugChainEnum **ppChains);
+    HRESULT GetActiveChain([out] ICorDebugChain **ppChain);
+    HRESULT GetActiveFrame([out] ICorDebugFrame **ppFrame);
+    HRESULT GetRegisterSet([out] ICorDebugRegisterSet **ppRegisters);
+    HRESULT CreateEval([out] ICorDebugEval **ppEval);
+    HRESULT GetObject([out] ICorDebugValue **ppObject);
+};
+
+[
+    object,
+    local,
+    uuid(3d6f5f62-7538-11d3-8d5b-00104b35e7ef),
+    pointer_default(unique)
+]
+
+interface ICorDebugController : IUnknown
+{
+    HRESULT Stop([in] DWORD dwTimeoutIgnored);
+    HRESULT Continue([in] BOOL fIsOutOfBand);
+    HRESULT IsRunning([out] BOOL *pbRunning);
+    HRESULT HasQueuedCallbacks([in] ICorDebugThread *pThread,
+                               [out] BOOL *pbQueued);
+    HRESULT EnumerateThreads([out] ICorDebugThreadEnum **ppThreads);
+    HRESULT SetAllThreadsDebugState([in] CorDebugThreadState state,
+                                    [in] ICorDebugThread *pExceptThisThread);
+    HRESULT Detach();
+    HRESULT Terminate([in] UINT exitCode);
+    HRESULT CanCommitChanges([in] ULONG cSnapshots,
+                             [in] ICorDebugEditAndContinueSnapshot *pSnapshots[],
+                             [out] ICorDebugErrorInfoEnum **pError);
+    HRESULT CommitChanges([in] ULONG cSnapshots,
+                          [in] ICorDebugEditAndContinueSnapshot *pSnapshots[],
+                          [out] ICorDebugErrorInfoEnum **pError);
+};
+
+[
+    object,
+    local,
+    uuid(3d6f5f64-7538-11d3-8d5b-00104b35e7ef),
+    pointer_default(unique)
+]
+interface ICorDebugProcess : ICorDebugController
+{
+    HRESULT GetID([out] DWORD *pdwProcessId);
+    HRESULT GetHandle([out] HPROCESS *phProcessHandle);
+    HRESULT GetThread([in] DWORD dwThreadId, [out] ICorDebugThread **ppThread);
+    HRESULT EnumerateObjects([out] ICorDebugObjectEnum **ppObjects);
+    HRESULT IsTransitionStub([in] CORDB_ADDRESS address, [out] BOOL *pbTransitionStub);
+    HRESULT IsOSSuspended([in] DWORD threadID, [out] BOOL *pbSuspended);
+    HRESULT GetThreadContext([in] DWORD threadID, [in] ULONG32 contextSize,
+                             [in, out] BYTE context[]);
+    HRESULT SetThreadContext([in] DWORD threadID, [in] ULONG32 contextSize, [in] BYTE context[]);
+    HRESULT ReadMemory([in] CORDB_ADDRESS address, [in] DWORD size, [out] BYTE buffer[], [out] SIZE_T *read);
+    HRESULT WriteMemory([in] CORDB_ADDRESS address, [in] DWORD size, [in] BYTE buffer[], [out] SIZE_T *written);
+    HRESULT ClearCurrentException([in] DWORD threadID);
+    HRESULT EnableLogMessages([in]BOOL fOnOff);
+    HRESULT ModifyLogSwitch([in] WCHAR *pLogSwitchName,
+                            [in]LONG lLevel);
+    HRESULT EnumerateAppDomains([out] ICorDebugAppDomainEnum **ppAppDomains);
+    HRESULT GetObject([out] ICorDebugValue **ppObject);
+    HRESULT ThreadForFiberCookie([in] DWORD fiberCookie, [out] ICorDebugThread **ppThread);
+    HRESULT GetHelperThreadID([out] DWORD *pThreadID);
+};
+
+[
+    object,
+    local,
+    uuid(3d6f5f63-7538-11d3-8d5b-00104b35e7ef),
+    pointer_default(unique)
+]
+interface ICorDebugAppDomain : ICorDebugController
+{
+    HRESULT GetProcess([out] ICorDebugProcess **ppProcess);
+    HRESULT EnumerateAssemblies([out] ICorDebugAssemblyEnum **ppAssemblies);
+    HRESULT GetModuleFromMetaDataInterface([in] IUnknown *pIMetaData,
+                                           [out] ICorDebugModule **ppModule);
+    HRESULT EnumerateBreakpoints([out] ICorDebugBreakpointEnum **ppBreakpoints);
+    HRESULT EnumerateSteppers([out] ICorDebugStepperEnum **ppSteppers);
+    HRESULT IsAttached([out] BOOL *pbAttached);
+    HRESULT GetName([in] ULONG32 cchName, [out] ULONG32 *pcchName, [out] WCHAR szName[]);
+    HRESULT GetObject([out] ICorDebugValue **ppObject);
+    HRESULT Attach();
+    HRESULT GetID([out] ULONG32 *pId);
+};
+
+[
+    object,
+    local,
+    uuid(3d6f5f60-7538-11d3-8d5b-00104b35e7ef),
+    pointer_default(unique)
+]
+interface ICorDebugManagedCallback : IUnknown
+{
+    HRESULT Breakpoint([in] ICorDebugAppDomain *pAppDomain,
+                       [in] ICorDebugThread *pThread,
+                       [in] ICorDebugBreakpoint *pBreakpoint);
+
+    typedef enum CorDebugStepReason
+    {
+        STEP_NORMAL,
+        STEP_RETURN,
+        STEP_CALL,
+        STEP_EXCEPTION_FILTER,
+        STEP_EXCEPTION_HANDLER,
+        STEP_INTERCEPT,
+        STEP_EXIT
+    } CorDebugStepReason;
+
+    HRESULT StepComplete([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                         [in] ICorDebugStepper *pStepper, [in] CorDebugStepReason reason);
+    HRESULT Break([in] ICorDebugAppDomain *pAppDomain,
+                  [in] ICorDebugThread *thread);
+    HRESULT Exception([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                      [in] BOOL unhandled);
+    HRESULT EvalComplete([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                         [in] ICorDebugEval *pEval);
+    HRESULT EvalException([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                          [in] ICorDebugEval *pEval);
+    HRESULT CreateProcess([in] ICorDebugProcess *pProcess);
+    HRESULT ExitProcess([in] ICorDebugProcess *pProcess);
+    HRESULT CreateThread([in] ICorDebugAppDomain *pAppDomain,[in] ICorDebugThread *thread);
+    HRESULT ExitThread([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *thread);
+    HRESULT LoadModule([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugModule *pModule);
+    HRESULT UnloadModule([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugModule *pModule);
+    HRESULT LoadClass([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugClass *c);
+    HRESULT UnloadClass([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugClass *c);
+    HRESULT DebuggerError([in] ICorDebugProcess *pProcess, [in] HRESULT errorHR,
+                          [in] DWORD errorCode);
+
+    typedef enum LoggingLevelEnum
+    {
+        LTraceLevel0   = 0,
+        LTraceLevel1,
+        LTraceLevel2,
+        LTraceLevel3,
+        LTraceLevel4,
+        LStatusLevel0  = 20,
+        LStatusLevel1,
+        LStatusLevel2,
+        LStatusLevel3,
+        LStatusLevel4,
+        LWarningLevel  = 40,
+        LErrorLevel    = 50,
+        LPanicLevel    = 100
+    } LoggingLevelEnum;
+
+    typedef enum LogSwitchCallReason
+    {
+        SWITCH_CREATE,
+        SWITCH_MODIFY,
+        SWITCH_DELETE
+    } LogSwitchCallReason;
+
+    HRESULT LogMessage([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                       [in] LONG lLevel, [in] WCHAR *pLogSwitchName, [in] WCHAR *pMessage);
+    HRESULT LogSwitch([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                      [in] LONG lLevel, [in] ULONG ulReason, [in] WCHAR *pLogSwitchName,
+                      [in] WCHAR *pParentName);
+    HRESULT CreateAppDomain([in] ICorDebugProcess *pProcess, [in] ICorDebugAppDomain *pAppDomain);
+    HRESULT ExitAppDomain([in] ICorDebugProcess *pProcess, [in] ICorDebugAppDomain *pAppDomain);
+    HRESULT LoadAssembly([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugAssembly *pAssembly);
+    HRESULT UnloadAssembly([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugAssembly *pAssembly);
+    HRESULT ControlCTrap([in] ICorDebugProcess *pProcess);
+    HRESULT NameChange([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread);
+    HRESULT UpdateModuleSymbols([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugModule *pModule,
+                                [in] IStream *pSymbolStream);
+    HRESULT EditAndContinueRemap([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                                 [in] ICorDebugFunction *pFunction, [in] BOOL fAccurate);
+
+    HRESULT BreakpointSetError([in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                               [in] ICorDebugBreakpoint *pBreakpoint, [in] DWORD dwError);
+};
+
+[
+    object,
+    local,
+    uuid(250E5EEA-DB5C-4C76-B6F3-8C46F12E3203),
+    pointer_default(unique)
+]
+interface ICorDebugManagedCallback2 : IUnknown
+{
+    HRESULT FunctionRemapOpportunity([in] ICorDebugAppDomain *pAppDomain,
+                   [in] ICorDebugThread *pThread, [in] ICorDebugFunction *pOldFunction,
+                   [in] ICorDebugFunction *pNewFunction, [in] ULONG32 oldILOffset);
+
+    HRESULT CreateConnection([in] ICorDebugProcess *pProcess, [in] CONNID dwConnectionId,
+                                [in] WCHAR *pConnName);
+
+    HRESULT ChangeConnection([in] ICorDebugProcess *pProcess, [in] CONNID dwConnectionId );
+
+    HRESULT DestroyConnection([in] ICorDebugProcess *pProcess, [in] CONNID dwConnectionId );
+
+
+    typedef enum CorDebugExceptionCallbackType
+    {
+        DEBUG_EXCEPTION_FIRST_CHANCE = 1,
+        DEBUG_EXCEPTION_USER_FIRST_CHANCE = 2,
+        DEBUG_EXCEPTION_CATCH_HANDLER_FOUND = 3,
+        DEBUG_EXCEPTION_UNHANDLED = 4
+    } CorDebugExceptionCallbackType;
+
+    typedef enum CorDebugExceptionFlags
+    {
+        DEBUG_EXCEPTION_CAN_BE_INTERCEPTED = 0x0001
+    } CorDebugExceptionFlags;
+
+    HRESULT Exception( [in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                       [in] ICorDebugFrame *pFrame, [in] ULONG32 nOffset,
+                       [in] CorDebugExceptionCallbackType dwEventType, [in] DWORD dwFlags );
+
+    typedef enum CorDebugExceptionUnwindCallbackType
+    {
+        DEBUG_EXCEPTION_UNWIND_BEGIN = 1,
+        DEBUG_EXCEPTION_INTERCEPTED = 2
+    } CorDebugExceptionUnwindCallbackType;
+
+    HRESULT ExceptionUnwind( [in] ICorDebugAppDomain *pAppDomain, [in] ICorDebugThread *pThread,
+                             [in] CorDebugExceptionUnwindCallbackType dwEventType,
+                             [in] DWORD dwFlags );
+
+    HRESULT FunctionRemapComplete([in] ICorDebugAppDomain *pAppDomain,
+                             [in] ICorDebugThread *pThread, [in] ICorDebugFunction *pFunction);
+
+    HRESULT MDANotification([in] ICorDebugController * pController,
+                            [in] ICorDebugThread *pThread, [in] ICorDebugMDA * pMDA
+    );
+
+};
+[
+    object,
+    local,
+    uuid(3d6f5f61-7538-11d3-8d5b-00104b35e7ef),
+    pointer_default(unique)
+]
+interface ICorDebug : IUnknown
+{
+    HRESULT Initialize();
+    HRESULT Terminate();
+    HRESULT SetManagedHandler([in] ICorDebugManagedCallback *pCallback);
+    HRESULT SetUnmanagedHandler([in] ICorDebugUnmanagedCallback *pCallback);
+    HRESULT CreateProcess([in] LPCWSTR lpApplicationName, [in] LPWSTR lpCommandLine,
+                          [in] LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                          [in] LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                          [in] BOOL bInheritHandles, [in] DWORD dwCreationFlags,
+                          [in] PVOID lpEnvironment, [in] LPCWSTR lpCurrentDirectory,
+                          [in] LPSTARTUPINFOW lpStartupInfo,
+                          [in] LPPROCESS_INFORMATION lpProcessInformation,
+                          [in] CorDebugCreateProcessFlags debuggingFlags,
+                          [out] ICorDebugProcess **ppProcess);
+
+    HRESULT DebugActiveProcess([in] DWORD id, [in] BOOL win32Attach,
+                               [out] ICorDebugProcess **ppProcess);
+    HRESULT EnumerateProcesses([out] ICorDebugProcessEnum **ppProcess);
+    HRESULT GetProcess([in] DWORD dwProcessId, [out] ICorDebugProcess **ppProcess);
+    HRESULT CanLaunchOrAttach([in] DWORD dwProcessId, [in] BOOL win32DebuggingEnabled);
+};
+
+
+[
+    object,
+    local,
+    uuid(CC7BCAE8-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugBreakpoint : IUnknown
+{
+    HRESULT Activate([in] BOOL bActive);
+    HRESULT IsActive([out] BOOL *pbActive);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAE9-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugFunctionBreakpoint : ICorDebugBreakpoint
+{
+    HRESULT GetFunction([out] ICorDebugFunction **ppFunction);
+    HRESULT GetOffset([out] ULONG32 *pnOffset);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAEA-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugModuleBreakpoint : ICorDebugBreakpoint
+{
+    HRESULT GetModule([out] ICorDebugModule **ppModule);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAEB-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugValueBreakpoint : ICorDebugBreakpoint
+{
+    HRESULT GetValue([out] ICorDebugValue **ppValue);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAEC-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugStepper : IUnknown
+{
+    HRESULT IsActive([out] BOOL *pbActive);
+    HRESULT Deactivate();
+
+    typedef enum CorDebugIntercept
+    {
+          INTERCEPT_NONE                = 0x0 ,
+          INTERCEPT_CLASS_INIT          = 0x01,
+          INTERCEPT_EXCEPTION_FILTER    = 0x02,
+          INTERCEPT_SECURITY            = 0x04,
+          INTERCEPT_CONTEXT_POLICY      = 0x08,
+          INTERCEPT_INTERCEPTION        = 0x10,
+          INTERCEPT_ALL                 = 0xffff
+    } CorDebugIntercept;
+
+    HRESULT SetInterceptMask([in] CorDebugIntercept mask);
+
+    typedef enum CorDebugUnmappedStop
+    {
+        STOP_NONE               = 0x0,
+        STOP_PROLOG             = 0x01,
+        STOP_EPILOG             = 0x02,
+        STOP_NO_MAPPING_INFO    = 0x04,
+        STOP_OTHER_UNMAPPED     = 0x08,
+        STOP_UNMANAGED          = 0x10,
+
+        STOP_ALL                = 0xffff,
+
+    } CorDebugUnmappedStop;
+
+    HRESULT SetUnmappedStopMask([in] CorDebugUnmappedStop mask);
+    HRESULT Step([in] BOOL bStepIn);
+
+    typedef struct COR_DEBUG_STEP_RANGE
+    {
+        ULONG32 startOffset, endOffset;
+    } COR_DEBUG_STEP_RANGE;
+
+    HRESULT StepRange([in] BOOL bStepIn, [in] COR_DEBUG_STEP_RANGE ranges[], [in] ULONG32 cRangeCount);
+    HRESULT StepOut();
+    HRESULT SetRangeIL([in] BOOL bIL);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB01-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugEnum : IUnknown
+{
+    HRESULT Skip([in] ULONG celt);
+    HRESULT Reset();
+    HRESULT Clone([out] ICorDebugEnum **ppEnum);
+    HRESULT GetCount([out] ULONG *pcelt);
+};
+
+[
+    object,
+    local,
+    uuid(63ca1b24-4359-4883-bd57-13f815f58744),
+    pointer_default(unique)
+]
+
+interface ICorDebugAppDomainEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugAppDomain *values[], [out] ULONG *pceltFetched);
+
+};
+
+[
+    object,
+    local,
+    uuid(4a2a1ec9-85ec-4bfb-9f15-a89fdfe0fe83),
+    pointer_default(unique)
+]
+interface ICorDebugAssemblyEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugAssembly *values[], [out] ULONG *pceltFetched);
+
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB03-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugBreakpointEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugBreakpoint *breakpoints[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB08-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugChainEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugChain *chains[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(F0E18809-72B5-11d2-976F-00A0C9B4D50C),
+    pointer_default(unique)
+]
+interface ICorDebugErrorInfoEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugEditAndContinueErrorInfo *errors[],
+                 [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB07-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugFrameEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugFrame *frames[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB09-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugModuleEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugModule *modules[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB02-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugObjectEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] CORDB_ADDRESS objects[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB05-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugProcessEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugProcess *processes[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB04-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugStepperEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugStepper *steppers[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB06-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugThreadEnum : ICorDebugEnum
+{
+    HRESULT Next([in] ULONG celt, [out] ICorDebugThread *threads[], [out] ULONG *pceltFetched);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAEE-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugChain : IUnknown
+{
+    HRESULT GetThread([out] ICorDebugThread **ppThread);
+    HRESULT GetStackRange([out] CORDB_ADDRESS *pStart, [out] CORDB_ADDRESS *pEnd);
+    HRESULT GetContext([out] ICorDebugContext **ppContext);
+    HRESULT GetCaller([out] ICorDebugChain **ppChain);
+    HRESULT GetCallee([out] ICorDebugChain **ppChain);
+    HRESULT GetPrevious([out] ICorDebugChain **ppChain);
+    HRESULT GetNext([out] ICorDebugChain **ppChain);
+    HRESULT IsManaged([out] BOOL *pManaged);
+    HRESULT EnumerateFrames([out] ICorDebugFrameEnum **ppFrames);
+    HRESULT GetActiveFrame([out] ICorDebugFrame **ppFrame);
+    HRESULT GetRegisterSet([out] ICorDebugRegisterSet **ppRegisters);
+    typedef enum CorDebugChainReason
+    {
+        CHAIN_NONE              = 0x000,
+        CHAIN_CLASS_INIT        = 0x001,
+        CHAIN_EXCEPTION_FILTER  = 0x002,
+        CHAIN_SECURITY          = 0x004,
+        CHAIN_CONTEXT_POLICY    = 0x008,
+        CHAIN_INTERCEPTION      = 0x010,
+        CHAIN_PROCESS_START     = 0x020,
+        CHAIN_THREAD_START      = 0x040,
+        CHAIN_ENTER_MANAGED     = 0x080,
+        CHAIN_ENTER_UNMANAGED   = 0x100,
+        CHAIN_DEBUGGER_EVAL     = 0x200,
+        CHAIN_CONTEXT_SWITCH    = 0x400,
+        CHAIN_FUNC_EVAL         = 0x800,
+    } CorDebugChainReason;
+
+    HRESULT GetReason([out] CorDebugChainReason *pReason);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAEF-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugFrame : IUnknown
+{
+    HRESULT GetChain([out] ICorDebugChain **ppChain);
+    HRESULT GetCode([out] ICorDebugCode **ppCode);
+    HRESULT GetFunction([out] ICorDebugFunction **ppFunction);
+    HRESULT GetFunctionToken([out] mdMethodDef *pToken);
+    HRESULT GetStackRange([out] CORDB_ADDRESS *pStart, [out] CORDB_ADDRESS *pEnd);
+    HRESULT GetCaller([out] ICorDebugFrame **ppFrame);
+    HRESULT GetCallee([out] ICorDebugFrame **ppFrame);
+    HRESULT CreateStepper([out] ICorDebugStepper **ppStepper);
+};
+
+
+[
+    object,
+    local,
+    uuid(CC7BCB0B-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugRegisterSet : IUnknown
+{
+    typedef enum CorDebugRegister
+    {
+        REGISTER_INSTRUCTION_POINTER = 0,
+        REGISTER_STACK_POINTER,
+        REGISTER_FRAME_POINTER,
+
+        REGISTER_X86_EIP = 0,
+        REGISTER_X86_ESP,
+        REGISTER_X86_EBP,
+
+        REGISTER_X86_EAX,
+        REGISTER_X86_ECX,
+        REGISTER_X86_EDX,
+        REGISTER_X86_EBX,
+
+        REGISTER_X86_ESI,
+        REGISTER_X86_EDI,
+
+        REGISTER_X86_FPSTACK_0,
+        REGISTER_X86_FPSTACK_1,
+        REGISTER_X86_FPSTACK_2,
+        REGISTER_X86_FPSTACK_3,
+        REGISTER_X86_FPSTACK_4,
+        REGISTER_X86_FPSTACK_5,
+        REGISTER_X86_FPSTACK_6,
+        REGISTER_X86_FPSTACK_7,
+
+        REGISTER_AMD64_RIP = 0,
+        REGISTER_AMD64_RSP,
+        REGISTER_AMD64_RBP,
+
+        REGISTER_AMD64_RAX,
+        REGISTER_AMD64_RCX,
+        REGISTER_AMD64_RDX,
+        REGISTER_AMD64_RBX,
+
+        REGISTER_AMD64_RSI,
+        REGISTER_AMD64_RDI,
+
+        REGISTER_AMD64_R8,
+        REGISTER_AMD64_R9,
+        REGISTER_AMD64_R10,
+        REGISTER_AMD64_R11,
+        REGISTER_AMD64_R12,
+        REGISTER_AMD64_R13,
+        REGISTER_AMD64_R14,
+        REGISTER_AMD64_R15,
+
+        REGISTER_AMD64_XMM0,
+        REGISTER_AMD64_XMM1,
+        REGISTER_AMD64_XMM2,
+        REGISTER_AMD64_XMM3,
+        REGISTER_AMD64_XMM4,
+        REGISTER_AMD64_XMM5,
+        REGISTER_AMD64_XMM6,
+        REGISTER_AMD64_XMM7,
+        REGISTER_AMD64_XMM8,
+        REGISTER_AMD64_XMM9,
+        REGISTER_AMD64_XMM10,
+        REGISTER_AMD64_XMM11,
+        REGISTER_AMD64_XMM12,
+        REGISTER_AMD64_XMM13,
+        REGISTER_AMD64_XMM14,
+        REGISTER_AMD64_XMM15,
+
+        REGISTER_IA64_BSP = REGISTER_FRAME_POINTER,
+
+        REGISTER_IA64_R0  = REGISTER_IA64_BSP + 1,
+        REGISTER_IA64_F0  = REGISTER_IA64_R0  + 128,
+
+    } CorDebugRegister;
+
+    HRESULT GetRegistersAvailable([out] ULONG64 *pAvailable);
+
+    HRESULT GetRegisters([in] ULONG64 mask, [in] ULONG32 regCount,
+                         [out] CORDB_REGISTER regBuffer[]);
+    HRESULT SetRegisters([in] ULONG64 mask, [in] ULONG32 regCount,
+                         [in] CORDB_REGISTER regBuffer[]);
+    HRESULT GetThreadContext([in] ULONG32 contextSize, [in, out] BYTE context[]);
+    HRESULT SetThreadContext([in] ULONG32 contextSize, [in] BYTE context[]);
+}
+
+[
+    object,
+    local,
+    uuid(CC7BCAF6-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugEval : IUnknown
+{
+    HRESULT CallFunction([in] ICorDebugFunction *pFunction, [in] ULONG32 nArgs,
+                         [in] ICorDebugValue *ppArgs[]);
+    HRESULT NewObject([in] ICorDebugFunction *pConstructor, [in] ULONG32 nArgs,
+                      [in] ICorDebugValue *ppArgs[]);
+    HRESULT NewObjectNoConstructor([in] ICorDebugClass *pClass);
+    HRESULT NewString([in] LPCWSTR string);
+    HRESULT NewArray([in] CorElementType elementType, [in] ICorDebugClass *pElementClass,
+                     [in] ULONG32 rank, [in] ULONG32 dims[], [in] ULONG32 lowBounds[]);
+    HRESULT IsActive([out] BOOL *pbActive);
+    HRESULT Abort();
+    HRESULT GetResult([out] ICorDebugValue **ppResult);
+    HRESULT GetThread([out] ICorDebugThread **ppThread);
+    HRESULT CreateValue([in] CorElementType elementType, [in] ICorDebugClass *pElementClass,
+                        [out] ICorDebugValue **ppValue);
+};
+
+[
+    object,
+    local,
+    uuid(6DC3FA01-D7CB-11d2-8A95-0080C792E5D8),
+    pointer_default(unique)
+]
+interface ICorDebugEditAndContinueSnapshot : IUnknown
+{
+    HRESULT CopyMetaData([in] IStream *pIStream, [out] GUID *pMvid);
+    HRESULT GetMvid([out] GUID *pMvid);
+    HRESULT GetRoDataRVA([out] ULONG32 *pRoDataRVA);
+    HRESULT GetRwDataRVA([out] ULONG32 *pRwDataRVA);
+    HRESULT SetPEBytes([in] IStream *pIStream);
+    HRESULT SetILMap([in] mdToken mdFunction, [in] ULONG cMapSize, [in] COR_IL_MAP map[]);
+    HRESULT SetPESymbolBytes([in] IStream *pIStream);
+};
+
+[
+    object,
+    local,
+    uuid(dba2d8c1-e5c5-4069-8c13-10a7c6abf43d),
+    pointer_default(unique)
+]
+interface ICorDebugModule : IUnknown
+{
+    HRESULT GetProcess([out] ICorDebugProcess **ppProcess);
+    HRESULT GetBaseAddress([out] CORDB_ADDRESS *pAddress);
+    HRESULT GetAssembly([out] ICorDebugAssembly **ppAssembly);
+    HRESULT GetName([in] ULONG32 cchName, [out] ULONG32 *pcchName, [out] WCHAR szName[]);
+    HRESULT EnableJITDebugging([in] BOOL bTrackJITInfo, [in] BOOL bAllowJitOpts);
+    HRESULT EnableClassLoadCallbacks([in] BOOL bClassLoadCallbacks);
+    HRESULT GetFunctionFromToken([in] mdMethodDef methodDef, [out] ICorDebugFunction **ppFunction);
+    HRESULT GetFunctionFromRVA([in] CORDB_ADDRESS rva, [out] ICorDebugFunction **ppFunction);
+    HRESULT GetClassFromToken([in] mdTypeDef typeDef, [out] ICorDebugClass **ppClass);
+    HRESULT CreateBreakpoint([out] ICorDebugModuleBreakpoint **ppBreakpoint);
+    HRESULT GetEditAndContinueSnapshot([out] ICorDebugEditAndContinueSnapshot **ppEditAndContinueSnapshot);
+    HRESULT GetMetaDataInterface([in] REFIID riid, [out] IUnknown **ppObj);
+    HRESULT GetToken([out] mdModule *pToken);
+    HRESULT IsDynamic([out] BOOL *pDynamic);
+    HRESULT GetGlobalVariableValue([in] mdFieldDef fieldDef, [out] ICorDebugValue **ppValue);
+    HRESULT GetSize([out] ULONG32 *pcBytes);
+    HRESULT IsInMemory([out] BOOL *pInMemory);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAF5-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugClass : IUnknown
+{
+    HRESULT GetModule([out] ICorDebugModule **pModule);
+    HRESULT GetToken([out] mdTypeDef *pTypeDef);
+    HRESULT GetStaticFieldValue([in] mdFieldDef fieldDef, [in] ICorDebugFrame *pFrame,
+                                [out] ICorDebugValue **ppValue);
+};
+
+[
+    object,
+    local,
+    uuid(df59507c-d47a-459e-bce2-6427eac8fd06),
+    pointer_default(unique)
+]
+interface ICorDebugAssembly : IUnknown
+{
+    HRESULT GetProcess([out] ICorDebugProcess **ppProcess);
+    HRESULT GetAppDomain([out] ICorDebugAppDomain **ppAppDomain);
+    HRESULT EnumerateModules([out] ICorDebugModuleEnum **ppModules);
+    HRESULT GetCodeBase([in] ULONG32 cchName, [out] ULONG32 *pcchName, [out] WCHAR szName[]);
+    HRESULT GetName([in] ULONG32 cchName, [out] ULONG32 *pcchName, [out] WCHAR szName[]);
+};
+
+
+[
+    object,
+    local,
+    uuid(CC7BCAF3-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugFunction : IUnknown
+{
+    HRESULT GetModule([out] ICorDebugModule **ppModule);
+    HRESULT GetClass([out] ICorDebugClass **ppClass);
+    HRESULT GetToken([out] mdMethodDef *pMethodDef);
+    HRESULT GetILCode([out] ICorDebugCode **ppCode);
+    HRESULT GetNativeCode([out] ICorDebugCode **ppCode);
+    HRESULT CreateBreakpoint([out] ICorDebugFunctionBreakpoint **ppBreakpoint);
+    HRESULT GetLocalVarSigToken([out] mdSignature *pmdSig);
+    HRESULT GetCurrentVersionNumber([out] ULONG32 *pnCurrentVersion);
+};
+
+[
+    object,
+    local,
+    uuid(5263E909-8CB5-11d3-BD2F-0000F80849BD),
+    pointer_default(unique)
+]
+interface ICorDebugUnmanagedCallback : IUnknown
+{
+    HRESULT DebugEvent([in] LPDEBUG_EVENT pDebugEvent, [in] BOOL fOutOfBand);
+};
+
+[
+    object,
+    local,
+    uuid(8D600D41-F4F6-4cb3-B7EC-7BD164944036),
+    pointer_default(unique)
+]
+interface ICorDebugEditAndContinueErrorInfo : IUnknown
+{
+    HRESULT GetModule([out] ICorDebugModule **ppModule);
+    HRESULT GetToken([out]mdToken *pToken);
+    HRESULT GetErrorCode([out]HRESULT *pHr);
+    HRESULT GetString([in] ULONG32 cchString, [out] ULONG32 *pcchString,
+                      [out] WCHAR szString[]);
+}
+
+[
+    object,
+    local,
+    uuid(18AD3D6E-B7D2-11d2-BD04-0000F80849BD),
+    pointer_default(unique)
+]
+interface ICorDebugObjectValue : ICorDebugValue
+{
+    HRESULT GetClass([out] ICorDebugClass **ppClass);
+    HRESULT GetFieldValue([in] ICorDebugClass *pClass, [in] mdFieldDef fieldDef,
+                          [out] ICorDebugValue **ppValue);
+    HRESULT GetVirtualMethod([in] mdMemberRef memberRef, [out] ICorDebugFunction **ppFunction);
+    HRESULT GetContext([out] ICorDebugContext **ppContext);
+    HRESULT IsValueClass([out] BOOL *pbIsValueClass);
+    HRESULT GetManagedCopy([out] IUnknown **ppObject);
+    HRESULT SetFromManagedCopy([in] IUnknown *pObject);
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCB00-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugContext : ICorDebugObjectValue
+{
+};
+
+[
+    object,
+    local,
+    uuid(CC7BCAF4-8A68-11d2-983C-0000F808342D),
+    pointer_default(unique)
+]
+interface ICorDebugCode : IUnknown
+{
+    HRESULT IsIL([out] BOOL *pbIL);
+    HRESULT GetFunction([out] ICorDebugFunction **ppFunction);
+    HRESULT GetAddress([out] CORDB_ADDRESS *pStart);
+    HRESULT GetSize([out] ULONG32 *pcBytes);
+    HRESULT CreateBreakpoint([in] ULONG32 offset, [out] ICorDebugFunctionBreakpoint **ppBreakpoint);
+    HRESULT GetCode([in] ULONG32 startOffset, [in] ULONG32 endOffset,
+                    [in] ULONG32 cBufferAlloc, [out] BYTE buffer[], [out] ULONG32 *pcBufferSize);
+    HRESULT GetVersionNumber([out] ULONG32 *nVersion);
+    HRESULT GetILToNativeMapping([in] ULONG32 cMap, [out] ULONG32 *pcMap,
+                                 [out] COR_DEBUG_IL_TO_NATIVE_MAP map[]);
+    HRESULT GetEnCRemapSequencePoints([in] ULONG32 cMap,[out] ULONG32 *pcMap,
+                                      [out] ULONG32 offsets[]);
+};
+
+[
+    object,
+    local,
+    uuid(CC726F2F-1DB7-459b-B0EC-05F01D841B42),
+    pointer_default(unique)
+]
+interface ICorDebugMDA : IUnknown
+{
+    HRESULT GetName([in] ULONG32 cchName, [out] ULONG32 * pcchName, [out] WCHAR szName[]);
+
+    HRESULT GetDescription([in] ULONG32 cchName, [out] ULONG32 * pcchName, [out] WCHAR szName[]);
+
+    HRESULT GetXML([in] ULONG32 cchName, [out] ULONG32 * pcchName, [out] WCHAR szName[]);
+
+    typedef enum CorDebugMDAFlags
+    {
+        MDA_FLAG_SLIP = 0x2
+    } CorDebugMDAFlags;
+
+    HRESULT GetFlags([in] CorDebugMDAFlags * pFlags);
+
+    HRESULT GetOSThreadId([out] DWORD * pOsTid);
+};

@@ -774,7 +774,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 hControl = GetDlgItem(hDlg, IDC_FINDWHAT);
                 if (hControl)
-                    GetWindowText(hControl, s_szFindWhat, sizeof(s_szFindWhat) / sizeof(s_szFindWhat[0]));
+                    GetWindowText(hControl, s_szFindWhat, COUNT_OF(s_szFindWhat));
                 EndDialog(hDlg, 1);
                 break;
 
@@ -788,7 +788,7 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
             switch(LOWORD(wParam))
             {
             case IDC_FINDWHAT:
-                GetWindowText((HWND) lParam, s_szSavedFindValue, sizeof(s_szSavedFindValue) / sizeof(s_szSavedFindValue[0]));
+                GetWindowText((HWND) lParam, s_szSavedFindValue, COUNT_OF(s_szSavedFindValue));
                 hControl = GetDlgItem(hDlg, IDOK);
                 if (hControl)
                 {
@@ -817,8 +817,8 @@ void FindDialog(HWND hWnd)
         {
             TCHAR msg[128], caption[128];
 
-            LoadString(hInst, IDS_FINISHEDFIND, msg, sizeof(msg)/sizeof(TCHAR));
-            LoadString(hInst, IDS_APP_TITLE, caption, sizeof(caption)/sizeof(TCHAR));
+            LoadString(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
+            LoadString(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
             MessageBox(0, msg, caption, MB_ICONINFORMATION);
         }
     }

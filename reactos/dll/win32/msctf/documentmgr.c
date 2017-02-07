@@ -41,8 +41,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 typedef struct tagDocumentMgr {
-    const ITfDocumentMgrVtbl *DocumentMgrVtbl;
-    const ITfSourceVtbl *SourceVtbl;
+    ITfDocumentMgr ITfDocumentMgr_iface;
+    ITfSource ITfSource_iface;
     LONG refCount;
 
     /* Aggregation */
@@ -53,7 +53,7 @@ typedef struct tagDocumentMgr {
 } DocumentMgr;
 
 typedef struct tagEnumTfContext {
-    const IEnumTfContextsVtbl *Vtbl;
+    IEnumTfContexts IEnumTfContexts_iface;
     LONG refCount;
 
     DWORD   index;
@@ -62,9 +62,19 @@ typedef struct tagEnumTfContext {
 
 static HRESULT EnumTfContext_Constructor(DocumentMgr* mgr, IEnumTfContexts **ppOut);
 
-static inline DocumentMgr *impl_from_ITfSourceVtbl(ITfSource *iface)
+static inline DocumentMgr *impl_from_ITfDocumentMgr(ITfDocumentMgr *iface)
 {
-    return (DocumentMgr *)((char *)iface - FIELD_OFFSET(DocumentMgr,SourceVtbl));
+    return CONTAINING_RECORD(iface, DocumentMgr, ITfDocumentMgr_iface);
+}
+
+static inline DocumentMgr *impl_from_ITfSource(ITfSource *iface)
+{
+    return CONTAINING_RECORD(iface, DocumentMgr, ITfSource_iface);
+}
+
+static inline EnumTfContext *impl_from_IEnumTfContexts(IEnumTfContexts *iface)\
+{
+    return CONTAINING_RECORD(iface, EnumTfContext, IEnumTfContexts_iface);
 }
 
 static void DocumentMgr_Destructor(DocumentMgr *This)
@@ -73,7 +83,7 @@ static void DocumentMgr_Destructor(DocumentMgr *This)
     TRACE("destroying %p\n", This);
 
     TF_GetThreadMgr(&tm);
-    ThreadMgr_OnDocumentMgrDestruction(tm, (ITfDocumentMgr*)This);
+    ThreadMgr_OnDocumentMgrDestruction(tm, &This->ITfDocumentMgr_iface);
 
     if (This->contextStack[0])
         ITfContext_Release(This->contextStack[0]);
@@ -85,7 +95,7 @@ static void DocumentMgr_Destructor(DocumentMgr *This)
 
 static HRESULT WINAPI DocumentMgr_QueryInterface(ITfDocumentMgr *iface, REFIID iid, LPVOID *ppvOut)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfDocumentMgr))
@@ -94,7 +104,7 @@ static HRESULT WINAPI DocumentMgr_QueryInterface(ITfDocumentMgr *iface, REFIID i
     }
     else if (IsEqualIID(iid, &IID_ITfSource))
     {
-        *ppvOut = &This->SourceVtbl;
+        *ppvOut = &This->ITfSource_iface;
     }
     else if (IsEqualIID(iid, &IID_ITfCompartmentMgr))
     {
@@ -113,13 +123,13 @@ static HRESULT WINAPI DocumentMgr_QueryInterface(ITfDocumentMgr *iface, REFIID i
 
 static ULONG WINAPI DocumentMgr_AddRef(ITfDocumentMgr *iface)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI DocumentMgr_Release(ITfDocumentMgr *iface)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -136,14 +146,14 @@ static HRESULT WINAPI DocumentMgr_CreateContext(ITfDocumentMgr *iface,
         DWORD dwFlags, IUnknown *punk, ITfContext **ppic,
         TfEditCookie *pecTextStore)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     TRACE("(%p) 0x%x 0x%x %p %p %p\n",This,tidOwner,dwFlags,punk,ppic,pecTextStore);
     return Context_Constructor(tidOwner, punk, iface, ppic, pecTextStore);
 }
 
 static HRESULT WINAPI DocumentMgr_Push(ITfDocumentMgr *iface, ITfContext *pic)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     ITfContext *check;
 
     TRACE("(%p) %p\n",This,pic);
@@ -168,7 +178,7 @@ static HRESULT WINAPI DocumentMgr_Push(ITfDocumentMgr *iface, ITfContext *pic)
 
 static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     TRACE("(%p) 0x%x\n",This,dwFlags);
 
     if (dwFlags == TF_POPF_ALL)
@@ -210,7 +220,7 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
 
 static HRESULT WINAPI DocumentMgr_GetTop(ITfDocumentMgr *iface, ITfContext **ppic)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     TRACE("(%p)\n",This);
     if (!ppic)
         return E_INVALIDARG;
@@ -225,7 +235,7 @@ static HRESULT WINAPI DocumentMgr_GetTop(ITfDocumentMgr *iface, ITfContext **ppi
 
 static HRESULT WINAPI DocumentMgr_GetBase(ITfDocumentMgr *iface, ITfContext **ppic)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     ITfContext *tgt;
 
     TRACE("(%p)\n",This);
@@ -247,7 +257,7 @@ static HRESULT WINAPI DocumentMgr_GetBase(ITfDocumentMgr *iface, ITfContext **pp
 
 static HRESULT WINAPI DocumentMgr_EnumContexts(ITfDocumentMgr *iface, IEnumTfContexts **ppEnum)
 {
-    DocumentMgr *This = (DocumentMgr *)iface;
+    DocumentMgr *This = impl_from_ITfDocumentMgr(iface);
     TRACE("(%p) %p\n",This,ppEnum);
     return EnumTfContext_Constructor(This, ppEnum);
 }
@@ -269,20 +279,20 @@ static const ITfDocumentMgrVtbl DocumentMgr_DocumentMgrVtbl =
 
 static HRESULT WINAPI Source_QueryInterface(ITfSource *iface, REFIID iid, LPVOID *ppvOut)
 {
-    DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
-    return DocumentMgr_QueryInterface((ITfDocumentMgr*)This, iid, *ppvOut);
+    DocumentMgr *This = impl_from_ITfSource(iface);
+    return DocumentMgr_QueryInterface(&This->ITfDocumentMgr_iface, iid, *ppvOut);
 }
 
 static ULONG WINAPI Source_AddRef(ITfSource *iface)
 {
-    DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
-    return DocumentMgr_AddRef((ITfDocumentMgr*)This);
+    DocumentMgr *This = impl_from_ITfSource(iface);
+    return DocumentMgr_AddRef(&This->ITfDocumentMgr_iface);
 }
 
 static ULONG WINAPI Source_Release(ITfSource *iface)
 {
-    DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
-    return DocumentMgr_Release((ITfDocumentMgr*)This);
+    DocumentMgr *This = impl_from_ITfSource(iface);
+    return DocumentMgr_Release(&This->ITfDocumentMgr_iface);
 }
 
 /*****************************************************
@@ -291,14 +301,14 @@ static ULONG WINAPI Source_Release(ITfSource *iface)
 static HRESULT WINAPI DocumentMgrSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
-    DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
+    DocumentMgr *This = impl_from_ITfSource(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DocumentMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
-    DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
+    DocumentMgr *This = impl_from_ITfSource(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -321,20 +331,20 @@ HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink *ThreadMgrSink, ITfDocumen
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->DocumentMgrVtbl= &DocumentMgr_DocumentMgrVtbl;
-    This->SourceVtbl = &DocumentMgr_SourceVtbl;
+    This->ITfDocumentMgr_iface.lpVtbl = &DocumentMgr_DocumentMgrVtbl;
+    This->ITfSource_iface.lpVtbl = &DocumentMgr_SourceVtbl;
     This->refCount = 1;
     This->ThreadMgrSink = ThreadMgrSink;
 
     CompartmentMgr_Constructor((IUnknown*)This, &IID_IUnknown, (IUnknown**)&This->CompartmentMgr);
 
     TRACE("returning %p\n", This);
-    *ppOut = (ITfDocumentMgr*)This;
+    *ppOut = &This->ITfDocumentMgr_iface;
     return S_OK;
 }
 
 /**************************************************
- * IEnumTfContexts implementaion
+ * IEnumTfContexts implementation
  **************************************************/
 static void EnumTfContext_Destructor(EnumTfContext *This)
 {
@@ -344,7 +354,7 @@ static void EnumTfContext_Destructor(EnumTfContext *This)
 
 static HRESULT WINAPI EnumTfContext_QueryInterface(IEnumTfContexts *iface, REFIID iid, LPVOID *ppvOut)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IEnumTfContexts))
@@ -364,13 +374,13 @@ static HRESULT WINAPI EnumTfContext_QueryInterface(IEnumTfContexts *iface, REFII
 
 static ULONG WINAPI EnumTfContext_AddRef(IEnumTfContexts *iface)
 {
-    EnumTfContext *This = (EnumTfContext*)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI EnumTfContext_Release(IEnumTfContexts *iface)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -382,7 +392,7 @@ static ULONG WINAPI EnumTfContext_Release(IEnumTfContexts *iface)
 static HRESULT WINAPI EnumTfContext_Next(IEnumTfContexts *iface,
     ULONG ulCount, ITfContext **rgContext, ULONG *pcFetched)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     ULONG fetched = 0;
 
     TRACE("(%p)\n",This);
@@ -411,7 +421,7 @@ static HRESULT WINAPI EnumTfContext_Next(IEnumTfContexts *iface,
 
 static HRESULT WINAPI EnumTfContext_Skip( IEnumTfContexts* iface, ULONG celt)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     TRACE("(%p)\n",This);
     This->index += celt;
     return S_OK;
@@ -419,7 +429,7 @@ static HRESULT WINAPI EnumTfContext_Skip( IEnumTfContexts* iface, ULONG celt)
 
 static HRESULT WINAPI EnumTfContext_Reset( IEnumTfContexts* iface)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     TRACE("(%p)\n",This);
     This->index = 0;
     return S_OK;
@@ -428,7 +438,7 @@ static HRESULT WINAPI EnumTfContext_Reset( IEnumTfContexts* iface)
 static HRESULT WINAPI EnumTfContext_Clone( IEnumTfContexts *iface,
     IEnumTfContexts **ppenum)
 {
-    EnumTfContext *This = (EnumTfContext *)iface;
+    EnumTfContext *This = impl_from_IEnumTfContexts(iface);
     HRESULT res;
 
     TRACE("(%p)\n",This);
@@ -438,7 +448,7 @@ static HRESULT WINAPI EnumTfContext_Clone( IEnumTfContexts *iface,
     res = EnumTfContext_Constructor(This->docmgr, ppenum);
     if (SUCCEEDED(res))
     {
-        EnumTfContext *new_This = (EnumTfContext *)*ppenum;
+        EnumTfContext *new_This = impl_from_IEnumTfContexts(*ppenum);
         new_This->index = This->index;
     }
     return res;
@@ -463,11 +473,11 @@ static HRESULT EnumTfContext_Constructor(DocumentMgr *mgr, IEnumTfContexts **ppO
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->Vtbl= &IEnumTfContexts_Vtbl;
+    This->IEnumTfContexts_iface.lpVtbl = &IEnumTfContexts_Vtbl;
     This->refCount = 1;
     This->docmgr = mgr;
 
     TRACE("returning %p\n", This);
-    *ppOut = (IEnumTfContexts*)This;
+    *ppOut = &This->IEnumTfContexts_iface;
     return S_OK;
 }

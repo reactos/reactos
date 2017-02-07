@@ -101,7 +101,7 @@ typedef struct _CONSOLE_SCREEN_BUFFER_INFO {
 	SMALL_RECT srWindow;
 	COORD	dwMaximumWindowSize;
 } CONSOLE_SCREEN_BUFFER_INFO,*PCONSOLE_SCREEN_BUFFER_INFO;
-typedef BOOL(CALLBACK *PHANDLER_ROUTINE)(DWORD);
+typedef BOOL(CALLBACK *PHANDLER_ROUTINE)(_In_ DWORD);
 typedef struct _KEY_EVENT_RECORD {
 	BOOL bKeyDown;
 	WORD wRepeatCount;
@@ -175,72 +175,213 @@ typedef struct _CONSOLE_FONT_INFOEX {
 BOOL WINAPI AllocConsole(void);
 #if (_WIN32_WINNT >= 0x0501)
 #define ATTACH_PARENT_PROCESS (DWORD)-1
-BOOL WINAPI AttachConsole(DWORD);
-BOOL WINAPI AddConsoleAliasA(LPCSTR,LPCSTR,LPCSTR);
-BOOL WINAPI AddConsoleAliasW(LPCWSTR,LPCWSTR,LPCWSTR);
-DWORD WINAPI GetConsoleAliasA(LPSTR,LPSTR,DWORD,LPSTR);
-DWORD WINAPI GetConsoleAliasW(LPWSTR,LPWSTR,DWORD,LPWSTR);
-DWORD WINAPI GetConsoleAliasesA(LPSTR,DWORD,LPSTR);
-DWORD WINAPI GetConsoleAliasesW(LPWSTR,DWORD,LPWSTR);
-DWORD WINAPI GetConsoleAliasesLengthA(LPSTR);
-DWORD WINAPI GetConsoleAliasesLengthW(LPWSTR);
+BOOL WINAPI AttachConsole(_In_ DWORD);
+BOOL WINAPI AddConsoleAliasA(_In_ LPCSTR, _In_ LPCSTR, _In_ LPCSTR);
+BOOL WINAPI AddConsoleAliasW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ LPCWSTR);
+
+DWORD
+WINAPI
+GetConsoleAliasA(
+  _In_ LPSTR Source,
+  _Out_writes_(TargetBufferLength) LPSTR TargetBuffer,
+  _In_ DWORD TargetBufferLength,
+  _In_ LPSTR ExeName);
+
+DWORD
+WINAPI
+GetConsoleAliasW(
+  _In_ LPWSTR Source,
+  _Out_writes_(TargetBufferLength) LPWSTR TargetBuffer,
+  _In_ DWORD TargetBufferLength,
+  _In_ LPWSTR ExeName);
+
+DWORD
+WINAPI
+GetConsoleAliasesA(
+  _Out_writes_(AliasBufferLength) LPSTR AliasBuffer,
+  _In_ DWORD AliasBufferLength,
+  _In_ LPSTR ExeName);
+
+DWORD
+WINAPI
+GetConsoleAliasesW(
+  _Out_writes_(AliasBufferLength) LPWSTR AliasBuffer,
+  _In_ DWORD AliasBufferLength,
+  _In_ LPWSTR ExeName);
+
+DWORD WINAPI GetConsoleAliasesLengthA(_In_ LPSTR);
+DWORD WINAPI GetConsoleAliasesLengthW(_In_ LPWSTR);
 #endif
-HANDLE WINAPI CreateConsoleScreenBuffer(DWORD,DWORD,CONST SECURITY_ATTRIBUTES*,DWORD,LPVOID);
-BOOL WINAPI FillConsoleOutputAttribute(HANDLE,WORD,DWORD,COORD,PDWORD);
-BOOL WINAPI FillConsoleOutputCharacterA(HANDLE,CHAR,DWORD,COORD,PDWORD);
-BOOL WINAPI FillConsoleOutputCharacterW(HANDLE,WCHAR,DWORD,COORD,PDWORD);
-BOOL WINAPI FlushConsoleInputBuffer(HANDLE);
+HANDLE WINAPI CreateConsoleScreenBuffer(_In_ DWORD, _In_ DWORD, _In_opt_ CONST SECURITY_ATTRIBUTES*, _In_ DWORD, _Reserved_ LPVOID);
+BOOL WINAPI FillConsoleOutputAttribute(_In_ HANDLE, _In_ WORD, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
+BOOL WINAPI FillConsoleOutputCharacterA(_In_ HANDLE, _In_ CHAR, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
+BOOL WINAPI FillConsoleOutputCharacterW(_In_ HANDLE, _In_ WCHAR, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
+BOOL WINAPI FlushConsoleInputBuffer(_In_ HANDLE);
 BOOL WINAPI FreeConsole(void);
-BOOL WINAPI GenerateConsoleCtrlEvent(DWORD,DWORD);
+BOOL WINAPI GenerateConsoleCtrlEvent(_In_ DWORD, _In_ DWORD);
 UINT WINAPI GetConsoleCP(void);
-BOOL WINAPI GetConsoleCursorInfo(HANDLE,PCONSOLE_CURSOR_INFO);
+BOOL WINAPI GetConsoleCursorInfo(_In_ HANDLE, _Out_ PCONSOLE_CURSOR_INFO);
 BOOL WINAPI GetConsoleMode(HANDLE,PDWORD);
 UINT WINAPI GetConsoleOutputCP(void);
-BOOL WINAPI GetConsoleScreenBufferInfo(HANDLE,PCONSOLE_SCREEN_BUFFER_INFO);
-DWORD WINAPI GetConsoleTitleA(LPSTR,DWORD);
-DWORD WINAPI GetConsoleTitleW(LPWSTR,DWORD);
+BOOL WINAPI GetConsoleScreenBufferInfo(_In_ HANDLE, _Out_ PCONSOLE_SCREEN_BUFFER_INFO);
+
+DWORD
+WINAPI
+GetConsoleTitleA(
+  _Out_writes_(nSize) LPSTR lpConsoleTitle,
+  _In_ DWORD nSize);
+
+DWORD
+WINAPI
+GetConsoleTitleW(
+  _Out_writes_(nSize) LPWSTR lpConsoleTitle,
+  _In_ DWORD nSize);
+
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetConsoleWindow(void);
-WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(OUT LPDWORD lpModeFlags);
-BOOL APIENTRY SetConsoleDisplayMode(IN HANDLE hConsoleOutput,IN DWORD dwFlags, OUT PCOORD lpNewScreenBufferDimensions);
+WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
+BOOL APIENTRY SetConsoleDisplayMode(_In_ HANDLE hConsoleOutput, _In_ DWORD dwFlags, _Out_opt_ PCOORD lpNewScreenBufferDimensions);
 #endif
-COORD WINAPI GetLargestConsoleWindowSize(HANDLE);
+COORD WINAPI GetLargestConsoleWindowSize(_In_ HANDLE);
 BOOL WINAPI GetNumberOfConsoleInputEvents(HANDLE,PDWORD);
-BOOL WINAPI GetNumberOfConsoleMouseButtons(PDWORD);
+BOOL WINAPI GetNumberOfConsoleMouseButtons(_Out_ PDWORD);
 BOOL WINAPI PeekConsoleInputA(HANDLE,PINPUT_RECORD,DWORD,PDWORD);
-BOOL WINAPI PeekConsoleInputW(HANDLE,PINPUT_RECORD,DWORD,PDWORD);
+
+BOOL
+WINAPI
+PeekConsoleInputW(
+  _In_ HANDLE hConsoleInput,
+  _Out_writes_(nLength) PINPUT_RECORD lpBuffer,
+  _In_ DWORD nLength,
+  _Out_ LPDWORD lpNumberOfEventsRead);
+
 BOOL WINAPI ReadConsoleA(HANDLE,PVOID,DWORD,PDWORD,PCONSOLE_READCONSOLE_CONTROL);
 BOOL WINAPI ReadConsoleW(HANDLE,PVOID,DWORD,PDWORD,PCONSOLE_READCONSOLE_CONTROL);
 BOOL WINAPI ReadConsoleInputA(HANDLE,PINPUT_RECORD,DWORD,PDWORD);
 BOOL WINAPI ReadConsoleInputW(HANDLE,PINPUT_RECORD,DWORD,PDWORD);
-BOOL WINAPI ReadConsoleOutputAttribute(HANDLE,LPWORD,DWORD,COORD,LPDWORD);
-BOOL WINAPI ReadConsoleOutputCharacterA(HANDLE,LPSTR,DWORD,COORD,PDWORD);
-BOOL WINAPI ReadConsoleOutputCharacterW(HANDLE,LPWSTR,DWORD,COORD,PDWORD);
-BOOL WINAPI ReadConsoleOutputA(HANDLE,PCHAR_INFO,COORD,COORD,PSMALL_RECT);
-BOOL WINAPI ReadConsoleOutputW(HANDLE,PCHAR_INFO,COORD,COORD,PSMALL_RECT);
-BOOL WINAPI ScrollConsoleScreenBufferA(HANDLE,const SMALL_RECT*,const SMALL_RECT*,COORD,const CHAR_INFO*);
-BOOL WINAPI ScrollConsoleScreenBufferW(HANDLE,const SMALL_RECT*,const SMALL_RECT*,COORD,const CHAR_INFO*);
-BOOL WINAPI SetConsoleActiveScreenBuffer(HANDLE);
-BOOL WINAPI SetConsoleCP(UINT);
+
+BOOL
+WINAPI
+ReadConsoleOutputAttribute(
+  _In_ HANDLE hConsoleOutput,
+  _Out_writes_(nLength) LPWORD lpAttribute,
+  _In_ DWORD nLength,
+  _In_ COORD dwReadCoord,
+  _Out_ LPDWORD lpNumberOfAttrsRead);
+
+BOOL
+WINAPI
+ReadConsoleOutputCharacterA(
+  _In_ HANDLE hConsoleOutput,
+  _Out_writes_(nLength) LPSTR lpCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwReadCoord,
+  _Out_ LPDWORD lpNumberOfCharsRead);
+
+BOOL
+WINAPI
+ReadConsoleOutputCharacterW(
+  _In_ HANDLE hConsoleOutput,
+  _Out_writes_(nLength) LPWSTR lpCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwReadCoord,
+  _Out_ LPDWORD lpNumberOfCharsRead);
+
+BOOL
+WINAPI
+ReadConsoleOutputA(
+  _In_ HANDLE hConsoleOutput,
+  _Out_writes_(dwBufferSize.X * dwBufferSize.Y) PCHAR_INFO lpBuffer,
+  _In_ COORD dwBufferSize,
+  _In_ COORD dwBufferCoord,
+  _Inout_ PSMALL_RECT lpReadRegion);
+
+BOOL
+WINAPI
+ReadConsoleOutputW(
+  _In_ HANDLE hConsoleOutput,
+  _Out_writes_(dwBufferSize.X * dwBufferSize.Y) PCHAR_INFO lpBuffer,
+  _In_ COORD dwBufferSize,
+  _In_ COORD dwBufferCoord,
+  _Inout_ PSMALL_RECT lpReadRegion);
+
+BOOL WINAPI ScrollConsoleScreenBufferA(_In_ HANDLE, _In_ const SMALL_RECT*, _In_opt_ const SMALL_RECT*, _In_ COORD, _In_ const CHAR_INFO*);
+BOOL WINAPI ScrollConsoleScreenBufferW(_In_ HANDLE, _In_ const SMALL_RECT*, _In_opt_ const SMALL_RECT*, _In_ COORD, _In_ const CHAR_INFO*);
+BOOL WINAPI SetConsoleActiveScreenBuffer(_In_ HANDLE);
+BOOL WINAPI SetConsoleCP(_In_ UINT);
 BOOL WINAPI SetConsoleCtrlHandler(PHANDLER_ROUTINE,BOOL);
-BOOL WINAPI SetConsoleCursorInfo(HANDLE,const CONSOLE_CURSOR_INFO*);
-BOOL WINAPI SetConsoleCursorPosition(HANDLE,COORD);
+BOOL WINAPI SetConsoleCursorInfo(_In_ HANDLE, _In_ const CONSOLE_CURSOR_INFO*);
+BOOL WINAPI SetConsoleCursorPosition(_In_ HANDLE, _In_ COORD);
 BOOL WINAPI SetConsoleMode(HANDLE,DWORD);
-BOOL WINAPI SetConsoleOutputCP(UINT);
-BOOL WINAPI SetConsoleScreenBufferSize(HANDLE,COORD);
-BOOL WINAPI SetConsoleTextAttribute(HANDLE,WORD);
-BOOL WINAPI SetConsoleTitleA(LPCSTR);
-BOOL WINAPI SetConsoleTitleW(LPCWSTR);
-BOOL WINAPI SetConsoleWindowInfo(HANDLE,BOOL,const SMALL_RECT*);
+BOOL WINAPI SetConsoleOutputCP(_In_ UINT);
+BOOL WINAPI SetConsoleScreenBufferSize(_In_ HANDLE, _In_ COORD);
+BOOL WINAPI SetConsoleTextAttribute(_In_ HANDLE, _In_ WORD);
+BOOL WINAPI SetConsoleTitleA(_In_ LPCSTR);
+BOOL WINAPI SetConsoleTitleW(_In_ LPCWSTR);
+BOOL WINAPI SetConsoleWindowInfo(_In_ HANDLE, _In_ BOOL, _In_ const SMALL_RECT*);
 BOOL WINAPI WriteConsoleA(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 BOOL WINAPI WriteConsoleW(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
-BOOL WINAPI WriteConsoleInputA(HANDLE,const INPUT_RECORD*,DWORD,PDWORD);
-BOOL WINAPI WriteConsoleInputW(HANDLE,const INPUT_RECORD*,DWORD,PDWORD);
-BOOL WINAPI WriteConsoleOutputA(HANDLE,const CHAR_INFO*,COORD,COORD,PSMALL_RECT);
-BOOL WINAPI WriteConsoleOutputW(HANDLE,const CHAR_INFO*,COORD,COORD,PSMALL_RECT);
-BOOL WINAPI WriteConsoleOutputAttribute(HANDLE,const WORD*,DWORD,COORD,PDWORD);
-BOOL WINAPI WriteConsoleOutputCharacterA(HANDLE,LPCSTR,DWORD,COORD,PDWORD);
-BOOL WINAPI WriteConsoleOutputCharacterW(HANDLE,LPCWSTR,DWORD,COORD,PDWORD);
+
+BOOL
+WINAPI
+WriteConsoleInputA(
+  _In_ HANDLE hConsoleInput,
+  _In_reads_(nLength) CONST INPUT_RECORD *lpBuffer,
+  _In_ DWORD nLength,
+  _Out_ LPDWORD lpNumberOfEventsWritten);
+
+BOOL
+WINAPI
+WriteConsoleInputW(
+  _In_ HANDLE hConsoleInput,
+  _In_reads_(nLength) CONST INPUT_RECORD *lpBuffer,
+  _In_ DWORD nLength,
+  _Out_ LPDWORD lpNumberOfEventsWritten);
+
+BOOL
+WINAPI
+WriteConsoleOutputA(
+  _In_ HANDLE hConsoleOutput,
+  _In_reads_(dwBufferSize.X * dwBufferSize.Y) CONST CHAR_INFO *lpBuffer,
+  _In_ COORD dwBufferSize,
+  _In_ COORD dwBufferCoord,
+  _Inout_ PSMALL_RECT lpWriteRegion);
+
+BOOL
+WINAPI
+WriteConsoleOutputW(
+  _In_ HANDLE hConsoleOutput,
+  _In_reads_(dwBufferSize.X * dwBufferSize.Y) CONST CHAR_INFO *lpBuffer,
+  _In_ COORD dwBufferSize,
+  _In_ COORD dwBufferCoord,
+  _Inout_ PSMALL_RECT lpWriteRegion);
+
+BOOL
+WINAPI
+WriteConsoleOutputAttribute(
+  _In_ HANDLE hConsoleOutput,
+  _In_reads_(nLength) CONST WORD *lpAttribute,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfAttrsWritten);
+
+BOOL
+WINAPI
+WriteConsoleOutputCharacterA(
+  _In_ HANDLE hConsoleOutput,
+  _In_reads_(nLength) LPCSTR lpCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfCharsWritten);
+
+BOOL
+WINAPI
+WriteConsoleOutputCharacterW(
+  _In_ HANDLE hConsoleOutput,
+  _In_reads_(nLength) LPCWSTR lpCharacter,
+  _In_ DWORD nLength,
+  _In_ COORD dwWriteCoord,
+  _Out_ LPDWORD lpNumberOfCharsWritten);
 
 #define CONSOLE_FULLSCREEN 1
 #define CONSOLE_FULLSCREEN_HARDWARE 2

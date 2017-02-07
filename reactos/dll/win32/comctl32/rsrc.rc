@@ -36,6 +36,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "wine/wine_common_ver.rc"
 
+/* @makedep: comctl32.manifest */
+WINE_MANIFEST RT_MANIFEST comctl32.manifest
+
 /* @makedep: idt_check.bmp */
 IDT_CHECK BITMAP idt_check.bmp
 
@@ -90,34 +93,93 @@ IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
  * get localized bitmaps for example.
  */
 
-#include "comctl_Bg.rc"
-#include "comctl_Cs.rc"
-#include "comctl_El.rc"
-#include "comctl_En.rc"
-#include "comctl_Eo.rc"
-#include "comctl_Es.rc"
-#include "comctl_Hu.rc"
-#include "comctl_Nl.rc"
-#include "comctl_No.rc"
-#include "comctl_Pl.rc"
-#include "comctl_Sk.rc"
-#include "comctl_Sv.rc"
-#include "comctl_Th.rc"
-#include "comctl_Tr.rc"
-
 /* UTF-8 */
-#include "comctl_Da.rc"
-#include "comctl_De.rc"
-#include "comctl_Fr.rc"
-#include "comctl_He.rc"
-#include "comctl_It.rc"
-#include "comctl_Ja.rc"
-#include "comctl_Ko.rc"
-#include "comctl_Lt.rc"
-#include "comctl_Pt.rc"
-#include "comctl_Ro.rc"
-#include "comctl_Ru.rc"
-#include "comctl_Si.rc"
-#include "comctl_Sr.rc"
-#include "comctl_Uk.rc"
-#include "comctl_Zh.rc"
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_BG_BG
+    #include "comctl_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "comctl_Cs.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "comctl_El.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "comctl_En.rc"
+#endif
+#ifdef LANGUAGE_EO_AA
+    #include "comctl_Eo.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "comctl_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "comctl_Hu.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "comctl_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "comctl_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "comctl_Pl.rc"
+#endif
+#ifdef LANGUAGE_SK_SK
+    #include "comctl_Sk.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "comctl_Sv.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "comctl_Th.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "comctl_Tr.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "comctl_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "comctl_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "comctl_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "comctl_He.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "comctl_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "comctl_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "comctl_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "comctl_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "comctl_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "comctl_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "comctl_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "comctl_Si.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "comctl_Sr.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "comctl_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "comctl_Zh.rc"
+#endif

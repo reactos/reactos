@@ -18,96 +18,94 @@
  */
 
 /*
- *Spanish Language resource file
- *ReactOs (c) 2005 Samuel Serapión Vega
- *ReactOs (c) 2007 Marc Piulachs
- *ReactOs (c) 2008 Javier Remacha
+ * Spanish Language resource file
+ * (C) 2005 Samuel SerapiÃ³n Vega
+ * (C) 2007 Marc Piulachs
+ * (C) 2008 Javier Remacha
  */
-
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bienvenido al asistente de instalación de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Este asistente instalará ReactOS en su equipo. El asistente necesita recopilar alguna información sobre usted y su equipo para configurar ReactOS apropiadamente.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Pulse Siguiente para continuar la instalación.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Bienvenido al asistente de instalaciÃ³n de ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Este asistente instalarÃ¡ ReactOS en su equipo. El asistente necesita recopilar alguna informaciÃ³n sobre usted y su equipo para configurar ReactOS apropiadamente.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Pulse Siguiente para continuar la instalaciÃ³n.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Los desarrolladores de ReactOS quieren agradecer a los siguientes proyectos Open Source, los cuales (o parte de ellos) han sido usados para crear ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS está bajo licencia GPL, asi que si quiere reutilizarlo o redistribuirlo (o parte de el) debe respetar la licencia GPL",
+    LTEXT           "ReactOS estÃ¡ bajo licencia GPL, asi que si quiere reutilizarlo o redistribuirlo (o parte de el) debe respetar la licencia GPL",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Ver GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Pulse siguiente para cotinuar con la instalación.",IDC_STATIC,15,136,
+    LTEXT           "Pulse siguiente para cotinuar con la instalaciÃ³n.",IDC_STATIC,15,136,
                     195,17
 END
 
 
 IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.",
+    LTEXT "Escriba su nombre completo y el nombre de su compaÃ±ia u organizaciÃ³n.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "No&mbre:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organización:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&OrganizaciÃ³n:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 
 IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre debe ser único.",
+    LTEXT "Escriba un nombre para su equipo que sea de 15 caracteres o menos. Si se encuentra conectado a una red, el nombre debe ser Ãºnico.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nombre del &Equipo:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrator. Puede utilizar este perfil si necesita acceso completo a su equipo.",
+    LTEXT "El instalador crearÃ¡ un perfil de usuario en su equipo llamado Administrator. Puede utilizar este perfil si necesita acceso completo a su equipo.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Escriba una contraseña para este perfil de 14 caracteres o menos.",
+    LTEXT "Escriba una contraseÃ±a para este perfil de 14 caracteres o menos.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "Contraseña &Administrator:", IDC_STATIC, 54, 104, 75, 8
+    LTEXT "ContraseÃ±a &Administrator:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirme contraseña:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "C&onfirme contraseÃ±a:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
 IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Las opciones regionales y de idioma permiten configurar la manera en que se representan fechas ,número ,monedas y horas. También puede agregar compatibilidad con otros idiomas y cambiar la configuración de su ubicación.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "Las opciones regionales y de idioma permiten configurar la manera en que se representan fechas ,nÃºmero ,monedas y horas. TambiÃ©n puede agregar compatibilidad con otros idiomas y cambiar la configuraciÃ³n de su ubicaciÃ³n.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 53, 34, 250, 16
-    LTEXT "Para modificar esta configuración, pulse Modificar.",
+    LTEXT "Para modificar esta configuraciÃ³n, pulse Modificar.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
-    LTEXT "La disposición de teclado especifica los caracteres que aparecen cuando usted escribe.",
+    LTEXT "La disposiciÃ³n de teclado especifica los caracteres que aparecen cuando usted escribe.",
           IDC_STATIC, 53, 86, 253, 32
     LTEXT "", IDC_LAYOUTTEXT, 53, 109, 250, 16
-    LTEXT "Para cambiar la disposición de teclado, pulse Modificar.",
+    LTEXT "Para cambiar la disposiciÃ³n de teclado, pulse Modificar.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "&Modificar...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -115,7 +113,7 @@ END
 
 IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
@@ -127,14 +125,14 @@ BEGIN
     LTEXT "Zona horaria", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ajustar el reloj automáticamente durante el horario de verano",
+    AUTOCHECKBOX "Ajustar el reloj automÃ¡ticamente durante el horario de verano",
                  IDC_AUTODAYLIGHT, 53, 124, 230, 10 //201
 END
 
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Instalación de ReactOS"
+CAPTION "InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -146,19 +144,19 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Finalización de la Instalación de ReactOS"
+CAPTION "FinalizaciÃ³n de la InstalaciÃ³n de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "El asistente de Instalación de ReactOS ha terminado", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Ha finalizado con éxito la instalación de ReactOS.\n\nCuando pulse Terminar, su equipo será reiniciado.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "El asistente de InstalaciÃ³n de ReactOS ha terminado", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "Ha finalizado con Ã©xito la instalaciÃ³n de ReactOS.\n\nCuando pulse Terminar, su equipo serÃ¡ reiniciado.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Si hay un CD en alguna unidad, retírelo. Luego, reinicie su equipo pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Si hay un CD en alguna unidad, retÃ­relo. Luego, reinicie su equipo pulsando Terminar.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Licencia Pública General GNU"
+CAPTION "Licencia PÃºblica General GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
@@ -179,11 +177,11 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Agradecimientos"
-    IDS_ACKSUBTITLE      "Cimientos de ReactOS e información de licencia"
+    IDS_ACKSUBTITLE      "Cimientos de ReactOS e informaciÃ³n de licencia"
     IDS_OWNERTITLE       "Personalice su Software"
-    IDS_OWNERSUBTITLE    "El instalador utiliza esta información sobre usted para personalizar ReactOS."
-    IDS_COMPUTERTITLE    "Nombre del equipo y contraseña de Administrador"
-    IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseña de Administrador a su equipo."
+    IDS_OWNERSUBTITLE    "El instalador utiliza esta informaciÃ³n sobre usted para personalizar ReactOS."
+    IDS_COMPUTERTITLE    "Nombre del equipo y contraseÃ±a de Administrador"
+    IDS_COMPUTERSUBTITLE "Debe dar un nombre y una contraseÃ±a de Administrador a su equipo."
     IDS_LOCALETITLE      "Opciones Regionales"
     IDS_LOCALESUBTITLE   "Puede personalizar ReactOS para diferentes regiones e idiomas."
     IDS_DATETIMETITLE    "Fecha y hora"
@@ -201,7 +199,7 @@ STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Accesorios"
     IDS_CMT_CALC        "Ejecutar Calculadora"
-    IDS_CMT_CMD         "Abrir Símbolo del sistema"
+    IDS_CMT_CMD         "Abrir SÃ­mbolo del sistema"
     IDS_CMT_EXPLORER    "Ejecutar Explorador"
     IDS_CMT_NOTEPAD     "Ejecutar Editor de texto"
     IDS_CMT_REGEDIT     "Ejecutar Editor del registro"
@@ -211,7 +209,7 @@ BEGIN
     IDS_CMT_SERVMAN     "Ejecutar Administrador de servicios"
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
     IDS_CMT_EVENTVIEW   "Ejecutar Visor de sucesos"
-    IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuración del sistema"
+    IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuraciÃ³n del sistema"
     IDS_CMT_PAINT       "Ejecutar Paint"
 END
 
@@ -228,7 +226,7 @@ BEGIN
     IDS_SYS_TOOLS               "Herramientas del sistema"
     IDS_CMT_CHARMAP             "Mapa de caracteres"
     IDS_CMT_KBSWITCH            "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG              "Ejecutar el programa de diagnóstico de ReactX"
+    IDS_CMT_DXDIAG              "Ejecutar el programa de diagnÃ³stico de ReactX"
 END
 
 
@@ -248,20 +246,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP           "Instalación de ReactOS"
+    IDS_REACTOS_SETUP           "InstalaciÃ³n de ReactOS"
     IDS_UNKNOWN_ERROR           "Error desconocido"
     IDS_REGISTERING_COMPONENTS  "Registrando componentes..."
-    IDS_LOADLIBRARY_FAILED      "LoadLibrary falló: "
-    IDS_GETPROCADDR_FAILED      "GetProcAddr falló: "
-    IDS_REGSVR_FAILED           "DllRegisterServer falló: "
-    IDS_DLLINSTALL_FAILED       "DllInstall falló: "
-    IDS_TIMEOUT                 "Tiempo agotado durante la instalación"
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary fallÃ³: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr fallÃ³: "
+    IDS_REGSVR_FAILED           "DllRegisterServer fallÃ³: "
+    IDS_DLLINSTALL_FAILED       "DllInstall fallÃ³: "
+    IDS_TIMEOUT                 "Tiempo agotado durante la instalaciÃ³n"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Símbolo del sistema.lnk"
+    IDS_SHORT_CMD        "SÃ­mbolo del sistema.lnk"
     IDS_SHORT_EXPLORER   "Explorador de ReactOS.lnk"
     IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Administrador de Servicios.lnk"
@@ -279,23 +277,23 @@ BEGIN
     IDS_SHORT_RDESKTOP   "Escritorio Remoto.lnk"
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
     IDS_SHORT_EVENTVIEW  "Visor de sucesos.lnk"
-    IDS_SHORT_MSCONFIG   "Configuración del sistema.lnk"
+    IDS_SHORT_MSCONFIG   "ConfiguraciÃ³n del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Control de volumen.lnk"
     IDS_SHORT_SNDREC32   "Grabadora de sonidos.lnk"
-    IDS_SHORT_DXDIAG     "Diagnóstico de ReactX.lnk"
+    IDS_SHORT_DXDIAG     "DiagnÃ³stico de ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
     IDS_SHORT_SPIDER     "Solitario Spider.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME            "El proceso de instalación no puede continuar hasta que no escriba su nombre."
-    IDS_WZD_SETCOMPUTERNAME "El proceso de instalación no pudo configurar el nombre del equipo."
-    IDS_WZD_COMPUTERNAME    "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
-    IDS_WZD_PASSWORDEMPTY   "¡Debe establecer una contraseña!"
-    IDS_WZD_PASSWORDMATCH   "La verificación no concuerda con la contraseña introducida. Por favor introduzca de nuevo la contraseña deseada."
-    IDS_WZD_PASSWORDCHAR    "La contraseña que ha introducido contiene carácteres inválidos. Por favor, introduzca uno de nuevo."
-    IDS_WZD_LOCALTIME       "El proceso de instalación no pudo configurar la hora del equipo."
+    IDS_WZD_NAME            "El proceso de instalaciÃ³n no puede continuar hasta que no escriba su nombre."
+    IDS_WZD_SETCOMPUTERNAME "El proceso de instalaciÃ³n no pudo configurar el nombre del equipo."
+    IDS_WZD_COMPUTERNAME    "El proceso de instalaciÃ³n no puede continuar hasta que no escriba un nombre para su equipo."
+    IDS_WZD_PASSWORDEMPTY   "Â¡Debe establecer una contraseÃ±a!"
+    IDS_WZD_PASSWORDMATCH   "La verificaciÃ³n no concuerda con la contraseÃ±a introducida. Por favor introduzca de nuevo la contraseÃ±a deseada."
+    IDS_WZD_PASSWORDCHAR    "La contraseÃ±a que ha introducido contiene carÃ¡cteres invÃ¡lidos. Por favor, introduzca uno de nuevo."
+    IDS_WZD_LOCALTIME       "El proceso de instalaciÃ³n no pudo configurar la hora del equipo."
 END
 
 STRINGTABLE

@@ -371,14 +371,11 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
 static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATURE *sig)
 {
     static const WCHAR query[] =  {
-        's','e','l','e','c','t',' ','*',' ',
-        'f','r','o','m',' ',
-        'R','e','g','L','o','c','a','t','o','r',' ',
-        'w','h','e','r','e',' ',
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        'R','e','g','L','o','c','a','t','o','r',' ','W','H','E','R','E',' ',
         'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
-    LPWSTR keyPath = NULL, valueName = NULL;
-    LPWSTR deformatted = NULL;
-    LPWSTR ptr = NULL, end;
+    const WCHAR *keyPath, *valueName;
+    WCHAR *deformatted = NULL, *ptr = NULL, *end;
     int root, type;
     HKEY rootKey, key = NULL;
     DWORD sz = 0, regType;
@@ -397,10 +394,10 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
         return ERROR_SUCCESS;
     }
 
-    root = MSI_RecordGetInteger(row,2);
-    keyPath = msi_dup_record_field(row,3);
-    valueName = msi_dup_record_field(row,4);
-    type = MSI_RecordGetInteger(row,5);
+    root = MSI_RecordGetInteger(row, 2);
+    keyPath = MSI_RecordGetString(row, 3);
+    valueName = MSI_RecordGetString(row, 4);
+    type = MSI_RecordGetInteger(row, 5);
 
     deformat_string(package, keyPath, &deformatted);
 
@@ -430,7 +427,10 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
         goto end;
     }
 
-    rc = RegQueryValueExW(key, valueName, NULL, NULL, NULL, &sz);
+    msi_free(deformatted);
+    deformat_string(package, valueName, &deformatted);
+
+    rc = RegQueryValueExW(key, deformatted, NULL, NULL, NULL, &sz);
     if (rc)
     {
         TRACE("RegQueryValueExW returned %d\n", rc);
@@ -440,7 +440,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
      * on the value of a property?)
      */
     value = msi_alloc( sz );
-    rc = RegQueryValueExW(key, valueName, NULL, &regType, value, &sz);
+    rc = RegQueryValueExW(key, deformatted, NULL, &regType, value, &sz);
     if (rc)
     {
         TRACE("RegQueryValueExW returned %d\n", rc);
@@ -460,7 +460,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
     switch (type & 0x0f)
     {
     case msidbLocatorTypeDirectory:
-        rc = ACTION_SearchDirectory(package, sig, ptr, 0, appValue);
+        ACTION_SearchDirectory(package, sig, ptr, 0, appValue);
         break;
     case msidbLocatorTypeFileName:
         *appValue = app_search_file(ptr, sig);
@@ -475,13 +475,9 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
 end:
     msi_free( value );
     RegCloseKey( key );
-
-    msi_free( keyPath );
-    msi_free( valueName );
     msi_free( deformatted );
 
     msiobj_release(&row->hdr);
-
     return ERROR_SUCCESS;
 }
 
@@ -612,6 +608,65 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
     msi_free(deformatted);
 }
 
+static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
+{
+    UINT i, count = 1;
+    WCHAR *str = strdupW( languages ), *p, *q;
+    LANGID *ret;
+
+    if (!str) return NULL;
+    for (p = q = str; (q = strchrW( q, ',' )); q++) count++;
+
+    if (!(ret = msi_alloc( count * sizeof(LANGID) )))
+    {
+        msi_free( str );
+        return NULL;
+    }
+    i = 0;
+    while (*p)
+    {
+        q = strchrW( p, ',' );
+        if (q) *q = 0;
+        ret[i] = atoiW( p );
+        if (!q) break;
+        p = q + 1;
+        i++;
+    }
+    msi_free( str );
+    *num_ids = count;
+    return ret;
+}
+
+static BOOL match_languages( const void *version, const WCHAR *languages )
+{
+    struct lang
+    {
+        USHORT id;
+        USHORT codepage;
+    } *lang;
+    DWORD len, num_ids, i, j;
+    BOOL found = FALSE;
+    LANGID *ids;
+
+    if (!languages || !languages[0]) return TRUE;
+    if (!VerQueryValueW( version, szLangResource, (void **)&lang, &len )) return FALSE;
+    if (!(ids = parse_languages( languages, &num_ids ))) return FALSE;
+
+    for (i = 0; i < num_ids; i++)
+    {
+        found = FALSE;
+        for (j = 0; j < len / sizeof(struct lang); j++)
+        {
+            if (!ids[i] || ids[i] == lang[j].id) found = TRUE;
+        }
+        if (!found) goto done;
+    }
+
+done:
+    msi_free( ids );
+    return found;
+}
+
 /* Sets *matches to whether the file (whose path is filePath) matches the
  * versions set in sig.
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
@@ -620,69 +675,55 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
 static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
  BOOL *matches)
 {
-    UINT rc = ERROR_SUCCESS;
+    UINT len;
+    void *version;
+    VS_FIXEDFILEINFO *info = NULL;
+    DWORD zero, size = GetFileVersionInfoSizeW( filePath, &zero );
 
     *matches = FALSE;
-    if (sig->Languages)
-    {
-        FIXME(": need to check version for languages %s\n",
-         debugstr_w(sig->Languages));
-    }
-    else
-    {
-        DWORD zero, size = GetFileVersionInfoSizeW(filePath, &zero);
 
-        if (size)
+    if (!size) return ERROR_SUCCESS;
+    if (!(version = msi_alloc( size ))) return ERROR_OUTOFMEMORY;
+
+    if (GetFileVersionInfoW( filePath, 0, size, version ))
+        VerQueryValueW( version, szBackSlash, (void **)&info, &len );
+
+    if (info)
+    {
+        TRACE("comparing file version %d.%d.%d.%d:\n",
+              HIWORD(info->dwFileVersionMS),
+              LOWORD(info->dwFileVersionMS),
+              HIWORD(info->dwFileVersionLS),
+              LOWORD(info->dwFileVersionLS));
+        if (info->dwFileVersionMS < sig->MinVersionMS
+            || (info->dwFileVersionMS == sig->MinVersionMS &&
+                info->dwFileVersionLS < sig->MinVersionLS))
         {
-            LPVOID buf = msi_alloc( size);
-
-            if (buf)
-            {
-                UINT versionLen;
-                LPVOID subBlock = NULL;
-
-                if (GetFileVersionInfoW(filePath, 0, size, buf))
-                    VerQueryValueW(buf, szBackSlash, &subBlock, &versionLen);
-                if (subBlock)
-                {
-                    VS_FIXEDFILEINFO *info = subBlock;
-
-                    TRACE("Comparing file version %d.%d.%d.%d:\n",
-                     HIWORD(info->dwFileVersionMS),
-                     LOWORD(info->dwFileVersionMS),
-                     HIWORD(info->dwFileVersionLS),
-                     LOWORD(info->dwFileVersionLS));
-                    if (info->dwFileVersionMS < sig->MinVersionMS
-                     || (info->dwFileVersionMS == sig->MinVersionMS &&
-                     info->dwFileVersionLS < sig->MinVersionLS))
-                    {
-                        TRACE("Less than minimum version %d.%d.%d.%d\n",
-                         HIWORD(sig->MinVersionMS),
-                         LOWORD(sig->MinVersionMS),
-                         HIWORD(sig->MinVersionLS),
-                         LOWORD(sig->MinVersionLS));
-                    }
-                    else if ((sig->MaxVersionMS || sig->MaxVersionLS) &&
-                             (info->dwFileVersionMS > sig->MaxVersionMS ||
-                              (info->dwFileVersionMS == sig->MaxVersionMS &&
-                               info->dwFileVersionLS > sig->MaxVersionLS)))
-                    {
-                        TRACE("Greater than maximum version %d.%d.%d.%d\n",
-                         HIWORD(sig->MaxVersionMS),
-                         LOWORD(sig->MaxVersionMS),
-                         HIWORD(sig->MaxVersionLS),
-                         LOWORD(sig->MaxVersionLS));
-                    }
-                    else
-                        *matches = TRUE;
-                }
-                msi_free( buf);
-            }
-            else
-                rc = ERROR_OUTOFMEMORY;
+            TRACE("less than minimum version %d.%d.%d.%d\n",
+                   HIWORD(sig->MinVersionMS),
+                   LOWORD(sig->MinVersionMS),
+                   HIWORD(sig->MinVersionLS),
+                   LOWORD(sig->MinVersionLS));
         }
+        else if ((sig->MaxVersionMS || sig->MaxVersionLS) &&
+                 (info->dwFileVersionMS > sig->MaxVersionMS ||
+                  (info->dwFileVersionMS == sig->MaxVersionMS &&
+                   info->dwFileVersionLS > sig->MaxVersionLS)))
+        {
+            TRACE("greater than maximum version %d.%d.%d.%d\n",
+                   HIWORD(sig->MaxVersionMS),
+                   LOWORD(sig->MaxVersionMS),
+                   HIWORD(sig->MaxVersionLS),
+                   LOWORD(sig->MaxVersionLS));
+        }
+        else if (!match_languages( version, sig->Languages ))
+        {
+            TRACE("languages %s not supported\n", debugstr_w( sig->Languages ));
+        }
+        else *matches = TRUE;
     }
-    return rc;
+    msi_free( version );
+    return ERROR_SUCCESS;
 }
 
 /* Sets *matches to whether the file in findData matches that in sig.
@@ -961,7 +1002,7 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
     {
         MSISIGNATURE parentSig;
 
-        rc = ACTION_AppSearchSigName(package, parentName, &parentSig, &parent);
+        ACTION_AppSearchSigName(package, parentName, &parentSig, &parent);
         ACTION_FreeSignature(&parentSig);
         if (!parent)
         {
@@ -1053,7 +1094,7 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         r = msi_set_property( package->db, propName, value );
-        if (r == ERROR_SUCCESS && !strcmpW( propName, cszSourceDir ))
+        if (r == ERROR_SUCCESS && !strcmpW( propName, szSourceDir ))
             msi_reset_folders( package, TRUE );
 
         msi_free(value);
@@ -1063,7 +1104,7 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, propName );
     MSI_RecordSetStringW( uirow, 2, sigName );
-    ui_actiondata( package, szAppSearch, uirow );
+    msi_ui_actiondata( package, szAppSearch, uirow );
     msiobj_release( &uirow->hdr );
 
     return r;
@@ -1072,19 +1113,18 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
 UINT ACTION_AppSearch(MSIPACKAGE *package)
 {
     static const WCHAR query[] =  {
-        's','e','l','e','c','t',' ','*',' ',
-        'f','r','o','m',' ',
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
         'A','p','p','S','e','a','r','c','h',0};
-    MSIQUERY *view = NULL;
+    MSIQUERY *view;
     UINT r;
 
-    if (check_unique_action(package, szAppSearch))
+    if (msi_action_is_unique(package, szAppSearch))
     {
         TRACE("Skipping AppSearch action: already done in UI sequence\n");
         return ERROR_SUCCESS;
     }
     else
-        register_unique_action(package, szAppSearch);
+        msi_register_unique_action(package, szAppSearch);
 
     r = MSI_OpenQuery( package->db, &view, query );
     if (r != ERROR_SUCCESS)
@@ -1092,7 +1132,6 @@ UINT ACTION_AppSearch(MSIPACKAGE *package)
 
     r = MSI_IterateRecords( view, NULL, iterate_appsearch, package );
     msiobj_release( &view->hdr );
-
     return r;
 }
 
@@ -1127,19 +1166,18 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
 UINT ACTION_CCPSearch(MSIPACKAGE *package)
 {
     static const WCHAR query[] =  {
-        's','e','l','e','c','t',' ','*',' ',
-        'f','r','o','m',' ',
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
         'C','C','P','S','e','a','r','c','h',0};
-    MSIQUERY *view = NULL;
+    MSIQUERY *view;
     UINT r;
 
-    if (check_unique_action(package, szCCPSearch))
+    if (msi_action_is_unique(package, szCCPSearch))
     {
         TRACE("Skipping AppSearch action: already done in UI sequence\n");
         return ERROR_SUCCESS;
     }
     else
-        register_unique_action(package, szCCPSearch);
+        msi_register_unique_action(package, szCCPSearch);
 
     r = MSI_OpenQuery(package->db, &view, query);
     if (r != ERROR_SUCCESS)
@@ -1147,6 +1185,5 @@ UINT ACTION_CCPSearch(MSIPACKAGE *package)
 
     r = MSI_IterateRecords(view, NULL, ITERATE_CCPSearch, package);
     msiobj_release(&view->hdr);
-
     return r;
 }

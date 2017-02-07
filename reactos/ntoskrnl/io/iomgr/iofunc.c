@@ -163,7 +163,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
                                            Executive,
                                            PreviousMode,
                                            (FileObject->Flags &
-                                            FO_ALERTABLE_IO),
+                                            FO_ALERTABLE_IO) != 0,
                                            NULL);
             if ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC))
             {
@@ -603,7 +603,8 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
             Status = KeWaitForSingleObject(&FileObject->Event,
                                            Executive,
                                            KernelMode,
-                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           (FileObject->Flags &
+                                            FO_ALERTABLE_IO) != 0,
                                            NULL);
             if (Status == STATUS_ALERTED)
             {
@@ -856,7 +857,8 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
             Status = KeWaitForSingleObject(&FileObject->Event,
                                            Executive,
                                            KernelMode,
-                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           (FileObject->Flags &
+                                            FO_ALERTABLE_IO) != 0,
                                            NULL);
             if (Status == STATUS_ALERTED)
             {
@@ -1869,7 +1871,8 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             Status = KeWaitForSingleObject(&FileObject->Event,
                                            Executive,
                                            PreviousMode,
-                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           (FileObject->Flags &
+                                            FO_ALERTABLE_IO) != 0,
                                            NULL);
             if ((Status == STATUS_USER_APC) || (Status == STATUS_ALERTED))
             {
@@ -2529,7 +2532,8 @@ NtSetInformationFile(IN HANDLE FileHandle,
             Status = KeWaitForSingleObject(&FileObject->Event,
                                            Executive,
                                            PreviousMode,
-                                           FileObject->Flags & FO_ALERTABLE_IO,
+                                           (FileObject->Flags &
+                                            FO_ALERTABLE_IO) != 0,
                                            NULL);
             if ((Status == STATUS_USER_APC) || (Status == STATUS_ALERTED))
             {

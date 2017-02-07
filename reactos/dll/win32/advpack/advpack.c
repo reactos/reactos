@@ -452,7 +452,7 @@ HRESULT WINAPI RebootCheckOnInstallW(HWND hWnd, LPCWSTR pszINF,
 }
 
 /* registers the OCX if do_reg is TRUE, unregisters it otherwise */
-HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg)
+HRESULT do_ocx_reg(HMODULE hocx, BOOL do_reg, const WCHAR *flags, const WCHAR *param)
 {
     DLLREGISTER reg_func;
 
@@ -519,7 +519,7 @@ HRESULT WINAPI RegisterOCX(HWND hWnd, HINSTANCE hInst, LPCSTR cmdline, INT show)
     if (!hm)
         goto done;
 
-    hr = do_ocx_reg(hm, TRUE);
+    hr = do_ocx_reg(hm, TRUE, str_flags, param);
 
 done:
     FreeLibrary(hm);

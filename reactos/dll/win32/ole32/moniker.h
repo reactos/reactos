@@ -30,23 +30,23 @@ DEFINE_OLEGUID( CLSID_CompositeMoniker, 0x309, 0, 0 );
 DEFINE_OLEGUID( CLSID_ClassMoniker,     0x31a, 0, 0 );
 DEFINE_OLEGUID( CLSID_PointerMoniker,   0x306, 0, 0 );
 
-HRESULT FileMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT CompositeMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT ClassMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT PointerMonikerCF_Create(REFIID riid, LPVOID *ppv);
-HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv);
+HRESULT FileMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT ItemMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT CompositeMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT ClassMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT PointerMonikerCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
+HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv) DECLSPEC_HIDDEN;
 
 /* This function decomposes a String path to a String Table containing all the elements ("\" or "subDirectory" or "Directory" or "FileName") of the path */
-int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);
+int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable) DECLSPEC_HIDDEN;
 
 HRESULT FileMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
-                                          LPDWORD pchEaten, LPMONIKER *ppmk);
+                                          LPDWORD pchEaten, LPMONIKER *ppmk) DECLSPEC_HIDDEN;
 HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
-                                           LPDWORD pchEaten, LPMONIKER *ppmk);
+                                           LPDWORD pchEaten, LPMONIKER *ppmk) DECLSPEC_HIDDEN;
 
-HRESULT MonikerMarshal_Create(IMoniker *inner, IUnknown **outer);
+HRESULT MonikerMarshal_Create(IMoniker *inner, IUnknown **outer) DECLSPEC_HIDDEN;
 
 
 #endif /* __WINE_MONIKER_H__ */

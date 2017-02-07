@@ -208,18 +208,18 @@ NTSTATUS
 WINAPI
 LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
                  IN PSID AccountSid,
-                 IN ULONG Flags,
+                 IN ACCESS_MASK DesiredAccess,
                  OUT PLSA_HANDLE AccountHandle)
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
         Status = LsarCreateAccount((LSAPR_HANDLE)PolicyHandle,
                                    AccountSid,
-                                   Flags,
+                                   DesiredAccess,
                                    AccountHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -366,6 +366,34 @@ LsaEnumerateAccountsWithUserRight(
     return STATUS_NO_MORE_ENTRIES;
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaEnumeratePrivilegesOfAccount(IN LSA_HANDLE AccountHandle,
+                                OUT PPRIVILEGE_SET *Privileges)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p) stub\n", AccountHandle, Privileges);
+
+    RpcTryExcept
+    {
+        Status = LsarEnumeratePrivilegesAccount((LSAPR_HANDLE)AccountHandle,
+                                                (LSAPR_PRIVILEGE_SET **)Privileges);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -380,7 +408,7 @@ LsaEnumerateTrustedDomains(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext,
         Buffer, PreferedMaximumLength, CountReturned);
-    
+
     if (CountReturned) *CountReturned = 0;
     return STATUS_SUCCESS;
 }
@@ -669,18 +697,18 @@ NTSTATUS
 WINAPI
 LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
                IN PSID AccountSid,
-               IN ULONG Flags,
+               IN ACCESS_MASK DesiredAccess,
                OUT PLSA_HANDLE AccountHandle)
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+    TRACE("(%p,%p,0x%08lx,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
         Status = LsarOpenAccount((LSAPR_HANDLE)PolicyHandle,
                                  AccountSid,
-                                 Flags,
+                                 DesiredAccess,
                                  AccountHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1003,11 +1031,11 @@ NTSTATUS WINAPI LsaSetSecret(
 NTSTATUS
 WINAPI
 LsaSetForestTrustInformation(
-    IN LSA_HANDLE PolicyHandle,
-    IN PLSA_UNICODE_STRING TrustedDomainName,
-    IN PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-    IN BOOLEAN CheckOnly,
-    OUT PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
+    LSA_HANDLE PolicyHandle,
+    PLSA_UNICODE_STRING TrustedDomainName,
+    PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
+    BOOL CheckOnly,
+    PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
 {
     FIXME("(%p,%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, ForestTrustInfo, CheckOnly, CollisionInfo);
     return STATUS_NOT_IMPLEMENTED;

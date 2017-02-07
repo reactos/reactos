@@ -31,7 +31,6 @@
 #include <undocuser.h>
 #include "resource.h"
 #include <wine/debug.h>
-#include <win32k/ntusrtyp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(userinit);
 

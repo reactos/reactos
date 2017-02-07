@@ -4,12 +4,12 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUIT, "Выход"
+	IDS_INSTALL, "Install"
 	IDS_PRINT, "Печать"
 	IDS_STRING, "В чащах юга жил бы цитрус? Да, но фальшивый экземпляр! 1234567890"
+	IDS_OPEN, "Open Font..."
 	IDS_ERROR, "Ошибка"
 	IDS_ERROR_NOMEM, "Недостаточно памяти, чтобы завершить операцию."
 	IDS_ERROR_NOFONT, "%1 не является корректным файлом шрифта."
 	IDS_ERROR_NOCLASS, "Невозможно инициализировать класс окна."
-	IDS_ERROR_BADCMD, "Не указан файл шрифта.\nСинтаксис:\n  fontview.exe <файл_шрифта>"
 END

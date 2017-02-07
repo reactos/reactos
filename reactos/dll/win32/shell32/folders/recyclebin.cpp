@@ -1258,7 +1258,7 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
     psh.phpage = hpsp;
     psh.hInstance = shell32_hInstance;
 
-    hprop = SH_CreatePropertySheetPage("BITBUCKET_PROPERTIES_DLG", RecycleBinDlg, (LPARAM)sDrive, NULL);
+    hprop = SH_CreatePropertySheetPage(IDD_RECYCLE_BIN_PROPERTIES, RecycleBinDlg, (LPARAM)sDrive, NULL);
     if (!hprop)
     {
         ERR("Failed to create property sheet\n");

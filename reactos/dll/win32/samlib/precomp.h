@@ -6,5 +6,8 @@
 #include <winerror.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
+#include <ntsam.h>
 
-#include "debug.h"
+#include "sam_c.h"
+
+#include <wine/debug.h>

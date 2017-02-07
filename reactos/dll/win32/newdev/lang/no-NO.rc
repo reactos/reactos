@@ -12,9 +12,9 @@ BEGIN
     LTEXT           "Velkommen",IDC_WELCOMETITLE,120,8,195,24
     LTEXT           "Denne veiviseren installerer driver for ny enhet:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Klikk Neste for å fortsette.",IDC_STATIC,120,169,195,17
+    LTEXT           "Klikk Neste for Ã¥ fortsette.",IDC_STATIC,120,169,195,17
     LTEXT           "UKJENT ENHET",IDC_DEVICE,134,36,164,11
-    LTEXT           "ADVARSEL! INSTALLASJON AV EN DRIVER KAN FRYSE DIN MASKIN, ELLER GJØRE AT DEN IKKE STARTER OPP!",IDC_STATIC,120,59,195,16
+    LTEXT           "ADVARSEL! INSTALLASJON AV EN DRIVER KAN FRYSE DIN MASKIN, ELLER GJÃ˜RE AT DEN IKKE STARTER OPP!",IDC_STATIC,120,59,195,16
     CONTROL         "Installer driver automatisk",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Installer driver fra spesifikk lokasjon",IDC_RADIO_MANUAL,
@@ -53,15 +53,15 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installasjon av enhet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Søk i disse områdene",IDC_RADIO_SEARCHHERE,"Button",
+    CONTROL         "SÃ¸k i disse omrÃ¥dene",IDC_RADIO_SEARCHHERE,"Button",
                     BS_AUTORADIOBUTTON,27,11,239,13
     CONTROL         "Velg driver manuelt",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "Søk i flyttbart media",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "SÃ¸k i flyttbart media",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
     CONTROL         "Inkluder denne stien",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "Søk",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "SÃ¸k",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT | 
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
@@ -89,9 +89,9 @@ CAPTION "Installasjon av enhet"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Installasjonen er ferdig",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Du må starte maskinen på nytt for å fullføre installasjonen av:",
+    LTEXT           "Du mÃ¥ starte maskinen pÃ¥ nytt for Ã¥ fullfÃ¸re installasjonen av:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Trykk Fullfør for å avslutte veiviseren.",IDC_STATIC,120,174,
+    LTEXT           "Trykk FullfÃ¸r for Ã¥ avslutte veiviseren.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "UKJENT ENHET",IDC_DEVICE,148,53,147,12
 END
@@ -105,7 +105,7 @@ BEGIN
     LTEXT           "Installasjonen er ferdig",IDC_FINISHTITLE,120,8,195,11
     LTEXT           "Veiviseren har installert driveren for: ",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Trykk Fullfør for å avslutte veiviseren.",IDC_STATIC,120,174,
+    LTEXT           "Trykk FullfÃ¸r for Ã¥ avslutte veiviseren.",IDC_STATIC,120,174,
                     179,11
     LTEXT           "UKJENT ENHET",IDC_DEVICE,148,53,147,12
 END

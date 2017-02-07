@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define IMAGE_FILE_MACHINE_I386  0x014c
+#define IMAGE_FILE_MACHINE_AMD64 0x8664
+#define IMAGE_FILE_MACHINE_ARMNT 0x01c4
+
 #ifdef _WIN32
 #define PRIx64 "I64x"
 typedef unsigned __int16 uint16_t;
@@ -112,7 +116,9 @@ int main(int argc, char* argv[])
         goto quit;
     }
 
-    if (Machine != 0x14c && Machine != 0x8664)
+    if ((Machine != IMAGE_FILE_MACHINE_I386) &&
+        (Machine != IMAGE_FILE_MACHINE_AMD64) &&
+        (Machine != IMAGE_FILE_MACHINE_ARMNT))
     {
         fprintf(stderr, "Invalid Machine: 0x%x.\n", Machine);
         goto quit;

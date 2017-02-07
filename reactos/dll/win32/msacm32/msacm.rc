@@ -23,29 +23,77 @@
 #include "winuser.h"
 #include "wineacm.h"
 
-#include "msacm_Bg.rc"
-#include "msacm_Cs.rc"
-#include "msacm_Da.rc"
-#include "msacm_El.rc"
-#include "msacm_En.rc"
-#include "msacm_Es.rc"
-#include "msacm_Hu.rc"
-#include "msacm_It.rc"
-#include "msacm_Ko.rc"
-#include "msacm_Nl.rc"
-#include "msacm_No.rc"
-#include "msacm_Pl.rc"
-#include "msacm_Sv.rc"
-#include "msacm_Tr.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "msacm_Bg.rc"
+#endif
+#ifdef LANGUAGE_CS_CZ
+    #include "msacm_Cs.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "msacm_Da.rc"
+#endif
+#ifdef LANGUAGE_EL_GR
+    #include "msacm_El.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "msacm_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "msacm_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "msacm_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "msacm_It.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "msacm_Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "msacm_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "msacm_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "msacm_Pl.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "msacm_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "msacm_Tr.rc"
+#endif
 
 /* UTF-8 */
-#include "msacm_De.rc"
-#include "msacm_Fr.rc"
-#include "msacm_Ja.rc"
-#include "msacm_Lt.rc"
-#include "msacm_Pt.rc"
-#include "msacm_Ro.rc"
-#include "msacm_Ru.rc"
-#include "msacm_Si.rc"
-#include "msacm_Uk.rc"
-#include "msacm_Zh.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "msacm_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "msacm_Fr.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "msacm_Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "msacm_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "msacm_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "msacm_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "msacm_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "msacm_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "msacm_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "msacm_Zh.rc"
+#endif

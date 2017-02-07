@@ -331,7 +331,7 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
 {
     HRESULT res = S_OK;
     HFDI hfdi;
-    char *str, *path, *name;
+    char *str, *end, *path = NULL, *name = NULL;
 
     TRACE("(%p, %s)\n", dest, szCabName);
 
@@ -363,13 +363,22 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
     }
     lstrcpyA(str, szCabName);
 
-    path = str;
-    name = strrchr(path, '\\');
-    if (name)
-        *name++ = 0;
+    if ((end = strrchr(str, '\\')))
+    {
+        end++;
+        name = HeapAlloc( GetProcessHeap(), 0, strlen(end) + 1 );
+        if (!name)
+        {
+            res = E_OUTOFMEMORY;
+            goto end;
+        }
+        strcpy( name, end );
+        *end = 0;
+        path = str;
+    }
     else
     {
-        name = path;
+        name = str;
         path = NULL;
     }
 
@@ -379,10 +388,9 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
          fdi_notify_extract, NULL, dest))
         res = HRESULT_FROM_WIN32(GetLastError());
 
-    HeapFree(GetProcessHeap(), 0, str);
 end:
-
+    HeapFree(GetProcessHeap(), 0, path);
+    HeapFree(GetProcessHeap(), 0, name);
     FDIDestroy(hfdi);
-
     return res;
 }

@@ -444,10 +444,8 @@ NdisReadConfiguration(
        return;
     }
 
-    if(
-        !wcsncmp(Keyword->Buffer, L"Environment", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"Environment") == Keyword->Length/sizeof(WCHAR)
-    )
+    if(!wcsncmp(Keyword->Buffer, L"Environment", Keyword->Length/sizeof(WCHAR)) &&
+        wcslen(L"Environment") == Keyword->Length/sizeof(WCHAR))
     {
         *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
@@ -483,10 +481,8 @@ NdisReadConfiguration(
         return;
     }
 
-    if(
-        !wcsncmp(Keyword->Buffer, L"ProcessorType", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"ProcessorType") == Keyword->Length/sizeof(WCHAR)
-    )
+    if(!wcsncmp(Keyword->Buffer, L"ProcessorType", Keyword->Length/sizeof(WCHAR)) &&
+        wcslen(L"ProcessorType") == Keyword->Length/sizeof(WCHAR))
     {
         *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
@@ -519,10 +515,8 @@ NdisReadConfiguration(
         return;
     }
 
-    if(
-        !wcsncmp(Keyword->Buffer, L"NdisVersion", Keyword->Length/sizeof(WCHAR)) &&
-        wcslen(L"NdisVersion") == Keyword->Length/sizeof(WCHAR)
-    )
+    if(!wcsncmp(Keyword->Buffer, L"NdisVersion", Keyword->Length/sizeof(WCHAR)) &&
+        wcslen(L"NdisVersion") == Keyword->Length/sizeof(WCHAR))
     {
         *ParameterValue = ExAllocatePool(PagedPool, sizeof(NDIS_CONFIGURATION_PARAMETER));
         if(!*ParameterValue)
@@ -613,7 +607,7 @@ NdisReadConfiguration(
 
         (*ParameterValue)->ParameterType = NdisParameterBinary;
 
-        Buffer = ExAllocatePool(NonPagedPool, KeyInformation->DataLength);
+        Buffer = ExAllocatePool(PagedPool, KeyInformation->DataLength);
         if (!Buffer)
         {
             NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -634,7 +628,7 @@ NdisReadConfiguration(
 
         (*ParameterValue)->ParameterType = NdisParameterMultiString;
 
-        Buffer = ExAllocatePool(NonPagedPool, KeyInformation->DataLength);
+        Buffer = ExAllocatePool(PagedPool, KeyInformation->DataLength);
         if (!Buffer)
         {
             NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -678,7 +672,7 @@ NdisReadConfiguration(
 
              (*ParameterValue)->ParameterType = NdisParameterString;
 
-             Buffer = ExAllocatePool(NonPagedPool, KeyInformation->DataLength);
+             Buffer = ExAllocatePool(PagedPool, KeyInformation->DataLength);
              if (!Buffer)
              {
                  NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));

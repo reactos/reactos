@@ -26,6 +26,7 @@
 #include "winuser.h"
 #include "winerror.h"
 #include "ole2.h"
+#include "rpcproxy.h"
 
 #include "initguid.h"
 #include "vfw.h"
@@ -57,11 +58,16 @@ static const IClassFactoryVtbl iclassfact = {
 typedef struct
 {
   /* IUnknown fields */
-  const IClassFactoryVtbl *lpVtbl;
+  IClassFactory IClassFactory_iface;
   DWORD	 dwRef;
 
   CLSID  clsid;
 } IClassFactoryImpl;
+
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+  return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
 
 static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
 					  LPVOID *ppv)
@@ -75,11 +81,11 @@ static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
   if (pClassFactory == NULL)
     return E_OUTOFMEMORY;
 
-  pClassFactory->lpVtbl    = &iclassfact;
+  pClassFactory->IClassFactory_iface.lpVtbl = &iclassfact;
   pClassFactory->dwRef     = 0;
   pClassFactory->clsid     = *pclsid;
 
-  hr = IClassFactory_QueryInterface((IClassFactory*)pClassFactory, riid, ppv);
+  hr = IClassFactory_QueryInterface(&pClassFactory->IClassFactory_iface, riid, ppv);
   if (FAILED(hr)) {
     HeapFree(GetProcessHeap(), 0, pClassFactory);
     *ppv = NULL;
@@ -105,7 +111,7 @@ static HRESULT WINAPI IClassFactory_fnQueryInterface(LPCLASSFACTORY iface,
 
 static ULONG WINAPI IClassFactory_fnAddRef(LPCLASSFACTORY iface)
 {
-  IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+  IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
   TRACE("(%p)\n", iface);
 
@@ -114,7 +120,7 @@ static ULONG WINAPI IClassFactory_fnAddRef(LPCLASSFACTORY iface)
 
 static ULONG WINAPI IClassFactory_fnRelease(LPCLASSFACTORY iface)
 {
-  IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+  IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
   TRACE("(%p)\n", iface);
   if ((--(This->dwRef)) > 0)
@@ -129,7 +135,7 @@ static HRESULT WINAPI IClassFactory_fnCreateInstance(LPCLASSFACTORY iface,
 						     LPUNKNOWN pOuter,
 						     REFIID riid,LPVOID *ppobj)
 {
-  IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
+  IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
   TRACE("(%p,%p,%s,%p)\n", iface, pOuter, debugstr_guid(riid),
 	ppobj);
@@ -215,4 +221,20 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
   };
 
   return TRUE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (AVIFIL32.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( AVIFILE_hModule );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (AVIFIL32.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( AVIFILE_hModule );
 }

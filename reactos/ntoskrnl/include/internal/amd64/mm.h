@@ -8,34 +8,45 @@
 #define MI_HIGHEST_USER_ADDRESS         (PVOID)0x000007FFFFFEFFFFULL
 #define MI_USER_PROBE_ADDRESS           (PVOID)0x000007FFFFFF0000ULL
 #define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0xFFFF080000000000ULL
+#define MI_REAL_SYSTEM_RANGE_START             0xFFFF800000000000ULL
+#define MI_PAGE_TABLE_BASE                     0xFFFFF68000000000ULL
 #define HYPER_SPACE                            0xFFFFF70000000000ULL
 #define HYPER_SPACE_END                        0xFFFFF77FFFFFFFFFULL
-#define MI_SESSION_SPACE_MINIMUM        (PVOID)0xFFFFF90000000000ULL
-#define MI_SESSION_VIEW_END             (PVOID)0xFFFFF97FFF000000ULL
-#define MI_SESSION_SPACE_END            (PVOID)0xFFFFF98000000000ULL
-#define MI_SYSTEM_PTE_START             (PVOID)0xFFFFFAA000000000ULL
-#define MI_PAGED_POOL_START             (PVOID)0xFFFFFA8000000000ULL
-#define MI_NON_PAGED_SYSTEM_START_MIN          0xFFFFFAA000000000ULL
-#define MI_PFN_DATABASE                 (PVOID)0xFFFFFAC000000000ULL
-#define MI_NONPAGED_POOL_END            (PVOID)0xFFFFFAE000000000ULL
-#define MI_DEBUG_MAPPING                (PVOID)0xFFFFFFFF80000000ULL // FIXME
+#define MI_SHARED_SYSTEM_PAGE                  0xFFFFF78000000000ULL
+#define MI_SYSTEM_CACHE_WS_START               0xFFFFF78000001000ULL
+#define MI_LOADER_MAPPINGS                     0xFFFFF80000000000ULL
+#define MI_PAGED_SYSTEM_START                  0xFFFFF88000000000ULL
+#define MI_PAGED_POOL_START             (PVOID)0xFFFFF8A000000000ULL
+#define MI_PAGED_POOL_END                      0xFFFFF8BFFFFFFFFFULL
+#define MI_SESSION_SPACE_START                 0xFFFFF90000000000ULL
+#define MI_SESSION_VIEW_END                    0xFFFFF97FFF000000ULL
+#define MI_SESSION_SPACE_END                   0xFFFFF97FFFFFFFFFULL
+#define MM_SYSTEM_SPACE_START                  0xFFFFF98000000000ULL
+#define MI_PFN_DATABASE                        0xFFFFFA8000000000ULL
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
-#define MI_SYSTEM_CACHE_WS_START        (PVOID)0xFFFFF78000001000ULL // CHECKME
 
+/* WOW64 address definitions */
 #define MM_HIGHEST_USER_ADDRESS_WOW64   0x7FFEFFFF
 #define MM_SYSTEM_RANGE_START_WOW64     0x80000000
 
-
-#define MI_SYSTEM_PTE_END               (PVOID)((ULONG64)MI_SYSTEM_PTE_START + MI_NUMBER_SYSTEM_PTES * PAGE_SIZE - 1)
+#define MI_DEBUG_MAPPING                (PVOID)0xFFFFFFFF80000000ULL // FIXME
+#define MI_NON_PAGED_SYSTEM_START_MIN   MM_SYSTEM_SPACE_START // FIXME
+#define MI_SYSTEM_PTE_START             MM_SYSTEM_SPACE_START
+#define MI_SYSTEM_PTE_END               (MI_SYSTEM_PTE_START + MI_NUMBER_SYSTEM_PTES * PAGE_SIZE - 1)
 #define MI_SYSTEM_PTE_BASE              (PVOID)MiAddressToPte(KSEG0_BASE)
 #define MM_HIGHEST_VAD_ADDRESS          (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
-#define MI_MAPPING_RANGE_START          (ULONG64)HYPER_SPACE
+#define MI_MAPPING_RANGE_START          HYPER_SPACE
 #define MI_MAPPING_RANGE_END            (MI_MAPPING_RANGE_START + MI_HYPERSPACE_PTES * PAGE_SIZE)
+#define MI_DUMMY_PTE                        (MI_MAPPING_RANGE_END + PAGE_SIZE)
+#define MI_VAD_BITMAP                       (MI_DUMMY_PTE + PAGE_SIZE)
+#define MI_WORKING_SET_LIST                 (MI_VAD_BITMAP + PAGE_SIZE)
+#define MI_NONPAGED_POOL_END 0
 
 /* Memory sizes */
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_TUNING        ((19*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_BOOST         ((32*1024*1024) >> PAGE_SHIFT)
+#define MI_MIN_PAGES_FOR_SYSPTE_BOOST_BOOST   ((256*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_INIT_PAGED_POOLSIZE            (32 * 1024 * 1024)
 #define MI_MAX_INIT_NONPAGED_POOL_SIZE        (128ULL * 1024 * 1024 * 1024)
 #define MI_MAX_NONPAGED_POOL_SIZE             (128ULL * 1024 * 1024 * 1024)
@@ -55,6 +66,8 @@
                                                MI_SESSION_IMAGE_SIZE + \
                                                MI_SESSION_WORKING_SET_SIZE)
 
+#define MmSystemRangeStart ((PVOID)MI_REAL_SYSTEM_RANGE_START)
+
 /* Misc constants */
 #define _MI_PAGING_LEVELS                   4
 #define MI_NUMBER_SYSTEM_PTES               22000
@@ -63,9 +76,6 @@
 #define NR_SECTION_PAGE_ENTRIES             1024
 #define MI_HYPERSPACE_PTES                  (256 - 1)
 #define MI_ZERO_PTES                        (32)
-#define MI_DUMMY_PTE                        (PMMPTE)(MI_MAPPING_RANGE_END + PAGE_SIZE)
-#define MI_VAD_BITMAP                       (PMMPTE)(MI_DUMMY_PTE + PAGE_SIZE)
-#define MI_WORKING_SET_LIST                 (PMMPTE)(MI_VAD_BITMAP + PAGE_SIZE)
 /* FIXME - different architectures have different cache line sizes... */
 #define MM_CACHE_LINE_SIZE                  32
 
@@ -74,6 +84,13 @@
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 #define IS_ALIGNED(addr, align) (((ULONG64)(addr) & (align - 1)) == 0)
 #define IS_PAGE_ALIGNED(addr) IS_ALIGNED(addr, PAGE_SIZE)
+
+#define MiIsPteOnPdeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
+#define MiIsPteOnPpeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PDE_PER_PAGE * PAGE_SIZE - 1)) == 0)
+#define MiIsPteOnPxeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PPE_PER_PAGE * PDE_PER_PAGE * PAGE_SIZE - 1)) == 0)
 
 /* MMPTE related defines */
 #define MM_EMPTY_PTE_LIST  ((ULONG64)0xFFFFFFFF)
@@ -129,6 +146,11 @@
 /* On x86, these two are the same */
 #define MMPDE MMPTE
 #define PMMPDE PMMPTE
+#define MMPPE MMPTE
+#define PMMPPE PMMPTE
+#define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
+
+#define ValidKernelPpe ValidKernelPde
 
 PULONG64
 FORCEINLINE
@@ -235,6 +257,10 @@ MiIsPdeForAddressValid(PVOID Address)
 
 #define MiPdeToPte(PDE) ((PMMPTE)MiPteToAddress(PDE))
 #define MiPteToPde(PTE) ((PMMPDE)MiAddressToPte(PTE))
+#define MiPdeToPpe(Pde) ((PMMPPE)MiAddressToPte(Pde))
+
+/* Sign extend 48 bits */
+#define MiProtoPteToPte(x) (PMMPTE)(((LONG64)(x)->u.Long) >> 16)
 
 FORCEINLINE
 VOID
@@ -242,17 +268,13 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
                       IN PMMPTE PointerPte)
 {
     /* Store the Address */
-    NewPte->u.Long = (ULONG64)PointerPte;
+    NewPte->u.Long = (ULONG64)PointerPte << 16;
 
     /* Mark this as a prototype PTE */
     NewPte->u.Proto.Prototype = 1;
-    NewPte->u.Proto.Valid  = 1;
-    NewPte->u.Proto.ReadOnly = 0;
-    NewPte->u.Proto.Protection = 0;
-}
 
-/* Sign extend 48 bits */
-#define MiProtoPteToPte(x) (PMMPTE)((LONG64)(x)->u.Proto.ProtoAddress)
+    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+}
 
 VOID
 FORCEINLINE

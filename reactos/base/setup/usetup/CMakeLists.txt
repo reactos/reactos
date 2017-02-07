@@ -1,8 +1,9 @@
 
+add_definitions(${I18N_DEFS})
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${REACTOS_SOURCE_DIR}/lib/newinflib
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 add_executable(usetup

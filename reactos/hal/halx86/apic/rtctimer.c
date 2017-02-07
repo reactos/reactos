@@ -19,10 +19,10 @@
 const UCHAR HalpClockVector = 0xD1;
 BOOLEAN HalpClockSetMSRate;
 UCHAR HalpNextMSRate;
-UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7,8 ms */
+UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7.8 ms */
 ULONG HalpCurrentTimeIncrement;
-static UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6:  16 Hz / 62,5 ms */
-static UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 256 Hz / 3,9 ms */
+static UCHAR RtcMinimumClockRate = 6;  /* Minimum rate  6:  16 Hz / 62.5 ms */
+static UCHAR RtcMaximumClockRate = 10; /* Maximum rate 10: 256 Hz / 3.9 ms */
 
 
 ULONG
@@ -131,7 +131,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     if (HalpClockSetMSRate)
     {
         /* Set new clock rate */
-        RtcSetClockRate(HalpCurrentRate);
+        RtcSetClockRate(HalpNextMSRate);
 
         /* We're done */
         HalpClockSetMSRate = FALSE;

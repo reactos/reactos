@@ -1373,6 +1373,243 @@ CheckDllState:
 
 VOID
 NTAPI
+MiFreeInitializationCode(IN PVOID InitStart,
+                         IN PVOID InitEnd)
+{
+    PMMPTE PointerPte;
+    PFN_NUMBER PagesFreed;
+
+    /* Get the start PTE */
+    PointerPte = MiAddressToPte(InitStart);
+    ASSERT(MI_IS_PHYSICAL_ADDRESS(InitStart) == FALSE);
+
+    /*  Compute the number of pages we expect to free */
+    PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte + 1);
+    
+    /* Try to actually free them */
+    PagesFreed = MiDeleteSystemPageableVm(PointerPte,
+                                          PagesFreed,
+                                          0,
+                                          NULL);
+}
+
+VOID
+NTAPI
+INIT_FUNCTION
+MiFindInitializationCode(OUT PVOID *StartVa,
+                         OUT PVOID *EndVa)
+{
+    ULONG Size, SectionCount, Alignment;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG_PTR DllBase, InitStart, InitEnd, ImageEnd, InitCode;
+    PLIST_ENTRY NextEntry;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_SECTION_HEADER Section, LastSection;
+    BOOLEAN InitFound;
+    
+    /* So we don't free our own code yet */
+    InitCode = (ULONG_PTR)&MiFindInitializationCode;
+
+    /* Assume failure */
+    *StartVa = NULL;
+
+    /* Enter a critical region while we loop the list */
+    KeEnterCriticalRegion();
+
+    /* Loop all loaded modules */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the loader entry and its DLL base */
+        LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        DllBase = (ULONG_PTR)LdrEntry->DllBase;
+        
+        /* Get the NT header */
+        NtHeader = RtlImageNtHeader((PVOID)DllBase);
+        if (!NtHeader)
+        {
+            /* Keep going */
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+
+        /* Get the first section, the section count, and scan them all */
+        Section = IMAGE_FIRST_SECTION(NtHeader);
+        SectionCount = NtHeader->FileHeader.NumberOfSections;
+        InitStart = 0;
+        while (SectionCount > 0)
+        {
+            /* Assume failure */
+            InitFound = FALSE;
+
+            /* Is this the INIT section or a discardable section? */
+            if ((*(PULONG)Section->Name == 'TINI') ||
+                ((Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)))
+            {
+                /* Remember this */
+                InitFound = TRUE;
+            }
+
+            if (InitFound)
+            {
+                /* Pick the biggest size -- either raw or virtual */
+                Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+                
+                /* Read the section alignment */
+                Alignment = NtHeader->OptionalHeader.SectionAlignment;
+
+                /* Align the start and end addresses appropriately */
+                InitStart = DllBase + Section->VirtualAddress;
+                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;                        
+                InitStart = (InitStart + (PAGE_SIZE - 1)) & 0xFFFFF000;
+
+                /* Have we reached the last section? */
+                if (SectionCount == 1)
+                {
+                    /* Remember this */
+                    LastSection = Section;
+                }
+                else
+                {
+                    /* We have not, loop all the sections */
+                    LastSection = NULL;
+                    do
+                    {
+                        /* Keep going until we find a non-discardable section range */
+                        SectionCount--;
+                        Section++;
+                        if (Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
+                        {
+                            /* Discardable, so record it, then keep going */
+                            LastSection = Section;
+                        }
+                        else
+                        {
+                            /* Non-contigous discard flag, or no flag, break out */
+                            break;
+                        }
+                    }
+                    while (SectionCount > 1);
+                }
+
+                /* Have we found a discardable or init section? */
+                if (LastSection)
+                {
+                    /* Pick the biggest size -- either raw or virtual */
+                    Size = max(LastSection->SizeOfRawData, LastSection->Misc.VirtualSize);
+
+                    /* Use this as the end of the section address */
+                    InitEnd = DllBase + LastSection->VirtualAddress + Size - 1;
+
+                    /* Have we reached the last section yet? */
+                    if (SectionCount != 1)
+                    {
+                        /* Then align this accross the session boundary */
+                        InitEnd = ((Alignment + InitEnd - 1) & 0XFFFFF000) - 1;
+                    }
+                }
+
+                /* Make sure we don't let the init section go past the image */
+                ImageEnd = DllBase + LdrEntry->SizeOfImage;
+                if (InitEnd > ImageEnd) InitEnd = (ImageEnd - 1) | (PAGE_SIZE - 1);
+
+                /* Make sure we have a valid, non-zero init section */
+                if (InitStart <= InitEnd)
+                {
+                    /* Make sure we are not within this code itself */
+                    if ((InitCode >= InitStart) && (InitCode <= InitEnd))
+                    {
+                        /* Return it, we can't free ourselves now */
+                        ASSERT(*StartVa == 0);
+                        *StartVa = (PVOID)InitStart;
+                        *EndVa = (PVOID)InitEnd;
+                    }
+                    else
+                    {
+                        /* This isn't us -- go ahead and free it */
+                        ASSERT(MI_IS_PHYSICAL_ADDRESS((PVOID)InitStart) == FALSE);
+                        MiFreeInitializationCode((PVOID)InitStart, (PVOID)InitEnd);
+                    }
+                }
+            }
+            
+            /* Move to the next section */
+            SectionCount--;
+            Section++;
+        }
+        
+        /* Move to the next module */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Leave the critical region and return */
+    KeLeaveCriticalRegion();
+}
+
+/* 
+ * Note: This function assumes that all discardable sections are at the end of
+ * the PE file. It searches backwards until it finds the non-discardable section
+ */
+VOID
+NTAPI
+MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PMMPTE StartPte, EndPte;
+    PFN_NUMBER PageCount;
+    PVOID DllBase;
+    ULONG i;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_SECTION_HEADER Section, DiscardSection;
+    ULONG PagesDeleted;
+
+    /* Get the base address and the page count */
+    DllBase = LdrEntry->DllBase;
+    PageCount = LdrEntry->SizeOfImage >> PAGE_SHIFT;
+
+    /* Get the last PTE in this image */
+    EndPte = MiAddressToPte(DllBase) + PageCount;
+
+    /* Get the NT header */
+    NtHeader = RtlImageNtHeader(DllBase);
+    if (!NtHeader) return;
+
+    /* Get the last section and loop each section backwards */
+    Section = IMAGE_FIRST_SECTION(NtHeader) + NtHeader->FileHeader.NumberOfSections;
+    DiscardSection = NULL;
+    for (i = 0; i < NtHeader->FileHeader.NumberOfSections; i++)
+    {
+        /* Go back a section and check if it's discardable */
+        Section--;
+        if (Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
+        {
+            /* It is, select it for freeing */
+            DiscardSection = Section;
+        }
+        else
+        {
+            /* No more discardable sections exist, bail out */
+            break;
+        }
+    }
+
+    /* Bail out if there's nothing to free */
+    if (!DiscardSection) return;
+
+    /* Push the DLL base to the first disacrable section, and get its PTE */
+    DllBase = (PVOID)ROUND_TO_PAGES((ULONG_PTR)DllBase + DiscardSection->VirtualAddress);
+    ASSERT(MI_IS_PHYSICAL_ADDRESS(DllBase) == FALSE);
+    StartPte = MiAddressToPte(DllBase);
+
+    /* Check how many pages to free total */
+    PageCount = (PFN_NUMBER)(EndPte - StartPte);
+    if (!PageCount) return;
+
+    /* Delete this many PTEs */
+    PagesDeleted = MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
+}
+
+VOID
+NTAPI
 INIT_FUNCTION
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

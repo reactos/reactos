@@ -298,7 +298,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                              NULL,
                              &SectionSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT,
+                             SEC_COMMIT | 0x1,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -331,7 +331,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the codepage data in its new location. */
-    ASSERT(SectionBase > MmSystemRangeStart);
+    ASSERT(SectionBase >= MmSystemRangeStart);
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
@@ -400,7 +400,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                      (PVOID*)&ProcessParams,
                                      0,
                                      &Size,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -429,7 +429,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                                      &EnvironmentPtr,
                                      0,
                                      &Size,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
     {
@@ -664,6 +664,7 @@ ExpInitSystemPhase1(VOID)
     /* Initialize events and event pairs */
     ExpInitializeEventImplementation();
     ExpInitializeEventPairImplementation();
+    ExpInitializeKeyedEventImplementation();
 
     /* Initialize callbacks */
     ExpInitializeCallbacks();
@@ -1288,6 +1289,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
 VOID
 NTAPI
+MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
+VOID
+NTAPI
 INIT_FUNCTION
 Phase1InitializationDiscard(IN PVOID Context)
 {
@@ -1906,6 +1911,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Make sure nobody touches the loader block again */
     if (LoaderBlock == KeLoaderBlock) KeLoaderBlock = NULL;
+    MmFreeLoaderBlock(LoaderBlock);
     LoaderBlock = Context = NULL;
 
     /* Update progress bar */

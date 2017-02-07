@@ -92,9 +92,6 @@ DriverEntry(
     return STATUS_SUCCESS;
 }
 
-
-
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInitialize()
@@ -116,6 +113,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 ClassInitialize(
     IN  PVOID            Argument1,
     IN  PVOID            Argument2,
@@ -328,7 +326,7 @@ ClassInitialize(
     status = STATUS_SUCCESS;
     return status;
 } // end ClassInitialize()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInitializeEx()
@@ -362,6 +360,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 ClassInitializeEx(
     IN  PDRIVER_OBJECT   DriverObject,
     IN  LPGUID           Guid,
@@ -402,7 +401,7 @@ ClassInitializeEx(
     return(status);
 
 } // end ClassInitializeEx()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassUnload()
@@ -420,12 +419,13 @@ Status:
 
 --*/
 VOID
+NTAPI
 ClassUnload(
     IN PDRIVER_OBJECT DriverObject
     )
 {
     PCLASS_DRIVER_EXTENSION driverExtension;
-    NTSTATUS status;
+    //NTSTATUS status;
 
     PAGED_CODE();
 
@@ -459,7 +459,7 @@ ClassUnload(
 
     return;
 } // end ClassUnload()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAddDevice()
@@ -484,6 +484,7 @@ Status: STATUS_NO_SUCH_DEVICE if the class driver did not want this device
 
 --*/
 NTSTATUS
+NTAPI
 ClassAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -502,7 +503,7 @@ ClassAddDevice(
                                                       PhysicalDeviceObject);
     return status;
 } // end ClassAddDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDispatchPnp()
@@ -524,6 +525,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassDispatchPnp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1240,7 +1242,7 @@ ClassDispatchPnp(
 
     return status;
 } // end ClassDispatchPnp()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassPnpStartDevice()
@@ -1261,7 +1263,7 @@ Return Value:
     none
 
 --*/
-NTSTATUS ClassPnpStartDevice(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI ClassPnpStartDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PCLASS_DRIVER_EXTENSION driverExtension;
     PCLASS_INIT_DATA initData;
@@ -1273,7 +1275,7 @@ NTSTATUS ClassPnpStartDevice(IN PDEVICE_OBJECT DeviceObject)
     BOOLEAN isFdo = commonExtension->IsFdo;
 
     BOOLEAN isMountedDevice = TRUE;
-    UNICODE_STRING  interfaceName;
+    //UNICODE_STRING  interfaceName;
 
     BOOLEAN timerStarted;
 
@@ -1570,12 +1572,12 @@ Return Value:
     NT Status
 
 --*/
-NTSTATUS ClassReadWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI ClassReadWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PDEVICE_OBJECT      lowerDeviceObject = commonExtension->LowerDeviceObject;
     PIO_STACK_LOCATION  currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
-    LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
+    //LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     ULONG               isRemoved;
     NTSTATUS            status;
@@ -1725,7 +1727,7 @@ Return Value:
     Status is returned.
 
 --*/
-NTSTATUS ClassReadDriveCapacity(IN PDEVICE_OBJECT Fdo)
+NTSTATUS NTAPI ClassReadDriveCapacity(IN PDEVICE_OBJECT Fdo)
 {
     READ_CAPACITY_DATA readCapacityBuffer = {0};
     NTSTATUS status;
@@ -1738,7 +1740,7 @@ NTSTATUS ClassReadDriveCapacity(IN PDEVICE_OBJECT Fdo)
         if (pkt){
             PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
             KEVENT event;
-            NTSTATUS pktStatus;
+            //NTSTATUS pktStatus;
             IRP pseudoIrp = {0};
 
             /*
@@ -2009,6 +2011,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassSendStartUnit(
     IN PDEVICE_OBJECT Fdo
     )
@@ -2135,7 +2138,7 @@ ClassSendStartUnit(
     return;
 
 } // end StartUnit()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAsynchronousCompletion() ISSUE-2000/02/18-henrygab - why public?!
@@ -2162,6 +2165,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassAsynchronousCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -2239,15 +2243,13 @@ ClassAsynchronousCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 
 } // end ClassAsynchronousCompletion()
-
 
-
-VOID ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp)
+VOID NTAPI ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp)
 {
-    PCOMMON_DEVICE_EXTENSION commonExt = Fdo->DeviceExtension;
+    //PCOMMON_DEVICE_EXTENSION commonExt = Fdo->DeviceExtension;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
-    PSTORAGE_ADAPTER_DESCRIPTOR adapterDesc = commonExt->PartitionZeroExtension->AdapterDescriptor;
+    //PSTORAGE_ADAPTER_DESCRIPTOR adapterDesc = commonExt->PartitionZeroExtension->AdapterDescriptor;
     PIO_STACK_LOCATION currentSp = IoGetCurrentIrpStackLocation(Irp);
     ULONG entireXferLen = currentSp->Parameters.Read.Length;
     PUCHAR bufPtr = MmGetMdlVirtualAddress(Irp->MdlAddress);
@@ -2256,7 +2258,7 @@ VOID ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp)
     SINGLE_LIST_ENTRY pktList;
     PSINGLE_LIST_ENTRY slistEntry;
     ULONG numPackets;
-    KIRQL oldIrql;
+    //KIRQL oldIrql;
     ULONG i;
 
     /*
@@ -2397,7 +2399,6 @@ VOID ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp)
 
 }
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassIoComplete()
@@ -2428,6 +2429,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassIoComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -2611,7 +2613,6 @@ ClassIoComplete(
 
 } // end ClassIoComplete()
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendSrbSynchronous()
@@ -2644,6 +2645,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSendSrbSynchronous(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -2656,7 +2658,7 @@ ClassSendSrbSynchronous(
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExtension->PrivateFdoData;
     IO_STATUS_BLOCK ioStatus;
-    ULONG controlType;
+    //ULONG controlType;
     PIRP irp;
     PIO_STACK_LOCATION irpStack;
     KEVENT event;
@@ -2960,7 +2962,6 @@ retry:
     return status;
 }
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInterpretSenseInfo()
@@ -2990,6 +2991,7 @@ Return Value:
 
 --*/
 BOOLEAN
+NTAPI
 ClassInterpretSenseInfo(
     IN PDEVICE_OBJECT Fdo,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -3443,7 +3445,7 @@ ClassInterpretSenseInfo(
 
         case SCSI_SENSE_UNIT_ATTENTION: {
 
-            PVPB vpb;
+            //PVPB vpb;
             ULONG count;
 
             //
@@ -4095,8 +4097,6 @@ ClassInterpretSenseInfo(
 
 } // end ClassInterpretSenseInfo()
 
-
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassModeSense()
@@ -4121,7 +4121,7 @@ Return Value:
     Length of the transferred data is returned.
 
 --*/
-ULONG ClassModeSense(   IN PDEVICE_OBJECT Fdo,
+ULONG NTAPI ClassModeSense(   IN PDEVICE_OBJECT Fdo,
                         IN PCHAR ModeSenseBuffer,
                         IN ULONG Length,
                         IN UCHAR PageMode)
@@ -4137,7 +4137,7 @@ ULONG ClassModeSense(   IN PDEVICE_OBJECT Fdo,
         TRANSFER_PACKET *pkt = DequeueFreeTransferPacket(Fdo, TRUE);
         if (pkt){
             KEVENT event;
-            NTSTATUS pktStatus;
+            //NTSTATUS pktStatus;
             IRP pseudoIrp = {0};
 
             /*
@@ -4182,7 +4182,6 @@ ULONG ClassModeSense(   IN PDEVICE_OBJECT Fdo,
     return lengthTransferred;
 }
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassFindModePage()
@@ -4208,6 +4207,7 @@ Return Value:
 
 --*/
 PVOID
+NTAPI
 ClassFindModePage(
     IN PCHAR ModeSenseBuffer,
     IN ULONG Length,
@@ -4279,7 +4279,7 @@ ClassFindModePage(
 
     return result;
 } // end ClassFindModePage()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendSrbAsynchronous()
@@ -4319,6 +4319,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSendSrbAsynchronous(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4506,7 +4507,7 @@ ClassSendSrbAsynchronous(
     return STATUS_PENDING;
 
 } // end ClassSendSrbAsynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDeviceControlDispatch()
@@ -4529,6 +4530,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassDeviceControlDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -4559,7 +4561,6 @@ ClassDeviceControlDispatch(
     return commonExtension->DevInfo->ClassDeviceControl(DeviceObject,Irp);
 } // end ClassDeviceControlDispatch()
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDeviceControl()
@@ -4587,6 +4588,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -4613,7 +4615,7 @@ ClassDeviceControl(
     if ((controlCode == IOCTL_SCSI_PASS_THROUGH) ||
         (controlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT)) {
 
-        PSCSI_PASS_THROUGH scsiPass;
+        //PSCSI_PASS_THROUGH scsiPass;
 
         //
         // Validiate the user buffer.
@@ -5585,7 +5587,7 @@ SetStatusAndReturn:
 
     return status;
 } // end ClassDeviceControl()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassShutdownFlush()
@@ -5609,6 +5611,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -5618,7 +5621,7 @@ ClassShutdownFlush(
 
     ULONG isRemoved;
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
 
@@ -5653,7 +5656,7 @@ ClassShutdownFlush(
 
     return STATUS_INVALID_DEVICE_REQUEST;
 } // end ClassShutdownFlush()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCreateDeviceObject()
@@ -5682,6 +5685,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassCreateDeviceObject(
     IN PDRIVER_OBJECT          DriverObject,
     IN PCCHAR                  ObjectNameBuffer,
@@ -5693,7 +5697,7 @@ ClassCreateDeviceObject(
     BOOLEAN        isPartitionable;
     STRING         ntNameString;
     UNICODE_STRING ntUnicodeString;
-    NTSTATUS       status, status2;
+    NTSTATUS       status;
     PDEVICE_OBJECT deviceObject = NULL;
 
     ULONG          characteristics;
@@ -5956,7 +5960,7 @@ ClassCreateDeviceObject(
 
     return status;
 } // end ClassCreateDeviceObject()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassClaimDevice()
@@ -5979,6 +5983,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassClaimDevice(
     IN PDEVICE_OBJECT LowerDeviceObject,
     IN BOOLEAN Release
@@ -6079,7 +6084,7 @@ ClassClaimDevice(
 
     return status;
 } // end ClassClaimDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInternalIoControl()
@@ -6110,6 +6115,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassInternalIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -6161,7 +6167,7 @@ ClassInternalIoControl(
 
     return IoCallDriver(commonExtension->LowerDeviceObject, Irp);
 } // end ClassInternalIoControl()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassQueryTimeOutRegistryValue()
@@ -6182,6 +6188,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 ClassQueryTimeOutRegistryValue(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -6264,7 +6271,7 @@ ClassQueryTimeOutRegistryValue(
     return timeOut;
 
 } // end ClassQueryTimeOutRegistryValue()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassCheckVerifyComplete() ISSUE-2000/02/18-henrygab - why public?!
@@ -6289,6 +6296,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassCheckVerifyComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -6328,7 +6336,7 @@ ClassCheckVerifyComplete(
     return STATUS_MORE_PROCESSING_REQUIRED;
 
 } // end ClassCheckVerifyComplete()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetDescriptor()
@@ -6354,6 +6362,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassGetDescriptor(
     IN PDEVICE_OBJECT DeviceObject,
     IN PSTORAGE_PROPERTY_ID PropertyId,
@@ -6366,7 +6375,7 @@ ClassGetDescriptor(
     PSTORAGE_DESCRIPTOR_HEADER descriptor = NULL;
     ULONG length;
 
-    UCHAR pass = 0;
+    //UCHAR pass = 0;
 
     PAGED_CODE();
 
@@ -6477,7 +6486,7 @@ ClassGetDescriptor(
     *Descriptor = descriptor;
     return ioStatus.Status;
 } // end ClassGetDescriptor()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSignalCompletion()
@@ -6503,6 +6512,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSignalCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -6513,7 +6523,7 @@ ClassSignalCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClassSignalCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassPnpQueryFdoRelations()
@@ -6537,6 +6547,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassPnpQueryFdoRelations(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp
@@ -6569,7 +6580,7 @@ ClassPnpQueryFdoRelations(
 
     return Irp->IoStatus.Status;
 } // end ClassPnpQueryFdoRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMarkChildrenMissing()
@@ -6590,6 +6601,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassMarkChildrenMissing(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo
     )
@@ -6615,7 +6627,7 @@ ClassMarkChildrenMissing(
     ClassReleaseChildLock(Fdo);
     return;
 } // end ClassMarkChildrenMissing()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMarkChildMissing()
@@ -6642,6 +6654,7 @@ Return Value:
 
 --*/
 BOOLEAN
+NTAPI
 ClassMarkChildMissing(
     IN PPHYSICAL_DEVICE_EXTENSION Child,
     IN BOOLEAN AcquireChildLock
@@ -6668,7 +6681,7 @@ ClassMarkChildMissing(
 
     return returnValue;
 } // end ClassMarkChildMissing()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRetrieveDeviceRelations()
@@ -6693,6 +6706,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassRetrieveDeviceRelations(
     IN PDEVICE_OBJECT Fdo,
     IN DEVICE_RELATION_TYPE RelationType,
@@ -6782,7 +6796,7 @@ ClassRetrieveDeviceRelations(
     ClassReleaseChildLock(fdoExtension);
     return STATUS_SUCCESS;
 } // end ClassRetrieveDeviceRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetPdoId()
@@ -6807,6 +6821,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassGetPdoId(
     IN PDEVICE_OBJECT Pdo,
     IN BUS_QUERY_ID_TYPE IdType,
@@ -6824,7 +6839,7 @@ ClassGetPdoId(
 
     return driverExtension->InitData.ClassQueryId( Pdo, IdType, IdString);
 } // end ClassGetPdoId()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassQueryPnpCapabilities()
@@ -6845,6 +6860,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassQueryPnpCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_CAPABILITIES Capabilities
@@ -6874,7 +6890,7 @@ ClassQueryPnpCapabilities(
         return STATUS_NOT_IMPLEMENTED;
     }
 } // end ClassQueryPnpCapabilities()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassInvalidateBusRelations()
@@ -6896,6 +6912,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassInvalidateBusRelations(
     IN PDEVICE_OBJECT Fdo
     )
@@ -6927,7 +6944,7 @@ ClassInvalidateBusRelations(
 
     return;
 } // end ClassInvalidateBusRelations()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRemoveDevice() ISSUE-2000/02/18-henrygab - why public?!
@@ -6951,6 +6968,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR RemoveType
@@ -7072,7 +7090,7 @@ ClassRemoveDevice(
         status = STATUS_SUCCESS;
 
         if (commonExtension->IsFdo){
-            PDEVICE_OBJECT pdo;
+            //PDEVICE_OBJECT pdo;
             PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
 
             ClasspDisableTimer(fdoExtension->DeviceObject);
@@ -7196,7 +7214,7 @@ ClassRemoveDevice(
 
     return STATUS_SUCCESS;
 } // end ClassRemoveDevice()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetDriverExtension()
@@ -7215,13 +7233,14 @@ Return Value:
 
 --*/
 PCLASS_DRIVER_EXTENSION
+NTAPI
 ClassGetDriverExtension(
     IN PDRIVER_OBJECT DriverObject
     )
 {
     return IoGetDriverObjectExtension(DriverObject, CLASS_DRIVER_EXTENSION_KEY);
 } // end ClassGetDriverExtension()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspStartIo()
@@ -7240,6 +7259,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClasspStartIo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -7270,7 +7290,7 @@ ClasspStartIo(
 
     return;
 } // ClasspStartIo()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassUpdateInformationInRegistry()
@@ -7299,6 +7319,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassUpdateInformationInRegistry(
     IN PDEVICE_OBJECT     Fdo,
     IN PCHAR              DeviceName,
@@ -7477,7 +7498,7 @@ ClassUpdateInformationInRegistry(
     }
 
 } // end ClassUpdateInformationInRegistry()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspSendSynchronousCompletion()
@@ -7501,6 +7522,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClasspSendSynchronousCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -7539,13 +7561,14 @@ ClasspSendSynchronousCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspSendSynchronousCompletion()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRegisterMountedDeviceInterface
 
 --*/
 VOID
+NTAPI
 ClasspRegisterMountedDeviceInterface(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -7598,7 +7621,7 @@ ClasspRegisterMountedDeviceInterface(
     }
     return;
 } // end ClasspRegisterMountedDeviceInterface()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendDeviceIoControlSynchronous()
@@ -7636,6 +7659,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassSendDeviceIoControlSynchronous(
     IN ULONG IoControlCode,
     IN PDEVICE_OBJECT TargetDeviceObject,
@@ -7874,7 +7898,7 @@ ClassSendDeviceIoControlSynchronous(
 
     return;
 } // end ClassSendDeviceIoControlSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassForwardIrpSynchronous()
@@ -7893,6 +7917,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassForwardIrpSynchronous(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PIRP Irp
@@ -7901,7 +7926,7 @@ ClassForwardIrpSynchronous(
     IoCopyCurrentIrpStackLocationToNext(Irp);
     return ClassSendIrpSynchronous(CommonExtension->LowerDeviceObject, Irp);
 } // end ClassForwardIrpSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSendIrpSynchronous()
@@ -7922,6 +7947,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSendIrpSynchronous(
     IN PDEVICE_OBJECT TargetDeviceObject,
     IN PIRP Irp
@@ -7999,7 +8025,7 @@ ClassSendIrpSynchronous(
 
     return status;
 } // end ClassSendIrpSynchronous()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassGetVpb()
@@ -8021,25 +8047,27 @@ Return Value:
 
 --*/
 PVPB
+NTAPI
 ClassGetVpb(
     IN PDEVICE_OBJECT DeviceObject
     )
 {
     return DeviceObject->Vpb;
 } // end ClassGetVpb()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspAllocateReleaseRequest
 
 --*/
 NTSTATUS
+NTAPI
 ClasspAllocateReleaseRequest(
     IN PDEVICE_OBJECT Fdo
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PIO_STACK_LOCATION irpStack;
+    //PIO_STACK_LOCATION irpStack;
 
     KeInitializeSpinLock(&(fdoExtension->ReleaseQueueSpinLock));
 
@@ -8062,13 +8090,14 @@ ClasspAllocateReleaseRequest(
 
     return STATUS_SUCCESS;
 } // end ClasspAllocateReleaseRequest()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspFreeReleaseRequest
 
 --*/
 VOID
+NTAPI
 ClasspFreeReleaseRequest(
     IN PDEVICE_OBJECT Fdo
     )
@@ -8105,7 +8134,7 @@ ClasspFreeReleaseRequest(
 
     return;
 } // end ClasspFreeReleaseRequest()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseQueue()
@@ -8130,6 +8159,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassReleaseQueue(
     IN PDEVICE_OBJECT Fdo
     )
@@ -8137,7 +8167,7 @@ ClassReleaseQueue(
     ClasspReleaseQueue(Fdo, NULL);
     return;
 } // end ClassReleaseQueue()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspAllocateReleaseQueueIrp()
@@ -8162,11 +8192,12 @@ Notes:
 
 --*/
 NTSTATUS
+NTAPI
 ClasspAllocateReleaseQueueIrp(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
 {
-    KIRQL oldIrql;
+    //KIRQL oldIrql;
     UCHAR lowerStackSize;
 
     //
@@ -8206,7 +8237,6 @@ ClasspAllocateReleaseQueueIrp(
     return STATUS_SUCCESS;
 }
 
-
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspReleaseQueue()
@@ -8238,6 +8268,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClasspReleaseQueue(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP ReleaseQueueIrp OPTIONAL
@@ -8353,7 +8384,7 @@ ClasspReleaseQueue(
     return;
 
 } // end ClassReleaseQueue()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseQueueCompletion()
@@ -8380,6 +8411,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassReleaseQueueCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -8429,7 +8461,7 @@ ClassReleaseQueueCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 
 } // ClassAsynchronousCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAcquireChildLock()
@@ -8450,6 +8482,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassAcquireChildLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -8472,7 +8505,7 @@ ClassAcquireChildLock(
     FdoExtension->ChildLockAcquisitionCount++;
     return;
 }
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassReleaseChildLock() ISSUE-2000/02/18-henrygab - not documented
@@ -8492,6 +8525,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassReleaseChildLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -8508,7 +8542,7 @@ ClassReleaseChildLock(
 
     return;
 } // end ClassReleaseChildLock(
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassAddChild()
@@ -8531,6 +8565,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 ClassAddChild(
     IN PFUNCTIONAL_DEVICE_EXTENSION Parent,
     IN PPHYSICAL_DEVICE_EXTENSION Child,
@@ -8565,7 +8600,7 @@ ClassAddChild(
     }
     return;
 } // end ClassAddChild()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassRemoveChild()
@@ -8592,6 +8627,7 @@ Return Value:
 
 --*/
 PPHYSICAL_DEVICE_EXTENSION
+NTAPI
 ClassRemoveChild(
     IN PFUNCTIONAL_DEVICE_EXTENSION Parent,
     IN PPHYSICAL_DEVICE_EXTENSION Child,
@@ -8659,13 +8695,13 @@ ClassRemoveChild(
     return Child;
 } // end ClassRemoveChild()
 
-
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRetryRequestDpc
 
 --*/
 VOID
+NTAPI
 ClasspRetryRequestDpc(
     IN PKDPC Dpc,
     IN PDEVICE_OBJECT DeviceObject,
@@ -8735,13 +8771,14 @@ ClasspRetryRequestDpc(
     return;
 
 } // end ClasspRetryRequestDpc()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClassRetryRequest
 
 --*/
 VOID
+NTAPI
 ClassRetryRequest(
     IN PDEVICE_OBJECT SelfDeviceObject,
     IN PIRP           Irp,
@@ -8751,7 +8788,7 @@ ClassRetryRequest(
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData;
     PCLASS_RETRY_INFO  retryInfo;
-    PCLASS_RETRY_INFO *previousNext;
+    //PCLASS_RETRY_INFO *previousNext;
     LARGE_INTEGER      delta;
     KIRQL irql;
 
@@ -8867,13 +8904,14 @@ ClassRetryRequest(
 
 
 } // end ClassRetryRequest()
-
+
 /*++
 
     ISSUE-2000/02/20-henrygab Not documented ClasspRetryDpcTimer
 
 --*/
 VOID
+NTAPI
 ClasspRetryDpcTimer(
     IN PCLASS_PRIVATE_FDO_DATA FdoData
     )
@@ -8922,8 +8960,9 @@ ClasspRetryDpcTimer(
 
     return;
 } // end ClasspRetryDpcTimer()
-
+
 NTSTATUS
+NTAPI
 ClasspInitializeHotplugInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -9040,8 +9079,9 @@ ClasspInitializeHotplugInfo(
 
     return STATUS_SUCCESS;
 }
-
+
 VOID
+NTAPI
 ClasspScanForClassHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
@@ -9057,8 +9097,9 @@ ClasspScanForClassHacks(
     SET_FLAG(FdoExtension->PrivateFdoData->HackFlags, Data);
     return;
 }
-
+
 VOID
+NTAPI
 ClasspScanForSpecialInRegistry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -9177,7 +9218,3 @@ cleanupScanForSpecial:
 
     return;
 }
-
-
-
-

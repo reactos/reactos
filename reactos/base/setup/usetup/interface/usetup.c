@@ -506,10 +506,10 @@ CheckUnattendedSetup(VOID)
 
     UnattendDestinationPartitionNumber = IntValue;
 
-    /* Search for 'DestinationPartitionNumber' in the 'Unattend' section */
-    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"DestinationPartitionNumber", &Context))
+    /* Search for 'InstallationDirectory' in the 'Unattend' section */
+    if (!SetupFindFirstLineW(UnattendInf, L"Unattend", L"InstallationDirectory", &Context))
     {
-        DPRINT("SetupFindFirstLine() failed for key 'DestinationPartitionNumber'\n");
+        DPRINT("SetupFindFirstLine() failed for key 'InstallationDirectory'\n");
         SetupCloseInfFile(UnattendInf);
         return;
     }
@@ -728,19 +728,19 @@ LanguagePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SetupStartPage(PINPUT_RECORD Ir)
 {
-    SYSTEM_DEVICE_INFORMATION Sdi;
+    //SYSTEM_DEVICE_INFORMATION Sdi;
     NTSTATUS Status;
     WCHAR FileNameBuffer[MAX_PATH];
     INFCONTEXT Context;
     PWCHAR Value;
     UINT ErrorLine;
-    ULONG ReturnSize;
+    //ULONG ReturnSize;
     PGENERIC_LIST_ENTRY ListEntry;
     INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-
+#if 0
     /* Check whether a harddisk is available */
     Status = NtQuerySystemInformation(SystemDeviceInformation,
                                       &Sdi,
@@ -759,6 +759,7 @@ SetupStartPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+#endif
 
     /* Get the source path and source root path */
     Status = GetSourcePaths(&SourcePath,
@@ -1464,8 +1465,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
             return QUIT_PAGE;
         }
     }
-
-    CheckActiveBootPartition(PartitionList);
 
     DrawPartitionList(PartitionList);
 
@@ -2381,8 +2380,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
             else if (!FileSystemList->Selected->FormatFunc)
                 return QUIT_PAGE;
 
-            CheckActiveBootPartition(PartitionList);
-
 #ifndef NDEBUG
             CONSOLE_PrintTextXY(6, 12,
                                 "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
@@ -2442,19 +2439,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                                    PathBuffer);
             DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
 
-
-            /* Set SystemRootPath */
-            RtlFreeUnicodeString(&SystemRootPath);
-            swprintf(PathBuffer,
-                     L"\\Device\\Harddisk%lu\\Partition%lu",
-                     PartitionList->ActiveBootDisk->DiskNumber,
-                     PartitionList->ActiveBootPartition->
-                         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionNumber);
-            RtlCreateUnicodeString(&SystemRootPath,
-                                   PathBuffer);
-            DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
-
-
             if (FileSystemList->Selected->FormatFunc)
             {
                 Status = FormatPartition(&DestinationRootPath,
@@ -2504,15 +2488,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     PartitionList->CurrentPartition->PartInfo[PartNum].PartitionNumber);
     RtlCreateUnicodeString(&DestinationRootPath, PathBuffer);
     DPRINT("DestinationRootPath: %wZ\n", &DestinationRootPath);
-
-    /* Set SystemRootPath */
-    RtlFreeUnicodeString(&SystemRootPath);
-    swprintf(PathBuffer,
-             L"\\Device\\Harddisk%lu\\Partition%lu",
-    PartitionList->ActiveBootDisk->DiskNumber,
-    PartitionList->ActiveBootPartition->PartInfo[PartNum].PartitionNumber);
-    RtlCreateUnicodeString(&SystemRootPath, PathBuffer);
-    DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
 
@@ -2619,8 +2594,6 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     PPARTENTRY PartEntry;
     WCHAR InstallDir[51];
-    PWCHAR DefaultPath;
-    INFCONTEXT Context;
     ULONG Length;
 
     if (PartitionList == NULL ||
@@ -2634,22 +2607,10 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     DiskEntry = PartitionList->CurrentDisk;
     PartEntry = PartitionList->CurrentPartition;
 
-    /* Search for 'DefaultPath' in the 'SetupData' section */
-    if (!SetupFindFirstLineW(SetupInf, L"SetupData", L"DefaultPath", &Context))
-    {
-        MUIDisplayError(ERROR_FIND_SETUPDATA, Ir, POPUP_WAIT_ENTER);
-        return QUIT_PAGE;
-    }
-
-    /* Read the 'DefaultPath' data */
-    if (INF_GetData(&Context, NULL, &DefaultPath))
-    {
-        wcscpy(InstallDir, DefaultPath);
-    }
+    if (IsUnattendedSetup)
+        wcscpy(InstallDir, UnattendInstallationDirectory);
     else
-    {
         wcscpy(InstallDir, L"\\ReactOS");
-    }
 
     Length = wcslen(InstallDir);
     CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
@@ -3137,6 +3098,11 @@ FileCopyCallback(PVOID Context,
 
         case SPFILENOTIFY_ENDCOPY:
             CopyContext->CompletedOperations++;
+
+            /* SYSREG checkpoint */
+            if (CopyContext->TotalOperations >> 1 == CopyContext->CompletedOperations)
+                DPRINT1("CHECKPOINT:HALF_COPIED\n");
+
             ProgressNextStep(CopyContext->ProgressBar);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
@@ -3371,8 +3337,30 @@ BootLoaderPage(PINPUT_RECORD Ir)
     UCHAR PartitionType;
     BOOLEAN InstallOnFloppy;
     USHORT Line = 12;
+    WCHAR PathBuffer[MAX_PATH];
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
+
+    /* Find or set the active partition */
+    CheckActiveBootPartition(PartitionList);
+
+    /* Update the partition table because we may have changed the active partition */
+    if (WritePartitionsToDisk(PartitionList) == FALSE)
+    {
+        DPRINT("WritePartitionsToDisk() failed\n");
+        MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    RtlFreeUnicodeString(&SystemRootPath);
+    swprintf(PathBuffer,
+             L"\\Device\\Harddisk%lu\\Partition%lu",
+             PartitionList->ActiveBootDisk->DiskNumber,
+             PartitionList->ActiveBootPartition->
+                PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionNumber);
+    RtlCreateUnicodeString(&SystemRootPath,
+                           PathBuffer);
+    DPRINT("SystemRootPath: %wZ\n", &SystemRootPath);
 
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;

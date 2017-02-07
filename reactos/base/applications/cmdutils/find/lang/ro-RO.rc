@@ -1,4 +1,4 @@
- /* 
+/* 
  * FILE:             base/applications/cmdutils/find/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
@@ -17,8 +17,8 @@ IDS_USAGE, "FIND: Tipărește toate rândurile unui fișier ce conțin un șir.\
     /N  Numără rândurile afișate, începând cu 1.\n\
     /V  Tipărește rândurile ce nu conțin șirul."
 
-IDS_NO_SUCH_FILE, "FIND: Fișierul „%s” nu există!\n"
+IDS_NO_SUCH_FILE, "FIND: Fișierul «%s» nu există!\n"
 
-IDS_CANNOT_OPEN, "FIND: Fișierul „%s” nu poate fi deschis!\n"
+IDS_CANNOT_OPEN, "FIND: Fișierul «%s» nu poate fi deschis!\n"
 
 END

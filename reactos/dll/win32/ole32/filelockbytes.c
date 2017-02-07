@@ -47,7 +47,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(storage);
 
 typedef struct FileLockBytesImpl
 {
-    const ILockBytesVtbl *lpVtbl;
+    ILockBytes ILockBytes_iface;
     LONG ref;
     ULARGE_INTEGER filesize;
     HANDLE hfile;
@@ -56,6 +56,11 @@ typedef struct FileLockBytesImpl
 } FileLockBytesImpl;
 
 static const ILockBytesVtbl FileLockBytesImpl_Vtbl;
+
+static inline FileLockBytesImpl *impl_from_ILockBytes(ILockBytes *iface)
+{
+    return CONTAINING_RECORD(iface, FileLockBytesImpl, ILockBytes_iface);
+}
 
 /***********************************************************
  * Prototypes for private methods
@@ -100,7 +105,7 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
   if (!This)
     return E_OUTOFMEMORY;
 
-  This->lpVtbl = &FileLockBytesImpl_Vtbl;
+  This->ILockBytes_iface.lpVtbl = &FileLockBytesImpl_Vtbl;
   This->ref = 1;
   This->hfile = hFile;
   This->filesize.u.LowPart = GetFileSize(This->hfile,
@@ -126,7 +131,7 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
 
   TRACE("file len %u\n", This->filesize.u.LowPart);
 
-  *pLockBytes = (ILockBytes*)This;
+  *pLockBytes = &This->ILockBytes_iface;
 
   return S_OK;
 }
@@ -151,13 +156,13 @@ static HRESULT WINAPI FileLockBytesImpl_QueryInterface(ILockBytes *iface, REFIID
 
 static ULONG WINAPI FileLockBytesImpl_AddRef(ILockBytes *iface)
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI FileLockBytesImpl_Release(ILockBytes *iface)
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     ULONG ref;
 
     ref = InterlockedDecrement(&This->ref);
@@ -187,7 +192,7 @@ static HRESULT WINAPI FileLockBytesImpl_ReadAt(
       ULONG          cb,        /* [in] */
       ULONG*         pcbRead)   /* [out] */
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     ULONG bytes_left = cb;
     LPBYTE readPtr = pv;
     BOOL ret;
@@ -242,7 +247,7 @@ static HRESULT WINAPI FileLockBytesImpl_WriteAt(
       ULONG          cb,          /* [in] */
       ULONG*         pcbWritten)  /* [out] */
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     ULONG size_needed = ulOffset.u.LowPart + cb;
     ULONG bytes_left = cb;
     const BYTE *writePtr = pv;
@@ -307,7 +312,7 @@ static HRESULT WINAPI FileLockBytesImpl_Flush(ILockBytes* iface)
  */
 static HRESULT WINAPI FileLockBytesImpl_SetSize(ILockBytes* iface, ULARGE_INTEGER newSize)
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
     HRESULT hr = S_OK;
     LARGE_INTEGER newpos;
 
@@ -343,7 +348,7 @@ static HRESULT WINAPI FileLockBytesImpl_UnlockRegion(ILockBytes* iface,
 static HRESULT WINAPI FileLockBytesImpl_Stat(ILockBytes* iface,
     STATSTG *pstatstg, DWORD grfStatFlag)
 {
-    FileLockBytesImpl* This = (FileLockBytesImpl*)iface;
+    FileLockBytesImpl* This = impl_from_ILockBytes(iface);
 
     if (!(STATFLAG_NONAME & grfStatFlag) && This->pwcsName)
     {

@@ -171,7 +171,7 @@ typedef struct _SYSTEM_FIRMWARE_TABLE_INFORMATION {
 
 typedef NTSTATUS
 (__cdecl *PFNFTH)(
-  IN OUT PSYSTEM_FIRMWARE_TABLE_INFORMATION SystemFirmwareTableInfo);
+  _Inout_ PSYSTEM_FIRMWARE_TABLE_INFORMATION SystemFirmwareTableInfo);
 
 typedef struct _SYSTEM_FIRMWARE_TABLE_HANDLER {
   ULONG ProviderSignature;
@@ -182,7 +182,7 @@ typedef struct _SYSTEM_FIRMWARE_TABLE_HANDLER {
 
 typedef ULONG_PTR
 (NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 
 typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
   PDRIVER_VERIFIER_THUNK_ROUTINE PristineRoutine;
@@ -245,11 +245,12 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 /* Filesystem runtime library routines */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+_Must_inspect_result_
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlIsTotalDeviceFailure(
-  IN NTSTATUS Status);
+  _In_ NTSTATUS Status);
 #endif
 
 #ifdef __cplusplus

@@ -29,8 +29,8 @@
 
 #include "wine/unicode.h"
 
-extern HRESULT WINAPI HLink_Constructor(IUnknown*,REFIID,void**);
-extern HRESULT WINAPI HLinkBrowseContext_Constructor(IUnknown*,REFIID,void**);
+extern HRESULT HLink_Constructor(IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
+extern HRESULT HLinkBrowseContext_Constructor(IUnknown*,REFIID,void**) DECLSPEC_HIDDEN;
 
 static inline void *heap_alloc(size_t len)
 {

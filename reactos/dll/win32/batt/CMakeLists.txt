@@ -10,7 +10,7 @@ add_library(batt SHARED
 
 set_module_type(batt win32dll UNICODE)
 
-add_importlib_target(batt.spec)
+
 
 add_importlibs(batt msvcrt kernel32 ntdll)
 

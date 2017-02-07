@@ -3,7 +3,7 @@
  *
  *
  *  History:
- *    
+ *
  *
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
  *        added config.h include
@@ -20,13 +20,13 @@
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
  *	  25-Nov-2008 (Victor Martinez) <vicmarcal@hotmail.com> Patch dedicated to Myrjala because her comprenhension and love :D
- *		  Fixing following Bugs: 
+ *		  Fixing following Bugs:
  *	           -Wrong behavior with wildcards when Source and Destiny are Paths(FIXED).
  *			   -Wrong general behavior (MSDN:"Rename cant move files between subdirectories")(FIXED)
  *			   -Wrong behavior when renaming without path in destiny:(i.e) "ren C:\text\as.txt list.txt" it moves as.txt and then rename it(FIXED)
  *				(MSDN: If there is a Path in Source and no Path in Destiny, then Destiny Path is Source Path,because never Ren has to be used to move.)
  *			   -Implemented checkings if SourcePath and DestinyPath are differents.
- *	     
+ *
  */
 
 #include <precomp.h>
@@ -59,13 +59,13 @@ INT cmd_rename (LPTSTR param)
   DWORD dwFiles = 0; /* number of renamedd files */
   INT i;
 
- 
+
   LPTSTR srcPattern = NULL; /* Source Argument*/
   TCHAR srcPath[MAX_PATH]; /*Source Path Directories*/
   LPTSTR srcFILE = NULL;  /*Contains the files name(s)*/
-  TCHAR srcFinal[MAX_PATH]; 
-  
- 
+  TCHAR srcFinal[MAX_PATH];
+
+
   LPTSTR dstPattern = NULL; /*Destiny Argument*/
   TCHAR dstPath[MAX_PATH]; /*Source Path Directories*/
   LPTSTR dstFILE = NULL; /*Contains the files name(s)*/
@@ -75,12 +75,12 @@ INT cmd_rename (LPTSTR param)
 
   BOOL bDstWildcard = FALSE;
   BOOL bPath = FALSE;
-  
- 
-  
- 
-  
-  
+
+
+
+
+
+
   LPTSTR p,q,r;
 
   HANDLE hFile;
@@ -88,8 +88,8 @@ INT cmd_rename (LPTSTR param)
  /*If the PARAM=/? then show the help*/
   if (!_tcsncmp(param, _T("/?"), 2))
   {
-	  
-	
+
+
     ConOutResPaging(TRUE,STRING_REN_HELP1);
     return 0;
   }
@@ -97,8 +97,8 @@ INT cmd_rename (LPTSTR param)
   nErrorLevel = 0;
 
   /* Split the argument list.Args will be saved in arg vector*/
-  arg = split(param, &args, FALSE);
- 	
+  arg = split(param, &args, FALSE, FALSE);
+
   if (args < 2)
     {
       if (!(dwFlags & REN_ERROR))
@@ -124,7 +124,7 @@ INT cmd_rename (LPTSTR param)
 						 case _T('N'):
 						dwFlags |= REN_NOTHING;
 						 break;
-			
+
 						case _T('P'):
 						dwFlags |= REN_PROMPT;
 						break;
@@ -158,8 +158,8 @@ INT cmd_rename (LPTSTR param)
 		freep(arg);
 		return 1;
     }
-  
-  
+
+
   /* Get destination pattern and source pattern*/
   for (i = 0; i < args; i++)
     {
@@ -167,16 +167,16 @@ INT cmd_rename (LPTSTR param)
 		continue;
       dstPattern = arg[i]; //we save the Last argument as dstPattern
 	  srcPattern = arg[i-1];
-	  
+
     }
-  
- 
- 
-  
+
+
+
+
 
   if (_tcschr(srcPattern, _T('\\')))  //Checking if the Source (srcPattern) is a Path to the file
-	{	
-		
+	{
+
 		bPath= TRUE;
 
         //Splitting srcPath and srcFile.
@@ -190,11 +190,11 @@ INT cmd_rename (LPTSTR param)
 			if(!_tcschr(srcFILE, _T('\\'))) break;
 			}
 		_tcsncpy(srcPath,srcPattern,_tcslen(srcPattern)-_tcslen(srcFILE));
-		
-	
-			
+
+
+
 		if(_tcschr(dstPattern, _T('\\'))) //Checking if the Destiny (dstPattern)is also a Path.And splitting dstPattern in dstPath and srcPath.
-			{  
+			{
 				dstFILE = _tcschr(dstPattern, _T('\\'));
 				nSlash=0;
 				while(_tcschr(dstFILE, _T('\\')))
@@ -204,53 +204,53 @@ INT cmd_rename (LPTSTR param)
 						if(!_tcschr(dstFILE, _T('\\'))) break;
 						}
 				_tcsncpy(dstPath,dstPattern,_tcslen(dstPattern)-_tcslen(dstFILE));
-				
+
 				if((_tcslen(dstPath)!=_tcslen(srcPath))||(_tcsncmp(srcPath,dstPath,_tcslen(srcPath))!=0)) //If it has a Path,then MUST be equal than srcPath
 						{
 						error_syntax(dstPath);
 						freep(arg);
 						return 1;
 						}
-			}else	{ //If Destiny hasnt a Path,then (MSDN says) srcPath is its Path. 
-					
+			}else	{ //If Destiny hasnt a Path,then (MSDN says) srcPath is its Path.
+
 					_tcscpy(dstPath,srcPath);
-					
+
 					dstFILE=dstPattern;
-					
+
 					}
 
-		
-	
+
+
 	}
-  
+
   if (!_tcschr(srcPattern, _T('\\'))) //If srcPattern isnt a Path but a  name:
-  { 
+  {
 	srcFILE=srcPattern;
 	if(_tcschr(dstPattern, _T('\\')))
-				{		
+				{
 						error_syntax(dstPattern);
-						
+
 						freep(arg);
 						return 1;
 				}else dstFILE=dstPattern;
   }
- 
+
  //Checking Wildcards.
   if (_tcschr(dstFILE, _T('*')) || _tcschr(dstFILE, _T('?')))
 		bDstWildcard = TRUE;
-  
-  
-  
+
+
+
   TRACE("\n\nSourcePattern: %s SourcePath: %s SourceFile: %s", debugstr_aw(srcPattern),debugstr_aw(srcPath),debugstr_aw(srcFILE));
   TRACE("\n\nDestinationPattern: %s Destination Path:%s Destination File: %s\n", debugstr_aw(dstPattern),debugstr_aw(dstPath),debugstr_aw(dstFILE));
- 
+
       hFile = FindFirstFile(srcPattern, &f);
-	  
+
       if (hFile == INVALID_HANDLE_VALUE)
 		{
 		 if (!(dwFlags & REN_ERROR))
 				error_file_not_found();
-				
+
 		}
       do
 		{
@@ -271,7 +271,7 @@ INT cmd_rename (LPTSTR param)
 			continue;
 
 		 TRACE("Found source name: %s\n", debugstr_aw(f.cFileName));
-	  /* So here we have splitted the dstFILE and we have find a f.cFileName(thanks to srcPattern) 
+	  /* So here we have splitted the dstFILE and we have find a f.cFileName(thanks to srcPattern)
 	   * Now we have to use the mask (dstFILE) (which can have Wildcards) with f.cFileName to find destination file name(dstLast) */
 		 p = f.cFileName;
 		 q = dstFILE;
@@ -310,37 +310,37 @@ INT cmd_rename (LPTSTR param)
 		*r = 0;
 		//Well we have splitted the Paths,so now we have to paste them again(if needed),thanks bPath.
 		if(	bPath == TRUE)
-			{	
-				
+			{
+
 				_tcscpy(srcFinal,srcPath);
-				
+
 				_tcscat(srcFinal,f.cFileName);
-				 
+
 				_tcscpy(dstFinal,dstPath);
 				_tcscat(dstFinal,dstLast);
-				 
-								
+
+
 		}else{
 				_tcscpy(srcFinal,f.cFileName);
 				_tcscpy(dstFinal,dstLast);
 
 				}
-		
+
 
 
 		TRACE("DestinationPath: %s\n", debugstr_aw(dstFinal));
-		
-		
+
+
 		if (!(dwFlags & REN_QUIET) && !(dwFlags & REN_TOTAL))
-	  
+
 			 ConOutPrintf(_T("%s -> %s\n"),srcFinal , dstFinal);
 
 	  /* Rename the file */
 		 if (!(dwFlags & REN_NOTHING))
-		 {	 
-				
-				
-	      
+		 {
+
+
+
 				if (MoveFile(srcFinal, dstFinal))
 			{
 			dwFiles++;
@@ -354,12 +354,12 @@ INT cmd_rename (LPTSTR param)
 				}
 		 }
 	  }
-	   
+
       while (FindNextFile(hFile, &f));
 //Closing and Printing errors.
-	
+
       FindClose(hFile);
-   
+
 
   if (!(dwFlags & REN_QUIET))
   {
@@ -368,9 +368,9 @@ INT cmd_rename (LPTSTR param)
     else
       ConOutResPrintf(STRING_REN_HELP3, dwFiles);
   }
- 
+
   freep(arg);
-  
+
   return 0;
 }
 

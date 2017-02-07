@@ -519,8 +519,14 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     HANDLE hMutex;
 
     hMutex = CreateMutex(NULL, FALSE, szKbSwitcherName);
-    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+    if (!hMutex)
         return 1;
+
+    if (GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        CloseHandle(hMutex);
+        return 1;
+    }
 
     hInst = hInstance;
     hProcessHeap = GetProcessHeap();
@@ -537,7 +543,10 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     WndClass.lpszClassName = szKbSwitcherName;
 
     if (!RegisterClass(&WndClass))
+    {
+        CloseHandle(hMutex);
         return 1;
+    }
 
     CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
 
@@ -547,7 +556,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         DispatchMessage(&msg);
     }
 
-    if (hMutex) CloseHandle(hMutex);
+    CloseHandle(hMutex);
 
     return 0;
 }

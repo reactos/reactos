@@ -48,15 +48,16 @@ typedef enum _TRACE_INFORMATION_CLASS {
 
 #include <evntprov.h>
 
+_IRQL_requires_same_
 typedef VOID
 (NTAPI *PETWENABLECALLBACK)(
-  IN LPCGUID SourceId,
-  IN ULONG ControlCode,
-  IN UCHAR Level,
-  IN ULONGLONG MatchAnyKeyword,
-  IN ULONGLONG MatchAllKeyword,
-  IN PEVENT_FILTER_DESCRIPTOR FilterData OPTIONAL,
-  IN OUT PVOID CallbackContext OPTIONAL);
+  _In_ LPCGUID SourceId,
+  _In_ ULONG ControlCode,
+  _In_ UCHAR Level,
+  _In_ ULONGLONG MatchAnyKeyword,
+  _In_ ULONGLONG MatchAllKeyword,
+  _In_opt_ PEVENT_FILTER_DESCRIPTOR FilterData,
+  _Inout_opt_ PVOID CallbackContext);
 
 #define EVENT_WRITE_FLAG_NO_FAULTING             0x00000001
 

@@ -78,11 +78,25 @@ typedef enum dwarf_tag_e
   DW_TAG_partial_unit                   = 0x3c,
   DW_TAG_imported_unit                  = 0x3d,
   DW_TAG_mutable_type                   = 0x3e,
+  /** Dwarf3f new values */
+  DW_TAG_condition                      = 0x3f,
+  DW_TAG_shared_type                    = 0x40,
+  /** Dwarf4 new values */
+  DW_TAG_type_unit                      = 0x41,
+  DW_TAG_rvalue_reference_type          = 0x42,
+  DW_TAG_template_alias                 = 0x43,
   /** extensions */
   DW_TAG_MIPS_loop                      = 0x4081,
   DW_TAG_format_label                   = 0x4101,
   DW_TAG_function_template              = 0x4102,
-  DW_TAG_class_template                 = 0x4103
+  DW_TAG_class_template                 = 0x4103,
+  DW_TAG_GNU_BINCL                      = 0x4104,
+  DW_TAG_GNU_EINCL                      = 0x4105,
+  DW_TAG_GNU_template_template_param    = 0x4106,
+  DW_TAG_GNU_template_parameter_pack    = 0x4107,
+  DW_TAG_GNU_formal_parameter_pack      = 0x4108,
+  DW_TAG_GNU_call_site                  = 0x4109,
+  DW_TAG_GNU_call_site_parameter        = 0x410a,
 } dwarf_tag_t;
 
 typedef enum dwarf_attribute_e
@@ -153,6 +167,7 @@ typedef enum dwarf_attribute_e
   DW_AT_allocated                       = 0x4e,
   DW_AT_associated                      = 0x4f,
   DW_AT_data_location                   = 0x50,
+  DW_AT_byte_stride                     = 0x51,
   DW_AT_stride                          = 0x51,
   DW_AT_entry_pc                        = 0x52,
   DW_AT_use_UTF8                        = 0x53,
@@ -163,6 +178,28 @@ typedef enum dwarf_attribute_e
   DW_AT_call_file                       = 0x58,
   DW_AT_call_line                       = 0x59,
   DW_AT_description                     = 0x5a,
+  /** Dwarf3 new values */
+  DW_AT_binary_scale                    = 0x5b,
+  DW_AT_decimal_scale                   = 0x5c,
+  DW_AT_small                           = 0x5d,
+  DW_AT_decimal_sign                    = 0x5e,
+  DW_AT_digit_count                     = 0x5f,
+  DW_AT_picture_string                  = 0x60,
+  DW_AT_mutable                         = 0x61,
+  DW_AT_threads_scaled                  = 0x62,
+  DW_AT_explicit                        = 0x63,
+  DW_AT_object_pointer                  = 0x64,
+  DW_AT_endianity                       = 0x65,
+  DW_AT_elemental                       = 0x66,
+  DW_AT_pure                            = 0x67,
+  DW_AT_recursive                       = 0x68,
+  /** Dwarf4 new values */
+  DW_AT_signature                       = 0x69,
+  DW_AT_main_subprogram                 = 0x6a,
+  DW_AT_data_bit_offset                 = 0x6b,
+  DW_AT_const_expr                      = 0x6c,
+  DW_AT_enum_class                      = 0x6d,
+  DW_AT_linkage_name                    = 0x6e,
   /* extensions */
   DW_AT_MIPS_fde                        = 0x2001,
   DW_AT_MIPS_loop_begin                 = 0x2002,
@@ -180,7 +217,26 @@ typedef enum dwarf_attribute_e
   DW_AT_mac_info                        = 0x2103,
   DW_AT_src_coords                      = 0x2104,
   DW_AT_body_begin                      = 0x2105,
-  DW_AT_body_end                        = 0x2106
+  DW_AT_body_end                        = 0x2106,
+  DW_AT_GNU_vector                      = 0x2107,
+  DW_AT_GNU_guarded_by                  = 0x2108,
+  DW_AT_GNU_pt_guarded_by               = 0x2109,
+  DW_AT_GNU_guarded                     = 0x210a,
+  DW_AT_GNU_pt_guarded                  = 0x210b,
+  DW_AT_GNU_locks_excluded              = 0x210c,
+  DW_AT_GNU_exclusive_locks_required    = 0x210d,
+  DW_AT_GNU_shared_locks_required       = 0x210e,
+  DW_AT_GNU_odr_signature               = 0x210f,
+  DW_AT_GNU_template_name               = 0x2110,
+  DW_AT_GNU_call_site_value             = 0x2111,
+  DW_AT_GNU_call_site_data_value        = 0x2112,
+  DW_AT_GNU_call_site_target            = 0x2113,
+  DW_AT_GNU_call_site_target_clobbered  = 0x2114,
+  DW_AT_GNU_tail_call                   = 0x2115,
+  DW_AT_GNU_all_tail_call_sites         = 0x2116,
+  DW_AT_GNU_all_call_sites              = 0x2117,
+  DW_AT_GNU_all_source_call_sites       = 0x2118,
+
 } dwarf_attribute_t;
 
 typedef enum dwarf_form_e
@@ -205,7 +261,12 @@ typedef enum dwarf_form_e
   DW_FORM_ref4                          = 0x13,
   DW_FORM_ref8                          = 0x14,
   DW_FORM_ref_udata                     = 0x15,
-  DW_FORM_indirect                      = 0x16
+  DW_FORM_indirect                      = 0x16,
+  /** Dwarf4 new values */
+  DW_FORM_sec_offset                    = 0x17,
+  DW_FORM_exprloc                       = 0x18,
+  DW_FORM_flag_present                  = 0x19,
+  DW_FORM_ref_sig8                      = 0x20,
 } dwarf_form_t;
 
 /** type encoding */
@@ -221,7 +282,13 @@ typedef enum dwarf_type_e
   DW_ATE_unsigned                       = 0x7,
   DW_ATE_unsigned_char                  = 0x8,
   /* Dwarf3 new values */
-  DW_ATE_imaginary_float                = 0x9
+  DW_ATE_imaginary_float                = 0x9,
+  DW_ATE_packed_decimal                 = 0xa,
+  DW_ATE_numeric_string                 = 0xb,
+  DW_ATE_edited                         = 0xc,
+  DW_ATE_signed_fixed                   = 0xd,
+  DW_ATE_unsigned_fixed                 = 0xe,
+  DW_ATE_decimal_float                  = 0xf,
 } dwarf_type_t;
 
 typedef enum dwarf_operation_e
@@ -391,6 +458,13 @@ typedef enum dwarf_operation_e
   DW_OP_GNU_push_tls_address            = 0xe0,
   DW_OP_GNU_uninit                      = 0xf0,
   DW_OP_GNU_encoded_addr                = 0xf1,
+  DW_OP_GNU_implicit_pointer            = 0xf2,
+  DW_OP_GNU_entry_value                 = 0xf3,
+  DW_OP_GNU_const_type                  = 0xf4,
+  DW_OP_GNU_regval_type                 = 0xf5,
+  DW_OP_GNU_deref_type                  = 0xf6,
+  DW_OP_GNU_convert                     = 0xf7,
+  DW_OP_GNU_reinterpret                 = 0xf9,
 } dwarf_operation_t;
 
 enum dwarf_calling_convention
@@ -475,3 +549,8 @@ enum dwarf_call_frame_info
 #define DW_EH_PE_aligned  0x50
 #define DW_EH_PE_indirect 0x80
 #define DW_EH_PE_omit     0xff
+
+#define DW_INL_not_inlined              0x00
+#define DW_INL_inlined                  0x01
+#define DW_INL_declared_not_inlined     0x02
+#define DW_INL_declared_inlined         0x03

@@ -10,7 +10,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(crypt32.dll crypt32.spec)
+spec2def(crypt32.dll crypt32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     base64.c
@@ -37,19 +37,21 @@ list(APPEND SOURCE
     sip.c
     store.c
     str.c
-    crypt32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
-add_library(crypt32 SHARED ${SOURCE})
+add_library(crypt32 SHARED
+    ${SOURCE}
+    crypt32.rc)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(crypt32)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
 
 set_module_type(crypt32 win32dll)
-
-target_link_libraries(crypt32
-    wine
-    ${PSEH_LIB}
-    oldnames)
-
+target_link_libraries(crypt32 wine ${PSEH_LIB} oldnames)
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET crypt32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(crypt32.spec)
+

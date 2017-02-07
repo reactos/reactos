@@ -1,25 +1,23 @@
 #pragma once
 
-struct _MM_CACHE_SECTION_SEGMENT;
-
 typedef struct _NOCC_BCB
 {
     /* Public part */
     PUBLIC_BCB Bcb;
 
-	struct _NOCC_CACHE_MAP *Map;
-    struct _MM_CACHE_SECTION_SEGMENT *SectionObject;
+    struct _NOCC_CACHE_MAP *Map;
+    PROS_SECTION_OBJECT SectionObject;
     LARGE_INTEGER FileOffset;
     ULONG Length;
     PVOID BaseAddress;
     BOOLEAN Dirty;
     PVOID OwnerPointer;
-    
+
     /* Reference counts */
     ULONG RefCount;
-    
+
     LIST_ENTRY ThisFileList;
-    
+
     KEVENT ExclusiveWait;
     ULONG ExclusiveWaiter;
     BOOLEAN Exclusive;
@@ -27,39 +25,33 @@ typedef struct _NOCC_BCB
 
 typedef struct _NOCC_CACHE_MAP
 {
-	LIST_ENTRY Entry;
+    LIST_ENTRY Entry;
     LIST_ENTRY AssociatedBcb;
-	LIST_ENTRY PrivateCacheMaps;
+    LIST_ENTRY PrivateCacheMaps;
     ULONG NumberOfMaps;
     ULONG RefCount;
     CC_FILE_SIZES FileSizes;
-	CACHE_MANAGER_CALLBACKS Callbacks;
-	PVOID LazyContext;
-	PVOID LogHandle;
-	PFLUSH_TO_LSN FlushToLsn;
-	ULONG ReadAheadGranularity;
+    CACHE_MANAGER_CALLBACKS Callbacks;
+    PVOID LazyContext;
+    PVOID LogHandle;
+    PFLUSH_TO_LSN FlushToLsn;
+    ULONG ReadAheadGranularity;
 } NOCC_CACHE_MAP, *PNOCC_CACHE_MAP;
 
 VOID
 NTAPI
-CcPfInitializePrefetcher(
-    VOID
-);
+CcPfInitializePrefetcher(VOID);
 
 VOID
 NTAPI
-CcMdlReadComplete2(
-    IN PMDL MemoryDescriptorList,
-    IN PFILE_OBJECT FileObject
-);
+CcMdlReadComplete2(IN PMDL MemoryDescriptorList,
+                   IN PFILE_OBJECT FileObject);
 
 VOID
 NTAPI
-CcMdlWriteComplete2(
-    IN PFILE_OBJECT FileObject,
-    IN PLARGE_INTEGER FileOffset,
-    IN PMDL MdlChain
-);
+CcMdlWriteComplete2(IN PFILE_OBJECT FileObject,
+                    IN PLARGE_INTEGER FileOffset,
+                    IN PMDL MdlChain);
 
 VOID
 NTAPI
@@ -67,7 +59,8 @@ CcInitView(VOID);
 
 BOOLEAN
 NTAPI
-CcpUnpinData(PNOCC_BCB Bcb, BOOLEAN ActuallyRelease);
+CcpUnpinData(PNOCC_BCB Bcb,
+             BOOLEAN ActuallyRelease);
 
 BOOLEAN
 NTAPI
@@ -84,24 +77,25 @@ CcInitCacheZeroPage(VOID);
 /* Called by section.c */
 BOOLEAN
 NTAPI
-CcFlushImageSection(PSECTION_OBJECT_POINTERS SectionObjectPointer, MMFLUSH_TYPE FlushType);
+CcFlushImageSection(PSECTION_OBJECT_POINTERS SectionObjectPointer,
+                    MMFLUSH_TYPE FlushType);
 
 VOID
 NTAPI
-_CcpFlushCache
-(IN PNOCC_CACHE_MAP Map,
- IN OPTIONAL PLARGE_INTEGER FileOffset,
- IN ULONG Length,
- OUT OPTIONAL PIO_STATUS_BLOCK IoStatus,
- BOOLEAN Delete,
- const char *File,
- int Line);
+_CcpFlushCache(IN PNOCC_CACHE_MAP Map,
+               IN OPTIONAL PLARGE_INTEGER FileOffset,
+               IN ULONG Length,
+               OUT OPTIONAL PIO_STATUS_BLOCK IoStatus,
+               BOOLEAN Delete,
+               const char *File,
+               int Line);
 
 #define CcpFlushCache(M,F,L,I,D) _CcpFlushCache(M,F,L,I,D,__FILE__,__LINE__)
 
 BOOLEAN
 NTAPI
-CcGetFileSizes(PFILE_OBJECT FileObject, PCC_FILE_SIZES FileSizes);
+CcGetFileSizes(PFILE_OBJECT FileObject,
+               PCC_FILE_SIZES FileSizes);
 
 ULONG
 NTAPI
@@ -127,13 +121,13 @@ CcpReleaseFileLock(PNOCC_CACHE_MAP Map);
 /* Private data */
 
 #define CACHE_SINGLE_FILE_MAX (16)
-#define CACHE_OVERALL_SIZE (32 * 1024 * 1024)
-#define CACHE_STRIPE VACB_MAPPING_GRANULARITY
-#define CACHE_SHIFT 18
-#define CACHE_NUM_SECTIONS (CACHE_OVERALL_SIZE / CACHE_STRIPE)
-#define CACHE_ROUND_UP(x) (((x) + (CACHE_STRIPE-1)) & ~(CACHE_STRIPE-1))
-#define CACHE_ROUND_DOWN(x) ((x) & ~(CACHE_STRIPE-1))
-#define INVALID_CACHE ((ULONG)~0)
+#define CACHE_OVERALL_SIZE    (32 * 1024 * 1024)
+#define CACHE_STRIPE          VACB_MAPPING_GRANULARITY
+#define CACHE_SHIFT           18
+#define CACHE_NUM_SECTIONS    (CACHE_OVERALL_SIZE / CACHE_STRIPE)
+#define CACHE_ROUND_UP(x)     (((x) + (CACHE_STRIPE-1)) & ~(CACHE_STRIPE-1))
+#define CACHE_ROUND_DOWN(x)   ((x) & ~(CACHE_STRIPE-1))
+#define INVALID_CACHE         ((ULONG)~0)
 
 extern NOCC_BCB CcCacheSections[CACHE_NUM_SECTIONS];
 extern PRTL_BITMAP CcCacheBitmap;
@@ -151,20 +145,20 @@ extern VOID _CcpUnlock(const char *file, int line);
 
 extern VOID CcpReferenceCache(ULONG Sector);
 extern VOID CcpDereferenceCache(ULONG Sector, BOOLEAN Immediate);
+
 BOOLEAN
 NTAPI
-CcpMapData
-(IN PFILE_OBJECT FileObject,
- IN PLARGE_INTEGER FileOffset,
- IN ULONG Length,
- IN ULONG Flags,
- OUT PVOID *BcbResult,
- OUT PVOID *Buffer);
+CcpMapData(IN PFILE_OBJECT FileObject,
+           IN PLARGE_INTEGER FileOffset,
+           IN ULONG Length,
+           IN ULONG Flags,
+           OUT PVOID *BcbResult,
+           OUT PVOID *Buffer);
 
 BOOLEAN
 NTAPI
 CcpPinMappedData(IN PNOCC_CACHE_MAP Map,
-				 IN PLARGE_INTEGER FileOffset,
-				 IN ULONG Length,
-				 IN ULONG Flags,
-				 IN OUT PVOID *Bcb);
+                 IN PLARGE_INTEGER FileOffset,
+                 IN ULONG Length,
+                 IN ULONG Flags,
+                 IN OUT PVOID *Bcb);

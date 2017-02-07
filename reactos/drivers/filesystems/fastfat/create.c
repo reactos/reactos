@@ -453,7 +453,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 	if (FileObject->FileName.Length == 0 &&
 		(FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
 	{
-		if (RequestedDisposition != FILE_OPEN ||
+		if (RequestedDisposition != FILE_OPEN &&
 			RequestedDisposition != FILE_OPEN_IF)
 		{
 			return(STATUS_ACCESS_DENIED);

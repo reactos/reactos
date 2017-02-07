@@ -1,5 +1,5 @@
 
-spec2def(fmifs.dll fmifs.spec)
+spec2def(fmifs.dll fmifs.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     chkdsk.c
@@ -20,4 +20,4 @@ add_importlibs(fmifs kernel32 ntdll)
 add_pch(fmifs precomp.h)
 add_dependencies(fmifs psdk)
 add_cd_file(TARGET fmifs DESTINATION reactos/system32 FOR all)
-add_importlib_target(fmifs.spec)
+

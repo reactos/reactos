@@ -506,10 +506,45 @@ int __cdecl compare(const void *arg1,const void *arg2)
 	return ret;
 }
 
+BOOL
+FileNameContainsSpecialCharacters(LPTSTR pszFileName)
+{
+    TCHAR chr;
+
+    while ((chr = *pszFileName++) != _T('\0'))
+    {
+        if ((chr == _T(' ')) ||
+            (chr == _T('!')) ||
+            (chr == _T('%')) ||
+            (chr == _T('&')) ||
+            (chr == _T('(')) ||
+            (chr == _T(')')) ||
+            (chr == _T('{')) ||
+            (chr == _T('}')) ||
+            (chr == _T('[')) ||
+            (chr == _T(']')) ||
+            (chr == _T('=')) ||
+            (chr == _T('\'')) ||
+            (chr == _T('`')) ||
+            (chr == _T(',')) ||
+            (chr == _T(';')) ||
+            (chr == _T('^')) ||
+            (chr == _T('~')) ||
+            (chr == _T('+')) ||
+            (chr == 0xB4)) // '´'
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+
 VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 {
 	/* Length of string before we complete it */
-	INT StartLength;
+	INT_PTR StartLength;
 	/* Length of string after completed */
 	//INT EndLength;
 	/* The number of chars added too it */
@@ -695,8 +730,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	   so return the first thing in the list */
 	strOut[0] = _T('\0');
 
-	/* space in the name */
-	if(_tcschr(FileList[Sel].Name, _T(' ')))
+	/* Special character in the name */
+	if (FileNameContainsSpecialCharacters(FileList[Sel].Name))
 	{
 		INT LastSpace;
 		BOOL bInside;

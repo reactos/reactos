@@ -2669,6 +2669,12 @@ extern "C" {
 #define EVENT_OBJECT_HELPCHANGE         0x00008010
 #define EVENT_OBJECT_DEFACTIONCHANGE    0x00008011
 #define EVENT_OBJECT_ACCELERATORCHANGE  0x00008012
+#define ALERT_SYSTEM_INFORMATIONAL      1          /* MB_INFORMATION */
+#define ALERT_SYSTEM_WARNING            2          /* MB_WARNING */
+#define ALERT_SYSTEM_ERROR              3          /* MB_ERROR */
+#define ALERT_SYSTEM_QUERY              4          /* MB_QUESTION */
+#define ALERT_SYSTEM_CRITICAL           5          /* HardSysErrBox */
+#define CALERT_SYSTEM                   6
 #if (_WIN32_WINNT >= 0x0501)
 #define EVENT_CONSOLE_CARET             0x00004001
 #define CONSOLE_CARET_SELECTION         0x00000001
@@ -2905,9 +2911,9 @@ typedef struct tagCOMPAREITEMSTRUCT {
 } COMPAREITEMSTRUCT, *PCOMPAREITEMSTRUCT,*LPCOMPAREITEMSTRUCT;
 
 typedef struct tagCOPYDATASTRUCT {
-	ULONG_PTR dwData;
-	DWORD cbData;
-	PVOID lpData;
+  ULONG_PTR dwData;
+  DWORD cbData;
+  _Field_size_bytes_(cbData) PVOID lpData;
 } COPYDATASTRUCT,*PCOPYDATASTRUCT;
 
 typedef struct tagCURSORSHAPE {
@@ -3852,740 +3858,1493 @@ typedef struct tagRAWINPUTDEVICELIST {
 }
 #define POINTTOPOINTS(p) ((POINTS)MAKELONG((p).x,(p).y))
 
-HKL WINAPI ActivateKeyboardLayout(HKL,UINT);
-BOOL WINAPI AdjustWindowRect(LPRECT,DWORD,BOOL);
-BOOL WINAPI AdjustWindowRectEx(LPRECT,DWORD,BOOL,DWORD);
+HKL WINAPI ActivateKeyboardLayout(_In_ HKL, _In_ UINT);
+BOOL WINAPI AdjustWindowRect(_Inout_ LPRECT, _In_ DWORD, _In_ BOOL);
+BOOL WINAPI AdjustWindowRectEx(_Inout_ LPRECT, _In_ DWORD, _In_ BOOL, _In_ DWORD);
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI AnimateWindow(HWND,DWORD,DWORD);
+BOOL WINAPI AnimateWindow(_In_ HWND, _In_ DWORD, _In_ DWORD);
 #endif /* (_WIN32_WINNT >= 0x0500) */
 BOOL WINAPI AnyPopup(void);
-BOOL WINAPI AppendMenuA(HMENU,UINT,UINT_PTR,LPCSTR);
-BOOL WINAPI AppendMenuW(HMENU,UINT,UINT_PTR,LPCWSTR);
-UINT WINAPI ArrangeIconicWindows(HWND);
-BOOL WINAPI AttachThreadInput(DWORD,DWORD,BOOL);
-HDWP WINAPI BeginDeferWindowPos(int);
-HDC WINAPI BeginPaint(HWND,LPPAINTSTRUCT);
-BOOL WINAPI BringWindowToTop(HWND);
-long WINAPI BroadcastSystemMessage(DWORD,LPDWORD,UINT,WPARAM,LPARAM);
+BOOL WINAPI AppendMenuA(_In_ HMENU, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCSTR);
+BOOL WINAPI AppendMenuW(_In_ HMENU, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCWSTR);
+UINT WINAPI ArrangeIconicWindows(_In_ HWND);
+BOOL WINAPI AttachThreadInput(_In_ DWORD, _In_ DWORD, _In_ BOOL);
+HDWP WINAPI BeginDeferWindowPos(_In_ int);
+HDC WINAPI BeginPaint(_In_ HWND, _Out_ LPPAINTSTRUCT);
+BOOL WINAPI BringWindowToTop(_In_ HWND);
+long WINAPI BroadcastSystemMessage(_In_ DWORD, _Inout_opt_ LPDWORD, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+
 #if (_WIN32_WINNT >= 0x0400)
-LONG WINAPI BroadcastSystemMessageA(DWORD,LPDWORD,UINT,WPARAM,LPARAM);
-LONG WINAPI BroadcastSystemMessageW(DWORD,LPDWORD,UINT,WPARAM,LPARAM);
+
+LONG
+WINAPI
+BroadcastSystemMessageA(
+  _In_ DWORD flags,
+  _Inout_opt_ LPDWORD lpInfo,
+  _In_ UINT Msg,
+  _In_ WPARAM wParam,
+  _In_ LPARAM lParam);
+
+LONG
+WINAPI
+BroadcastSystemMessageW(
+  _In_ DWORD flags,
+  _Inout_opt_ LPDWORD lpInfo,
+  _In_ UINT Msg,
+  _In_ WPARAM wParam,
+  _In_ LPARAM lParam);
+
 #endif /* (_WIN32_WINNT >= 0x0400) */
+
 #if (_WIN32_WINNT >= 0x0501)
-LONG WINAPI BroadcastSystemMessageExA(DWORD,LPDWORD,UINT,WPARAM,LPARAM,PBSMINFO);
-LONG WINAPI BroadcastSystemMessageExW(DWORD,LPDWORD,UINT,WPARAM,LPARAM,PBSMINFO);
+
+LONG
+WINAPI
+BroadcastSystemMessageExA(
+  _In_ DWORD flags,
+  _Inout_opt_ LPDWORD lpInfo,
+  _In_ UINT Msg,
+  _In_ WPARAM wParam,
+  _In_ LPARAM lParam,
+  _Out_opt_ PBSMINFO pbsmInfo);
+
+LONG
+WINAPI
+BroadcastSystemMessageExW(
+  _In_ DWORD flags,
+  _Inout_opt_ LPDWORD lpInfo,
+  _In_ UINT Msg,
+  _In_ WPARAM wParam,
+  _In_ LPARAM lParam,
+  _Out_opt_ PBSMINFO pbsmInfo);
+
 #endif /* (_WIN32_WINNT >= 0x0501) */
+
 void WINAPI CalcChildScroll(HWND, INT);
-BOOL WINAPI CallMsgFilterA(LPMSG,INT);
-BOOL WINAPI CallMsgFilterW(LPMSG,INT);
-LRESULT WINAPI CallNextHookEx(HHOOK,int,WPARAM,LPARAM);
-LRESULT WINAPI CallWindowProcA(WNDPROC,HWND,UINT,WPARAM,LPARAM);
-LRESULT WINAPI CallWindowProcW(WNDPROC,HWND,UINT,WPARAM,LPARAM);
-WORD WINAPI CascadeWindows(HWND,UINT,LPCRECT,UINT,const HWND*);
-BOOL WINAPI ChangeClipboardChain(HWND,HWND);
+BOOL WINAPI CallMsgFilterA(_In_ LPMSG, _In_ INT);
+BOOL WINAPI CallMsgFilterW(_In_ LPMSG, _In_ INT);
+LRESULT WINAPI CallNextHookEx(_In_opt_ HHOOK, _In_ int, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI CallWindowProcA(_In_ WNDPROC, _In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI CallWindowProcW(_In_ WNDPROC, _In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+
+WORD
+WINAPI
+CascadeWindows(
+  _In_opt_ HWND hwndParent,
+  _In_ UINT wHow,
+  _In_opt_ CONST RECT * lpRect,
+  _In_ UINT cKids,
+  _In_reads_opt_(cKids) const HWND FAR *lpKids);
+
+BOOL WINAPI ChangeClipboardChain(_In_ HWND, _In_ HWND);
 #if defined(_WINGDI_) && !defined(NOGDI)
-LONG WINAPI ChangeDisplaySettingsA(PDEVMODEA,DWORD);
-LONG WINAPI ChangeDisplaySettingsW(PDEVMODEW,DWORD);
-LONG WINAPI ChangeDisplaySettingsExA(LPCSTR,LPDEVMODEA,HWND,DWORD,LPVOID);
-LONG WINAPI ChangeDisplaySettingsExW(LPCWSTR,LPDEVMODEW,HWND,DWORD,LPVOID);
+LONG WINAPI ChangeDisplaySettingsA(_In_opt_ PDEVMODEA, _In_ DWORD);
+LONG WINAPI ChangeDisplaySettingsW(_In_opt_ PDEVMODEW, _In_ DWORD);
+LONG WINAPI ChangeDisplaySettingsExA(_In_opt_ LPCSTR, _In_opt_ LPDEVMODEA, _Reserved_ HWND, _In_ DWORD, _In_opt_ LPVOID);
+LONG WINAPI ChangeDisplaySettingsExW(_In_opt_ LPCWSTR, _In_opt_ LPDEVMODEW, _Reserved_ HWND, _In_ DWORD, _In_opt_ LPVOID);
 #endif
-BOOL WINAPI ChangeMenuA(HMENU,UINT,LPCSTR,UINT,UINT);
-BOOL WINAPI ChangeMenuW(HMENU,UINT,LPCWSTR,UINT,UINT);
-LPSTR WINAPI CharLowerA(LPSTR);
-LPWSTR WINAPI CharLowerW(LPWSTR);
-DWORD WINAPI CharLowerBuffA(LPSTR,DWORD);
-DWORD WINAPI CharLowerBuffW(LPWSTR,DWORD);
-LPSTR WINAPI CharNextA(LPCSTR);
-LPWSTR WINAPI CharNextW(LPCWSTR);
-LPSTR WINAPI CharNextExA(WORD,LPCSTR,DWORD);
-LPWSTR WINAPI CharNextExW(WORD,LPCWSTR,DWORD);
-LPSTR WINAPI CharPrevA(LPCSTR,LPCSTR);
-LPWSTR WINAPI CharPrevW(LPCWSTR,LPCWSTR);
-LPSTR WINAPI CharPrevExA(WORD,LPCSTR,LPCSTR,DWORD);
-LPWSTR WINAPI CharPrevExW(WORD,LPCWSTR,LPCWSTR,DWORD);
-BOOL WINAPI CharToOemA(LPCSTR,LPSTR);
-BOOL WINAPI CharToOemW(LPCWSTR,LPSTR);
-BOOL WINAPI CharToOemBuffA(LPCSTR,LPSTR,DWORD);
-BOOL WINAPI CharToOemBuffW(LPCWSTR,LPSTR,DWORD);
-LPSTR WINAPI CharUpperA(LPSTR);
-LPWSTR WINAPI CharUpperW(LPWSTR);
-DWORD WINAPI CharUpperBuffA(LPSTR,DWORD);
-DWORD WINAPI CharUpperBuffW(LPWSTR,DWORD);
-BOOL WINAPI CheckDlgButton(HWND,int,UINT);
-DWORD WINAPI CheckMenuItem(HMENU,UINT,UINT);
-BOOL WINAPI CheckMenuRadioItem(HMENU,UINT,UINT,UINT,UINT);
-BOOL WINAPI CheckRadioButton(HWND,int,int,int);
-HWND WINAPI ChildWindowFromPoint(HWND,POINT);
-HWND WINAPI ChildWindowFromPointEx(HWND,POINT,UINT);
-BOOL WINAPI ClientToScreen(HWND,LPPOINT);
-BOOL WINAPI ClipCursor(LPCRECT);
+BOOL WINAPI ChangeMenuA(_In_ HMENU, _In_ UINT, _In_opt_ LPCSTR, _In_ UINT, _In_ UINT);
+BOOL WINAPI ChangeMenuW(_In_ HMENU, _In_ UINT, _In_opt_ LPCWSTR, _In_ UINT, _In_ UINT);
+LPSTR WINAPI CharLowerA(_Inout_ LPSTR);
+LPWSTR WINAPI CharLowerW(_Inout_ LPWSTR);
+
+DWORD
+WINAPI
+CharLowerBuffA(
+  _Inout_updates_(cchLength) LPSTR lpsz,
+  _In_ DWORD cchLength);
+
+DWORD
+WINAPI
+CharLowerBuffW(
+  _Inout_updates_(cchLength) LPWSTR lpsz,
+  _In_ DWORD cchLength);
+
+LPSTR WINAPI CharNextA(_In_ LPCSTR);
+LPWSTR WINAPI CharNextW(_In_ LPCWSTR);
+
+LPSTR WINAPI CharNextExA(_In_ WORD, _In_ LPCSTR, _In_ DWORD);
+LPWSTR WINAPI CharNextExW(_In_ WORD, _In_ LPCWSTR, _In_ DWORD);
+LPSTR WINAPI CharPrevA(_In_ LPCSTR, _In_ LPCSTR);
+LPWSTR WINAPI CharPrevW(_In_ LPCWSTR, _In_ LPCWSTR);
+LPSTR WINAPI CharPrevExA(_In_ WORD, _In_ LPCSTR, _In_ LPCSTR, _In_ DWORD);
+LPWSTR WINAPI CharPrevExW(_In_ WORD, _In_ LPCWSTR, _In_ LPCWSTR, _In_ DWORD);
+
+BOOL
+WINAPI
+CharToOemA(
+  _In_ LPCSTR pSrc,
+  _Out_writes_(_Inexpressible_(strlen(pSrc) + 1)) LPSTR pDst);
+
+BOOL
+WINAPI
+CharToOemW(
+  _In_ LPCWSTR pSrc,
+  _Out_writes_(_Inexpressible_(strlen(pSrc) + 1)) LPSTR pDst);
+
+BOOL
+WINAPI
+CharToOemBuffA(
+  _In_ LPCSTR lpszSrc,
+  _Out_writes_(cchDstLength) LPSTR lpszDst,
+  _In_ DWORD cchDstLength);
+
+BOOL
+WINAPI
+CharToOemBuffW(
+  _In_ LPCWSTR lpszSrc,
+  _Out_writes_(cchDstLength) LPSTR lpszDst,
+  _In_ DWORD cchDstLength);
+
+LPSTR WINAPI CharUpperA(_Inout_ LPSTR);
+LPWSTR WINAPI CharUpperW(_Inout_ LPWSTR);
+
+DWORD
+WINAPI
+CharUpperBuffA(
+  _Inout_updates_(cchLength) LPSTR lpsz,
+  _In_ DWORD cchLength);
+
+DWORD
+WINAPI
+CharUpperBuffW(
+  _Inout_updates_(cchLength) LPWSTR lpsz,
+  _In_ DWORD cchLength);
+
+BOOL WINAPI CheckDlgButton(_In_ HWND, _In_ int, _In_ UINT);
+DWORD WINAPI CheckMenuItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+BOOL WINAPI CheckMenuRadioItem(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT, _In_ UINT);
+BOOL WINAPI CheckRadioButton(_In_ HWND, _In_ int, _In_ int, _In_ int);
+HWND WINAPI ChildWindowFromPoint(_In_ HWND, _In_ POINT);
+HWND WINAPI ChildWindowFromPointEx(_In_ HWND, _In_ POINT, _In_ UINT);
+BOOL WINAPI ClientToScreen(_In_ HWND, _Inout_ LPPOINT);
+BOOL WINAPI ClipCursor(_In_opt_ LPCRECT);
 BOOL WINAPI CloseClipboard(void);
-BOOL WINAPI CloseDesktop(HDESK);
-BOOL WINAPI CloseWindow(HWND);
-BOOL WINAPI CloseWindowStation(HWINSTA);
-int WINAPI CopyAcceleratorTableA(HACCEL,LPACCEL,int);
-int WINAPI CopyAcceleratorTableW(HACCEL,LPACCEL,int);
+BOOL WINAPI CloseDesktop(_In_ HDESK);
+BOOL WINAPI CloseWindow(_In_ HWND);
+BOOL WINAPI CloseWindowStation(_In_ HWINSTA);
+
+int
+WINAPI
+CopyAcceleratorTableA(
+  _In_ HACCEL hAccelSrc,
+  _Out_writes_to_opt_(cAccelEntries, return) LPACCEL lpAccelDst,
+  _In_ int cAccelEntries);
+
+int
+WINAPI
+CopyAcceleratorTableW(
+  _In_ HACCEL hAccelSrc,
+  _Out_writes_to_opt_(cAccelEntries, return) LPACCEL lpAccelDst,
+  _In_ int cAccelEntries);
+
 #define CopyCursor(c) ((HCURSOR)CopyIcon((HICON)(c)))
-HICON WINAPI CopyIcon(HICON);
-HANDLE WINAPI CopyImage(HANDLE,UINT,int,int,UINT);
-BOOL WINAPI CopyRect(LPRECT,LPCRECT);
+HICON WINAPI CopyIcon(_In_ HICON);
+HANDLE WINAPI CopyImage(_In_ HANDLE, _In_ UINT, _In_ int, _In_ int, _In_ UINT);
+BOOL WINAPI CopyRect(_Out_ LPRECT, _In_ LPCRECT);
 int WINAPI CountClipboardFormats(void);
-HACCEL WINAPI CreateAcceleratorTableA(LPACCEL,int);
-HACCEL WINAPI CreateAcceleratorTableW(LPACCEL,int);
-BOOL WINAPI CreateCaret(HWND,HBITMAP,int,int);
-HCURSOR WINAPI CreateCursor(HINSTANCE,int,int,int,int,CONST VOID*,CONST VOID*);
+
+HACCEL
+WINAPI
+CreateAcceleratorTableA(
+  _In_reads_(cAccel) LPACCEL paccel,
+  _In_ int cAccel);
+
+HACCEL
+WINAPI
+CreateAcceleratorTableW(
+  _In_reads_(cAccel) LPACCEL paccel,
+  _In_ int cAccel);
+
+BOOL WINAPI CreateCaret(_In_ HWND, _In_opt_ HBITMAP, _In_ int, _In_ int);
+HCURSOR WINAPI CreateCursor(_In_opt_ HINSTANCE, _In_ int, _In_ int, _In_ int, _In_ int, _In_ CONST VOID*, _In_ CONST VOID*);
+
 #if defined(_WINGDI_) && !defined(NOGDI)
-HDESK WINAPI CreateDesktopA(LPCSTR,LPCSTR,LPDEVMODEA,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
-HDESK WINAPI CreateDesktopW(LPCWSTR,LPCWSTR,LPDEVMODEW,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
+
+HDESK
+WINAPI
+CreateDesktopA(
+  _In_ LPCSTR lpszDesktop,
+  _Reserved_ LPCSTR lpszDevice,
+  _Reserved_ DEVMODEA* pDevmode,
+  _In_ DWORD dwFlags,
+  _In_ ACCESS_MASK dwDesiredAccess,
+  _In_opt_ LPSECURITY_ATTRIBUTES lpsa);
+
+HDESK
+WINAPI
+CreateDesktopW(
+  _In_ LPCWSTR lpszDesktop,
+  _Reserved_ LPCWSTR lpszDevice,
+  _Reserved_ DEVMODEW* pDevmode,
+  _In_ DWORD dwFlags,
+  _In_ ACCESS_MASK dwDesiredAccess,
+  _In_opt_ LPSECURITY_ATTRIBUTES lpsa);
+
 #endif
+
 #define CreateDialogA(h,n,w,f) CreateDialogParamA(h,n,w,f,0)
 #define CreateDialogW(h,n,w,f) CreateDialogParamW(h,n,w,f,0)
 #define CreateDialogIndirectA(h,t,w,f) CreateDialogIndirectParamA(h,t,w,f,0)
 #define CreateDialogIndirectW(h,t,w,f) CreateDialogIndirectParamW(h,t,w,f,0)
-HWND WINAPI CreateDialogIndirectParamA(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
-HWND WINAPI CreateDialogIndirectParamW(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
-HWND WINAPI CreateDialogParamA(HINSTANCE,LPCSTR,HWND,DLGPROC,LPARAM);
-HWND WINAPI CreateDialogParamW(HINSTANCE,LPCWSTR,HWND,DLGPROC,LPARAM);
-HICON WINAPI CreateIcon(HINSTANCE,int,int,BYTE,BYTE,const BYTE*,const BYTE*);
-HICON WINAPI CreateIconFromResource(PBYTE,DWORD,BOOL,DWORD);
-HICON WINAPI CreateIconFromResourceEx(PBYTE,DWORD,BOOL,DWORD,int,int,UINT);
-HICON WINAPI CreateIconIndirect(PICONINFO);
-HWND WINAPI CreateMDIWindowA(LPCSTR,LPCSTR,DWORD,int,int,int,int,HWND,HINSTANCE,LPARAM);
-HWND WINAPI CreateMDIWindowW(LPCWSTR,LPCWSTR,DWORD,int,int,int,int,HWND,HINSTANCE,LPARAM);
+HWND WINAPI CreateDialogIndirectParamA(_In_opt_ HINSTANCE, _In_ LPCDLGTEMPLATE, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+HWND WINAPI CreateDialogIndirectParamW(_In_opt_ HINSTANCE, _In_ LPCDLGTEMPLATE, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+HWND WINAPI CreateDialogParamA(_In_opt_ HINSTANCE, _In_ LPCSTR, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+HWND WINAPI CreateDialogParamW(_In_opt_ HINSTANCE, _In_ LPCWSTR, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+HICON WINAPI CreateIcon(_In_opt_ HINSTANCE, _In_ int, _In_ int, _In_ BYTE, _In_ BYTE, _In_ const BYTE*, _In_ const BYTE*);
+
+HICON
+WINAPI
+CreateIconFromResource(
+  _In_reads_bytes_(dwResSize) PBYTE presbits,
+  _In_ DWORD dwResSize,
+  _In_ BOOL fIcon,
+  _In_ DWORD dwVer);
+
+HICON
+WINAPI
+CreateIconFromResourceEx(
+  _In_reads_bytes_(dwResSize) PBYTE presbits,
+  _In_ DWORD dwResSize,
+  _In_ BOOL fIcon,
+  _In_ DWORD dwVer,
+  _In_ int cxDesired,
+  _In_ int cyDesired,
+  _In_ UINT Flags);
+
+HICON WINAPI CreateIconIndirect(_In_ PICONINFO);
+HWND WINAPI CreateMDIWindowA(_In_ LPCSTR, _In_ LPCSTR, _In_ DWORD, _In_ int, _In_ int, _In_ int, _In_ int, _In_opt_ HWND, _In_opt_ HINSTANCE, _In_ LPARAM);
+HWND WINAPI CreateMDIWindowW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ DWORD, _In_ int, _In_ int, _In_ int, _In_ int, _In_opt_ HWND, _In_opt_ HINSTANCE, _In_ LPARAM);
 HMENU WINAPI CreateMenu(void);
 HMENU WINAPI CreatePopupMenu(void);
+
 #define CreateWindowA(a,b,c,d,e,f,g,h,i,j,k) CreateWindowExA(0,a,b,c,d,e,f,g,h,i,j,k)
 #define CreateWindowW(a,b,c,d,e,f,g,h,i,j,k) CreateWindowExW(0,a,b,c,d,e,f,g,h,i,j,k)
-HWND WINAPI CreateWindowExA(DWORD,LPCSTR,LPCSTR,DWORD,int,int,int,int,HWND,HMENU,HINSTANCE,LPVOID);
-HWND WINAPI CreateWindowExW(DWORD,LPCWSTR,LPCWSTR,DWORD,int,int,int,int,HWND,HMENU,HINSTANCE,LPVOID);
+
+HWND
+WINAPI
+CreateWindowExA(
+  _In_ DWORD dwExStyle,
+  _In_opt_ LPCSTR lpClassName,
+  _In_opt_ LPCSTR lpWindowName,
+  _In_ DWORD dwStyle,
+  _In_ int X,
+  _In_ int Y,
+  _In_ int nWidth,
+  _In_ int nHeight,
+  _In_opt_ HWND hWndParent,
+  _In_opt_ HMENU hMenu,
+  _In_opt_ HINSTANCE hInstance,
+  _In_opt_ LPVOID lpParam);
+
+HWND
+WINAPI
+CreateWindowExW(
+  _In_ DWORD dwExStyle,
+  _In_opt_ LPCWSTR lpClassName,
+  _In_opt_ LPCWSTR lpWindowName,
+  _In_ DWORD dwStyle,
+  _In_ int X,
+  _In_ int Y,
+  _In_ int nWidth,
+  _In_ int nHeight,
+  _In_opt_ HWND hWndParent,
+  _In_opt_ HMENU hMenu,
+  _In_opt_ HINSTANCE hInstance,
+  _In_opt_ LPVOID lpParam);
+
 #ifndef NOWINDOWSTATION
-HWINSTA WINAPI CreateWindowStationA(LPCSTR,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
-HWINSTA WINAPI CreateWindowStationW(LPCWSTR,DWORD,ACCESS_MASK,LPSECURITY_ATTRIBUTES);
+
+HWINSTA
+WINAPI
+CreateWindowStationA(
+  _In_opt_ LPCSTR lpwinsta,
+  _In_ DWORD dwFlags,
+  _In_ ACCESS_MASK dwDesiredAccess,
+  _In_opt_ LPSECURITY_ATTRIBUTES lpsa);
+
+HWINSTA
+WINAPI
+CreateWindowStationW(
+  _In_opt_ LPCWSTR lpwinsta,
+  _In_ DWORD dwFlags,
+  _In_ ACCESS_MASK dwDesiredAccess,
+  _In_opt_ LPSECURITY_ATTRIBUTES lpsa);
+
 #endif
-LRESULT WINAPI DefDlgProcA(HWND,UINT,WPARAM,LPARAM);
-LRESULT WINAPI DefDlgProcW(HWND,UINT,WPARAM,LPARAM);
-HDWP WINAPI DeferWindowPos(HDWP,HWND,HWND,int,int,int,int,UINT);
-LRESULT WINAPI DefFrameProcA(HWND,HWND,UINT,WPARAM,LPARAM);
-LRESULT WINAPI DefFrameProcW(HWND,HWND,UINT,WPARAM,LPARAM);
+
+LRESULT WINAPI DefDlgProcA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI DefDlgProcW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+HDWP WINAPI DeferWindowPos(_In_ HDWP, _In_ HWND, _In_opt_ HWND, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
+LRESULT WINAPI DefFrameProcA(_In_ HWND, _In_opt_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI DefFrameProcW(_In_ HWND, _In_opt_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
 #define DefHookProc(c,p,lp,h) CallNextHookEx((HHOOK)*h,c,p,lp)
-LRESULT WINAPI DefMDIChildProcA(HWND,UINT,WPARAM,LPARAM);
-LRESULT WINAPI DefMDIChildProcW(HWND,UINT,WPARAM,LPARAM);
+LRESULT WINAPI DefMDIChildProcA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI DefMDIChildProcW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+
 #if (_WIN32_WINNT >= 0x0501)
-LRESULT WINAPI DefRawInputProc(PRAWINPUT*,INT,UINT);
+LRESULT
+WINAPI
+DefRawInputProc(
+  _In_reads_(nInput) PRAWINPUT *paRawInput,
+  _In_ INT nInput,
+  _In_ UINT cbSizeHeader);
 #endif
-LRESULT WINAPI DefWindowProcA(HWND,UINT,WPARAM,LPARAM);
-LRESULT WINAPI DefWindowProcW(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI DeleteMenu(HMENU,UINT,UINT);
-BOOL WINAPI DeregisterShellHookWindow(HWND);
-BOOL WINAPI DestroyAcceleratorTable(HACCEL);
+
+LRESULT WINAPI DefWindowProcA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI DefWindowProcW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI DeleteMenu(_In_ HMENU, _In_ UINT, _In_ UINT);
+BOOL WINAPI DeregisterShellHookWindow(_In_ HWND);
+BOOL WINAPI DestroyAcceleratorTable(_In_ HACCEL);
 BOOL WINAPI DestroyCaret(void);
-BOOL WINAPI DestroyCursor(HCURSOR);
-BOOL WINAPI DestroyIcon(HICON);
-BOOL WINAPI DestroyMenu(HMENU);
-BOOL WINAPI DestroyWindow(HWND);
+BOOL WINAPI DestroyCursor(_In_ HCURSOR);
+BOOL WINAPI DestroyIcon(_In_ HICON);
+BOOL WINAPI DestroyMenu(_In_ HMENU);
+BOOL WINAPI DestroyWindow(_In_ HWND);
 #define DialogBoxA(i,t,p,f) DialogBoxParamA(i,t,p,f,0)
 #define DialogBoxW(i,t,p,f) DialogBoxParamW(i,t,p,f,0)
 #define DialogBoxIndirectA(i,t,p,f) DialogBoxIndirectParamA(i,t,p,f,0)
 #define DialogBoxIndirectW(i,t,p,f) DialogBoxIndirectParamW(i,t,p,f,0)
-INT_PTR WINAPI DialogBoxIndirectParamA(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
-INT_PTR WINAPI DialogBoxIndirectParamW(HINSTANCE,LPCDLGTEMPLATE,HWND,DLGPROC,LPARAM);
-INT_PTR WINAPI DialogBoxParamA(HINSTANCE,LPCSTR,HWND,DLGPROC,LPARAM);
-INT_PTR WINAPI DialogBoxParamW(HINSTANCE,LPCWSTR,HWND,DLGPROC,LPARAM);
-LRESULT WINAPI DispatchMessageA(const MSG*);
-LRESULT WINAPI DispatchMessageW(const MSG*);
-int WINAPI DlgDirListA(HWND,LPSTR,int,int,UINT);
-int WINAPI DlgDirListW(HWND,LPWSTR,int,int,UINT);
-int WINAPI DlgDirListComboBoxA(HWND,LPSTR,int,int,UINT);
-int WINAPI DlgDirListComboBoxW(HWND,LPWSTR,int,int,UINT);
-BOOL WINAPI DlgDirSelectComboBoxExA(HWND,LPSTR,int,int);
-BOOL WINAPI DlgDirSelectComboBoxExW(HWND,LPWSTR,int,int);
-BOOL WINAPI DlgDirSelectExA(HWND,LPSTR,int,int);
-BOOL WINAPI DlgDirSelectExW(HWND,LPWSTR,int,int);
-BOOL WINAPI DragDetect(HWND,POINT);
-DWORD WINAPI DragObject(HWND,HWND,UINT,ULONG_PTR,HCURSOR);
-BOOL WINAPI DrawAnimatedRects(HWND,int,LPCRECT,LPCRECT);
-BOOL WINAPI DrawCaption(HWND,HDC,LPCRECT,UINT);
+INT_PTR WINAPI DialogBoxIndirectParamA(_In_opt_ HINSTANCE, _In_ LPCDLGTEMPLATE, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+INT_PTR WINAPI DialogBoxIndirectParamW(_In_opt_ HINSTANCE, _In_ LPCDLGTEMPLATE, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+INT_PTR WINAPI DialogBoxParamA(_In_opt_ HINSTANCE, _In_ LPCSTR, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+INT_PTR WINAPI DialogBoxParamW(_In_opt_ HINSTANCE, _In_ LPCWSTR, _In_opt_ HWND, _In_opt_ DLGPROC, _In_ LPARAM);
+LRESULT WINAPI DispatchMessageA(_In_ const MSG*);
+LRESULT WINAPI DispatchMessageW(_In_ const MSG*);
+int WINAPI DlgDirListA(_In_ HWND, _Inout_ LPSTR, _In_ int, _In_ int, _In_ UINT);
+int WINAPI DlgDirListW(_In_ HWND, _Inout_ LPWSTR, _In_ int, _In_ int, _In_ UINT);
+int WINAPI DlgDirListComboBoxA(_In_ HWND, _Inout_ LPSTR, _In_ int, _In_ int, _In_ UINT);
+int WINAPI DlgDirListComboBoxW(_In_ HWND, _Inout_ LPWSTR, _In_ int, _In_ int, _In_ UINT);
+
+BOOL
+WINAPI
+DlgDirSelectComboBoxExA(
+  _In_ HWND hwndDlg,
+  _Out_writes_(cchOut) LPSTR lpString,
+  _In_ int cchOut,
+  _In_ int idComboBox);
+
+BOOL
+WINAPI
+DlgDirSelectComboBoxExW(
+  _In_ HWND hwndDlg,
+  _Out_writes_(cchOut) LPWSTR lpString,
+  _In_ int cchOut,
+  _In_ int idComboBox);
+
+BOOL
+WINAPI
+DlgDirSelectExA(
+  _In_ HWND hwndDlg,
+  _Out_writes_(chCount) LPSTR lpString,
+  _In_ int chCount,
+  _In_ int idListBox);
+
+BOOL
+WINAPI
+DlgDirSelectExW(
+  _In_ HWND hwndDlg,
+  _Out_writes_(chCount) LPWSTR lpString,
+  _In_ int chCount,
+  _In_ int idListBox);
+
+BOOL WINAPI DragDetect(_In_ HWND, _In_ POINT);
+DWORD WINAPI DragObject(_In_ HWND, _In_ HWND, _In_ UINT, _In_ ULONG_PTR, _In_opt_ HCURSOR);
+BOOL WINAPI DrawAnimatedRects(_In_opt_ HWND, _In_ int, _In_ LPCRECT, _In_ LPCRECT);
+BOOL WINAPI DrawCaption(_In_ HWND, _In_ HDC, _In_ LPCRECT, _In_ UINT);
 BOOL WINAPI DrawCaptionTempA(HWND,HDC,const RECT*,HFONT,HICON,LPCSTR,UINT);
 BOOL WINAPI DrawCaptionTempW(HWND,HDC,const RECT*,HFONT,HICON,LPCWSTR,UINT);
-BOOL WINAPI DrawEdge(HDC,LPRECT,UINT,UINT);
-BOOL WINAPI DrawFocusRect(HDC,LPCRECT);
-BOOL WINAPI DrawFrameControl(HDC,LPRECT,UINT,UINT);
-BOOL WINAPI DrawIcon(HDC,int,int,HICON);
-BOOL WINAPI DrawIconEx(HDC,int,int,HICON,int,int,UINT,HBRUSH,UINT);
-BOOL WINAPI DrawMenuBar(HWND);
+BOOL WINAPI DrawEdge(_In_ HDC, _Inout_ LPRECT, _In_ UINT, _In_ UINT);
+BOOL WINAPI DrawFocusRect(_In_ HDC, _In_ LPCRECT);
+BOOL WINAPI DrawFrameControl(_In_ HDC, _Inout_ LPRECT, _In_ UINT, _In_ UINT);
+BOOL WINAPI DrawIcon(_In_ HDC, _In_ int, _In_ int, _In_ HICON);
+BOOL WINAPI DrawIconEx(_In_ HDC, _In_ int, _In_ int, _In_ HICON, _In_ int, _In_ int, _In_ UINT, _In_opt_ HBRUSH, _In_ UINT);
+BOOL WINAPI DrawMenuBar(_In_ HWND);
 DWORD WINAPI DrawMenuBarTemp(HWND,HDC,LPRECT,HMENU,HFONT);
-BOOL WINAPI DrawStateA(HDC,HBRUSH,DRAWSTATEPROC,LPARAM,WPARAM,int,int,int,int,UINT);
-BOOL WINAPI DrawStateW(HDC,HBRUSH,DRAWSTATEPROC,LPARAM,WPARAM,int,int,int,int,UINT);
-int WINAPI DrawTextA(HDC,LPCSTR,int,LPRECT,UINT);
-int WINAPI DrawTextW(HDC,LPCWSTR,int,LPRECT,UINT);
-int WINAPI DrawTextExA(HDC,LPSTR,int,LPRECT,UINT,LPDRAWTEXTPARAMS);
-int WINAPI DrawTextExW(HDC,LPWSTR,int,LPRECT,UINT,LPDRAWTEXTPARAMS);
+BOOL WINAPI DrawStateA(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
+BOOL WINAPI DrawStateW(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
+
+int
+WINAPI
+DrawTextA(
+  _In_ HDC hdc,
+  _Inout_updates_opt_(cchText) LPCSTR lpchText,
+  _In_ int cchText,
+  _Inout_ LPRECT lprc,
+  _In_ UINT format);
+
+int
+WINAPI
+DrawTextW(
+  _In_ HDC hdc,
+  _Inout_updates_opt_(cchText) LPCWSTR lpchText,
+  _In_ int cchText,
+  _Inout_ LPRECT lprc,
+  _In_ UINT format);
+
+int
+WINAPI
+DrawTextExA(
+  _In_ HDC hdc,
+  _Inout_updates_opt_(cchText) LPSTR lpchText,
+  _In_ int cchText,
+  _Inout_ LPRECT lprc,
+  _In_ UINT format,
+  _In_opt_ LPDRAWTEXTPARAMS lpdtp);
+
+int
+WINAPI
+DrawTextExW(
+  _In_ HDC hdc,
+  _Inout_updates_opt_(cchText) LPWSTR lpchText,
+  _In_ int cchText,
+  _Inout_ LPRECT lprc,
+  _In_ UINT format,
+  _In_opt_ LPDRAWTEXTPARAMS lpdtp);
+
 BOOL WINAPI EmptyClipboard(void);
-BOOL WINAPI EnableMenuItem(HMENU,UINT,UINT);
-BOOL WINAPI EnableScrollBar(HWND,UINT,UINT);
-BOOL WINAPI EnableWindow(HWND,BOOL);
-BOOL WINAPI EndDeferWindowPos(HDWP);
-BOOL WINAPI EndDialog(HWND,INT_PTR);
+BOOL WINAPI EnableMenuItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+BOOL WINAPI EnableScrollBar(_In_ HWND, _In_ UINT, _In_ UINT);
+BOOL WINAPI EnableWindow(_In_ HWND, _In_ BOOL);
+BOOL WINAPI EndDeferWindowPos(_In_ HDWP);
+BOOL WINAPI EndDialog(_In_ HWND, _In_ INT_PTR);
 BOOL WINAPI EndMenu(void);
-BOOL WINAPI EndPaint(HWND,const PAINTSTRUCT*);
+BOOL WINAPI EndPaint(_In_ HWND, _In_ const PAINTSTRUCT*);
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI EndTask(HWND,BOOL,BOOL);
+BOOL WINAPI EndTask(_In_ HWND, _In_ BOOL, _In_ BOOL);
 #endif
-BOOL WINAPI EnumChildWindows(HWND,WNDENUMPROC,LPARAM);
-UINT WINAPI EnumClipboardFormats(UINT);
-BOOL WINAPI EnumDesktopsA(HWINSTA,DESKTOPENUMPROCA,LPARAM);
-BOOL WINAPI EnumDesktopsW(HWINSTA,DESKTOPENUMPROCW,LPARAM);
-BOOL WINAPI EnumDesktopWindows(HDESK,WNDENUMPROC,LPARAM);
-BOOL WINAPI EnumDisplayMonitors(HDC,LPCRECT,MONITORENUMPROC,LPARAM);
+BOOL WINAPI EnumChildWindows(_In_opt_ HWND, _In_ WNDENUMPROC, _In_ LPARAM);
+UINT WINAPI EnumClipboardFormats(_In_ UINT);
+BOOL WINAPI EnumDesktopsA(_In_opt_ HWINSTA, _In_ DESKTOPENUMPROCA, _In_ LPARAM);
+BOOL WINAPI EnumDesktopsW(_In_opt_ HWINSTA, _In_ DESKTOPENUMPROCW, _In_ LPARAM);
+BOOL WINAPI EnumDesktopWindows(_In_opt_ HDESK, _In_ WNDENUMPROC, _In_ LPARAM);
+BOOL WINAPI EnumDisplayMonitors(_In_opt_ HDC, _In_opt_ LPCRECT, _In_ MONITORENUMPROC, _In_ LPARAM);
 #if defined(_WINGDI_) && !defined(NOGDI)
-BOOL WINAPI EnumDisplaySettingsA(LPCSTR,DWORD,PDEVMODEA);
-BOOL WINAPI EnumDisplaySettingsW(LPCWSTR,DWORD,PDEVMODEW);
+BOOL WINAPI EnumDisplaySettingsA(_In_opt_ LPCSTR, _In_ DWORD, _Inout_ PDEVMODEA);
+BOOL WINAPI EnumDisplaySettingsW(_In_opt_ LPCWSTR, _In_ DWORD, _Inout_ PDEVMODEW);
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
-BOOL WINAPI EnumDisplaySettingsExA(LPCSTR,DWORD,LPDEVMODEA,DWORD);
-BOOL WINAPI EnumDisplaySettingsExW(LPCWSTR,DWORD,LPDEVMODEW,DWORD);
+BOOL WINAPI EnumDisplaySettingsExA(_In_opt_ LPCSTR, _In_ DWORD, _Inout_ LPDEVMODEA, _In_ DWORD);
+BOOL WINAPI EnumDisplaySettingsExW(_In_opt_ LPCWSTR, _In_ DWORD, _Inout_ LPDEVMODEW, _In_ DWORD);
 #endif
-BOOL WINAPI EnumDisplayDevicesA(LPCSTR,DWORD,PDISPLAY_DEVICEA,DWORD);
-BOOL WINAPI EnumDisplayDevicesW(LPCWSTR,DWORD,PDISPLAY_DEVICEW,DWORD);
+BOOL WINAPI EnumDisplayDevicesA(_In_opt_ LPCSTR, _In_ DWORD, _Inout_ PDISPLAY_DEVICEA, _In_ DWORD);
+BOOL WINAPI EnumDisplayDevicesW(_In_opt_ LPCWSTR, _In_ DWORD, _Inout_ PDISPLAY_DEVICEW, _In_ DWORD);
 #endif
-int WINAPI EnumPropsA(HWND,PROPENUMPROCA);
-int WINAPI EnumPropsW(HWND,PROPENUMPROCW);
-int WINAPI EnumPropsExA(HWND,PROPENUMPROCEXA,LPARAM);
-int WINAPI EnumPropsExW(HWND,PROPENUMPROCEXW,LPARAM);
+int WINAPI EnumPropsA(_In_ HWND, _In_ PROPENUMPROCA);
+int WINAPI EnumPropsW(_In_ HWND, _In_ PROPENUMPROCW);
+int WINAPI EnumPropsExA(_In_ HWND, _In_ PROPENUMPROCEXA, _In_ LPARAM);
+int WINAPI EnumPropsExW(_In_ HWND, _In_ PROPENUMPROCEXW, _In_ LPARAM);
 #define EnumTaskWindows(h,f,p) EnumThreadWindows((DWORD)h,f,p)
-BOOL WINAPI EnumThreadWindows(DWORD,WNDENUMPROC,LPARAM);
-BOOL WINAPI EnumWindows(WNDENUMPROC,LPARAM);
-BOOL WINAPI EnumWindowStationsA(WINSTAENUMPROCA,LPARAM);
-BOOL WINAPI EnumWindowStationsW(WINSTAENUMPROCW,LPARAM);
-BOOL WINAPI EqualRect(LPCRECT,LPCRECT);
+BOOL WINAPI EnumThreadWindows(_In_ DWORD, _In_ WNDENUMPROC, _In_ LPARAM);
+BOOL WINAPI EnumWindows(_In_ WNDENUMPROC, _In_ LPARAM);
+BOOL WINAPI EnumWindowStationsA(_In_ WINSTAENUMPROCA, _In_ LPARAM);
+BOOL WINAPI EnumWindowStationsW(_In_ WINSTAENUMPROCW, _In_ LPARAM);
+BOOL WINAPI EqualRect(_In_ LPCRECT, _In_ LPCRECT);
 #define ExitWindows(r,c) ExitWindowsEx(EWX_LOGOFF,0)
-BOOL WINAPI ExitWindowsEx(UINT,DWORD);
-HWND WINAPI FindWindowA(LPCSTR,LPCSTR);
-HWND WINAPI FindWindowExA(HWND,HWND,LPCSTR,LPCSTR);
-HWND WINAPI FindWindowExW(HWND,HWND,LPCWSTR,LPCWSTR);
-HWND WINAPI FindWindowW(LPCWSTR,LPCWSTR);
-BOOL WINAPI FlashWindow(HWND,BOOL);
+BOOL WINAPI ExitWindowsEx(_In_ UINT, _In_ DWORD);
+HWND WINAPI FindWindowA(_In_opt_ LPCSTR, _In_opt_ LPCSTR);
+HWND WINAPI FindWindowW(_In_opt_ LPCWSTR, _In_opt_ LPCWSTR);
+HWND WINAPI FindWindowExA(_In_opt_ HWND, _In_opt_ HWND, _In_opt_ LPCSTR, _In_opt_ LPCSTR);
+HWND WINAPI FindWindowExW(_In_opt_ HWND, _In_opt_ HWND, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR);
+BOOL WINAPI FlashWindow(_In_ HWND, _In_ BOOL);
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
-BOOL WINAPI FlashWindowEx(PFLASHWINFO);
+BOOL WINAPI FlashWindowEx(_In_ PFLASHWINFO);
 #endif
-int WINAPI FrameRect(HDC,LPCRECT,HBRUSH);
+int WINAPI FrameRect(_In_ HDC, _In_ LPCRECT, _In_ HBRUSH);
 BOOL WINAPI FrameRgn(HDC,HRGN,HBRUSH,int,int);
 HWND WINAPI GetActiveWindow(void);
-HWND WINAPI GetAncestor(HWND,UINT);
-SHORT WINAPI GetAsyncKeyState(int);
+HWND WINAPI GetAncestor(_In_ HWND, _In_ UINT);
+SHORT WINAPI GetAsyncKeyState(_In_ int);
 HWND WINAPI GetCapture(void);
 UINT WINAPI GetCaretBlinkTime(void);
-BOOL WINAPI GetCaretPos(LPPOINT);
-BOOL WINAPI GetClassInfoA(HINSTANCE,LPCSTR,LPWNDCLASSA);
-BOOL WINAPI GetClassInfoExA(HINSTANCE,LPCSTR,LPWNDCLASSEXA);
-BOOL WINAPI GetClassInfoW(HINSTANCE,LPCWSTR,LPWNDCLASSW);
-BOOL WINAPI GetClassInfoExW(HINSTANCE,LPCWSTR,LPWNDCLASSEXW);
-DWORD WINAPI GetClassLongA(HWND,int);
-DWORD WINAPI GetClassLongW(HWND,int);
+BOOL WINAPI GetCaretPos(_Out_ LPPOINT);
+BOOL WINAPI GetClassInfoA(_In_opt_ HINSTANCE, _In_ LPCSTR, _Out_ LPWNDCLASSA);
+BOOL WINAPI GetClassInfoExA(_In_opt_ HINSTANCE, _In_ LPCSTR, _Out_ LPWNDCLASSEXA);
+BOOL WINAPI GetClassInfoW(_In_opt_ HINSTANCE, _In_ LPCWSTR, _Out_ LPWNDCLASSW);
+BOOL WINAPI GetClassInfoExW(_In_opt_ HINSTANCE, _In_ LPCWSTR, _Out_ LPWNDCLASSEXW);
+DWORD WINAPI GetClassLongA(_In_ HWND, _In_ int);
+DWORD WINAPI GetClassLongW(_In_ HWND, _In_ int);
 #ifdef _WIN64
-ULONG_PTR WINAPI GetClassLongPtrA(HWND,int);
-ULONG_PTR WINAPI GetClassLongPtrW(HWND,int);
+ULONG_PTR WINAPI GetClassLongPtrA(_In_ HWND, _In_ int);
+ULONG_PTR WINAPI GetClassLongPtrW(_In_ HWND, _In_ int);
 #else
 #define GetClassLongPtrA GetClassLongA
 #define GetClassLongPtrW GetClassLongW
 #endif
-int WINAPI GetClassNameA(HWND,LPSTR,int);
-int WINAPI GetClassNameW(HWND,LPWSTR,int);
-WORD WINAPI GetClassWord(HWND,int);
-BOOL WINAPI GetClientRect(HWND,LPRECT);
-HANDLE WINAPI GetClipboardData(UINT);
-int WINAPI GetClipboardFormatNameA(UINT,LPSTR,int);
-int WINAPI GetClipboardFormatNameW(UINT,LPWSTR,int);
+
+int
+WINAPI
+GetClassNameA(
+  _In_ HWND hWnd,
+  _Out_writes_to_(nMaxCount, return) LPSTR lpClassName,
+  _In_ int nMaxCount);
+
+int
+WINAPI
+GetClassNameW(
+  _In_ HWND hWnd,
+  _Out_writes_to_(nMaxCount, return) LPWSTR lpClassName,
+  _In_ int nMaxCount);
+
+WORD WINAPI GetClassWord(_In_ HWND, _In_ int);
+BOOL WINAPI GetClientRect(_In_ HWND, _Out_ LPRECT);
+HANDLE WINAPI GetClipboardData(_In_ UINT);
+
+int
+WINAPI
+GetClipboardFormatNameA(
+  _In_ UINT format,
+  _Out_writes_(cchMaxCount) LPSTR lpszFormatName,
+  _In_ int cchMaxCount);
+
+int
+WINAPI
+GetClipboardFormatNameW(
+  _In_ UINT format,
+  _Out_writes_(cchMaxCount) LPWSTR lpszFormatName,
+  _In_ int cchMaxCount);
+
 HWND WINAPI GetClipboardOwner(void);
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
 DWORD WINAPI GetClipboardSequenceNumber(void);
 #endif
 HWND WINAPI GetClipboardViewer(void);
-BOOL WINAPI GetClipCursor(LPRECT);
-BOOL WINAPI GetCursorPos(LPPOINT);
-HDC WINAPI GetDC(HWND);
-HDC WINAPI GetDCEx(HWND,HRGN,DWORD);
+BOOL WINAPI GetClipCursor(_Out_ LPRECT);
+BOOL WINAPI GetCursorPos(_Out_ LPPOINT);
+HDC WINAPI GetDC(_In_opt_ HWND);
+HDC WINAPI GetDCEx(_In_opt_ HWND, _In_opt_ HRGN, _In_ DWORD);
 HWND WINAPI GetDesktopWindow(void);
 LONG WINAPI GetDialogBaseUnits(void);
-int WINAPI GetDlgCtrlID(HWND);
-HWND WINAPI GetDlgItem(HWND,int);
-UINT WINAPI GetDlgItemInt(HWND,int,PBOOL,BOOL);
-UINT WINAPI GetDlgItemTextA(HWND,int,LPSTR,int);
-UINT WINAPI GetDlgItemTextW(HWND,int,LPWSTR,int);
+int WINAPI GetDlgCtrlID(_In_ HWND);
+HWND WINAPI GetDlgItem(_In_opt_ HWND, _In_ int);
+UINT WINAPI GetDlgItemInt(_In_ HWND, _In_ int, _Out_opt_ PBOOL, _In_ BOOL);
+
+_Ret_range_(0, cchMax)
+UINT
+WINAPI
+GetDlgItemTextA(
+  _In_ HWND hDlg,
+  _In_ int nIDDlgItem,
+  _Out_writes_(cchMax) LPSTR lpString,
+  _In_ int cchMax);
+
+_Ret_range_(0, cchMax)
+UINT
+WINAPI
+GetDlgItemTextW(
+  _In_ HWND hDlg,
+  _In_ int nIDDlgItem,
+  _Out_writes_(cchMax) LPWSTR lpString,
+  _In_ int cchMax);
+
 UINT WINAPI GetDoubleClickTime(void);
 HWND WINAPI GetFocus(void);
 HWND WINAPI GetForegroundWindow(void);
 #if (_WIN32_WINNT >= 0x0500)
-DWORD WINAPI GetGuiResources(HANDLE,DWORD);
+DWORD WINAPI GetGuiResources(_In_ HANDLE, _In_ DWORD);
 #endif
-BOOL WINAPI GetIconInfo(HICON,PICONINFO);
-BOOL WINAPI GetIconInfoExA(HICON,ICONINFOEXA*);
-BOOL WINAPI GetIconInfoExW(HICON,ICONINFOEXW*);
+BOOL WINAPI GetIconInfo(_In_ HICON, _Out_ PICONINFO);
+BOOL WINAPI GetIconInfoExA(_In_ HICON, _Inout_ ICONINFOEXA*);
+BOOL WINAPI GetIconInfoExW(_In_ HICON, _Inout_ ICONINFOEXW*);
 BOOL WINAPI GetInputState(void);
 UINT WINAPI GetKBCodePage(void);
-HKL WINAPI GetKeyboardLayout(DWORD);
-UINT WINAPI GetKeyboardLayoutList(int,HKL*);
-BOOL WINAPI GetKeyboardLayoutNameA(LPSTR);
-BOOL WINAPI GetKeyboardLayoutNameW(LPWSTR);
-BOOL WINAPI GetKeyboardState(PBYTE);
-int WINAPI GetKeyboardType(int);
-int WINAPI GetKeyNameTextA(LONG,LPSTR,int);
-int WINAPI GetKeyNameTextW(LONG,LPWSTR,int);
-SHORT WINAPI GetKeyState(int);
-HWND WINAPI GetLastActivePopup(HWND);
-HMENU WINAPI GetMenu(HWND);
+HKL WINAPI GetKeyboardLayout(_In_ DWORD);
+
+UINT
+WINAPI
+GetKeyboardLayoutList(
+  _In_ int nBuff,
+  _Out_writes_to_opt_(nBuff, return) HKL FAR *lpList);
+
+BOOL WINAPI GetKeyboardLayoutNameA(_Out_writes_(KL_NAMELENGTH) LPSTR);
+BOOL WINAPI GetKeyboardLayoutNameW(_Out_writes_(KL_NAMELENGTH) LPWSTR);
+
+_Check_return_
+BOOL
+WINAPI
+GetKeyboardState(
+  _Out_writes_(256) PBYTE lpKeyState);
+
+int WINAPI GetKeyboardType(_In_ int);
+
+int
+WINAPI
+GetKeyNameTextA(
+  _In_ LONG lParam,
+  _Out_writes_(cchSize) LPSTR lpString,
+  _In_ int cchSize);
+
+int
+WINAPI
+GetKeyNameTextW(
+  _In_ LONG lParam,
+  _Out_writes_(cchSize) LPWSTR lpString,
+  _In_ int cchSize);
+
+SHORT WINAPI GetKeyState(_In_ int);
+HWND WINAPI GetLastActivePopup(_In_ HWND);
+HMENU WINAPI GetMenu(_In_ HWND);
 LONG WINAPI GetMenuCheckMarkDimensions(void);
-DWORD WINAPI GetMenuContextHelpId(HMENU);
-UINT WINAPI GetMenuDefaultItem(HMENU,UINT,UINT);
-int WINAPI GetMenuItemCount(HMENU);
-UINT WINAPI GetMenuItemID(HMENU,int);
-BOOL WINAPI GetMenuItemInfoA(HMENU,UINT,BOOL,LPMENUITEMINFOA);
-BOOL WINAPI GetMenuItemInfoW(HMENU,UINT,BOOL,LPMENUITEMINFOW);
-BOOL WINAPI GetMenuItemRect(HWND,HMENU,UINT,LPRECT);
-UINT WINAPI GetMenuState(HMENU,UINT,UINT);
-int WINAPI GetMenuStringA(HMENU,UINT,LPSTR,int,UINT);
-int WINAPI GetMenuStringW(HMENU,UINT,LPWSTR,int,UINT);
-BOOL WINAPI GetMessageA(LPMSG,HWND,UINT,UINT);
-BOOL WINAPI GetMessageW(LPMSG,HWND,UINT,UINT);
+DWORD WINAPI GetMenuContextHelpId(_In_ HMENU);
+UINT WINAPI GetMenuDefaultItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+int WINAPI GetMenuItemCount(_In_opt_ HMENU);
+UINT WINAPI GetMenuItemID(_In_ HMENU, _In_ int);
+BOOL WINAPI GetMenuItemInfoA(_In_ HMENU, _In_ UINT, _In_ BOOL, _Inout_ LPMENUITEMINFOA);
+BOOL WINAPI GetMenuItemInfoW(_In_ HMENU, _In_ UINT, _In_ BOOL, _Inout_ LPMENUITEMINFOW);
+BOOL WINAPI GetMenuItemRect(_In_opt_ HWND, _In_ HMENU, _In_ UINT, _Out_ LPRECT);
+UINT WINAPI GetMenuState(_In_ HMENU, _In_ UINT, _In_ UINT);
+
+int
+WINAPI
+GetMenuStringA(
+  _In_ HMENU hMenu,
+  _In_ UINT uIDItem,
+  _Out_writes_opt_(cchMax) LPSTR lpString,
+  _In_ int cchMax,
+  _In_ UINT flags);
+
+int
+WINAPI
+GetMenuStringW(
+  _In_ HMENU hMenu,
+  _In_ UINT uIDItem,
+  _Out_writes_opt_(cchMax) LPWSTR lpString,
+  _In_ int cchMax,
+  _In_ UINT flags);
+
+BOOL WINAPI GetMessageA(_Out_ LPMSG, _In_opt_ HWND, _In_ UINT, _In_ UINT);
+BOOL WINAPI GetMessageW(_Out_ LPMSG, _In_opt_ HWND, _In_ UINT, _In_ UINT);
+
 LPARAM WINAPI GetMessageExtraInfo(void);
 DWORD WINAPI GetMessagePos(void);
 LONG WINAPI GetMessageTime(void);
+
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0490)
-int WINAPI GetMouseMovePointsEx(UINT,LPMOUSEMOVEPOINT,LPMOUSEMOVEPOINT,int,DWORD);
+int
+WINAPI
+GetMouseMovePointsEx(
+  _In_ UINT cbSize,
+  _In_ LPMOUSEMOVEPOINT lppt,
+  _Out_writes_(nBufPoints) LPMOUSEMOVEPOINT lpptBuf,
+  _In_ int nBufPoints,
+  _In_ DWORD resolution);
 #endif
-HWND WINAPI GetNextDlgGroupItem(HWND,HWND,BOOL);
-HWND WINAPI GetNextDlgTabItem(HWND,HWND,BOOL);
+
+HWND WINAPI GetNextDlgGroupItem(_In_ HWND, _In_opt_ HWND, _In_ BOOL);
+HWND WINAPI GetNextDlgTabItem(_In_ HWND, _In_opt_ HWND, _In_ BOOL);
 #define GetNextWindow(h,c) GetWindow(h,c)
 HWND WINAPI GetOpenClipboardWindow(void);
-HWND WINAPI GetParent(HWND);
-int WINAPI GetPriorityClipboardFormat(UINT*,int);
-HANDLE WINAPI GetPropA(HWND,LPCSTR);
-HANDLE WINAPI GetPropW(HWND,LPCWSTR);
+HWND WINAPI GetParent(_In_ HWND);
+
+int
+WINAPI
+GetPriorityClipboardFormat(
+  _In_reads_(cFormats) UINT *paFormatPriorityList,
+  _In_ int cFormats);
+
+HANDLE WINAPI GetPropA(_In_ HWND, _In_ LPCSTR);
+HANDLE WINAPI GetPropW(_In_ HWND, _In_ LPCWSTR);
+
 #if (_WIN32_WINNT >= 0x0501)
-UINT WINAPI GetRawInputBuffer(PRAWINPUT,PUINT,UINT);
-UINT WINAPI GetRawInputData(HRAWINPUT,UINT,LPVOID,PUINT,UINT);
-UINT WINAPI GetRawInputDeviceInfoA(HANDLE,UINT,LPVOID,PUINT);
-UINT WINAPI GetRawInputDeviceInfoW(HANDLE,UINT,LPVOID,PUINT);
-UINT WINAPI GetRawInputDeviceList(PRAWINPUTDEVICELIST,PUINT,UINT);
-UINT WINAPI GetRegisteredRawInputDevices(PRAWINPUTDEVICE,PUINT,UINT);
-#endif
-DWORD WINAPI GetQueueStatus(UINT);
-BOOL WINAPI GetScrollInfo(HWND,int,LPSCROLLINFO);
-int WINAPI GetScrollPos(HWND,int);
-BOOL WINAPI GetScrollRange(HWND,int,LPINT,LPINT);
+
+UINT
+WINAPI
+GetRawInputBuffer(
+  _Out_writes_bytes_opt_(*pcbSize) PRAWINPUT pData,
+  _Inout_ PUINT pcbSize,
+  _In_ UINT cbSizeHeader);
+
+UINT
+WINAPI
+GetRawInputData(
+  _In_ HRAWINPUT hRawInput,
+  _In_ UINT uiCommand,
+  _Out_writes_bytes_to_opt_(*pcbSize, return) LPVOID pData,
+  _Inout_ PUINT pcbSize,
+  _In_ UINT cbSizeHeader);
+
+UINT
+WINAPI
+GetRawInputDeviceInfoA(
+  _In_opt_ HANDLE hDevice,
+  _In_ UINT uiCommand,
+  _Inout_updates_bytes_to_opt_(*pcbSize, *pcbSize) LPVOID pData,
+  _Inout_ PUINT pcbSize);
+
+UINT
+WINAPI
+GetRawInputDeviceInfoW(
+  _In_opt_ HANDLE hDevice,
+  _In_ UINT uiCommand,
+  _Inout_updates_bytes_to_opt_(*pcbSize, *pcbSize) LPVOID pData,
+  _Inout_ PUINT pcbSize);
+
+UINT
+WINAPI
+GetRawInputDeviceList(
+  _Out_writes_opt_(*puiNumDevices) PRAWINPUTDEVICELIST pRawInputDeviceList,
+  _Inout_ PUINT puiNumDevices,
+  _In_ UINT cbSize);
+
+UINT
+WINAPI
+GetRegisteredRawInputDevices(
+  _Out_writes_opt_(*puiNumDevices) PRAWINPUTDEVICE pRawInputDevices,
+  _Inout_ PUINT puiNumDevices,
+  _In_ UINT cbSize);
+
+#endif /* (_WIN32_WINNT >= 0x0501) */
+
+DWORD WINAPI GetQueueStatus(_In_ UINT);
+BOOL WINAPI GetScrollInfo(_In_ HWND, _In_ int, _Inout_ LPSCROLLINFO);
+int WINAPI GetScrollPos(_In_ HWND, _In_ int);
+BOOL WINAPI GetScrollRange(_In_ HWND, _In_ int, _Out_ LPINT, _Out_ LPINT);
 #if (_WIN32_WINNT >= 0x0500)
 HWND WINAPI GetShellWindow(void);
 #endif
-HMENU WINAPI GetSubMenu(HMENU,int);
-DWORD WINAPI GetSysColor(int);
-HBRUSH WINAPI GetSysColorBrush(int);
+HMENU WINAPI GetSubMenu(_In_ HMENU, _In_ int);
+DWORD WINAPI GetSysColor(_In_ int);
+HBRUSH WINAPI GetSysColorBrush(_In_ int);
 #define GetSysModalWindow() (NULL)
-HMENU WINAPI GetSystemMenu(HWND,BOOL);
-int WINAPI GetSystemMetrics(int);
-DWORD WINAPI GetTabbedTextExtentA(HDC,LPCSTR,int,int,CONST INT*);
-DWORD WINAPI GetTabbedTextExtentW(HDC,LPCWSTR,int,int,CONST INT*);
-LONG WINAPI GetWindowLongA(HWND,int);
-LONG WINAPI GetWindowLongW(HWND,int);
+HMENU WINAPI GetSystemMenu(_In_ HWND, _In_ BOOL);
+int WINAPI GetSystemMetrics(_In_ int);
+
+DWORD
+WINAPI
+GetTabbedTextExtentA(
+  _In_ HDC hdc,
+  _In_reads_(chCount) LPCSTR lpString,
+  _In_ int chCount,
+  _In_ int nTabPositions,
+  _In_reads_opt_(nTabPositions) CONST INT *lpnTabStopPositions);
+
+DWORD
+WINAPI
+GetTabbedTextExtentW(
+  _In_ HDC hdc,
+  _In_reads_(chCount) LPCWSTR lpString,
+  _In_ int chCount,
+  _In_ int nTabPositions,
+  _In_reads_opt_(nTabPositions) CONST INT *lpnTabStopPositions);
+
+LONG WINAPI GetWindowLongA(_In_ HWND, _In_ int);
+LONG WINAPI GetWindowLongW(_In_ HWND, _In_ int);
 #ifdef _WIN64
-LONG_PTR WINAPI GetWindowLongPtrA(HWND,int);
-LONG_PTR WINAPI GetWindowLongPtrW(HWND,int);
+LONG_PTR WINAPI GetWindowLongPtrA(_In_ HWND, _In_ int);
+LONG_PTR WINAPI GetWindowLongPtrW(_In_ HWND, _In_ int);
 #else
 #define GetWindowLongPtrA GetWindowLongA
 #define GetWindowLongPtrW GetWindowLongW
 #endif
-HDESK WINAPI GetThreadDesktop(DWORD);
-HWND WINAPI GetTopWindow(HWND);
-BOOL WINAPI GetUpdateRect(HWND,LPRECT,BOOL);
-int WINAPI GetUpdateRgn(HWND,HRGN,BOOL);
-BOOL WINAPI GetUserObjectInformationA(HANDLE,int,PVOID,DWORD,PDWORD);
-BOOL WINAPI GetUserObjectInformationW(HANDLE,int,PVOID,DWORD,PDWORD);
-BOOL WINAPI GetUserObjectSecurity(HANDLE,PSECURITY_INFORMATION,PSECURITY_DESCRIPTOR,DWORD,PDWORD);
-HWND WINAPI GetWindow(HWND,UINT);
-DWORD WINAPI GetWindowContextHelpId(HWND);
-HDC WINAPI GetWindowDC(HWND);
+HDESK WINAPI GetThreadDesktop(_In_ DWORD);
+HWND WINAPI GetTopWindow(_In_opt_ HWND);
+BOOL WINAPI GetUpdateRect(_In_ HWND, _Out_opt_ LPRECT, _In_ BOOL);
+int WINAPI GetUpdateRgn(_In_ HWND, _In_ HRGN, _In_ BOOL);
+
+BOOL
+WINAPI
+GetUserObjectInformationA(
+  _In_ HANDLE hObj,
+  _In_ int nIndex,
+  _Out_writes_bytes_opt_(nLength) PVOID pvInfo,
+  _In_ DWORD nLength,
+  _Out_opt_ LPDWORD lpnLengthNeeded);
+
+BOOL
+WINAPI
+GetUserObjectInformationW(
+  _In_ HANDLE hObj,
+  _In_ int nIndex,
+  _Out_writes_bytes_opt_(nLength) PVOID pvInfo,
+  _In_ DWORD nLength,
+  _Out_opt_ LPDWORD lpnLengthNeeded);
+
+BOOL
+WINAPI
+GetUserObjectSecurity(
+  _In_ HANDLE hObj,
+  _In_ PSECURITY_INFORMATION pSIRequested,
+  _Out_writes_bytes_opt_(nLength) PSECURITY_DESCRIPTOR pSID,
+  _In_ DWORD nLength,
+  _Out_ LPDWORD lpnLengthNeeded);
+
+HWND WINAPI GetWindow(_In_ HWND, _In_ UINT);
+DWORD WINAPI GetWindowContextHelpId(_In_ HWND);
+HDC WINAPI GetWindowDC(_In_opt_ HWND);
 BOOL WINAPI GetWindowExtEx(HDC,LPSIZE);
-BOOL WINAPI GetWindowPlacement(HWND,WINDOWPLACEMENT*);
-BOOL WINAPI GetWindowRect(HWND,LPRECT);
-int WINAPI GetWindowRgn(HWND,HRGN);
+BOOL WINAPI GetWindowPlacement(_In_ HWND, _Inout_ WINDOWPLACEMENT*);
+BOOL WINAPI GetWindowRect(_In_ HWND, _Out_ LPRECT);
+int WINAPI GetWindowRgn(_In_ HWND, _In_ HRGN);
 #define GetWindowTask(hWnd) ((HANDLE)GetWindowThreadProcessId(hWnd, NULL))
-int WINAPI GetWindowTextA(HWND,LPSTR,int);
-int WINAPI GetWindowTextLengthA(HWND);
-int WINAPI GetWindowTextLengthW(HWND);
-int WINAPI GetWindowTextW(HWND,LPWSTR,int);
-WORD WINAPI GetWindowWord(HWND,int);
-BOOL WINAPI GetAltTabInfoA(HWND,int,PALTTABINFO,LPSTR,UINT);
-BOOL WINAPI GetAltTabInfoW(HWND,int,PALTTABINFO,LPWSTR,UINT);
-BOOL WINAPI GetComboBoxInfo(HWND,PCOMBOBOXINFO);
-BOOL WINAPI GetCursorInfo(PCURSORINFO);
+
+_Ret_range_(0, nMaxCount)
+int
+WINAPI
+GetWindowTextA(
+  _In_ HWND hWnd,
+  _Out_writes_(nMaxCount) LPSTR lpString,
+  _In_ int nMaxCount);
+
+_Ret_range_(0, nMaxCount)
+int
+WINAPI
+GetWindowTextW(
+  _In_ HWND hWnd,
+  _Out_writes_(nMaxCount) LPWSTR lpString,
+  _In_ int nMaxCount);
+
+int WINAPI GetWindowTextLengthA(_In_ HWND);
+int WINAPI GetWindowTextLengthW(_In_ HWND);
+WORD WINAPI GetWindowWord(_In_ HWND, _In_ int);
+
+BOOL
+WINAPI
+GetAltTabInfoA(
+  _In_opt_ HWND hwnd,
+  _In_ int iItem,
+  _Inout_ PALTTABINFO pati,
+  _Out_writes_opt_(cchItemText) LPSTR pszItemText,
+  _In_ UINT cchItemText);
+
+BOOL
+WINAPI
+GetAltTabInfoW(
+  _In_opt_ HWND hwnd,
+  _In_ int iItem,
+  _Inout_ PALTTABINFO pati,
+  _Out_writes_opt_(cchItemText) LPWSTR pszItemText,
+  _In_ UINT cchItemText);
+
+BOOL WINAPI GetComboBoxInfo(_In_ HWND, _Inout_ PCOMBOBOXINFO);
+BOOL WINAPI GetCursorInfo(_Inout_ PCURSORINFO);
 #if (WINVER >= 0x0500)
-BOOL WINAPI GetGUIThreadInfo(DWORD,LPGUITHREADINFO);
+BOOL WINAPI GetGUIThreadInfo(_In_ DWORD, _Inout_ LPGUITHREADINFO);
 #endif
-BOOL WINAPI GetLastInputInfo(PLASTINPUTINFO);
-DWORD WINAPI GetListBoxInfo(HWND);
-BOOL WINAPI GetMenuBarInfo(HWND,LONG,LONG,PMENUBARINFO);
-BOOL WINAPI GetMenuInfo(HMENU,LPMENUINFO);
+BOOL WINAPI GetLastInputInfo(_Out_ PLASTINPUTINFO);
+DWORD WINAPI GetListBoxInfo(_In_ HWND);
+BOOL WINAPI GetMenuBarInfo(_In_ HWND, _In_ LONG, _In_ LONG, _Inout_ PMENUBARINFO);
+BOOL WINAPI GetMenuInfo(_In_ HMENU, _Inout_ LPMENUINFO);
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI GetProcessDefaultLayout(DWORD*);
+BOOL WINAPI GetProcessDefaultLayout(_Out_ DWORD*);
 #endif
-BOOL WINAPI GetScrollBarInfo(HWND,LONG,PSCROLLBARINFO);
-BOOL WINAPI GetTitleBarInfo(HWND,PTITLEBARINFO);
-BOOL WINAPI GetWindowInfo(HWND,PWINDOWINFO);
-BOOL WINAPI GetMonitorInfoA(HMONITOR,LPMONITORINFO);
-BOOL WINAPI GetMonitorInfoW(HMONITOR,LPMONITORINFO);
-UINT WINAPI GetWindowModuleFileNameA(HWND,LPSTR,UINT);
-UINT WINAPI GetWindowModuleFileNameW(HWND,LPWSTR,UINT);
-BOOL WINAPI GrayStringA(HDC,HBRUSH,GRAYSTRINGPROC,LPARAM,int,int,int,int,int);
-BOOL WINAPI GrayStringW(HDC,HBRUSH,GRAYSTRINGPROC,LPARAM,int,int,int,int,int);
-BOOL WINAPI HideCaret(HWND);
-BOOL WINAPI HiliteMenuItem(HWND,HMENU,UINT,UINT);
-BOOL WINAPI InflateRect(LPRECT,int,int);
+BOOL WINAPI GetScrollBarInfo(_In_ HWND, _In_ LONG, _Inout_ PSCROLLBARINFO);
+BOOL WINAPI GetTitleBarInfo(_In_ HWND, _Inout_ PTITLEBARINFO);
+BOOL WINAPI GetWindowInfo(_In_ HWND, _Inout_ PWINDOWINFO);
+BOOL WINAPI GetMonitorInfoA(_In_ HMONITOR, _Inout_ LPMONITORINFO);
+BOOL WINAPI GetMonitorInfoW(_In_ HMONITOR, _Inout_ LPMONITORINFO);
+
+UINT
+WINAPI
+GetWindowModuleFileNameA(
+  _In_ HWND hwnd,
+  _Out_writes_to_(cchFileNameMax, return) LPSTR pszFileName,
+  _In_ UINT cchFileNameMax);
+
+UINT
+WINAPI
+GetWindowModuleFileNameW(
+  _In_ HWND hwnd,
+  _Out_writes_to_(cchFileNameMax, return) LPWSTR pszFileName,
+  _In_ UINT cchFileNameMax);
+
+BOOL WINAPI GrayStringA(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ GRAYSTRINGPROC, _In_ LPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int);
+BOOL WINAPI GrayStringW(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ GRAYSTRINGPROC, _In_ LPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ int);
+BOOL WINAPI HideCaret(_In_opt_ HWND);
+BOOL WINAPI HiliteMenuItem(_In_ HWND, _In_ HMENU, _In_ UINT, _In_ UINT);
+BOOL WINAPI InflateRect(_Inout_ LPRECT, _In_ int, _In_ int);
 BOOL WINAPI InSendMessage(void);
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
-DWORD WINAPI InSendMessageEx(LPVOID);
+DWORD WINAPI InSendMessageEx(_Reserved_ LPVOID);
 #endif
-BOOL WINAPI InsertMenuA(HMENU,UINT,UINT,UINT_PTR,LPCSTR);
-BOOL WINAPI InsertMenuW(HMENU,UINT,UINT,UINT_PTR,LPCWSTR);
-BOOL WINAPI InsertMenuItemA(HMENU,UINT,BOOL,LPCMENUITEMINFOA);
-BOOL WINAPI InsertMenuItemW(HMENU,UINT,BOOL,LPCMENUITEMINFOW);
-INT WINAPI InternalGetWindowText(HWND,LPWSTR,INT);
-BOOL WINAPI IntersectRect(LPRECT,LPCRECT,LPCRECT);
-BOOL WINAPI InvalidateRect(HWND,LPCRECT,BOOL);
-BOOL WINAPI InvalidateRgn(HWND,HRGN,BOOL);
-BOOL WINAPI InvertRect(HDC,LPCRECT);
-BOOL WINAPI IsCharAlphaA(CHAR ch);
-BOOL WINAPI IsCharAlphaNumericA(CHAR);
-BOOL WINAPI IsCharAlphaNumericW(WCHAR);
-BOOL WINAPI IsCharAlphaW(WCHAR);
-BOOL WINAPI IsCharLowerA(CHAR);
-BOOL WINAPI IsCharLowerW(WCHAR);
-BOOL WINAPI IsCharUpperA(CHAR);
-BOOL WINAPI IsCharUpperW(WCHAR);
-BOOL WINAPI IsChild(HWND,HWND);
-BOOL WINAPI IsClipboardFormatAvailable(UINT);
-BOOL WINAPI IsDialogMessageA(HWND,LPMSG);
-BOOL WINAPI IsDialogMessageW(HWND,LPMSG);
-UINT WINAPI IsDlgButtonChecked(HWND,int);
+BOOL WINAPI InsertMenuA(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCSTR);
+BOOL WINAPI InsertMenuW(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCWSTR);
+BOOL WINAPI InsertMenuItemA(_In_ HMENU, _In_ UINT, _In_ BOOL, _In_ LPCMENUITEMINFOA);
+BOOL WINAPI InsertMenuItemW(_In_ HMENU, _In_ UINT, _In_ BOOL, _In_ LPCMENUITEMINFOW);
+
+INT
+WINAPI
+InternalGetWindowText(
+  _In_ HWND hWnd,
+  _Out_writes_to_(cchMaxCount, return + 1) LPWSTR pString,
+  _In_ int cchMaxCount);
+
+BOOL WINAPI IntersectRect(_Out_ LPRECT, _In_ LPCRECT, _In_ LPCRECT);
+BOOL WINAPI InvalidateRect(_In_opt_ HWND, _In_opt_ LPCRECT, _In_ BOOL);
+BOOL WINAPI InvalidateRgn(_In_ HWND, _In_opt_ HRGN, _In_ BOOL);
+BOOL WINAPI InvertRect(_In_ HDC, _In_ LPCRECT);
+BOOL WINAPI IsCharAlphaA(_In_ CHAR ch);
+BOOL WINAPI IsCharAlphaNumericA(_In_ CHAR);
+BOOL WINAPI IsCharAlphaNumericW(_In_ WCHAR);
+BOOL WINAPI IsCharAlphaW( _In_ WCHAR);
+BOOL WINAPI IsCharLowerA(_In_ CHAR);
+BOOL WINAPI IsCharLowerW(_In_ WCHAR);
+BOOL WINAPI IsCharUpperA(_In_ CHAR);
+BOOL WINAPI IsCharUpperW(_In_ WCHAR);
+BOOL WINAPI IsChild(_In_ HWND, _In_ HWND);
+BOOL WINAPI IsClipboardFormatAvailable(_In_ UINT);
+BOOL WINAPI IsDialogMessageA(_In_ HWND, _In_ LPMSG);
+BOOL WINAPI IsDialogMessageW(_In_ HWND, _In_ LPMSG);
+UINT WINAPI IsDlgButtonChecked(_In_ HWND, _In_ int);
 #if(_WIN32_WINNT >= 0x0501)
-BOOL WINAPI IsGUIThread(BOOL);
+BOOL WINAPI IsGUIThread(_In_ BOOL);
 #endif
 #if(_WIN32_WINNT >= 0x0500)
-BOOL WINAPI IsHungAppWindow(HWND);
+BOOL WINAPI IsHungAppWindow(_In_ HWND);
 #endif
-BOOL WINAPI IsIconic(HWND);
-BOOL WINAPI IsMenu(HMENU);
-BOOL WINAPI IsRectEmpty(LPCRECT);
-BOOL WINAPI IsWindow(HWND);
-BOOL WINAPI IsWindowEnabled(HWND);
-BOOL WINAPI IsWindowUnicode(HWND);
-BOOL WINAPI IsWindowVisible(HWND);
+BOOL WINAPI IsIconic(_In_ HWND);
+BOOL WINAPI IsMenu(_In_ HMENU);
+BOOL WINAPI IsRectEmpty(_In_ LPCRECT);
+BOOL WINAPI IsWindow(_In_opt_ HWND);
+BOOL WINAPI IsWindowEnabled(_In_ HWND);
+BOOL WINAPI IsWindowUnicode(_In_ HWND);
+BOOL WINAPI IsWindowVisible(_In_ HWND);
 #if (_WIN32_WINNT >= 0x0501)
-BOOL WINAPI IsWinEventHookInstalled(DWORD);
+BOOL WINAPI IsWinEventHookInstalled(_In_ DWORD);
 #endif
-BOOL WINAPI IsZoomed(HWND);
-VOID WINAPI keybd_event(BYTE,BYTE,DWORD,ULONG_PTR);
-BOOL WINAPI KillTimer(HWND,UINT_PTR);
+BOOL WINAPI IsZoomed(_In_ HWND);
+VOID WINAPI keybd_event(_In_ BYTE, _In_ BYTE, _In_ DWORD, _In_ ULONG_PTR);
+BOOL WINAPI KillTimer(_In_opt_ HWND, _In_ UINT_PTR);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
-HACCEL WINAPI LoadAcceleratorsA(HINSTANCE,LPCSTR);
-HACCEL WINAPI LoadAcceleratorsW(HINSTANCE,LPCWSTR);
-HBITMAP WINAPI LoadBitmapA(HINSTANCE,LPCSTR);
-HBITMAP WINAPI LoadBitmapW(HINSTANCE,LPCWSTR);
-HCURSOR WINAPI LoadCursorA(HINSTANCE,LPCSTR);
-HCURSOR WINAPI LoadCursorFromFileA(LPCSTR);
-HCURSOR WINAPI LoadCursorFromFileW(LPCWSTR);
-HCURSOR WINAPI LoadCursorW(HINSTANCE,LPCWSTR);
-HICON WINAPI LoadIconA(HINSTANCE,LPCSTR);
-HICON WINAPI LoadIconW(HINSTANCE,LPCWSTR);
-HANDLE WINAPI LoadImageA(HINSTANCE,LPCSTR,UINT,int,int,UINT);
-HANDLE WINAPI LoadImageW(HINSTANCE,LPCWSTR,UINT,int,int,UINT);
-HKL WINAPI LoadKeyboardLayoutA(LPCSTR,UINT);
-HKL WINAPI LoadKeyboardLayoutW(LPCWSTR,UINT);
-HMENU WINAPI LoadMenuA(HINSTANCE,LPCSTR);
-HMENU WINAPI LoadMenuIndirectA(const MENUTEMPLATE*);
-HMENU WINAPI LoadMenuIndirectW(const MENUTEMPLATE*);
-HMENU WINAPI LoadMenuW(HINSTANCE,LPCWSTR);
-int WINAPI LoadStringA(HINSTANCE,UINT,LPSTR,int);
-int WINAPI LoadStringW(HINSTANCE,UINT,LPWSTR,int);
-BOOL WINAPI LockWindowUpdate(HWND);
+HACCEL WINAPI LoadAcceleratorsA(_In_opt_ HINSTANCE, _In_ LPCSTR);
+HACCEL WINAPI LoadAcceleratorsW(_In_opt_ HINSTANCE, _In_ LPCWSTR);
+HBITMAP WINAPI LoadBitmapA(_In_opt_ HINSTANCE, _In_ LPCSTR);
+HBITMAP WINAPI LoadBitmapW(_In_opt_ HINSTANCE, _In_ LPCWSTR);
+HCURSOR WINAPI LoadCursorA(_In_opt_ HINSTANCE, _In_ LPCSTR);
+HCURSOR WINAPI LoadCursorW(_In_opt_ HINSTANCE, _In_ LPCWSTR);
+HCURSOR WINAPI LoadCursorFromFileA(_In_ LPCSTR);
+HCURSOR WINAPI LoadCursorFromFileW(_In_ LPCWSTR);
+HICON WINAPI LoadIconA(_In_opt_ HINSTANCE, _In_ LPCSTR);
+HICON WINAPI LoadIconW(_In_opt_ HINSTANCE, _In_ LPCWSTR);
+HANDLE WINAPI LoadImageA(_In_opt_ HINSTANCE, _In_ LPCSTR, _In_ UINT, _In_ int, _In_ int, _In_ UINT);
+HANDLE WINAPI LoadImageW(_In_opt_ HINSTANCE, _In_ LPCWSTR, _In_ UINT, _In_ int, _In_ int, _In_ UINT);
+HKL WINAPI LoadKeyboardLayoutA(_In_ LPCSTR, _In_ UINT);
+HKL WINAPI LoadKeyboardLayoutW(_In_ LPCWSTR, _In_ UINT);
+HMENU WINAPI LoadMenuA(_In_opt_ HINSTANCE, _In_ LPCSTR);
+HMENU WINAPI LoadMenuIndirectA(_In_ const MENUTEMPLATE*);
+HMENU WINAPI LoadMenuIndirectW(_In_ const MENUTEMPLATE*);
+HMENU WINAPI LoadMenuW(_In_opt_ HINSTANCE, _In_ LPCWSTR);
+
+int
+WINAPI
+LoadStringA(
+  _In_opt_ HINSTANCE hInstance,
+  _In_ UINT uID,
+  _Out_writes_to_(cchBufferMax, return + 1) LPSTR lpBuffer,
+  _In_ int cchBufferMax);
+
+int
+WINAPI
+LoadStringW(
+  _In_opt_ HINSTANCE hInstance,
+  _In_ UINT uID,
+  _Out_writes_to_(cchBufferMax, return + 1) LPWSTR lpBuffer,
+  _In_ int cchBufferMax);
+
+BOOL WINAPI LockWindowUpdate(_In_opt_ HWND);
 #if (_WIN32_WINNT >= 0x0500)
 BOOL WINAPI LockWorkStation(void);
 #endif
-int WINAPI LookupIconIdFromDirectory(PBYTE,BOOL);
-int WINAPI LookupIconIdFromDirectoryEx(PBYTE,BOOL,int,int,UINT);
-BOOL WINAPI MapDialogRect(HWND,LPRECT);
-UINT WINAPI MapVirtualKeyA(UINT,UINT);
-UINT WINAPI MapVirtualKeyExA(UINT,UINT,HKL);
-UINT WINAPI MapVirtualKeyExW(UINT,UINT,HKL);
-UINT WINAPI MapVirtualKeyW(UINT,UINT);
-int WINAPI MapWindowPoints(HWND,HWND,LPPOINT,UINT);
-int WINAPI MenuItemFromPoint(HWND,HMENU,POINT);
-BOOL WINAPI MessageBeep(UINT);
-int WINAPI MessageBoxA(HWND,LPCSTR,LPCSTR,UINT);
-int WINAPI MessageBoxW(HWND,LPCWSTR,LPCWSTR,UINT);
-int WINAPI MessageBoxExA(HWND,LPCSTR,LPCSTR,UINT,WORD);
-int WINAPI MessageBoxExW(HWND,LPCWSTR,LPCWSTR,UINT,WORD);
-int WINAPI MessageBoxIndirectA(CONST MSGBOXPARAMSA*);
-int WINAPI MessageBoxIndirectW(CONST MSGBOXPARAMSW*);
-BOOL WINAPI ModifyMenuA(HMENU,UINT,UINT,UINT_PTR,LPCSTR);
-BOOL WINAPI ModifyMenuW(HMENU,UINT,UINT,UINT_PTR,LPCWSTR);
-HMONITOR WINAPI MonitorFromPoint(POINT,DWORD);
-HMONITOR WINAPI MonitorFromRect(LPCRECT,DWORD);
-HMONITOR WINAPI MonitorFromWindow(HWND,DWORD);
-void WINAPI mouse_event(DWORD,DWORD,DWORD,DWORD,ULONG_PTR);
-BOOL WINAPI MoveWindow(HWND,int,int,int,int,BOOL);
-DWORD WINAPI MsgWaitForMultipleObjects(DWORD,CONST HANDLE*,BOOL,DWORD,DWORD);
-DWORD WINAPI MsgWaitForMultipleObjectsEx(DWORD,CONST HANDLE*,DWORD,DWORD,DWORD);
+
+typedef struct {
+  WORD Reserved;
+  WORD ResType;
+  WORD ResCount;
+} NEWHEADER;
+
+int WINAPI LookupIconIdFromDirectory(_In_reads_bytes_(sizeof(NEWHEADER)) PBYTE, _In_ BOOL);
+int WINAPI LookupIconIdFromDirectoryEx(_In_reads_bytes_(sizeof(NEWHEADER)) PBYTE, _In_ BOOL, _In_ int, _In_ int, _In_ UINT);
+BOOL WINAPI MapDialogRect(_In_ HWND, _Inout_ LPRECT);
+UINT WINAPI MapVirtualKeyA(_In_ UINT, _In_ UINT);
+UINT WINAPI MapVirtualKeyExA(_In_ UINT, _In_ UINT, _In_opt_ HKL);
+UINT WINAPI MapVirtualKeyExW(_In_ UINT, _In_ UINT, _In_opt_ HKL);
+UINT WINAPI MapVirtualKeyW(_In_ UINT, _In_ UINT);
+
+int
+WINAPI
+MapWindowPoints(
+  _In_opt_ HWND hWndFrom,
+  _In_opt_ HWND hWndTo,
+  _Inout_updates_(cPoints) LPPOINT lpPoints,
+  _In_ UINT cPoints);
+
+int WINAPI MenuItemFromPoint(_In_opt_ HWND, _In_ HMENU, _In_ POINT);
+BOOL WINAPI MessageBeep(_In_ UINT);
+int WINAPI MessageBoxA(_In_opt_ HWND, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_ UINT);
+int WINAPI MessageBoxW(_In_opt_ HWND, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_ UINT);
+int WINAPI MessageBoxExA(_In_opt_ HWND, _In_opt_ LPCSTR, _In_opt_ LPCSTR, _In_ UINT, _In_ WORD);
+int WINAPI MessageBoxExW(_In_opt_ HWND, _In_opt_ LPCWSTR, _In_opt_ LPCWSTR, _In_ UINT, _In_ WORD);
+int WINAPI MessageBoxIndirectA(_In_ CONST MSGBOXPARAMSA*);
+int WINAPI MessageBoxIndirectW(_In_ CONST MSGBOXPARAMSW*);
+BOOL WINAPI ModifyMenuA(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCSTR);
+BOOL WINAPI ModifyMenuW(_In_ HMENU, _In_ UINT, _In_ UINT, _In_ UINT_PTR, _In_opt_ LPCWSTR);
+HMONITOR WINAPI MonitorFromPoint(_In_ POINT, _In_ DWORD);
+HMONITOR WINAPI MonitorFromRect(_In_ LPCRECT, _In_ DWORD);
+HMONITOR WINAPI MonitorFromWindow(_In_ HWND, _In_ DWORD);
+void WINAPI mouse_event(_In_ DWORD, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_ ULONG_PTR);
+BOOL WINAPI MoveWindow(_In_ HWND, _In_ int, _In_ int, _In_ int, _In_ int, _In_ BOOL);
+
+DWORD
+WINAPI
+MsgWaitForMultipleObjects(
+  _In_ DWORD nCount,
+  _In_reads_opt_(nCount) CONST HANDLE *pHandles,
+  _In_ BOOL fWaitAll,
+  _In_ DWORD dwMilliseconds,
+  _In_ DWORD dwWakeMask);
+
+DWORD
+WINAPI
+MsgWaitForMultipleObjectsEx(
+  _In_ DWORD nCount,
+  _In_reads_opt_(nCount) CONST HANDLE *pHandles,
+  _In_ DWORD dwMilliseconds,
+  _In_ DWORD dwWakeMask,
+  _In_ DWORD dwFlags);
+
 #if (WINVER >= 0x0500)
-void WINAPI NotifyWinEvent(DWORD,HWND,LONG,LONG);
+void WINAPI NotifyWinEvent(_In_ DWORD, _In_ HWND, _In_ LONG, _In_ LONG);
 #endif
-DWORD WINAPI OemKeyScan(WORD);
-BOOL WINAPI OemToCharA(LPCSTR,LPSTR);
-BOOL WINAPI OemToCharBuffA(LPCSTR,LPSTR,DWORD);
-BOOL WINAPI OemToCharBuffW(LPCSTR,LPWSTR,DWORD);
-BOOL WINAPI OemToCharW(LPCSTR,LPWSTR);
-BOOL WINAPI OffsetRect(LPRECT,int,int);
-BOOL WINAPI OpenClipboard(HWND);
-HDESK WINAPI OpenDesktopA(LPCSTR,DWORD,BOOL,DWORD);
-HDESK WINAPI OpenDesktopW(LPCWSTR,DWORD,BOOL,DWORD);
-BOOL WINAPI OpenIcon(HWND);
-HDESK WINAPI OpenInputDesktop(DWORD,BOOL,DWORD);
-HWINSTA WINAPI OpenWindowStationA(LPCSTR,BOOL,DWORD);
-HWINSTA WINAPI OpenWindowStationW(LPCWSTR,BOOL,DWORD);
-BOOL WINAPI PaintDesktop(HDC);
-BOOL WINAPI PeekMessageA(LPMSG,HWND,UINT,UINT,UINT);
-BOOL WINAPI PeekMessageW(LPMSG,HWND,UINT,UINT,UINT);
+DWORD WINAPI OemKeyScan(_In_ WORD);
+
+BOOL
+WINAPI
+OemToCharA(
+  _In_ LPCSTR pSrc,
+  _Out_writes_(_Inexpressible_(strlen(pSrc) + 1)) LPSTR pDst);
+
+BOOL
+WINAPI
+OemToCharBuffA(
+  _In_ LPCSTR lpszSrc,
+  _Out_writes_(cchDstLength) LPSTR lpszDst,
+  _In_ DWORD cchDstLength);
+
+BOOL
+WINAPI
+OemToCharBuffW(
+  _In_ LPCSTR lpszSrc,
+  _Out_writes_(cchDstLength) LPWSTR lpszDst,
+  _In_ DWORD cchDstLength);
+
+BOOL
+WINAPI
+OemToCharW(
+  _In_ LPCSTR pSrc,
+  _Out_writes_(_Inexpressible_(strlen(pSrc) + 1)) LPWSTR pDst);
+
+BOOL WINAPI OffsetRect(_Inout_ LPRECT, _In_ int, _In_ int);
+BOOL WINAPI OpenClipboard(_In_opt_ HWND);
+HDESK WINAPI OpenDesktopA(_In_ LPCSTR, _In_ DWORD, _In_ BOOL, _In_ DWORD);
+HDESK WINAPI OpenDesktopW(_In_ LPCWSTR, _In_ DWORD, _In_ BOOL, _In_ DWORD);
+BOOL WINAPI OpenIcon(_In_ HWND);
+HDESK WINAPI OpenInputDesktop(_In_ DWORD, _In_ BOOL, _In_ DWORD);
+HWINSTA WINAPI OpenWindowStationA(_In_ LPCSTR, _In_ BOOL, _In_ DWORD);
+HWINSTA WINAPI OpenWindowStationW(_In_ LPCWSTR, _In_ BOOL, _In_ DWORD);
+BOOL WINAPI PaintDesktop(_In_ HDC);
+BOOL WINAPI PeekMessageA(_Out_ LPMSG, _In_opt_ HWND, _In_ UINT, _In_ UINT, _In_ UINT);
+BOOL WINAPI PeekMessageW(_Out_ LPMSG, _In_opt_ HWND, _In_ UINT, _In_ UINT, _In_ UINT);
 #define PostAppMessageA(t,m,w,l) PostThreadMessageA((DWORD)t,m,w,l)
 #define PostAppMessageW(t,m,w,l) PostThreadMessageW((DWORD)t,m,w,l)
-BOOL WINAPI PostMessageA(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI PostMessageW(HWND,UINT,WPARAM,LPARAM);
-void WINAPI PostQuitMessage(int);
-BOOL WINAPI PostThreadMessageA(DWORD,UINT,WPARAM,LPARAM);
-BOOL WINAPI PostThreadMessageW(DWORD,UINT,WPARAM,LPARAM);
+BOOL WINAPI PostMessageA(_In_opt_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI PostMessageW(_In_opt_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+
+__analysis_noreturn
+void WINAPI PostQuitMessage(_In_ int);
+
+BOOL WINAPI PostThreadMessageA(_In_ DWORD, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI PostThreadMessageW(_In_ DWORD, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
 #if (_WIN32_WINNT >= 0x0501)
-BOOL WINAPI PrintWindow(HWND,HDC,UINT);
+BOOL WINAPI PrintWindow(_In_ HWND, _In_ HDC, _In_ UINT);
 #endif
-UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
-UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
+
+UINT
+WINAPI
+PrivateExtractIconsA(
+  _In_reads_(MAX_PATH) LPCSTR szFileName,
+  _In_ int nIconIndex,
+  _In_ int cxIcon,
+  _In_ int cyIcon,
+  _Out_writes_opt_(nIcons) HICON *phicon,
+  _Out_writes_opt_(nIcons) UINT *piconid,
+  _In_ UINT nIcons,
+  _In_ UINT flags);
+
+UINT
+WINAPI
+PrivateExtractIconsW(
+  _In_reads_(MAX_PATH) LPCWSTR szFileName,
+  _In_ int nIconIndex,
+  _In_ int cxIcon,
+  _In_ int cyIcon,
+  _Out_writes_opt_(nIcons) HICON *phicon,
+  _Out_writes_opt_(nIcons) UINT *piconid,
+  _In_ UINT nIcons,
+  _In_ UINT flags);
+
 UINT WINAPI WINAPI PrivateExtractIconExA(LPCSTR,int,HICON*,HICON*,UINT);
 UINT WINAPI WINAPI PrivateExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
-BOOL WINAPI PtInRect(LPCRECT,POINT);
-HWND WINAPI RealChildWindowFromPoint(HWND,POINT);
-UINT WINAPI RealGetWindowClassA(HWND,LPSTR,UINT);
-UINT WINAPI RealGetWindowClassW(HWND,LPWSTR,UINT);
-BOOL WINAPI RedrawWindow(HWND,LPCRECT,HRGN,UINT);
-ATOM WINAPI RegisterClassA(CONST WNDCLASSA*);
-ATOM WINAPI RegisterClassW(CONST WNDCLASSW*);
-ATOM WINAPI RegisterClassExA(CONST WNDCLASSEXA*);
-ATOM WINAPI RegisterClassExW(CONST WNDCLASSEXW*);
+BOOL WINAPI PtInRect(_In_ LPCRECT, _In_ POINT);
+HWND WINAPI RealChildWindowFromPoint(_In_ HWND, _In_ POINT);
+
+UINT
+WINAPI
+RealGetWindowClassA(
+  _In_ HWND hwnd,
+  _Out_writes_to_(cchClassNameMax, return) LPSTR ptszClassName,
+  _In_ UINT cchClassNameMax);
+
+UINT
+WINAPI
+RealGetWindowClassW(
+  _In_ HWND hwnd,
+  _Out_writes_to_(cchClassNameMax, return) LPWSTR ptszClassName,
+  _In_ UINT cchClassNameMax);
+
+BOOL WINAPI RedrawWindow(_In_opt_ HWND, _In_opt_ LPCRECT, _In_opt_ HRGN, _In_ UINT);
+ATOM WINAPI RegisterClassA(_In_ CONST WNDCLASSA*);
+ATOM WINAPI RegisterClassW(_In_ CONST WNDCLASSW*);
+ATOM WINAPI RegisterClassExA(_In_ CONST WNDCLASSEXA*);
+ATOM WINAPI RegisterClassExW(_In_ CONST WNDCLASSEXW*);
 #if(_WIN32_WINNT >= 0x0501)
 typedef BOOLEAN (WINAPI * PREGISTERCLASSNAMEW)(LPCWSTR);
 #endif
-UINT WINAPI RegisterClipboardFormatA(LPCSTR);
-UINT WINAPI RegisterClipboardFormatW(LPCWSTR);
+UINT WINAPI RegisterClipboardFormatA(_In_ LPCSTR);
+UINT WINAPI RegisterClipboardFormatW(_In_ LPCWSTR);
 #if (WINVER >= 0x0500)
-HDEVNOTIFY WINAPI RegisterDeviceNotificationA(HANDLE,LPVOID,DWORD);
-HDEVNOTIFY WINAPI RegisterDeviceNotificationW(HANDLE,LPVOID,DWORD);
+HDEVNOTIFY WINAPI RegisterDeviceNotificationA(_In_ HANDLE, _In_ LPVOID, _In_ DWORD);
+HDEVNOTIFY WINAPI RegisterDeviceNotificationW(_In_ HANDLE, _In_ LPVOID, _In_ DWORD);
 #endif
-BOOL WINAPI RegisterHotKey(HWND,int,UINT,UINT);
+BOOL WINAPI RegisterHotKey(_In_opt_ HWND, _In_ int, _In_ UINT, _In_ UINT);
 BOOL WINAPI RegisterLogonProcess(DWORD,BOOL);
+
 #if (_WIN32_WINNT >= 0x0501)
-BOOL WINAPI RegisterRawInputDevices(PCRAWINPUTDEVICE,UINT,UINT);
+BOOL
+WINAPI
+RegisterRawInputDevices(
+  _In_reads_(uiNumDevices) PCRAWINPUTDEVICE pRawInputDevices,
+  _In_ UINT uiNumDevices,
+  _In_ UINT cbSize);
 #endif
-BOOL WINAPI RegisterShellHookWindow(HWND);
-UINT WINAPI RegisterWindowMessageA(LPCSTR);
-UINT WINAPI RegisterWindowMessageW(LPCWSTR);
+
+BOOL WINAPI RegisterShellHookWindow(_In_ HWND);
+UINT WINAPI RegisterWindowMessageA(_In_ LPCSTR);
+UINT WINAPI RegisterWindowMessageW(_In_ LPCWSTR);
 BOOL WINAPI ReleaseCapture(void);
-int WINAPI ReleaseDC(HWND,HDC);
-BOOL WINAPI RemoveMenu(HMENU,UINT,UINT);
-HANDLE WINAPI RemovePropA(HWND,LPCSTR);
-HANDLE WINAPI RemovePropW(HWND,LPCWSTR);
-BOOL WINAPI ReplyMessage(LRESULT);
-BOOL WINAPI ScreenToClient(HWND,LPPOINT);
+int WINAPI ReleaseDC(_In_opt_ HWND, _In_ HDC);
+BOOL WINAPI RemoveMenu(_In_ HMENU, _In_ UINT, _In_ UINT);
+HANDLE WINAPI RemovePropA(_In_ HWND, _In_ LPCSTR);
+HANDLE WINAPI RemovePropW(_In_ HWND, _In_ LPCWSTR);
+BOOL WINAPI ReplyMessage(_In_ LRESULT);
+BOOL WINAPI ScreenToClient(_In_ HWND, _Inout_ LPPOINT);
 VOID WINAPI ScrollChildren(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI ScrollDC(HDC,int,int,LPCRECT,LPCRECT,HRGN,LPRECT);
-BOOL WINAPI ScrollWindow(HWND,int,int,LPCRECT,LPCRECT);
-int WINAPI ScrollWindowEx(HWND,int,int,LPCRECT,LPCRECT,HRGN,LPRECT,UINT);
-LRESULT WINAPI SendDlgItemMessageA(HWND,int,UINT,WPARAM,LPARAM);
-LRESULT WINAPI SendDlgItemMessageW(HWND,int,UINT,WPARAM,LPARAM);
+BOOL WINAPI ScrollDC(_In_ HDC, _In_ int, _In_ int, _In_opt_ LPCRECT, _In_opt_ LPCRECT, _In_opt_ HRGN, _Out_opt_ LPRECT);
+BOOL WINAPI ScrollWindow(_In_ HWND, _In_ int, _In_ int, _In_opt_ LPCRECT, _In_opt_ LPCRECT);
+int WINAPI ScrollWindowEx(_In_ HWND, _In_ int, _In_ int, _In_opt_ LPCRECT, _In_opt_ LPCRECT, _In_opt_ HRGN, _Out_opt_ LPRECT, _In_ UINT);
+LRESULT WINAPI SendDlgItemMessageA(_In_ HWND, _In_ int, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+LRESULT WINAPI SendDlgItemMessageW(_In_ HWND, _In_ int, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+
 #if (_WIN32_WINNT >= 0x0403)
-UINT WINAPI SendInput(UINT,LPINPUT,int);
+UINT
+WINAPI
+SendInput(
+  _In_ UINT cInputs,
+  _In_reads_(cInputs) LPINPUT pInputs,
+  _In_ int cbSize);
 #endif
-LRESULT WINAPI SendMessageA(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI SendMessageCallbackA(HWND,UINT,WPARAM,LPARAM,SENDASYNCPROC,ULONG_PTR);
-BOOL WINAPI SendMessageCallbackW(HWND,UINT,WPARAM,LPARAM,SENDASYNCPROC,ULONG_PTR);
-LRESULT WINAPI SendMessageTimeoutA(HWND,UINT,WPARAM,LPARAM,UINT,UINT,PDWORD_PTR);
-LRESULT WINAPI SendMessageTimeoutW(HWND,UINT,WPARAM,LPARAM,UINT,UINT,PDWORD_PTR);
-LRESULT WINAPI SendMessageW(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI SendNotifyMessageA(HWND,UINT,WPARAM,LPARAM);
-BOOL WINAPI SendNotifyMessageW(HWND,UINT,WPARAM,LPARAM);
-HWND WINAPI SetActiveWindow(HWND);
-HWND WINAPI SetCapture(HWND hWnd);
-BOOL WINAPI SetCaretBlinkTime(UINT);
-BOOL WINAPI SetCaretPos(int,int);
-DWORD WINAPI SetClassLongA(HWND,int,LONG);
-DWORD WINAPI SetClassLongW(HWND,int,LONG);
+
+LRESULT WINAPI SendMessageA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI SendMessageCallbackA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM, _In_ SENDASYNCPROC, _In_ ULONG_PTR);
+BOOL WINAPI SendMessageCallbackW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM, _In_ SENDASYNCPROC, _In_ ULONG_PTR);
+LRESULT WINAPI SendMessageTimeoutA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM, _In_ UINT, _In_ UINT, _Out_opt_ PDWORD_PTR);
+LRESULT WINAPI SendMessageTimeoutW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM, _In_ UINT, _In_ UINT, _Out_opt_ PDWORD_PTR);
+LRESULT WINAPI SendMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI SendNotifyMessageA(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+BOOL WINAPI SendNotifyMessageW(_In_ HWND, _In_ UINT, _In_ WPARAM, _In_ LPARAM);
+HWND WINAPI SetActiveWindow(_In_ HWND);
+HWND WINAPI SetCapture(_In_ HWND hWnd);
+BOOL WINAPI SetCaretBlinkTime(_In_ UINT);
+BOOL WINAPI SetCaretPos(_In_ int, _In_ int);
+DWORD WINAPI SetClassLongA(_In_ HWND, _In_ int, _In_ LONG);
+DWORD WINAPI SetClassLongW(_In_ HWND, _In_ int, _In_ LONG);
 #ifdef _WIN64
-ULONG_PTR WINAPI SetClassLongPtrA(HWND,INT,LONG_PTR);
-ULONG_PTR WINAPI SetClassLongPtrW(HWND,INT,LONG_PTR);
+ULONG_PTR WINAPI SetClassLongPtrA(_In_ HWND, _In_ INT, _In_ LONG_PTR);
+ULONG_PTR WINAPI SetClassLongPtrW(_In_ HWND, _In_ INT, _In_ LONG_PTR);
 #else
 #define SetClassLongPtrA SetClassLongA
 #define SetClassLongPtrW SetClassLongW
 #endif
-WORD WINAPI SetClassWord(HWND,int,WORD);
-HANDLE WINAPI SetClipboardData(UINT,HANDLE);
-HWND WINAPI SetClipboardViewer(HWND);
-HCURSOR WINAPI SetCursor(HCURSOR);
-BOOL WINAPI SetCursorPos(int,int);
-VOID WINAPI SetDebugErrorLevel(DWORD);
+WORD WINAPI SetClassWord(_In_ HWND, _In_ int, _In_ WORD);
+HANDLE WINAPI SetClipboardData(_In_ UINT, _In_opt_ HANDLE);
+HWND WINAPI SetClipboardViewer(_In_ HWND);
+HCURSOR WINAPI SetCursor(_In_opt_ HCURSOR);
+BOOL WINAPI SetCursorPos(_In_ int, _In_ int);
+VOID WINAPI SetDebugErrorLevel(_In_ DWORD);
 BOOL WINAPI SetDeskWallPaper(LPCSTR);
-BOOL WINAPI SetDlgItemInt(HWND,int,UINT,BOOL);
-BOOL WINAPI SetDlgItemTextA(HWND,int,LPCSTR);
-BOOL WINAPI SetDlgItemTextW(HWND,int,LPCWSTR);
-BOOL WINAPI SetDoubleClickTime(UINT);
-HWND WINAPI SetFocus(HWND);
-BOOL WINAPI SetForegroundWindow(HWND);
-BOOL WINAPI SetKeyboardState(PBYTE);
-BOOL WINAPI SetMenu(HWND,HMENU);
-BOOL WINAPI SetMenuContextHelpId(HMENU,DWORD);
-BOOL WINAPI SetMenuDefaultItem(HMENU,UINT,UINT);
-BOOL WINAPI SetMenuInfo(HMENU,LPCMENUINFO);
-BOOL WINAPI SetMenuItemBitmaps(HMENU,UINT,UINT,HBITMAP,HBITMAP);
-BOOL WINAPI SetMenuItemInfoA(HMENU,UINT,BOOL,LPCMENUITEMINFOA);
-BOOL WINAPI SetMenuItemInfoW( HMENU,UINT,BOOL,LPCMENUITEMINFOW);
-LPARAM WINAPI SetMessageExtraInfo(LPARAM);
-BOOL WINAPI SetMessageQueue(int);
-HWND WINAPI SetParent(HWND,HWND);
+BOOL WINAPI SetDlgItemInt(_In_ HWND, _In_ int, _In_ UINT, _In_ BOOL);
+BOOL WINAPI SetDlgItemTextA(_In_ HWND, _In_ int, _In_ LPCSTR);
+BOOL WINAPI SetDlgItemTextW(_In_ HWND, _In_ int, _In_ LPCWSTR);
+BOOL WINAPI SetDoubleClickTime(_In_ UINT);
+HWND WINAPI SetFocus(_In_opt_ HWND);
+BOOL WINAPI SetForegroundWindow(_In_ HWND);
+BOOL WINAPI SetKeyboardState(_In_reads_(256) LPBYTE);
+BOOL WINAPI SetMenu(_In_ HWND, _In_opt_ HMENU);
+BOOL WINAPI SetMenuContextHelpId(_In_ HMENU, _In_ DWORD);
+BOOL WINAPI SetMenuDefaultItem(_In_ HMENU, _In_ UINT, _In_ UINT);
+BOOL WINAPI SetMenuInfo(_In_ HMENU, _In_ LPCMENUINFO);
+BOOL WINAPI SetMenuItemBitmaps(_In_ HMENU, _In_ UINT, _In_ UINT, _In_opt_ HBITMAP, _In_opt_ HBITMAP);
+BOOL WINAPI SetMenuItemInfoA(_In_ HMENU, _In_ UINT, _In_ BOOL, _In_ LPCMENUITEMINFOA);
+BOOL WINAPI SetMenuItemInfoW(_In_ HMENU, _In_ UINT, _In_ BOOL, _In_ LPCMENUITEMINFOW);
+LPARAM WINAPI SetMessageExtraInfo(_In_ LPARAM);
+BOOL WINAPI SetMessageQueue(_In_ int);
+HWND WINAPI SetParent(_In_ HWND, _In_opt_ HWND);
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI SetProcessDefaultLayout(DWORD);
+BOOL WINAPI SetProcessDefaultLayout(_In_ DWORD);
 #endif /* (_WIN32_WINNT >= 0x0500) */
-BOOL WINAPI SetProcessWindowStation(HWINSTA);
-BOOL WINAPI SetPropA(HWND,LPCSTR,HANDLE);
-BOOL WINAPI SetPropW(HWND,LPCWSTR,HANDLE);
-BOOL WINAPI SetRect(LPRECT,int,int,int,int);
-BOOL WINAPI SetRectEmpty(LPRECT);
-int WINAPI SetScrollInfo(HWND,int,LPCSCROLLINFO,BOOL);
-int WINAPI SetScrollPos(HWND,int,int,BOOL);
-BOOL WINAPI SetScrollRange(HWND,int,int,int,BOOL);
-BOOL WINAPI SetSysColors(int,const INT *,const COLORREF *);
+BOOL WINAPI SetProcessWindowStation(_In_ HWINSTA);
+BOOL WINAPI SetPropA(_In_ HWND, _In_ LPCSTR, _In_opt_ HANDLE);
+BOOL WINAPI SetPropW(_In_ HWND, _In_ LPCWSTR, _In_opt_ HANDLE);
+BOOL WINAPI SetRect(_Out_ LPRECT, _In_ int, _In_ int, _In_ int, _In_ int);
+BOOL WINAPI SetRectEmpty(_Out_ LPRECT);
+int WINAPI SetScrollInfo(_In_ HWND, _In_ int, _In_ LPCSCROLLINFO, _In_ BOOL);
+int WINAPI SetScrollPos(_In_ HWND, _In_ int, _In_ int, _In_ BOOL);
+BOOL WINAPI SetScrollRange(_In_ HWND, _In_ int, _In_ int, _In_ int, _In_ BOOL);
+
+BOOL
+WINAPI
+SetSysColors(
+  _In_ int cElements,
+  _In_reads_(cElements) CONST INT * lpaElements,
+  _In_reads_(cElements) CONST COLORREF * lpaRgbValues);
+
 DWORD_PTR WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD_PTR);
 #define SetSysModalWindow(h) (NULL)
-BOOL WINAPI SetSystemCursor(HCURSOR,DWORD);
+BOOL WINAPI SetSystemCursor(_In_ HCURSOR, _In_ DWORD);
 BOOL WINAPI SetSystemMenu(HWND,HMENU);
-BOOL WINAPI SetThreadDesktop(HDESK);
-UINT_PTR WINAPI SetTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+BOOL WINAPI SetThreadDesktop(_In_ HDESK);
+UINT_PTR WINAPI SetTimer(_In_opt_ HWND, _In_ UINT_PTR, _In_ UINT, _In_opt_ TIMERPROC);
 UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
-BOOL WINAPI SetUserObjectInformationA(HANDLE,int,PVOID,DWORD);
-BOOL WINAPI SetUserObjectInformationW(HANDLE,int,PVOID,DWORD);
-BOOL WINAPI SetUserObjectSecurity(HANDLE,PSECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
+
+BOOL
+WINAPI
+SetUserObjectInformationA(
+  _In_ HANDLE hObj,
+  _In_ int nIndex,
+  _In_reads_bytes_(nLength) PVOID pvInfo,
+  _In_ DWORD nLength);
+
+BOOL
+WINAPI
+SetUserObjectInformationW(
+  _In_ HANDLE hObj,
+  _In_ int nIndex,
+  _In_reads_bytes_(nLength) PVOID pvInfo,
+  _In_ DWORD nLength);
+
+BOOL WINAPI SetUserObjectSecurity(_In_ HANDLE, _In_ PSECURITY_INFORMATION, _In_ PSECURITY_DESCRIPTOR);
 #if (WINVER >= 0x0500)
-HWINEVENTHOOK WINAPI SetWinEventHook(UINT,UINT,HMODULE,WINEVENTPROC,DWORD,DWORD,UINT);
+HWINEVENTHOOK WINAPI SetWinEventHook(_In_ UINT, _In_ UINT, _In_opt_ HMODULE, _In_ WINEVENTPROC, _In_ DWORD, _In_ DWORD, _In_ UINT);
 #endif
-BOOL WINAPI SetWindowContextHelpId(HWND,DWORD);
-LONG WINAPI SetWindowLongA(HWND,int,LONG);
-LONG WINAPI SetWindowLongW(HWND,int,LONG);
+BOOL WINAPI SetWindowContextHelpId(_In_ HWND, _In_ DWORD);
+LONG WINAPI SetWindowLongA(_In_ HWND, _In_ int, _In_ LONG);
+LONG WINAPI SetWindowLongW(_In_ HWND, _In_ int, _In_ LONG);
 #ifdef _WIN64
-LONG_PTR WINAPI SetWindowLongPtrA(HWND,int,LONG_PTR);
-LONG_PTR WINAPI SetWindowLongPtrW(HWND,int,LONG_PTR);
+LONG_PTR WINAPI SetWindowLongPtrA(_In_ HWND, _In_ int, _In_ LONG_PTR);
+LONG_PTR WINAPI SetWindowLongPtrW(_In_ HWND, _In_ int, _In_ LONG_PTR);
 #else
 #define SetWindowLongPtrA SetWindowLongA
 #define SetWindowLongPtrW SetWindowLongW
 #endif
-BOOL WINAPI SetWindowPlacement(HWND hWnd,const WINDOWPLACEMENT*);
-BOOL WINAPI SetWindowPos(HWND,HWND,int,int,int,int,UINT);
-int WINAPI SetWindowRgn(HWND,HRGN,BOOL);
-HHOOK WINAPI SetWindowsHookA(int,HOOKPROC);
-HHOOK WINAPI SetWindowsHookExA(int,HOOKPROC,HINSTANCE,DWORD);
-HHOOK WINAPI SetWindowsHookExW(int,HOOKPROC,HINSTANCE,DWORD);
-HHOOK WINAPI SetWindowsHookW(int,HOOKPROC);
-BOOL WINAPI SetWindowTextA(HWND,LPCSTR);
-BOOL WINAPI SetWindowTextW(HWND,LPCWSTR);
-WORD WINAPI SetWindowWord(HWND,int,WORD);
-BOOL WINAPI ShowCaret(HWND);
-int WINAPI ShowCursor(BOOL);
-BOOL WINAPI ShowOwnedPopups(HWND,BOOL);
-BOOL WINAPI ShowScrollBar(HWND,int,BOOL);
-BOOL WINAPI ShowWindow(HWND,int);
-BOOL WINAPI ShowWindowAsync(HWND,int);
-BOOL WINAPI SubtractRect(LPRECT,LPCRECT,LPCRECT);
-BOOL WINAPI SwapMouseButton(BOOL);
-BOOL WINAPI SwitchDesktop(HDESK);
+BOOL WINAPI SetWindowPlacement(_In_ HWND hWnd, _In_ const WINDOWPLACEMENT*);
+BOOL WINAPI SetWindowPos(_In_ HWND, _In_opt_ HWND, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
+int WINAPI SetWindowRgn(_In_ HWND, _In_opt_ HRGN, _In_ BOOL);
+HHOOK WINAPI SetWindowsHookA(_In_ int, _In_ HOOKPROC);
+HHOOK WINAPI SetWindowsHookW(_In_ int, _In_ HOOKPROC);
+HHOOK WINAPI SetWindowsHookExA(_In_ int, _In_ HOOKPROC, _In_opt_ HINSTANCE, _In_ DWORD);
+HHOOK WINAPI SetWindowsHookExW(_In_ int, _In_ HOOKPROC, _In_opt_ HINSTANCE, _In_ DWORD);
+BOOL WINAPI SetWindowTextA(_In_ HWND, _In_opt_ LPCSTR);
+BOOL WINAPI SetWindowTextW(_In_ HWND, _In_opt_ LPCWSTR);
+WORD WINAPI SetWindowWord(_In_ HWND, _In_ int, _In_ WORD);
+BOOL WINAPI ShowCaret(_In_opt_ HWND);
+int WINAPI ShowCursor(_In_ BOOL);
+BOOL WINAPI ShowOwnedPopups(_In_ HWND, _In_ BOOL);
+BOOL WINAPI ShowScrollBar(_In_ HWND, _In_ int, _In_ BOOL);
+BOOL WINAPI ShowWindow(_In_ HWND, _In_ int);
+BOOL WINAPI ShowWindowAsync(_In_ HWND, _In_ int);
+BOOL WINAPI SubtractRect(_Out_ LPRECT, _In_ LPCRECT, _In_ LPCRECT);
+BOOL WINAPI SwapMouseButton(_In_ BOOL);
+BOOL WINAPI SwitchDesktop(_In_ HDESK);
 #if(_WIN32_WINNT >= 0x0500)
-VOID WINAPI SwitchToThisWindow(HWND,BOOL);
+VOID WINAPI SwitchToThisWindow(_In_ HWND, _In_ BOOL);
 #endif /* (_WIN32_WINNT >= 0x0500) */
-BOOL WINAPI SystemParametersInfoA(UINT,UINT,PVOID,UINT);
-BOOL WINAPI SystemParametersInfoW(UINT,UINT,PVOID,UINT);
-LONG WINAPI TabbedTextOutA(HDC,int,int,LPCSTR,int,int,CONST INT*,int);
-LONG WINAPI TabbedTextOutW(HDC,int,int,LPCWSTR,int,int,CONST INT*,int);
-WORD WINAPI TileWindows(HWND,UINT,LPCRECT,UINT,const HWND *);
-int WINAPI ToAscii(UINT,UINT,CONST BYTE*,LPWORD,UINT);
-int WINAPI ToAsciiEx(UINT,UINT,CONST BYTE*,LPWORD,UINT,HKL);
-int WINAPI ToUnicode(UINT,UINT,CONST BYTE*,LPWSTR,int,UINT);
-int WINAPI ToUnicodeEx(UINT,UINT,CONST BYTE*,LPWSTR,int,UINT,HKL);
-BOOL WINAPI TrackMouseEvent(LPTRACKMOUSEEVENT);
-BOOL WINAPI TrackPopupMenu(HMENU,UINT,int,int,int,HWND,LPCRECT);
-BOOL WINAPI TrackPopupMenuEx(HMENU,UINT,int,int,HWND,LPTPMPARAMS);
-int WINAPI TranslateAcceleratorA(HWND,HACCEL,LPMSG);
-int WINAPI TranslateAcceleratorW(HWND,HACCEL,LPMSG);
-BOOL WINAPI TranslateMDISysAccel(HWND,LPMSG);
-BOOL WINAPI TranslateMessage(const MSG*);
-BOOL WINAPI UnhookWindowsHook(int,HOOKPROC);
-BOOL WINAPI UnhookWindowsHookEx(HHOOK);
+BOOL WINAPI SystemParametersInfoA(_In_ UINT, _In_ UINT, _Inout_opt_ PVOID, _In_ UINT);
+BOOL WINAPI SystemParametersInfoW(_In_ UINT, _In_ UINT, _Inout_opt_ PVOID, _In_ UINT);
+
+LONG
+WINAPI
+TabbedTextOutA(
+  _In_ HDC hdc,
+  _In_ int x,
+  _In_ int y,
+  _In_reads_(chCount) LPCSTR lpString,
+  _In_ int chCount,
+  _In_ int nTabPositions,
+  _In_reads_opt_(nTabPositions) CONST INT *lpnTabStopPositions,
+  _In_ int nTabOrigin);
+
+LONG
+WINAPI
+TabbedTextOutW(
+  _In_ HDC hdc,
+  _In_ int x,
+  _In_ int y,
+  _In_reads_(chCount) LPCWSTR lpString,
+  _In_ int chCount,
+  _In_ int nTabPositions,
+  _In_reads_opt_(nTabPositions) CONST INT *lpnTabStopPositions,
+  _In_ int nTabOrigin);
+
+WORD
+WINAPI
+TileWindows(
+  _In_opt_ HWND hwndParent,
+  _In_ UINT wHow,
+  _In_opt_ CONST RECT * lpRect,
+  _In_ UINT cKids,
+  _In_reads_opt_(cKids) const HWND FAR *lpKids);
+
+int WINAPI ToAscii(_In_ UINT, _In_ UINT, _In_reads_opt_(256) CONST BYTE*, _Out_ LPWORD, _In_ UINT);
+int WINAPI ToAsciiEx(_In_ UINT, _In_ UINT, _In_reads_opt_(256) CONST BYTE*, _Out_ LPWORD, _In_ UINT, _In_opt_ HKL);
+
+int
+WINAPI
+ToUnicode(
+  _In_ UINT wVirtKey,
+  _In_ UINT wScanCode,
+  _In_reads_bytes_opt_(256) CONST BYTE *lpKeyState,
+  _Out_writes_(cchBuff) LPWSTR pwszBuff,
+  _In_ int cchBuff,
+  _In_ UINT wFlags);
+
+int
+WINAPI
+ToUnicodeEx(
+  _In_ UINT wVirtKey,
+  _In_ UINT wScanCode,
+  _In_reads_bytes_(256) CONST BYTE *lpKeyState,
+  _Out_writes_(cchBuff) LPWSTR pwszBuff,
+  _In_ int cchBuff,
+  _In_ UINT wFlags,
+  _In_opt_ HKL dwhkl);
+
+BOOL WINAPI TrackMouseEvent(_Inout_ LPTRACKMOUSEEVENT);
+BOOL WINAPI TrackPopupMenu(_In_ HMENU, _In_ UINT, _In_ int, _In_ int, _Reserved_ int, _In_ HWND, _Reserved_ LPCRECT);
+BOOL WINAPI TrackPopupMenuEx(_In_ HMENU, _In_ UINT, _In_ int, _In_ int, _In_ HWND, _In_opt_ LPTPMPARAMS);
+int WINAPI TranslateAcceleratorA(_In_ HWND, _In_ HACCEL, _In_ LPMSG);
+int WINAPI TranslateAcceleratorW(_In_ HWND, _In_ HACCEL, _In_ LPMSG);
+BOOL WINAPI TranslateMDISysAccel(_In_ HWND, _In_ LPMSG);
+BOOL WINAPI TranslateMessage(_In_ const MSG*);
+BOOL WINAPI UnhookWindowsHook(_In_ int, _In_ HOOKPROC);
+BOOL WINAPI UnhookWindowsHookEx(_In_ HHOOK);
 #if (WINVER >= 0x0500)
-BOOL WINAPI UnhookWinEvent(HWINEVENTHOOK);
+BOOL WINAPI UnhookWinEvent(_In_ HWINEVENTHOOK);
 #endif
-BOOL WINAPI UnionRect(LPRECT,LPCRECT,LPCRECT);
-BOOL WINAPI UnloadKeyboardLayout(HKL);
-BOOL WINAPI UnregisterClassA(LPCSTR,HINSTANCE);
-BOOL WINAPI UnregisterClassW(LPCWSTR,HINSTANCE);
-BOOL WINAPI UnregisterHotKey(HWND,int);
-BOOL WINAPI UpdateWindow(HWND);
+BOOL WINAPI UnionRect(_Out_ LPRECT, _In_ LPCRECT, _In_ LPCRECT);
+BOOL WINAPI UnloadKeyboardLayout(_In_ HKL);
+BOOL WINAPI UnregisterClassA(_In_ LPCSTR,HINSTANCE);
+BOOL WINAPI UnregisterClassW(_In_ LPCWSTR,HINSTANCE);
+BOOL WINAPI UnregisterHotKey(_In_opt_ HWND, _In_ int);
+BOOL WINAPI UpdateWindow(_In_ HWND);
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI UserHandleGrantAccess(HANDLE,HANDLE,BOOL);
+BOOL WINAPI UserHandleGrantAccess(_In_ HANDLE, _In_ HANDLE, _In_ BOOL);
 #endif
-BOOL WINAPI ValidateRect(HWND,LPCRECT);
-BOOL WINAPI ValidateRgn(HWND,HRGN);
-SHORT WINAPI VkKeyScanA(CHAR);
-SHORT WINAPI VkKeyScanExA(CHAR,HKL);
-SHORT WINAPI VkKeyScanExW(WCHAR,HKL);
-SHORT WINAPI VkKeyScanW(WCHAR);
-DWORD WINAPI WaitForInputIdle(HANDLE,DWORD);
+BOOL WINAPI ValidateRect(_In_opt_ HWND, _In_opt_ LPCRECT);
+BOOL WINAPI ValidateRgn(_In_ HWND, _In_opt_ HRGN);
+SHORT WINAPI VkKeyScanA(_In_ CHAR);
+SHORT WINAPI VkKeyScanExA(_In_ CHAR, _In_ HKL);
+SHORT WINAPI VkKeyScanExW(_In_ WCHAR, _In_ HKL);
+SHORT WINAPI VkKeyScanW(_In_ WCHAR);
+DWORD WINAPI WaitForInputIdle(_In_ HANDLE, _In_ DWORD);
 BOOL WINAPI WaitMessage(void);
-HWND WINAPI WindowFromDC(HDC hDC);
+HWND WINAPI WindowFromDC(_In_ HDC hDC);
 #if (_WIN32_WINNT >= 0x0600)
-HWND WINAPI WindowFromPhysicalPoint(POINT);
+HWND WINAPI WindowFromPhysicalPoint(_In_ POINT);
 #endif
-HWND WINAPI WindowFromPoint(POINT);
+HWND WINAPI WindowFromPoint(_In_ POINT);
 UINT WINAPI WinExec(LPCSTR,UINT);
-BOOL WINAPI WinHelpA(HWND,LPCSTR,UINT,ULONG_PTR);
-BOOL WINAPI WinHelpW(HWND,LPCWSTR,UINT,ULONG_PTR);
-int WINAPIV wsprintfA(LPSTR,LPCSTR,...);
-int WINAPIV wsprintfW(LPWSTR,LPCWSTR,...);
-int WINAPI wvsprintfA(LPSTR,LPCSTR,va_list arglist);
-int WINAPI wvsprintfW(LPWSTR,LPCWSTR,va_list arglist);
+BOOL WINAPI WinHelpA(_In_opt_ HWND, _In_opt_ LPCSTR, _In_ UINT, _In_ ULONG_PTR);
+BOOL WINAPI WinHelpW(_In_opt_ HWND, _In_opt_ LPCWSTR, _In_ UINT, _In_ ULONG_PTR);
+
+int
+WINAPIV
+wsprintfA(
+  _Out_ LPSTR,
+  _In_ _Printf_format_string_ LPCSTR,
+  ...);
+
+int
+WINAPIV
+wsprintfW(
+  _Out_ LPWSTR,
+  _In_ _Printf_format_string_ LPCWSTR,
+  ...);
+
+int
+WINAPI
+wvsprintfA(
+  _Out_ LPSTR,
+  _In_ _Printf_format_string_ LPCSTR,
+  _In_ va_list arglist);
+
+int
+WINAPI
+wvsprintfW(
+  _Out_ LPWSTR,
+  _In_ _Printf_format_string_ LPCWSTR,
+  _In_ va_list arglist);
+
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0490)
-BOOL WINAPI AllowSetForegroundWindow(DWORD);
-BOOL WINAPI LockSetForegroundWindow(UINT);
+BOOL WINAPI AllowSetForegroundWindow(_In_ DWORD);
+BOOL WINAPI LockSetForegroundWindow(_In_ UINT);
 #endif
 #if (_WIN32_WINNT >= 0x0500)
-BOOL WINAPI SetLayeredWindowAttributes(HWND,COLORREF,BYTE,DWORD);
+
+BOOL WINAPI SetLayeredWindowAttributes(_In_ HWND, _In_ COLORREF, _In_ BYTE, _In_ DWORD);
+
 #if defined(_WINGDI_) && !defined(NOGDI)
-BOOL WINAPI UpdateLayeredWindow(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
-typedef struct tagUPDATELAYEREDWINDOWINFO
-{
-    DWORD                cbSize;
-    HDC                  hdcDst;
-    POINT CONST*         pptDst;
-    SIZE CONST*          psize;
-    HDC                  hdcSrc;
-    POINT CONST*         pptSrc;
-    COLORREF             crKey;
-    BLENDFUNCTION CONST* pblend;
-    DWORD                dwFlags;
-    RECT CONST*          prcDirty;
+
+BOOL
+WINAPI
+UpdateLayeredWindow(
+  _In_ HWND hWnd,
+  _In_opt_ HDC hdcDst,
+  _In_opt_ POINT* pptDst,
+  _In_opt_ SIZE* psize,
+  _In_opt_ HDC hdcSrc,
+  _In_opt_ POINT* pptSrc,
+  _In_ COLORREF crKey,
+  _In_opt_ BLENDFUNCTION* pblend,
+  _In_ DWORD dwFlags);
+
+typedef struct tagUPDATELAYEREDWINDOWINFO {
+  DWORD cbSize;
+  HDC hdcDst;
+  POINT CONST* pptDst;
+  SIZE CONST* psize;
+  HDC hdcSrc;
+  POINT CONST* pptSrc;
+  COLORREF crKey;
+  BLENDFUNCTION CONST* pblend;
+  DWORD dwFlags;
+  RECT CONST* prcDirty;
 } UPDATELAYEREDWINDOWINFO, *PUPDATELAYEREDWINDOWINFO;
-BOOL WINAPI UpdateLayeredWindowIndirect(HWND,UPDATELAYEREDWINDOWINFO CONST*);
-#endif
-#endif
+
+BOOL WINAPI UpdateLayeredWindowIndirect(_In_ HWND, _In_ const UPDATELAYEREDWINDOWINFO*);
+
+#endif /* defined(_WINGDI_) && !defined(NOGDI) */
+
+#endif /* (_WIN32_WINNT >= 0x0500) */
+
 #if (_WIN32_WINNT >= 0x0501)
-BOOL WINAPI GetLayeredWindowAttributes(HWND,COLORREF*,BYTE*,DWORD*);
+BOOL WINAPI GetLayeredWindowAttributes(_In_ HWND, _Out_opt_ COLORREF*, _Out_opt_ BYTE*, _Out_opt_ DWORD*);
 #endif
 #ifdef UNICODE
 #define EDITWORDBREAKPROC EDITWORDBREAKPROCW

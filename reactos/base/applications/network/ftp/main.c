@@ -250,7 +250,7 @@ void intr(void)
 
 void lostpeer(void)
 {
-   extern int cout;
+   extern SOCKET cout;
    extern int data;
 
    if (connected) {

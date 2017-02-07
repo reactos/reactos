@@ -21,10 +21,14 @@
 
 #include <stdarg.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
+#include "objbase.h"
+#include "rpcproxy.h"
 #include "commdlg.h"
 #include "cderr.h"
 #include "wine/debug.h"
@@ -34,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 #include "cdlg.h"
 
 
-HINSTANCE	COMDLG32_hInstance = 0;
+DECLSPEC_HIDDEN HINSTANCE	COMDLG32_hInstance = 0;
 
 static DWORD COMDLG32_TlsIndex = TLS_OUT_OF_INDEXES;
 
@@ -42,17 +46,18 @@ static HINSTANCE	SHELL32_hInstance;
 static HINSTANCE	SHFOLDER_hInstance;
 
 /* ITEMIDLIST */
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST);
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILCombine)(LPCITEMIDLIST,LPCITEMIDLIST);
-LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILGetNext)(LPITEMIDLIST);
-BOOL (WINAPI *COMDLG32_PIDL_ILRemoveLastID)(LPCITEMIDLIST);
-BOOL (WINAPI *COMDLG32_PIDL_ILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
-UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST);
+LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST) DECLSPEC_HIDDEN;
+LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILCombine)(LPCITEMIDLIST,LPCITEMIDLIST) DECLSPEC_HIDDEN;
+LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILGetNext)(LPITEMIDLIST) DECLSPEC_HIDDEN;
+BOOL (WINAPI *COMDLG32_PIDL_ILRemoveLastID)(LPCITEMIDLIST) DECLSPEC_HIDDEN;
+BOOL (WINAPI *COMDLG32_PIDL_ILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST) DECLSPEC_HIDDEN;
+UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 
 /* SHELL */
-LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD);
-DWORD (WINAPI *COMDLG32_SHFree)(LPVOID);
-BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR);
+LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD) DECLSPEC_HIDDEN;
+DWORD (WINAPI *COMDLG32_SHFree)(LPVOID) DECLSPEC_HIDDEN;
+BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR) DECLSPEC_HIDDEN;
+LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID) DECLSPEC_HIDDEN;
 
 /***********************************************************************
  *	DllMain  (COMDLG32.init)
@@ -92,7 +97,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 		GPA(COMDLG32_PIDL_ILGetSize, SHELL32_hInstance, (LPCSTR)152L);
 
 		/* SHELL */
-
+		GPA(COMDLG32_SHSimpleIDListFromPathAW, SHELL32_hInstance, (LPCSTR)162);
 		GPA(COMDLG32_SHAlloc, SHELL32_hInstance, (LPCSTR)196L);
 		GPA(COMDLG32_SHFree, SHELL32_hInstance, (LPCSTR)195L);
 
@@ -167,3 +172,127 @@ DWORD WINAPI CommDlgExtendedError(void)
 	else
 	  return 0; /* we never set an error, so there isn't one */
 }
+
+#if 0 // Win 7
+
+/*************************************************************************
+ * Implement the CommDlg32 class factory
+ *
+ * (Taken from shdocvw/factory.c; based on implementation in
+ *  ddraw/main.c)
+ */
+typedef struct
+{
+    IClassFactory IClassFactory_iface;
+    HRESULT (*cf)(IUnknown*, REFIID, void**);
+} IClassFactoryImpl;
+
+static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
+}
+
+/*************************************************************************
+ * CDLGCF_QueryInterface (IUnknown)
+ */
+static HRESULT WINAPI CDLGCF_QueryInterface(IClassFactory* iface,
+                                            REFIID riid, void **ppobj)
+{
+    TRACE("%p (%s %p)\n", iface, debugstr_guid(riid), ppobj);
+
+    if(!ppobj)
+        return E_POINTER;
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IClassFactory, riid))
+    {
+        *ppobj = iface;
+        IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    WARN("Interface not supported.\n");
+
+    *ppobj = NULL;
+    return E_NOINTERFACE;
+}
+
+/*************************************************************************
+ * CDLGCF_AddRef (IUnknown)
+ */
+static ULONG WINAPI CDLGCF_AddRef(IClassFactory *iface)
+{
+    return 2; /* non-heap based object */
+}
+
+/*************************************************************************
+ * CDLGCF_Release (IUnknown)
+ */
+static ULONG WINAPI CDLGCF_Release(IClassFactory *iface)
+{
+    return 1; /* non-heap based object */
+}
+
+/*************************************************************************
+ * CDLGCF_CreateInstance (IClassFactory)
+ */
+static HRESULT WINAPI CDLGCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
+                                            REFIID riid, void **ppobj)
+{
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    return This->cf(pOuter, riid, ppobj);
+}
+
+/*************************************************************************
+ * CDLGCF_LockServer (IClassFactory)
+ */
+static HRESULT WINAPI CDLGCF_LockServer(IClassFactory *iface, BOOL dolock)
+{
+    TRACE("%p (%d)\n", iface, dolock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl CDLGCF_Vtbl =
+{
+    CDLGCF_QueryInterface,
+    CDLGCF_AddRef,
+    CDLGCF_Release,
+    CDLGCF_CreateInstance,
+    CDLGCF_LockServer
+};
+
+/*************************************************************************
+ *              DllGetClassObject (COMMDLG32.@)
+ */
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    static IClassFactoryImpl FileOpenDlgClassFactory = {{&CDLGCF_Vtbl}, FileOpenDialog_Constructor};
+    static IClassFactoryImpl FileSaveDlgClassFactory = {{&CDLGCF_Vtbl}, FileSaveDialog_Constructor};
+
+    TRACE("%s, %s, %p\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+
+    if(IsEqualGUID(&CLSID_FileOpenDialog, rclsid))
+        return IClassFactory_QueryInterface(&FileOpenDlgClassFactory.IClassFactory_iface, riid, ppv);
+
+    if(IsEqualGUID(&CLSID_FileSaveDialog, rclsid))
+        return IClassFactory_QueryInterface(&FileSaveDlgClassFactory.IClassFactory_iface, riid, ppv);
+
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
+
+/***********************************************************************
+ *          DllRegisterServer (COMMDLG32.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return E_FAIL; // FIXME: __wine_register_resources(COMDLG32_hInstance);
+}
+
+/***********************************************************************
+ *          DllUnregisterServer (COMMDLG32.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return E_FAIL; // FIXME: __wine_unregister_resources(COMDLG32_hInstance);
+}
+
+#endif // Win 7

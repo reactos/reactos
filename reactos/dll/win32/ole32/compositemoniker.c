@@ -41,51 +41,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /* CompositeMoniker data structure */
 typedef struct CompositeMonikerImpl{
-
-    const IMonikerVtbl*  lpvtbl1;  /* VTable relative to the IMoniker interface.*/
-
-    /* The ROT (RunningObjectTable implementation) uses the IROTData
-     * interface to test whether two monikers are equal. That's why IROTData
-     * interface is implemented by monikers.
-     */
-    const IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
-
-    const IMarshalVtbl*  lpvtblMarshal;  /* VTable relative to the IMarshal interface.*/
-
-    LONG ref; /* reference counter for this object */
-
+    IMoniker IMoniker_iface;
+    IROTData IROTData_iface;
+    IMarshal IMarshal_iface;
+    LONG ref;
     IMoniker** tabMoniker; /* dynamic table containing all components (monikers) of this composite moniker */
-
     ULONG    tabSize;      /* size of tabMoniker */
-
-    ULONG    tabLastIndex;  /* first free index in tabMoniker */
-
+    ULONG    tabLastIndex; /* first free index in tabMoniker */
 } CompositeMonikerImpl;
 
+static inline CompositeMonikerImpl *impl_from_IMoniker(IMoniker *iface)
+{
+    return CONTAINING_RECORD(iface, CompositeMonikerImpl, IMoniker_iface);
+}
+
+static inline CompositeMonikerImpl *impl_from_IROTData(IROTData *iface)
+{
+    return CONTAINING_RECORD(iface, CompositeMonikerImpl, IROTData_iface);
+}
+
+static inline CompositeMonikerImpl *impl_from_IMarshal(IMarshal *iface)
+{
+    return CONTAINING_RECORD(iface, CompositeMonikerImpl, IMarshal_iface);
+}
 
 /* EnumMoniker data structure */
 typedef struct EnumMonikerImpl{
-
-    const IEnumMonikerVtbl *lpVtbl;  /* VTable relative to the IEnumMoniker interface.*/
-
-    LONG ref; /* reference counter for this object */
-
+    IEnumMoniker IEnumMoniker_iface;
+    LONG ref;
     IMoniker** tabMoniker; /* dynamic table containing the enumerated monikers */
-
     ULONG      tabSize; /* size of tabMoniker */
-
     ULONG      currentPos;  /* index pointer on the current moniker */
-
 } EnumMonikerImpl;
 
-static inline IMoniker *impl_from_IROTData( IROTData *iface )
+static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
 {
-    return (IMoniker *)((char*)iface - FIELD_OFFSET(CompositeMonikerImpl, lpvtbl2));
-}
-
-static inline IMoniker *impl_from_IMarshal( IMarshal *iface )
-{
-    return (IMoniker *)((char*)iface - FIELD_OFFSET(CompositeMonikerImpl, lpvtblMarshal));
+    return CONTAINING_RECORD(iface, EnumMonikerImpl, IEnumMoniker_iface);
 }
 
 static HRESULT EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker,ULONG tabSize,ULONG currentPos,BOOL leftToRigth,IEnumMoniker ** ppmk);
@@ -96,7 +87,7 @@ static HRESULT EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker,ULONG tab
 static HRESULT WINAPI
 CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -115,9 +106,9 @@ CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject
        )
         *ppvObject = iface;
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = &This->lpvtbl2;
+        *ppvObject = &This->IROTData_iface;
     else if (IsEqualIID(&IID_IMarshal, riid))
-        *ppvObject = &This->lpvtblMarshal;
+        *ppvObject = &This->IMarshal_iface;
 
     /* Check that we obtained an interface.*/
     if ((*ppvObject)==0)
@@ -135,7 +126,7 @@ CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject
 static ULONG WINAPI
 CompositeMonikerImpl_AddRef(IMoniker* iface)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -158,7 +149,7 @@ static void CompositeMonikerImpl_ReleaseMonikersInTable(CompositeMonikerImpl *Th
 static ULONG WINAPI
 CompositeMonikerImpl_Release(IMoniker* iface)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -214,11 +205,10 @@ CompositeMonikerImpl_IsDirty(IMoniker* iface)
 static HRESULT WINAPI
 CompositeMonikerImpl_Load(IMoniker* iface,IStream* pStm)
 {
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
     HRESULT res;
     DWORD moniker_count;
     DWORD i;
-
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
 
     TRACE("(%p,%p)\n",iface,pStm);
 
@@ -262,7 +252,7 @@ CompositeMonikerImpl_Load(IMoniker* iface,IStream* pStm)
 static HRESULT WINAPI
 CompositeMonikerImpl_Save(IMoniker* iface,IStream* pStm,BOOL fClearDirty)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
     HRESULT res;
     IEnumMoniker *enumMk;
     IMoniker *pmk;
@@ -532,7 +522,7 @@ CompositeMonikerImpl_ComposeWith(IMoniker* iface, IMoniker* pmkRight,
 static HRESULT WINAPI
 CompositeMonikerImpl_Enum(IMoniker* iface,BOOL fForward, IEnumMoniker** ppenumMoniker)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)iface;
+    CompositeMonikerImpl *This = impl_from_IMoniker(iface);
 
     TRACE("(%p,%d,%p)\n",iface,fForward,ppenumMoniker);
 
@@ -841,7 +831,7 @@ CompositeMonikerImpl_CommonPrefixWith(IMoniker* iface, IMoniker* pmkOther,
 
     IMoniker_IsSystemMoniker(pmkOther,&mkSys);
 
-    if((mkSys==MKSYS_GENERICCOMPOSITE)){
+    if(mkSys==MKSYS_GENERICCOMPOSITE){
 
         IMoniker_Enum(iface,TRUE,&enumMoniker1);
         IMoniker_Enum(pmkOther,TRUE,&enumMoniker2);
@@ -1196,12 +1186,11 @@ static HRESULT WINAPI
 CompositeMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,
                VOID** ppvObject)
 {
-
-    IMoniker *This = impl_from_IROTData(iface);
+    CompositeMonikerImpl *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
 
-    return CompositeMonikerImpl_QueryInterface(This, riid, ppvObject);
+    return CompositeMonikerImpl_QueryInterface(&This->IMoniker_iface, riid, ppvObject);
 }
 
 /***********************************************************************
@@ -1210,11 +1199,11 @@ CompositeMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,
 static ULONG WINAPI
 CompositeMonikerROTDataImpl_AddRef(IROTData *iface)
 {
-    IMoniker *This = impl_from_IROTData(iface);
+    CompositeMonikerImpl *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
-    return IMoniker_AddRef(This);
+    return IMoniker_AddRef(&This->IMoniker_iface);
 }
 
 /***********************************************************************
@@ -1222,11 +1211,11 @@ CompositeMonikerROTDataImpl_AddRef(IROTData *iface)
  */
 static ULONG WINAPI CompositeMonikerROTDataImpl_Release(IROTData* iface)
 {
-    IMoniker *This = impl_from_IROTData(iface);
+    CompositeMonikerImpl *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
-    return IMoniker_Release(This);
+    return IMoniker_Release(&This->IMoniker_iface);
 }
 
 /******************************************************************************
@@ -1236,7 +1225,7 @@ static HRESULT WINAPI
 CompositeMonikerROTDataImpl_GetComparisonData(IROTData* iface,
                BYTE* pbData, ULONG cbMax, ULONG* pcbData)
 {
-    IMoniker *This = impl_from_IROTData(iface);
+    CompositeMonikerImpl *This = impl_from_IROTData(iface);
     IEnumMoniker *pEnumMk;
     IMoniker *pmk;
     HRESULT hr;
@@ -1245,7 +1234,7 @@ CompositeMonikerROTDataImpl_GetComparisonData(IROTData* iface,
 
     *pcbData = sizeof(CLSID);
 
-    hr = IMoniker_Enum(This, TRUE, &pEnumMk);
+    hr = IMoniker_Enum(&This->IMoniker_iface, TRUE, &pEnumMk);
     if (FAILED(hr)) return hr;
 
     while(IEnumMoniker_Next(pEnumMk, 1, &pmk, NULL) == S_OK)
@@ -1323,48 +1312,48 @@ CompositeMonikerROTDataImpl_GetComparisonData(IROTData* iface,
 
 static HRESULT WINAPI CompositeMonikerMarshalImpl_QueryInterface(IMarshal *iface, REFIID riid, LPVOID *ppv)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
 
     TRACE("(%p,%s,%p)\n",iface,debugstr_guid(riid),ppv);
 
-    return CompositeMonikerImpl_QueryInterface(This, riid, ppv);
+    return CompositeMonikerImpl_QueryInterface(&This->IMoniker_iface, riid, ppv);
 }
 
 static ULONG WINAPI CompositeMonikerMarshalImpl_AddRef(IMarshal *iface)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
 
     TRACE("(%p)\n",iface);
 
-    return CompositeMonikerImpl_AddRef(This);
+    return CompositeMonikerImpl_AddRef(&This->IMoniker_iface);
 }
 
 static ULONG WINAPI CompositeMonikerMarshalImpl_Release(IMarshal *iface)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
 
     TRACE("(%p)\n",iface);
 
-    return CompositeMonikerImpl_Release(This);
+    return CompositeMonikerImpl_Release(&This->IMoniker_iface);
 }
 
 static HRESULT WINAPI CompositeMonikerMarshalImpl_GetUnmarshalClass(
-  LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+  IMarshal *iface, REFIID riid, void *pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, CLSID* pCid)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
 
     TRACE("(%s, %p, %x, %p, %x, %p)\n", debugstr_guid(riid), pv,
         dwDestContext, pvDestContext, mshlflags, pCid);
 
-    return IMoniker_GetClassID(This, pCid);
+    return IMoniker_GetClassID(&This->IMoniker_iface, pCid);
 }
 
 static HRESULT WINAPI CompositeMonikerMarshalImpl_GetMarshalSizeMax(
-  LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
+  IMarshal *iface, REFIID riid, void *pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, DWORD* pSize)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
     IEnumMoniker *pEnumMk;
     IMoniker *pmk;
     HRESULT hr;
@@ -1375,10 +1364,10 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_GetMarshalSizeMax(
 
     *pSize = 0x10; /* to match native */
 
-    hr = IMoniker_Enum(This, TRUE, &pEnumMk);
+    hr = IMoniker_Enum(&This->IMoniker_iface, TRUE, &pEnumMk);
     if (FAILED(hr)) return hr;
 
-    hr = IMoniker_GetSizeMax(This, &size);
+    hr = IMoniker_GetSizeMax(&This->IMoniker_iface, &size);
 
     while (IEnumMoniker_Next(pEnumMk, 1, &pmk, NULL) == S_OK)
     {
@@ -1402,11 +1391,11 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_GetMarshalSizeMax(
     return S_OK;
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL iface, IStream *pStm, 
+static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(IMarshal *iface, IStream *pStm,
     REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags)
 {
-    IMoniker *This = impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
     IEnumMoniker *pEnumMk;
     IMoniker *pmk;
     HRESULT hr;
@@ -1415,7 +1404,7 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL ifa
     TRACE("(%p, %s, %p, %x, %p, %x)\n", pStm, debugstr_guid(riid), pv,
         dwDestContext, pvDestContext, mshlflags);
 
-    hr = IMoniker_Enum(This, TRUE, &pEnumMk);
+    hr = IMoniker_Enum(&This->IMoniker_iface, TRUE, &pEnumMk);
     if (FAILED(hr)) return hr;
 
     while (IEnumMoniker_Next(pEnumMk, 1, &pmk, NULL) == S_OK)
@@ -1440,9 +1429,10 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL ifa
     return S_OK;
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv)
+static HRESULT WINAPI CompositeMonikerMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm,
+    REFIID riid, void **ppv)
 {
-    CompositeMonikerImpl *This = (CompositeMonikerImpl *)impl_from_IMarshal(iface);
+    CompositeMonikerImpl *This = impl_from_IMarshal(iface);
     HRESULT hr;
 
     TRACE("(%p, %s, %p)\n", pStm, debugstr_guid(riid), ppv);
@@ -1474,10 +1464,10 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_UnmarshalInterface(LPMARSHAL i
     }
     This->tabLastIndex++;
 
-    return IMoniker_QueryInterface((IMoniker *)&This->lpvtbl1, riid, ppv);
+    return IMoniker_QueryInterface(&This->IMoniker_iface, riid, ppv);
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
+static HRESULT WINAPI CompositeMonikerMarshalImpl_ReleaseMarshalData(IMarshal *iface, IStream *pStm)
 {
     TRACE("(%p)\n", pStm);
     /* can't release a state-based marshal as nothing on server side to
@@ -1485,7 +1475,8 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_ReleaseMarshalData(LPMARSHAL i
     return S_OK;
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved)
+static HRESULT WINAPI CompositeMonikerMarshalImpl_DisconnectObject(IMarshal *iface,
+    DWORD dwReserved)
 {
     TRACE("(0x%x)\n", dwReserved);
     /* can't disconnect a state-based marshal as nothing on server side to
@@ -1499,7 +1490,7 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_DisconnectObject(LPMARSHAL ifa
 static HRESULT WINAPI
 EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID riid,void** ppvObject)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -1530,7 +1521,7 @@ EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID riid,void** ppvObject)
 static ULONG WINAPI
 EnumMonikerImpl_AddRef(IEnumMoniker* iface)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -1544,7 +1535,7 @@ EnumMonikerImpl_AddRef(IEnumMoniker* iface)
 static ULONG WINAPI
 EnumMonikerImpl_Release(IEnumMoniker* iface)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     ULONG i;
     ULONG ref;
     TRACE("(%p)\n",This);
@@ -1570,7 +1561,7 @@ static HRESULT WINAPI
 EnumMonikerImpl_Next(IEnumMoniker* iface,ULONG celt, IMoniker** rgelt,
                ULONG* pceltFethed)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     ULONG i;
 
     /* retrieve the requested number of moniker from the current position */
@@ -1595,7 +1586,7 @@ EnumMonikerImpl_Next(IEnumMoniker* iface,ULONG celt, IMoniker** rgelt,
 static HRESULT WINAPI
 EnumMonikerImpl_Skip(IEnumMoniker* iface,ULONG celt)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     if ((This->currentPos+celt) >= This->tabSize)
         return S_FALSE;
@@ -1611,8 +1602,7 @@ EnumMonikerImpl_Skip(IEnumMoniker* iface,ULONG celt)
 static HRESULT WINAPI
 EnumMonikerImpl_Reset(IEnumMoniker* iface)
 {
-
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     This->currentPos=0;
 
@@ -1625,7 +1615,7 @@ EnumMonikerImpl_Reset(IEnumMoniker* iface)
 static HRESULT WINAPI
 EnumMonikerImpl_Clone(IEnumMoniker* iface,IEnumMoniker** ppenum)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     return EnumMonikerImpl_CreateEnumMoniker(This->tabMoniker,This->tabSize,This->currentPos,TRUE,ppenum);
 }
@@ -1662,7 +1652,7 @@ EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker, ULONG tabSize,
         return STG_E_INSUFFICIENTMEMORY;
 
     /* Initialize the virtual function table. */
-    newEnumMoniker->lpVtbl       = &VT_EnumMonikerImpl;
+    newEnumMoniker->IEnumMoniker_iface.lpVtbl = &VT_EnumMonikerImpl;
     newEnumMoniker->ref          = 1;
 
     newEnumMoniker->tabSize=tabSize;
@@ -1688,7 +1678,7 @@ EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker, ULONG tabSize,
             IMoniker_AddRef(tabMoniker[i]);
         }
 
-    *ppmk=(IEnumMoniker*)newEnumMoniker;
+    *ppmk=&newEnumMoniker->IEnumMoniker_iface;
 
     return S_OK;
 }
@@ -1751,8 +1741,7 @@ static const IMarshalVtbl VT_MarshalImpl =
  *         Composite-Moniker_Construct (local function)
  *******************************************************************************/
 static HRESULT
-CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
-               LPMONIKER pmkFirst, LPMONIKER pmkRest)
+CompositeMonikerImpl_Construct(IMoniker **ppMoniker, IMoniker *pmkFirst, IMoniker *pmkRest)
 {
     DWORD mkSys;
     IEnumMoniker *enumMoniker;
@@ -1768,9 +1757,9 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
     TRACE("(%p,%p,%p)\n",This,pmkFirst,pmkRest);
 
     /* Initialize the virtual function table. */
-    This->lpvtbl1      = &VT_CompositeMonikerImpl;
-    This->lpvtbl2      = &VT_ROTDataImpl;
-    This->lpvtblMarshal= &VT_MarshalImpl;
+    This->IMoniker_iface.lpVtbl = &VT_CompositeMonikerImpl;
+    This->IROTData_iface.lpVtbl = &VT_ROTDataImpl;
+    This->IMarshal_iface.lpVtbl = &VT_MarshalImpl;
     This->ref          = 1;
 
     This->tabSize=BLOCK_TAB_SIZE;
@@ -1784,7 +1773,7 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
 
     if (!pmkFirst && !pmkRest)
     {
-        *ppMoniker = (IMoniker *)This;
+        *ppMoniker = &This->IMoniker_iface;
         return S_OK;
     }
 
@@ -1922,10 +1911,10 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
     {
         *ppMoniker = This->tabMoniker[0];
         IMoniker_AddRef(*ppMoniker);
-        IMoniker_Release((IMoniker *)This);
+        IMoniker_Release(&This->IMoniker_iface);
     }
     else
-        *ppMoniker = (IMoniker *)This;
+        *ppMoniker = &This->IMoniker_iface;
 
     return S_OK;
 }
@@ -1934,8 +1923,7 @@ CompositeMonikerImpl_Construct(IMoniker** ppMoniker,
  *        CreateGenericComposite	[OLE32.@]
  ******************************************************************************/
 HRESULT WINAPI
-CreateGenericComposite(LPMONIKER pmkFirst, LPMONIKER pmkRest,
-               LPMONIKER* ppmkComposite)
+CreateGenericComposite(IMoniker *pmkFirst, IMoniker *pmkRest, IMoniker **ppmkComposite)
 {
     IMoniker* moniker = 0;
     HRESULT        hr = S_OK;

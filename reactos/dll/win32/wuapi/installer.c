@@ -35,13 +35,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
 
 typedef struct _update_installer
 {
-    const struct IUpdateInstallerVtbl *vtbl;
+    IUpdateInstaller IUpdateInstaller_iface;
     LONG refs;
 } update_installer;
 
 static inline update_installer *impl_from_IUpdateInstaller( IUpdateInstaller *iface )
 {
-    return (update_installer *)((char *)iface - FIELD_OFFSET( update_installer, vtbl ));
+    return CONTAINING_RECORD(iface, update_installer, IUpdateInstaller_iface);
 }
 
 static ULONG WINAPI update_installer_AddRef(
@@ -213,6 +213,103 @@ static HRESULT WINAPI update_installer_put_Updates(
     return E_NOTIMPL;
 }
 
+static HRESULT WINAPI update_installer_BeginInstall(
+    IUpdateInstaller *This,
+    IUnknown *onProgressChanged,
+    IUnknown *onCompleted,
+    VARIANT state,
+    IInstallationJob **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_BeginUninstall(
+    IUpdateInstaller *This,
+    IUnknown *onProgressChanged,
+    IUnknown *onCompleted,
+    VARIANT state,
+    IInstallationJob **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_EndInstall(
+    IUpdateInstaller *This,
+    IInstallationJob *value,
+    IInstallationResult **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_EndUninstall(
+    IUpdateInstaller *This,
+    IInstallationJob *value,
+    IInstallationResult **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_Install(
+    IUpdateInstaller *This,
+    IInstallationResult **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_RunWizard(
+    IUpdateInstaller *This,
+    BSTR dialogTitle,
+    IInstallationResult **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_get_IsBusy(
+    IUpdateInstaller *This,
+    VARIANT_BOOL *retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_Uninstall(
+    IUpdateInstaller *This,
+    IInstallationResult **retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_get_AllowSourcePrompts(
+    IUpdateInstaller *This,
+    VARIANT_BOOL *retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_put_AllowSourcePrompts(
+    IUpdateInstaller *This,
+    VARIANT_BOOL value )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI update_installer_get_RebootRequiredBeforeInstallation(
+    IUpdateInstaller *This,
+    VARIANT_BOOL *retval )
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
 static const struct IUpdateInstallerVtbl update_installer_vtbl =
 {
     update_installer_QueryInterface,
@@ -232,6 +329,17 @@ static const struct IUpdateInstallerVtbl update_installer_vtbl =
     update_installer_get_ParentWindow,
     update_installer_get_Updates,
     update_installer_put_Updates,
+    update_installer_BeginInstall,
+    update_installer_BeginUninstall,
+    update_installer_EndInstall,
+    update_installer_EndUninstall,
+    update_installer_Install,
+    update_installer_RunWizard,
+    update_installer_get_IsBusy,
+    update_installer_Uninstall,
+    update_installer_get_AllowSourcePrompts,
+    update_installer_put_AllowSourcePrompts,
+    update_installer_get_RebootRequiredBeforeInstallation
 };
 
 HRESULT UpdateInstaller_create( IUnknown *pUnkOuter, LPVOID *ppObj )
@@ -243,10 +351,10 @@ HRESULT UpdateInstaller_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     installer = HeapAlloc( GetProcessHeap(), 0, sizeof(*installer) );
     if (!installer) return E_OUTOFMEMORY;
 
-    installer->vtbl = &update_installer_vtbl;
+    installer->IUpdateInstaller_iface.lpVtbl = &update_installer_vtbl;
     installer->refs = 1;
 
-    *ppObj = &installer->vtbl;
+    *ppObj = &installer->IUpdateInstaller_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

@@ -165,6 +165,12 @@ ArmMemGetMemoryMap(OUT ULONG *MemoryMapSize)
 }
 
 VOID
+ArmHwIdle(VOID)
+{
+    /* UNIMPLEMENTED */
+}
+
+VOID
 MachInit(IN PCCH CommandLine)
 {
     /* Copy Machine Routines from Firmware Table */
@@ -217,4 +223,5 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
     MachVtbl.HwDetect = ArmHwDetect;
     MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
+    MachVtbl.HwIdle = ArmHwIdle;
 }

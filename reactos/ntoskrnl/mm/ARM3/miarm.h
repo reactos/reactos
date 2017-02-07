@@ -11,6 +11,7 @@
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING   ((255 * _1MB) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_TUNING          ((19 * _1MB) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_BOOST           ((32 * _1MB) >> PAGE_SHIFT)
+#define MI_MIN_PAGES_FOR_SYSPTE_BOOST_BOOST     ((256 * _1MB) >> PAGE_SHIFT)
 #define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128 * _1MB)
 #define MI_MAX_NONPAGED_POOL_SIZE               (128 * _1MB)
 #define MI_MAX_FREE_PAGE_LISTS                  4
@@ -26,7 +27,7 @@
                                                  MI_SESSION_IMAGE_SIZE + \
                                                  MI_SESSION_WORKING_SET_SIZE)
 
-#define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
+#define MI_SYSTEM_VIEW_SIZE                     (32 * _1MB)
 
 #define MI_HIGHEST_USER_ADDRESS                 (PVOID)0x7FFEFFFF
 #define MI_USER_PROBE_ADDRESS                   (PVOID)0x7FFF0000
@@ -49,6 +50,8 @@
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
+
+#define MI_DEFAULT_SYSTEM_PTE_COUNT             50000
 
 #endif /* !_M_AMD64 */
 
@@ -78,6 +81,8 @@
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
 C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
+#define MiIsPteOnPdeBoundary(PointerPte) \
+    ((((ULONG_PTR)PointerPte) & (PAGE_SIZE - 1)) == 0)
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
@@ -164,7 +169,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #error Define these please!
 #endif
 
-extern const ULONG MmProtectToPteMask[32];
+extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
@@ -219,6 +224,11 @@ extern const ULONG MmProtectToValue[32];
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
+//
+// Number of initial session IDs
+//
+#define MI_INITIAL_SESSION_IDS  64
+
 #if defined(_M_IX86) || defined(_M_ARM)
 //
 // PFN List Sentinel
@@ -262,7 +272,29 @@ extern const ULONG MmProtectToValue[32];
 //
 // Prototype PTEs that don't yet have a pagefile association
 //
+#ifdef _M_AMD64
+#define MI_PTE_LOOKUP_NEEDED 0xffffffffULL
+#else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+#endif
+
+//
+// Number of session lists in the MM_SESSIONS_SPACE structure
+//
+#if defined(_M_AMD64)
+#define SESSION_POOL_LOOKASIDES 21
+#elif defined(_M_IX86)
+#define SESSION_POOL_LOOKASIDES 26
+#else
+#error Not Defined!
+#endif
+
+//
+// Number of session data and tag pages
+//
+#define MI_SESSION_DATA_PAGES_MAXIMUM (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
+#define MI_SESSION_TAG_PAGES_MAXIMUM  (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
+
 
 //
 // System views are binned into 64K chunks
@@ -280,6 +312,40 @@ extern const ULONG MmProtectToValue[32];
 #define POOL_LISTS_PER_PAGE (PAGE_SIZE / POOL_BLOCK_SIZE)
 #define BASE_POOL_TYPE_MASK 1
 #define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + POOL_BLOCK_SIZE))
+
+//
+// Pool debugging/analysis/tracing flags
+//
+#define POOL_FLAG_CHECK_TIMERS 0x1
+#define POOL_FLAG_CHECK_WORKERS 0x2
+#define POOL_FLAG_CHECK_RESOURCES 0x4
+#define POOL_FLAG_VERIFIER 0x8
+#define POOL_FLAG_CHECK_DEADLOCK 0x10
+#define POOL_FLAG_SPECIAL_POOL 0x20
+#define POOL_FLAG_DBGPRINT_ON_FAILURE 0x40
+#define POOL_FLAG_CRASH_ON_FAILURE 0x80
+
+//
+// BAD_POOL_HEADER codes during pool bugcheck
+//
+#define POOL_CORRUPTED_LIST 3
+#define POOL_SIZE_OR_INDEX_MISMATCH 5
+#define POOL_ENTRIES_NOT_ALIGNED_PREVIOUS 6
+#define POOL_HEADER_NOT_ALIGNED 7
+#define POOL_HEADER_IS_ZERO 8
+#define POOL_ENTRIES_NOT_ALIGNED_NEXT 9
+#define POOL_ENTRY_NOT_FOUND 10
+
+//
+// BAD_POOL_CALLER codes during pool bugcheck
+//
+#define POOL_ENTRY_CORRUPTED 1
+#define POOL_ENTRY_ALREADY_FREE 6
+#define POOL_ENTRY_NOT_ALLOCATED 7
+#define POOL_ALLOC_IRQL_INVALID 8
+#define POOL_FREE_IRQL_INVALID 9
+#define POOL_BILLED_PROCESS_INVALID 13
+#define POOL_HEADER_SIZE_INVALID 32
 
 typedef struct _POOL_DESCRIPTOR
 {
@@ -339,10 +405,29 @@ typedef struct _POOL_HEADER
 C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
 C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 
+typedef struct _POOL_TRACKER_TABLE
+{
+    ULONG Key;
+    LONG NonPagedAllocs;
+    LONG NonPagedFrees;
+    SIZE_T NonPagedBytes;
+    LONG PagedAllocs;
+    LONG PagedFrees;
+    SIZE_T PagedBytes;
+} POOL_TRACKER_TABLE, *PPOOL_TRACKER_TABLE;
+
+typedef struct _POOL_TRACKER_BIG_PAGES
+{
+    PVOID Va;
+    ULONG Key;
+    ULONG NumberOfPages;
+    PVOID QuotaObject;
+} POOL_TRACKER_BIG_PAGES, *PPOOL_TRACKER_BIG_PAGES;
+
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
 extern PPOOL_DESCRIPTOR ExpPagedPoolDescriptor[16 + 1];
-extern PVOID PoolTrackTable;
+extern PPOOL_TRACKER_TABLE PoolTrackTable;
 
 //
 // END FIXFIX
@@ -414,12 +499,74 @@ typedef struct _MMSESSION
     PRTL_BITMAP SystemSpaceBitMap;
 } MMSESSION, *PMMSESSION;
 
+typedef struct _MM_SESSION_SPACE_FLAGS
+{
+    ULONG Initialized:1;
+    ULONG DeletePending:1;
+    ULONG Filler:30;
+} MM_SESSION_SPACE_FLAGS;
+
+typedef struct _MM_SESSION_SPACE
+{
+    struct _MM_SESSION_SPACE *GlobalVirtualAddress;
+    LONG ReferenceCount;
+    union
+    {
+        ULONG LongFlags;
+        MM_SESSION_SPACE_FLAGS Flags;
+    } u;
+    ULONG SessionId;
+    LIST_ENTRY ProcessList;
+    LARGE_INTEGER LastProcessSwappedOutTime;
+    PFN_NUMBER SessionPageDirectoryIndex;
+    SIZE_T NonPageablePages;
+    SIZE_T CommittedPages;
+    PVOID PagedPoolStart;
+    PVOID PagedPoolEnd;
+    PMMPTE PagedPoolBasePde;
+    ULONG Color;
+    LONG ResidentProcessCount;
+    ULONG SessionPoolAllocationFailures[4];
+    LIST_ENTRY ImageList;
+    LCID LocaleId;
+    ULONG AttachCount;
+    KEVENT AttachEvent;
+    PEPROCESS LastProcess;
+    LONG ProcessReferenceToSession;
+    LIST_ENTRY WsListEntry;
+    GENERAL_LOOKASIDE Lookaside[SESSION_POOL_LOOKASIDES];
+    MMSESSION Session;
+    KGUARDED_MUTEX PagedPoolMutex;
+    MM_PAGED_POOL_INFO PagedPoolInfo;
+    MMSUPPORT Vm;
+    PMMWSLE Wsle;
+    PDRIVER_UNLOAD Win32KDriverUnload;
+    POOL_DESCRIPTOR PagedPool;
+#if defined (_M_AMD64)
+    MMPTE PageDirectory;
+#else
+    PMMPTE PageTables;
+#endif
+#if defined (_M_AMD64)
+    PMMPTE SpecialPoolFirstPte;
+    PMMPTE SpecialPoolLastPte;
+    PMMPTE NextPdeForSpecialPoolExpansion;
+    PMMPTE LastPdeForSpecialPoolExpansion;
+    PFN_NUMBER SpecialPagesInUse;
+#endif
+    LONG ImageLoadingCount;
+} MM_SESSION_SPACE, *PMM_SESSION_SPACE;
+
+extern PMM_SESSION_SPACE MmSessionSpace;
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
+extern MMPDE ValidKernelPdeLocal;
+extern MMPTE ValidKernelPteLocal;
 extern MMPDE DemandZeroPde;
 extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
+extern MMPTE MmDecommittedPte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
 extern BOOLEAN MmProtectFreedNonPagedPool;
@@ -444,6 +591,7 @@ extern SIZE_T MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
 extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
+extern SIZE_T MiNonPagedSystemSize;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PVOID MmNonPagedPoolEnd;
@@ -465,6 +613,7 @@ extern ULONG_PTR MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
 extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
+extern KGUARDED_MUTEX MmSectionCommitMutex;
 extern PVOID MmPagedPoolStart;
 extern PVOID MmPagedPoolEnd;
 extern PVOID MmNonPagedSystemStart;
@@ -496,6 +645,7 @@ extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
 extern PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+extern MMPFNLIST MmStandbyPageListByPriority[8];
 extern ULONG MmProductType;
 extern MM_SYSTEMSIZE MmSystemSize;
 extern PKEVENT MiLowMemoryEvent;
@@ -537,6 +687,11 @@ extern PVOID MiSystemViewStart;
 extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
+extern ULONG MmMaximumDeadKernelStacks;
+extern SLIST_HEADER MmDeadStackSListHead;
+extern MM_AVL_TABLE MmSectionBasedRoot;
+extern KGUARDED_MUTEX MmSectionBasedMutex;
+extern PVOID MmHighSectionBase;
 
 BOOLEAN
 FORCEINLINE
@@ -558,6 +713,50 @@ MiIsMemoryTypeInvisible(TYPE_OF_MEMORY MemoryType)
             (MemoryType == LoaderBBTMemory));
 }
 
+#ifdef _M_AMD64
+BOOLEAN
+FORCEINLINE
+MiIsUserPxe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 7) == 0x1FFFFEDF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPpe(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 16) == 0xFFFFF6FB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 25) == 0x7FFFFB7DA0ULL;
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return ((ULONG_PTR)Address >> 34) == 0x3FFFFDA0ULL;
+}
+#else
+BOOLEAN
+FORCEINLINE
+MiIsUserPde(PVOID Address)
+{
+    return ((Address >= (PVOID)MiAddressToPde(NULL)) &&
+            (Address <= (PVOID)MiHighestUserPde));
+}
+
+BOOLEAN
+FORCEINLINE
+MiIsUserPte(PVOID Address)
+{
+    return (Address <= (PVOID)MiHighestUserPte);
+}
+#endif
 
 //
 // Figures out the hardware bits for a PTE
@@ -576,9 +775,15 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
     MI_MAKE_ACCESSED_PAGE(&TempPte);
 
     /* Is this for user-mode? */
-    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
-        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
-         (PointerPte <= (PVOID)MiHighestUserPde)))
+    if (
+#if (_MI_PAGING_LEVELS == 4)
+        MiIsUserPxe(PointerPte) ||
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        MiIsUserPpe(PointerPte) ||
+#endif
+        MiIsUserPde(PointerPte) ||
+        MiIsUserPte(PointerPte))
     {
         /* Set the owner bit */
         MI_MAKE_OWNER_PAGE(&TempPte);
@@ -799,7 +1004,6 @@ MiLockProcessWorkingSet(IN PEPROCESS Process,
     //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
 
     /* Okay, now we can own it exclusively */
-    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
     Thread->OwnsProcessWorkingSetExclusive = TRUE;
 }
 
@@ -976,6 +1180,12 @@ MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+VOID
+NTAPI
+MiInitializeSessionIds(
+    VOID
+);
+
 BOOLEAN
 NTAPI
 MiInitializeMemoryEvents(
@@ -1007,6 +1217,16 @@ FASTCALL
 MiSyncARM3WithROS(
     IN PVOID AddressStart,
     IN PVOID AddressEnd
+);
+
+NTSTATUS
+NTAPI
+MiRosProtectVirtualMemory(
+    IN PEPROCESS Process,
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToProtect,
+    IN ULONG NewAccessProtection,
+    OUT PULONG OldAccessProtection OPTIONAL
 );
 
 NTSTATUS
@@ -1048,6 +1268,24 @@ InitializePool(           //
     IN POOL_TYPE PoolType,// FIXFIX: This should go in ex.h after the pool merge
     IN ULONG Threshold    //
 );                        //
+
+// FIXFIX: THIS ONE TOO
+VOID
+NTAPI
+INIT_FUNCTION
+ExInitializePoolDescriptor(
+    IN PPOOL_DESCRIPTOR PoolDescriptor,
+    IN POOL_TYPE PoolType,
+    IN ULONG PoolIndex,
+    IN ULONG Threshold,
+    IN PVOID PoolLock
+);
+
+NTSTATUS
+NTAPI
+MiInitializeSessionPool(
+    VOID
+);
 
 VOID
 NTAPI
@@ -1135,6 +1373,12 @@ MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
 );
 
+VOID
+NTAPI
+MiUnlinkPageFromList(
+    IN PMMPFN Pfn
+);
+
 PFN_NUMBER
 NTAPI
 MiAllocatePfn(
@@ -1148,6 +1392,15 @@ MiInitializePfn(
     IN PFN_NUMBER PageFrameIndex,
     IN PMMPTE PointerPte,
     IN BOOLEAN Modified
+);
+
+NTSTATUS
+NTAPI
+MiInitializeAndChargePfn(
+    OUT PPFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPde,
+    IN PFN_NUMBER ContainingPageFrame,
+    IN BOOLEAN SessionAllocation
 );
 
 VOID
@@ -1213,6 +1466,12 @@ MiDeleteSystemPageableVm(
     OUT PPFN_NUMBER ValidPages
 );
 
+ULONG
+NTAPI
+MiGetPageProtection(
+    IN PMMPTE PointerPte
+);
+
 PLDR_DATA_TABLE_ENTRY
 NTAPI
 MiLookupDataTableEntry(
@@ -1270,6 +1529,16 @@ MiFindEmptyAddressRangeDownTree(
 
 NTSTATUS
 NTAPI
+MiFindEmptyAddressRangeDownBasedTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR BoundaryAddress,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PULONG_PTR Base
+);
+
+NTSTATUS
+NTAPI
 MiFindEmptyAddressRangeInTree(
     IN SIZE_T Length,
     IN ULONG_PTR Alignment,
@@ -1283,6 +1552,28 @@ NTAPI
 MiInsertVad(
     IN PMMVAD Vad,
     IN PEPROCESS Process
+);
+
+VOID
+NTAPI
+MiInsertBasedSection(
+    IN PSECTION Section
+);
+
+NTSTATUS
+NTAPI
+MiUnmapViewOfSection(
+    IN PEPROCESS Process,
+    IN PVOID BaseAddress,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+MiRosUnmapViewOfSection(
+    IN PEPROCESS Process,
+    IN PVOID BaseAddress,
+    IN ULONG Flags
 );
 
 VOID
@@ -1316,7 +1607,14 @@ MiGetNextNode(
 BOOLEAN
 NTAPI
 MiInitializeSystemSpaceMap(
-    IN PVOID InputSession OPTIONAL
+    IN PMMSESSION InputSession OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+MiSessionCommitPageTables(
+    IN PVOID StartVa,
+    IN PVOID EndVa
 );
 
 ULONG
@@ -1361,6 +1659,50 @@ MiLocateSubsection(
     IN ULONG_PTR Vpn
 );
 
+NTSTATUS
+NTAPI
+MiQueryMemorySectionName(
+    IN HANDLE ProcessHandle,
+    IN PVOID BaseAddress,
+    OUT PVOID MemoryInformation,
+    IN SIZE_T MemoryInformationLength,
+    OUT PSIZE_T ReturnLength
+);
+
+NTSTATUS
+NTAPI
+MiRosAllocateVirtualMemory(
+    IN HANDLE ProcessHandle,
+    IN PEPROCESS Process,
+    IN PMEMORY_AREA MemoryArea,
+    IN PMMSUPPORT AddressSpace,
+    IN OUT PVOID* UBaseAddress,
+    IN BOOLEAN Attached,
+    IN OUT PSIZE_T URegionSize,
+    IN ULONG AllocationType,
+    IN ULONG Protect
+);
+
+NTSTATUS
+NTAPI
+MiRosUnmapViewInSystemSpace(
+    IN PVOID MappedBase
+);
+
+POOL_TYPE
+NTAPI
+MmDeterminePoolType(
+    IN PVOID PoolAddress
+);
+
+VOID
+NTAPI
+MiMakePdeExistAndMakeValid(
+    IN PMMPTE PointerPde,
+    IN PEPROCESS TargetProcess,
+    IN KIRQL OldIrql
+);
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
@@ -1379,7 +1721,23 @@ MiRemoveZeroPageSafe(IN ULONG Color)
 //
 // New ARM3<->RosMM PAGE Architecture
 //
+BOOLEAN
+FORCEINLINE
+MiIsRosSectionObject(IN PVOID Section)
+{
+    PROS_SECTION_OBJECT RosSection = Section;
+    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
+    return FALSE;
+}
+
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
 #define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
 #define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
 #define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
 typedef struct _MMROSPFN

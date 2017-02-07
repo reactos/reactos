@@ -333,7 +333,7 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName, ValueName = { 0, 0, NULL };
-    HANDLE KeyHandle;
+    HANDLE KeyHandle = NULL;
     NTSTATUS Status;
     ASSERT(LoaderBlock != NULL);
 
@@ -374,7 +374,7 @@ Quickie:
     RtlFreeUnicodeString(&ValueName);
 
     /* Close the key and return */
-    NtClose(KeyHandle);
+    if (KeyHandle) NtClose(KeyHandle);
 
     /* Return the status */
     return (ExpInTextModeSetup ? STATUS_SUCCESS : Status);
@@ -1098,7 +1098,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
 {
     WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
-    ULONG FileStart, i, ErrorResponse, WorkerCount, Length;
+    ULONG i, ErrorResponse, WorkerCount, Length;
+    USHORT FileStart;
     //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
@@ -1259,7 +1260,8 @@ CmpInitializeHiveList(IN USHORT Flag)
     UNICODE_STRING TempName, FileName, RegName;
     HANDLE Thread;
     NTSTATUS Status;
-    ULONG RegStart, i;
+    ULONG i;
+    USHORT RegStart;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -1611,25 +1613,25 @@ CmpFreeDriverList(IN PHHIVE Hive,
     PLIST_ENTRY NextEntry, OldEntry;
     PBOOT_DRIVER_NODE DriverNode;
     PAGED_CODE();
-    
+
     /* Parse the current list */
     NextEntry = DriverList->Flink;
     while (NextEntry != DriverList)
     {
         /* Get the driver node */
         DriverNode = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_NODE, ListEntry.Link);
-        
+
         /* Get the next entry now, since we're going to free it later */
         OldEntry = NextEntry;
         NextEntry = NextEntry->Flink;
-        
+
         /* Was there a name? */
         if (DriverNode->Name.Buffer)
         {
             /* Free it */
             CmpFree(DriverNode->Name.Buffer, DriverNode->Name.Length);
         }
-        
+
         /* Was there a registry path? */
         if (DriverNode->ListEntry.RegistryPath.Buffer)
         {
@@ -1637,7 +1639,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
             CmpFree(DriverNode->ListEntry.RegistryPath.Buffer,
                     DriverNode->ListEntry.RegistryPath.MaximumLength);
         }
-        
+
         /* Was there a file path? */
         if (DriverNode->ListEntry.FilePath.Buffer)
         {
@@ -1645,7 +1647,7 @@ CmpFreeDriverList(IN PHHIVE Hive,
             CmpFree(DriverNode->ListEntry.FilePath.Buffer,
                     DriverNode->ListEntry.FilePath.MaximumLength);
         }
-        
+
         /* Now free the node, and move on */
         CmpFree(OldEntry, sizeof(BOOT_DRIVER_NODE));
     }
@@ -1673,7 +1675,7 @@ CmGetSystemDriverList(VOID)
 
     /* Initialize the driver list */
     InitializeListHead(&DriverList);
-    
+
     /* Open the system hive key */
     RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System");
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1683,7 +1685,7 @@ CmGetSystemDriverList(VOID)
                                NULL);
     Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status)) return NULL;
-    
+
     /* Reference the key object to get the root hive/cell to access directly */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
@@ -1697,38 +1699,38 @@ CmGetSystemDriverList(VOID)
         NtClose(KeyHandle);
         return NULL;
     }
-    
+
     /* Do all this under the registry lock */
     CmpLockRegistryExclusive();
-    
+
     /* Get the hive and key cell */
     Hive = KeyBody->KeyControlBlock->KeyHive;
     RootCell = KeyBody->KeyControlBlock->KeyCell;
-    
+
     /* Open the current control set key */
     RtlInitUnicodeString(&KeyName, L"Current");
     ControlCell = CmpFindControlSet(Hive, RootCell, &KeyName, &AutoSelect);
     if (ControlCell == HCELL_NIL) goto EndPath;
-    
+
     /* Find all system drivers */
     Success = CmpFindDrivers(Hive, ControlCell, SystemLoad, NULL, &DriverList);
     if (!Success) goto EndPath;
-    
+
     /* Sort by group/tag */
     if (!CmpSortDriverList(Hive, ControlCell, &DriverList)) goto EndPath;
-    
+
     /* Remove circular dependencies (cycles) and sort */
     if (!CmpResolveDriverDependencies(&DriverList)) goto EndPath;
-    
+
     /* Loop the list to count drivers */
     for (i = 0, NextEntry = DriverList.Flink;
          NextEntry != &DriverList;
          i++, NextEntry = NextEntry->Flink);
-    
+
     /* Allocate the array */
     ServicePath = ExAllocatePool(NonPagedPool, (i + 1) * sizeof(PUNICODE_STRING));
     if (!ServicePath) KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
-    
+
     /* Loop the driver list */
     for (i = 0, NextEntry = DriverList.Flink;
          NextEntry != &DriverList;
@@ -1743,17 +1745,17 @@ CmGetSystemDriverList(VOID)
                                   &DriverEntry->RegistryPath,
                                   ServicePath[i]);
     }
-    
+
     /* Terminate the list */
     ServicePath[i] = NULL;
-    
+
 EndPath:
     /* Free the driver list if we had one */
     if (!IsListEmpty(&DriverList)) CmpFreeDriverList(Hive, &DriverList);
-    
+
     /* Unlock the registry */
     CmpUnlockRegistry();
-    
+
     /* Close the key handle and dereference the object, then return the path */
     ObDereferenceObject(KeyBody);
     NtClose(KeyHandle);

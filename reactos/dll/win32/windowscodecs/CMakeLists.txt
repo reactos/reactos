@@ -16,7 +16,7 @@ if(MSVC)
     add_compile_flags("/FItypeof.h")
 endif()
 
-spec2def(windowscodecs.dll windowscodecs.spec)
+spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     bmpdecode.c
@@ -41,12 +41,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
-if(MSVC)
-    set_source_files_properties(${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c PROPERTIES GENERATED TRUE)
-    list(APPEND SOURCE
-         ${REACTOS_BINARY_DIR}/include/psdk/wincodec_i.c)
-endif()
-
 add_library(windowscodecs SHARED ${SOURCE})
 
 set_module_type(windowscodecs win32dll)
@@ -54,6 +48,6 @@ set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid)
 
 add_importlibs(windowscodecs ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-add_importlib_target(windowscodecs.spec)
+
 
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

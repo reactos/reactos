@@ -31,13 +31,13 @@ typedef struct tagCSRSS_EXPORTED_FUNCS
 
 typedef BOOL (WINAPI *CSRPLUGIN_INIT_COMPLETE_PROC)(void);
 
-typedef BOOL (WINAPI *CSRPLUGIN_HARDERROR_PROC)(IN PCSRSS_PROCESS_DATA ProcessData,
+typedef VOID (WINAPI *CSRPLUGIN_HARDERROR_PROC)(IN PCSR_THREAD ThreadData,
                                                  IN PHARDERROR_MSG HardErrorMessage);
 
-typedef NTSTATUS (WINAPI *CSRPLUGIN_PROCESS_INHERIT_PROC)(IN PCSRSS_PROCESS_DATA SourceProcessData,
-                                                          IN PCSRSS_PROCESS_DATA TargetProcessData);
+typedef NTSTATUS (WINAPI *CSRPLUGIN_PROCESS_INHERIT_PROC)(IN PCSR_PROCESS SourceProcessData,
+                                                          IN PCSR_PROCESS TargetProcessData);
 
-typedef NTSTATUS (WINAPI *CSRPLUGIN_PROCESS_DELETED_PROC)(IN PCSRSS_PROCESS_DATA ProcessData);
+typedef ULONG (WINAPI *CSRPLUGIN_PROCESS_DELETED_PROC)(IN PCSR_PROCESS ProcessData, IN ULONG Unused, IN BOOLEAN Flag);
 
 typedef struct tagCSRSS_SERVER_PROCS
 {
@@ -48,8 +48,6 @@ typedef struct tagCSRSS_SERVER_PROCS
 } CSRPLUGIN_SERVER_PROCS, *PCSRPLUGIN_SERVER_PROCS;
 
 typedef BOOL (WINAPI *CSRPLUGIN_INITIALIZE_PROC)(PCSRSS_API_DEFINITION *ApiDefinitions,
-                                                  PCSRPLUGIN_SERVER_PROCS ServerProcs,
-                                                  PCSRSS_EXPORTED_FUNCS Exports,
-                                                  HANDLE CsrssApiHeap);
+                                                  PCSRPLUGIN_SERVER_PROCS ServerProcs);
 
 /* EOF */

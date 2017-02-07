@@ -127,9 +127,10 @@ extern ULONG NTSYSAPI NtBuildNumber;
 #define PROFILE_ALL_ACCESS                  (STANDARD_RIGHTS_REQUIRED | PROFILE_CONTROL)
 
 //
-// Maximum Parameters for NtRaiseHardError
+// NtRaiseHardError-related parameters
 //
 #define MAXIMUM_HARDERROR_PARAMETERS        4
+#define HARDERROR_OVERRIDE_ERRORMODE        0x10000000
 
 //
 // Pushlock bits
@@ -842,15 +843,20 @@ typedef struct _SYSTEM_THREAD_INFORMATION
     ULONG ContextSwitches;
     ULONG ThreadState;
     ULONG WaitReason;
+    ULONG PadPadAlignment;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+#ifndef _WIN64
+C_ASSERT(sizeof(SYSTEM_THREAD_INFORMATION) == 0x40); // Must be 8-byte aligned
+#endif
 
 typedef struct _SYSTEM_PROCESS_INFORMATION
 {
     ULONG NextEntryOffset;
     ULONG NumberOfThreads;
-    LARGE_INTEGER SpareLi1;
-    LARGE_INTEGER SpareLi2;
-    LARGE_INTEGER SpareLi3;
+    LARGE_INTEGER WorkingSetPrivateSize; //VISTA
+    ULONG HardFaultCount; //WIN7
+    ULONG NumberOfThreadsHighWatermark; //WIN7
+    ULONGLONG CycleTime; //WIN7
     LARGE_INTEGER CreateTime;
     LARGE_INTEGER UserTime;
     LARGE_INTEGER KernelTime;
@@ -867,8 +873,8 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     // NOTE: *NOT* THE SAME AS VM_COUNTERS!
     //
     SIZE_T PeakVirtualSize;
-    ULONG VirtualSize;
-    SIZE_T PageFaultCount;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
     SIZE_T PeakWorkingSetSize;
     SIZE_T WorkingSetSize;
     SIZE_T QuotaPeakPagedPoolUsage;
@@ -888,10 +894,13 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-
-    //SYSTEM_THREAD_INFORMATION TH[1];
+//    SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
+#ifndef _WIN64
+C_ASSERT(sizeof(SYSTEM_PROCESS_INFORMATION) == 0xB8); // Must be 8-byte aligned
+#endif
 
+//
 // Class 6
 typedef struct _SYSTEM_CALL_COUNT_INFORMATION
 {
@@ -958,7 +967,7 @@ typedef struct _SYSTEM_POOL_ENTRY
 
 typedef struct _SYSTEM_POOL_INFORMATION
 {
-    ULONG TotalSize;
+    SIZE_T TotalSize;
     PVOID FirstEntry;
     USHORT EntryOverhead;
     BOOLEAN PoolTagPresent;
@@ -1071,13 +1080,13 @@ typedef struct _SYSTEM_VDM_INSTEMUL_INFO
 // Class 21
 typedef struct _SYSTEM_FILECACHE_INFORMATION
 {
-    ULONG CurrentSize;
-    ULONG PeakSize;
+    SIZE_T CurrentSize;
+    SIZE_T PeakSize;
     ULONG PageFaultCount;
-    ULONG MinimumWorkingSet;
-    ULONG MaximumWorkingSet;
-    ULONG CurrentSizeIncludingTransitionInPages;
-    ULONG PeakSizeIncludingTransitionInPages;
+    SIZE_T MinimumWorkingSet;
+    SIZE_T MaximumWorkingSet;
+    SIZE_T CurrentSizeIncludingTransitionInPages;
+    SIZE_T PeakSizeIncludingTransitionInPages;
     ULONG TransitionRePurposeCount;
     ULONG Flags;
 } SYSTEM_FILECACHE_INFORMATION, *PSYSTEM_FILECACHE_INFORMATION;
@@ -1097,6 +1106,7 @@ typedef struct _SYSTEM_POOLTAG
     ULONG NonPagedFrees;
     SIZE_T NonPagedUsed;
 } SYSTEM_POOLTAG, *PSYSTEM_POOLTAG;
+
 typedef struct _SYSTEM_POOLTAG_INFORMATION
 {
     ULONG Count;
@@ -1228,7 +1238,7 @@ typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION
 {
     ULONG RegistryQuotaAllowed;
     ULONG RegistryQuotaUsed;
-    ULONG PagedPoolSize;
+    SIZE_T PagedPoolSize;
 } SYSTEM_REGISTRY_QUOTA_INFORMATION, *PSYSTEM_REGISTRY_QUOTA_INFORMATION;
 
 // Class 38
@@ -1273,7 +1283,6 @@ typedef struct _SYSTEM_LEGACY_DRIVER_INFORMATION
 {
     PNP_VETO_TYPE VetoType;
     UNICODE_STRING VetoDriver;
-    // CHAR Buffer[0];
 } SYSTEM_LEGACY_DRIVER_INFORMATION, *PSYSTEM_LEGACY_DRIVER_INFORMATION;
 
 // Class 44
@@ -1450,6 +1459,7 @@ typedef struct _SYSTEM_MEMORY_LIST_INFORMATION
    SIZE_T BadPageCount;
    SIZE_T PageCountByPriority[8];
    SIZE_T RepurposedPagesByPriority[8];
+   SIZE_T ModifiedPageCountPageFile;
 } SYSTEM_MEMORY_LIST_INFORMATION, *PSYSTEM_MEMORY_LIST_INFORMATION;
 
 #endif

@@ -57,7 +57,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
                                NULL,
                                NULL);
 
-    Status = ZwOpenKey(&KeyHandle,
+    Status = NtOpenKey(&KeyHandle,
                        KEY_READ,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
@@ -70,21 +70,21 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
     KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, KeyInfoSize);
     if (KeyInfo == NULL)
     {
-        ZwClose(KeyHandle);
+        NtClose(KeyHandle);
         SetLastError(ERROR_OUTOFMEMORY);
         return FALSE;
     }
 
     RtlInitUnicodeString(&ValueName, ValueNameStr);
 
-    Status = ZwQueryValueKey(KeyHandle,
+    Status = NtQueryValueKey(KeyHandle,
                              &ValueName,
                              KeyValuePartialInformation,
                              KeyInfo,
                              KeyInfoSize,
                              &ReturnSize);
 
-    ZwClose(KeyHandle);
+    NtClose(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -396,13 +396,13 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
                            (wcslen (lpBuffer) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
-        ZwClose(KeyHandle);
+        NtClose(KeyHandle);
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
     NtFlushKey(KeyHandle);
-    ZwClose(KeyHandle);
+    NtClose(KeyHandle);
 
     return TRUE;
 }

@@ -348,146 +348,102 @@ static void Control_DoWindow(CPanel *panel, HWND hWnd, HINSTANCE hInst)
     Control_DoInterface(panel, hWnd, hInst);
 }
 
-static void Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
-   /* forms to parse:
-    *    foo.cpl,@sp,str
-    *    foo.cpl,@sp
-    *    foo.cpl,,str
-    *    foo.cpl @sp
-    *    foo.cpl str
-    *   "a path\foo.cpl"
-    */
+static void Control_DoLaunch(CPanel *pPanel, HWND hWnd, LPCWSTR pwszCmd)
 {
-    LPWSTR    buffer;
-    LPWSTR    beg = NULL;
-    LPWSTR    end;
-    WCHAR    ch;
-    LPCWSTR       ptr, ptr2;
-    WCHAR szName[MAX_PATH];
-    unsigned     sp = 0;
-    LPWSTR    extraPmts = NULL;
-    int        quoted = 0;
-    BOOL    spSet = FALSE;
-    HANDLE hMutex;
-    UINT Length;
+    /* Make a pwszCmd copy so we can modify it */
+    LPWSTR pwszCmdCopy = _wcsdup(pwszCmd);
+    if (!pwszCmdCopy)
+        return;
 
-    ptr = wcsrchr(wszCmd, L'\\');
-    ptr2 = wcsrchr(wszCmd, L',');
-    if (!ptr2)
+    LPWSTR pwszPath = pwszCmdCopy, pwszArg = NULL, pwszArg2 = NULL;
+
+    /* Path can be quoted */
+    if (pwszPath[0] == L'"')
     {
-        ptr2 = wszCmd + wcslen(wszCmd) + 1;
+        ++pwszPath;
+        pwszArg = wcschr(pwszPath, L'"');
+        if (pwszArg)
+            *(pwszArg++) = '\0';
     }
-
-    if (ptr)
-        ptr++;
     else
-        ptr = wszCmd;
+        pwszArg = pwszCmdCopy;
 
-    Length = (ptr2 - ptr);
-    if (Length >= MAX_PATH)
-        return;
-
-    memcpy(szName, (LPVOID)ptr, Length * sizeof(WCHAR));
-    szName[Length] = L'\0';
-    hMutex = CreateMutexW(NULL, TRUE, szName);
-
-     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
-        return;
-    buffer = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(wszCmd) + 1) * sizeof(*wszCmd));
-    if (!buffer)
+    /* First argument starts after space or ','. Note: we ignore characters between '"' and ',' or ' '. */
+    if (pwszArg)
+        pwszArg = wcspbrk(pwszArg, L" ,");
+    if (pwszArg)
     {
-        CloseHandle(hMutex);
+        /* NULL terminate path and find first character of arg */
+        *(pwszArg++) = L'\0';
+        if (pwszArg[0] == L'"')
+        {
+            ++pwszArg;
+            pwszArg2 = wcschr(pwszArg, L'"');
+            if (pwszArg2)
+                *(pwszArg2++) = L'\0';
+        } else
+            pwszArg2 = pwszArg;
+
+        /* Second argument always starts with ','. Note: we ignore characters between '"' and ','. */
+        if (pwszArg2)
+            pwszArg2 = wcschr(pwszArg2, L',');
+    }
+
+    TRACE("Launch %ls, arg %ls, arg2 %ls\n", pwszPath, pwszArg, pwszArg2);
+
+    /* Create a mutex to disallow running multiple instances */
+    HANDLE hMutex = CreateMutexW(NULL, TRUE, PathFindFileNameW(pwszPath));
+    if (!hMutex || GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        TRACE("Next instance disallowed\n");
+        if (hMutex)
+            CloseHandle(hMutex);
         return;
     }
 
-    TRACE("[shell32, Control_DoLaunch] wszCmd = %ws\n", wszCmd);
-    
-    end = wcscpy(buffer, wszCmd);
-    for (;;)
+    /* Load applet cpl */
+    TRACE("Load applet %ls\n", pwszPath);
+    Control_LoadApplet(hWnd, pwszPath, pPanel);
+    if (pPanel->first)
     {
-        ch = *end;
-        if (ch == '"')
-            quoted = !quoted;
+        /* First pPanel applet is the new one */
+        CPlApplet *pApplet = pPanel->first;
+        assert(pApplet && pApplet->next == NULL);
+        TRACE("pApplet->count %d\n", pApplet->count);
 
-        if (!quoted && (ch == ',' || ch == '\0'))
+        /* Note: if there is only one applet, first argument is ignored */
+        INT i = 0;
+        if (pApplet->count > 1 && pwszArg && pwszArg[0])
         {
-            *end = '\0';
-            if (beg)
+            /* If arg begins with '@', number specifies applet index */
+            if (pwszArg[0] == L'@')
+                i = _wtoi(pwszArg + 1);
+            else
             {
-                if (*beg == '@')
-                {
-                    sp = atoiW(beg + 1);
-                    spSet = TRUE;
-                }
-                else if (*beg == '\0')
-                {
-                    sp = 0;
-                    spSet = TRUE;
-                }
-                else
-                {
-                    extraPmts = beg;
-                }
-            }
-            
-            if (ch == '\0') break;
-                beg = end + 1;
-            if (ch == ' ')
-                while (end[1] == ' ')
-                    end++;
-        }
-        end++;
-    }
-    while ((ptr = StrChrW(buffer, '"')))
-        memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
-
-    while ((ptr = StrChrW(extraPmts, '"')))
-        memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
-
-    TRACE("[shell32, Control_DoLaunch] cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
-
-    Control_LoadApplet(hWnd, buffer, panel);
-
-    if (panel->first)
-    {
-        CPlApplet* applet = panel->first;
-
-        TRACE("[shell32, Control_DoLaunch] applet->count %d, applet->info[sp].szName %ws\n", applet->count, applet->info[sp].szName);
-
-        assert(applet && applet->next == NULL);
-        if (sp >= applet->count)
-        {
-            WARN("Out of bounds (%u >= %u), setting to 0\n", sp, applet->count);
-            sp = 0;
-        }
-
-        if ((extraPmts) && extraPmts[0] && (!spSet))
-        {
-            while ((lstrcmpiW(extraPmts, applet->info[sp].szName)) && (sp < applet->count))
-                sp++;
-
-            if (sp >= applet->count)
-            {
-                ReleaseMutex(hMutex);
-                CloseHandle(hMutex);
-                Control_UnloadApplet(applet);
-                HeapFree(GetProcessHeap(), 0, buffer);
-                return;
+                /* Otherwise it's applet name */
+                for (i = 0; i < (INT)pApplet->count; ++i)
+                    if (!wcscmp(pwszArg, pApplet->info[i].szName))
+                        break;
             }
         }
 
-        if (applet->info[sp].dwSize)
+        if (i >= 0 && i < (INT)pApplet->count && pApplet->info[i].dwSize)
         {
-            if (!applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].lData))
-                applet->proc(applet->hWnd, CPL_STARTWPARMSA, sp, (LPARAM)extraPmts);
-        }
+            /* Start the applet */
+            TRACE("Starting applet %d\n", i);
+            if (!pApplet->proc(pApplet->hWnd, CPL_DBLCLK, i, pApplet->info[i].lData))
+                pApplet->proc(pApplet->hWnd, CPL_STARTWPARMSA, i, (LPARAM)pwszArg);
+        } else
+            ERR("Applet not found: %ls\n", pwszArg ? pwszArg : L"NULL");
 
-        Control_UnloadApplet(applet);
+        Control_UnloadApplet(pApplet);
     }
+    else
+        ERR("Failed to load applet %ls\n", pwszPath);
 
     ReleaseMutex(hMutex);
     CloseHandle(hMutex);
-    HeapFree(GetProcessHeap(), 0, buffer);
+    free(pwszCmdCopy);
 }
 
 /*************************************************************************
@@ -496,22 +452,22 @@ static void Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
  */
 EXTERN_C void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
 {
-    CPanel    panel;
+    CPanel Panel;
 
     TRACE("(%p, %p, %s, 0x%08x)\n",
       hWnd, hInst, debugstr_w(cmd), nCmdShow);
 
-    memset(&panel, 0, sizeof(panel));
+    memset(&Panel, 0, sizeof(Panel));
 
     if (!cmd || !*cmd)
     {
         TRACE("[shell32, Control_RunDLLW] Calling Control_DoWindow\n");
-        Control_DoWindow(&panel, hWnd, hInst);
+        Control_DoWindow(&Panel, hWnd, hInst);
     }
     else
     {
         TRACE("[shell32, Control_RunDLLW] Calling Control_DoLaunch\n");
-        Control_DoLaunch(&panel, hWnd, cmd);
+        Control_DoLaunch(&Panel, hWnd, cmd);
     }
 }
 

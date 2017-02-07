@@ -13,3 +13,4 @@ extern const WCHAR g_szFontDisplayClassName[];
 
 /* Public function */
 BOOL Display_InitClass(HINSTANCE hInstance);
+LRESULT Display_OnPrint(HWND hwnd);

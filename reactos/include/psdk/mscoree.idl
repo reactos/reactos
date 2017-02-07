@@ -224,3 +224,17 @@ interface ICLRRuntimeHost : IUnknown
                                       [in] LPCWSTR pwzArgument,
                                       [out] DWORD *pReturnValue);
 }
+
+[
+    uuid(C3FCC19E-A970-11d2-8B5A-00A0C9B7C9C4),
+    local,
+    object
+]
+interface IManagedObject : IUnknown
+{
+    HRESULT GetSerializedBuffer([out] BSTR *pBSTR);
+
+    HRESULT GetObjectIdentity([out] BSTR *pBSTRGUID,
+                              [out] int *AppDomainID,
+                             [out] int *pCCW);
+}

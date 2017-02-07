@@ -93,7 +93,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 	}
 
 	/* Convert possible %SystemRoot% to a real path */
-	BufferSize = ExpandEnvironmentStrings(Buffer, DllPath, sizeof(DllPath));
+	BufferSize = ExpandEnvironmentStrings(Buffer, DllPath, _countof(DllPath));
 	if (0 == BufferSize)
 	{
 		DPRINT1("Invalid ServiceDll path: %s\n", Buffer);
@@ -124,7 +124,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 	}
 
 	memset(Service, 0, sizeof(SERVICE));
-	Service->Name = HeapAlloc(GetProcessHeap(), 0, _tcslen(ServiceName) + sizeof(TCHAR));
+	Service->Name = HeapAlloc(GetProcessHeap(), 0, (_tcslen(ServiceName)+1) * sizeof(TCHAR));
 	if (NULL == Service->Name)
 	{
 		DPRINT1("Not enough memory for service: %s\n", ServiceName);
@@ -199,7 +199,7 @@ DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
 		if (TRUE == PrepareService(ServiceName))
 			++NrOfServices;
 
-		BufferIndex += (Length + 1) * sizeof(TCHAR);
+		BufferIndex += Length + 1;
 
 		ServiceName = &Buffer[BufferIndex];
 	}
@@ -238,7 +238,7 @@ int _tmain (int argc, LPTSTR argv [])
 		PSERVICE Service = FirstService;
 
 		/* Fill the service table */
-		for (i = 0; i < NrOfServices; ++i)
+		for (i = 0; i < NrOfServices; i++)
 		{
 			DPRINT("Loading service: %s\n", Service->Name);
 			ServiceTable[i].lpServiceName = Service->Name;
@@ -251,7 +251,7 @@ int _tmain (int argc, LPTSTR argv [])
 		ServiceTable[i].lpServiceProc = NULL;
 
 		if (FALSE == StartServiceCtrlDispatcher(ServiceTable))
-			printf("Failed to start service control dispatcher, ErrorCode: %lu\n", GetLastError());
+			DPRINT1("Failed to start service control dispatcher, ErrorCode: %lu\n", GetLastError());
 
 		HeapFree(GetProcessHeap(), 0, ServiceTable);
 	}
@@ -260,7 +260,7 @@ int _tmain (int argc, LPTSTR argv [])
 		DPRINT1("Not enough memory for the service table, trying to allocate %u bytes\n", sizeof(SERVICE_TABLE_ENTRY) * (NrOfServices + 1));
 	}
 
-	DPRINT1("Freeing services...\n");
+	DPRINT("Freeing services...\n");
 	FreeServices();
 
     return 0;

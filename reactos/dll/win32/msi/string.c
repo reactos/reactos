@@ -41,12 +41,12 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
-typedef struct _msistring
+struct msistring
 {
     USHORT persistent_refcount;
     USHORT nonpersistent_refcount;
     LPWSTR str;
-} msistring;
+};
 
 struct string_table
 {
@@ -54,8 +54,8 @@ struct string_table
     UINT freeslot;
     UINT codepage;
     UINT sortcount;
-    msistring *strings; /* an array of strings */
-    UINT *sorted;       /* index */
+    struct msistring *strings; /* an array of strings */
+    UINT *sorted;              /* index */
 };
 
 static BOOL validate_codepage( UINT codepage )
@@ -81,7 +81,7 @@ static string_table *init_stringtable( int entries, UINT codepage )
     if( entries < 1 )
         entries = 1;
 
-    st->strings = msi_alloc_zero( sizeof (msistring) * entries );
+    st->strings = msi_alloc_zero( sizeof(struct msistring) * entries );
     if( !st->strings )
     {
         msi_free( st );
@@ -122,7 +122,7 @@ VOID msi_destroy_stringtable( string_table *st )
 static int st_find_free_entry( string_table *st )
 {
     UINT i, sz, *s;
-    msistring *p;
+    struct msistring *p;
 
     TRACE("%p\n", st);
 
@@ -140,7 +140,7 @@ static int st_find_free_entry( string_table *st )
 
     /* dynamically resize */
     sz = st->maxcount + 1 + st->maxcount/2;
-    p = msi_realloc_zero( st->strings, sz*sizeof(msistring) );
+    p = msi_realloc_zero( st->strings, sz * sizeof(struct msistring) );
     if( !p )
         return -1;
 
@@ -460,11 +460,6 @@ static void string_totalsize( const string_table *st, UINT *datasize, UINT *pool
     }
     TRACE("data %u pool %u codepage %x\n", *datasize, *poolsize, st->codepage );
 }
-
-static const WCHAR szStringData[] = {
-    '_','S','t','r','i','n','g','D','a','t','a',0 };
-static const WCHAR szStringPool[] = {
-    '_','S','t','r','i','n','g','P','o','o','l',0 };
 
 HRESULT msi_init_string_table( IStorage *stg )
 {

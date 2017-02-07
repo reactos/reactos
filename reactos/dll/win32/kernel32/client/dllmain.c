@@ -68,7 +68,10 @@ BasepInitConsole(VOID)
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
     STARTUPINFO si;
-
+    WCHAR SessionDir[256];
+    ULONG SessionId = NtCurrentPeb()->SessionId;
+    BOOLEAN InServer;
+    
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
@@ -136,6 +139,38 @@ BasepInitConsole(VOID)
 
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
+    
+    /* Setup the right Object Directory path */
+    if (!SessionId)
+    {
+        /* Use the raw path */
+        wcscpy(SessionDir, WIN_OBJ_DIR);
+    }
+    else
+    {
+        /* Use the session path */
+        swprintf(SessionDir,
+                 L"%ws\\%ld%ws",
+                 SESSION_DIR,
+                 SessionId,
+                 WIN_OBJ_DIR);
+    }
+
+    /* Connect to the base server */
+    DPRINT("Connecting to CSR...\n");
+    Status = CsrClientConnectToServer(SessionDir,
+                                      2,
+                                      NULL,
+                                      NULL,
+                                      &InServer);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Nothing to do for server-to-server */
+    if (InServer) return TRUE;
 
     /*
      * Normally, we should be connecting to the Console CSR Server...
@@ -156,6 +191,7 @@ BasepInitConsole(VOID)
         return TRUE;
     }
 
+    /* Nothing to do if not a console app */
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
@@ -184,6 +220,46 @@ BasepInitConsole(VOID)
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+BaseCreateThreadPoolThread(IN PTHREAD_START_ROUTINE Function,
+                           IN PVOID Parameter,
+                           OUT PHANDLE ThreadHandle)
+{
+    NTSTATUS Status;
+
+    /* Create a Win32 thread */
+    *ThreadHandle = CreateRemoteThread(NtCurrentProcess(),
+                                       NULL,
+                                       0,
+                                       Function,
+                                       Parameter,
+                                       CREATE_SUSPENDED,
+                                       NULL);
+    if (!(*ThreadHandle))
+    {
+        /* Get the status value if we couldn't get a handle */
+        Status = NtCurrentTeb()->LastStatusValue;
+        if (NT_SUCCESS(Status)) Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Set success code */
+        Status = STATUS_SUCCESS;
+    }
+
+    /* All done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+BaseExitThreadPoolThread(IN NTSTATUS ExitStatus)
+{
+    /* Exit the thread */
+    ExitThread(ExitStatus);
+}
+
 BOOL
 WINAPI
 DllMain(HANDLE hDll,
@@ -210,6 +286,9 @@ DllMain(HANDLE hDll,
         
         /* Set no filter intially */
         GlobalTopLevelExceptionFilter = RtlEncodePointer(NULL);
+        
+        /* Enable the Rtl thread pool and timer queue to use proper Win32 thread */
+        RtlSetThreadPoolStartFunc(BaseCreateThreadPoolThread, BaseExitThreadPoolThread);
 
         /* Don't bother us for each thread */
         LdrDisableThreadCalloutsForDll((PVOID)hDll);
@@ -243,7 +322,7 @@ DllMain(HANDLE hDll,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
-            ZwTerminateProcess(NtCurrentProcess(), Status);
+            NtTerminateProcess(NtCurrentProcess(), Status);
             return FALSE;
         }
 
@@ -302,6 +381,10 @@ DllMain(HANDLE hDll,
             DPRINT1("Failure to set up console\n");
             return FALSE;
         }
+
+        /* Initialize application certification globals */
+        InitializeListHead(&BasepAppCertDllsList);
+        RtlInitializeCriticalSection(&gcsAppCert);
 
         /* Insert more dll attach stuff here! */
         DllInitialized = TRUE;

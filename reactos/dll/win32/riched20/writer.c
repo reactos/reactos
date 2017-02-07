@@ -54,7 +54,7 @@ ME_StreamOutFlush(ME_OutStream *pStream)
   LONG nRemaining = 0;
   EDITSTREAM *stream = pStream->stream;
 
-  do {
+  while (nStart < pStream->pos) {
     TRACE("sending %u bytes\n", pStream->pos - nStart);
     /* Some apps seem not to set *pcb unless a problem arises, relying
       on initial random nWritten value, which is usually >STREAMOUT_BUFFER_SIZE */
@@ -72,7 +72,7 @@ ME_StreamOutFlush(ME_OutStream *pStream)
       return FALSE;
     pStream->written += nWritten;
     nStart += nWritten;
-  } while (nStart < pStream->pos);
+  }
   pStream->pos = 0;
   return TRUE;
 }
@@ -927,7 +927,7 @@ static BOOL ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream,
 
     if (!editor->bEmulateVersion10 && cursor.pRun->member.run.nFlags & MERF_ENDPARA)
     {
-      static const WCHAR szEOL[2] = { '\r', '\n' };
+      static const WCHAR szEOL[] = { '\r', '\n' };
 
       /* richedit 2.0 - all line breaks are \r\n */
       if (dwFormat & SF_UNICODE)

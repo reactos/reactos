@@ -15,7 +15,7 @@
  11 stdcall -noname DPA_Merge(ptr ptr long ptr ptr long)
 #12 stub Cctl1632_ThunkData32
  13 stdcall MakeDragList(long)
- 14 stdcall LBItemFromPt(long double long)
+ 14 stdcall LBItemFromPt(long double long) #(long int64 long)
  15 stdcall DrawInsert(long long long)
  16 stdcall CreateUpDownControl(long long long long long long long long long long long long)
  17 stdcall InitCommonControls()
@@ -94,7 +94,7 @@
 386 stdcall -ordinal DPA_DestroyCallback(ptr ptr long)
 387 stdcall -ordinal DSA_EnumCallback(ptr ptr long)
 388 stdcall -ordinal DSA_DestroyCallback(ptr ptr long)
-389 stdcall -noname comctl32_389(long long)
+389 stdcall -noname SHGetProcessDword(long long)
 390 stdcall -noname ImageList_SetColorTable(ptr long long ptr)
 400 stdcall -ordinal CreateMRUListW(ptr)
 401 stdcall -ordinal AddMRUStringW(long wstr)
@@ -188,6 +188,7 @@
 @ stdcall PropertySheet(ptr) PropertySheetA
 @ stdcall PropertySheetA(ptr)
 @ stdcall PropertySheetW(ptr)
+@ stdcall RegisterClassNameW(wstr)
 @ stdcall TaskDialogIndirect(ptr ptr ptr ptr)
 @ stdcall UninitializeFlatSB(long)
 @ stdcall _TrackMouseEvent(ptr)

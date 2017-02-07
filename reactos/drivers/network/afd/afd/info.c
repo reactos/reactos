@@ -11,7 +11,7 @@
 
 NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	    PIO_STACK_LOCATION IrpSp ) {
+            PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -19,34 +19,34 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PLIST_ENTRY CurrentEntry;
 
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
-			    InfoReq ? InfoReq->InformationClass : 0));
+                            InfoReq ? InfoReq->InformationClass : 0));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    
+
     if (!InfoReq)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
-	switch( InfoReq->InformationClass ) {
-	case AFD_INFO_RECEIVE_WINDOW_SIZE:
-	    InfoReq->Information.Ulong = FCB->Recv.Size;
-	    break;
+        switch( InfoReq->InformationClass ) {
+        case AFD_INFO_RECEIVE_WINDOW_SIZE:
+            InfoReq->Information.Ulong = FCB->Recv.Size;
+            break;
 
-	case AFD_INFO_SEND_WINDOW_SIZE:
-	    InfoReq->Information.Ulong = FCB->Send.Size;
-	    AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
-	    break;
+        case AFD_INFO_SEND_WINDOW_SIZE:
+            InfoReq->Information.Ulong = FCB->Send.Size;
+            AFD_DbgPrint(MID_TRACE,("Send window size %d\n", FCB->Send.Size));
+            break;
 
-	case AFD_INFO_GROUP_ID_TYPE:
-	    InfoReq->Information.LargeInteger.u.HighPart = FCB->GroupType;
-	    InfoReq->Information.LargeInteger.u.LowPart = FCB->GroupID;
-	    AFD_DbgPrint(MID_TRACE, ("Group ID: %d Group Type: %d\n", FCB->GroupID, FCB->GroupType));
-	    break;
+        case AFD_INFO_GROUP_ID_TYPE:
+            InfoReq->Information.LargeInteger.u.HighPart = FCB->GroupType;
+            InfoReq->Information.LargeInteger.u.LowPart = FCB->GroupID;
+            AFD_DbgPrint(MID_TRACE, ("Group ID: %d Group Type: %d\n", FCB->GroupID, FCB->GroupType));
+            break;
 
-	case AFD_INFO_BLOCKING_MODE:
-	    InfoReq->Information.Boolean = FCB->NonBlocking;
-	    break;
-            
+        case AFD_INFO_BLOCKING_MODE:
+            InfoReq->Information.Boolean = FCB->NonBlocking;
+            break;
+
     case AFD_INFO_INLINING_MODE:
         InfoReq->Information.Boolean = FCB->OobInline;
         break;
@@ -59,16 +59,16 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
         break;
 
-	case AFD_INFO_SENDS_IN_PROGRESS:
+        case AFD_INFO_SENDS_IN_PROGRESS:
             InfoReq->Information.Ulong = 0;
 
-	    /* Count the queued sends */
-	    CurrentEntry = FCB->PendingIrpList[FUNCTION_SEND].Flink;
-	    while (CurrentEntry != &FCB->PendingIrpList[FUNCTION_SEND])
-	    {
-	         InfoReq->Information.Ulong++;
-	         CurrentEntry = CurrentEntry->Flink;
-	    }
+            /* Count the queued sends */
+            CurrentEntry = FCB->PendingIrpList[FUNCTION_SEND].Flink;
+            while (CurrentEntry != &FCB->PendingIrpList[FUNCTION_SEND])
+            {
+                 InfoReq->Information.Ulong++;
+                 CurrentEntry = CurrentEntry->Flink;
+            }
 
         /* This needs to count too because when this is dispatched
          * the user-mode IRP has already been completed and therefore
@@ -83,15 +83,15 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             InfoReq->Information.Ulong++;
         break;
 
-	default:
-	    AFD_DbgPrint(MIN_TRACE,("Unknown info id %x\n",
-				    InfoReq->InformationClass));
-	    Status = STATUS_INVALID_PARAMETER;
-	    break;
-	}
+        default:
+            AFD_DbgPrint(MIN_TRACE,("Unknown info id %x\n",
+                                    InfoReq->InformationClass));
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	AFD_DbgPrint(MIN_TRACE,("Exception executing GetInfo\n"));
-	Status = STATUS_INVALID_PARAMETER;
+        AFD_DbgPrint(MIN_TRACE,("Exception executing GetInfo\n"));
+        Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
@@ -109,78 +109,78 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PCHAR NewBuffer;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!InfoReq)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     _SEH2_TRY {
-      switch (InfoReq->InformationClass) {
-        case AFD_INFO_BLOCKING_MODE:
-          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
-          FCB->NonBlocking = InfoReq->Information.Boolean;
-          break;
-        case AFD_INFO_INLINING_MODE:
-          FCB->OobInline = InfoReq->Information.Boolean;
-          break;
-        case AFD_INFO_RECEIVE_WINDOW_SIZE:
-          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
-          if (NewBuffer)
-          {
-              if (FCB->Recv.Content > InfoReq->Information.Ulong)
-                  FCB->Recv.Content = InfoReq->Information.Ulong;
-              
-              if (FCB->Recv.Window)
-              {
-                  RtlCopyMemory(NewBuffer,
-                                FCB->Recv.Window,
-                                FCB->Recv.Content);
-                  
-                  ExFreePool(FCB->Recv.Window);
-              }
-              
-              FCB->Recv.Size = InfoReq->Information.Ulong;
-              FCB->Recv.Window = NewBuffer;
-              
-              Status = STATUS_SUCCESS;
-          }
-          else
-          {
-              Status = STATUS_NO_MEMORY;
-          }
-          break;
-        case AFD_INFO_SEND_WINDOW_SIZE:
-          NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
-          if (NewBuffer)
-          {
-              if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
-                  FCB->Send.BytesUsed = InfoReq->Information.Ulong;
-                  
-              if (FCB->Send.Window)
-              {
-                  RtlCopyMemory(NewBuffer,
-                                FCB->Send.Window,
-                                FCB->Send.BytesUsed);
-                  
-                  ExFreePool(FCB->Send.Window);
-              }
-                  
-              FCB->Send.Size = InfoReq->Information.Ulong;
-              FCB->Send.Window = NewBuffer;
-                  
-              Status = STATUS_SUCCESS;
-          }
-          else
-          {
-              Status = STATUS_NO_MEMORY;
-          }
-          break;
-        default:
-          AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
-          break;
-      }
+        switch (InfoReq->InformationClass) {
+            case AFD_INFO_BLOCKING_MODE:
+                AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Boolean));
+                FCB->NonBlocking = InfoReq->Information.Boolean;
+                break;
+            case AFD_INFO_INLINING_MODE:
+                FCB->OobInline = InfoReq->Information.Boolean;
+                break;
+            case AFD_INFO_RECEIVE_WINDOW_SIZE:
+                NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+                if (NewBuffer)
+                {
+                    if (FCB->Recv.Content > InfoReq->Information.Ulong)
+                        FCB->Recv.Content = InfoReq->Information.Ulong;
+
+                    if (FCB->Recv.Window)
+                    {
+                        RtlCopyMemory(NewBuffer,
+                                      FCB->Recv.Window,
+                                      FCB->Recv.Content);
+
+                        ExFreePool(FCB->Recv.Window);
+                    }
+
+                    FCB->Recv.Size = InfoReq->Information.Ulong;
+                    FCB->Recv.Window = NewBuffer;
+
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    Status = STATUS_NO_MEMORY;
+                }
+                break;
+            case AFD_INFO_SEND_WINDOW_SIZE:
+                NewBuffer = ExAllocatePool(PagedPool, InfoReq->Information.Ulong);
+                if (NewBuffer)
+                {
+                    if (FCB->Send.BytesUsed > InfoReq->Information.Ulong)
+                        FCB->Send.BytesUsed = InfoReq->Information.Ulong;
+
+                    if (FCB->Send.Window)
+                    {
+                        RtlCopyMemory(NewBuffer,
+                                      FCB->Send.Window,
+                                      FCB->Send.BytesUsed);
+
+                        ExFreePool(FCB->Send.Window);
+                    }
+
+                    FCB->Send.Size = InfoReq->Information.Ulong;
+                    FCB->Send.Window = NewBuffer;
+
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    Status = STATUS_NO_MEMORY;
+                }
+                break;
+            default:
+                AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
+                break;
+        }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-      AFD_DbgPrint(MIN_TRACE,("Exception executing SetInfo\n"));
-      Status = STATUS_INVALID_PARAMETER;
+        AFD_DbgPrint(MIN_TRACE,("Exception executing SetInfo\n"));
+        Status = STATUS_INVALID_PARAMETER;
     } _SEH2_END;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
@@ -190,7 +190,7 @@ AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS NTAPI
 AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                      PIO_STACK_LOCATION IrpSp ) {
+                PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -199,29 +199,29 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( FCB->AddressFile.Object == NULL && FCB->Connection.Object == NULL ) {
-	 return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
+         return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
     }
 
-    Mdl = IoAllocateMdl
-	( Irp->UserBuffer,
-	  IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-	  FALSE,
-	  FALSE,
-	  NULL );
+    Mdl = IoAllocateMdl( Irp->UserBuffer,
+                         IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
+                         FALSE,
+                         FALSE,
+                         NULL );
 
     if( Mdl != NULL ) {
-	_SEH2_TRY {
-	    MmProbeAndLockPages( Mdl, Irp->RequestorMode, IoModifyAccess );
-	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-	    AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	    Status = _SEH2_GetExceptionCode();
-	} _SEH2_END;
+        _SEH2_TRY {
+            MmProbeAndLockPages( Mdl, Irp->RequestorMode, IoModifyAccess );
+        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+            AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+            Status = _SEH2_GetExceptionCode();
+        } _SEH2_END;
 
-	if( NT_SUCCESS(Status) ) {
-                Status = TdiQueryInformation
-                    ( FCB->Connection.Object ? FCB->Connection.Object : FCB->AddressFile.Object,
-                      TDI_QUERY_ADDRESS_INFO,
-                      Mdl );
+        if( NT_SUCCESS(Status) ) {
+                Status = TdiQueryInformation( FCB->Connection.Object
+                                                ? FCB->Connection.Object
+                                                : FCB->AddressFile.Object,
+                                              TDI_QUERY_ADDRESS_INFO,
+                                              Mdl );
         }
     } else
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -231,7 +231,7 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS NTAPI
 AfdGetPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                      PIO_STACK_LOCATION IrpSp ) {
+                PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;

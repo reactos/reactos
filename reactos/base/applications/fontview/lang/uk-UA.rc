@@ -10,12 +10,12 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUIT, "Вихід"
+	IDS_INSTALL, "Install"
 	IDS_PRINT, "Друк"
 	IDS_STRING, "Чуєш їх, доцю, га? Кумедна ж ти, прощайся без ґольфів! 1234567890"
+	IDS_OPEN, "Open Font..."
 	IDS_ERROR, "Помилка"
 	IDS_ERROR_NOMEM, "Недостатньо пам'яті для завершення операції."
 	IDS_ERROR_NOFONT, "Файл %1 не є коректним файлом шрифту."
 	IDS_ERROR_NOCLASS, "Неможливо ініціалізувати віконний клас."
-	IDS_ERROR_BADCMD, "Не вказаний файл шрифту.\nСинтаксис:\n  fontview.exe <файл_шрифту>"
 END

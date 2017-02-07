@@ -307,7 +307,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
             }
             break;
 
-        /* Add the current applicaiton path */
+        /* Add the current application path */
         case BaseSearchPathApp:
             if ((AppName) && (AppNameEnd))
             {
@@ -1372,7 +1372,7 @@ SearchPathW(IN LPCWSTR lpPath,
     /* Create the string that describes the output buffer from the caller */
     CallerBuffer.Length = 0;
     CallerBuffer.Buffer = lpBuffer;
-    
+
     /* How much space does the caller have? */
     if (nBufferLength <= UNICODE_STRING_MAX_CHARS)
     {
@@ -1407,7 +1407,7 @@ SearchPathW(IN LPCWSTR lpPath,
                      Status);
             DbgPrint("    Path = %wZ\n", &PathString);
         }
-        
+
         /* Check if the failure was due to a small buffer */
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
@@ -1425,7 +1425,7 @@ SearchPathW(IN LPCWSTR lpPath,
     {
         /* It worked! Write the file part now */
         if (lpFilePart) *lpFilePart = &lpBuffer[FilePartSize];
-        
+
         /* Convert the final result length */
         Result = CallerBuffer.Length / sizeof(WCHAR);
     }
@@ -2205,7 +2205,7 @@ SetCurrentDirectoryA(IN LPCSTR lpPathName)
     DirName = Basep8BitStringToStaticUnicodeString(lpPathName);
     if (!DirName) return FALSE;
 
-    if (CheckForSameCurdir(DirName)) return FALSE;
+    if (CheckForSameCurdir(DirName)) return TRUE;
 
     Status = RtlSetCurrentDirectory_U(DirName);
     if (NT_SUCCESS(Status)) return TRUE;

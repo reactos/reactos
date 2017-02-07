@@ -390,8 +390,13 @@ GetVersionInformationFromInfFile(
             DriverVer, RequiredSize,
             &RequiredSize);
     }
-    if (!Result)
-        goto cleanup;
+    else
+    {
+        /* windows sets default date of 00/00/0000 when this directive is missing*/
+        memset(DriverDate, 0, sizeof(FILETIME));
+        *DriverVersion = 0;
+        return TRUE;
+    }
 
     /* Get driver date and driver version, by analyzing the "DriverVer" value */
     pComma = strchrW(DriverVer, ',');

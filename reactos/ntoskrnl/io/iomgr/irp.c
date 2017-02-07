@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* Undefine some macros we implement here */
-#undef IoCallDriver
-#undef IoCompleteRequest
-
 PIRP IopDeadIrp;
 
 /* PRIVATE FUNCTIONS  ********************************************************/
@@ -1099,6 +1095,7 @@ IoCancelThreadIo(IN PETHREAD Thread)
 /*
  * @implemented
  */
+#undef IoCallDriver
 NTSTATUS
 NTAPI
 IoCallDriver(IN PDEVICE_OBJECT DeviceObject,
@@ -1108,9 +1105,12 @@ IoCallDriver(IN PDEVICE_OBJECT DeviceObject,
     return IofCallDriver(DeviceObject, Irp);
 }
 
+#define IoCallDriver IofCallDriver
+
 /*
  * @implemented
  */
+#undef IoCompleteRequest
 VOID
 NTAPI
 IoCompleteRequest(IN PIRP Irp,
@@ -1119,6 +1119,8 @@ IoCompleteRequest(IN PIRP Irp,
     /* Call the fastcall */
     IofCompleteRequest(Irp, PriorityBoost);
 }
+
+#define IoCompleteRequest IofCompleteRequest
 
 /*
  * @implemented
@@ -1650,7 +1652,8 @@ IoGetRequestorSessionId(IN PIRP Irp,
     /* Return the session */
     if ((Process = IoGetRequestorProcess(Irp)))
     {
-        *pSessionId = Process->Session;
+        // FIXME: broken
+        *pSessionId = PtrToUlong(Process->Session);
         return STATUS_SUCCESS;
     }
 

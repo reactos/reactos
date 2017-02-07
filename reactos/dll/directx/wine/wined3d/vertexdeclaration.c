@@ -27,7 +27,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
-static void dump_wined3dvertexelement(const WINED3DVERTEXELEMENT *element) {
+static void dump_wined3d_vertex_element(const struct wined3d_vertex_element *element)
+{
     TRACE("     format: %s (%#x)\n", debug_d3dformat(element->format), element->format);
     TRACE(" input_slot: %u\n", element->input_slot);
     TRACE("     offset: %u\n", element->offset);
@@ -69,7 +70,7 @@ void * CDECL wined3d_vertex_declaration_get_parent(const struct wined3d_vertex_d
     return declaration->parent;
 }
 
-static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
+static BOOL declaration_element_valid_ffp(const struct wined3d_vertex_element *element)
 {
     switch(element->usage)
     {
@@ -158,7 +159,7 @@ static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
 }
 
 static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declaration,
-        struct wined3d_device *device, const WINED3DVERTEXELEMENT *elements, UINT element_count,
+        struct wined3d_device *device, const struct wined3d_vertex_element *elements, UINT element_count,
         void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
@@ -169,7 +170,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
     {
         for (i = 0; i < element_count; ++i)
         {
-            dump_wined3dvertexelement(elements + i);
+            dump_wined3d_vertex_element(elements + i);
         }
     }
 
@@ -238,7 +239,7 @@ static HRESULT vertexdeclaration_init(struct wined3d_vertex_declaration *declara
 }
 
 HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
-        const WINED3DVERTEXELEMENT *elements, UINT element_count, void *parent,
+        const struct wined3d_vertex_element *elements, UINT element_count, void *parent,
         const struct wined3d_parent_ops *parent_ops, struct wined3d_vertex_declaration **declaration)
 {
     struct wined3d_vertex_declaration *object;
@@ -271,7 +272,7 @@ HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
 struct wined3d_fvf_convert_state
 {
     const struct wined3d_gl_info *gl_info;
-    WINED3DVERTEXELEMENT *elements;
+    struct wined3d_vertex_element *elements;
     UINT offset;
     UINT idx;
 };
@@ -279,7 +280,7 @@ struct wined3d_fvf_convert_state
 static void append_decl_element(struct wined3d_fvf_convert_state *state,
         enum wined3d_format_id format_id, WINED3DDECLUSAGE usage, UINT usage_idx)
 {
-    WINED3DVERTEXELEMENT *elements = state->elements;
+    struct wined3d_vertex_element *elements = state->elements;
     const struct wined3d_format *format;
     UINT offset = state->offset;
     UINT idx = state->idx;
@@ -298,7 +299,7 @@ static void append_decl_element(struct wined3d_fvf_convert_state *state,
 }
 
 static unsigned int convert_fvf_to_declaration(const struct wined3d_gl_info *gl_info,
-        DWORD fvf, WINED3DVERTEXELEMENT **elements)
+        DWORD fvf, struct wined3d_vertex_element **elements)
 {
     BOOL has_pos = !!(fvf & WINED3DFVF_POSITION_MASK);
     BOOL has_blend = (fvf & WINED3DFVF_XYZB5) > WINED3DFVF_XYZRHW;
@@ -408,7 +409,7 @@ HRESULT CDECL wined3d_vertex_declaration_create_from_fvf(struct wined3d_device *
         DWORD fvf, void *parent, const struct wined3d_parent_ops *parent_ops,
         struct wined3d_vertex_declaration **declaration)
 {
-    WINED3DVERTEXELEMENT *elements;
+    struct wined3d_vertex_element *elements;
     unsigned int size;
     DWORD hr;
 

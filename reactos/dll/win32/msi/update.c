@@ -154,9 +154,8 @@ static UINT UPDATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
     return wv->ops->get_dimensions( wv, rows, cols );
 }
 
-static UINT UPDATE_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
-                LPWSTR* table_name )
+static UINT UPDATE_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                    UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
     MSIVIEW *wv;
@@ -226,31 +225,22 @@ static const MSIVIEWOPS update_ops =
     NULL,
 };
 
-UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
+UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
                         column_info *columns, struct expr *expr )
 {
     MSIUPDATEVIEW *uv = NULL;
     UINT r;
-    MSIVIEW *tv = NULL, *sv = NULL, *wv = NULL;
+    MSIVIEW *sv = NULL, *wv = NULL;
 
     TRACE("%p\n", uv );
 
-    r = TABLE_CreateView( db, table, &tv );
+    if (expr)
+        r = WHERE_CreateView( db, &wv, table, expr );
+    else
+        r = TABLE_CreateView( db, table, &wv );
+
     if( r != ERROR_SUCCESS )
         return r;
-
-    if (expr)
-    {
-        /* add conditions first */
-        r = WHERE_CreateView( db, &wv, tv, expr );
-        if( r != ERROR_SUCCESS )
-        {
-            tv->ops->delete( tv );
-            return r;
-        }
-    }
-    else
-       wv = tv;
 
     /* then select the columns we want */
     r = SELECT_CreateView( db, &sv, wv, columns );

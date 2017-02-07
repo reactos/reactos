@@ -888,9 +888,9 @@ EXPORT
 getnameinfo(const struct sockaddr FAR * sa,
             socklen_t       salen,
             char FAR *      host,
-            socklen_t       hostlen,
+            DWORD           hostlen,
             char FAR *      serv,
-            socklen_t       servlen,
+            DWORD           servlen,
             INT             flags)
 {
     UNIMPLEMENTED

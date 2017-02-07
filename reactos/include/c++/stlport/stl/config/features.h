@@ -26,6 +26,8 @@
 #ifndef _STLP_FEATURES_H
 #define _STLP_FEATURES_H
 
+#ifndef RC_INVOKED
+
 /*
  * Purpose of this file:
  *
@@ -1075,5 +1077,7 @@ void _STLP_DECLSPEC _STLP_CALL _STLP_CHECK_RUNTIME_COMPATIBILITY();
 #undef _STLP_NEED_TYPENAME
 #undef _STLP_NO_NEW_STYLE_CASTS
 #undef __AUTO_CONFIGURED
+
+#endif /* RC_INVOKED */
 
 #endif /* _STLP_FEATURES_H */

@@ -55,7 +55,7 @@ BEGIN
 
         MENUITEM SEPARATOR
             MENUITEM "ハイブの読み込み...",     ID_REGISTRY_LOADHIVE, GRAYED
-            MENUITEM "ハイブのアンロード...",   ID_REGISTRY_UNLOADHIVE, GRAYED
+            MENUITEM "ハイブのアンロード...",     ID_REGISTRY_UNLOADHIVE, GRAYED
             MENUITEM SEPARATOR
         MENUITEM "ネットワーク レジストリへの接続(&C)...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -80,7 +80,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
                 MENUITEM "複数行文字列値(&M)",  ID_EDIT_NEW_MULTISTRINGVALUE
-                MENUITEM "展開可能\な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+                MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "アクセス許可(&P)...",         ID_EDIT_PERMISSIONS
@@ -93,7 +93,7 @@ BEGIN
         MENUITEM "検索(&F)\tCtrl+F",            ID_EDIT_FIND
         MENUITEM "次を検索(&X)\tF3",            ID_EDIT_FINDNEXT
     END
-    POPUP "表\示(&V)"
+    POPUP "表 示(&V)"
     BEGIN
         MENUITEM "ステータス バー(&B)",         ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -134,7 +134,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
             MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能\な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -148,7 +148,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
             MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能\な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "検索(&F)",                    ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -164,7 +164,7 @@ BEGIN
   BEGIN
         MENUITEM "切り取り(&C)", ID_HEXEDIT_CUT
         MENUITEM "コピー(&C)", ID_HEXEDIT_COPY
-        MENUITEM "貼\り付け(&P)", ID_HEXEDIT_PASTE
+        MENUITEM "貼 り付け(&P)", ID_HEXEDIT_PASTE
         MENUITEM "削除(&D)", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
         MENUITEM "すべて選択(&A)", ID_HEXEDIT_SELECT_ALL
@@ -307,7 +307,7 @@ BEGIN
     ID_EDIT_MENU            "値やキーを編集するコマンドです。"
     ID_VIEW_MENU            "レジストリ ウィンドウをカスタマイズするコマンドです。"
     ID_FAVOURITES_MENU      "頻繁に使用されるキーにアクセスするコマンドです。"
-    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表\示するコマンドです。"
+    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表 示するコマンドです。"
     ID_EDIT_NEW_MENU        "新しいキーや値を作成するコマンドです。"
 END
 
@@ -331,7 +331,7 @@ BEGIN
                             "リモート コンピュータのレジストリを切断します。"
     ID_REGISTRY_PRINT       "レジストリの一部または全体を印刷します。"
 /*    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。" */
-    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表\示します。"
+    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表 示します。"
 END
 
 STRINGTABLE DISCARDABLE
@@ -339,7 +339,7 @@ BEGIN
     ID_REGISTRY_EXIT        "レジストリ エディタを終了します。"
     ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
     ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
-    ID_VIEW_STATUSBAR       "ステータス バーの表\示/非表\示を切り替えます。"
+    ID_VIEW_STATUSBAR       "ステータス バーの表 示/非表 示を切り替えます。"
     ID_VIEW_SPLIT           "2 つのパネルの境界の位置を変更します。"
     ID_VIEW_REFRESH         "ウィンドウの内容を最新の情報に更新します。"
     ID_EDIT_DELETE          "選択範囲を削除します。"
@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "指定された値のすべてを削除できません!"
     IDS_ERR_RENVAL_CAPTION  "値の名前を変更するときにエラーが発生しました。"
     IDS_ERR_RENVAL_TOEMPTY  "%s の名前を変更できません。指定された値の名前には文字が含まれていません。別の名前でやり直してください。"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "新しいキー #%d"
     IDS_NEW_VALUE           "新しい値 #%d"
 END
@@ -389,9 +391,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "登録ファイル"
-    IDS_FLT_REGFILES        "登録ファイル"
+    IDS_FLT_REGFILES        "登録ファイル (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 登録ファイル (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 登録ファイル (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "すべてのファイル (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

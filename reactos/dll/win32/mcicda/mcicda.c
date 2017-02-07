@@ -33,7 +33,6 @@
 #include "wownt32.h"
 #include "mmddk.h"
 #include "winioctl.h"
-#define __NTDDSTOR_H /* ROS HACK */
 #include "ntddcdrm.h"
 #include "winternl.h"
 #include "wine/debug.h"
@@ -59,7 +58,7 @@ typedef struct {
     UINT		wDevID;
     int     		nUseCount;          /* Incremented for each shared open */
     BOOL  		fShareable;         /* TRUE if first open was shareable */
-    WORD    		wNotifyDeviceID;    /* MCI device ID with a pending notification */
+    MCIDEVICEID		wNotifyDeviceID;    /* MCI device ID with a pending notification */
     HANDLE 		hCallback;          /* Callback handle for pending notification */
     DWORD		dwTimeFormat;
     HANDLE              handle;
@@ -142,17 +141,12 @@ static DWORD CALLBACK MCICDA_playLoop(void *ptr)
     IDirectSoundBuffer_Stop(wmcda->dsBuf);
     SetEvent(wmcda->stopEvent);
 
-    EnterCriticalSection(&wmcda->cs);
-    if (wmcda->hCallback) {
-        mciDriverNotify(wmcda->hCallback, wmcda->wNotifyDeviceID,
-                        FAILED(hr) ? MCI_NOTIFY_FAILURE :
-                        ((endPos!=lastPos) ? MCI_NOTIFY_ABORTED :
-                         MCI_NOTIFY_SUCCESSFUL));
-        wmcda->hCallback = NULL;
-    }
-    LeaveCriticalSection(&wmcda->cs);
+    /* A design bug in native: the independent CD player called by the
+     * MCI has no means to signal end of playing, therefore the MCI
+     * notification is left hanging.  MCI_NOTIFY_SUPERSEDED will be
+     * signaled by the next command that has MCI_NOTIFY set (or
+     * MCI_NOTIFY_ABORTED for MCI_PLAY). */
 
-    ExitThread(0);
     return 0;
 }
 
@@ -167,6 +161,7 @@ static	DWORD	MCICDA_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
     WINE_MCICDAUDIO*	wmcda;
 
     if (!modp) return 0xFFFFFFFF;
+    /* FIXME: MCIERR_CANNOT_LOAD_DRIVER if there's no drive of type CD-ROM */
 
     wmcda = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINE_MCICDAUDIO));
 
@@ -184,6 +179,7 @@ static	DWORD	MCICDA_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
     modp->wCustomCommandTable = MCI_NO_COMMAND_TABLE;
     modp->wType = MCI_DEVTYPE_CD_AUDIO;
     InitializeCriticalSection(&wmcda->cs);
+    wmcda->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": WINE_MCICDAUDIO.cs");
     return modp->wDeviceID;
 }
 
@@ -195,6 +191,7 @@ static	DWORD	MCICDA_drvClose(DWORD dwDevID)
     WINE_MCICDAUDIO*  wmcda = (WINE_MCICDAUDIO*)mciGetDriverData(dwDevID);
 
     if (wmcda) {
+	wmcda->cs.DebugInfo->Spare[0] = 0;
 	DeleteCriticalSection(&wmcda->cs);
 	HeapFree(GetProcessHeap(), 0, wmcda);
 	mciSetDriverData(dwDevID, 0);
@@ -214,6 +211,20 @@ static WINE_MCICDAUDIO*  MCICDA_GetOpenDrv(UINT wDevID)
 	return 0;
     }
     return wmcda;
+}
+
+/**************************************************************************
+ *				MCICDA_mciNotify		[internal]
+ *
+ * Notifications in MCI work like a 1-element queue.
+ * Each new notification request supersedes the previous one.
+ */
+static void MCICDA_Notify(DWORD_PTR hWndCallBack, WINE_MCICDAUDIO* wmcda, UINT wStatus)
+{
+    MCIDEVICEID wDevID = wmcda->wNotifyDeviceID;
+    HANDLE old = InterlockedExchangePointer(&wmcda->hCallback, NULL);
+    if (old) mciDriverNotify(old, wDevID, MCI_NOTIFY_SUPERSEDED);
+    mciDriverNotify(HWND_32(LOWORD(hWndCallBack)), wDevID, wStatus);
 }
 
 /**************************************************************************
@@ -270,6 +281,7 @@ static	int	MCICDA_GetError(WINE_MCICDAUDIO* wmcda)
     switch (GetLastError())
     {
     case ERROR_NOT_READY:     return MCIERR_DEVICE_NOT_READY;
+    case ERROR_NOT_SUPPORTED:
     case ERROR_IO_DEVICE:     return MCIERR_HARDWARE;
     default:
 	FIXME("Unknown mode %u\n", GetLastError());
@@ -384,7 +396,6 @@ static DWORD MCICDA_CalcTime(WINE_MCICDAUDIO* wmcda, DWORD tf, DWORD dwFrame, LP
     return dwTime;
 }
 
-static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms);
 static DWORD MCICDA_Stop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms);
 
 /**************************************************************************
@@ -392,11 +403,10 @@ static DWORD MCICDA_Stop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms
  */
 static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenParms)
 {
-    DWORD		dwDeviceID;
-    DWORD               ret = MCIERR_HARDWARE;
+    MCIDEVICEID		dwDeviceID;
+    DWORD               ret;
     WINE_MCICDAUDIO* 	wmcda = (WINE_MCICDAUDIO*)mciGetDriverData(wDevID);
     WCHAR               root[7], drive = 0;
-    unsigned int        count;
 
     TRACE("(%04X, %08X, %p);\n", wDevID, dwFlags, lpOpenParms);
 
@@ -420,33 +430,32 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     if (dwFlags & MCI_OPEN_ELEMENT) {
         if (dwFlags & MCI_OPEN_ELEMENT_ID) {
             WARN("MCI_OPEN_ELEMENT_ID %p! Abort\n", lpOpenParms->lpstrElementName);
-            ret = MCIERR_NO_ELEMENT_ALLOWED;
+            ret = MCIERR_FLAGS_NOT_COMPATIBLE;
             goto the_error;
         }
         TRACE("MCI_OPEN_ELEMENT element name: %s\n", debugstr_w(lpOpenParms->lpstrElementName));
-        if (!isalpha(lpOpenParms->lpstrElementName[0]) || lpOpenParms->lpstrElementName[1] != ':' ||
-            (lpOpenParms->lpstrElementName[2] && lpOpenParms->lpstrElementName[2] != '\\'))
+        /* Only the first letter counts since w2k
+         * Win9x-NT accept only d: and w98SE accepts d:\foobar as well.
+         * Play d:\Track03.cda plays from the first track, not #3. */
+        if (!isalpha(lpOpenParms->lpstrElementName[0]))
         {
-            WARN("MCI_OPEN_ELEMENT unsupported format: %s\n", 
-                 debugstr_w(lpOpenParms->lpstrElementName));
-            ret = MCIERR_NO_ELEMENT_ALLOWED;
+            ret = MCIERR_INVALID_FILE;
             goto the_error;
         }
         drive = toupper(lpOpenParms->lpstrElementName[0]);
         root[0] = drive; root[1] = ':'; root[2] = '\\'; root[3] = '\0';
         if (GetDriveTypeW(root) != DRIVE_CDROM)
         {
-            ret = MCIERR_INVALID_DEVICE_NAME;
+            ret = MCIERR_INVALID_FILE;
             goto the_error;
         }
     }
     else
     {
-        /* drive letter isn't passed... get the dwDeviceID'th cdrom in the system */
         root[0] = 'A'; root[1] = ':'; root[2] = '\\'; root[3] = '\0';
-        for (count = 0; root[0] <= 'Z'; root[0]++)
+        for ( ; root[0] <= 'Z'; root[0]++)
         {
-            if (GetDriveTypeW(root) == DRIVE_CDROM && ++count >= dwDeviceID)
+            if (GetDriveTypeW(root) == DRIVE_CDROM)
             {
                 drive = root[0];
                 break;
@@ -454,7 +463,7 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
         }
         if (!drive)
         {
-            ret = MCIERR_INVALID_DEVICE_ID;
+            ret = MCIERR_CANNOT_LOAD_DRIVER; /* drvOpen should return this */
             goto the_error;
         }
     }
@@ -466,12 +475,14 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     root[0] = root[1] = '\\'; root[2] = '.'; root[3] = '\\'; root[4] = drive; root[5] = ':'; root[6] = '\0';
     wmcda->handle = CreateFileW(root, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
     if (wmcda->handle == INVALID_HANDLE_VALUE)
+    {
+        ret = MCIERR_MUST_USE_SHAREABLE;
         goto the_error;
+    }
 
     if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpOpenParms->dwCallback);
 	mciDriverNotify(HWND_32(LOWORD(lpOpenParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
+			dwDeviceID, MCI_NOTIFY_SUCCESSFUL);
     }
     return 0;
 
@@ -496,6 +507,8 @@ static DWORD MCICDA_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParm
     if (--wmcda->nUseCount == 0) {
 	CloseHandle(wmcda->handle);
     }
+    if ((dwParam & MCI_NOTIFY) && lpParms)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -505,11 +518,13 @@ static DWORD MCICDA_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParm
 static DWORD MCICDA_GetDevCaps(UINT wDevID, DWORD dwFlags,
 				   LPMCI_GETDEVCAPS_PARMS lpParms)
 {
+    WINE_MCICDAUDIO* 	wmcda = (WINE_MCICDAUDIO*)mciGetDriverData(wDevID);
     DWORD	ret = 0;
 
     TRACE("(%04X, %08X, %p);\n", wDevID, dwFlags, lpParms);
 
     if (lpParms == NULL) return MCIERR_NULL_PARAMETER_BLOCK;
+    if (wmcda == NULL)			return MCIERR_INVALID_DEVICE_ID;
 
     if (dwFlags & MCI_GETDEVCAPS_ITEM) {
 	TRACE("MCI_GETDEVCAPS_ITEM dwItem=%08X;\n", lpParms->dwItem);
@@ -552,14 +567,17 @@ static DWORD MCICDA_GetDevCaps(UINT wDevID, DWORD dwFlags,
 	    ret = MCI_RESOURCE_RETURNED;
 	    break;
 	default:
-            ERR("Unsupported %x devCaps item\n", lpParms->dwItem);
-	    return MCIERR_UNRECOGNIZED_COMMAND;
+            WARN("Unsupported %x devCaps item\n", lpParms->dwItem);
+	    return MCIERR_UNSUPPORTED_FUNCTION;
 	}
     } else {
 	TRACE("No GetDevCaps-Item !\n");
-	return MCIERR_UNRECOGNIZED_COMMAND;
+	return MCIERR_MISSING_PARAMETER;
     }
     TRACE("lpParms->dwReturn=%08X;\n", lpParms->dwReturn);
+    if (dwFlags & MCI_NOTIFY) {
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
+    }
     return ret;
 }
 
@@ -632,19 +650,19 @@ static DWORD MCICDA_Info(UINT wDevID, DWORD dwFlags, LPMCI_INFO_PARMSW lpParms)
 	str = buffer;
     } else {
 	WARN("Don't know this info command (%u)\n", dwFlags);
-	ret = MCIERR_UNRECOGNIZED_COMMAND;
+	ret = MCIERR_MISSING_PARAMETER;
     }
-    if (str) {
-	if (lpParms->dwRetSize <= strlenW(str)) {
-	    lstrcpynW(lpParms->lpstrReturn, str, lpParms->dwRetSize - 1);
-	    ret = MCIERR_PARAM_OVERFLOW;
-	} else {
-	    strcpyW(lpParms->lpstrReturn, str);
-	}
-    } else {
-	*lpParms->lpstrReturn = 0;
+    if (!ret) {
+	TRACE("=> %s\n", debugstr_w(str));
+	if (lpParms->dwRetSize) {
+	    WCHAR zero = 0;
+	    /* FIXME? Since NT, mciwave, mciseq and mcicda set dwRetSize
+	     *        to the number of characters written, excluding \0. */
+	    lstrcpynW(lpParms->lpstrReturn, str ? str : &zero, lpParms->dwRetSize);
+	} else ret = MCIERR_PARAM_OVERFLOW;
     }
-    TRACE("=> %s (%d)\n", debugstr_w(lpParms->lpstrReturn), ret);
+    if (MMSYSERR_NOERROR==ret && (dwFlags & MCI_NOTIFY))
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return ret;
 }
 
@@ -665,11 +683,6 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
     if (lpParms == NULL) return MCIERR_NULL_PARAMETER_BLOCK;
     if (wmcda == NULL) return MCIERR_INVALID_DEVICE_ID;
 
-    if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
     if (dwFlags & MCI_STATUS_ITEM) {
 	TRACE("dwItem = %x\n", lpParms->dwItem);
 	switch (lpParms->dwItem) {
@@ -679,6 +692,7 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
                                  &data, sizeof(data), &br, NULL))
             {
 		return MCICDA_GetError(wmcda);
+		/* alt. data.CurrentPosition.TrackNumber = 1; -- what native yields */
 	    }
 	    lpParms->dwReturn = data.CurrentPosition.TrackNumber;
             TRACE("CURRENT_TRACK=%lu\n", lpParms->dwReturn);
@@ -737,7 +751,8 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
 		return MCICDA_GetError(wmcda);
 	    break;
 	case MCI_STATUS_POSITION:
-	    if (dwFlags & MCI_STATUS_START) {
+            switch (dwFlags & (MCI_STATUS_START | MCI_TRACK)) {
+            case MCI_STATUS_START:
                 if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_READ_TOC, NULL, 0,
                                      &toc, sizeof(toc), &br, NULL)) {
                     WARN("error reading TOC !\n");
@@ -745,7 +760,8 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
                 }
 		lpParms->dwReturn = FRAME_OF_TOC(toc, toc.FirstTrack);
 		TRACE("get MCI_STATUS_START !\n");
-	    } else if (dwFlags & MCI_TRACK) {
+                break;
+            case MCI_TRACK:
                 if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_READ_TOC, NULL, 0,
                                      &toc, sizeof(toc), &br, NULL)) {
                     WARN("error reading TOC !\n");
@@ -755,13 +771,17 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
 		    return MCIERR_OUTOFRANGE;
 		lpParms->dwReturn = FRAME_OF_TOC(toc, lpParms->dwTrack);
 		TRACE("get MCI_TRACK #%u !\n", lpParms->dwTrack);
-            } else {
+                break;
+            case 0:
                 fmt.Format = IOCTL_CDROM_CURRENT_POSITION;
                 if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_READ_Q_CHANNEL, &fmt, sizeof(fmt),
                                      &data, sizeof(data), &br, NULL)) {
                     return MCICDA_GetError(wmcda);
                 }
                 lpParms->dwReturn = FRAME_OF_ADDR(data.CurrentPosition.AbsoluteAddress);
+                break;
+            default:
+                return MCIERR_FLAGS_NOT_COMPATIBLE;
             }
 	    lpParms->dwReturn = MCICDA_CalcTime(wmcda, wmcda->dwTimeFormat, lpParms->dwReturn, &ret);
             TRACE("MCI_STATUS_POSITION=%08lX\n", lpParms->dwReturn);
@@ -801,16 +821,17 @@ static DWORD MCICDA_Status(UINT wDevID, DWORD dwFlags, LPMCI_STATUS_PARMS lpParm
 		else
 		    lpParms->dwReturn = (toc.TrackData[lpParms->dwTrack - toc.FirstTrack].Control & 0x04) ?
                                          MCI_CDA_TRACK_OTHER : MCI_CDA_TRACK_AUDIO;
+		    /* FIXME: MAKEMCIRESOURCE "audio" | "other", localised */
 	    }
             TRACE("MCI_CDA_STATUS_TYPE_TRACK[%d]=%ld\n", lpParms->dwTrack, lpParms->dwReturn);
 	    break;
 	default:
             FIXME("unknown command %08X !\n", lpParms->dwItem);
-	    return MCIERR_UNRECOGNIZED_COMMAND;
+	    return MCIERR_UNSUPPORTED_FUNCTION;
 	}
-    } else {
-	WARN("not MCI_STATUS_ITEM !\n");
-    }
+    } else return MCIERR_MISSING_PARAMETER;
+    if ((dwFlags & MCI_NOTIFY) && HRESULT_CODE(ret)==0)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return ret;
 }
 
@@ -827,24 +848,23 @@ static DWORD MCICDA_SkipDataTracks(WINE_MCICDAUDIO* wmcda,DWORD *frame)
     WARN("error reading TOC !\n");
     return MCICDA_GetError(wmcda);
   }
-  /* Locate first track whose starting frame is bigger than frame */
-  for(i=toc.FirstTrack;i<=toc.LastTrack+1;i++) 
-    if ( FRAME_OF_TOC(toc, i) > *frame ) break;
-  if (i <= toc.FirstTrack && i>toc.LastTrack+1) {
-    i = 0; /* requested address is out of range: go back to start */
-    *frame = FRAME_OF_TOC(toc,toc.FirstTrack);
-  }
-  else
-    i--;
+  if (*frame < FRAME_OF_TOC(toc,toc.FirstTrack) ||
+      *frame >= FRAME_OF_TOC(toc,toc.LastTrack+1)) /* lead-out */
+    return MCIERR_OUTOFRANGE;
+  for(i=toc.LastTrack+1;i>toc.FirstTrack;i--)
+    if ( FRAME_OF_TOC(toc, i) <= *frame ) break;
   /* i points to last track whose start address is not greater than frame.
    * Now skip non-audio tracks */
-  for(;i<=toc.LastTrack+1;i++)
+  for(;i<=toc.LastTrack;i++)
     if ( ! (toc.TrackData[i-toc.FirstTrack].Control & 4) )
       break;
   /* The frame will be an address in the next audio track or
    * address of lead-out. */
   if ( FRAME_OF_TOC(toc, i) > *frame )
     *frame = FRAME_OF_TOC(toc, i);
+  /* Lead-out is an invalid seek position (on Linux as well). */
+  if (*frame == FRAME_OF_TOC(toc,toc.LastTrack+1))
+     (*frame)--;
   return 0;
 }
 
@@ -855,6 +875,7 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
 {
     WINE_MCICDAUDIO*	        wmcda = MCICDA_GetOpenDrv(wDevID);
     DWORD		        ret = 0, start, end;
+    HANDLE                      oldcb;
     DWORD                       br;
     CDROM_PLAY_AUDIO_MSF        play;
     CDROM_SUB_Q_DATA_FORMAT     fmt;
@@ -892,11 +913,26 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
     }
     if (dwFlags & MCI_TO) {
 	end = MCICDA_CalcFrame(wmcda, lpParms->dwTo);
+	if ( (ret=MCICDA_SkipDataTracks(wmcda, &end)) )
+	  return ret;
 	TRACE("MCI_TO=%08X -> %u\n", lpParms->dwTo, end);
     } else {
 	end = FRAME_OF_TOC(toc, toc.LastTrack + 1) - 1;
     }
+    if (end < start) return MCIERR_OUTOFRANGE;
     TRACE("Playing from %u to %u\n", start, end);
+
+    oldcb = InterlockedExchangePointer(&wmcda->hCallback,
+	(dwFlags & MCI_NOTIFY) ? HWND_32(LOWORD(lpParms->dwCallback)) : NULL);
+    if (oldcb) mciDriverNotify(oldcb, wmcda->wNotifyDeviceID, MCI_NOTIFY_ABORTED);
+
+    if (start == end || start == FRAME_OF_TOC(toc,toc.LastTrack+1)-1) {
+        if (dwFlags & MCI_NOTIFY) {
+            oldcb = InterlockedExchangePointer(&wmcda->hCallback, NULL);
+            if (oldcb) mciDriverNotify(oldcb, wDevID, MCI_NOTIFY_SUCCESSFUL);
+        }
+        return MMSYSERR_NOERROR;
+    }
 
     if (wmcda->hThread != 0) {
         SetEvent(wmcda->stopEvent);
@@ -913,14 +949,6 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
         IDirectSound_Release(wmcda->dsObj);
         wmcda->dsObj = NULL;
     }
-    else if(wmcda->hCallback) {
-        mciDriverNotify(wmcda->hCallback, wmcda->wNotifyDeviceID,
-                        MCI_NOTIFY_ABORTED);
-        wmcda->hCallback = NULL;
-    }
-
-    if ((dwFlags&MCI_NOTIFY))
-        wmcda->hCallback = HWND_32(LOWORD(lpParms->dwCallback));
 
     if (pDirectSoundCreate) {
         WAVEFORMATEX format;
@@ -980,8 +1008,15 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
                 wmcda->hThread = CreateThread(NULL, 0, MCICDA_playLoop, wmcda, 0, &br);
             if (wmcda->hThread != 0) {
                 hr = IDirectSoundBuffer_Play(wmcda->dsBuf, 0, 0, DSBPLAY_LOOPING);
-                if (SUCCEEDED(hr))
+                if (SUCCEEDED(hr)) {
+                    /* FIXME: implement MCI_WAIT and send notification only in that case */
+                    if (0) {
+                        oldcb = InterlockedExchangePointer(&wmcda->hCallback, NULL);
+                        if (oldcb) mciDriverNotify(oldcb, wmcda->wNotifyDeviceID,
+                            FAILED(hr) ? MCI_NOTIFY_FAILURE : MCI_NOTIFY_SUCCESSFUL);
+                    }
                     return ret;
+                }
 
                 SetEvent(wmcda->stopEvent);
                 WaitForSingleObject(wmcda->hThread, INFINITE);
@@ -1014,13 +1049,9 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
                          NULL, 0, &br, NULL)) {
 	wmcda->hCallback = NULL;
 	ret = MCIERR_HARDWARE;
-    } else if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	/*
-	  mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-	  wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-	*/
     }
+    /* The independent CD player has no means to signal MCI_NOTIFY when it's done.
+     * Native sends a notification with MCI_WAIT only. */
     return ret;
 }
 
@@ -1030,11 +1061,15 @@ static DWORD MCICDA_Play(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms)
 static DWORD MCICDA_Stop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms)
 {
     WINE_MCICDAUDIO*	wmcda = MCICDA_GetOpenDrv(wDevID);
+    HANDLE		oldcb;
     DWORD               br;
 
     TRACE("(%04X, %08X, %p);\n", wDevID, dwFlags, lpParms);
 
     if (wmcda == NULL)	return MCIERR_INVALID_DEVICE_ID;
+
+    oldcb = InterlockedExchangePointer(&wmcda->hCallback, NULL);
+    if (oldcb) mciDriverNotify(oldcb, wmcda->wNotifyDeviceID, MCI_NOTIFY_ABORTED);
 
     if (wmcda->hThread != 0) {
         SetEvent(wmcda->stopEvent);
@@ -1053,16 +1088,8 @@ static DWORD MCICDA_Stop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms
     else if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_STOP_AUDIO, NULL, 0, NULL, 0, &br, NULL))
         return MCIERR_HARDWARE;
 
-    if (wmcda->hCallback) {
-        mciDriverNotify(wmcda->hCallback, wmcda->wNotifyDeviceID, MCI_NOTIFY_ABORTED);
-        wmcda->hCallback = NULL;
-    }
-
-    if (lpParms && (dwFlags & MCI_NOTIFY)) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
+    if ((dwFlags & MCI_NOTIFY) && lpParms)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -1072,11 +1099,15 @@ static DWORD MCICDA_Stop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms
 static DWORD MCICDA_Pause(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms)
 {
     WINE_MCICDAUDIO*	wmcda = MCICDA_GetOpenDrv(wDevID);
+    HANDLE		oldcb;
     DWORD               br;
 
     TRACE("(%04X, %08X, %p);\n", wDevID, dwFlags, lpParms);
 
     if (wmcda == NULL)	return MCIERR_INVALID_DEVICE_ID;
+
+    oldcb = InterlockedExchangePointer(&wmcda->hCallback, NULL);
+    if (oldcb) mciDriverNotify(oldcb, wmcda->wNotifyDeviceID, MCI_NOTIFY_ABORTED);
 
     if (wmcda->hThread != 0) {
         /* Don't bother calling stop if the playLoop thread has already stopped */
@@ -1087,18 +1118,8 @@ static DWORD MCICDA_Pause(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParm
     else if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_PAUSE_AUDIO, NULL, 0, NULL, 0, &br, NULL))
         return MCIERR_HARDWARE;
 
-    EnterCriticalSection(&wmcda->cs);
-    if (wmcda->hCallback) {
-        mciDriverNotify(wmcda->hCallback, wmcda->wNotifyDeviceID, MCI_NOTIFY_SUPERSEDED);
-        wmcda->hCallback = NULL;
-    }
-    LeaveCriticalSection(&wmcda->cs);
-
-    if (lpParms && (dwFlags & MCI_NOTIFY)) {
-        TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
+    if ((dwFlags & MCI_NOTIFY) && lpParms)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -1123,11 +1144,8 @@ static DWORD MCICDA_Resume(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpPar
     else if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_RESUME_AUDIO, NULL, 0, NULL, 0, &br, NULL))
         return MCIERR_HARDWARE;
 
-    if (lpParms && (dwFlags & MCI_NOTIFY)) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
+    if ((dwFlags & MCI_NOTIFY) && lpParms)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -1139,7 +1157,7 @@ static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms)
     DWORD		        at;
     WINE_MCICDAUDIO*	        wmcda = MCICDA_GetOpenDrv(wDevID);
     CDROM_SEEK_AUDIO_MSF        seek;
-    DWORD                       br, ret;
+    DWORD                       br, position, ret;
     CDROM_TOC			toc;
 
     TRACE("(%04X, %08X, %p);\n", wDevID, dwFlags, lpParms);
@@ -1147,12 +1165,21 @@ static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms)
     if (wmcda == NULL)	return MCIERR_INVALID_DEVICE_ID;
     if (lpParms == NULL) return MCIERR_NULL_PARAMETER_BLOCK;
 
+    position = dwFlags & (MCI_SEEK_TO_START|MCI_SEEK_TO_END|MCI_TO);
+    if (!position)		return MCIERR_MISSING_PARAMETER;
+    if (position&(position-1))	return MCIERR_FLAGS_NOT_COMPATIBLE;
+
+    /* Stop sends MCI_NOTIFY_ABORTED when needed.
+     * Tests show that native first sends ABORTED and reads the TOC,
+     * then only checks the position flags, then stops and seeks. */
+    MCICDA_Stop(wDevID, MCI_WAIT, 0);
+
     if (!DeviceIoControl(wmcda->handle, IOCTL_CDROM_READ_TOC, NULL, 0,
                          &toc, sizeof(toc), &br, NULL)) {
         WARN("error reading TOC !\n");
         return MCICDA_GetError(wmcda);
     }
-    switch (dwFlags & ~(MCI_NOTIFY|MCI_WAIT)) {
+    switch (position) {
     case MCI_SEEK_TO_START:
 	TRACE("Seeking to start\n");
 	at = FRAME_OF_TOC(toc,toc.FirstTrack);
@@ -1161,6 +1188,8 @@ static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms)
 	break;
     case MCI_SEEK_TO_END:
 	TRACE("Seeking to end\n");
+	/* End is prior to lead-out
+	 * yet Win9X seeks to even one frame less than that. */
 	at = FRAME_OF_TOC(toc, toc.LastTrack + 1) - 1;
 	if ( (ret=MCICDA_SkipDataTracks(wmcda, &at)) )
 	  return ret;
@@ -1172,18 +1201,10 @@ static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms)
 	  return ret;
 	break;
     default:
-	TRACE("Unknown seek action %08lX\n",
-	      (dwFlags & ~(MCI_NOTIFY|MCI_WAIT)));
-	return MCIERR_UNSUPPORTED_FUNCTION;
+	return MCIERR_FLAGS_NOT_COMPATIBLE;
     }
 
-    if (wmcda->hThread != 0) {
-        EnterCriticalSection(&wmcda->cs);
-        wmcda->start = at - FRAME_OF_TOC(toc, toc.FirstTrack);
-        /* Flush remaining data, or just let it play into the new data? */
-        LeaveCriticalSection(&wmcda->cs);
-    }
-    else {
+    {
         seek.M = at / CDFRAMES_PERMIN;
         seek.S = (at / CDFRAMES_PERSEC) % 60;
         seek.F = at % CDFRAMES_PERSEC;
@@ -1192,11 +1213,8 @@ static DWORD MCICDA_Seek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms)
             return MCIERR_HARDWARE;
     }
 
-    if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			  wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
+    if (dwFlags & MCI_NOTIFY)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -1242,7 +1260,6 @@ static DWORD MCICDA_Set(UINT wDevID, DWORD dwFlags, LPMCI_SET_PARMS lpParms)
     if (lpParms == NULL) return MCIERR_NULL_PARAMETER_BLOCK;
     /*
       TRACE("dwTimeFormat=%08lX\n", lpParms->dwTimeFormat);
-      TRACE("dwAudio=%08lX\n", lpParms->dwAudio);
     */
     if (dwFlags & MCI_SET_TIME_FORMAT) {
 	switch (lpParms->dwTimeFormat) {
@@ -1256,20 +1273,15 @@ static DWORD MCICDA_Set(UINT wDevID, DWORD dwFlags, LPMCI_SET_PARMS lpParms)
 	    TRACE("MCI_FORMAT_TMSF !\n");
 	    break;
 	default:
-	    WARN("bad time format !\n");
 	    return MCIERR_BAD_TIME_FORMAT;
 	}
 	wmcda->dwTimeFormat = lpParms->dwTimeFormat;
     }
-    if (dwFlags & MCI_SET_VIDEO) return MCIERR_UNSUPPORTED_FUNCTION;
-    if (dwFlags & MCI_SET_ON) return MCIERR_UNSUPPORTED_FUNCTION;
-    if (dwFlags & MCI_SET_OFF) return MCIERR_UNSUPPORTED_FUNCTION;
-    if (dwFlags & MCI_NOTIFY) {
-	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n",
-	      lpParms->dwCallback);
-	mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
-			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
-    }
+    if (dwFlags & MCI_SET_AUDIO) /* one xp machine ignored it */
+	TRACE("SET_AUDIO %X %x\n", dwFlags, lpParms->dwAudio);
+
+    if (dwFlags & MCI_NOTIFY)
+	MCICDA_Notify(lpParms->dwCallback, wmcda, MCI_NOTIFY_SUCCESSFUL);
     return 0;
 }
 
@@ -1308,10 +1320,11 @@ LRESULT CALLBACK MCICDA_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     case MCI_SEEK:		return MCICDA_Seek(dwDevID, dwParam1, (LPMCI_SEEK_PARMS)dwParam2);
     /* commands that should report an error as they are not supported in
      * the native version */
-    case MCI_SET_DOOR_CLOSED:
-    case MCI_SET_DOOR_OPEN:
+    case MCI_RECORD:
     case MCI_LOAD:
     case MCI_SAVE:
+	return MCIERR_UNSUPPORTED_FUNCTION;
+    case MCI_BREAK:
     case MCI_FREEZE:
     case MCI_PUT:
     case MCI_REALIZE:

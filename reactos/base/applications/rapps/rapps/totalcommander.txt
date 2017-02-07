@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Total Commander
+Version = 8.0
+Licence = Shareware
+Description = Total Commander is a file manager with two panels side by side.
+Size = 3.2MB
+Category = 12
+URLSite = http://http://www.ghisler.com/
+URLDownload = http://www.slo.ru/download/total_commander/tcm80x32.exe
+CDPath = none

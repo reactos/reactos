@@ -549,7 +549,7 @@ GetSystemTimes(OUT LPFILETIME lpIdleTime OPTIONAL,
         return FALSE;
     }
 
-    Status = ZwQuerySystemInformation(SystemProcessorPerformanceInformation,
+    Status = NtQuerySystemInformation(SystemProcessorPerformanceInformation,
                                       ProcPerfInfo,
                                       BufferSize,
                                       &ReturnLength);

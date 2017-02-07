@@ -90,7 +90,8 @@ HRESULT     WINAPI OleCreateStaticFromData(LPDATAOBJECT pSrcDataObj, REFIID iid,
                 DWORD renderopt, LPFORMATETC pFormatEtc, LPOLECLIENTSITE pClientSite,
                 LPSTORAGE pStg, LPVOID* ppvObj)
 {
-  FIXME("(not shown), stub!\n");
+  FIXME("(srcdata=%p, refiid=%s, renderopt=%x, formatetc=%p, client=%p, storage=%p, ppv=%p), stub!\n",
+        pSrcDataObj,debugstr_guid(iid),renderopt,pFormatEtc,pClientSite,pStg,ppvObj );
   return E_NOTIMPL;
 }
 

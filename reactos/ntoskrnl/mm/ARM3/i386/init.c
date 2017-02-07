@@ -18,8 +18,13 @@
 /* GLOBALS ********************************************************************/
 
 /* Template PTE and PDE for a kernel page */
+ /* FIXME: These should be PTE_GLOBAL */
 MMPTE ValidKernelPde = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 MMPTE ValidKernelPte = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+
+/* The same, but for local pages */
+MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
@@ -29,6 +34,8 @@ MMPTE DemandZeroPte  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 MMPTE PrototypePte = {{(MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) |
                       PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)}};
 
+/* Template PTE for decommited page */
+MMPTE MmDecommittedPte = {{MM_DECOMMIT << MM_PTE_SOFTWARE_PROTECTION_BITS}};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -104,6 +111,12 @@ MiInitializeSessionSpaceLayout()
     MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
     MiSessionBasePte = MiAddressToPte(MmSessionBase);
     MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+
+    /* Initialize session space */
+    MmSessionSpace = (PMM_SESSION_SPACE)((ULONG_PTR)MmSessionBase +
+                                         MmSessionSize -
+                                         MmSessionImageSize -
+                                         MM_ALLOCATION_GRANULARITY);
 }
 
 VOID
@@ -281,8 +294,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // nonpaged pool expansion (above) and the system PTEs. Note that it is
     // then aligned to a PDE boundary (4MB).
     //
+    MiNonPagedSystemSize = (MmNumberOfSystemPtes + 1) * PAGE_SIZE;
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
-                                    (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
+                                    MiNonPagedSystemSize);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
                                     ~(PDE_MAPPED_VA - 1));
 

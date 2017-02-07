@@ -4,12 +4,29 @@ if(CCACHE STREQUAL "ccache")
     message("-- Enabling ccache build - done")
 endif()
 
+# PDB style debug info
+if(NOT DEFINED SEPARATE_DBG)
+    set(SEPARATE_DBG FALSE)
+endif()
+
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions")
 
-# Debugging (Note: DWARF-4 on 4.5.1 when we ship)
-# add_compile_flags("-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types")
-add_compile_flags("-gstabs+")
+#bug
+#file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
+#workaround
+set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
+ if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
+endif()
+add_compile_flags("-fdebug-prefix-map=${REACTOS_SOURCE_DIR_NATIVE}=ReactOS")
+
+# Debugging
+if(SEPARATE_DBG)
+    add_compile_flags("-gdwarf-2 -g2")
+else()
+    add_compile_flags("-gstabs+")
+endif()
 
 # Do not allow warnings
 add_compile_flags("-Werror")
@@ -27,7 +44,15 @@ else()
 endif()
 
 # Warnings
-add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value")
+add_compile_flags("-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-unused-value")
+
+if(GCC_VERSION VERSION_LESS 4.6)
+    add_compile_flags("-Wno-error=uninitialized")
+elseif((GCC_VERSION VERSION_GREATER 4.6 OR GCC_VERSION VERSION_EQUAL 4.6) AND GCC_VERSION VERSION_LESS 4.7)
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=uninitialized")
+elseif(GCC_VERSION VERSION_EQUAL 4.7 OR GCC_VERSION VERSION_GREATER 4.7)
+    add_compile_flags("-Wno-error=unused-but-set-variable -Wno-error=maybe-uninitialized -Wno-error=delete-non-virtual-dtor -Wno-error=narrowing")
+endif()
 
 if(ARCH MATCHES amd64)
     add_compile_flags("-Wno-format")
@@ -48,10 +73,15 @@ elseif(OPTIMIZE STREQUAL "5")
     add_compile_flags("-O3")
 endif()
 
+# Link-time code generation
+if(LTCG)
+    add_compile_flags("-flto -Wno-error=clobbered")
+endif()
+
 add_compile_flags("-fno-strict-aliasing")
 
 if(ARCH MATCHES i386)
-    add_compile_flags("-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    add_compile_flags("-mpreferred-stack-boundary=3 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
     if(OPTIMIZE STREQUAL "1")
         add_compile_flags("-ftracer -momit-leaf-frame-pointer")
     endif()
@@ -74,6 +104,8 @@ elseif(ARCH MATCHES arm)
     add_definitions(-D__MSVCRT__) # DUBIOUS
 endif()
 
+add_definitions(-D_inline=__inline)
+
 # alternative arch name
 if(ARCH MATCHES amd64)
     set(ARCH2 x86_64)
@@ -81,49 +113,65 @@ else()
     set(ARCH2 ${ARCH})
 endif()
 
-# Linking
-if(ARCH MATCHES i386)
-    link_directories(${REACTOS_SOURCE_DIR}/importlibs)
+if(SEPARATE_DBG)
+    # PDB style debug puts all dwarf debug info in a separate dbg file
+    message(STATUS "Building separate debug symbols")
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/symbols)
+    if(CMAKE_GENERATOR MATCHES "Ninja")
+        set(SYMBOL_FILE <TARGET_PDB>)
+    else()
+        set(SYMBOL_FILE <TARGET>.gdb)
+    endif()
+    set(OBJCOPY ${CMAKE_OBJCOPY})
+    set(CMAKE_C_LINK_EXECUTABLE
+        "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+        "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY
+        "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        "${OBJCOPY} --strip-debug <TARGET>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${OBJCOPY} --only-keep-debug <TARGET> ${REACTOS_BINARY_DIR}/symbols/${SYMBOL_FILE}"
+        "${OBJCOPY} --strip-debug <TARGET>")
+else()
+    # Normal rsym build
+    get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
+    set(CMAKE_C_LINK_EXECUTABLE
+        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+        "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY
+        "<CMAKE_CXX_COMPILER> ${CMAKE_CXX_FLAGS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
+    set(CMAKE_RC_CREATE_SHARED_LIBRARY
+        "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+        "${RSYM} <TARGET> <TARGET>")
 endif()
 
-link_directories(${REACTOS_BINARY_DIR}/lib/sdk/crt)
-
-get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
-
-set(CMAKE_C_LINK_EXECUTABLE
-    "<CMAKE_C_COMPILER> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-
-set(CMAKE_CXX_LINK_EXECUTABLE
-    "<CMAKE_CXX_COMPILER> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-
 set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-auto-import,--disable-stdcall-fixup")
-
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
-
-set(CMAKE_C_CREATE_SHARED_LIBRARY
-    "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-set(CMAKE_CXX_CREATE_SHARED_LIBRARY
-    "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
-set(CMAKE_RC_CREATE_SHARED_LIBRARY
-    "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
-    "${RSYM} <TARGET> <TARGET>")
 
 SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
-#set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT>")
-
-# Temporary, until windres issues are fixed
-get_target_property(WRC native-wrc IMPORTED_LOCATION_NOCONFIG)
-set(CMAKE_RC_COMPILE_OBJECT
-    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -xc -E <SOURCE> -o <OBJECT>"
-    "${WRC} -i <OBJECT> -o <OBJECT>"
-    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>")
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"<CMAKE_C_COMPILER> -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\"")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
@@ -158,30 +206,12 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 endfunction()
 
-# Workaround lack of mingw RC support in cmake
 function(set_rc_compiler)
-    get_directory_property(defines COMPILE_DEFINITIONS)
-    get_directory_property(includes INCLUDE_DIRECTORIES)
-
-    foreach(arg ${defines})
-        set(rc_result_defs "${rc_result_defs} -D${arg}")
-    endforeach()
-
-    foreach(arg ${includes})
-        set(rc_result_incs "-I${arg} ${rc_result_incs}")
-    endforeach()
-
-    #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>" PARENT_SCOPE)
-    set(CMAKE_RC_COMPILE_OBJECT
-    "<CMAKE_C_COMPILER> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${rc_result_defs} -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -xc -E <SOURCE> -o <OBJECT>"
-    "${WRC} -I${CMAKE_CURRENT_SOURCE_DIR} ${rc_result_incs} -i <OBJECT> -o <OBJECT>"
-    "<CMAKE_RC_COMPILER> -i <OBJECT> -J res -O coff -o <OBJECT>" PARENT_SCOPE)
 endfunction()
 
 function(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
-        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}_delayed.a)
-        add_dependencies(${MODULE} lib${LIB}_delayed)
+        target_link_libraries(${MODULE} lib${LIB}_delayed)
     endforeach()
     target_link_libraries(${MODULE} delayimp)
 endfunction()
@@ -190,76 +220,53 @@ if(NOT ARCH MATCHES i386)
     set(DECO_OPTION "-@")
 endif()
 
-function(add_importlib_target _exports_file)
+function(generate_import_lib _libname _dllname _spec_file)
+    # generate the def for the import lib
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
-    get_filename_component(_name ${_exports_file} NAME_WE)
-    get_filename_component(_extension ${_exports_file} EXT)
-    get_target_property(_suffix ${_name} SUFFIX)
-    if(${_suffix} STREQUAL "_suffix-NOTFOUND")
-        get_target_property(_type ${_name} TYPE)
-        if(${_type} MATCHES EXECUTABLE)
-            set(_suffix ".exe")
+    #create normal importlib
+    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
+    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+
+    #create delayed importlib
+    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
+    set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+endfunction()
+
+# Cute little hack to produce import libs
+set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
+set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
+function(spec2def _dllname _spec_file)
+    # do we also want to add importlib targets?
+    if(${ARGC} GREATER 2)
+        if(${ARGN} STREQUAL "ADD_IMPORTLIB")
+            set(__add_importlib TRUE)
         else()
-            set(_suffix ".dll")
+            message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
         endif()
     endif()
 
-    if(${_extension} STREQUAL ".spec")
+    # get library basename
+    get_filename_component(_file ${_dllname} NAME_WE)
 
-        # Normal importlib creation
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_implib.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
-
-        # Delayed importlib creation
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            COMMAND native-spec2def -n=${_name}${_suffix} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file}
-            COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}_delayed_implib.def --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} native-spec2def)
-
-    elseif(${_extension} STREQUAL ".def")
-        message("Use of def files for import libs is deprecated: ${_exports_file}")
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
-        add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file} --kill-at --output-delaylib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_exports_file})
-    else()
-        message(FATAL_ERROR "Unsupported exports file extension: ${_extension}")
+    # error out on anything else than spec
+    if(NOT ${_spec_file} MATCHES ".*\\.spec")
+        message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    # Normal importlib target
-    add_custom_target(
-        lib${_name}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
-    # Delayed importlib target
-    add_custom_target(
-        lib${_name}_delayed
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_delayed.a)
-
-endfunction()
-
-function(spec2def _dllname _spec_file)
-
-    if(${ARGC} GREATER 2)
-        set(_file ${ARGV2})
-    else()
-        get_filename_component(_file ${_spec_file} NAME_WE)
-    endif()
-
+    # generate exports def and stubs C file for the module
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
         COMMAND native-spec2def -n=${_dllname} --kill-at -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
+
+    if(__add_importlib)
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+    endif()
 endfunction()
 
 macro(macro_mc FLAG FILE)
@@ -338,30 +345,7 @@ else()
     endmacro()
 endif()
 
-function(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)
-    get_filename_component(OBJECT_PATH ${_object_file} PATH)
-    get_filename_component(OBJECT_NAME ${_object_file} NAME)
-    file(MAKE_DIRECTORY ${OBJECT_PATH})
-    get_directory_property(defines COMPILE_DEFINITIONS)
-    get_directory_property(includes INCLUDE_DIRECTORIES)
-
-    foreach(arg ${defines})
-        set(result_defs ${result_defs} -D${arg})
-    endforeach()
-
-    foreach(arg ${includes})
-        set(result_incs -I${arg} ${result_incs})
-    endforeach()
-
-    add_custom_command(
-        OUTPUT ${_object_file}
-        COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
-        DEPENDS ${_asm_file})
-    set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
-    add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
-endfunction()
-
-function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
+function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
     set(_object_file ${_binary_file}.o)
 
     add_custom_command(

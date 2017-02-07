@@ -22,41 +22,91 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#define WINE_OLESELFREGISTER
+/* @makedep: avifile.rgs */
+1 WINE_REGISTRY avifile.rgs
+
 #define WINE_FILEDESCRIPTION_STR "Wine AVI file support library"
 #define WINE_FILENAME_STR "avifil32.dll"
 #define WINE_FILEVERSION 4,0,3,1998
 #define WINE_FILEVERSION_STR "4.03.1998"
+#define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
 #include "wine/wine_common_ver.rc"
 #include "avifile_private.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 /*
  * Everything specific to any language goes
  * in one of the specific files.
  */
-#include "avifile_Cs.rc"
-#include "avifile_En.rc"
-#include "avifile_Es.rc"
-#include "avifile_Hu.rc"
-#include "avifile_It.rc"
-#include "avifile_Nl.rc"
-#include "avifile_No.rc"
-#include "avifile_Pl.rc"
-#include "avifile_Sv.rc"
-#include "avifile_Tr.rc"
-
-/* UTF-8 */
-#include "avifile_Da.rc"
-#include "avifile_De.rc"
-#include "avifile_Fr.rc"
-#include "avifile_Ja.rc"
-#include "avifile_Ko.rc"
-#include "avifile_Lt.rc"
-#include "avifile_Pt.rc"
-#include "avifile_Ro.rc"
-#include "avifile_Ru.rc"
-#include "avifile_Si.rc"
-#include "avifile_Uk.rc"
-#include "avifile_Zh.rc"
-#include "avifile_Bg.rc"
+#ifdef LANGUAGE_CS_CZ
+    #include "avifile_Cs.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "avifile_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "avifile_Es.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "avifile_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "avifile_It.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "avifile_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "avifile_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "avifile_Pl.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "avifile_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "avifile_Tr.rc"
+#endif
+#ifdef LANGUAGE_DA_DK
+    #include "avifile_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "avifile_De.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "avifile_Fr.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "avifile_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "avifile_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "avifile_Lt.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "avifile_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "avifile_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "avifile_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "avifile_Si.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "avifile_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "avifile_Zh.rc"
+#endif
+#ifdef LANGUAGE_BG_BG
+    #include "avifile_Bg.rc"
+#endif

@@ -32,9 +32,6 @@ typedef struct _LANGCODEPAGE
     WORD wCodePage;
 } LANGCODEPAGE, *PLANGCODEPAGE;
 
-/* undoc GUID */
-DEFINE_GUID(CLSID_RebarBandSite, 0xECD4FC4D, 0x521C, 0x11D0, 0xB7, 0x92, 0x00, 0xA0, 0xC9, 0x03, 0x12, 0xE1);
-
 LONG
 SetWindowStyle(IN HWND hWnd,
                IN LONG dwStyleMask,

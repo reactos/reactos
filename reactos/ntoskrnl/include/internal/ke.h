@@ -36,6 +36,12 @@ typedef struct _DISPATCH_INFO
     PKINTERRUPT_ROUTINE *FlatDispatch;
 } DISPATCH_INFO, *PDISPATCH_INFO;
 
+typedef struct _DEFERRED_REVERSE_BARRIER
+{
+    ULONG Barrier;
+    ULONG TotalProcessors;
+} DEFERRED_REVERSE_BARRIER, *PDEFERRED_REVERSE_BARRIER;
+
 typedef struct _KI_SAMPLE_MAP
 {
     LARGE_INTEGER PerfStart;
@@ -729,6 +735,10 @@ KeContextToTrapFrame(
 
 VOID
 NTAPI
+Ke386SetIOPL(VOID);
+
+VOID
+NTAPI
 KiCheckForKernelApcDelivery(VOID);
 
 LONG
@@ -973,12 +983,14 @@ KiServiceExit2(
     IN PKTRAP_FRAME TrapFrame
 );
 
+#ifndef _M_AMD64
 VOID
 FASTCALL
 KiInterruptDispatch(
     IN PKTRAP_FRAME TrapFrame,
     IN PKINTERRUPT Interrupt
 );
+#endif
 
 VOID
 FASTCALL
@@ -1119,5 +1131,13 @@ PVOID
 NTAPI
 KiRosPcToUserFileHeader(IN PVOID Eip,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
+
+PCHAR
+NTAPI
+KeBugCheckUnicodeToAnsi(
+    IN PUNICODE_STRING Unicode,
+    OUT PCHAR Ansi,
+    IN ULONG Length
+);
 
 #include "ke_x.h"

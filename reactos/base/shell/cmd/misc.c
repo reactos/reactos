@@ -275,13 +275,13 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
  *         are spaces and slashes ('/').
  */
 
-LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
+LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards, BOOL handle_plus)
 {
 	LPTSTR *arg;
 	LPTSTR start;
 	LPTSTR q;
 	INT  ac;
-	INT  len;
+	INT_PTR  len;
 
 	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
@@ -294,7 +294,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 		BOOL bQuoted = FALSE;
 
 		/* skip leading spaces */
-		while (*s && (_istspace (*s) || _istcntrl (*s)))
+		while (*s && (_istspace(*s) || _istcntrl(*s)))
 			++s;
 
 		start = s;
@@ -304,10 +304,25 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			++s;
 
 		/* skip to next word delimiter or start of next option */
-		while (_istprint(*s) && (bQuoted || (!_istspace(*s) && *s != _T('/'))))
+		while (_istprint(*s))
 		{
 			/* if quote (") then set bQuoted */
 			bQuoted ^= (*s == _T('\"'));
+
+            /* Check if we have unquoted text */
+            if (!bQuoted)
+            {
+                /* check for separators */
+                if (_istspace(*s) ||
+                    (*s == _T('/')) ||
+                    (handle_plus && (*s == _T('+'))))
+                {
+                    /* Make length at least one character */
+                    if (s == start) s++;
+                    break;
+                }
+            }
+
 			++s;
 		}
 
@@ -322,7 +337,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 			memcpy (q, start, len * sizeof (TCHAR));
 			q[len] = _T('\0');
 			StripQuotes(q);
-			if (expand_wildcards && _T('/') != *start &&
+			if (expand_wildcards && (_T('/') != *start) &&
 			    (NULL != _tcschr(q, _T('*')) || NULL != _tcschr(q, _T('?'))))
 			{
 				if (! expand(&ac, &arg, q))
@@ -360,7 +375,7 @@ LPTSTR *splitspace (LPTSTR s, LPINT args)
 	LPTSTR start;
 	LPTSTR q;
 	INT  ac;
-	INT  len;
+	INT_PTR  len;
 
 	arg = cmd_alloc (sizeof (LPTSTR));
 	if (!arg)
@@ -505,7 +520,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 		len = dwRead;
 		if (end)
 		{
-			len = (end - lpString) + 1;
+			len = (INT)(end - lpString) + 1;
 			SetFilePointer(hFile, len - dwRead, NULL, FILE_CURRENT);
 		}
 	}

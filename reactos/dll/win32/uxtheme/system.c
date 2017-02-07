@@ -620,9 +620,9 @@ static LPWSTR UXTHEME_GetWindowProperty(HWND hwnd, ATOM aProp, LPWSTR pszBuffer,
 }
 
 /***********************************************************************
- *      OpenThemeData                                       (UXTHEME.@)
+ *      OpenThemeDataEx                                     (UXTHEME.61)
  */
-HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
+HTHEME WINAPI OpenThemeDataEx(HWND hwnd, LPCWSTR pszClassList, DWORD flags)
 {
     WCHAR szAppBuff[256];
     WCHAR szClassBuff[256];
@@ -630,6 +630,15 @@ HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
     LPCWSTR pszUseClassList;
     HTHEME hTheme = NULL;
     TRACE("(%p,%s)\n", hwnd, debugstr_w(pszClassList));
+    
+    if(!pszClassList)
+    {
+        SetLastError(E_POINTER);
+        return NULL;
+    }
+
+    if(flags)
+        FIXME("unhandled flags: %x\n", flags);
 
     if(bThemeActive)
     {
@@ -649,6 +658,14 @@ HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
 }
 
 /***********************************************************************
+ *      OpenThemeData                                       (UXTHEME.@)
+ */
+HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR classlist)
+{
+    return OpenThemeDataEx(hwnd, classlist, 0);
+}
+
+/***********************************************************************
  *      GetWindowTheme                                      (UXTHEME.@)
  *
  * Retrieve the last theme opened for a window.
@@ -662,6 +679,9 @@ HTHEME WINAPI OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
 HTHEME WINAPI GetWindowTheme(HWND hwnd)
 {
     TRACE("(%p)\n", hwnd);
+	if(!IsWindow(hwnd))
+		SetLastError(E_HANDLE);
+
     return GetPropW(hwnd, (LPCWSTR)MAKEINTATOM(atWindowTheme));
 }
 
@@ -673,9 +693,13 @@ HTHEME WINAPI GetWindowTheme(HWND hwnd)
 HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
                               LPCWSTR pszSubIdList)
 {
-    HRESULT hr;
+	HRESULT hr;
     TRACE("(%p,%s,%s)\n", hwnd, debugstr_w(pszSubAppName),
-          debugstr_w(pszSubIdList));
+        debugstr_w(pszSubIdList));
+    
+    if(!IsWindow(hwnd))
+		return E_HANDLE;
+
     hr = UXTHEME_SetWindowProperty(hwnd, atSubAppName, pszSubAppName);
     if(SUCCEEDED(hr))
         hr = UXTHEME_SetWindowProperty(hwnd, atSubIdList, pszSubIdList);

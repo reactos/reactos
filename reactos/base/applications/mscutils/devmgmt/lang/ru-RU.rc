@@ -1,4 +1,4 @@
-// Russian language resource file (Dmitry Chapyshev, 2007-06-10)
+﻿// Russian language resource file (Dmitry Chapyshev, 2007-06-10)
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -18,10 +18,12 @@ BEGIN
   END
   POPUP "Вид"
   BEGIN
-    MENUITEM "Устройства по типу",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Устройства по подключению",   IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по типу",       IDC_STATIC, GRAYED
-    MENUITEM "Ресурсы по подключению", IDC_STATIC, GRAYED
+    MENUITEM "Устройства по типу",        IDC_DEVBYTYPE
+    MENUITEM "Устройства по подключению", IDC_DEVBYCONN
+    MENUITEM "Ресурсы по типу",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурсы по подключению",    IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",       IDC_SHOWHIDDEN
   END
   POPUP "Справка"
   BEGIN

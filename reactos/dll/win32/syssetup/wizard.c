@@ -46,7 +46,7 @@ SETUPDATA SetupData;
 
 /* FUNCTIONS ****************************************************************/
 BOOL
-GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength);
+GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax);
 
 #ifdef VMWINST
 static BOOL
@@ -522,46 +522,6 @@ OwnerPageDlgProc(HWND hwndDlg,
 }
 
 static
-NTSTATUS
-SetAccountDomain(LPWSTR DomainName)
-{
-    POLICY_ACCOUNT_DOMAIN_INFO Info;
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    LSA_HANDLE PolicyHandle;
-    NTSTATUS Status;
-
-    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
-    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
-
-    Status = LsaOpenPolicy(NULL,
-                           &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
-                           &PolicyHandle);
-    if (Status != STATUS_SUCCESS)
-    {
-        DPRINT("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    Info.DomainName.Buffer = DomainName;
-    Info.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
-    Info.DomainName.MaximumLength = Info.DomainName.Length + sizeof(WCHAR);
-    Info.DomainSid = NULL;
-
-    Status = LsaSetInformationPolicy(PolicyHandle,
-                                     PolicyAccountDomainInformation,
-                                     (PVOID)&Info);
-    if (Status != STATUS_SUCCESS)
-    {
-        DPRINT("LsaSetInformationPolicy failed (Status: 0x%08lx)\n", Status);
-    }
-
-    LsaClose(PolicyHandle);
-
-    return Status;
-}
-
-static
 BOOL
 WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
 {
@@ -587,7 +547,7 @@ WriteComputerSettings(WCHAR * ComputerName, HWND hwndDlg)
     SetComputerNameExW(ComputerNamePhysicalDnsHostname, ComputerName);
 
     /* Set the account domain name */
-    SetAccountDomain(ComputerName);
+    SetAccountDomain(ComputerName, NULL);
 
     return TRUE;
 }
@@ -883,7 +843,6 @@ LocalePageDlgProc(HWND hwndDlg,
                   LPARAM lParam)
 {
     PSETUPDATA SetupData;
-    WCHAR szBuffer[1024];
 
     /* Retrieve pointer to the global setup data */
     SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
@@ -907,19 +866,13 @@ LocalePageDlgProc(HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDC_CUSTOMLOCALE:
-                    {
-                        wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5");
-                        RunControlPanelApplet(hwndDlg, szBuffer);
+                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5");
                         /* FIXME: Update input locale name */
-                    }
-                    break;
+                        break;
 
                     case IDC_CUSTOMLAYOUT:
-                    {
-                        wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL input.dll,@1");
-                        RunControlPanelApplet(hwndDlg, szBuffer);
-                    }
-                    break;
+                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL input.dll,@1");
+                        break;
                 }
             }
             break;
@@ -935,17 +888,13 @@ LocalePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        WCHAR szPath[MAX_PATH];
-                        if (GetRosInstallCD(szPath, MAX_PATH))
-                        {
-                            swprintf(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%S\\reactos\\unattend.inf\"", szPath);
-                        }
+                        WCHAR wszPath[MAX_PATH], wszBuf[1024];
+                        if (GetRosInstallCD(wszPath, _countof(wszPath)))
+                            swprintf(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
                         else
-                        {
-                            wcscpy(szBuffer, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\"");
-                        }
+                            wcscpy(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\"");
 
-                        RunControlPanelApplet(hwndDlg, szBuffer);
+                        RunControlPanelApplet(hwndDlg, wszBuf);
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                         return TRUE;
                     }
@@ -1761,6 +1710,9 @@ RegistrationProc(LPVOID Parameter)
     SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
     HeapFree(GetProcessHeap(), 0, RegistrationData);
 
+    // FIXME: Move this call to a separate cleanup page!
+    RtlCreateBootStatusDataFile();
+
     return 0;
 }
 
@@ -2062,6 +2014,8 @@ FinishDlgProc(HWND hwndDlg,
 
     return FALSE;
 }
+
+
 BOOL
 ProcessUnattendInf(HINF hUnattendedInf)
 {
@@ -2238,35 +2192,32 @@ ProcessUnattendInf(HINF hUnattendedInf)
  */
 
 BOOL
-GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
+GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax)
 {
-    WCHAR szDrives[512];
-    WCHAR szDrive[] = L"D:\\";
-    DWORD dwLength, dwIndex;
-    WCHAR * pDrive;
-    dwLength = GetLogicalDriveStringsW(sizeof(szDrives) / sizeof(WCHAR), szDrives);
+    WCHAR wszDrives[512];
+    DWORD cchDrives;
+    WCHAR *pwszDrive;
 
-    if (dwLength > (sizeof(szDrives) / sizeof(WCHAR)) || dwLength == 0)
+    cchDrives = GetLogicalDriveStringsW(_countof(wszDrives) - 1, wszDrives);
+    if (cchDrives == 0 || cchDrives >= _countof(wszDrives))
     {
         /* buffer too small or failure */
         LogItem(SYSSETUP_SEVERITY_INFORMATION, L"GetLogicalDriveStringsW failed");
         return FALSE;
     }
 
-    pDrive = szDrives;
-    for (dwIndex = 0; dwIndex < dwLength; dwIndex++)
+    for (pwszDrive = wszDrives; pwszDrive[0]; pwszDrive += wcslen(pwszDrive) + 1)
     {
-        szDrive[0] = pDrive[dwIndex];
-        if (GetDriveTypeW(szDrive) == DRIVE_CDROM)
+        if (GetDriveTypeW(pwszDrive) == DRIVE_CDROM)
         {
-            WCHAR szBuffer[MAX_PATH];
-            wcscpy(szBuffer, szDrive);
-            wcscat(szBuffer, L"reactos\\system32\\ntoskrnl.exe");
-            LogItem(SYSSETUP_SEVERITY_INFORMATION, szBuffer);
-            if (GetFileAttributesW(szBuffer) != INVALID_FILE_ATTRIBUTES)
+            WCHAR wszBuf[MAX_PATH];
+            wsprintf(wszBuf, L"%sreactos\\system32\\ntoskrnl.exe", pwszDrive);
+            LogItem(SYSSETUP_SEVERITY_INFORMATION, wszBuf);
+            if (GetFileAttributesW(wszBuf) != INVALID_FILE_ATTRIBUTES)
             {
                 /* the file exists, so this is the right drive */
-                wcsncpy(szPath, szDrive, dwPathLength);
+                wcsncpy(pwszPath, pwszDrive, cchPathMax);
+                OutputDebugStringW(L"GetRosInstallCD: ");OutputDebugStringW(pwszPath);OutputDebugStringW(L"\n");
                 return TRUE;
             }
         }
@@ -2274,8 +2225,9 @@ GetRosInstallCD(WCHAR * szPath, DWORD dwPathLength)
     return FALSE;
 }
 
+
 VOID
-ProcessUnattendSetup()
+ProcessUnattendSetup(VOID)
 {
     WCHAR szPath[MAX_PATH];
     HINF hUnattendedInf;
@@ -2325,7 +2277,6 @@ InstallWizard(VOID)
     ZeroMemory(&SetupData, sizeof(SETUPDATA));
 
     ProcessUnattendSetup();
-
 
     /* Create the Welcome page */
     psp.dwSize = sizeof(PROPSHEETPAGE);

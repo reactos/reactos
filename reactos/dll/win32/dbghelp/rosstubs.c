@@ -78,7 +78,9 @@ FindFileInPath(
     IN DWORD two,
     IN DWORD three,
     IN DWORD flags,
-    OUT PSTR FilePath)
+    OUT PSTR FilePath,
+    IN PFINDFILEINPATHCALLBACK callback,
+    IN PVOID context)
 {
     UNIMPLEMENTED;
 	return FALSE;
@@ -140,45 +142,6 @@ SymEnumProcesses(PSYM_ENUMPROCESSES_CALLBACK Callback,
 }
 
 BOOL WINAPI
-SymEnumSourceFilesW(HANDLE hProcess,
-                    ULONG64 ModBase,
-                    PCWSTR pszMask,
-                    PSYM_ENUMSOURCEFILES_CALLBACKW Callback,
-                    PVOID pUserContext)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymEnumSourceLines(HANDLE hProcess,
-                   ULONG64 ModBase,
-                   PCSTR pszObject,
-                   PCSTR pszFile,
-                   DWORD dwLine,
-                   DWORD dwFlags,
-                   PSYM_ENUMLINES_CALLBACK Callback,
-                   PVOID pUserContext)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymEnumSourceLinesW(HANDLE hProcess,
-                    ULONG64 ModBase,
-                    PCWSTR pszObject,
-                    PCWSTR pszFile,
-                    DWORD dwLine,
-                    DWORD dwFlags,
-                    PSYM_ENUMLINES_CALLBACKW Callback,
-                    PVOID pUserContext)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
 SymEnumSym(HANDLE hProcess,
            ULONG64 ModBase,
            PSYM_ENUMERATESYMBOLS_CALLBACK Callback,
@@ -223,26 +186,6 @@ SymEnumerateSymbolsW(HANDLE hProcess,
              DWORD ModBase,
              PSYM_ENUMSYMBOLS_CALLBACKW Callback,
              PVOID pUserContext)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymFromIndex(HANDLE hProcess,
-             ULONG64 ModBase,
-             DWORD Index,
-             PSYMBOL_INFO Symbol)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymFromIndexW(HANDLE hProcess,
-              ULONG64 ModBase,
-              DWORD Index,
-              PSYMBOL_INFOW Symbol)
 {
     UNIMPLEMENTED;
 	return FALSE;
@@ -462,24 +405,6 @@ BOOL WINAPI
 SymGetTypeInfoEx(HANDLE hProcess,
                  DWORD64 ModBase,
                  PIMAGEHLP_GET_TYPE_INFO_PARAMS Params)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymMatchStringA(PCSTR pszString,
-                PCSTR pszExpression,
-                BOOL bCaseSensitiv)
-{
-    UNIMPLEMENTED;
-	return FALSE;
-}
-
-BOOL WINAPI
-SymMatchStringW(PCWSTR pszString,
-                PCWSTR pszExpression,
-                BOOL bCaseSensitiv)
 {
     UNIMPLEMENTED;
 	return FALSE;

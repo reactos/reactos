@@ -102,42 +102,6 @@ KiPcToFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
-BOOLEAN
-NTAPI
-KiRosPrintAddress(PVOID address)
-{
-    PLIST_ENTRY current_entry;
-    PLDR_DATA_TABLE_ENTRY current;
-    extern LIST_ENTRY PsLoadedModuleList;
-    ULONG_PTR RelativeAddress;
-    ULONG i = 0;
-
-    do
-    {
-        current_entry = PsLoadedModuleList.Flink;
-
-        while (current_entry != &PsLoadedModuleList)
-        {
-            current = CONTAINING_RECORD(current_entry,
-                                        LDR_DATA_TABLE_ENTRY,
-                                        InLoadOrderLinks);
-
-            if (address >= (PVOID)current->DllBase &&
-                address < (PVOID)((ULONG_PTR)current->DllBase +
-                                             current->SizeOfImage))
-            {
-                RelativeAddress = (ULONG_PTR)address -
-                                  (ULONG_PTR)current->DllBase;
-                DbgPrint("<%wZ: %x>", &current->FullDllName, RelativeAddress);
-                return(TRUE);
-            }
-            current_entry = current_entry->Flink;
-        }
-    } while(++i <= 1);
-
-    return(FALSE);
-}
-
 PVOID
 NTAPI
 KiRosPcToUserFileHeader(IN PVOID Pc,
@@ -270,9 +234,14 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
             if (!KdbSymPrintAddress((PVOID)Addr, NULL))
 #endif
             {
-                /* Print out the module name */
+                CHAR AnsiName[64];
+
+                /* Convert module name to ANSI and print it */
+                KeBugCheckUnicodeToAnsi(&LdrEntry->BaseDllName,
+                                        AnsiName,
+                                        sizeof(AnsiName));
                 Addr -= (ULONG_PTR)LdrEntry->DllBase;
-                DbgPrint("<%wZ: %p>", &LdrEntry->FullDllName, (PVOID)Addr);
+                DbgPrint("<%s: %p>", AnsiName, (PVOID)Addr);
             }
         }
         else
@@ -434,7 +403,7 @@ NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
                     OUT PANSI_STRING OutputString OPTIONAL)
 {
-    ULONG i;
+    ULONG i, j;
     ULONG IdOffset;
     ULONG_PTR MessageEntry;
     PCHAR BugCode;
@@ -457,7 +426,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             IdOffset = BugCheckCode - KiBugCodeMessages->Blocks[i].LowId;
 
             /* Get offset to ID */
-            for (i = 0; i < IdOffset; i++)
+            for (j = 0; j < IdOffset; j++)
             {
                 /* Advance in the Entries */
                 MessageEntry += ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->
@@ -1432,18 +1401,13 @@ KeBugCheckEx(IN ULONG BugCheckCode,
              IN ULONG_PTR BugCheckParameter3,
              IN ULONG_PTR BugCheckParameter4)
 {
-    /* Workaround for Windows Server 2003 Checked PCI Driver issue */
-    if (!((BugCheckCode == PCI_BUS_DRIVER_INTERNAL) &&
-          (BugCheckParameter1 == 0xDEAD0010)))
-    {
-        /* Call the internal API */
-        KeBugCheckWithTf(BugCheckCode,
-                         BugCheckParameter1,
-                         BugCheckParameter2,
-                         BugCheckParameter3,
-                         BugCheckParameter4,
-                         NULL);
-    }
+    /* Call the internal API */
+    KeBugCheckWithTf(BugCheckCode,
+                     BugCheckParameter1,
+                     BugCheckParameter2,
+                     BugCheckParameter3,
+                     BugCheckParameter4,
+                     NULL);
 }
 
 /*

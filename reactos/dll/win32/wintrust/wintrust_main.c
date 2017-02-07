@@ -1201,3 +1201,31 @@ HRESULT WINAPI WTHelperCertCheckValidSignature(CRYPT_PROVIDER_DATA *pProvData)
     FIXME("Stub\n");
     return S_OK;
 }
+
+/***********************************************************************
+ *              IsCatalogFile
+ */
+BOOL WINAPI IsCatalogFile(HANDLE hFile, WCHAR *pwszFileName)
+{
+    static const GUID catGUID = { 0xDE351A43, 0x8E59, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
+    GUID guid;
+
+    TRACE("(%p, %s)\n", hFile, debugstr_w(pwszFileName));
+
+    if (!CryptSIPRetrieveSubjectGuid(pwszFileName, hFile, &guid))
+        return FALSE;
+    return IsEqualGUID(&guid, &catGUID);
+}
+
+/***********************************************************************
+ *              FindCertsByIssuer
+ */
+HRESULT WINAPI FindCertsByIssuer(PCERT_CHAIN pCertChains, DWORD *pcbCertChains,
+ DWORD *pcCertChains, BYTE* pbEncodedIssuerName, DWORD cbEncodedIssuerName,
+ LPCWSTR pwszPurpose, DWORD dwKeySpec)
+{
+    FIXME("(%p, %p, %p, %p, %d, %s, %d): stub\n", pCertChains, pcbCertChains,
+     pcCertChains, pbEncodedIssuerName, cbEncodedIssuerName,
+     debugstr_w(pwszPurpose), dwKeySpec);
+    return E_FAIL;
+}

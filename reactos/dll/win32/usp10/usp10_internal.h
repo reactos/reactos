@@ -75,17 +75,80 @@
 #define Script_Diacritical 44
 #define Script_Punctuation2 45
 #define Script_Numeric2 46
+/* Unicode Chapter 11 continued */
+#define Script_Myanmar 47
+#define Script_Myanmar_Numeric 48
+#define Script_Tai_Le 49
+#define Script_New_Tai_Lue 50
+#define Script_New_Tai_Lue_Numeric 51
+#define Script_Khmer 52
+#define Script_Khmer_Numeric 53
+/* Unicode Chapter 12 */
+#define Script_CJK_Han  54
+#define Script_Ideograph  55
+#define Script_Bopomofo 56
+#define Script_Kana 57
+#define Script_Hangul 58
+#define Script_Yi 59
+/* Unicode Chapter 13 */
+#define Script_Ethiopic 60
+#define Script_Ethiopic_Numeric 61
+#define Script_Mongolian 62
+#define Script_Mongolian_Numeric 63
+#define Script_Tifinagh 64
+#define Script_NKo 65
+#define Script_Vai 66
+#define Script_Vai_Numeric 67
+#define Script_Cherokee 68
+#define Script_Canadian 69
+/* Unicode Chapter 14 */
+#define Script_Ogham 70
+#define Script_Runic 71
+/* Unicode Chapter 15 */
+#define Script_Braille 72
+/* Unicode Chapter 16 */
+#define Script_Surrogates 73
+#define Script_Private 74
+/* Unicode Chapter 13 : Plane 1 */
+#define Script_Deseret 75
+#define Script_Osmanya 76
+#define Script_Osmanya_Numeric 77
+/* Unicode Chapter 15 : Plane 1 */
+#define Script_MathAlpha 78
+/* Additional Currency Scripts */
+#define Script_Hebrew_Currency 79
+#define Script_Vietnamese_Currency 80
+#define Script_Thai_Currency 81
 
 #define GLYPH_BLOCK_SHIFT 8
 #define GLYPH_BLOCK_SIZE  (1UL << GLYPH_BLOCK_SHIFT)
 #define GLYPH_BLOCK_MASK  (GLYPH_BLOCK_SIZE - 1)
 #define GLYPH_MAX         65536
 
+#define GSUB_E_NOFEATURE -2
+#define GSUB_E_NOGLYPH -1
+
 typedef struct {
-    char    tag[5];
-    char    script[5];
+    OPENTYPE_TAG tag;
     LPCVOID  feature;
+    INT lookup_count;
+    WORD *lookups;
 } LoadedFeature;
+
+typedef struct {
+    OPENTYPE_TAG tag;
+    LPCVOID table;
+    INT feature_count;
+    LoadedFeature *features;
+} LoadedLanguage;
+
+typedef struct {
+    OPENTYPE_TAG tag;
+    LPCVOID table;
+    LoadedLanguage default_language;
+    INT language_count;
+    LoadedLanguage *languages;
+} LoadedScript;
 
 typedef struct {
     LOGFONTW lf;
@@ -95,12 +158,22 @@ typedef struct {
     ABC *widths[GLYPH_MAX / GLYPH_BLOCK_SIZE];
     LPVOID GSUB_Table;
     LPVOID GDEF_Table;
-    INT feature_count;
-    LoadedFeature *features;
+    LPVOID CMAP_Table;
+    LPVOID CMAP_format12_Table;
+    INT script_count;
+    LoadedScript *scripts;
 
     OPENTYPE_TAG userScript;
     OPENTYPE_TAG userLang;
 } ScriptCache;
+
+typedef struct _scriptData
+{
+    SCRIPT_ANALYSIS a;
+    SCRIPT_PROPERTIES props;
+    OPENTYPE_TAG scriptTag;
+    WCHAR fallbackFont[LF_FACESIZE];
+} scriptData;
 
 typedef struct {
     INT start;
@@ -131,6 +204,8 @@ typedef void (*reorder_function)(LPWSTR pwChar, IndicSyllable *syllable, lexical
 #define BIDI_WEAK    2
 #define BIDI_NEUTRAL 0
 
+int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target) DECLSPEC_HIDDEN;
+
 BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
                 const SCRIPT_CONTROL *c, WORD *lpOutLevels ) DECLSPEC_HIDDEN;
 BOOL BIDI_GetStrengths(LPCWSTR lpString, INT uCount, const SCRIPT_CONTROL *c,
@@ -142,8 +217,18 @@ void SHAPE_ApplyDefaultOpentypeFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYS
 HRESULT SHAPE_CheckFontForRequiredFeatures(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa) DECLSPEC_HIDDEN;
 void SHAPE_CharGlyphProp(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WCHAR* pwcChars, const INT cChars, const WORD* pwGlyphs, const INT cGlyphs, WORD *pwLogClust, SCRIPT_CHARPROP *pCharProp, SCRIPT_GLYPHPROP *pGlyphProp) DECLSPEC_HIDDEN;
 INT SHAPE_does_GSUB_feature_apply_to_chars(HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, const WCHAR *chars, INT write_dir, INT count, const char* feature) DECLSPEC_HIDDEN;
+HRESULT SHAPE_GetFontScriptTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags) DECLSPEC_HIDDEN;
+HRESULT SHAPE_GetFontLanguageTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, int cMaxTags, OPENTYPE_TAG *pLangSysTags, int *pcTags) DECLSPEC_HIDDEN;
+HRESULT SHAPE_GetFontFeatureTags( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, OPENTYPE_TAG tagLangSys, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags) DECLSPEC_HIDDEN;
 
 void Indic_ReorderCharacters( HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPWSTR input, int cChars, IndicSyllable **syllables, int *syllable_count, lexical_function lexical_f, reorder_function reorder_f, BOOL modern) DECLSPEC_HIDDEN;
-void Indic_ParseSyllables( HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR input, const int cChar, IndicSyllable **syllables, int *syllable_count, lexical_function lex, BOOL modern);
+void Indic_ParseSyllables( HDC hdc, SCRIPT_ANALYSIS *psa, ScriptCache* psc, LPCWSTR input, const int cChar, IndicSyllable **syllables, int *syllable_count, lexical_function lex, BOOL modern) DECLSPEC_HIDDEN;
 
 void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT_LOGATTR *la) DECLSPEC_HIDDEN;
+
+DWORD OpenType_CMAP_GetGlyphIndex(HDC hdc, ScriptCache *psc, DWORD utf32c, LPWORD pgi, DWORD flags) DECLSPEC_HIDDEN;
+void OpenType_GDEF_UpdateGlyphProps(HDC hdc, ScriptCache *psc, const WORD *pwGlyphs, const WORD cGlyphs, WORD* pwLogClust, const WORD cChars, SCRIPT_GLYPHPROP *pGlyphProp) DECLSPEC_HIDDEN;
+INT OpenType_apply_GSUB_lookup(LPCVOID table, INT lookup_index, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count) DECLSPEC_HIDDEN;
+HRESULT OpenType_GSUB_GetFontScriptTags(ScriptCache *psc, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags, LPCVOID* script_table) DECLSPEC_HIDDEN;
+HRESULT OpenType_GSUB_GetFontLanguageTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pLanguageTags, int *pcTags, LPCVOID* language_table) DECLSPEC_HIDDEN;
+HRESULT OpenType_GSUB_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature) DECLSPEC_HIDDEN;

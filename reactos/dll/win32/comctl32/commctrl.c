@@ -71,57 +71,19 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
-
-#define NAME       "microsoft.windows.common-controls"
-#define FILE       "comctl32.dll"
-#define VERSION    "6.0.2600.2982"
-#define PUBLIC_KEY "6595b64144ccf1df"
+#define NAME       L"microsoft.windows.common-controls"
+#define VERSION    L"6.0.2600.2982"
+#define PUBLIC_KEY L"6595b64144ccf1df"
 
 #ifdef __i386__
-#define ARCH "x86"
+#define ARCH L"x86"
 #elif defined __x86_64__
-#define ARCH "amd64"
+#define ARCH L"amd64"
 #else
-#define ARCH "none"
+#define ARCH L"none"
 #endif
 
-static const char manifest[] =
-    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-    "<assembly xmlns=\"urn:schemas-microsoft-com:asm.v1\" manifestVersion=\"1.0\">\n"
-    "  <assemblyIdentity type=\"win32\" name=\"" NAME "\" version=\"" VERSION "\" processorArchitecture=\"" ARCH "\" publicKeyToken=\"" PUBLIC_KEY "\"/>\n"
-    "  <file name=\"" FILE "\">\n"
-    "    <windowClass>Button</windowClass>\n"
-    "    <windowClass>ButtonListBox</windowClass>\n"
-    "    <windowClass>ComboBoxEx32</windowClass>\n"
-    "    <windowClass>ComboLBox</windowClass>\n"
-    "    <windowClass>Combobox</windowClass>\n"
-    "    <windowClass>Edit</windowClass>\n"
-    "    <windowClass>Listbox</windowClass>\n"
-    "    <windowClass>NativeFontCtl</windowClass>\n"
-    "    <windowClass>ReBarWindow32</windowClass>\n"
-    "    <windowClass>ScrollBar</windowClass>\n"
-    "    <windowClass>Static</windowClass>\n"
-    "    <windowClass>SysAnimate32</windowClass>\n"
-    "    <windowClass>SysDateTimePick32</windowClass>\n"
-    "    <windowClass>SysHeader32</windowClass>\n"
-    "    <windowClass>SysIPAddress32</windowClass>\n"
-    "    <windowClass>SysLink</windowClass>\n"
-    "    <windowClass>SysListView32</windowClass>\n"
-    "    <windowClass>SysMonthCal32</windowClass>\n"
-    "    <windowClass>SysPager</windowClass>\n"
-    "    <windowClass>SysTabControl32</windowClass>\n"
-    "    <windowClass>SysTreeView32</windowClass>\n"
-    "    <windowClass>ToolbarWindow32</windowClass>\n"
-    "    <windowClass>msctls_hotkey32</windowClass>\n"
-    "    <windowClass>msctls_progress32</windowClass>\n"
-    "    <windowClass>msctls_statusbar32</windowClass>\n"
-    "    <windowClass>msctls_trackbar32</windowClass>\n"
-    "    <windowClass>msctls_updown32</windowClass>\n"
-    "    <windowClass>tooltips_class32</windowClass>\n"
-    "  </file>\n"
-    "</assembly>\n";
-
-static const char manifest_filename[] = ARCH "_" NAME "_" PUBLIC_KEY "_" VERSION "_none_deadbeef.manifest";
+static const WCHAR manifest_filename[] = ARCH L"_" NAME L"_" PUBLIC_KEY L"_" VERSION L"_none_deadbeef.manifest";
 
 static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -143,44 +105,65 @@ static const WCHAR strCC32SubclassInfo[] = {
     'C','C','3','2','S','u','b','c','l','a','s','s','I','n','f','o',0
 };
 
-static BOOL create_manifest( BOOL install )
+static BOOL create_manifest(BOOL install)
 {
-    static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s',0};
-    static const WCHAR manifestsW[] = {'\\','m','a','n','i','f','e','s','t','s','\\',0};
+    WCHAR *pwszBuf;
+    HRSRC hResInfo;
+    HGLOBAL hResData;
+    PVOID pManifest;
+    DWORD cchBuf, cbManifest, cbWritten;
+    HANDLE hFile;
+    BOOL bRet = FALSE;
 
-    DWORD len, written;
-    WCHAR *buffer;
-    HANDLE file;
-    BOOL ret = FALSE;
+    hResInfo = FindResourceW(COMCTL32_hModule, L"WINE_MANIFEST", RT_MANIFEST);
+    if (!hResInfo)
+        return FALSE;
 
-    len = MultiByteToWideChar( CP_UTF8, 0, manifest_filename, sizeof(manifest_filename), NULL, 0 );
-    len += GetWindowsDirectoryW( NULL, 0 );
-    len += lstrlenW(winsxsW);
-    len += lstrlenW(manifestsW);
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return FALSE;
-    GetWindowsDirectoryW( buffer, len );
-    lstrcatW( buffer, winsxsW );
-    CreateDirectoryW( buffer, NULL );
-    lstrcatW( buffer, manifestsW );
-    CreateDirectoryW( buffer, NULL );
-    MultiByteToWideChar( CP_UTF8, 0, manifest_filename, sizeof(manifest_filename),
-                         buffer + lstrlenW(buffer), len );
+    cbManifest = SizeofResource(COMCTL32_hModule, hResInfo);
+    if (!cbManifest)
+        return FALSE;
+
+    hResData = LoadResource(COMCTL32_hModule, hResInfo);
+    if (!hResData)
+        return FALSE;
+
+    pManifest = LockResource(hResData);
+    if (!pManifest)
+        return FALSE;
+
+    cchBuf = GetWindowsDirectoryW(NULL, 0) * sizeof(WCHAR) + sizeof(L"\\winsxs\\manifests\\") + sizeof(manifest_filename);
+    pwszBuf = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, cchBuf * sizeof(WCHAR));
+    if (!pwszBuf)
+        return FALSE;
+
+    GetWindowsDirectoryW(pwszBuf, cchBuf);
+    lstrcatW(pwszBuf, L"\\winsxs");
+    CreateDirectoryW(pwszBuf, NULL);
+    lstrcatW(pwszBuf, L"\\manifests\\");
+    CreateDirectoryW(pwszBuf, NULL);
+    lstrcatW(pwszBuf, manifest_filename);
     if (install)
     {
-        file = CreateFileW( buffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-        if (file != INVALID_HANDLE_VALUE)
+        hFile = CreateFileW(pwszBuf, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
         {
-            ret = (WriteFile( file, manifest, sizeof(manifest)-1, &written, NULL ) &&
-                   written == sizeof(manifest)-1);
-            CloseHandle( file );
-            if (!ret) DeleteFileW( buffer );
-            else TRACE("created %s\n", debugstr_w(buffer));
+            if (WriteFile(hFile, pManifest, cbManifest, &cbWritten, NULL) && cbWritten == cbManifest)
+                bRet = TRUE;
+
+            CloseHandle(hFile);
+
+            if (!bRet)
+                DeleteFileW(pwszBuf);
+            else
+                TRACE("created %s\n", debugstr_w(pwszBuf));
         }
     }
-    else ret = DeleteFileW( buffer );
+    else
+        bRet = DeleteFileW(pwszBuf);
 
-    HeapFree( GetProcessHeap(), 0, buffer );
-    return ret;
+    HeapFree(GetProcessHeap(), 0, pwszBuf);
+
+    return bRet;
 }
 
 
@@ -192,7 +175,7 @@ static BOOL create_manifest( BOOL install )
  * PARAMS
  *     hinstDLL    [I] handle to the 'dlls' instance
  *     fdwReason   [I]
- *     lpvReserved [I] reserverd, must be NULL
+ *     lpvReserved [I] reserved, must be NULL
  *
  * RETURNS
  *     Success: TRUE
@@ -701,7 +684,7 @@ CreateUpDownControl (DWORD style, INT x, INT y, INT cx, INT cy,
  *
  * NOTES
  *     This function is just a dummy - all the controls are registered at
- *     the DLL's initialization. See InitCommonContolsEx for details.
+ *     the DLL initialization time. See InitCommonContolsEx for details.
  */
 
 VOID WINAPI
@@ -887,7 +870,10 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
         nColorTableSize = (1 << lpBitmap->biBitCount);
     else
         nColorTableSize = 0;
-    nSize = lpBitmap->biSize + nColorTableSize * sizeof(RGBQUAD);
+    nSize = lpBitmap->biSize;
+    if (nSize == sizeof(BITMAPINFOHEADER) && lpBitmap->biCompression == BI_BITFIELDS)
+        nSize += 3 * sizeof(DWORD);
+    nSize += nColorTableSize * sizeof(RGBQUAD);
     lpBitmapInfo = GlobalAlloc (GMEM_FIXED, nSize);
     if (lpBitmapInfo == NULL)
 	return 0;
@@ -1018,7 +1004,12 @@ HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
     TRACE("(%u, %s): stub\n", bInstall, debugstr_w(cmdline));
-    if (!create_manifest( bInstall )) return HRESULT_FROM_WIN32(GetLastError());
+    if (!create_manifest(bInstall))
+    {
+        ERR("create_manifest failed!\n");
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+        
     return S_OK;
 }
 
@@ -1088,7 +1079,7 @@ VOID WINAPI InitMUILanguage (LANGID uiLang)
  * PARAMS
  *     hWnd [in] handle to window subclass.
  *     pfnSubclass [in] Pointer to new window procedure.
- *     uIDSubclass [in] Unique identifier of sublass together with pfnSubclass.
+ *     uIDSubclass [in] Unique identifier of subclass together with pfnSubclass.
  *     dwRef [in] Reference data to pass to window procedure.
  *
  * RETURNS
@@ -1177,7 +1168,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
  * PARAMS
  *     hWnd [in] Handle to window which were subclassing
  *     pfnSubclass [in] Pointer to the subclass procedure
- *     uID [in] Unique indentifier of the subclassing procedure
+ *     uID [in] Unique identifier of the subclassing procedure
  *     pdwRef [out] Pointer to the reference data
  *
  * RETURNS
@@ -1320,7 +1311,7 @@ static LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam
 /***********************************************************************
  * DefSubclassProc [COMCTL32.413]
  *
- * Calls the next window procedure (ie. the one before this subclass)
+ * Calls the next window procedure (i.e. the one before this subclass)
  *
  * PARAMS
  *     hWnd [in] The window that we're subclassing
@@ -1682,12 +1673,114 @@ LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet)
  *
  * Draw text with shadow.
  */
-int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD dwFlags,
+int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *prc, DWORD dwFlags,
                           COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset)
 {
-    FIXME("(%p, %s, %d, %p, %d, 0x%08x, 0x%08x, %d, %d): stub\n", hdc, debugstr_w(pszText), cch, rect, dwFlags,
-                                                                  crText, crShadow, ixOffset, iyOffset);
-    return DrawTextW(hdc, pszText, cch, rect, DT_LEFT);
+    COLORREF crOldText;
+    RECT rcText;
+    INT iRet, x, y, x2, y2;
+    BYTE *pBits;
+    HBITMAP hbm, hbmOld;
+    BITMAPINFO bi;
+    HDC hdcMem;
+    HFONT hOldFont;
+    BLENDFUNCTION bf;
+
+    /* Create 32 bit DIB section for the shadow */
+    ZeroMemory(&bi, sizeof(bi));
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = prc->right - prc->left + 4;
+    bi.bmiHeader.biHeight = prc->bottom - prc->top + 5; // bottom-up DIB
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    hbm = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, (PVOID*)&pBits, NULL, 0);
+    if(!hbm)
+    {
+        ERR("CreateDIBSection failed\n");
+        return 0;
+    }
+
+    /* Create memory device context for new DIB section and select it */
+    hdcMem = CreateCompatibleDC(hdc);
+    if(!hdcMem)
+    {
+        ERR("CreateCompatibleDC failed\n");
+        DeleteObject(hbm);
+        return 0;
+    }
+
+    hbmOld = (HBITMAP)SelectObject(hdcMem, hbm);
+
+    /* Draw text on our helper bitmap */
+    hOldFont = (HFONT)SelectObject(hdcMem, GetCurrentObject(hdc, OBJ_FONT));
+    SetTextColor(hdcMem, RGB(16, 16, 16));
+    SetBkColor(hdcMem, RGB(0, 0, 0));
+    SetBkMode(hdcMem, TRANSPARENT);
+    SetRect(&rcText, 0, 0, prc->right - prc->left, prc->bottom - prc->top);
+    DrawTextW(hdcMem, pszText, cch, &rcText, dwFlags);
+    SelectObject(hdcMem, hOldFont);
+
+    /* Flush GDI so data pointed by pBits is valid */
+    GdiFlush();
+
+    /* Set alpha of pixels (forget about colors for now. They will be changed in next loop).
+       We copy text image 4*5 times and each time alpha is added */
+    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
+        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
+        {
+            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
+            UINT Alpha = 0;
+
+            for (x2 = x - 4 + 1; x2 <= x; ++x2)
+                for (y2 = y; y2 < y + 5; ++y2)
+                {
+                    if (x2 >= 0 && x2 < bi.bmiHeader.biWidth && y2 >= 0 && y2 < bi.bmiHeader.biHeight)
+                    {
+                        BYTE *pSrc = &pBits[(y2 * bi.bmiHeader.biWidth + x2) * 4];
+                        Alpha += pSrc[0];
+                    }
+                }
+
+            if (Alpha > 255)
+                Alpha = 255;
+            pDest[3] = Alpha;
+        }
+
+    /* Now set the color of each pixel to shadow color * alpha (see GdiAlphaBlend) */
+    for (x = 0; x < bi.bmiHeader.biWidth; ++x)
+        for (y = 0; y < bi.bmiHeader.biHeight; ++y)
+        {
+            BYTE *pDest = &pBits[(y * bi.bmiHeader.biWidth + x) * 4];
+            pDest[0] = GetBValue(crShadow) * pDest[3] / 255;
+            pDest[1] = GetGValue(crShadow) * pDest[3] / 255;
+            pDest[2] = GetRValue(crShadow) * pDest[3] / 255;
+        }
+
+    /* Fix ixOffset of the shadow (tested on Win) */
+    ixOffset -= 3;
+    iyOffset -= 3;
+
+    /* Alpha blend helper image to destination DC */
+    bf.BlendOp = AC_SRC_OVER;
+    bf.BlendFlags = 0;
+    bf.SourceConstantAlpha = 255;
+    bf.AlphaFormat = AC_SRC_ALPHA;
+    if (!GdiAlphaBlend(hdc, prc->left + ixOffset, prc->top + iyOffset, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, hdcMem, 0, 0, bi.bmiHeader.biWidth, bi.bmiHeader.biHeight, bf))
+        ERR("GdiAlphaBlend failed: %lu\n", GetLastError());
+
+    /* Delete the helper bitmap */
+    SelectObject(hdcMem, hbmOld);
+    DeleteObject(hbm);
+    DeleteDC(hdcMem);
+
+    /* Finally draw the text over shadow */
+    crOldText = SetTextColor(hdc, crText);
+    SetBkMode(hdc, TRANSPARENT);
+    iRet = DrawTextW(hdc, pszText, cch, prc, dwFlags);
+    SetTextColor(hdc, crOldText);
+
+    return iRet;
 }
 
 /***********************************************************************
@@ -1696,10 +1789,47 @@ int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD 
 HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *pTaskConfig, int *pnButton,
                                   int *pnRadioButton, BOOL *pfVerificationFlagChecked)
 {
+    UINT uType = 0;
+    INT  ret;
     FIXME("%p, %p, %p, %p\n", pTaskConfig, pnButton, pnRadioButton, pfVerificationFlagChecked);
 
-    if (pnButton) *pnButton = IDYES;
+    if (pTaskConfig->dwCommonButtons & TDCBF_YES_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_NO_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_YESNOCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_YES_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_NO_BUTTON)
+        uType |= MB_YESNO;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_RETRY_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_RETRYCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_OK_BUTTON &&
+        pTaskConfig->dwCommonButtons & TDCBF_CANCEL_BUTTON)
+        uType |= MB_OKCANCEL;
+    else
+    if (pTaskConfig->dwCommonButtons & TDCBF_OK_BUTTON)
+        uType |= MB_OK;
+    ret = MessageBoxW(pTaskConfig->hwndParent, pTaskConfig->pszMainInstruction,
+                      pTaskConfig->pszWindowTitle, uType);
+    FIXME("dwCommonButtons=%x uType=%x ret=%x\n", pTaskConfig->dwCommonButtons, uType, ret);
+
+    if (pnButton) *pnButton = ret;
     if (pnRadioButton) *pnRadioButton = pTaskConfig->nDefaultButton;
     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
     return S_OK;
+}
+
+/***********************************************************************
+ * RegisterClassNameW [COMCTL32.@]
+ *
+ * Register window class again while using as SxS module.
+ */
+BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
+{
+    /* FIXME: actually register redirected user32 class,
+              comctl32 classes are registered by this module anyway */
+    return TRUE;
 }

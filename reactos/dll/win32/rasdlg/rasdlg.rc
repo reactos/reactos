@@ -34,13 +34,26 @@
 101		BITMAP "res/bitmaps/101.bmp"
 102		BITMAP "res/bitmaps/102.bmp"
 
-#include "lang/de-DE.rc"
-#include "lang/en-US.rc"
-#include "lang/no-NO.rc"
-
 // UTF-8
 #pragma code_page(65001)
-#include "lang/pl-PL.rc"
-#include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_NB_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif

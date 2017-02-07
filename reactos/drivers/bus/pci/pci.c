@@ -181,6 +181,14 @@ PciAddDevice(
 }
 
 
+VOID
+NTAPI
+PciUnload(
+  IN PDRIVER_OBJECT DriverObject)
+{
+    /* The driver object extension is destroyed by the I/O manager */
+}
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -196,6 +204,7 @@ DriverEntry(
   DriverObject->MajorFunction[IRP_MJ_PNP] = PciPnpControl;
   DriverObject->MajorFunction[IRP_MJ_POWER] = PciPowerControl;
   DriverObject->DriverExtension->AddDevice = PciAddDevice;
+  DriverObject->DriverUnload = PciUnload;
 
   Status = IoAllocateDriverObjectExtension(
     DriverObject,

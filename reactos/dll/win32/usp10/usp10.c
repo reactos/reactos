@@ -25,6 +25,7 @@
  */
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -44,8 +45,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 typedef struct _scriptRange
 {
     WORD script;
-    WORD rangeFirst;
-    WORD rangeLast;
+    DWORD rangeFirst;
+    DWORD rangeLast;
     WORD numericScript;
     WORD punctScript;
 } scriptRange;
@@ -57,7 +58,8 @@ static const scriptRange scriptRanges[] = {
     /* Latin Extended-A: U+0100–U+017F */
     /* Latin Extended-B: U+0180–U+024F */
     /* IPA Extensions: U+0250–U+02AF */
-    { Script_Latin,      0x80,   0x2af ,  Script_Numeric2, Script_Punctuation},
+    /* Spacing Modifier Letters:U+02B0–U+02FF */
+    { Script_Latin,      0x80,   0x2ff ,  Script_Numeric2, Script_Punctuation},
     /* Combining Diacritical Marks : U+0300–U+036F */
     { Script_Diacritical,0x300,  0x36f,  0, 0},
     /* Greek: U+0370–U+03FF */
@@ -81,6 +83,8 @@ static const scriptRange scriptRanges[] = {
     { Script_Arabic,     0x750,  0x77f,  0, 0},
     /* Thaana: U+0780–U+07BF */
     { Script_Thaana,     0x780,  0x7bf,  0, 0},
+    /* N’Ko: U+07C0–U+07FF */
+    { Script_NKo,        0x7c0,  0x7ff,  0, 0},
     /* Devanagari: U+0900–U+097F */
     { Script_Devanagari, 0x900,  0x97f,  Script_Devanagari_Numeric, 0},
     /* Bengali: U+0980–U+09FF */
@@ -107,8 +111,35 @@ static const scriptRange scriptRanges[] = {
     { Script_Lao,       0xe80,  0xeff,  Script_Lao_Numeric, 0},
     /* Tibetan: U+0F00–U+0FFF */
     { Script_Tibetan,   0xf00,  0xfff,  0, 0},
+    /* Myanmar: U+1000–U+109F */
+    { Script_Myanmar,    0x1000,  0x109f, Script_Myanmar_Numeric, 0},
     /* Georgian: U+10A0–U+10FF */
     { Script_Georgian,   0x10a0,  0x10ff,  0, 0},
+    /* Hangul Jamo: U+1100–U+11FF */
+    { Script_Hangul,     0x1100,  0x11ff,  0, 0},
+    /* Ethiopic: U+1200–U+137F */
+    /* Ethiopic Extensions: U+1380–U+139F */
+    { Script_Ethiopic,   0x1200,  0x139f,  0, 0},
+    /* Cherokee: U+13A0–U+13FF */
+    { Script_Cherokee,   0x13a0,  0x13ff,  0, 0},
+    /* Canadian Aboriginal Syllabics: U+1400–U+167F */
+    { Script_Canadian,   0x1400,  0x167f,  0, 0},
+    /* Ogham: U+1680–U+169F */
+    { Script_Ogham,      0x1680,  0x169f,  0, 0},
+    /* Runic: U+16A0–U+16F0 */
+    { Script_Runic,      0x16a0,  0x16f0,  0, 0},
+    /* Khmer: U+1780–U+17FF */
+    { Script_Khmer,      0x1780,  0x17ff,  Script_Khmer_Numeric, 0},
+    /* Mongolian: U+1800–U+18AF */
+    { Script_Mongolian,  0x1800,  0x18af,  Script_Mongolian_Numeric, 0},
+    /* Canadian Aboriginal Syllabics Extended: U+18B0–U+18FF */
+    { Script_Canadian,   0x18b0,  0x18ff,  0, 0},
+    /* Tai Le: U+1950–U+197F */
+    { Script_Tai_Le,     0x1950,  0x197f,  0, 0},
+    /* New Tai Lue: U+1980–U+19DF */
+    { Script_New_Tai_Lue,0x1980,  0x19df,  Script_New_Tai_Lue_Numeric, 0},
+    /* Khmer Symbols: U+19E0–U+19FF */
+    { Script_Khmer,      0x19e0,  0x19ff,  Script_Khmer_Numeric, 0},
     /* Vedic Extensions: U+1CD0-U+1CFF */
     { Script_Devanagari, 0x1cd0, 0x1cff, Script_Devanagari_Numeric, 0},
     /* Phonetic Extensions: U+1D00–U+1DBF */
@@ -145,6 +176,8 @@ static const scriptRange scriptRanges[] = {
     /* Miscellaneous Mathematical Symbols-A : U+27c0 –U+27ef */
     /* Supplemental Arrows-A : U+27f0 –U+27ff */
     { Script_Latin,      0x2100, 0x27ff, 0, 0},
+    /* Braille Patterns: U+2800–U+28FF */
+    { Script_Braille,    0x2800, 0x28ff, 0, 0},
     /* Supplemental Arrows-B : U+2900 –U+297f */
     /* Miscellaneous Mathematical Symbols-B : U+2980 –U+29ff */
     /* Supplemental Mathematical Operators : U+2a00 –U+2aff */
@@ -154,8 +187,62 @@ static const scriptRange scriptRanges[] = {
     { Script_Latin,      0x2c60, 0x2c7f, 0, 0},
     /* Georgian: U+2D00–U+2D2F */
     { Script_Georgian,   0x2d00,  0x2d2f,  0, 0},
+    /* Tifinagh: U+2D30–U+2D7F */
+    { Script_Tifinagh,   0x2d30,  0x2d7f,  0, 0},
+    /* Ethiopic Extensions: U+2D80–U+2DDF */
+    { Script_Ethiopic,   0x2d80,  0x2ddf,  0, 0},
     /* Cyrillic Extended-A: U+2DE0–U+2DFF */
     { Script_Cyrillic,   0x2de0, 0x2dff,  0, 0},
+    /* CJK Radicals Supplement: U+2E80–U+2EFF */
+    /* Kangxi Radicals: U+2F00–U+2FDF */
+    { Script_CJK_Han,    0x2e80, 0x2fdf,  0, 0},
+    /* Ideographic Description Characters: U+2FF0–U+2FFF */
+    { Script_Ideograph  ,0x2ff0, 0x2fff,  0, 0},
+    /* CJK Symbols and Punctuation: U+3000–U+303F */
+    { Script_Ideograph  ,0x3000, 0x3004,  0, 0},
+    { Script_CJK_Han    ,0x3005, 0x3005,  0, 0},
+    { Script_Ideograph  ,0x3006, 0x3006,  0, 0},
+    { Script_CJK_Han    ,0x3007, 0x3007,  0, 0},
+    { Script_Ideograph  ,0x3008, 0x3020,  0, 0},
+    { Script_CJK_Han    ,0x3021, 0x3029,  0, 0},
+    { Script_Ideograph  ,0x302a, 0x3030,  0, 0},
+    /* Kana Marks: */
+    { Script_Kana       ,0x3031, 0x3035,  0, 0},
+    { Script_Ideograph  ,0x3036, 0x3037,  0, 0},
+    { Script_CJK_Han    ,0x3038, 0x303b,  0, 0},
+    { Script_Ideograph  ,0x303c, 0x303f,  0, 0},
+    /* Hiragana: U+3040–U+309F */
+    /* Katakana: U+30A0–U+30FF */
+    { Script_Kana       ,0x3040, 0x30ff,  0, 0},
+    /* Bopomofo: U+3100–U+312F */
+    { Script_Bopomofo   ,0x3100, 0x312f,  0, 0},
+    /* Hangul Compatibility Jamo: U+3130–U+318F */
+    { Script_Hangul     ,0x3130, 0x318f,  0, 0},
+    /* Kanbun: U+3190–U+319F */
+    { Script_Ideograph  ,0x3190, 0x319f,  0, 0},
+    /* Bopomofo Extended: U+31A0–U+31BF */
+    { Script_Bopomofo   ,0x31a0, 0x31bf,  0, 0},
+    /* CJK Strokes: U+31C0–U+31EF */
+    { Script_Ideograph  ,0x31c0, 0x31ef,  0, 0},
+    /* Katakana Phonetic Extensions: U+31F0–U+31FF */
+    { Script_Kana       ,0x31f0, 0x31ff,  0, 0},
+    /* Enclosed CJK Letters and Months: U+3200–U+32FF */
+    { Script_Hangul     ,0x3200, 0x321f,  0, 0},
+    { Script_Ideograph  ,0x3220, 0x325f,  0, 0},
+    { Script_Hangul     ,0x3260, 0x327f,  0, 0},
+    { Script_Ideograph  ,0x3280, 0x32ef,  0, 0},
+    { Script_Kana       ,0x32d0, 0x31ff,  0, 0},
+    /* CJK Compatibility: U+3300–U+33FF*/
+    { Script_Kana       ,0x3300, 0x3357,  0, 0},
+    { Script_Ideograph  ,0x3358, 0x33ff,  0, 0},
+    /* CJK Unified Ideographs Extension A: U+3400–U+4DBF */
+    { Script_CJK_Han    ,0x3400, 0x4dbf,  0, 0},
+    /* CJK Unified Ideographs: U+4E00–U+9FFF */
+    { Script_CJK_Han    ,0x4e00, 0x9fff,  0, 0},
+    /* Yi: U+A000–U+A4CF */
+    { Script_Yi         ,0xa000, 0xa4cf,  0, 0},
+    /* Vai: U+A500–U+A63F */
+    { Script_Vai        ,0xa500, 0xa63f,  Script_Vai_Numeric, 0},
     /* Cyrillic Extended-B: U+A640–U+A69F */
     { Script_Cyrillic,   0xa640, 0xa69f,  0, 0},
     /* Modifier Tone Letters: U+A700–U+A71F */
@@ -165,6 +252,22 @@ static const scriptRange scriptRanges[] = {
     { Script_Phags_pa,   0xa840, 0xa87f, 0, 0},
     /* Devanagari Extended: U+A8E0-U+A8FF */
     { Script_Devanagari, 0xa8e0, 0xa8ff, Script_Devanagari_Numeric, 0},
+    /* Myanmar Extended-A: U+AA60–U+AA7F */
+    { Script_Myanmar,    0xaa60,  0xaa7f, Script_Myanmar_Numeric, 0},
+    /* Hangul Jamo Extended-A: U+A960–U+A97F */
+    { Script_Hangul,     0xa960, 0xa97f,  0, 0},
+    /* Hangul Syllables: U+AC00–U+D7A3 */
+    { Script_Hangul,     0xac00, 0xd7a3,  0, 0},
+    /* Hangul Jamo Extended-B: U+D7B0–U+D7FF */
+    { Script_Hangul,     0xd7b0, 0xd7ff,  0, 0},
+    /* Surrogates Area: U+D800–U+DFFF */
+    { Script_Surrogates, 0xd800, 0xdbfe,  0, 0},
+    { Script_Private,    0xdbff, 0xdc00,  0, 0},
+    { Script_Surrogates, 0xdc01, 0xdfff,  0, 0},
+    /* Private Use Area: U+E000–U+F8FF */
+    { Script_Private,    0xe000, 0xf8ff,  0, 0},
+    /* CJK Compatibility Ideographs: U+F900–U+FAFF */
+    { Script_CJK_Han    ,0xf900, 0xfaff,  0, 0},
     /* Latin Ligatures: U+FB00–U+FB06 */
     { Script_Latin,      0xfb00, 0xfb06, 0, 0},
     /* Armenian ligatures U+FB13..U+FB17 */
@@ -173,22 +276,31 @@ static const scriptRange scriptRanges[] = {
     { Script_Hebrew,     0xfb1d, 0xfb4f, 0, 0},
     /* Arabic Presentation Forms-A: U+FB50–U+FDFF*/
     { Script_Arabic,     0xfb50, 0xfdff, 0, 0},
+    /* Vertical Forms: U+FE10–U+FE1F */
+    /* Combining Half Marks: U+FE20–U+FE2F */
+    /* CJK Compatibility Forms: U+FE30–U+FE4F */
+    /* Small Form Variants: U+FE50–U+FE6F */
+    { Script_Ideograph  ,0xfe10, 0xfe6f,  0, 0},
     /* Arabic Presentation Forms-B: U+FE70–U+FEFF*/
     { Script_Arabic,     0xfe70, 0xfeff, 0, 0},
+    /* Halfwidth and Fullwidth Forms: U+FF00–FFEF */
+    { Script_Ideograph  ,0xff00, 0xff64,  Script_Numeric2, 0},
+    { Script_Kana       ,0xff65, 0xff9f,  0, 0},
+    { Script_Hangul     ,0xffa0, 0xffdf,  0, 0},
+    { Script_Ideograph  ,0xffe0, 0xffef,  0, 0},
+    /* Plane - 1 */
+    /* Deseret: U+10400–U+1044F */
+    { Script_Deseret,     0x10400, 0x1044F,  0, 0},
+    /* Osmanya: U+10480–U+104AF */
+    { Script_Osmanya,    0x10480, 0x104AF,  Script_Osmanya_Numeric, 0},
+    /* Mathematical Alphanumeric Symbols: U+1D400–U+1D7FF */
+    { Script_MathAlpha,  0x1D400, 0x1D7FF,  0, 0},
     /* END */
     { SCRIPT_UNDEFINED,  0, 0, 0}
 };
 
-typedef struct _scriptData
-{
-    SCRIPT_ANALYSIS a;
-    SCRIPT_PROPERTIES props;
-    OPENTYPE_TAG scriptTag;
-    WCHAR fallbackFont[LF_FACESIZE];
-} scriptData;
-
 /* the must be in order so that the index matches the Script value */
-static const scriptData scriptInformation[] = {
+const scriptData scriptInformation[] = {
     {{SCRIPT_UNDEFINED, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_NEUTRAL, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      0x00000000,
@@ -196,7 +308,7 @@ static const scriptData scriptInformation[] = {
     {{Script_Latin, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      MS_MAKE_TAG('l','a','t','n'),
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_CR, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_NEUTRAL, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      0x00000000,
@@ -204,7 +316,7 @@ static const scriptData scriptInformation[] = {
     {{Script_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 1, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      0x00000000,
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_Control, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 1, 0, 0, ANSI_CHARSET, 1, 0, 0, 0, 0, 0, 1, 0, 0},
      0x00000000,
@@ -212,7 +324,7 @@ static const scriptData scriptInformation[] = {
     {{Script_Punctuation, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_NEUTRAL, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      0x00000000,
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_Arabic, 1, 1, 0, 0, 0, 0, { 1,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ARABIC, 0, 1, 0, 0, ARABIC_CHARSET, 0, 0, 0, 0, 0, 0, 1, 1, 0},
      MS_MAKE_TAG('a','r','a','b'),
@@ -240,11 +352,11 @@ static const scriptData scriptInformation[] = {
     {{Script_Greek, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_GREEK, 0, 0, 0, 0, GREEK_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('g','r','e','k'),
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_Cyrillic, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_RUSSIAN, 0, 0, 0, 0, RUSSIAN_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('c','y','r','l'),
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_Armenian, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ARMENIAN, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      MS_MAKE_TAG('a','r','m','n'),
@@ -372,11 +484,151 @@ static const scriptData scriptInformation[] = {
     {{Script_Punctuation2, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
      MS_MAKE_TAG('l','a','t','n'),
-     {0}},
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
     {{Script_Numeric2, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
      {LANG_ENGLISH, 1, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
      0x00000000,
      {0}},
+    {{Script_Myanmar, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x55, 0, 1, 1, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+     MS_MAKE_TAG('m','y','m','r'),
+     {'M','y','a','n','m','a','r',' ','T','e','x','t',0}},
+    {{Script_Myanmar_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x55, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('m','y','m','r'),
+     {0}},
+    {{Script_Tai_Le, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('t','a','l','e'),
+     {'M','i','c','r','o','s','o','f','t',' ','T','a','i',' ','L','e'}},
+    {{Script_New_Tai_Lue, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('t','a','l','u'),
+     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e'}},
+    {{Script_New_Tai_Lue_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('t','a','l','u'),
+     {'M','i','c','r','o','s','o','f','t',' ','N','e','w',' ','T','a','i',' ','L','u','e'}},
+    {{Script_Khmer, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x53, 0, 1, 1, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+     MS_MAKE_TAG('k','h','m','r'),
+     {'D','a','u','n','P','e','n','h'}},
+    {{Script_Khmer, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x53, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('k','h','m','r'),
+     {'D','a','u','n','P','e','n','h'}},
+    {{Script_CJK_Han, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('h','a','n','i'),
+     {0}},
+    {{Script_Ideograph, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('h','a','n','i'),
+     {0}},
+    {{Script_Bopomofo, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('b','o','p','o'),
+     {0}},
+    {{Script_Kana, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 0, 0, 0, ANSI_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('k','a','n','a'),
+     {0}},
+    {{Script_Hangul, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_KOREAN, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('h','a','n','g'),
+     {0}},
+    {{Script_Yi, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     MS_MAKE_TAG('y','i',' ',' '),
+     {'M','i','c','r','o','s','o','f','t',' ','Y','i',' ','B','a','i','t','i'}},
+    {{Script_Ethiopic, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x5e, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('e','t','h','i'),
+     {'N','y','a','l','a'}},
+    {{Script_Ethiopic_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x5e, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('e','t','h','i'),
+     {'N','y','a','l','a'}},
+    {{Script_Mongolian, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_MONGOLIAN, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('m','o','n','g'),
+     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i'}},
+    {{Script_Mongolian_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_MONGOLIAN, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('m','o','n','g'),
+     {'M','o','n','g','o','l','i','a','n',' ','B','a','i','t','i'}},
+    {{Script_Tifinagh, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('t','f','n','g'),
+     {'E','b','r','i','m','a'}},
+    {{Script_NKo, 1, 1, 0, 0, 0, 0, { 1,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('n','k','o',' '),
+     {'E','b','r','i','m','a'}},
+    {{Script_Vai, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('v','a','i',' '),
+     {'E','b','r','i','m','a'}},
+    {{Script_Vai_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('v','a','i',' '),
+     {'E','b','r','i','m','a'}},
+    {{Script_Cherokee, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x5c, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('c','h','e','r'),
+     {'P','l','a','n','t','a','g','e','n','e','t',' ','C','h','e','r','o','k','e','e'}},
+    {{Script_Canadian, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0x5d, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('c','a','n','s'),
+     {'E','u','p','h','e','m','i','a'}},
+    {{Script_Ogham, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('o','g','a','m'),
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+    {{Script_Runic, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('r','u','n','r'),
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+    {{Script_Braille, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('b','r','a','i'),
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+    {{Script_Surrogates, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_ENGLISH, 0, 1, 0, 1, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+     0x00000000,
+     {0}},
+    {{Script_Private, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 0, 0, 0, DEFAULT_CHARSET, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+     0x00000000,
+     {0}},
+    {{Script_Deseret, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('d','s','r','t'),
+     {'S','e','g','o','e',' ','U','I',' ','S','y','m','b','o','l'}},
+    {{Script_Osmanya, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('o','s','m','a'),
+     {'E','b','r','i','m','a'}},
+    {{Script_Osmanya_Numeric, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 1, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('o','s','m','a'),
+     {'E','b','r','i','m','a'}},
+    {{Script_MathAlpha, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {0, 0, 1, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('m','a','t','h'),
+     {'C','a','m','b','r','i','a',' ','M','a','t','h'}},
+    {{Script_Hebrew_Currency, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_HEBREW, 0, 1, 0, 0, HEBREW_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('h','e','b','r'),
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
+    {{Script_Vietnamese_Currency, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_VIETNAMESE, 0, 0, 0, 0, VIETNAMESE_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('l','a','t','n'),
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
+    {{Script_Thai_Currency, 0, 0, 0, 0, 0, 0, { 0,0,0,0,0,0,0,0,0,0,0}},
+     {LANG_THAI, 0, 1, 0, 0, THAI_CHARSET, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     MS_MAKE_TAG('t','h','a','i'),
+     {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f',0}},
 };
 
 static const SCRIPT_PROPERTIES *script_props[] =
@@ -403,7 +655,25 @@ static const SCRIPT_PROPERTIES *script_props[] =
     &scriptInformation[38].props, &scriptInformation[39].props,
     &scriptInformation[40].props, &scriptInformation[41].props,
     &scriptInformation[42].props, &scriptInformation[43].props,
-    &scriptInformation[44].props, &scriptInformation[45].props
+    &scriptInformation[44].props, &scriptInformation[45].props,
+    &scriptInformation[46].props, &scriptInformation[47].props,
+    &scriptInformation[48].props, &scriptInformation[49].props,
+    &scriptInformation[50].props, &scriptInformation[51].props,
+    &scriptInformation[52].props, &scriptInformation[53].props,
+    &scriptInformation[54].props, &scriptInformation[55].props,
+    &scriptInformation[56].props, &scriptInformation[57].props,
+    &scriptInformation[58].props, &scriptInformation[59].props,
+    &scriptInformation[60].props, &scriptInformation[61].props,
+    &scriptInformation[62].props, &scriptInformation[63].props,
+    &scriptInformation[64].props, &scriptInformation[65].props,
+    &scriptInformation[66].props, &scriptInformation[67].props,
+    &scriptInformation[68].props, &scriptInformation[69].props,
+    &scriptInformation[70].props, &scriptInformation[71].props,
+    &scriptInformation[72].props, &scriptInformation[73].props,
+    &scriptInformation[74].props, &scriptInformation[75].props,
+    &scriptInformation[76].props, &scriptInformation[77].props,
+    &scriptInformation[78].props, &scriptInformation[79].props,
+    &scriptInformation[80].props, &scriptInformation[81].props
 };
 
 typedef struct {
@@ -433,6 +703,11 @@ typedef struct {
     SIZE* sz;
     int* logical2visual;
 } StringAnalysis;
+
+typedef struct {
+    BOOL ascending;
+    WORD target;
+} FindGlyph_struct;
 
 static inline void *heap_alloc(SIZE_T size)
 {
@@ -469,7 +744,7 @@ static inline BYTE get_cache_pitch_family(SCRIPT_CACHE *psc)
     return ((ScriptCache *)*psc)->tm.tmPitchAndFamily;
 }
 
-static inline WORD get_cache_glyph(SCRIPT_CACHE *psc, WCHAR c)
+static inline WORD get_cache_glyph(SCRIPT_CACHE *psc, DWORD c)
 {
     WORD *block = ((ScriptCache *)*psc)->glyphs[c >> GLYPH_BLOCK_SHIFT];
 
@@ -535,30 +810,62 @@ static WCHAR mirror_char( WCHAR ch )
     return ch + wine_mirror_map[wine_mirror_map[ch >> 8] + (ch & 0xff)];
 }
 
-static WORD get_char_script( WCHAR ch)
+static inline DWORD decode_surrogate_pair(LPCWSTR str, INT index, INT end)
+{
+    if (index < end-1 && IS_SURROGATE_PAIR(str[index],str[index+1]))
+    {
+        DWORD ch = 0x10000 + ((str[index] - 0xd800) << 10) + (str[index+1] - 0xdc00);
+        TRACE("Surrogate Pair %x %x => %x\n",str[index], str[index+1], ch);
+        return ch;
+    }
+    return 0;
+}
+
+static WORD get_char_script( LPCWSTR str, INT index, INT end, INT *consumed)
 {
     static const WCHAR latin_punc[] = {'#','$','&','\'',',',';','<','>','?','@','\\','^','_','`','{','|','}','~', 0x00a0, 0};
     WORD type = 0;
+    DWORD ch;
     int i;
 
-    if (ch == 0xc || ch == 0x20 || ch == 0x202f)
+    *consumed = 1;
+
+    if (str[index] == 0xc || str[index] == 0x20 || str[index] == 0x202f)
         return Script_CR;
 
     /* These punctuation are separated out as Latin punctuation */
-    if (strchrW(latin_punc,ch))
+    if (strchrW(latin_punc,str[index]))
         return Script_Punctuation2;
 
     /* These chars are itemized as Punctuation by Windows */
-    if (ch == 0x2212 || ch == 0x2044)
+    if (str[index] == 0x2212 || str[index] == 0x2044)
         return Script_Punctuation;
 
-    GetStringTypeW(CT_CTYPE1, &ch, 1, &type);
+    /* Currency Symboles by Unicode point */
+    switch (str[index])
+    {
+        case 0x09f2:
+        case 0x09f3: return Script_Bengali_Currency;
+        case 0x0af1: return Script_Gujarati_Currency;
+        case 0x0e3f: return Script_Thai_Currency;
+        case 0x20aa: return Script_Hebrew_Currency;
+        case 0x20ab: return Script_Vietnamese_Currency;
+        case 0xfb29: return Script_Hebrew_Currency;
+    }
+
+    GetStringTypeW(CT_CTYPE1, &str[index], 1, &type);
 
     if (type == 0)
         return SCRIPT_UNDEFINED;
 
     if (type & C1_CNTRL)
         return Script_Control;
+
+    ch = decode_surrogate_pair(str, index, end);
+    if (ch)
+        *consumed = 2;
+    else
+        ch = str[index];
 
     i = 0;
     do
@@ -578,6 +885,46 @@ static WORD get_char_script( WCHAR ch)
     } while (1);
 
     return SCRIPT_UNDEFINED;
+}
+
+static int compare_FindGlyph(const void *a, const void* b)
+{
+    const FindGlyph_struct *find = (FindGlyph_struct*)a;
+    const WORD *idx= (WORD*)b;
+    int rc = 0;
+
+    if ( find->target > *idx)
+        rc = 1;
+    else if (find->target < *idx)
+        rc = -1;
+
+    if (!find->ascending)
+        rc *= -1;
+    return rc;
+}
+
+int USP10_FindGlyphInLogClust(const WORD* pwLogClust, int cChars, WORD target)
+{
+    FindGlyph_struct fgs;
+    WORD *ptr;
+    INT k;
+
+    if (pwLogClust[0] < pwLogClust[cChars-1])
+        fgs.ascending = TRUE;
+    else
+        fgs.ascending = FALSE;
+
+    fgs.target = target;
+    ptr = bsearch(&fgs, pwLogClust, cChars, sizeof(WORD), compare_FindGlyph);
+
+    if (!ptr)
+        return -1;
+
+    for (k = (ptr - pwLogClust)-1; k >= 0 && pwLogClust[k] == target; k--)
+    ;
+    k++;
+
+    return k;
 }
 
 /***********************************************************************
@@ -623,7 +970,20 @@ HRESULT WINAPI ScriptFreeCache(SCRIPT_CACHE *psc)
         }
         heap_free(((ScriptCache *)*psc)->GSUB_Table);
         heap_free(((ScriptCache *)*psc)->GDEF_Table);
-        heap_free(((ScriptCache *)*psc)->features);
+        heap_free(((ScriptCache *)*psc)->CMAP_Table);
+        for (i = 0; i < ((ScriptCache *)*psc)->script_count; i++)
+        {
+            int j;
+            for (j = 0; j < ((ScriptCache *)*psc)->scripts[i].language_count; j++)
+            {
+                int k;
+                for (k = 0; k < ((ScriptCache *)*psc)->scripts[i].languages[j].feature_count; k++)
+                    heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features[k].lookups);
+                heap_free(((ScriptCache *)*psc)->scripts[i].languages[j].features);
+            }
+            heap_free(((ScriptCache *)*psc)->scripts[i].languages);
+        }
+        heap_free(((ScriptCache *)*psc)->scripts);
         heap_free(*psc);
         *psc = NULL;
     }
@@ -874,6 +1234,7 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
     WORD  last_indic = -1;
     WORD layoutRTL = 0;
     BOOL forceLevels = FALSE;
+    INT consumed = 0;
 
     TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems, 
           psControl, psState, pItems, pcItems);
@@ -887,7 +1248,16 @@ HRESULT WINAPI ScriptItemizeOpenType(const WCHAR *pwcInChars, int cInChars, int 
 
     for (i = 0; i < cInChars; i++)
     {
-        scripts[i] = get_char_script(pwcInChars[i]);
+        if (consumed <= 0)
+        {
+            scripts[i] = get_char_script(pwcInChars,i,cInChars,&consumed);
+            consumed --;
+        }
+        else
+        {
+            scripts[i] = scripts[i-1];
+            consumed --;
+        }
         /* Devanagari danda (U+0964) and double danda (U+0965) are used for
            all Indic scripts */
         if ((pwcInChars[i] == 0x964 || pwcInChars[i] ==0x965) && last_indic > 0)
@@ -1402,19 +1772,12 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
     hr = ScriptItemize(pString, cString, num_items, &sControl, &sState, analysis->pItem,
                        &analysis->numItems);
 
-    while (hr == E_OUTOFMEMORY)
+    if FAILED(hr)
     {
-        SCRIPT_ITEM *tmp;
-
-        num_items *= 2;
-        if (!(tmp = heap_realloc_zero(analysis->pItem, num_items * sizeof(SCRIPT_ITEM) + 1)))
-            goto error;
-
-        analysis->pItem = tmp;
-        hr = ScriptItemize(pString, cString, num_items, psControl, psState, analysis->pItem,
-                           &analysis->numItems);
+        if (hr == E_OUTOFMEMORY)
+            hr = E_INVALIDARG;
+        goto error;
     }
-    if (hr != S_OK) goto error;
 
     /* set back to out of memory for default goto error behaviour */
     hr = E_OUTOFMEMORY;
@@ -1480,14 +1843,25 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
                 LOGFONTW lf;
                 GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(lf), & lf);
                 lf.lfCharSet = scriptInformation[analysis->pItem[i].a.eScript].props.bCharSet;
+                lf.lfFaceName[0] = 0;
                 find_fallback_font(analysis->pItem[i].a.eScript, lf.lfFaceName);
-                analysis->glyphs[i].fallbackFont = CreateFontIndirectW(&lf);
-                if (analysis->glyphs[i].fallbackFont)
+                if (lf.lfFaceName[0])
                 {
-                    ScriptFreeCache(sc);
-                    originalFont = SelectObject(hdc, analysis->glyphs[i].fallbackFont);
+                    analysis->glyphs[i].fallbackFont = CreateFontIndirectW(&lf);
+                    if (analysis->glyphs[i].fallbackFont)
+                    {
+                        ScriptFreeCache(sc);
+                        originalFont = SelectObject(hdc, analysis->glyphs[i].fallbackFont);
+                    }
                 }
             }
+
+            /* FIXME: When we properly shape Hangul remove this check */
+            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && analysis->pItem[i].a.eScript == Script_Hangul)
+                analysis->pItem[i].a.fNoGlyphIndex = TRUE;
+
+            if ((dwFlags & SSA_LINK) && !analysis->glyphs[i].fallbackFont && !scriptInformation[analysis->pItem[i].a.eScript].props.fComplex)
+                analysis->pItem[i].a.fNoGlyphIndex = TRUE;
 
             hr = ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos],
                              cChar, numGlyphs, &analysis->pItem[i].a,
@@ -1545,13 +1919,9 @@ error:
 
 static inline BOOL does_glyph_start_cluster(const SCRIPT_VISATTR *pva, const WORD *pwLogClust, int cChars, int glyph, int direction)
 {
-    int i;
-
     if (pva[glyph].fClusterStart)
         return TRUE;
-    for (i = 0; i < cChars; i++)
-        if (pwLogClust[i] == glyph) break;
-    if (i != cChars)
+    if (USP10_FindGlyphInLogClust(pwLogClust, cChars, glyph) >= 0)
         return TRUE;
 
     return FALSE;
@@ -1578,6 +1948,8 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
     INT runStart, runEnd;
     INT iGlyph, cGlyphs;
     HFONT oldFont = 0x0;
+    RECT  crc;
+    int i;
 
     TRACE("(%p,%d,%d,%d,%d,%d, 0x%1x, %d, %d)\n",
          ssa, iX, iY, iItem, cStart, cEnd, uOptions, fSelected, fDisabled);
@@ -1588,6 +1960,7 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
          (cEnd >= 0 && analysis->pItem[iItem].iCharPos >= cEnd))
             return S_OK;
 
+    CopyRect(&crc,prc);
     if (fSelected)
     {
         BkMode = GetBkMode(analysis->hdc);
@@ -1618,6 +1991,7 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
             ScriptStringCPtoX(ssa, cEnd, FALSE, &off_x);
         else
             ScriptStringCPtoX(ssa, analysis->pItem[iItem+1].iCharPos-1, TRUE, &off_x);
+        crc.left = iX + off_x;
     }
     else
     {
@@ -1625,6 +1999,7 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
             ScriptStringCPtoX(ssa, cStart, FALSE, &off_x);
         else
             ScriptStringCPtoX(ssa, analysis->pItem[iItem].iCharPos, FALSE, &off_x);
+        crc.left = iX + off_x;
     }
 
     if (analysis->pItem[iItem].a.fRTL)
@@ -1638,6 +2013,24 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
         cGlyphs = analysis->glyphs[iItem].pwLogClust[runEnd] - iGlyph;
 
     cGlyphs++;
+
+    /* adjust for cluster glyphs when starting */
+    if (analysis->pItem[iItem].a.fRTL)
+        i = analysis->pItem[iItem+1].iCharPos - 1;
+    else
+        i = analysis->pItem[iItem].iCharPos;
+
+    for (; i >=analysis->pItem[iItem].iCharPos && i < analysis->pItem[iItem+1].iCharPos; (analysis->pItem[iItem].a.fRTL)?i--:i++)
+    {
+        if (analysis->glyphs[iItem].pwLogClust[i - analysis->pItem[iItem].iCharPos] == iGlyph)
+        {
+            if (analysis->pItem[iItem].a.fRTL)
+                ScriptStringCPtoX(ssa, i, TRUE, &off_x);
+            else
+                ScriptStringCPtoX(ssa, i, FALSE, &off_x);
+            break;
+        }
+    }
 
     if (cEnd < 0 || scriptInformation[analysis->pItem[iItem].a.eScript].props.fNeedsCaretInfo)
     {
@@ -1660,7 +2053,7 @@ static HRESULT SS_ItemOut( SCRIPT_STRING_ANALYSIS ssa,
 
     hr = ScriptTextOut(analysis->hdc,
                        (SCRIPT_CACHE *)&analysis->glyphs[iItem].sc, iX + off_x,
-                       iY, uOptions, prc, &analysis->pItem[iItem].a, NULL, 0,
+                       iY, uOptions, &crc, &analysis->pItem[iItem].a, NULL, 0,
                        &analysis->glyphs[iItem].glyphs[iGlyph], cGlyphs,
                        &analysis->glyphs[iItem].piAdvance[iGlyph], NULL,
                        &analysis->glyphs[iItem].pGoffset[iGlyph]);
@@ -1958,16 +2351,14 @@ static inline int get_cluster_size(const WORD *pwLogClust, int cChars, int item,
 static inline int get_glyph_cluster_advance(const int* piAdvance, const SCRIPT_VISATTR *pva, const WORD *pwLogClust, int cGlyphs, int cChars, int glyph, int direction)
 {
     int advance;
-    int log_clust_max = 0;
-    int i;
+    int log_clust_max;
 
     advance = piAdvance[glyph];
 
-    for (i = 0; i < cChars; i++)
-    {
-        if (pwLogClust[i] > log_clust_max)
-            log_clust_max = pwLogClust[i];
-    }
+    if (pwLogClust[0] > pwLogClust[cChars-1])
+        log_clust_max = pwLogClust[0];
+    else
+        log_clust_max = pwLogClust[cChars-1];
 
     if (glyph > log_clust_max)
         return advance;
@@ -2274,7 +2665,8 @@ HRESULT WINAPI ScriptBreak(const WCHAR *chars, int count, const SCRIPT_ANALYSIS 
 {
     TRACE("(%s, %d, %p, %p)\n", debugstr_wn(chars, count), count, sa, la);
 
-    if (!la) return S_FALSE;
+    if (count < 0 || !la) return E_INVALIDARG;
+    if (count == 0) return E_FAIL;
 
     BREAK_line(chars, count, sa, la);
 
@@ -2299,17 +2691,20 @@ HRESULT WINAPI ScriptBreak(const WCHAR *chars, int count, const SCRIPT_ANALYSIS 
 HRESULT WINAPI ScriptIsComplex(const WCHAR *chars, int len, DWORD flag)
 {
     int i;
+    INT consumed = 0;
 
     TRACE("(%s,%d,0x%x)\n", debugstr_wn(chars, len), len, flag);
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; i+=consumed)
     {
         int script;
+        if (i >= len)
+            break;
 
         if ((flag & SIC_ASCIIDIGIT) && chars[i] >= 0x30 && chars[i] <= 0x39)
             return S_OK;
 
-        script = get_char_script(chars[i]);
+        script = get_char_script(chars,i,len, &consumed);
         if ((scriptInformation[script].props.fComplex && (flag & SIC_COMPLEX))||
             (!scriptInformation[script].props.fComplex && (flag & SIC_NEUTRAL)))
             return S_OK;
@@ -2354,8 +2749,9 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
                                     SCRIPT_GLYPHPROP *pOutGlyphProps, int *pcGlyphs)
 {
     HRESULT hr;
-    unsigned int i;
+    unsigned int i,g;
     BOOL rtl;
+    int cluster;
 
     TRACE("(%p, %p, %p, %s, %s, %p, %p, %d, %s, %d, %d, %p, %p, %p, %p, %p )\n",
      hdc, psc, psa,
@@ -2382,7 +2778,7 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
     ((ScriptCache *)*psc)->userLang = tagLangSys;
 
     /* set fNoGlyphIndex non truetype/opentype fonts */
-    if (!psa->fNoGlyphIndex && !((ScriptCache *)*psc)->sfnt)
+    if (psa && !psa->fNoGlyphIndex && !((ScriptCache *)*psc)->sfnt)
         psa->fNoGlyphIndex = TRUE;
 
     /* Initialize a SCRIPT_VISATTR and LogClust for each char in this run */
@@ -2411,35 +2807,59 @@ HRESULT WINAPI ScriptShapeOpenType( HDC hdc, SCRIPT_CACHE *psc,
 
         rChars = heap_alloc(sizeof(WCHAR) * cChars);
         if (!rChars) return E_OUTOFMEMORY;
-        for (i = 0; i < cChars; i++)
+        for (i = 0, g = 0, cluster = 0; i < cChars; i++)
         {
             int idx = i;
-            WCHAR chInput;
+            DWORD chInput;
+
             if (rtl) idx = cChars - 1 - i;
-            if (psa->fRTL)
-                chInput = mirror_char(pwcChars[idx]);
-            else
-                chInput = pwcChars[idx];
-            /* special case for tabs */
-            if (chInput == 0x0009)
-                chInput = 0x0020;
-            if (!(pwOutGlyphs[i] = get_cache_glyph(psc, chInput)))
+            if (!cluster)
             {
-                WORD glyph;
-                if (!hdc)
+                chInput = decode_surrogate_pair(pwcChars, idx, cChars);
+                if (!chInput)
                 {
-                    heap_free(rChars);
-                    return E_PENDING;
+                    if (psa->fRTL)
+                        chInput = mirror_char(pwcChars[idx]);
+                    else
+                        chInput = pwcChars[idx];
+                    /* special case for tabs */
+                    if (chInput == 0x0009)
+                        chInput = 0x0020;
+                    rChars[i] = chInput;
                 }
-                if (GetGlyphIndicesW(hdc, &chInput, 1, &glyph, 0) == GDI_ERROR)
+                else
                 {
-                    heap_free(rChars);
-                    return S_FALSE;
+                    rChars[i] = pwcChars[idx];
+                    rChars[i+1] = pwcChars[(rtl)?idx-1:idx+1];
+                    cluster = 1;
                 }
-                pwOutGlyphs[i] = set_cache_glyph(psc, chInput, glyph);
+                if (!(pwOutGlyphs[g] = get_cache_glyph(psc, chInput)))
+                {
+                    WORD glyph;
+                    if (!hdc)
+                    {
+                        heap_free(rChars);
+                        return E_PENDING;
+                    }
+                    if (OpenType_CMAP_GetGlyphIndex(hdc, (ScriptCache *)*psc, chInput, &glyph, 0) == GDI_ERROR)
+                    {
+                        heap_free(rChars);
+                        return S_FALSE;
+                    }
+                    pwOutGlyphs[g] = set_cache_glyph(psc, chInput, glyph);
+                }
+                g++;
             }
-            rChars[i] = chInput;
+            else
+            {
+                int k;
+                cluster--;
+                pwLogClust[idx] = (rtl)?pwLogClust[idx+1]:pwLogClust[idx-1];
+                for (k = (rtl)?idx-1:idx+1; k >= 0 && k < cChars; (rtl)?k--:k++)
+                    pwLogClust[k]--;
+            }
         }
+        *pcGlyphs = g;
 
         SHAPE_ContextualShaping(hdc, (ScriptCache *)*psc, psa, rChars, cChars, pwOutGlyphs, pcGlyphs, cMaxGlyphs, pwLogClust);
         SHAPE_ApplyDefaultOpentypeFeatures(hdc, (ScriptCache *)*psc, psa, pwOutGlyphs, pcGlyphs, cMaxGlyphs, cChars, pwLogClust);
@@ -3174,6 +3594,33 @@ HRESULT WINAPI ScriptJustify(const SCRIPT_VISATTR *sva, const int *advance,
 
     for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
     return S_OK;
+}
+
+HRESULT WINAPI ScriptGetFontScriptTags( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS *psa, int cMaxTags, OPENTYPE_TAG *pScriptTags, int *pcTags)
+{
+    HRESULT hr;
+    if (!pScriptTags || !pcTags || cMaxTags == 0) return E_INVALIDARG;
+    if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
+
+    return SHAPE_GetFontScriptTags(hdc, (ScriptCache *)*psc, psa, cMaxTags, pScriptTags, pcTags);
+}
+
+HRESULT WINAPI ScriptGetFontLanguageTags( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, int cMaxTags, OPENTYPE_TAG *pLangSysTags, int *pcTags)
+{
+    HRESULT hr;
+    if (!pLangSysTags || !pcTags || cMaxTags == 0) return E_INVALIDARG;
+    if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
+
+    return SHAPE_GetFontLanguageTags(hdc, (ScriptCache *)*psc, psa, tagScript, cMaxTags, pLangSysTags, pcTags);
+}
+
+HRESULT WINAPI ScriptGetFontFeatureTags( HDC hdc, SCRIPT_CACHE *psc, SCRIPT_ANALYSIS *psa, OPENTYPE_TAG tagScript, OPENTYPE_TAG tagLangSys, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags)
+{
+    HRESULT hr;
+    if (!pFeatureTags || !pcTags || cMaxTags == 0) return E_INVALIDARG;
+    if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
+
+    return SHAPE_GetFontFeatureTags(hdc, (ScriptCache *)*psc, psa, tagScript, tagLangSys, cMaxTags, pFeatureTags, pcTags);
 }
 
 BOOL gbLpkPresent = FALSE;

@@ -51,7 +51,7 @@ PciGetDescriptionMessage(IN ULONG Identifier,
 
         /* Validate valid message length, ending with a newline character */
         ASSERT(TextLength > 1);
-        ASSERT(Description[TextLength / sizeof(WCHAR) == L'\n']);
+        ASSERT(Description[TextLength / sizeof(WCHAR)] == L'\n');
 
         /* Allocate the buffer to hold the message string */
         Buffer = ExAllocatePoolWithTag(PagedPool, TextLength, 'BicP');
@@ -61,8 +61,8 @@ PciGetDescriptionMessage(IN ULONG Identifier,
         RtlCopyMemory(Buffer, Entry->Text, TextLength - 1);
         Buffer[TextLength / sizeof(WCHAR)] = UNICODE_NULL;
 
-        /* Return the length to the caller */
-        if (Length) *Length = UnicodeString.Length;
+        /* Return the length to the caller, minus the terminating NULL */
+        if (Length) *Length = TextLength - 1;
     }
     else
     {

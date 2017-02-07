@@ -1,5 +1,5 @@
 
-spec2def(ntdll.dll def/ntdll.spec)
+spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
 add_definitions(
     -D__NTDLL__
@@ -8,7 +8,8 @@ add_definitions(
 
 include_directories(
     BEFORE include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 list(APPEND SOURCE
     csr/api.c
@@ -27,7 +28,7 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
     list(APPEND SOURCE dispatch/i386/dispatch.S)
 elseif(ARCH MATCHES amd64)
-    list(APPEND SOURCE dispatch/amd64/stubs.c)
+    list(APPEND SOURCE dispatch/amd64/dispatch.S)
 elseif(ARCH MATCHES arm)
     list(APPEND SOURCE dispatch/arm/stubs_asm.s)
 else()
@@ -52,4 +53,4 @@ add_pch(ntdll include/ntdll.h)
 add_dependencies(ntdll ntstatus asm)
 
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(def/ntdll.spec)
+

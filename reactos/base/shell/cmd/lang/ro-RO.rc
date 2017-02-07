@@ -73,7 +73,7 @@ CHOICE  [/C[:]opțiuni][/N][/S][/T[:]implicit,nn][text]\n\n\
   /C[:]opțiuni       Specifică tastele permise. Implicit sunt D și N.\n\
   /N                 Ascunde tastele permise și ? de la sfârșitul interogării.\n\
   /S                 Distinge diferențele între majuscule și minuscule.\n\
-  /T[:]implicit,nn   Alege „implicit” după „nn” secunde.\n\
+  /T[:]implicit,nn   Alege «implicit» după «nn» secunde.\n\
   text               Textul interogării.\n\n\
 ERRORLEVEL este calibrat pe deplasamentul tastei opțiunii alese de utilizator.\n"
 
@@ -97,7 +97,7 @@ STRING_CMD_HELP8, "Deschide o nouă instanță a interpretorului de comenzi Reac
 CMD [/[C|K] comandă][/P][/Q][/T:culori]\n\n\
   /C comandă  Execută comanda specificată, apoi închide instanța.\n\
   /K comandă  Execută comanda specificată menținând apoi instanța deschisă.\n\
-  /P          Permanentizează CMD și execută „autoexec.bat”\n\
+  /P          Permanentizează CMD și execută «autoexec.bat»\n\
               (nu poate fi închis).\n\
   /T:culori   Stabilește culorile pentru text și fundal\n\
               (a se vedea comanda COLOR).\n"
@@ -134,7 +134,7 @@ COLOR green ON bright white\n\
 COLOR 0 ON 7\n\
 COLOR 8F /-F\n"
 
-STRING_COPY_HELP1,  "Suprascrieți „%s”? (Da|Nu|Toate)"
+STRING_COPY_HELP1,  "Suprascrieți «%s»? (Da|Nu|Toate)"
 
 STRING_COPY_HELP2, "Copiază unul sau mai multe fișiere într-un alt loc.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] sursă [/A|/B]\n\
@@ -187,8 +187,8 @@ STRING_DEL_HELP4, "    %lu fișier(e) șters(e)\n"
 
 STRING_DELAY_HELP, "Pauză pentru n secunde sau milisecunde.\n\
 DELAY [/m]n\n\n\
-  /m          Specifică faptul că „n” sunt milisecunde\n\
-              altfel „n” sunt considerate secunde.\n"
+  /m          Specifică faptul că «n» sunt milisecunde\n\
+              altfel «n» sunt considerate secunde.\n"
 
 STRING_DIR_HELP1, "DIR [unitate:][cale][fișier] [/A[[:]atribute]] [/B] [/C] [/D] [/L] [/N]\n\
   [/O[[:]ordonare]] [/P] [/Q] [/S] [/T[[:]timp]] [/W] [/X] [/4]\n\n\
@@ -226,7 +226,7 @@ STRING_DIR_HELP1, "DIR [unitate:][cale][fișier] [/A[[:]atribute]] [/B] [/C] [/D
               pentru numele lungi care se încadrează în formatul 8.3\n\
   /4          Afișează anii pe petru cifre.\n\n\
 Aceste argumente pot fi prezente în variabila de mediu DIRCMD. Puteți nega\n\
-argumentele curente adăugând prefixul „-”.\n\
+argumentele curente adăugând prefixul «-».\n\
 De exemplu /-W.\n"
 
 STRING_DIR_HELP2, " Volumul unității %c este etichetat ca %s\n"
@@ -303,14 +303,14 @@ STRING_IF_HELP1, "Realizează execuția condiționată a comenzilor într-un fi�
                     condiția este nesatisfăcută.\n\
   ERRORLEVEL număr  Determină o condiție satisfăcută dacă ultimul\n\
                     program executat a răspuns la ieșire cu un\n\
-                    cod mai mare sau egal cu „număr”.\n\
+                    cod mai mare sau egal cu «număr».\n\
   comandă           Comanda specificată pentru execuție în cazul în care\n\
                     condiția a fost satisfăcută.\n\
   șir1==șir2        Determină o condiție satisfăcută dacă șirurile\n\
                     specificate sunt identice.\n\
   EXIST fișier      Determină o condiție satisfăcută în cazul existenței\n\
                     fișierului specificat.\n\
-  DEFINED variablă  Determină o condiție satisfăcută dacă „variabilă”\n\
+  DEFINED variablă  Determină o condiție satisfăcută dacă «variabilă»\n\
                     a fost anterior definită.\n"
 
 STRING_GOTO_HELP1,  "Execută un salt către o linie etichetată în interiorul unui fișier de comenzi.\n\n\
@@ -351,7 +351,7 @@ STRING_MEMMORY_HELP2, "\n  %12s%% nivel de uzilizare.\n\n\
 
 STRING_MISC_HELP1, "Tastați pentru a continua...\n"
 
-STRING_MOVE_HELP1, "Suprascrieți „%s”? (Da|Nu|Toate)"
+STRING_MOVE_HELP1, "Suprascrieți «%s»? (Da|Nu|Toate)"
 
 STRING_MOVE_HELP2, "Mută sau redenumește fișiere și directoare.\n\n\
 Pentru a muta unul sau mai multe fișiere:\n\
@@ -388,7 +388,7 @@ Tastați PATH fără argumente pentru a afișa căile curente.\n"
 STRING_PROMPT_HELP1, "Modifică aspectul liniei de comandă.\n\n\
 PROMPT [text]\n\n\
   text    Specifică textul liniei de comandă a consolei.\n\n\
-Șirul „text” poate fi format din caractere normale plus câteva coduri speciale:\n\n\
+Șirul «text» poate fi format din caractere normale plus câteva coduri speciale:\n\n\
   $A   & (ampersand)\n\
   $B   | (linie verticală)\n\
   $C   ( (paranteză stânga)\n\
@@ -407,7 +407,7 @@ PROMPT [text]\n\n\
   $$   $ (semnul dolar)\n"
 
 STRING_PAUSE_HELP1, "Oprește execuția unui fișier de comenzi și afișează următorul mesaj:\n\
-„Tastați pentru a continua...” sau un alt mesaj definit.\n\n\
+«Tastați pentru a continua...» sau un alt mesaj definit.\n\n\
 PAUSE [mesaj]\n"
 
 STRING_PROMPT_HELP2, "  $+   Afișează adâncimea curentă a stivei de directoare\n"
@@ -463,19 +463,19 @@ STRING_REPLACE_HELP3, "Nu a fost înlocuit nici un fișier\n"
 
 STRING_REPLACE_HELP4, "A(u) fost înlocuit(e) %lu fișier(e)\n"
 
-STRING_REPLACE_HELP5, "Înlocuire „%s”\n"
+STRING_REPLACE_HELP5, "Înlocuire «%s»\n"
 
-STRING_REPLACE_HELP6, "Înlocuiește „%s”\n"
+STRING_REPLACE_HELP6, "Înlocuiește «%s»\n"
 
 STRING_REPLACE_HELP7, "Nu au fost adăugate fișiere\n"
 
 STRING_REPLACE_HELP8, "A(u) fost adăugat(e) %lu fișier(e)\n"
 
-STRING_REPLACE_HELP9, "Adaugă „%s”? (Da|Nu)"
+STRING_REPLACE_HELP9, "Adaugă «%s»? (Da|Nu)"
 
-STRING_REPLACE_HELP10, "Înlocuiește „%s”? (Da|Nu)"
+STRING_REPLACE_HELP10, "Înlocuiește «%s»? (Da|Nu)"
 
-STRING_REPLACE_HELP11, "Adăugare „%s”\n"
+STRING_REPLACE_HELP11, "Adăugare «%s»\n"
 
 
 STRING_SHIFT_HELP, "Modifică poziția argumentelor înlocuibile într-un fișier de comenzi.\n\n\
@@ -523,7 +523,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
          Cronometrele disponibile sunt de la 0 la 9\n\
          Dacă nu e specificat, implicit este 1\n\
   /Fn    Formatul de ieșire\n\
-         „n” poate fi:\n\
+         «n» poate fi:\n\
            0    milisecunde\n\
            1    hh%cmm%css%czz\n\n\
 Dacă nu sunt specificate nici unul din argumentele ON, OFF sau /S\n\
@@ -548,8 +548,8 @@ VER [/C][/R][/W]\n\n\
   /W  Afișează informații despre garanție.\n"
 
 STRING_VERSION_HELP2, " nu vine cu ABSOLUT NICI O GARANȚIE; pentru detalii\n\
-tastați: „ver /w”. Acesta este un soft public, redistribuția în condițiile\n\
-specifice este binevenită; tastați „ver /r” pentru detalii. Tastați „ver /c”\n\
+tastați: «ver /w». Acesta este un soft public, redistribuția în condițiile\n\
+specifice este binevenită; tastați «ver /r» pentru detalii. Tastați «ver /c»\n\
 pentru lista de autori."
 
 STRING_VERSION_HELP3, "\n Această aplicație este distribuită în speranța că va fi utilă,\n\
@@ -635,8 +635,8 @@ MEMORY    Afișează informații referitoare la memoria sistemului.\n\
 MD        Crează un director.\n\
 MKDIR     Crează un director.\n\
 MKLINK    Crează un obiect-legătură în sistemul de fișiere.\n\
-MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n\
-PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
+MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n"
+STRING_HELP2, "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
 PAUSE     Suspendă execuția unui fișier de comenzi și afișează un mesaj.\n\
 POPD      Restabilește valoarea precedentă a directorului curent, anterior\n\
           stocată cu PUSHD.\n\
@@ -646,8 +646,8 @@ RD        Elimină un director.\n\
 REM       Desemnează un rând de comentarii într-un fișier de comenzi.\n\
 REN       Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
 RENAME    Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
-REPLACE   Înlocuiește fișiere.\n"
-STRING_HELP2, "RMDIR     Elimină un director.\n\
+REPLACE   Înlocuiește fișiere.\n\
+RMDIR     Elimină un director.\n\
 SCREEN    Mută cursorul și (opțional) afișează un text.\n\
 SET       Afișează, stabilește sau elimină variabile de mediu ReactOS.\n\
 SHIFT     Schimbă poziția argumentelor înlocuibile într-un fișier de comenzi.\n\
@@ -666,41 +666,41 @@ STRING_CHOICE_OPTION,         "DN"
 STRING_COPY_OPTION,           "DNT"
 
 STRING_ALIAS_ERROR,          "Linia de comandă devine prea lungă după extinderea alias!\n"
-STRING_ASSOC_ERROR,          "Nu se poate găsi nici o aplicație asociată extensiei „%s”\n"
+STRING_ASSOC_ERROR,          "Nu se poate găsi nici o aplicație asociată extensiei «%s»\n"
 STRING_BATCH_ERROR,          "Eroare la deschiderea fișierului de comenzi\n"
 STRING_CHCP_ERROR1,          "Codificarea curentă a paginilor: %u\n"
 STRING_CHCP_ERROR4,          "Codificare de pagină nevalidă\n"
 STRING_CHOICE_ERROR,         "Opțiune eronată. Vedeți formatul: /C[:]opțiuni"
 STRING_CHOICE_ERROR_TXT,     "Opțiune eronată. Vedeți formatul: /T[:]implicit,nn"
 STRING_CHOICE_ERROR_OPTION,  "Opțiune eronată: %s"
-STRING_CMD_ERROR1,           "Nu se poate redirecționa intrarea din fișierul „%s”\n"
+STRING_CMD_ERROR1,           "Nu se poate redirecționa intrarea din fișierul «%s»\n"
 STRING_CMD_ERROR2,           "Nu se poate crea fișierul temporar pentru canalizarea de date\n"
 STRING_CMD_ERROR3,           "Nu se poate redirecționa către fișierul %s\n"
-STRING_CMD_ERROR4,           "Executare „%s”...\n"
-STRING_CMD_ERROR5,           "Executare „cmdexit.bat”...\n"
+STRING_CMD_ERROR4,           "Executare «%s»...\n"
+STRING_CMD_ERROR5,           "Executare «cmdexit.bat»...\n"
 STRING_COLOR_ERROR1,         "Eroare de culoare identică! (Culorile nu trebuie să fie identice)"
 STRING_COLOR_ERROR2,         "Eroare la specificarea culorii"
 STRING_COLOR_ERROR3,         "Culoare %x\n"
 STRING_COLOR_ERROR4,         "Eroare de culoare identică!"
 STRING_CONSOLE_ERROR,        "Eroare necunoscută: %d\n"
-STRING_COPY_ERROR1,          "Eroare: Nu se poate deschide fișierul - „%s”!\n"
+STRING_COPY_ERROR1,          "Eroare: Nu se poate deschide fișierul - «%s»!\n"
 STRING_COPY_ERROR2,          "Eroare: Nu se poate copia peste el însuși!\n"
 STRING_COPY_ERROR3,          "Eroare de scriere în destinație!\n"
 STRING_COPY_ERROR4,          "Eroare: Încă nu a fost implementat!\n"
 STRING_DATE_ERROR,           "Dată nevalidă."
-STRING_DEL_ERROR5,           "Se va șterge fișierul „%s”!\n"
+STRING_DEL_ERROR5,           "Se va șterge fișierul «%s»!\n"
 STRING_DEL_ERROR6,           "Confirmați? (Da|Nu)"
 STRING_DEL_ERROR7,           "Ștergere: %s\n"
 STRING_ERROR_ERROR1,         "Eroare necunoscută! Codul de eroare: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Eroare de sintaxă"
-STRING_FOR_ERROR1,           "Lipsește „IN” din formularea lui „FOR”."
+STRING_FOR_ERROR1,           "Lipsește «IN» din formularea lui «FOR»."
 STRING_FOR_ERROR2,           "Nu au fost găsite paranteze."
-STRING_FOR_ERROR3,           "Lipsește „DO”."
-STRING_FOR_ERROR4,           "Nici o comandă după „DO”."
+STRING_FOR_ERROR3,           "Lipsește «DO»."
+STRING_FOR_ERROR4,           "Nici o comandă după «DO»."
 STRING_FREE_ERROR1,          "Unitate nevalidă"
 STRING_FREE_ERROR2,          "neetichetat"
-STRING_GOTO_ERROR1,          "Nu a fost specificată nici o etichetă pentru „GOTO”"
-STRING_GOTO_ERROR2,          "Nu s-a găsit eticheta „%s”\n"
+STRING_GOTO_ERROR1,          "Nu a fost specificată nici o etichetă pentru «GOTO»"
+STRING_GOTO_ERROR2,          "Nu s-a găsit eticheta «%s»\n"
 
 STRING_MD_ERROR,             "Există deja un fișier sau un subdirector cu acest nume.\n"
 STRING_MD_ERROR2,            "Calea către noul director nu există.\n"
@@ -713,7 +713,7 @@ STRING_START_ERROR1,         "Deocamdată fișierele de comenzi nu sunt admise!"
 
 STRING_TIME_ERROR1,          "Oră nevalidă."
 
-STRING_TYPE_ERROR1,          "Opțiune eronată „/%s”\n"
+STRING_TYPE_ERROR1,          "Opțiune eronată «/%s»\n"
 
 STRING_WINDOW_ERROR1,        "fereastra nu a fost găsită"
 
@@ -732,7 +732,7 @@ STRING_ERROR_CANNOTPIPE,           "Eroare!  Nu se pot canaliza date!  Nu se poa
 STRING_ERROR_D_PAUSEMSG,           "Tastați pentru a continua..."
 STRING_ERROR_DRIVER_NOT_READY,     "Unitatea de stocare nu e utilizabilă"
 
-STRING_PATH_ERROR,                 "CMD: „%s” inexistentă în mediu\n"
+STRING_PATH_ERROR,                 "CMD: «%s» inexistentă în mediu\n"
 
 STRING_REPLACE_ERROR1, "Argument eronat - %s\n"
 STRING_REPLACE_ERROR2, "Calea nu este găsită - %s\n"
@@ -748,8 +748,8 @@ STRING_VERSION_RUNVER,             " operând pe %s"
 STRING_COPY_FILE ,                 "        %d fișier(e) copiat(e)\n"
 STRING_DELETE_WIPE,                "șters"
 STRING_FOR_ERROR,                  "specificație de variabilă eronată."
-STRING_SCREEN_COL,                 "valoarea pentru „coloană” este nevalidă"
-STRING_SCREEN_ROW,                 "valoarea pentru „rând” este nevalidă"
+STRING_SCREEN_COL,                 "valoarea pentru «coloană» este nevalidă"
+STRING_SCREEN_ROW,                 "valoarea pentru «rând» este nevalidă"
 STRING_TIMER_TIME                  "Cronometrul %d: %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "A fost creată o legătură simbolică pentru %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "A fost creată o legătură permanentă pentru %s <<===>> %s\n"
@@ -758,7 +758,7 @@ STRING_MORE,                       "Mai mult? "
 STRING_CANCEL_BATCH_FILE,          "\r\nS-a tastat Ctrl-Break.  Anulați fișierul de comenzi? (Da|Nu|Toate)"
 
 STRING_INVALID_OPERAND,            "Operand eronat."
-STRING_EXPECTED_CLOSE_PAREN,       "Se cere „)”."
+STRING_EXPECTED_CLOSE_PAREN,       "Se cere «)»."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Se cere un număr sau un nume de variabilă."
 STRING_SYNTAX_COMMAND_INCORRECT,   "Sintaxa comenzii este eronată."
 

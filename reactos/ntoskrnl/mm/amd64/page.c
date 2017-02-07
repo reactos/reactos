@@ -28,7 +28,7 @@ extern MMPTE HyperTemplatePte;
 /* GLOBALS *****************************************************************/
 
 const
-ULONG
+ULONG64
 MmProtectToPteMask[32] =
 {
     //
@@ -138,6 +138,57 @@ MiFlushTlb(PMMPTE Pte, PVOID Address)
 }
 
 static
+VOID
+MmDeletePageTablePfn(PFN_NUMBER PageFrameNumber, ULONG Level)
+{
+    PMMPTE PageTable;
+    KIRQL OldIrql;
+    PMMPFN PfnEntry;
+    ULONG i, NumberEntries;
+
+    /* Check if this is a page table */
+    if (Level > 0)
+    {
+        NumberEntries = (Level == 4) ? MiAddressToPxi(MmHighestUserAddress)+1 : 512;
+
+        /* Map the page table in hyperspace */
+        PageTable = (PMMPTE)MmCreateHyperspaceMapping(PageFrameNumber);
+
+        /* Loop all page table entries */
+        for (i = 0; i < NumberEntries; i++)
+        {
+            /* Check if the entry is valid */
+            if (PageTable[i].u.Hard.Valid)
+            {
+                /* Recursively free the page that backs it */
+                MmDeletePageTablePfn(PageTable[i].u.Hard.PageFrameNumber, Level - 1);
+            }
+        }
+
+        /* Delete the hyperspace mapping */
+        MmDeleteHyperspaceMapping(PageTable);
+    }
+
+    /* Check if this is a legacy allocation */
+    PfnEntry = MiGetPfnEntry(PageFrameNumber);
+    if (MI_IS_ROS_PFN(PfnEntry))
+    {
+        /* Free it using the legacy API */
+        MmReleasePageMemoryConsumer(MC_SYSTEM, PageFrameNumber);
+    }
+    else
+    {
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Free it using the ARM3 API */
+        MI_SET_PFN_DELETED(PfnEntry);
+        MiDecrementShareCount(PfnEntry, PageFrameNumber);
+
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
+}
+
+static
 PMMPTE
 MiGetPteForProcess(
     PEPROCESS Process,
@@ -151,37 +202,48 @@ MiGetPteForProcess(
         Process && Process != PsGetCurrentProcess())
     {
         UNIMPLEMENTED;
+        __debugbreak();
         return NULL;
     }
     else if (Create)
     {
+        KIRQL OldIrql;
         TmplPte.u.Long = 0;
         TmplPte.u.Flush.Valid = 1;
         TmplPte.u.Flush.Write = 1;
+
+        /* All page table levels of user pages are user owned */
+        TmplPte.u.Flush.Owner = (Address < MmHighestUserAddress) ? 1 : 0;
+
+        /* Lock the PFN database */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
         /* Get the PXE */
         Pte = MiAddressToPxe(Address);
         if (!Pte->u.Hard.Valid)
         {
-//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
-            InterlockedExchangePte(Pte, TmplPte);
+            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
+            MI_WRITE_VALID_PTE(Pte, TmplPte);
         }
 
         /* Get the PPE */
         Pte = MiAddressToPpe(Address);
         if (!Pte->u.Hard.Valid)
         {
-//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
-            InterlockedExchangePte(Pte, TmplPte);
+            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(1);
+            MI_WRITE_VALID_PTE(Pte, TmplPte);
         }
 
         /* Get the PDE */
         Pte = MiAddressToPde(Address);
         if (!Pte->u.Hard.Valid)
         {
-//            TmplPte.u.Hard.PageFrameNumber = MiAllocPage(TRUE);
-            InterlockedExchangePte(Pte, TmplPte);
+            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(2);
+            MI_WRITE_VALID_PTE(Pte, TmplPte);
         }
+
+        /* Unlock PFN database */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     }
     else
     {
@@ -318,11 +380,59 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
+MmIsDisabledPage(PEPROCESS Process, PVOID Address)
+{
+    MMPTE Pte;
+    Pte.u.Long = MiGetPteValueForProcess(Process, Address);
+    __debugbreak(); // FIXME
+    return !Pte.u.Hard.Valid && !(Pte.u.Long & 0x800) && Pte.u.Hard.PageFrameNumber;
+}
+
+BOOLEAN
+NTAPI
 MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
     return Pte.u.Hard.Valid && Pte.u.Soft.Transition;
+}
+
+static PMMPTE
+MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
+{
+    __debugbreak();
+    return 0;
+}
+
+BOOLEAN MmUnmapPageTable(PMMPTE Pt)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+
+static ULONG64 MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
+{
+    MMPTE Pte, *PointerPte;
+
+    PointerPte = MmGetPageTableForProcess(Process, Address, FALSE);
+    if (PointerPte)
+    {
+        Pte = *PointerPte;
+        MmUnmapPageTable(PointerPte);
+        return Pte.u.Long;
+    }
+    return 0;
+}
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+    PEPROCESS Process,
+    PVOID Address,
+    SWAPENTRY* SwapEntry)
+{
+	ULONG64 Entry = MmGetPageEntryForProcess(Process, Address);
+	*SwapEntry = Entry >> 1;
 }
 
 BOOLEAN
@@ -517,6 +627,8 @@ MmCreateVirtualMappingUnsafe(
     ULONG i;
     MMPTE TmplPte, *Pte;
 
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
+
     /* Check if the range is valid */
     if ((Process == NULL && Address < MmSystemRangeStart) ||
         (Process != NULL && Address > MmHighestUserAddress))
@@ -529,6 +641,8 @@ MmCreateVirtualMappingUnsafe(
     TmplPte.u.Hard.Valid = 1;
     MiSetPteProtection(&TmplPte, PageProtection);
 
+    TmplPte.u.Flush.Owner = (Address < MmHighestUserAddress) ? 1 : 0;
+
 //__debugbreak();
 
     for (i = 0; i < PageCount; i++)
@@ -537,7 +651,7 @@ MmCreateVirtualMappingUnsafe(
 
         Pte = MiGetPteForProcess(Process, Address, TRUE);
 
-DPRINT1("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
+DPRINT("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
         Address, TmplPte.u.Long, Pte);
 
         if (InterlockedExchangePte(Pte, TmplPte))
@@ -565,6 +679,8 @@ MmCreateVirtualMapping(PEPROCESS Process,
 {
     ULONG i;
 
+    ASSERT((ULONG_PTR)Address % PAGE_SIZE == 0);
+
     for (i = 0; i < PageCount; i++)
     {
         if (!MmIsPageInUse(Pages[i]))
@@ -584,14 +700,19 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                             OUT PULONG_PTR DirectoryTableBase)
 {
     KIRQL OldIrql;
-    PFN_NUMBER TableBasePfn, HyperPfn;
-    PMMPTE PointerPte;
+    PFN_NUMBER TableBasePfn, HyperPfn, HyperPdPfn, HyperPtPfn, WorkingSetPfn;
+    PMMPTE SystemPte;
     MMPTE TempPte, PdePte;
     ULONG TableIndex;
-    PMMPTE SystemTable;
+    PMMPTE PageTablePointer;
 
-    /* No page colors yet */
-    Process->NextPageColor = 0;
+    /* Make sure we don't already have a page directory setup */
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == 0);
+    ASSERT(Process->Pcb.DirectoryTableBase[1] == 0);
+    ASSERT(Process->WorkingSetPage == 0);
+
+    /* Choose a process color */
+    Process->NextPageColor = (USHORT)RtlRandom(&MmProcessColorSeed);
 
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);
@@ -599,67 +720,97 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Lock PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-    /* Get a page for the table base and for hyperspace */
-    TableBasePfn = MiRemoveAnyPage(0);
-    HyperPfn = MiRemoveAnyPage(0);
+    /* Get a page for the table base and one for hyper space. The PFNs for
+       these pages will be initialized in MmInitializeProcessAddressSpace,
+       when we are already attached to the process. */
+    TableBasePfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
+    HyperPfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
+    HyperPdPfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
+    HyperPtPfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
+    WorkingSetPfn = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(Process));
 
     /* Release PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* Zero both pages */
-    MiZeroPhysicalPage(TableBasePfn);
+    /* Zero pages */ /// FIXME:
     MiZeroPhysicalPage(HyperPfn);
+    MiZeroPhysicalPage(WorkingSetPfn);
 
     /* Set the base directory pointers */
+    Process->WorkingSetPage = WorkingSetPfn;
     DirectoryTableBase[0] = TableBasePfn << PAGE_SHIFT;
     DirectoryTableBase[1] = HyperPfn << PAGE_SHIFT;
 
-    /* Make sure we don't already have a page directory setup */
-    ASSERT(Process->Pcb.DirectoryTableBase[0] == 0);
-
-    /* Insert us into the Mm process list */
-    InsertTailList(&MmProcessList, &Process->MmProcessLinks);
-
     /* Get a PTE to map the page directory */
-    PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
-    ASSERT(PointerPte != NULL);
+    SystemPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(SystemPte != NULL);
 
-    /* Build it */
-    MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
-                                PointerPte,
-                                MM_READWRITE,
-                                TableBasePfn);
+    /* Get its address */
+    PageTablePointer = MiPteToAddress(SystemPte);
 
-    /* Set it dirty and map it */
-    PdePte.u.Hard.Dirty = TRUE;
-    MI_WRITE_VALID_PTE(PointerPte, PdePte);
+    /* Build the PTE for the page directory and map it */
+    PdePte = ValidKernelPte;
+    PdePte.u.Hard.PageFrameNumber = TableBasePfn;
+    *SystemPte = PdePte;
 
-    /* Now get the page directory (which we'll double map, so call it a page table */
-    SystemTable = MiPteToAddress(PointerPte);
+/// architecture specific
+    //MiInitializePageDirectoryForProcess(
 
-    /* Copy all the kernel mappings */
-    TableIndex = MiAddressToPxi(MmSystemRangeStart);
-
-    RtlCopyMemory(&SystemTable[TableIndex],
-                  MiAddressToPxe(MmSystemRangeStart),
+    /* Copy the kernel mappings and zero out the rest */
+    TableIndex = PXE_PER_PAGE / 2;
+    RtlZeroMemory(PageTablePointer, TableIndex * sizeof(MMPTE));
+    RtlCopyMemory(PageTablePointer + TableIndex,
+                  MiAddressToPxe(0) + TableIndex,
                   PAGE_SIZE - TableIndex * sizeof(MMPTE));
 
-    /* Now write the PTE/PDE entry for hyperspace itself */
-    TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = HyperPfn;
-    TableIndex = MiAddressToPxi((PVOID)HYPER_SPACE);
-    SystemTable[TableIndex] = TempPte;
-
     /* Sanity check */
-    ASSERT(MiAddressToPxi(MmHyperSpaceEnd) > TableIndex);
+    ASSERT(MiAddressToPxi(MmHyperSpaceEnd) >= TableIndex);
 
-    /* Now do the x86 trick of making the PDE a page table itself */
-    TableIndex = MiAddressToPxi((PVOID)PTE_BASE);
+    /* Setup a PTE for the page directory mappings */
+    TempPte = ValidKernelPte;
+
+    /* Update the self mapping of the PML4 */
+    TableIndex = MiAddressToPxi((PVOID)PXE_SELFMAP);
     TempPte.u.Hard.PageFrameNumber = TableBasePfn;
-    SystemTable[TableIndex] = TempPte;
+    PageTablePointer[TableIndex] = TempPte;
 
-    /* Let go of the system PTE */
-    MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
+    /* Write the PML4 entry for hyperspace */
+    TableIndex = MiAddressToPxi((PVOID)HYPER_SPACE);
+    TempPte.u.Hard.PageFrameNumber = HyperPfn;
+    PageTablePointer[TableIndex] = TempPte;
+
+    /* Map the hyperspace PDPT to the system PTE */
+    PdePte.u.Hard.PageFrameNumber = HyperPfn;
+    *SystemPte = PdePte;
+    __invlpg(PageTablePointer);
+
+    /* Write the hyperspace entry for the first PD */
+    TempPte.u.Hard.PageFrameNumber = HyperPdPfn;
+    PageTablePointer[0] = TempPte;
+
+    /* Map the hyperspace PD to the system PTE */
+    PdePte.u.Hard.PageFrameNumber = HyperPdPfn;
+    *SystemPte = PdePte;
+    __invlpg(PageTablePointer);
+
+    /* Write the hyperspace entry for the first PT */
+    TempPte.u.Hard.PageFrameNumber = HyperPtPfn;
+    PageTablePointer[0] = TempPte;
+
+    /* Map the hyperspace PT to the system PTE */
+    PdePte.u.Hard.PageFrameNumber = HyperPtPfn;
+    *SystemPte = PdePte;
+    __invlpg(PageTablePointer);
+
+    /* Write the hyperspace PTE for the working set list index */
+    TempPte.u.Hard.PageFrameNumber = WorkingSetPfn;
+    TableIndex = MiAddressToPti(MmWorkingSetList);
+    PageTablePointer[TableIndex] = TempPte;
+
+/// end architecture specific
+
+    /* Release the system PTE */
+    MiReleaseSystemPtes(SystemPte, 1, SystemPteSpace);
 
     /* Switch to phase 1 initialization */
     ASSERT(Process->AddressSpaceInitialized == 0);

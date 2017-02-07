@@ -2039,7 +2039,7 @@ TOOLTIPS_SetFont (TOOLTIPS_INFO *infoPtr, HFONT hFont, BOOL redraw)
     lf.lfWeight = FW_BOLD;
     infoPtr->hTitleFont = CreateFontIndirectW(&lf);
 
-    if (redraw & (infoPtr->nCurrentTool != -1)) {
+    if (redraw && infoPtr->nCurrentTool != -1) {
 	FIXME("full redraw needed!\n");
     }
 
@@ -2076,7 +2076,7 @@ TOOLTIPS_OnWMGetText (const TOOLTIPS_INFO *infoPtr, WPARAM size, LPWSTR pszText)
 {
     LRESULT res;
 
-    if(!infoPtr->szTipText || !size)
+    if(!size)
         return 0;
 
     res = min(strlenW(infoPtr->szTipText)+1, size);

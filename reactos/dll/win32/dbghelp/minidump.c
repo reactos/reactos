@@ -283,7 +283,8 @@ static BOOL fetch_elf_module_info_cb(const WCHAR* name, unsigned long base,
                                      void* user)
 {
     struct dump_context*        dc = user;
-    DWORD                       rbase, size, checksum;
+    DWORD_PTR                   rbase;
+    DWORD                       size, checksum;
 
     /* FIXME: there's no relevant timestamp on ELF modules */
     /* NB: if we have a non-null base from the live-target use it (whenever
@@ -305,7 +306,8 @@ static BOOL fetch_macho_module_info_cb(const WCHAR* name, unsigned long base,
                                        void* user)
 {
     struct dump_context*        dc = (struct dump_context*)user;
-    DWORD                       rbase, size, checksum;
+    DWORD_PTR                   rbase;
+    DWORD                       size, checksum;
 
     /* FIXME: there's no relevant timestamp on Mach-O modules */
     /* NB: if we have a non-null base from the live-target use it.  If we have

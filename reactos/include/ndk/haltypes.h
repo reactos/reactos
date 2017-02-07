@@ -257,7 +257,7 @@ typedef struct _BUS_HANDLER
 //
 // Kernel Exports
 //
-#if defined(_NTDRIVER_) || defined(_NTHAL_)
+#if (defined(_NTDRIVER_) || defined(_NTHAL_)) && !defined(_BLDR_)
 extern NTSYSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #define HALPRIVATEDISPATCH ((PHAL_PRIVATE_DISPATCH)&HalPrivateDispatchTable)
 #else

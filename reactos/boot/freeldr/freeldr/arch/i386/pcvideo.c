@@ -416,7 +416,7 @@ PcVideoSet480ScanLines(VOID)
   CRTC = (CRTC | 0xE2);
 
   /* (write) */
-  WRITE_PORT_UCHAR((PUCHAR)0x03C2, CRTC);
+  WRITE_PORT_UCHAR((PUCHAR)0x03C2, (UCHAR)CRTC);
 }
 
 static VOID
@@ -798,7 +798,7 @@ PcVideoSetMode(USHORT NewMode)
       ScreenHeight = VesaVideoModeInformation.HeightInPixels;
       BytesPerScanLine = VesaVideoModeInformation.BytesPerScanLine;
       BiosVideoMode = NewMode;
-      DisplayMode = VideoTextMode;
+      DisplayMode = VideoGraphicsMode;
       VesaVideoMode = TRUE;
 
       return TRUE;

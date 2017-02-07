@@ -31,6 +31,6 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe]\n\
   nume_macro              Numele macrodefiniției în curs de creare.\n\
   text                    Textul înlocuitor dintr-o macrodefiniție.\n"
 
-IDS_INVALID_MACRO_DEF, "Macrodefiniția „%s” este nevalidă!\n"
+IDS_INVALID_MACRO_DEF, "Macrodefiniția «%s» este nevalidă!\n"
 
 END

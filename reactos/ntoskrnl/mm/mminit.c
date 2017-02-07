@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/mm/mminit.c
@@ -31,6 +31,11 @@ UCHAR MmDisablePagingExecutive = 1; // Forced to off
 PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 
+extern KEVENT MmWaitPageEvent;
+extern FAST_MUTEX MiGlobalPageOperation;
+extern LIST_ENTRY MiSegmentList;
+extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -45,13 +50,28 @@ MiInitSystemMemoryAreas()
     BoundaryAddressMultiple.QuadPart = 0;
 
     //
+    // Create the memory area to define the loader mappings
+    //
+    BaseAddress = (PVOID)KSEG0_BASE;
+    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                                MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
+                                &BaseAddress,
+                                MmBootImageSize,
+                                PAGE_EXECUTE_READWRITE,
+                                &MArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    //
     // Create the memory area to define the PTE base
     //
     BaseAddress = (PVOID)PTE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
-                                4 * 1024 * 1024,
+                                PTE_TOP - PTE_BASE + 1,
                                 PAGE_READWRITE,
                                 &MArea,
                                 TRUE,
@@ -66,7 +86,7 @@ MiInitSystemMemoryAreas()
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
-                                4 * 1024 * 1024,
+                                HYPER_SPACE_END - HYPER_SPACE + 1,
                                 PAGE_READWRITE,
                                 &MArea,
                                 TRUE,
@@ -111,8 +131,7 @@ MiInitSystemMemoryAreas()
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
-                                (ULONG_PTR)MmNonPagedPoolEnd -
-                                (ULONG_PTR)MmNonPagedSystemStart,
+                                MiNonPagedSystemSize,
                                 PAGE_READWRITE,
                                 &MArea,
                                 TRUE,
@@ -165,7 +184,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-
+#ifndef _M_AMD64
     //
     // Next, the KPCR
     //
@@ -180,7 +199,7 @@ MiInitSystemMemoryAreas()
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(Status == STATUS_SUCCESS);
-
+#endif
     //
     // Now the KUSER_SHARED_DATA
     //
@@ -238,8 +257,8 @@ MiDbgDumpAddressSpace(VOID)
     // Print the memory layout
     //
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmSystemRangeStart,
-            (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
+            KSEG0_BASE,
+            (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
             "Boot Loaded Image");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
@@ -248,7 +267,7 @@ MiDbgDumpAddressSpace(VOID)
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
             (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
-            "ARM³ Non Paged Pool");
+            "ARM3 Non Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MiSystemViewStart,
             (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
@@ -258,18 +277,18 @@ MiDbgDumpAddressSpace(VOID)
             MiSessionSpaceEnd,
             "Session Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PTE_BASE, PDE_BASE,
+            PTE_BASE, PTE_TOP,
             "Page Tables");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PDE_BASE, HYPER_SPACE,
+            PDE_BASE, PDE_TOP,
             "Page Directories");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            HYPER_SPACE, HYPER_SPACE + (4 * 1024 * 1024),
+            HYPER_SPACE, HYPER_SPACE_END,
             "Hyperspace");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolStart,
             (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
-            "ARM³ Paged Pool");
+            "ARM3 Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
             "System PTE Space");
@@ -380,7 +399,14 @@ MmInitSystem(IN ULONG Phase,
 
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
-    KeInitializeGuardedMutex(&PsIdleProcess->AddressCreationLock);
+
+    InitializeListHead(&MiSegmentList);
+    ExInitializeFastMutex(&MiGlobalPageOperation);
+    KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+    // Until we're fully demand paged, we can do things the old way through
+    // the balance manager
+    MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 
     /* Intialize system memory areas */
@@ -393,7 +419,6 @@ MmInitSystem(IN ULONG Phase,
     MiInitializeUserPfnBitmap();
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
-    MmInitializePageOp();
     MmInitSectionImplementation();
     MmInitPagingFile();
 
@@ -421,6 +446,9 @@ MmInitSystem(IN ULONG Phase,
                                 MM_READONLY,
                                 PageFrameNumber);
     *MmSharedUserDataPte = TempPte;
+
+    /* Setup session IDs */
+    MiInitializeSessionIds();
 
     /* Setup the memory threshold events */
     if (!MiInitializeMemoryEvents()) return FALSE;

@@ -28,8 +28,8 @@ namespace Gdiplus
 #include "gdiplusmem.h"
     };
 
-#include "gdiplustypes.h"
 #include "gdiplusenums.h"
+#include "gdiplustypes.h"
 #include "gdiplusinit.h"
 #include "gdipluspixelformats.h"
 #include "gdiplusmetaheader.h"
@@ -48,8 +48,8 @@ namespace Gdiplus
 
 #include "gdiplusmem.h"
 
-#include "gdiplustypes.h"
 #include "gdiplusenums.h"
+#include "gdiplustypes.h"
 #include "gdiplusinit.h"
 #include "gdipluspixelformats.h"
 #include "gdiplusmetaheader.h"

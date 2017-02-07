@@ -456,7 +456,17 @@ static NTSTATUS QSI_USE(n) (PVOID Buffer, ULONG Size, PULONG ReqSize)
 #define SSI_DEF(n) \
 static NTSTATUS SSI_USE(n) (PVOID Buffer, ULONG Size)
 
-
+VOID
+NTAPI
+ExQueryPoolUsage(OUT PULONG PagedPoolPages,
+                 OUT PULONG NonPagedPoolPages,
+                 OUT PULONG PagedPoolAllocs,
+                 OUT PULONG PagedPoolFrees,
+                 OUT PULONG PagedPoolLookasideHits,
+                 OUT PULONG NonPagedPoolAllocs,
+                 OUT PULONG NonPagedPoolFrees,
+                 OUT PULONG NonPagedPoolLookasideHits);
+    
 /* Class 0 - Basic Information */
 QSI_DEF(SystemBasicInformation)
 {
@@ -571,21 +581,27 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->MappedPagesWriteCount = 0; /* FIXME */
     Spi->MappedWriteIoCount = 0; /* FIXME */
 
-    Spi->PagedPoolPages = 0; /* FIXME */
-    Spi->PagedPoolAllocs = 0; /* FIXME */
-    Spi->PagedPoolFrees = 0; /* FIXME */
-    Spi->NonPagedPoolPages = 0; /* FIXME */
-    Spi->NonPagedPoolAllocs = 0; /* FIXME */
-    Spi->NonPagedPoolFrees = 0; /* FIXME */
-
+    Spi->PagedPoolPages = 0;
+    Spi->NonPagedPoolPages = 0;
+    Spi->PagedPoolAllocs = 0;
+    Spi->PagedPoolFrees = 0;
+    Spi->PagedPoolLookasideHits = 0;
+    Spi->NonPagedPoolAllocs = 0;
+    Spi->NonPagedPoolFrees = 0;
+    Spi->NonPagedPoolLookasideHits = 0;
+    ExQueryPoolUsage(&Spi->PagedPoolPages,
+                     &Spi->NonPagedPoolPages,
+                     &Spi->PagedPoolAllocs,
+                     &Spi->PagedPoolFrees,
+                     &Spi->PagedPoolLookasideHits,
+                     &Spi->NonPagedPoolAllocs,
+                     &Spi->NonPagedPoolFrees,
+                     &Spi->NonPagedPoolLookasideHits);
     Spi->FreeSystemPtes = 0; /* FIXME */
 
     Spi->ResidentSystemCodePage = 0; /* FIXME */
 
     Spi->TotalSystemDriverPages = 0; /* FIXME */
-    Spi->TotalSystemCodePages = 0; /* FIXME */
-    Spi->NonPagedPoolLookasideHits = 0; /* FIXME */
-    Spi->PagedPoolLookasideHits = 0; /* FIXME */
     Spi->Spare3Count = 0; /* FIXME */
 
     Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
@@ -711,7 +727,9 @@ QSI_DEF(SystemProcessInformation)
 
         /* Check for overflow */
         if (Size < sizeof(SYSTEM_PROCESS_INFORMATION))
+        {
             Overflow = TRUE;
+        }
 
         /* Zero user's buffer */
         if (!Overflow) RtlZeroMemory(Spi, Size);
@@ -723,10 +741,22 @@ QSI_DEF(SystemProcessInformation)
         do
         {
             SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
+            
+            if ((Process->ProcessExiting) &&
+                (Process->Pcb.Header.SignalState) &&
+                !(Process->ActiveThreads) &&
+                (IsListEmpty(&Process->Pcb.ThreadListHead)))
+            {
+                DPRINT1("Process %p (%s:%lx) is a zombie\n",
+                        Process, Process->ImageFileName, Process->UniqueProcessId);
+                CurrentSize = 0;
+                ImageNameMaximumLength = 0;
+                goto Skip;
+            }
 
             ThreadsCount = 0;
-            CurrentEntry = Process->ThreadListHead.Flink;
-            while (CurrentEntry != &Process->ThreadListHead)
+            CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+            while (CurrentEntry != &Process->Pcb.ThreadListHead)
             {
                 ThreadsCount++;
                 CurrentEntry = CurrentEntry->Flink;
@@ -770,7 +800,9 @@ QSI_DEF(SystemProcessInformation)
 
             /* Check for overflow */
             if (TotalSize > Size)
+            {
                 Overflow = TRUE;
+            }
 
             /* Fill system information */
             if (!Overflow)
@@ -821,10 +853,10 @@ QSI_DEF(SystemProcessInformation)
                 SpiCurrent->PrivatePageCount = Process->CommitCharge;
                 ThreadInfo = (PSYSTEM_THREAD_INFORMATION)(SpiCurrent + 1);
 
-                CurrentEntry = Process->ThreadListHead.Flink;
-                while (CurrentEntry != &Process->ThreadListHead)
+                CurrentEntry = Process->Pcb.ThreadListHead.Flink;
+                while (CurrentEntry != &Process->Pcb.ThreadListHead)
                 {
-                    CurrentThread = CONTAINING_RECORD(CurrentEntry, ETHREAD,
+                    CurrentThread = (PETHREAD)CONTAINING_RECORD(CurrentEntry, KTHREAD,
                         ThreadListEntry);
 
                     ThreadInfo->KernelTime.QuadPart = UInt32x32To64(CurrentThread->Tcb.KernelTime, KeMaximumIncrement);
@@ -850,6 +882,7 @@ QSI_DEF(SystemProcessInformation)
             }
 
             /* Handle idle process entry */
+Skip:
             if (Process == PsIdleProcess) Process = NULL;
 
             Process = PsGetNextProcess(Process);
@@ -1222,9 +1255,8 @@ SSI_DEF(SystemFileCacheInformation)
 /* Class 22 - Pool Tag Information */
 QSI_DEF(SystemPoolTagInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemPoolTagInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    if (Size < sizeof(SYSTEM_POOLTAG_INFORMATION)) return STATUS_INFO_LENGTH_MISMATCH;
+    return ExGetPoolTagInfo(Buffer, Size, ReqSize);
 }
 
 /* Class 23 - Interrupt Information for all processors */
@@ -1755,22 +1787,57 @@ SSI_DEF(SystemSetTimeSlipEvent)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+NTAPI
+MmSessionCreate(OUT PULONG SessionId);
+
+NTSTATUS
+NTAPI
+MmSessionDelete(IN ULONG SessionId);
 
 /* Class 47 - Create a new session (TSE) */
 SSI_DEF(SystemCreateSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemCreateSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    NTSTATUS Status;
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    Status = MmSessionCreate(&SessionId);
+    if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
+
+    return Status;
 }
 
 
 /* Class 48 - Delete an existing session (TSE) */
 SSI_DEF(SystemDeleteSession)
 {
-    /* FIXME */
-    DPRINT1("NtSetSystemInformation - SystemDeleteSession not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG SessionId;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    
+    if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
+    
+    if (PreviousMode != KernelMode)
+    {
+        if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
+    
+    SessionId = *(PULONG)Buffer;
+    
+    return MmSessionDelete(SessionId);
 }
 
 

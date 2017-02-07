@@ -1,5 +1,5 @@
 
-spec2def(advapi32.dll advapi32.spec)
+spec2def(advapi32.dll advapi32.spec ADD_IMPORTLIB)
 
 add_definitions(-D_ADVAPI32_)
 
@@ -65,4 +65,4 @@ add_pch(advapi32 advapi32.h
     ${CMAKE_CURRENT_BINARY_DIR}/eventlogrpc_c.h)
 
 add_cd_file(TARGET advapi32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(advapi32.spec)
+

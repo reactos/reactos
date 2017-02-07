@@ -38,7 +38,7 @@ static HRESULT xmlreaderinput_query_for_stream(IXmlReaderInput *iface, void **pO
 
 typedef struct _xmlreader
 {
-    const IXmlReaderVtbl *lpVtbl;
+    IXmlReader IXmlReader_iface;
     LONG ref;
     IXmlReaderInput *input;
     ISequentialStream *stream;/* stored as sequential stream, cause currently
@@ -49,19 +49,19 @@ typedef struct _xmlreader
 
 typedef struct _xmlreaderinput
 {
-    const IUnknownVtbl *lpVtbl;
+    IXmlReaderInput IXmlReaderInput_iface;
     LONG ref;
     IUnknown *input;          /* reference passed on IXmlReaderInput creation */
 } xmlreaderinput;
 
 static inline xmlreader *impl_from_IXmlReader(IXmlReader *iface)
 {
-    return (xmlreader *)((char*)iface - FIELD_OFFSET(xmlreader, lpVtbl));
+    return CONTAINING_RECORD(iface, xmlreader, IXmlReader_iface);
 }
 
 static inline xmlreaderinput *impl_from_IXmlReaderInput(IXmlReaderInput *iface)
 {
-    return (xmlreaderinput *)((char*)iface - FIELD_OFFSET(xmlreaderinput, lpVtbl));
+    return CONTAINING_RECORD(iface, xmlreaderinput, IXmlReaderInput_iface);
 }
 
 static HRESULT WINAPI xmlreader_QueryInterface(IXmlReader *iface, REFIID riid, void** ppvObject)
@@ -450,14 +450,14 @@ HRESULT WINAPI CreateXmlReader(REFIID riid, void **pObject, IMalloc *pMalloc)
     reader = HeapAlloc(GetProcessHeap(), 0, sizeof (*reader));
     if(!reader) return E_OUTOFMEMORY;
 
-    reader->lpVtbl = &xmlreader_vtbl;
+    reader->IXmlReader_iface.lpVtbl = &xmlreader_vtbl;
     reader->ref = 1;
     reader->stream = NULL;
     reader->input = NULL;
     reader->state = XmlReadState_Closed;
     reader->line  = reader->pos = 0;
 
-    *pObject = &reader->lpVtbl;
+    *pObject = &reader->IXmlReader_iface;
 
     TRACE("returning iface %p\n", *pObject);
 
@@ -481,11 +481,11 @@ HRESULT WINAPI CreateXmlReaderInputWithEncodingName(IUnknown *stream,
     readerinput = HeapAlloc(GetProcessHeap(), 0, sizeof (*readerinput));
     if(!readerinput) return E_OUTOFMEMORY;
 
-    readerinput->lpVtbl = &xmlreaderinput_vtbl;
+    readerinput->IXmlReaderInput_iface.lpVtbl = &xmlreaderinput_vtbl;
     readerinput->ref = 1;
     IUnknown_QueryInterface(stream, &IID_IUnknown, (void**)&readerinput->input);
 
-    *ppInput = (IXmlReaderInput*)&readerinput->lpVtbl;
+    *ppInput = &readerinput->IXmlReaderInput_iface;
 
     TRACE("returning iface %p\n", *ppInput);
 

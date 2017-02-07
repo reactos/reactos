@@ -349,7 +349,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
            simply add it to the list */
         if (HashLink != NULL)
           {
-             ULONG AtomNameLen = wcslen(AtomName);
+             ULONG AtomNameLen = (ULONG)wcslen(AtomName);
 
              if (AtomNameLen > RTL_MAXIMUM_ATOM_LENGTH)
              {

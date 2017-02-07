@@ -21,12 +21,23 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
+struct ClassFactoryImpl
+{
+    IClassFactory IClassFactory_iface;
+    LONG ref;
+};
+
+static inline ClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
+{
+    return CONTAINING_RECORD(iface, ClassFactoryImpl, IClassFactory_iface);
+}
+
 static HRESULT WINAPI MSTASK_IClassFactory_QueryInterface(
         LPCLASSFACTORY iface,
         REFIID riid,
         LPVOID *ppvObj)
 {
-    ClassFactoryImpl *This = (ClassFactoryImpl *)iface;
+    ClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
     TRACE("IID: %s\n",debugstr_guid(riid));
     if (ppvObj == NULL)
@@ -35,7 +46,7 @@ static HRESULT WINAPI MSTASK_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
             IsEqualGUID(riid, &IID_IClassFactory))
     {
-        *ppvObj = &This->lpVtbl;
+        *ppvObj = &This->IClassFactory_iface;
         IClassFactory_AddRef(iface);
         return S_OK;
     }
@@ -105,4 +116,4 @@ static const IClassFactoryVtbl IClassFactory_Vtbl =
     MSTASK_IClassFactory_LockServer
 };
 
-ClassFactoryImpl MSTASK_ClassFactory = { &IClassFactory_Vtbl };
+ClassFactoryImpl MSTASK_ClassFactory = { { &IClassFactory_Vtbl } };

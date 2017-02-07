@@ -37,7 +37,7 @@ LdrpMakeCookie(VOID)
 {
     /* Generate a cookie */
     return (((ULONG_PTR)NtCurrentTeb()->RealClientId.UniqueThread & 0xFFF) << 16) |
-                        _InterlockedIncrement(&LdrpLoaderLockAcquisitonCount);
+                        (_InterlockedIncrement(&LdrpLoaderLockAcquisitonCount) & 0xFFFF);
 }
 
 /*
@@ -783,7 +783,7 @@ LdrVerifyImageMatchesChecksum(IN HANDLE FileHandle,
 {
     FILE_STANDARD_INFORMATION FileStandardInfo;
     PIMAGE_IMPORT_DESCRIPTOR ImportData;
-    PIMAGE_SECTION_HEADER LastSection;
+    PIMAGE_SECTION_HEADER LastSection = NULL;
     IO_STATUS_BLOCK IoStatusBlock;
     PIMAGE_NT_HEADERS NtHeader;
     HANDLE SectionHandle;
@@ -1540,19 +1540,19 @@ NTAPI
 LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
 {
     ULONG_PTR Cookie;
-    
+
     /* Acquire the loader lock */
     LdrLockLoaderLock(TRUE, NULL, &Cookie);
-    
+
     /* Check if there's any alternate resources loaded */
     if (AlternateResourceModuleCount)
     {
         UNIMPLEMENTED;
     }
-    
+
     /* Release the loader lock */
     LdrUnlockLoaderLock(1, Cookie);
-    
+
     /* All done */
     return TRUE;
 }
@@ -1570,9 +1570,9 @@ LdrLoadAlternateResourceModule(IN PVOID Module,
 {
     /* Is MUI Support enabled? */
     if (!LdrAlternateResourcesEnabled()) return STATUS_SUCCESS;
-    
+
     UNIMPLEMENTED;
     return STATUS_MUI_FILE_NOT_FOUND;
 }
-    
+
 /* EOF */

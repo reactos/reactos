@@ -453,14 +453,16 @@ WRITE_REGISTER_USHORT(
 
 #define DMA_MACROS_DEFINED
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 FORCEINLINE
 NTSTATUS
 IoAllocateAdapterChannel(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG NumberOfMapRegisters,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG NumberOfMapRegisters,
+  _In_ PDRIVER_CONTROL ExecutionRoutine,
+  _In_ PVOID Context)
 {
   PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
   AllocateAdapterChannel =
@@ -470,19 +472,19 @@ IoAllocateAdapterChannel(
                                 DeviceObject,
                                 NumberOfMapRegisters,
                                 ExecutionRoutine,
-                                Context );
+                                Context);
 }
 
 FORCEINLINE
 BOOLEAN
 NTAPI
 IoFlushAdapterBuffers(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN BOOLEAN WriteToDevice)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ BOOLEAN WriteToDevice)
 {
   PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
   FlushAdapterBuffers = *(DmaAdapter)->DmaOperations->FlushAdapterBuffers;
@@ -499,7 +501,7 @@ FORCEINLINE
 VOID
 NTAPI
 IoFreeAdapterChannel(
-  IN PDMA_ADAPTER DmaAdapter)
+  _In_ PDMA_ADAPTER DmaAdapter)
 {
   PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
   FreeAdapterChannel = *(DmaAdapter)->DmaOperations->FreeAdapterChannel;
@@ -511,9 +513,9 @@ FORCEINLINE
 VOID
 NTAPI
 IoFreeMapRegisters(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PVOID MapRegisterBase,
-  IN ULONG NumberOfMapRegisters)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PVOID MapRegisterBase,
+  _In_ ULONG NumberOfMapRegisters)
 {
   PFREE_MAP_REGISTERS FreeMapRegisters;
   FreeMapRegisters = *(DmaAdapter)->DmaOperations->FreeMapRegisters;
@@ -525,12 +527,12 @@ FORCEINLINE
 PHYSICAL_ADDRESS
 NTAPI
 IoMapTransfer(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN OUT PULONG Length,
-  IN BOOLEAN WriteToDevice)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _Inout_ PULONG Length,
+  _In_ BOOLEAN WriteToDevice)
 {
   PMAP_TRANSFER MapTransfer;
 
@@ -587,283 +589,346 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterFsRegistrationChangeEx(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
 #endif
 $endif (_NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 $if (_WDMDDK_)
+_Acquires_lock_(_Global_cancel_spin_lock_)
+_Requires_lock_not_held_(_Global_cancel_spin_lock_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_raises_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoAcquireCancelSpinLock(
-  OUT PKIRQL Irql);
+  _Out_ _At_(*Irql, _IRQL_saves_) PKIRQL Irql);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAcquireRemoveLockEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN PVOID Tag OPTIONAL,
-  IN PCSTR File,
-  IN ULONG Line,
-  IN ULONG RemlockSize);
+  _Inout_ PIO_REMOVE_LOCK RemoveLock,
+  _In_opt_ PVOID Tag,
+  _In_ PCSTR File,
+  _In_ ULONG Line,
+  _In_ ULONG RemlockSize);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Ret_range_(<=, 0)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAllocateDriverObjectExtension(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PVOID ClientIdentificationAddress,
-  IN ULONG DriverObjectExtensionSize,
-  OUT PVOID *DriverObjectExtension);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PVOID ClientIdentificationAddress,
+  _In_ ULONG DriverObjectExtensionSize,
+  _Post_ _At_(*DriverObjectExtension, _When_(return==0,
+    __drv_aliasesMem __drv_allocatesMem(Mem) _Post_notnull_))
+  _When_(return == 0, _Outptr_result_bytebuffer_(DriverObjectExtensionSize))
+    PVOID *DriverObjectExtension);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 IoAllocateErrorLogEntry(
-  IN PVOID IoObject,
-  IN UCHAR EntrySize);
+  _In_ PVOID IoObject,
+  _In_ UCHAR EntrySize);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PIRP
 NTAPI
 IoAllocateIrp(
-  IN CCHAR StackSize,
-  IN BOOLEAN ChargeQuota);
+  _In_ CCHAR StackSize,
+  _In_ BOOLEAN ChargeQuota);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PMDL
 NTAPI
 IoAllocateMdl(
-  IN PVOID VirtualAddress OPTIONAL,
-  IN ULONG Length,
-  IN BOOLEAN SecondaryBuffer,
-  IN BOOLEAN ChargeQuota,
-  IN OUT PIRP Irp OPTIONAL);
+  _In_opt_ __drv_aliasesMem PVOID VirtualAddress,
+  _In_ ULONG Length,
+  _In_ BOOLEAN SecondaryBuffer,
+  _In_ BOOLEAN ChargeQuota,
+  _Inout_opt_ PIRP Irp);
 
+__drv_allocatesMem(Mem)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PIO_WORKITEM
 NTAPI
 IoAllocateWorkItem(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Ret_range_(<=, 0)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAttachDevice(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PUNICODE_STRING TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedDevice);
+  _In_ _Kernel_requires_resource_held_(Memory) _When_(return==0, __drv_aliasesMem)
+    PDEVICE_OBJECT SourceDevice,
+  _In_ PUNICODE_STRING TargetDevice,
+  _Out_ PDEVICE_OBJECT *AttachedDevice);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoAttachDeviceToDeviceStack(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice);
+  _In_ _Kernel_requires_resource_held_(Memory) _When_(return!=0, __drv_aliasesMem)
+    PDEVICE_OBJECT SourceDevice,
+  _In_ PDEVICE_OBJECT TargetDevice);
 
+_Must_inspect_result_
+__drv_aliasesMem
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PIRP
 NTAPI
 IoBuildAsynchronousFsdRequest(
-  IN ULONG MajorFunction,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PVOID Buffer OPTIONAL,
-  IN ULONG Length OPTIONAL,
-  IN PLARGE_INTEGER StartingOffset OPTIONAL,
-  IN PIO_STATUS_BLOCK IoStatusBlock OPTIONAL);
+  _In_ ULONG MajorFunction,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_opt_ PVOID Buffer,
+  _In_opt_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER StartingOffset,
+  _In_opt_ PIO_STATUS_BLOCK IoStatusBlock);
 
+_Must_inspect_result_
+__drv_aliasesMem
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PIRP
 NTAPI
 IoBuildDeviceIoControlRequest(
-  IN ULONG IoControlCode,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength,
-  IN BOOLEAN InternalDeviceIoControl,
-  IN PKEVENT Event,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ ULONG IoControlCode,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_opt_ PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_opt_ PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength,
+  _In_ BOOLEAN InternalDeviceIoControl,
+  _In_ PKEVENT Event,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoBuildPartialMdl(
-  IN PMDL SourceMdl,
-  IN OUT PMDL TargetMdl,
-  IN PVOID VirtualAddress,
-  IN ULONG Length);
+  _In_ PMDL SourceMdl,
+  _Inout_ PMDL TargetMdl,
+  _In_ PVOID VirtualAddress,
+  _In_ ULONG Length);
 
+_Must_inspect_result_
+__drv_aliasesMem
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PIRP
 NTAPI
 IoBuildSynchronousFsdRequest(
-  IN ULONG MajorFunction,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PVOID Buffer OPTIONAL,
-  IN ULONG Length OPTIONAL,
-  IN PLARGE_INTEGER StartingOffset OPTIONAL,
-  IN PKEVENT Event,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ ULONG MajorFunction,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_opt_ PVOID Buffer,
+  _In_opt_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER StartingOffset,
+  _In_ PKEVENT Event,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Success_(TRUE)
 NTKERNELAPI
 NTSTATUS
 FASTCALL
 IofCallDriver(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ __drv_aliasesMem PIRP Irp);
 #define IoCallDriver IofCallDriver
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 IofCompleteRequest(
-  IN PIRP Irp,
-  IN CCHAR PriorityBoost);
+  _In_ PIRP Irp,
+  _In_ CCHAR PriorityBoost);
 #define IoCompleteRequest IofCompleteRequest
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoCancelIrp(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckShareAccess(
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG DesiredShareAccess,
-  IN OUT PFILE_OBJECT FileObject,
-  IN OUT PSHARE_ACCESS ShareAccess,
-  IN BOOLEAN Update);
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG DesiredShareAccess,
+  _Inout_ PFILE_OBJECT FileObject,
+  _Inout_ PSHARE_ACCESS ShareAccess,
+  _In_ BOOLEAN Update);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 IofCompleteRequest(
-  IN PIRP Irp,
-  IN CCHAR PriorityBoost);
+  _In_ PIRP Irp,
+  _In_ CCHAR PriorityBoost);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoConnectInterrupt(
-  OUT PKINTERRUPT *InterruptObject,
-  IN PKSERVICE_ROUTINE ServiceRoutine,
-  IN PVOID ServiceContext OPTIONAL,
-  IN PKSPIN_LOCK SpinLock OPTIONAL,
-  IN ULONG Vector,
-  IN KIRQL Irql,
-  IN KIRQL SynchronizeIrql,
-  IN KINTERRUPT_MODE InterruptMode,
-  IN BOOLEAN ShareVector,
-  IN KAFFINITY ProcessorEnableMask,
-  IN BOOLEAN FloatingSave);
+  _Out_ PKINTERRUPT *InterruptObject,
+  _In_ PKSERVICE_ROUTINE ServiceRoutine,
+  _In_opt_ PVOID ServiceContext,
+  _In_opt_ PKSPIN_LOCK SpinLock,
+  _In_ ULONG Vector,
+  _In_ KIRQL Irql,
+  _In_ KIRQL SynchronizeIrql,
+  _In_ KINTERRUPT_MODE InterruptMode,
+  _In_ BOOLEAN ShareVector,
+  _In_ KAFFINITY ProcessorEnableMask,
+  _In_ BOOLEAN FloatingSave);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Ret_range_(<=, 0)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateDevice(
-  IN PDRIVER_OBJECT DriverObject,
-  IN ULONG DeviceExtensionSize,
-  IN PUNICODE_STRING DeviceName OPTIONAL,
-  IN DEVICE_TYPE DeviceType,
-  IN ULONG DeviceCharacteristics,
-  IN BOOLEAN Exclusive,
-  OUT PDEVICE_OBJECT *DeviceObject);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ ULONG DeviceExtensionSize,
+  _In_opt_ PUNICODE_STRING DeviceName,
+  _In_ DEVICE_TYPE DeviceType,
+  _In_ ULONG DeviceCharacteristics,
+  _In_ BOOLEAN Exclusive,
+  _Outptr_result_nullonfailure_
+  _At_(*DeviceObject,
+    __drv_allocatesMem(Mem)
+    _When_((((_In_function_class_(DRIVER_INITIALIZE))
+      ||(_In_function_class_(DRIVER_DISPATCH)))),
+      __drv_aliasesMem))
+    PDEVICE_OBJECT *DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG Disposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength,
-  IN CREATE_FILE_TYPE CreateFileType,
-  IN PVOID InternalParameters OPTIONAL,
-  IN ULONG Options);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_opt_ PLARGE_INTEGER AllocationSize,
+  _In_ ULONG FileAttributes,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG Disposition,
+  _In_ ULONG CreateOptions,
+  _In_opt_ PVOID EaBuffer,
+  _In_ ULONG EaLength,
+  _In_ CREATE_FILE_TYPE CreateFileType,
+  _In_opt_ PVOID InternalParameters,
+  _In_ ULONG Options);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PKEVENT
 NTAPI
 IoCreateNotificationEvent(
-  IN PUNICODE_STRING EventName,
-  OUT PHANDLE EventHandle);
+  _In_ PUNICODE_STRING EventName,
+  _Out_ PHANDLE EventHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateSymbolicLink(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN PUNICODE_STRING DeviceName);
+  _In_ PUNICODE_STRING SymbolicLinkName,
+  _In_ PUNICODE_STRING DeviceName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PKEVENT
 NTAPI
 IoCreateSynchronizationEvent(
-  IN PUNICODE_STRING EventName,
-  OUT PHANDLE EventHandle);
+  _In_ PUNICODE_STRING EventName,
+  _Out_ PHANDLE EventHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateUnprotectedSymbolicLink(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN PUNICODE_STRING DeviceName);
+  _In_ PUNICODE_STRING SymbolicLinkName,
+  _In_ PUNICODE_STRING DeviceName);
 
+_IRQL_requires_max_(APC_LEVEL)
+_Kernel_clear_do_init_(__yes)
 NTKERNELAPI
 VOID
 NTAPI
 IoDeleteDevice(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ _Kernel_requires_resource_held_(Memory) __drv_freesMem(Mem)
+    PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoDeleteSymbolicLink(
-  IN PUNICODE_STRING SymbolicLinkName);
+  _In_ PUNICODE_STRING SymbolicLinkName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoDetachDevice(
-  IN OUT PDEVICE_OBJECT TargetDevice);
+  _Inout_ PDEVICE_OBJECT TargetDevice);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoDisconnectInterrupt(
-  IN PKINTERRUPT InterruptObject);
+  _In_ PKINTERRUPT InterruptObject);
 
+__drv_freesMem(Mem)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoFreeIrp(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoFreeMdl(
-  IN PMDL Mdl);
+  PMDL Mdl);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoFreeWorkItem(
-  IN PIO_WORKITEM IoWorkItem);
+  _In_ __drv_freesMem(Mem) PIO_WORKITEM IoWorkItem);
 
 NTKERNELAPI
 PDEVICE_OBJECT
@@ -871,75 +936,96 @@ NTAPI
 IoGetAttachedDevice(
   IN PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetAttachedDeviceReference(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetBootDiskInformation(
-  IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
-  IN ULONG Size);
+  _Inout_ PBOOTDISK_INFORMATION BootDiskInformation,
+  _In_ ULONG Size);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDeviceInterfaceAlias(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN CONST GUID *AliasInterfaceClassGuid,
-  OUT PUNICODE_STRING AliasSymbolicLinkName);
+  _In_ PUNICODE_STRING SymbolicLinkName,
+  _In_ CONST GUID *AliasInterfaceClassGuid,
+  _Out_
+  _When_(return==0, _At_(AliasSymbolicLinkName->Buffer, __drv_allocatesMem(Mem)))
+    PUNICODE_STRING AliasSymbolicLinkName);
 
 NTKERNELAPI
 PEPROCESS
 NTAPI
 IoGetCurrentProcess(VOID);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDeviceInterfaces(
-  IN CONST GUID *InterfaceClassGuid,
-  IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-  IN ULONG Flags,
-  OUT PWSTR *SymbolicLinkList);
+  _In_ CONST GUID *InterfaceClassGuid,
+  _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ ULONG Flags,
+  _Outptr_result_nullonfailure_
+  _At_(*SymbolicLinkList, _When_(return==0, __drv_allocatesMem(Mem)))
+    PZZWSTR *SymbolicLinkList);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDeviceObjectPointer(
-  IN PUNICODE_STRING ObjectName,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PFILE_OBJECT *FileObject,
-  OUT PDEVICE_OBJECT *DeviceObject);
+  _In_ PUNICODE_STRING ObjectName,
+  _In_ ACCESS_MASK DesiredAccess,
+  _Out_ PFILE_OBJECT *FileObject,
+  _Out_ PDEVICE_OBJECT *DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_((DeviceProperty & __string_type),
+  _At_(PropertyBuffer, _Post_z_))
+_When_((DeviceProperty & __multiString_type),
+  _At_(PropertyBuffer, _Post_ _NullNull_terminated_))
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDeviceProperty(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
-  IN ULONG BufferLength,
-  OUT PVOID PropertyBuffer,
-  OUT PULONG ResultLength);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ DEVICE_REGISTRY_PROPERTY DeviceProperty,
+  _In_ ULONG BufferLength,
+  _Out_writes_bytes_opt_(BufferLength) PVOID PropertyBuffer,
+  _Deref_out_range_(<=, BufferLength) PULONG ResultLength);
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PDMA_ADAPTER
 NTAPI
 IoGetDmaAdapter(
-  IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-  IN PDEVICE_DESCRIPTION DeviceDescription,
-  IN OUT PULONG NumberOfMapRegisters);
+  _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ PDEVICE_DESCRIPTION DeviceDescription,
+  _Out_ _When_(return!=0, _Kernel_IoGetDmaAdapter_ _At_(*NumberOfMapRegisters, _Must_inspect_result_))
+    PULONG NumberOfMapRegisters);
 
+__drv_aliasesMem
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 IoGetDriverObjectExtension(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PVOID ClientIdentificationAddress);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PVOID ClientIdentificationAddress);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -949,311 +1035,365 @@ NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetRelatedDeviceObject(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoQueueWorkItem(
-  IN PIO_WORKITEM IoWorkItem,
-  IN PIO_WORKITEM_ROUTINE WorkerRoutine,
-  IN WORK_QUEUE_TYPE QueueType,
-  IN PVOID Context OPTIONAL);
+  _Inout_ PIO_WORKITEM IoWorkItem,
+  _In_ PIO_WORKITEM_ROUTINE WorkerRoutine,
+  _In_ WORK_QUEUE_TYPE QueueType,
+  _In_opt_ __drv_aliasesMem PVOID Context);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoInitializeIrp(
-  IN OUT PIRP Irp,
-  IN USHORT PacketSize,
-  IN CCHAR StackSize);
+  _Inout_ PIRP Irp,
+  _In_ USHORT PacketSize,
+  _In_ CCHAR StackSize);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoInitializeRemoveLockEx(
-  IN PIO_REMOVE_LOCK Lock,
-  IN ULONG AllocateTag,
-  IN ULONG MaxLockedMinutes,
-  IN ULONG HighWatermark,
-  IN ULONG RemlockSize);
+  _Out_ PIO_REMOVE_LOCK Lock,
+  _In_ ULONG AllocateTag,
+  _In_ ULONG MaxLockedMinutes,
+  _In_ ULONG HighWatermark,
+  _In_ ULONG RemlockSize);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoInitializeTimer(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIO_TIMER_ROUTINE TimerRoutine,
-  IN PVOID Context OPTIONAL);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIO_TIMER_ROUTINE TimerRoutine,
+  _In_opt_ __drv_aliasesMem PVOID Context);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoInvalidateDeviceRelations(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN DEVICE_RELATION_TYPE Type);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ DEVICE_RELATION_TYPE Type);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoInvalidateDeviceState(
-  IN PDEVICE_OBJECT PhysicalDeviceObject);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsWdmVersionAvailable(
-  IN UCHAR MajorVersion,
-  IN UCHAR MinorVersion);
+  _When_(MajorVersion!=1&&MajorVersion!=6, _In_ __drv_reportError("MajorVersion must be 1 or 6"))
+    UCHAR MajorVersion,
+  _In_ _When_(MinorVersion!=0 && MinorVersion!=5 &&
+              MinorVersion!=16 && MinorVersion!=32 &&
+              MinorVersion!=48, __drv_reportError("MinorVersion must be 0, 0x5, 0x10, 0x20, or 0x30"))
+    UCHAR MinorVersion);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoOpenDeviceInterfaceRegistryKey(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE DeviceInterfaceKey);
+  _In_ PUNICODE_STRING SymbolicLinkName,
+  _In_ ACCESS_MASK DesiredAccess,
+  _Out_ PHANDLE DeviceInterfaceKey);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoOpenDeviceRegistryKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG DevInstKeyType,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE DevInstRegKey);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG DevInstKeyType,
+  _In_ ACCESS_MASK DesiredAccess,
+  _Out_ PHANDLE DevInstRegKey);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterDeviceInterface(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN CONST GUID *InterfaceClassGuid,
-  IN PUNICODE_STRING ReferenceString OPTIONAL,
-  OUT PUNICODE_STRING SymbolicLinkName);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ CONST GUID *InterfaceClassGuid,
+  _In_opt_ PUNICODE_STRING ReferenceString,
+  _Out_ _When_(return==0, _At_(SymbolicLinkName->Buffer, __drv_allocatesMem(Mem)))
+    PUNICODE_STRING SymbolicLinkName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterPlugPlayNotification(
-  IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-  IN ULONG EventCategoryFlags,
-  IN PVOID EventCategoryData OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,
-  IN OUT PVOID Context OPTIONAL,
-  OUT PVOID *NotificationEntry);
+  _In_ IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
+  _In_ ULONG EventCategoryFlags,
+  _In_opt_ PVOID EventCategoryData,
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,
+  _Inout_opt_ __drv_aliasesMem PVOID Context,
+  _Outptr_result_nullonfailure_
+  _At_(*NotificationEntry, _When_(return==0, __drv_allocatesMem(Mem)))
+    PVOID *NotificationEntry);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterShutdownNotification(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_Requires_lock_held_(_Global_cancel_spin_lock_)
+_Releases_lock_(_Global_cancel_spin_lock_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoReleaseCancelSpinLock(
-  IN KIRQL Irql);
+  _In_ _IRQL_restores_ _IRQL_uses_cancel_ KIRQL Irql);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoReleaseRemoveLockAndWaitEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN PVOID Tag OPTIONAL,
-  IN ULONG RemlockSize);
+  _Inout_ PIO_REMOVE_LOCK RemoveLock,
+  _In_opt_ PVOID Tag,
+  _In_ ULONG RemlockSize);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoReleaseRemoveLockEx(
-  IN PIO_REMOVE_LOCK RemoveLock,
-  IN PVOID Tag OPTIONAL,
-  IN ULONG RemlockSize);
+  _Inout_ PIO_REMOVE_LOCK RemoveLock,
+  _In_opt_ PVOID Tag,
+  _In_ ULONG RemlockSize);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoRemoveShareAccess(
-  IN PFILE_OBJECT FileObject,
-  IN OUT PSHARE_ACCESS ShareAccess);
+  _In_ PFILE_OBJECT FileObject,
+  _Inout_ PSHARE_ACCESS ShareAccess);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReportTargetDeviceChange(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PVOID NotificationStructure);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ PVOID NotificationStructure);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReportTargetDeviceChangeAsynchronous(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PVOID NotificationStructure,
-  IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
-  IN PVOID Context OPTIONAL);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_ PVOID NotificationStructure,
+  _In_opt_ PDEVICE_CHANGE_COMPLETE_CALLBACK Callback,
+  _In_opt_ PVOID Context);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoRequestDeviceEject(
-  IN PDEVICE_OBJECT PhysicalDeviceObject);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoReuseIrp(
-  IN OUT PIRP Irp,
-  IN NTSTATUS Status);
+  _Inout_ PIRP Irp,
+  _In_ NTSTATUS Status);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetDeviceInterfaceState(
-  IN PUNICODE_STRING SymbolicLinkName,
-  IN BOOLEAN Enable);
+  _In_ PUNICODE_STRING SymbolicLinkName,
+  _In_ BOOLEAN Enable);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoSetShareAccess(
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG DesiredShareAccess,
-  IN OUT PFILE_OBJECT FileObject,
-  OUT PSHARE_ACCESS ShareAccess);
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG DesiredShareAccess,
+  _Inout_ PFILE_OBJECT FileObject,
+  _Out_ PSHARE_ACCESS ShareAccess);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoStartNextPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN Cancelable);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoStartNextPacketByKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable,
-  IN ULONG Key);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN Cancelable,
+  _In_ ULONG Key);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoStartPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  IN PULONG Key OPTIONAL,
-  IN PDRIVER_CANCEL CancelFunction OPTIONAL);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_opt_ PULONG Key,
+  _In_opt_ PDRIVER_CANCEL CancelFunction);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoStartTimer(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoStopTimer(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__drv_freesMem(Pool)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoUnregisterPlugPlayNotification(
-  IN PVOID NotificationEntry);
+  _In_ PVOID NotificationEntry);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoUnregisterShutdownNotification(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoUpdateShareAccess(
-  IN PFILE_OBJECT FileObject,
-  IN OUT PSHARE_ACCESS ShareAccess);
+  _In_ PFILE_OBJECT FileObject,
+  _Inout_ PSHARE_ACCESS ShareAccess);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIAllocateInstanceIds(
-  IN GUID *Guid,
-  IN ULONG InstanceCount,
-  OUT ULONG *FirstInstanceId);
+  _In_ GUID *Guid,
+  _In_ ULONG InstanceCount,
+  _Out_ ULONG *FirstInstanceId);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIQuerySingleInstanceMultiple(
-  IN PVOID *DataBlockObjectList,
-  IN PUNICODE_STRING InstanceNames,
-  IN ULONG ObjectCount,
-  IN OUT ULONG *InOutBufferSize,
-  OUT PVOID OutBuffer);
+  _In_reads_(ObjectCount) PVOID *DataBlockObjectList,
+  _In_reads_(ObjectCount) PUNICODE_STRING InstanceNames,
+  _In_ ULONG ObjectCount,
+  _Inout_ ULONG *InOutBufferSize,
+  _Out_writes_bytes_opt_(*InOutBufferSize) PVOID OutBuffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIRegistrationControl(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG Action);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG Action);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMISuggestInstanceName(
-  IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
-  IN PUNICODE_STRING SymbolicLinkName OPTIONAL,
-  IN BOOLEAN CombineNames,
-  OUT PUNICODE_STRING SuggestedInstanceName);
+  _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_opt_ PUNICODE_STRING SymbolicLinkName,
+  _In_ BOOLEAN CombineNames,
+  _Out_ PUNICODE_STRING SuggestedInstanceName);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Ret_range_(<=, 0)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIWriteEvent(
-  IN OUT PVOID WnodeEventItem);
+  _Inout_ _When_(return==0, __drv_aliasesMem) PVOID WnodeEventItem);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoWriteErrorLogEntry(
-  IN PVOID ElEntry);
+  _In_ PVOID ElEntry);
 
 NTKERNELAPI
 PIRP
 NTAPI
 IoGetTopLevelIrp(VOID);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterLastChanceShutdownNotification(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoSetTopLevelIrp(
-  IN PIRP Irp OPTIONAL);
+  _In_opt_ PIRP Irp);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 #if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAllocateAdapterChannel(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG NumberOfMapRegisters,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG NumberOfMapRegisters,
+  _In_ PDRIVER_CONTROL ExecutionRoutine,
+  _In_ PVOID Context);
 #endif
 
 #if !defined(DMA_MACROS_DEFINED)
@@ -1262,185 +1402,203 @@ NTHALAPI
 PHYSICAL_ADDRESS
 NTAPI
 IoMapTransfer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN OUT PULONG Length,
-  IN BOOLEAN WriteToDevice);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _Inout_ PULONG Length,
+  _In_ BOOLEAN WriteToDevice);
 #endif
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoAllocateController(
-  IN PCONTROLLER_OBJECT ControllerObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context OPTIONAL);
+  _In_ PCONTROLLER_OBJECT ControllerObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PDRIVER_CONTROL ExecutionRoutine,
+  _In_opt_ PVOID Context);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PCONTROLLER_OBJECT
 NTAPI
 IoCreateController(
-  IN ULONG Size);
+  _In_ ULONG Size);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoDeleteController(
-  IN PCONTROLLER_OBJECT ControllerObject);
+  _In_ PCONTROLLER_OBJECT ControllerObject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoFreeController(
-  IN PCONTROLLER_OBJECT ControllerObject);
+  _In_ PCONTROLLER_OBJECT ControllerObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PCONFIGURATION_INFORMATION
 NTAPI
 IoGetConfigurationInformation(VOID);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetDeviceToVerify(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoCancelFileOpen(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PFILE_OBJECT FileObject);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PFILE_OBJECT FileObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PGENERIC_MAPPING
 NTAPI
 IoGetFileObjectGenericMapping(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PIRP
 NTAPI
 IoMakeAssociatedIrp(
-  IN PIRP Irp,
-  IN CCHAR StackSize);
+  _In_ PIRP Irp,
+  _In_ CCHAR StackSize);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoQueryDeviceDescription(
-  IN PINTERFACE_TYPE BusType OPTIONAL,
-  IN PULONG BusNumber OPTIONAL,
-  IN PCONFIGURATION_TYPE ControllerType OPTIONAL,
-  IN PULONG ControllerNumber OPTIONAL,
-  IN PCONFIGURATION_TYPE PeripheralType OPTIONAL,
-  IN PULONG PeripheralNumber OPTIONAL,
-  IN PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
-  IN OUT PVOID Context OPTIONAL);
+  _In_opt_ PINTERFACE_TYPE BusType,
+  _In_opt_ PULONG BusNumber,
+  _In_opt_ PCONFIGURATION_TYPE ControllerType,
+  _In_opt_ PULONG ControllerNumber,
+  _In_opt_ PCONFIGURATION_TYPE PeripheralType,
+  _In_opt_ PULONG PeripheralNumber,
+  _In_ PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
+  _Inout_opt_ PVOID Context);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoRaiseHardError(
-  IN PIRP Irp,
-  IN PVPB Vpb OPTIONAL,
-  IN PDEVICE_OBJECT RealDeviceObject);
+  _In_ PIRP Irp,
+  _In_opt_ PVPB Vpb,
+  _In_ PDEVICE_OBJECT RealDeviceObject);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoRaiseInformationalHardError(
-  IN NTSTATUS ErrorStatus,
-  IN PUNICODE_STRING String OPTIONAL,
-  IN PKTHREAD Thread OPTIONAL);
+  _In_ NTSTATUS ErrorStatus,
+  _In_opt_ PUNICODE_STRING String,
+  _In_opt_ PKTHREAD Thread);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoRegisterBootDriverReinitialization(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-  IN PVOID Context OPTIONAL);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+  _In_opt_ PVOID Context);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoRegisterDriverReinitialization(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-  IN PVOID Context OPTIONAL);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+  _In_opt_ PVOID Context);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAttachDeviceByPointer(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice);
+  _In_ PDEVICE_OBJECT SourceDevice,
+  _In_ PDEVICE_OBJECT TargetDevice);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReportDetectedDevice(
-  IN PDRIVER_OBJECT DriverObject,
-  IN INTERFACE_TYPE LegacyBusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PCM_RESOURCE_LIST ResourceList OPTIONAL,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements OPTIONAL,
-  IN BOOLEAN ResourceAssigned,
-  IN OUT PDEVICE_OBJECT *DeviceObject OPTIONAL);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ INTERFACE_TYPE LegacyBusType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _In_opt_ PCM_RESOURCE_LIST ResourceList,
+  _In_opt_ PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements,
+  _In_ BOOLEAN ResourceAssigned,
+  _Inout_ PDEVICE_OBJECT *DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReportResourceForDetection(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
-  IN ULONG DriverListSize OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
-  IN ULONG DeviceListSize OPTIONAL,
-  OUT PBOOLEAN ConflictDetected);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_reads_bytes_opt_(DriverListSize) PCM_RESOURCE_LIST DriverList,
+  _In_opt_ ULONG DriverListSize,
+  _In_opt_ PDEVICE_OBJECT DeviceObject,
+  _In_reads_bytes_opt_(DeviceListSize) PCM_RESOURCE_LIST DeviceList,
+  _In_opt_ ULONG DeviceListSize,
+  _Out_ PBOOLEAN ConflictDetected);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReportResourceUsage(
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
-  IN ULONG DriverListSize OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
-  IN ULONG DeviceListSize OPTIONAL,
-  IN BOOLEAN OverrideConflict,
-  OUT PBOOLEAN ConflictDetected);
+  _In_opt_ PUNICODE_STRING DriverClassName,
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_reads_bytes_opt_(DriverListSize) PCM_RESOURCE_LIST DriverList,
+  _In_opt_ ULONG DriverListSize,
+  _In_opt_ PDEVICE_OBJECT DeviceObject,
+  _In_reads_bytes_opt_(DeviceListSize) PCM_RESOURCE_LIST DeviceList,
+  _In_opt_ ULONG DeviceListSize,
+  _In_ BOOLEAN OverrideConflict,
+  _Out_ PBOOLEAN ConflictDetected);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoSetHardErrorOrVerifyDevice(
-  IN PIRP Irp,
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PIRP Irp,
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAssignResources(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources OPTIONAL,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+  _In_ PUNICODE_STRING RegistryPath,
+  _In_opt_ PUNICODE_STRING DriverClassName,
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_opt_ PDEVICE_OBJECT DeviceObject,
+  _In_opt_ PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
+  _Inout_ PCM_RESOURCE_LIST *AllocatedResources);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoSetThreadHardErrorMode(
-  IN BOOLEAN EnableHardErrors);
+  _In_ BOOLEAN EnableHardErrors);
 
 $endif (_NTDDK_)
 $if (_NTIFS_)
@@ -1449,98 +1607,99 @@ NTKERNELAPI
 VOID
 NTAPI
 IoAcquireVpbSpinLock(
-  OUT PKIRQL Irql);
+  _Out_ PKIRQL Irql);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckDesiredAccess(
-  IN OUT PACCESS_MASK DesiredAccess,
-  IN ACCESS_MASK GrantedAccess);
+  _Inout_ PACCESS_MASK DesiredAccess,
+  _In_ ACCESS_MASK GrantedAccess);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckEaBufferValidity(
-  IN PFILE_FULL_EA_INFORMATION EaBuffer,
-  IN ULONG EaLength,
-  OUT PULONG ErrorOffset);
+  _In_ PFILE_FULL_EA_INFORMATION EaBuffer,
+  _In_ ULONG EaLength,
+  _Out_ PULONG ErrorOffset);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckFunctionAccess(
-  IN ACCESS_MASK GrantedAccess,
-  IN UCHAR MajorFunction,
-  IN UCHAR MinorFunction,
-  IN ULONG IoControlCode,
-  IN PVOID Argument1 OPTIONAL,
-  IN PVOID Argument2 OPTIONAL);
+  _In_ ACCESS_MASK GrantedAccess,
+  _In_ UCHAR MajorFunction,
+  _In_ UCHAR MinorFunction,
+  _In_ ULONG IoControlCode,
+  _In_opt_ PVOID Argument1,
+  _In_opt_ PVOID Argument2);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckQuerySetFileInformation(
-  IN FILE_INFORMATION_CLASS FileInformationClass,
-  IN ULONG Length,
-  IN BOOLEAN SetOperation);
+  _In_ FILE_INFORMATION_CLASS FileInformationClass,
+  _In_ ULONG Length,
+  _In_ BOOLEAN SetOperation);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckQuerySetVolumeInformation(
-  IN FS_INFORMATION_CLASS FsInformationClass,
-  IN ULONG Length,
-  IN BOOLEAN SetOperation);
+  _In_ FS_INFORMATION_CLASS FsInformationClass,
+  _In_ ULONG Length,
+  _In_ BOOLEAN SetOperation);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckQuotaBufferValidity(
-  IN PFILE_QUOTA_INFORMATION QuotaBuffer,
-  IN ULONG QuotaLength,
-  OUT PULONG ErrorOffset);
+  _In_ PFILE_QUOTA_INFORMATION QuotaBuffer,
+  _In_ ULONG QuotaLength,
+  _Out_ PULONG ErrorOffset);
 
 NTKERNELAPI
 PFILE_OBJECT
 NTAPI
 IoCreateStreamFileObject(
-  IN PFILE_OBJECT FileObject OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+  _In_opt_ PFILE_OBJECT FileObject,
+  _In_opt_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 PFILE_OBJECT
 NTAPI
 IoCreateStreamFileObjectLite(
-  IN PFILE_OBJECT FileObject OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+  _In_opt_ PFILE_OBJECT FileObject,
+  _In_opt_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoFastQueryNetworkAttributes(
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG OpenOptions,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  OUT PFILE_NETWORK_OPEN_INFORMATION Buffer);
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG OpenOptions,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _Out_ PFILE_NETWORK_OPEN_INFORMATION Buffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoPageRead(
-  IN PFILE_OBJECT FileObject,
-  IN PMDL Mdl,
-  IN PLARGE_INTEGER Offset,
-  IN PKEVENT Event,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ PMDL Mdl,
+  _In_ PLARGE_INTEGER Offset,
+  _In_ PKEVENT Event,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetBaseFileSystemDeviceObject(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PCONFIGURATION_INFORMATION
 NTAPI
@@ -1550,13 +1709,13 @@ NTKERNELAPI
 ULONG
 NTAPI
 IoGetRequestorProcessId(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 NTKERNELAPI
 PEPROCESS
 NTAPI
 IoGetRequestorProcess(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 NTKERNELAPI
 PIRP
@@ -1567,130 +1726,130 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsOperationSynchronous(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsSystemThread(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsValidNameGraftingBuffer(
-  IN PIRP Irp,
-  IN PREPARSE_DATA_BUFFER ReparseBuffer);
+  _In_ PIRP Irp,
+  _In_ PREPARSE_DATA_BUFFER ReparseBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoQueryFileInformation(
-  IN PFILE_OBJECT FileObject,
-  IN FILE_INFORMATION_CLASS FileInformationClass,
-  IN ULONG Length,
-  OUT PVOID FileInformation,
-  OUT PULONG ReturnedLength);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass,
+  _In_ ULONG Length,
+  _Out_ PVOID FileInformation,
+  _Out_ PULONG ReturnedLength);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoQueryVolumeInformation(
-  IN PFILE_OBJECT FileObject,
-  IN FS_INFORMATION_CLASS FsInformationClass,
-  IN ULONG Length,
-  OUT PVOID FsInformation,
-  OUT PULONG ReturnedLength);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ FS_INFORMATION_CLASS FsInformationClass,
+  _In_ ULONG Length,
+  _Out_ PVOID FsInformation,
+  _Out_ PULONG ReturnedLength);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoQueueThreadIrp(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoRegisterFileSystem(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ __drv_aliasesMem PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterFsRegistrationChange(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoReleaseVpbSpinLock(
-  IN KIRQL Irql);
+  _In_ KIRQL Irql);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoSetDeviceToVerify(
-  IN PETHREAD Thread,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+  _In_ PETHREAD Thread,
+  _In_opt_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetInformation(
-  IN PFILE_OBJECT FileObject,
-  IN FILE_INFORMATION_CLASS FileInformationClass,
-  IN ULONG Length,
-  IN PVOID FileInformation);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass,
+  _In_ ULONG Length,
+  _In_ PVOID FileInformation);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoSetTopLevelIrp(
-  IN PIRP Irp OPTIONAL);
+  _In_opt_ PIRP Irp);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSynchronousPageWrite(
-  IN PFILE_OBJECT FileObject,
-  IN PMDL Mdl,
-  IN PLARGE_INTEGER FileOffset,
-  IN PKEVENT Event,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ PMDL Mdl,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ PKEVENT Event,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
 NTKERNELAPI
 PEPROCESS
 NTAPI
 IoThreadToProcess(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoUnregisterFileSystem(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoUnregisterFsRegistrationChange(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoVerifyVolume(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN AllowRawMount);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN AllowRawMount);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetRequestorSessionId(
-  IN PIRP Irp,
-  OUT PULONG pSessionId);
+  _In_ PIRP Irp,
+  _Out_ PULONG pSessionId);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
@@ -1702,14 +1861,14 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsFileOriginRemote(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetFileOrigin(
-  IN PFILE_OBJECT FileObject,
-  IN BOOLEAN Remote);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ BOOLEAN Remote);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2KSP3) */
 $endif (_NTDDK_)
@@ -1721,42 +1880,42 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCsqInitialize(
-  IN PIO_CSQ Csq,
-  IN PIO_CSQ_INSERT_IRP CsqInsertIrp,
-  IN PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
-  IN PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
-  IN PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
-  IN PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
-  IN PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
+  _Out_ PIO_CSQ Csq,
+  _In_ PIO_CSQ_INSERT_IRP CsqInsertIrp,
+  _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+  _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+  _In_ PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+  _In_ PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+  _In_ PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoCsqInsertIrp(
-  IN PIO_CSQ Csq,
-  IN PIRP Irp,
-  IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL);
+  _Inout_ PIO_CSQ Csq,
+  _Inout_ PIRP Irp,
+  _Out_opt_ PIO_CSQ_IRP_CONTEXT Context);
 
 NTKERNELAPI
 PIRP
 NTAPI
 IoCsqRemoveIrp(
-  IN PIO_CSQ Csq,
-  IN PIO_CSQ_IRP_CONTEXT Context);
+  _Inout_ PIO_CSQ Csq,
+  _Inout_ PIO_CSQ_IRP_CONTEXT Context);
 
 NTKERNELAPI
 PIRP
 NTAPI
 IoCsqRemoveNextIrp(
-  IN PIO_CSQ Csq,
-  IN PVOID PeekContext OPTIONAL);
+  _Inout_ PIO_CSQ Csq,
+  _In_opt_ PVOID PeekContext);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 IoForwardIrpSynchronously(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp);
 
 #define IoForwardAndCatchIrp IoForwardIrpSynchronously
 
@@ -1764,230 +1923,241 @@ NTKERNELAPI
 VOID
 NTAPI
 IoFreeErrorLogEntry(
-  PVOID ElEntry);
+  _In_ PVOID ElEntry);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetCompletionRoutineEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  IN PIO_COMPLETION_ROUTINE CompletionRoutine,
-  IN PVOID Context,
-  IN BOOLEAN InvokeOnSuccess,
-  IN BOOLEAN InvokeOnError,
-  IN BOOLEAN InvokeOnCancel);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIRP Irp,
+  _In_ PIO_COMPLETION_ROUTINE CompletionRoutine,
+  _In_opt_ PVOID Context,
+  _In_ BOOLEAN InvokeOnSuccess,
+  _In_ BOOLEAN InvokeOnError,
+  _In_ BOOLEAN InvokeOnCancel);
 
 VOID
 NTAPI
 IoSetStartIoAttributes(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN DeferredStartIo,
-  IN BOOLEAN NonCancelable);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN DeferredStartIo,
+  _In_ BOOLEAN NonCancelable);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIDeviceObjectToInstanceName(
-  IN PVOID DataBlockObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  OUT PUNICODE_STRING InstanceName);
+  _In_ PVOID DataBlockObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ PUNICODE_STRING InstanceName);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIExecuteMethod(
-  IN PVOID DataBlockObject,
-  IN PUNICODE_STRING InstanceName,
-  IN ULONG MethodId,
-  IN ULONG InBufferSize,
-  IN OUT PULONG OutBufferSize,
-  IN OUT  PUCHAR InOutBuffer);
+  _In_ PVOID DataBlockObject,
+  _In_ PUNICODE_STRING InstanceName,
+  _In_ ULONG MethodId,
+  _In_ ULONG InBufferSize,
+  _Inout_ PULONG OutBufferSize,
+  _Inout_updates_bytes_to_opt_(*OutBufferSize, InBufferSize) PUCHAR InOutBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIHandleToInstanceName(
-  IN PVOID DataBlockObject,
-  IN HANDLE FileHandle,
-  OUT PUNICODE_STRING InstanceName);
+  _In_ PVOID DataBlockObject,
+  _In_ HANDLE FileHandle,
+  _Out_ PUNICODE_STRING InstanceName);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIOpenBlock(
-  IN GUID *DataBlockGuid,
-  IN ULONG DesiredAccess,
-  OUT PVOID *DataBlockObject);
+  _In_ GUID *DataBlockGuid,
+  _In_ ULONG DesiredAccess,
+  _Out_ PVOID *DataBlockObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIQueryAllData(
-  IN PVOID DataBlockObject,
-  IN OUT ULONG *InOutBufferSize,
-  OUT PVOID OutBuffer);
+  _In_ PVOID DataBlockObject,
+  _Inout_ ULONG *InOutBufferSize,
+  _Out_writes_bytes_opt_(*InOutBufferSize) PVOID OutBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIQueryAllDataMultiple(
-  IN PVOID *DataBlockObjectList,
-  IN ULONG ObjectCount,
-  IN OUT ULONG *InOutBufferSize,
-  OUT PVOID OutBuffer);
+  _In_reads_(ObjectCount) PVOID *DataBlockObjectList,
+  _In_ ULONG ObjectCount,
+  _Inout_ ULONG *InOutBufferSize,
+  _Out_writes_bytes_opt_(*InOutBufferSize) PVOID OutBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIQuerySingleInstance(
-  IN PVOID DataBlockObject,
-  IN PUNICODE_STRING InstanceName,
-  IN OUT ULONG *InOutBufferSize,
-  OUT PVOID OutBuffer);
+  _In_ PVOID DataBlockObject,
+  _In_ PUNICODE_STRING InstanceName,
+  _Inout_ ULONG *InOutBufferSize,
+  _Out_writes_bytes_opt_(*InOutBufferSize) PVOID OutBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMISetNotificationCallback(
-  IN OUT PVOID Object,
-  IN WMI_NOTIFICATION_CALLBACK Callback,
-  IN PVOID Context OPTIONAL);
+  _Inout_ PVOID Object,
+  _In_ WMI_NOTIFICATION_CALLBACK Callback,
+  _In_opt_ PVOID Context);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMISetSingleInstance(
-  IN PVOID DataBlockObject,
-  IN PUNICODE_STRING InstanceName,
-  IN ULONG Version,
-  IN ULONG ValueBufferSize,
-  IN PVOID ValueBuffer);
+  _In_ PVOID DataBlockObject,
+  _In_ PUNICODE_STRING InstanceName,
+  _In_ ULONG Version,
+  _In_ ULONG ValueBufferSize,
+  _In_reads_bytes_(ValueBufferSize) PVOID ValueBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMISetSingleItem(
-  IN PVOID DataBlockObject,
-  IN PUNICODE_STRING InstanceName,
-  IN ULONG DataItemId,
-  IN ULONG Version,
-  IN ULONG ValueBufferSize,
-  IN PVOID ValueBuffer);
+  _In_ PVOID DataBlockObject,
+  _In_ PUNICODE_STRING InstanceName,
+  _In_ ULONG DataItemId,
+  _In_ ULONG Version,
+  _In_ ULONG ValueBufferSize,
+  _In_reads_bytes_(ValueBufferSize) PVOID ValueBuffer);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 FASTCALL
 IoReadPartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN BOOLEAN ReturnRecognizedPartitions,
-  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ BOOLEAN ReturnRecognizedPartitions,
+  _Out_ struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 FASTCALL
 IoSetPartitionInformation(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG PartitionNumber,
-  IN ULONG PartitionType);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG PartitionNumber,
+  _In_ ULONG PartitionType);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 FASTCALL
 IoWritePartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG SectorsPerTrack,
-  IN ULONG NumberOfHeads,
-  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG SectorsPerTrack,
+  _In_ ULONG NumberOfHeads,
+  _In_ struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateDisk(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _CREATE_DISK* Disk OPTIONAL);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_opt_ struct _CREATE_DISK* Disk);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReadDiskSignature(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG BytesPerSector,
-  OUT PDISK_SIGNATURE Signature);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG BytesPerSector,
+  _Out_ PDISK_SIGNATURE Signature);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReadPartitionTableEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  OUT struct _DRIVE_LAYOUT_INFORMATION_EX **PartitionBuffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Out_ struct _DRIVE_LAYOUT_INFORMATION_EX **PartitionBuffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetPartitionInformationEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG PartitionNumber,
-  IN struct _SET_PARTITION_INFORMATION_EX *PartitionInfo);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG PartitionNumber,
+  _In_ struct _SET_PARTITION_INFORMATION_EX *PartitionInfo);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetSystemPartition(
-  IN PUNICODE_STRING VolumeNameString);
+  _In_ PUNICODE_STRING VolumeNameString);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoVerifyPartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN FixErrors);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN FixErrors);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoVolumeDeviceToDosName(
-  IN PVOID VolumeDeviceObject,
-  OUT PUNICODE_STRING DosName);
+  _In_ PVOID VolumeDeviceObject,
+  _Out_ _When_(return==0,
+    _At_(DosName->Buffer, __drv_allocatesMem(Mem)))
+    PUNICODE_STRING DosName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWritePartitionTableEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_reads_(_Inexpressible_(FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry[0])))
+    struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateFileSpecifyDeviceObjectHint(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG Disposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength,
-  IN CREATE_FILE_TYPE CreateFileType,
-  IN PVOID InternalParameters OPTIONAL,
-  IN ULONG Options,
-  IN PVOID DeviceObject OPTIONAL);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_opt_ PLARGE_INTEGER AllocationSize,
+  _In_ ULONG FileAttributes,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG Disposition,
+  _In_ ULONG CreateOptions,
+  _In_opt_ PVOID EaBuffer,
+  _In_ ULONG EaLength,
+  _In_ CREATE_FILE_TYPE CreateFileType,
+  _In_opt_ PVOID InternalParameters,
+  _In_ ULONG Options,
+  _In_opt_ PVOID DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAttachDeviceToDeviceStackSafe(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+  _In_ PDEVICE_OBJECT SourceDevice,
+  _In_ PDEVICE_OBJECT TargetDevice,
+  _Outptr_ PDEVICE_OBJECT *AttachedToDeviceObject);
 
 $endif (_NTDDK_)
 $if (_NTIFS_)
@@ -1996,44 +2166,45 @@ NTKERNELAPI
 PFILE_OBJECT
 NTAPI
 IoCreateStreamFileObjectEx(
-  IN PFILE_OBJECT FileObject OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  OUT PHANDLE FileObjectHandle OPTIONAL);
+  _In_opt_ PFILE_OBJECT FileObject,
+  _In_opt_ PDEVICE_OBJECT DeviceObject,
+  _Out_opt_ PHANDLE FileObjectHandle);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoQueryFileDosDeviceName(
-  IN PFILE_OBJECT FileObject,
-  OUT POBJECT_NAME_INFORMATION *ObjectNameInformation);
+  _In_ PFILE_OBJECT FileObject,
+  _Out_ POBJECT_NAME_INFORMATION *ObjectNameInformation);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoEnumerateDeviceObjectList(
-  IN PDRIVER_OBJECT DriverObject,
-  OUT PDEVICE_OBJECT *DeviceObjectList,
-  IN ULONG DeviceObjectListSize,
-  OUT PULONG ActualNumberDeviceObjects);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _Out_writes_bytes_to_opt_(DeviceObjectListSize,(*ActualNumberDeviceObjects)*sizeof(PDEVICE_OBJECT))
+    PDEVICE_OBJECT *DeviceObjectList,
+  _In_ ULONG DeviceObjectListSize,
+  _Out_ PULONG ActualNumberDeviceObjects);
 
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetLowerDeviceObject(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetDeviceAttachmentBaseRef(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDiskDeviceObject(
-  IN PDEVICE_OBJECT FileSystemDeviceObject,
-  OUT PDEVICE_OBJECT *DiskDeviceObject);
+  _In_ PDEVICE_OBJECT FileSystemDeviceObject,
+  _Out_ PDEVICE_OBJECT *DiskDeviceObject);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
@@ -2044,20 +2215,20 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoValidateDeviceIoControlAccess(
-  IN PIRP Irp,
-  IN ULONG RequiredAccess);
+  _In_ PIRP Irp,
+  _In_ ULONG RequiredAccess);
 #endif
 
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTDDK_)
 NTKERNELAPI
 IO_PAGING_PRIORITY
 FASTCALL
 IoGetPagingIoPriority(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 $endif (_NTDDK_)
 $if (_WDMDDK_)
@@ -2065,39 +2236,39 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCsqInitializeEx(
-  IN PIO_CSQ Csq,
-  IN PIO_CSQ_INSERT_IRP_EX CsqInsertIrp,
-  IN PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
-  IN PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
-  IN PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
-  IN PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
-  IN PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
+  _Out_ PIO_CSQ Csq,
+  _In_ PIO_CSQ_INSERT_IRP_EX CsqInsertIrp,
+  _In_ PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+  _In_ PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+  _In_ PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+  _In_ PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+  _In_ PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCsqInsertIrpEx(
-  IN PIO_CSQ Csq,
-  IN PIRP Irp,
-  IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL,
-  IN PVOID InsertContext OPTIONAL);
+  _Inout_ PIO_CSQ Csq,
+  _Inout_ PIRP Irp,
+  _Out_opt_ PIO_CSQ_IRP_CONTEXT Context,
+  _In_opt_ PVOID InsertContext);
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_NTDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
 BOOLEAN
 NTAPI
 IoTranslateBusAddress(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+  _In_ INTERFACE_TYPE InterfaceType,
+  _In_ ULONG BusNumber,
+  _In_ PHYSICAL_ADDRESS BusAddress,
+  _Inout_ PULONG AddressSpace,
+  _Out_ PPHYSICAL_ADDRESS TranslatedAddress);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
@@ -2105,13 +2276,14 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoEnumerateRegisteredFiltersList(
-  OUT PDRIVER_OBJECT *DriverObjectList,
-  IN ULONG DriverObjectListSize,
-  OUT PULONG ActualNumberDriverObjects);
+  _Out_writes_bytes_to_opt_(DriverObjectListSize,(*ActualNumberDriverObjects)*sizeof(PDRIVER_OBJECT))
+    PDRIVER_OBJECT *DriverObjectList,
+  _In_ ULONG DriverObjectListSize,
+  _Out_ PULONG ActualNumberDriverObjects);
 $endif (_NTIFS_)
 $if (_NTDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)
@@ -2119,46 +2291,46 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetBootDiskInformationLite(
-  OUT PBOOTDISK_INFORMATION_LITE *BootDiskInformation);
+  _Outptr_ PBOOTDISK_INFORMATION_LITE *BootDiskInformation);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCheckShareAccessEx(
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG DesiredShareAccess,
-  IN OUT PFILE_OBJECT FileObject,
-  IN OUT PSHARE_ACCESS ShareAccess,
-  IN BOOLEAN Update,
-  IN PBOOLEAN WritePermission);
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG DesiredShareAccess,
+  _Inout_ PFILE_OBJECT FileObject,
+  _Inout_ PSHARE_ACCESS ShareAccess,
+  _In_ BOOLEAN Update,
+  _In_ PBOOLEAN WritePermission);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoConnectInterruptEx(
-  IN OUT PIO_CONNECT_INTERRUPT_PARAMETERS Parameters);
+  _Inout_ PIO_CONNECT_INTERRUPT_PARAMETERS Parameters);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoDisconnectInterruptEx(
-  IN PIO_DISCONNECT_INTERRUPT_PARAMETERS Parameters);
+  _In_ PIO_DISCONNECT_INTERRUPT_PARAMETERS Parameters);
 
 LOGICAL
 NTAPI
 IoWithinStackLimits(
-  IN ULONG_PTR RegionStart,
-  IN SIZE_T RegionSize);
+  _In_ ULONG_PTR RegionStart,
+  _In_ SIZE_T RegionSize);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoSetShareAccessEx(
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG DesiredShareAccess,
-  IN OUT PFILE_OBJECT FileObject,
-  OUT PSHARE_ACCESS ShareAccess,
-  IN PBOOLEAN WritePermission);
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG DesiredShareAccess,
+  _Inout_ PFILE_OBJECT FileObject,
+  _Out_ PSHARE_ACCESS ShareAccess,
+  _In_ PBOOLEAN WritePermission);
 
 ULONG
 NTAPI
@@ -2167,86 +2339,93 @@ IoSizeofWorkItem(VOID);
 VOID
 NTAPI
 IoInitializeWorkItem(
-  IN PVOID IoObject,
-  IN PIO_WORKITEM IoWorkItem);
+  _In_ PVOID IoObject,
+  _Out_ PIO_WORKITEM IoWorkItem);
 
 VOID
 NTAPI
 IoUninitializeWorkItem(
-  IN PIO_WORKITEM IoWorkItem);
+  _Inout_ PIO_WORKITEM IoWorkItem);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 NTAPI
 IoQueueWorkItemEx(
-  IN PIO_WORKITEM IoWorkItem,
-  IN PIO_WORKITEM_ROUTINE_EX WorkerRoutine,
-  IN WORK_QUEUE_TYPE QueueType,
-  IN PVOID Context OPTIONAL);
+  _Inout_ PIO_WORKITEM IoWorkItem,
+  _In_ PIO_WORKITEM_ROUTINE_EX WorkerRoutine,
+  _In_ WORK_QUEUE_TYPE QueueType,
+  _In_opt_ __drv_aliasesMem PVOID Context);
 
 IO_PRIORITY_HINT
 NTAPI
 IoGetIoPriorityHint(
-  IN PIRP Irp);
+  _In_ PIRP Irp);
 
 NTSTATUS
 NTAPI
 IoSetIoPriorityHint(
-  IN PIRP Irp,
-  IN IO_PRIORITY_HINT PriorityHint);
+  _In_ PIRP Irp,
+  _In_ IO_PRIORITY_HINT PriorityHint);
 
 NTSTATUS
 NTAPI
 IoAllocateSfioStreamIdentifier(
-  IN PFILE_OBJECT FileObject,
-  IN ULONG Length,
-  IN PVOID Signature,
-  OUT PVOID *StreamIdentifier);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ ULONG Length,
+  _In_ PVOID Signature,
+  _Out_ PVOID *StreamIdentifier);
 
 PVOID
 NTAPI
 IoGetSfioStreamIdentifier(
-  IN PFILE_OBJECT FileObject,
-  IN PVOID Signature);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ PVOID Signature);
 
 NTSTATUS
 NTAPI
 IoFreeSfioStreamIdentifier(
-  IN PFILE_OBJECT FileObject,
-  IN PVOID Signature);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ PVOID Signature);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRequestDeviceEjectEx(
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  IN PIO_DEVICE_EJECT_CALLBACK Callback OPTIONAL,
-  IN PVOID Context OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject OPTIONAL);
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _In_opt_ PIO_DEVICE_EJECT_CALLBACK Callback,
+  _In_opt_ PVOID Context,
+  _In_opt_ PDRIVER_OBJECT DriverObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetDevicePropertyData(
-  IN PDEVICE_OBJECT     Pdo,
-  IN CONST DEVPROPKEY   *PropertyKey,
-  IN LCID               Lcid,
-  IN ULONG              Flags,
-  IN DEVPROPTYPE        Type,
-  IN ULONG              Size,
-  IN PVOID          Data OPTIONAL);
+  _In_ PDEVICE_OBJECT Pdo,
+  _In_ CONST DEVPROPKEY *PropertyKey,
+  _In_ LCID Lcid,
+  _In_ ULONG Flags,
+  _In_ DEVPROPTYPE Type,
+  _In_ ULONG Size,
+  _In_opt_ PVOID Data);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDevicePropertyData(
-  PDEVICE_OBJECT Pdo,
-  CONST DEVPROPKEY *PropertyKey,
-  LCID Lcid,
-  ULONG Flags,
-  ULONG Size,
-  PVOID Data,
-  PULONG RequiredSize,
-  PDEVPROPTYPE Type);
+  _In_ PDEVICE_OBJECT Pdo,
+  _In_ CONST DEVPROPKEY *PropertyKey,
+  _In_ LCID Lcid,
+  _Reserved_ ULONG Flags,
+  _In_ ULONG Size,
+  _Out_ PVOID Data,
+  _Out_ PULONG RequiredSize,
+  _Out_ PDEVPROPTYPE Type);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
@@ -2254,56 +2433,56 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoUpdateDiskGeometry(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _DISK_GEOMETRY_EX* OldDiskGeometry,
-  IN struct _DISK_GEOMETRY_EX* NewDiskGeometry);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ struct _DISK_GEOMETRY_EX* OldDiskGeometry,
+  _In_ struct _DISK_GEOMETRY_EX* NewDiskGeometry);
 
 PTXN_PARAMETER_BLOCK
 NTAPI
 IoGetTransactionParameterBlock(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoCreateFileEx(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG Disposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength,
-  IN CREATE_FILE_TYPE CreateFileType,
-  IN PVOID InternalParameters OPTIONAL,
-  IN ULONG Options,
-  IN PIO_DRIVER_CREATE_CONTEXT DriverContext OPTIONAL);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_opt_ PLARGE_INTEGER AllocationSize,
+  _In_ ULONG FileAttributes,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG Disposition,
+  _In_ ULONG CreateOptions,
+  _In_opt_ PVOID EaBuffer,
+  _In_ ULONG EaLength,
+  _In_ CREATE_FILE_TYPE CreateFileType,
+  _In_opt_ PVOID InternalParameters,
+  _In_ ULONG Options,
+  _In_opt_ PIO_DRIVER_CREATE_CONTEXT DriverContext);
 
 NTSTATUS
 NTAPI
 IoSetIrpExtraCreateParameter(
-  IN OUT PIRP Irp,
-  IN struct _ECP_LIST *ExtraCreateParameter);
+  _Inout_ PIRP Irp,
+  _In_ struct _ECP_LIST *ExtraCreateParameter);
 
 VOID
 NTAPI
 IoClearIrpExtraCreateParameter(
-  IN OUT PIRP Irp);
+  _Inout_ PIRP Irp);
 
 NTSTATUS
 NTAPI
 IoGetIrpExtraCreateParameter(
-  IN PIRP Irp,
-  OUT struct _ECP_LIST **ExtraCreateParameter OPTIONAL);
+  _In_ PIRP Irp,
+  _Outptr_result_maybenull_ struct _ECP_LIST **ExtraCreateParameter);
 
 BOOLEAN
 NTAPI
 IoIsFileObjectIgnoringSharing(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
 $endif (_NTDDK_)
 $if (_NTIFS_)
@@ -2312,12 +2491,12 @@ FORCEINLINE
 VOID
 NTAPI
 IoInitializePriorityInfo(
-  IN PIO_PRIORITY_INFO PriorityInfo)
+    _In_ PIO_PRIORITY_INFO PriorityInfo)
 {
-  PriorityInfo->Size = sizeof(IO_PRIORITY_INFO);
-  PriorityInfo->ThreadPriority = 0xffff;
-  PriorityInfo->IoPriority = IoPriorityNormal;
-  PriorityInfo->PagePriority = 0;
+    PriorityInfo->Size = sizeof(IO_PRIORITY_INFO);
+    PriorityInfo->ThreadPriority = 0xffff;
+    PriorityInfo->IoPriority = IoPriorityNormal;
+    PriorityInfo->PagePriority = 0;
 }
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
@@ -2326,13 +2505,15 @@ $if (_WDMDDK_)
 #define IoCallDriverStackSafeDefault(a, b) IoCallDriver(a, b)
 
 #if (NTDDI_VERSION >= NTDDI_WS08)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReplacePartitionUnit(
-  IN PDEVICE_OBJECT TargetPdo,
-  IN PDEVICE_OBJECT SparePdo,
-  IN ULONG Flags);
+  _In_ PDEVICE_OBJECT TargetPdo,
+  _In_ PDEVICE_OBJECT SparePdo,
+  _In_ ULONG Flags);
 #endif
 
 $endif (_WDMDDK_)
@@ -2343,50 +2524,54 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetAffinityInterrupt(
-  IN PKINTERRUPT InterruptObject,
-  OUT PGROUP_AFFINITY GroupAffinity);
+  _In_ PKINTERRUPT InterruptObject,
+  _Out_ PGROUP_AFFINITY GroupAffinity);
 
 NTSTATUS
 NTAPI
 IoGetContainerInformation(
-  IN IO_CONTAINER_INFORMATION_CLASS InformationClass,
-  IN PVOID ContainerObject OPTIONAL,
-  IN OUT PVOID Buffer OPTIONAL,
-  IN ULONG BufferLength);
+  _In_ IO_CONTAINER_INFORMATION_CLASS InformationClass,
+  _In_opt_ PVOID ContainerObject,
+  _Inout_updates_bytes_opt_(BufferLength) PVOID Buffer,
+  _In_ ULONG BufferLength);
 
 NTSTATUS
 NTAPI
 IoRegisterContainerNotification(
-  IN IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,
-  IN PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,
-  IN PVOID NotificationInformation OPTIONAL,
-  IN ULONG NotificationInformationLength,
-  OUT PVOID CallbackRegistration);
+  _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,
+  _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,
+  _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,
+  _In_ ULONG NotificationInformationLength,
+  _Out_ PVOID CallbackRegistration);
 
 VOID
 NTAPI
 IoUnregisterContainerNotification(
-  IN PVOID CallbackRegistration);
+  _In_ PVOID CallbackRegistration);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__drv_freesMem(Pool)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoUnregisterPlugPlayNotificationEx(
-  IN PVOID NotificationEntry);
+  _In_ PVOID NotificationEntry);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetDeviceNumaNode(
-  IN PDEVICE_OBJECT Pdo,
-  OUT PUSHORT NodeNumber);
+  _In_ PDEVICE_OBJECT Pdo,
+  _Out_ PUSHORT NodeNumber);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 NTSTATUS
 NTAPI
 IoSetFileObjectIgnoreSharing(
-  IN PFILE_OBJECT FileObject);
+  _In_ PFILE_OBJECT FileObject);
 
 $endif (_NTDDK_)
 $if (_NTIFS_)
@@ -2395,17 +2580,17 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoRegisterFsRegistrationChangeMountAware(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine,
-  IN BOOLEAN SynchronizeWithMounts);
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDRIVER_FS_NOTIFICATION DriverNotificationRoutine,
+  _In_ BOOLEAN SynchronizeWithMounts);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 IoReplaceFileObjectName(
-  IN PFILE_OBJECT FileObject,
-  IN PWSTR NewFileName,
-  IN USHORT FileNameLength);
+  _In_ PFILE_OBJECT FileObject,
+  _In_reads_bytes_(FileNameLength) PWSTR NewFileName,
+  _In_ USHORT FileNameLength);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
@@ -2415,7 +2600,7 @@ NTKERNELAPI
 ULONG
 NTAPI
 IoWMIDeviceObjectToProviderId(
-  IN PDEVICE_OBJECT DeviceObject);
+  _In_ PDEVICE_OBJECT DeviceObject);
 #else
 #define IoWMIDeviceObjectToProviderId(DeviceObject) ((ULONG)(DeviceObject))
 #endif
@@ -2431,7 +2616,7 @@ IoWMIDeviceObjectToProviderId(
 FORCEINLINE
 VOID
 IoSkipCurrentIrpStackLocation(
-  IN OUT PIRP Irp)
+  _Inout_ PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount);
   Irp->CurrentLocation++;
@@ -2445,7 +2630,7 @@ IoSkipCurrentIrpStackLocation(
 FORCEINLINE
 VOID
 IoSetNextIrpStackLocation(
-  IN OUT PIRP Irp)
+  _Inout_ PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation > 0);
   Irp->CurrentLocation--;
@@ -2456,10 +2641,11 @@ IoSetNextIrpStackLocation(
 #endif
 }
 
+__drv_aliasesMem
 FORCEINLINE
 PIO_STACK_LOCATION
 IoGetNextIrpStackLocation(
-  IN PIRP Irp)
+  _In_ PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation > 0);
 #ifdef NONAMELESSUNION
@@ -2469,15 +2655,16 @@ IoGetNextIrpStackLocation(
 #endif
 }
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
 VOID
 IoSetCompletionRoutine(
-  IN PIRP Irp,
-  IN PIO_COMPLETION_ROUTINE CompletionRoutine OPTIONAL,
-  IN PVOID Context OPTIONAL,
-  IN BOOLEAN InvokeOnSuccess,
-  IN BOOLEAN InvokeOnError,
-  IN BOOLEAN InvokeOnCancel)
+  _In_ PIRP Irp,
+  _In_opt_ PIO_COMPLETION_ROUTINE CompletionRoutine,
+  _In_opt_ __drv_aliasesMem PVOID Context,
+  _In_ BOOLEAN InvokeOnSuccess,
+  _In_ BOOLEAN InvokeOnError,
+  _In_ BOOLEAN InvokeOnCancel)
 {
   PIO_STACK_LOCATION irpSp;
   ASSERT( (InvokeOnSuccess || InvokeOnError || InvokeOnCancel) ? (CompletionRoutine != NULL) : TRUE );
@@ -2499,26 +2686,26 @@ IoSetCompletionRoutine(
   }
 }
 
-/*
- * PDRIVER_CANCEL
- * IoSetCancelRoutine(
- *   IN PIRP  Irp,
- *   IN PDRIVER_CANCEL  CancelRoutine)
- */
-#define IoSetCancelRoutine(_Irp, \
-                           _CancelRoutine) \
-  ((PDRIVER_CANCEL) (ULONG_PTR) InterlockedExchangePointer( \
-    (PVOID *) &(_Irp)->CancelRoutine, (PVOID) (ULONG_PTR) (_CancelRoutine)))
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Ret_maybenull_
+FORCEINLINE
+PDRIVER_CANCEL
+IoSetCancelRoutine(
+    _Inout_ PIRP Irp,
+    _In_opt_ PDRIVER_CANCEL CancelRoutine)
+{
+    return (PDRIVER_CANCEL)(ULONG_PTR) InterlockedExchangePointer((PVOID *)&(Irp)->CancelRoutine, (PVOID)(ULONG_PTR)(CancelRoutine));
+}
 
-/*
- * VOID
- * IoRequestDpc(
- *   IN PDEVICE_OBJECT  DeviceObject,
- *   IN PIRP  Irp,
- *   IN PVOID  Context);
- */
-#define IoRequestDpc(DeviceObject, Irp, Context)( \
-  KeInsertQueueDpc(&(DeviceObject)->Dpc, (Irp), (Context)))
+FORCEINLINE
+VOID
+IoRequestDpc(
+    _Inout_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PIRP Irp,
+    _In_opt_ __drv_aliasesMem PVOID Context)
+{
+    KeInsertQueueDpc(&DeviceObject->Dpc, Irp, Context);
+}
 
 /*
  * VOID
@@ -2541,20 +2728,22 @@ IoSetCompletionRoutine(
   IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
 
 #if defined(_WIN64)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 IoIs32bitProcess(
-  IN PIRP Irp OPTIONAL);
+  _In_opt_ PIRP Irp);
 #endif
 
 #define PLUGPLAY_REGKEY_DEVICE                            1
 #define PLUGPLAY_REGKEY_DRIVER                            2
 #define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
 
+__drv_aliasesMem
 FORCEINLINE
 PIO_STACK_LOCATION
 IoGetCurrentIrpStackLocation(
-  IN PIRP Irp)
+  _In_ PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount + 1);
 #ifdef NONAMELESSUNION
@@ -2567,9 +2756,9 @@ IoGetCurrentIrpStackLocation(
 FORCEINLINE
 VOID
 IoMarkIrpPending(
-  IN OUT PIRP Irp)
+  _Inout_ PIRP Irp)
 {
-  IoGetCurrentIrpStackLocation( (Irp) )->Control |= SL_PENDING_RETURNED;
+    IoGetCurrentIrpStackLocation((Irp))->Control |= SL_PENDING_RETURNED;
 }
 
 /*
@@ -2601,12 +2790,19 @@ IoMarkIrpPending(
 FORCEINLINE
 VOID
 IoInitializeDpcRequest(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIO_DPC_ROUTINE DpcRoutine)
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PIO_DPC_ROUTINE DpcRoutine)
 {
-  KeInitializeDpc( &DeviceObject->Dpc,
-                   (PKDEFERRED_ROUTINE) DpcRoutine,
-                   DeviceObject );
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28024)
+#endif
+  KeInitializeDpc(&DeviceObject->Dpc,
+                  (PKDEFERRED_ROUTINE) DpcRoutine,
+                  DeviceObject);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 }
 
 #define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
@@ -2622,45 +2818,55 @@ IoInitializeDpcRequest(
 FORCEINLINE
 VOID
 IoCopyCurrentIrpStackLocationToNext(
-  IN OUT PIRP Irp)
+    _Inout_ PIRP Irp)
 {
-  PIO_STACK_LOCATION irpSp;
-  PIO_STACK_LOCATION nextIrpSp;
-  irpSp = IoGetCurrentIrpStackLocation(Irp);
-  nextIrpSp = IoGetNextIrpStackLocation(Irp);
-  RtlCopyMemory( nextIrpSp, irpSp, FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
-  nextIrpSp->Control = 0;
+    PIO_STACK_LOCATION irpSp;
+    PIO_STACK_LOCATION nextIrpSp;
+    irpSp = IoGetCurrentIrpStackLocation(Irp);
+    nextIrpSp = IoGetNextIrpStackLocation(Irp);
+    RtlCopyMemory(nextIrpSp, irpSp, FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
+    nextIrpSp->Control = 0;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 IoGetStackLimits(
-  OUT PULONG_PTR LowLimit,
-  OUT PULONG_PTR HighLimit);
+  _Out_ PULONG_PTR LowLimit,
+  _Out_ PULONG_PTR HighLimit);
 
+_IRQL_requires_max_(APC_LEVEL)
 FORCEINLINE
 ULONG_PTR
 IoGetRemainingStackSize(VOID)
 {
-  ULONG_PTR End, Begin;
-  ULONG_PTR Result;
+    ULONG_PTR End, Begin;
+    ULONG_PTR Result;
 
-  IoGetStackLimits(&Begin, &End);
-  Result = (ULONG_PTR)(&End) - Begin;
-  return Result;
+    IoGetStackLimits(&Begin, &End);
+    Result = (ULONG_PTR)(&End) - Begin;
+    return Result;
 }
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 FORCEINLINE
 VOID
 IoInitializeThreadedDpcRequest(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIO_DPC_ROUTINE DpcRoutine)
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIO_DPC_ROUTINE DpcRoutine)
 {
-  KeInitializeThreadedDpc(&DeviceObject->Dpc,
-                          (PKDEFERRED_ROUTINE) DpcRoutine,
-                          DeviceObject );
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28024)
+#pragma warning(disable:28128)
+#endif
+    KeInitializeThreadedDpc(&DeviceObject->Dpc,
+                            (PKDEFERRED_ROUTINE) DpcRoutine,
+                            DeviceObject );
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 }
 #endif
 

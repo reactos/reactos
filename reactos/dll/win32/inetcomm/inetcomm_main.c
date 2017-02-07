@@ -27,6 +27,9 @@
 #include "winnt.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "ocidl.h"
+#include "rpcproxy.h"
+#include "initguid.h"
 #include "mimeole.h"
 
 #include "inetcomm_private.h"
@@ -34,6 +37,8 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcomm);
+
+static HINSTANCE instance;
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -47,6 +52,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         return FALSE;
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
+        instance = hinstDLL;
         if (!InternetTransport_RegisterClass(hinstDLL))
             return FALSE;
         MimeInternational_Construct(&international);
@@ -66,13 +72,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  */
 typedef struct
 {
-    const struct IClassFactoryVtbl *lpVtbl;
+    IClassFactory IClassFactory_iface;
     HRESULT (*create_object)(IUnknown *, void **);
 } cf;
 
 static inline cf *impl_from_IClassFactory( IClassFactory *iface )
 {
-    return (cf *)((char*)iface - FIELD_OFFSET(cf, lpVtbl));
+    return CONTAINING_RECORD(iface, cf, IClassFactory_iface);
 }
 
 static HRESULT WINAPI cf_QueryInterface( IClassFactory *iface, REFIID riid, LPVOID *ppobj )
@@ -135,11 +141,11 @@ static const struct IClassFactoryVtbl cf_vtbl =
     cf_LockServer
 };
 
-static cf mime_body_cf      = { &cf_vtbl, MimeBody_create };
-static cf mime_allocator_cf = { &cf_vtbl, MimeAllocator_create };
-static cf mime_message_cf   = { &cf_vtbl, MimeMessage_create };
-static cf mime_security_cf  = { &cf_vtbl, MimeSecurity_create };
-static cf virtual_stream_cf = { &cf_vtbl, VirtualStream_create };
+static cf mime_body_cf      = { { &cf_vtbl }, MimeBody_create };
+static cf mime_allocator_cf = { { &cf_vtbl }, MimeAllocator_create };
+static cf mime_message_cf   = { { &cf_vtbl }, MimeMessage_create };
+static cf mime_security_cf  = { { &cf_vtbl }, MimeSecurity_create };
+static cf virtual_stream_cf = { { &cf_vtbl }, VirtualStream_create };
 
 /***********************************************************************
  *              DllGetClassObject (INETCOMM.@)
@@ -164,23 +170,23 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
     if ( IsEqualCLSID( rclsid, &CLSID_IMimeSecurity ))
     {
-        cf = (IClassFactory*) &mime_security_cf.lpVtbl;
+        cf = &mime_security_cf.IClassFactory_iface;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_IMimeMessage ))
     {
-        cf = (IClassFactory*) &mime_message_cf.lpVtbl;
+        cf = &mime_message_cf.IClassFactory_iface;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_IMimeBody ))
     {
-        cf = (IClassFactory*) &mime_body_cf.lpVtbl;
+        cf = &mime_body_cf.IClassFactory_iface;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_IMimeAllocator ))
     {
-        cf = (IClassFactory*) &mime_allocator_cf.lpVtbl;
+        cf = &mime_allocator_cf.IClassFactory_iface;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_IVirtualStream ))
     {
-        cf = (IClassFactory*) &virtual_stream_cf.lpVtbl;
+        cf = &virtual_stream_cf.IClassFactory_iface;
     }
 
     if ( !cf )
@@ -198,4 +204,20 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 HRESULT WINAPI DllCanUnloadNow(void)
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (INETCOMM.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (INETCOMM.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * WINE COPYRIGHT: 
+ * WINE COPYRIGHT:
  * Copyright 1999, 2000 Juergen Schmied <juergen.schmied@debitel.net>
  * Copyright 2003 CodeWeavers Inc. (Ulrich Czekalla)
  * Copyright 2006 Robert Reif
@@ -207,14 +207,11 @@ GetFileSecurityA(LPCSTR lpFileName,
                  LPDWORD lpnLengthNeeded)
 {
     UNICODE_STRING FileName;
-    NTSTATUS Status;
     BOOL bResult;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                              (LPSTR)lpFileName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -344,14 +341,11 @@ SetFileSecurityA(LPCSTR lpFileName,
                  PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
     UNICODE_STRING FileName;
-    NTSTATUS Status;
     BOOL bResult;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
-                                              (LPSTR)lpFileName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -808,7 +802,7 @@ LookupAccountSidA(LPCSTR lpSystemName,
     /* allocate buffers for the unicode strings to receive */
     if (dwName > 0)
     {
-        NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
+        NameBuffer = LocalAlloc(LMEM_FIXED, dwName * sizeof(WCHAR));
         if (NameBuffer == NULL)
         {
             SetLastError(ERROR_OUTOFMEMORY);
@@ -820,7 +814,7 @@ LookupAccountSidA(LPCSTR lpSystemName,
 
     if (dwReferencedDomainName > 0)
     {
-        ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
+        ReferencedDomainNameBuffer = LocalAlloc(LMEM_FIXED, dwReferencedDomainName * sizeof(WCHAR));
         if (ReferencedDomainNameBuffer == NULL)
         {
             if (dwName > 0)
@@ -1758,14 +1752,11 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL pSacl)
 {
     UNICODE_STRING ObjectName;
-    NTSTATUS Status;
     DWORD Ret;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
-                                              pObjectName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&ObjectName, pObjectName))
     {
-        return RtlNtStatusToDosError(Status);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     Ret = SetNamedSecurityInfoW(ObjectName.Buffer,
@@ -2260,14 +2251,11 @@ TreeResetNamedSecurityInfoA(LPSTR pObjectName,
 #else
     INERNAL_FNPROGRESSW_DATA ifnProgressData;
     UNICODE_STRING ObjectName;
-    NTSTATUS Status;
     DWORD Ret;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
-                                              pObjectName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&ObjectName, pObjectName))
     {
-        return RtlNtStatusToDosError(Status);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     ifnProgressData.fnProgress = fnProgress;

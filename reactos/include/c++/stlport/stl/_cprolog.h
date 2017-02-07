@@ -4,6 +4,8 @@
  * allow reentrancy of this header.
  */
 
+#ifndef RC_INVOKED
+
 #ifdef std
 #  undef std /* We undef "std" on entry , as STLport headers may include native ones. */
 #endif
@@ -22,4 +24,6 @@
  * like #pragmas, do include platform-specific prolog file */
 #if defined (_STLP_HAS_SPECIFIC_PROLOG_EPILOG)
 #  include <stl/config/_prolog.h>
+#endif
+
 #endif

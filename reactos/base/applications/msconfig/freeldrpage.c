@@ -64,13 +64,13 @@ LoadBootIni(WCHAR *szDrive, HWND hDlg)
                 if (szBuffer[0] == L'[')
                     continue;
 
-                if (!wcsncmp(szBuffer, L"timeout=", 8))
+                if (!_wcsnicmp(szBuffer, L"timeout=", 8))
                 {
                     Settings.TimeOut = _wtoi(&szBuffer[8]);
                     continue;
                 }
 
-                if (!wcsncmp(szBuffer, L"default=", 8))
+                if (!_wcsnicmp(szBuffer, L"default=", 8))
                 {
                     wcscpy(Settings.szDefaultOS, &szBuffer[8]);
                     continue;

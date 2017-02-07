@@ -12,9 +12,17 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _RTL_BSD_ITEM
+{
+    ULONG Offset;
+    ULONG Size;
+} RTL_BSD_ITEM, *PRTL_BSD_ITEM;
+
 /* FUNCTIONS *****************************************************************/
 
 static SID_IDENTIFIER_AUTHORITY LocalSystemAuthority = {SECURITY_NT_AUTHORITY};
+
+static RTL_BSD_ITEM BsdItemTable[6] = {{0, 4}, {4, 4,}, {8, 1}, {9, 1}, {10, 1}, {11, 1}};
 
 static NTSTATUS
 RtlpSysVolCreateSecurityDescriptor(OUT PISECURITY_DESCRIPTOR *SecurityDescriptor,
@@ -671,52 +679,187 @@ RtlCreateSystemVolumeInformationFolder(IN PUNICODE_STRING VolumeRootPath)
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
 RtlCreateBootStatusDataFile(VOID)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER AllocationSize;
+    LARGE_INTEGER ByteOffset;
+    UNICODE_STRING FileName;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+
+    /* Initialize the file name */
+    RtlInitUnicodeString(&FileName,
+                         L"\\SystemRoot\\bootstat.dat");
+
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    AllocationSize.QuadPart = 0x800;
+
+    /* Create the boot status data file */
+    Status = ZwCreateFile(&FileHandle,
+                          FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL, //&AllocationSize,
+                          FILE_ATTRIBUTE_SYSTEM,
+                          0,
+                          FILE_CREATE,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    if (NT_SUCCESS(Status))
+    {
+        // FIXME: Initialize the buffer in a better way.
+        UCHAR Buffer[12] = {0xC,0,0,0, 1,0,0,0, 1, 0x1e, 1, 0};
+
+        ByteOffset.QuadPart = 0;
+        Status = ZwWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             &Buffer,
+                             12, //BufferSize,
+                             &ByteOffset,
+                             NULL);
+    }
+
+    /* Close the file */
+    ZwClose(FileHandle);
+
+    return Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
-RtlGetSetBootStatusData(HANDLE Filehandle,
-                        BOOLEAN WriteMode,
-                        DWORD DataClass,
-                        PVOID Buffer,
-                        ULONG BufferSize,
-                        DWORD DataClass2)
+RtlGetSetBootStatusData(IN HANDLE FileHandle,
+                        IN BOOLEAN WriteMode,
+                        IN RTL_BSD_ITEM_TYPE DataClass,
+                        IN PVOID Buffer,
+                        IN ULONG BufferSize,
+                        OUT PULONG ReturnLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER ByteOffset;
+    NTSTATUS Status;
+
+    DPRINT("RtlGetSetBootStatusData (%p %u %u %p %lu %p)\n",
+           FileHandle, WriteMode, DataClass, Buffer, BufferSize, ReturnLength);
+
+    if (DataClass >= RtlBsdItemMax)
+        return STATUS_INVALID_PARAMETER;
+
+    if (BufferSize > BsdItemTable[DataClass].Size)
+        return STATUS_BUFFER_TOO_SMALL;
+
+    ByteOffset.HighPart = 0;
+    ByteOffset.LowPart = BsdItemTable[DataClass].Offset;
+
+    if (WriteMode)
+    {
+        Status = ZwReadFile(FileHandle,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            Buffer,
+                            BufferSize,
+                            &ByteOffset,
+                            NULL);
+    }
+    else
+    {
+        Status = ZwWriteFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             Buffer,
+                             BufferSize,
+                             &ByteOffset,
+                             NULL);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        if (ReturnLength)
+            *ReturnLength = BsdItemTable[DataClass].Size;
+    }
+
+    return Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
-RtlLockBootStatusData(OUT PHANDLE Filehandle)
+RtlLockBootStatusData(OUT PHANDLE FileHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING FileName;
+    HANDLE LocalFileHandle;
+    NTSTATUS Status;
+
+    /* Intialize the file handle */
+    *FileHandle = NULL;
+
+    /* Initialize the file name */
+    RtlInitUnicodeString(&FileName,
+                         L"\\SystemRoot\\bootstat.dat");
+
+    /* Initialize the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               0,
+                               NULL,
+                               NULL);
+
+    /* Open the boot status data file */
+    Status = ZwOpenFile(&LocalFileHandle,
+                        FILE_ALL_ACCESS,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the file handle */
+        *FileHandle = LocalFileHandle;
+    }
+
+    return Status;
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 NTAPI
-RtlUnlockBootStatusData(IN HANDLE Filehandle)
+RtlUnlockBootStatusData(IN HANDLE FileHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    /* Flush the file and close it */
+    ZwFlushBuffersFile(FileHandle,
+                       &IoStatusBlock);
+
+    return ZwClose(FileHandle);
 }
 
 /* EOF */

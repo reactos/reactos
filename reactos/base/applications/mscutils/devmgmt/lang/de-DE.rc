@@ -1,30 +1,32 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
   POPUP "&Datei"
   BEGIN
-    MENUITEM "&Beenden",                   IDC_EXIT
+    MENUITEM "&Beenden",                  IDC_EXIT
   END
   POPUP "Aktion"
   BEGIN
     MENUITEM "Drucken",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Eigenschaften",              IDC_PROP, GRAYED
+    MENUITEM "Eigenschaften",             IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Hilfe",                    IDC_PROGHELP, GRAYED
+    MENUITEM "Hilfe",                     IDC_PROGHELP, GRAYED
   END
   POPUP "Ansicht"
   BEGIN
-    MENUITEM "Geräte nach Typ",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Geräte nach Verbindung",   IDC_STATIC, GRAYED
-    MENUITEM "Resourcen nach Typ",       IDC_STATIC, GRAYED
-    MENUITEM "Resourcen nach Verbindung", IDC_STATIC, GRAYED
+    MENUITEM "Geräte nach Typ",           IDC_DEVBYTYPE
+    MENUITEM "Geräte nach Verbindung",    IDC_DEVBYCONN
+    MENUITEM "Resourcen nach Typ",        IDC_RESBYTYPE, GRAYED
+    MENUITEM "Resourcen nach Verbindung", IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Ausgeblendete Geräte anzeigen", IDC_SHOWHIDDEN
   END
   POPUP "&?"
   BEGIN
-    MENUITEM "Hilfe",                    IDC_PROGHELP
-    MENUITEM "Info",                   IDC_ABOUT
+    MENUITEM "Hilfe",                     IDC_PROGHELP
+    MENUITEM "Info",                      IDC_ABOUT
   END
 END
 
@@ -32,9 +34,9 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-    MENUITEM "Eigenschaften",              IDC_PROP, GRAYED
+    MENUITEM "Eigenschaften",             IDC_PROP, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Hilfe",                    IDC_PROGHELP
+    MENUITEM "Hilfe",                     IDC_PROGHELP
   END
 END
 

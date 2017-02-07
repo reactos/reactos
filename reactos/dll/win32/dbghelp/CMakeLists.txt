@@ -14,12 +14,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
 
-spec2def(dbghelp.dll dbghelp.spec)
+spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     coff.c
+    cpu_arm.c
     cpu_i386.c
     cpu_ppc.c
+    cpu_sparc.c
     cpu_x86_64.c
     crc32.c
     dbghelp.c
@@ -32,7 +34,6 @@ list(APPEND SOURCE
     msc.c
     path.c
     pe_module.c
-    regex.c
     rosstubs.c
     source.c
     stabs.c
@@ -40,16 +41,25 @@ list(APPEND SOURCE
     storage.c
     symbol.c
     type.c
-    version.rc
+    regex.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
-add_library(dbghelp SHARED ${SOURCE})
-allow_warnings(dbghelp)
+add_library(dbghelp SHARED
+    ${SOURCE}
+    version.rc)
+
+if(NOT MSVC)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(dbghelp)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
+endif()
+
 set_module_type(dbghelp win32dll)
 target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
 add_delay_importlibs(dbghelp version)
 add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
 add_pch(dbghelp dbghelp_private.h)
-add_importlib_target(dbghelp.spec)
+
+
 add_cd_file(TARGET dbghelp DESTINATION reactos/system32 FOR all)

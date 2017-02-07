@@ -53,6 +53,7 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.GetTime = XboxGetTime;
   MachVtbl.HwDetect = XboxHwDetect;
+  MachVtbl.HwIdle = XboxHwIdle;
 
   /* Set LEDs to orange after init */
   XboxSetLED("oooo");

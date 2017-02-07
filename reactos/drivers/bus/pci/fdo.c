@@ -96,7 +96,6 @@ FdoEnumerateDevices(
 {
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PCI_COMMON_CONFIG PciConfig;
-  PLIST_ENTRY CurrentEntry;
   PPCI_DEVICE Device;
   PCI_SLOT_NUMBER SlotNumber;
   ULONG DeviceNumber;
@@ -107,15 +106,6 @@ FdoEnumerateDevices(
   DPRINT("Called\n");
 
   DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-  /* Mark all devices to be removed. If we don't discover them again during
-     enumeration, assume that they have been surprise removed */
-  CurrentEntry = DeviceExtension->DeviceListHead.Flink;
-  while (CurrentEntry != &DeviceExtension->DeviceListHead) {
-    Device = CONTAINING_RECORD(CurrentEntry, PCI_DEVICE, ListEntry);
-    Device->RemovePending = TRUE;
-    CurrentEntry = CurrentEntry->Flink;
-  }
 
   DeviceExtension->DeviceListCount = 0;
 
@@ -189,9 +179,6 @@ FdoEnumerateDevices(
           &Device->ListEntry,
           &DeviceExtension->DeviceListLock);
       }
-
-      /* Don't remove this device */
-      Device->RemovePending = FALSE;
 
       DeviceExtension->DeviceListCount++;
 
@@ -354,15 +341,13 @@ FdoQueryBusRelations(
       }
     }
 
-    if (!Device->RemovePending) {
-      /* Reference the physical device object. The PnP manager
-         will dereference it again when it is no longer needed */
-      ObReferenceObject(Device->Pdo);
+    /* Reference the physical device object. The PnP manager
+       will dereference it again when it is no longer needed */
+    ObReferenceObject(Device->Pdo);
 
-      Relations->Objects[i] = Device->Pdo;
+    Relations->Objects[i] = Device->Pdo;
 
-      i++;
-    }
+    i++;
 
     CurrentEntry = CurrentEntry->Flink;
   }

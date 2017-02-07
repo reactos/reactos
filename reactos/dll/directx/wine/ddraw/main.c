@@ -29,6 +29,7 @@
 
 #define DDRAW_INIT_GUID
 #include "ddraw_private.h"
+#include "rpcproxy.h"
 
 #include "wine/exception.h"
 #include "winreg.h"
@@ -36,21 +37,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /* The configured default surface */
-WINED3DSURFTYPE DefaultSurfaceType = SURFACE_UNKNOWN;
+WINED3DSURFTYPE DefaultSurfaceType = SURFACE_OPENGL;
 
-
-
-/* DDraw list and critical section */
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
 
-static CRITICAL_SECTION_DEBUG ddraw_cs_debug =
-{
-    0, 0, &ddraw_cs,
-    { &ddraw_cs_debug.ProcessLocksList,
-    &ddraw_cs_debug.ProcessLocksList },
-    0, 0, { (DWORD_PTR)(__FILE__ ": ddraw_cs") }
-};
-CRITICAL_SECTION ddraw_cs = { &ddraw_cs_debug, -1, 0, 0, 0, 0 };
+static HINSTANCE instance;
 
 /* value of ForceRefreshRate */
 DWORD force_refresh_rate = 0;
@@ -195,7 +186,7 @@ DDRAW_Create(const GUID *guid,
              IUnknown *UnkOuter,
              REFIID iid)
 {
-    WINED3DDEVTYPE devicetype;
+    enum wined3d_device_type device_type;
     IDirectDrawImpl *This;
     HRESULT hr;
 
@@ -213,15 +204,15 @@ DDRAW_Create(const GUID *guid,
          * WineD3D always uses OpenGL for D3D rendering. One could make it request
          * indirect rendering
          */
-        devicetype = WINED3DDEVTYPE_REF;
+        device_type = WINED3D_DEVICE_TYPE_REF;
     }
     else if(guid == (GUID *) DDCREATE_HARDWAREONLY)
     {
-        devicetype = WINED3DDEVTYPE_HAL;
+        device_type = WINED3D_DEVICE_TYPE_HAL;
     }
     else
     {
-        devicetype = 0;
+        device_type = 0;
     }
 
     /* DDraw doesn't support aggregation, according to msdn */
@@ -236,7 +227,7 @@ DDRAW_Create(const GUID *guid,
         return E_OUTOFMEMORY;
     }
 
-    hr = ddraw_init(This, devicetype);
+    hr = ddraw_init(This, device_type);
     if (FAILED(hr))
     {
         WARN("Failed to initialize ddraw object, hr %#x.\n", hr);
@@ -271,9 +262,17 @@ DirectDrawCreate(GUID *GUID,
     TRACE("driver_guid %s, ddraw %p, outer_unknown %p.\n",
             debugstr_guid(GUID), DD, UnkOuter);
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     hr = DDRAW_Create(GUID, (void **) DD, UnkOuter, &IID_IDirectDraw);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
+
+    if (SUCCEEDED(hr))
+    {
+        hr = IDirectDraw_Initialize(*DD, GUID);
+        if (FAILED(hr))
+            IDirectDraw_Release(*DD);
+    }
+
     return hr;
 }
 
@@ -287,22 +286,31 @@ DirectDrawCreate(GUID *GUID,
  *
  ***********************************************************************/
 HRESULT WINAPI DECLSPEC_HOTPATCH
-DirectDrawCreateEx(GUID *GUID,
-                   LPVOID *DD,
+DirectDrawCreateEx(GUID *guid,
+                   LPVOID *dd,
                    REFIID iid,
                    IUnknown *UnkOuter)
 {
     HRESULT hr;
 
     TRACE("driver_guid %s, ddraw %p, interface_iid %s, outer_unknown %p.\n",
-            debugstr_guid(GUID), DD, debugstr_guid(iid), UnkOuter);
+            debugstr_guid(guid), dd, debugstr_guid(iid), UnkOuter);
 
     if (!IsEqualGUID(iid, &IID_IDirectDraw7))
         return DDERR_INVALIDPARAMS;
 
-    EnterCriticalSection(&ddraw_cs);
-    hr = DDRAW_Create(GUID, DD, UnkOuter, iid);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
+    hr = DDRAW_Create(guid, dd, UnkOuter, iid);
+    wined3d_mutex_unlock();
+
+    if (SUCCEEDED(hr))
+    {
+        IDirectDraw7 *ddraw7 = *(IDirectDraw7 **)dd;
+        hr = IDirectDraw7_Initialize(ddraw7, guid);
+        if (FAILED(hr))
+            IDirectDraw7_Release(ddraw7);
+    }
+
     return hr;
 }
 
@@ -448,9 +456,10 @@ CF_CreateDirectDraw(IUnknown* UnkOuter, REFIID iid,
 
     TRACE("outer_unknown %p, riid %s, object %p.\n", UnkOuter, debugstr_guid(iid), obj);
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     hr = DDRAW_Create(NULL, obj, UnkOuter, iid);
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -477,18 +486,19 @@ CF_CreateDirectDrawClipper(IUnknown* UnkOuter, REFIID riid,
 
     TRACE("outer_unknown %p, riid %s, object %p.\n", UnkOuter, debugstr_guid(riid), obj);
 
-    EnterCriticalSection(&ddraw_cs);
+    wined3d_mutex_lock();
     hr = DirectDrawCreateClipper(0, &Clip, UnkOuter);
     if (hr != DD_OK)
     {
-        LeaveCriticalSection(&ddraw_cs);
+        wined3d_mutex_unlock();
         return hr;
     }
 
     hr = IDirectDrawClipper_QueryInterface(Clip, riid, obj);
     IDirectDrawClipper_Release(Clip);
 
-    LeaveCriticalSection(&ddraw_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -714,6 +724,23 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return S_FALSE;
 }
 
+
+/***********************************************************************
+ *		DllRegisterServer (DDRAW.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (DDRAW.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
+}
+
 /*******************************************************************************
  * DestroyCallback
  *
@@ -733,11 +760,18 @@ DestroyCallback(IDirectDrawSurface7 *surf,
                 DDSURFACEDESC2 *desc,
                 void *context)
 {
-    IDirectDrawSurfaceImpl *Impl = (IDirectDrawSurfaceImpl *)surf;
-    ULONG ref;
+    IDirectDrawSurfaceImpl *Impl = impl_from_IDirectDrawSurface7(surf);
+    ULONG ref7, ref4, ref3, ref2, ref1, gamma_count, iface_count;
 
-    ref = IDirectDrawSurface7_Release(surf);  /* For the EnumSurfaces */
-    WARN("Surface %p has an reference count of %d\n", Impl, ref);
+    ref7 = IDirectDrawSurface7_Release(surf);  /* For the EnumSurfaces */
+    ref4 = Impl->ref4;
+    ref3 = Impl->ref3;
+    ref2 = Impl->ref2;
+    ref1 = Impl->ref1;
+    gamma_count = Impl->gamma_count;
+
+    WARN("Surface %p has an reference counts of 7: %u 4: %u 3: %u 2: %u 1: %u gamma: %u\n",
+            Impl, ref7, ref4, ref3, ref2, ref1, gamma_count);
 
     /* Skip surfaces which are attached somewhere or which are
      * part of a complex compound. They will get released when destroying
@@ -747,7 +781,8 @@ DestroyCallback(IDirectDrawSurface7 *surf,
         return DDENUMRET_OK;
 
     /* Destroy the surface */
-    while(ref) ref = IDirectDrawSurface7_Release(surf);
+    iface_count = ddraw_surface_release_iface(Impl);
+    while (iface_count) iface_count = ddraw_surface_release_iface(Impl);
 
     return DDENUMRET_OK;
 }
@@ -880,6 +915,7 @@ DllMain(HINSTANCE hInstDLL,
             RegCloseKey( hkey );
         }
 
+        instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
     }
     else if (Reason == DLL_PROCESS_DETACH)
@@ -902,7 +938,6 @@ DllMain(HINSTANCE hInstDLL,
                 /* Add references to each interface to avoid freeing them unexpectedly */
                 IDirectDraw_AddRef(&ddraw->IDirectDraw_iface);
                 IDirectDraw2_AddRef(&ddraw->IDirectDraw2_iface);
-                IDirectDraw3_AddRef(&ddraw->IDirectDraw3_iface);
                 IDirectDraw4_AddRef(&ddraw->IDirectDraw4_iface);
                 IDirectDraw7_AddRef(&ddraw->IDirectDraw7_iface);
 
@@ -913,8 +948,14 @@ DllMain(HINSTANCE hInstDLL,
                 if(ddraw->d3ddevice)
                 {
                     WARN("DDraw %p has d3ddevice %p attached\n", ddraw, ddraw->d3ddevice);
-                    while(IDirect3DDevice7_Release((IDirect3DDevice7 *)ddraw->d3ddevice));
+                    while(IDirect3DDevice7_Release(&ddraw->d3ddevice->IDirect3DDevice7_iface));
                 }
+
+                /* Destroy the swapchain after any 3D device. The 3D device
+                 * cleanup code needs a swapchain. Specifically, it tries to
+                 * set the current render target to the front buffer. */
+                if (ddraw->wined3d_swapchain)
+                    ddraw_destroy_swapchain(ddraw);
 
                 /* Try to release the objects
                     * Do an EnumSurfaces to find any hanging surfaces
@@ -929,16 +970,14 @@ DllMain(HINSTANCE hInstDLL,
                         ERR("(%p) EnumSurfaces failed, prepare for trouble\n", ddraw);
                 }
 
-                /* Check the surface count */
-                if(ddraw->surfaces > 0)
-                    ERR("DDraw %p still has %d surfaces attached\n", ddraw, ddraw->surfaces);
+                if (!list_empty(&ddraw->surface_list))
+                    ERR("DDraw %p still has surfaces attached.\n", ddraw);
 
                 /* Release all hanging references to destroy the objects. This
                     * restores the screen mode too
                     */
                 while(IDirectDraw_Release(&ddraw->IDirectDraw_iface));
                 while(IDirectDraw2_Release(&ddraw->IDirectDraw2_iface));
-                while(IDirectDraw3_Release(&ddraw->IDirectDraw3_iface));
                 while(IDirectDraw4_Release(&ddraw->IDirectDraw4_iface));
                 while(IDirectDraw7_Release(&ddraw->IDirectDraw7_iface));
             }

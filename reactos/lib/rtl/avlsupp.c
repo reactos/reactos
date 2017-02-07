@@ -140,7 +140,7 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
     {
         /* This performs the rotation described in Knuth A8-A10 for Case 1 */
         RtlPromoteAvlTreeNode(ChildNode);
-        
+
         /* The nodes are now balanced */
         RtlSetBalance(ChildNode, RtlBalancedAvlTree);
         RtlSetBalance(Node, RtlBalancedAvlTree);
@@ -189,16 +189,16 @@ RtlpRebalanceAvlTreeNode(IN PRTL_BALANCED_LINKS Node)
         RtlSetBalance(SubChildNode, RtlBalancedAvlTree);
         return FALSE;
     }
-    
+
     /*
      * The case that remains is that the child was already balanced, so this is
      * This is the rotation required for Case 3 in Knuth A8-A10
      */
     RtlPromoteAvlTreeNode(ChildNode);
-    
+
     /* Now the child has the opposite weight of the node */
     RtlSetBalance(ChildNode, -Balance);
-    
+
     /* This only happens on deletion, so we return TRUE to terminate the delete */
     return TRUE;
 }
@@ -211,10 +211,11 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
                       IN OUT TABLE_SEARCH_RESULT SearchResult)
 {
     CHAR Balance;
-    
+
     /* Initialize the new inserted element */
     MI_ASSERT(SearchResult != TableFoundNode);
     NewNode->LeftChild = NewNode->RightChild = NULL;
+    RtlSetBalance(NewNode, RtlBalancedAvlTree);
 
     /* Increase element count */
     Table->NumberGenericTableElements++;
@@ -224,8 +225,7 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     {
         /* This is the new root node */
         RtlInsertAsRightChildAvl(&Table->BalancedRoot, NewNode);
-        MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
-        
+
         /* On AVL trees, we also update the depth */
         ASSERT(Table->DepthOfTree == 0);
         Table->DepthOfTree = 1;
@@ -243,7 +243,6 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     }
 
     /* Little cheat to save on loop processing, taken from Timo */
-    MI_ASSERT(RtlBalance(NewNode) == RtlBalancedAvlTree);
     RtlSetBalance(&Table->BalancedRoot, RtlLeftHeavyAvlTree);
 
     /*
@@ -256,13 +255,13 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     {
         /* Calculate which side to balance on */
         Balance = RtlIsLeftChildAvl(NewNode) ? RtlLeftHeavyAvlTree : RtlRightHeavyAvlTree;
-        
+
         /* Check if the parent node was balanced */
         if (RtlBalance(NodeOrParent) == RtlBalancedAvlTree)
         {
             /* It's not balanced anymore (heavy on one side) */
             RtlSetBalance(NodeOrParent, Balance);
-            
+
             /* Move up */
             NewNode = NodeOrParent;
             NodeOrParent = RtlParentAvl(NodeOrParent);
@@ -271,14 +270,14 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
         {
             /* The parent's balance is opposite, so the tree is balanced now */
             RtlSetBalance(NodeOrParent, RtlBalancedAvlTree);
-            
+
             /* Check if this is the root (the cheat applied earlier gets us here) */
             if (RtlBalance(&Table->BalancedRoot) == RtlBalancedAvlTree)
             {
                 /* The depth has thus increased */
                 Table->DepthOfTree++;
             }
-            
+
             /* We reached the root or a balanced node, so we're done */
             break;
         }
@@ -299,10 +298,10 @@ RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
     PRTL_BALANCED_LINKS DeleteNode = NULL, ParentNode;
     PRTL_BALANCED_LINKS *Node1, *Node2;
     CHAR Balance;
-    
+
     /* Take one of the children if possible */
     if (!(RtlLeftChildAvl(Node)) || !(RtlRightChildAvl(Node))) DeleteNode = Node;
-    
+
     /* Otherwise, check if one side is longer */
     if (!(DeleteNode) && (RtlBalance(Node) >= RtlBalancedAvlTree))
     {
@@ -314,34 +313,34 @@ RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
     {
         /* Pick the predecessor which will be the longest side in this case */
         DeleteNode = RtlLeftChildAvl(Node);
-        while (RtlRightChildAvl(DeleteNode)) DeleteNode = RtlRightChildAvl(DeleteNode);        
+        while (RtlRightChildAvl(DeleteNode)) DeleteNode = RtlRightChildAvl(DeleteNode);
     }
-    
+
     /* Get the parent node */
     ParentNode = RtlParentAvl(DeleteNode);
     DPRINT("Parent: %p\n", ParentNode);
-    
+
     /* Pick which now to use based on whether or not we have a left child */
     Node1 = RtlLeftChildAvl(DeleteNode) ? &DeleteNode->LeftChild : &DeleteNode->RightChild;
     DPRINT("Node 1: %p %p\n", Node1, *Node1);
-            
+
     /* Pick which node to swap based on if we're already a left child or not */
     Node2 = RtlIsLeftChildAvl(DeleteNode) ? &ParentNode->LeftChild : &ParentNode->RightChild;
     DPRINT("Node 2: %p %p\n", Node2, *Node2);
-            
+
     /* Pick the correct balance depending on which side will get heavier */
     Balance = RtlIsLeftChildAvl(DeleteNode) ? RtlLeftHeavyAvlTree : RtlRightHeavyAvlTree;
     DPRINT("Balance: %lx\n", Balance);
-    
+
     /* Swap the children nodes, making one side heavier */
     *Node2 = *Node1;
-    
+
     /* If the node has a child now, update its parent */
     if (*Node1) RtlSetParent(*Node1, ParentNode);
 
     /* Assume balanced root for loop optimization */
     RtlSetBalance(&Table->BalancedRoot, RtlBalancedAvlTree);
-    
+
     /* Loop up the tree by parents */
     while (TRUE)
     {
@@ -372,7 +371,7 @@ RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
         /* Choose which balance factor to use based on which side we're on */
         Balance = RtlIsRightChild(ParentNode) ?
                   RtlRightHeavyAvlTree : RtlLeftHeavyAvlTree;
-        
+
         /* Iterate up the tree */
         ParentNode = RtlParentAvl(ParentNode);
     }
@@ -382,7 +381,7 @@ RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
 
     /* Copy the deleted node itself */
     RtlpCopyAvlNodeData(DeleteNode, Node);
-    
+
     /* Pick the right node to unlink */
     Node1 = RtlIsLeftChildAvl(Node) ?
             &(RtlParentAvl(DeleteNode))->LeftChild : &(RtlParentAvl(DeleteNode))->RightChild;

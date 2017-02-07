@@ -28,7 +28,8 @@ add_importlibs(intl
     advapi32
     setupapi
     shell32
-    kernel32)
+    kernel32
+    ntdll)
 
 add_pch(intl intl.h)
 add_cd_file(TARGET intl DESTINATION reactos/system32 FOR all)

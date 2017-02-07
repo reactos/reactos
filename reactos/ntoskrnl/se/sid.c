@@ -266,7 +266,6 @@ SepCaptureSid(IN PSID InputSid,
 {
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
-    NTSTATUS Status;
 
     PAGED_CODE();
 
@@ -274,14 +273,9 @@ SepCaptureSid(IN PSID InputSid,
     {
         _SEH2_TRY
         {
-            ProbeForRead(Sid,
-                         FIELD_OFFSET(SID,
-                                      SubAuthority),
-                         sizeof(UCHAR));
+            ProbeForRead(Sid, FIELD_OFFSET(SID, SubAuthority), sizeof(UCHAR));
             SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
-            ProbeForRead(Sid,
-                         SidSize,
-                         sizeof(UCHAR));
+            ProbeForRead(Sid, SidSize, sizeof(UCHAR));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -291,58 +285,43 @@ SepCaptureSid(IN PSID InputSid,
         _SEH2_END;
 
         /* allocate a SID and copy it */
-        NewSid = ExAllocatePool(PoolType,
-                                SidSize);
-        if (NewSid != NULL)
-        {
-            _SEH2_TRY
-            {
-                RtlCopyMemory(NewSid,
-                              Sid,
-                              SidSize);
+        NewSid = ExAllocatePoolWithTag(PoolType, SidSize, TAG_SID);
+        if (!NewSid)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-                *CapturedSid = NewSid;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Free the SID and return the exception code */
-                ExFreePoolWithTag(NewSid, TAG_SID);
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
-            }
-            _SEH2_END;
-        }
-        else
+        _SEH2_TRY
         {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
+            RtlCopyMemory(NewSid, Sid, SidSize);
+
+            *CapturedSid = NewSid;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Free the SID and return the exception code */
+            ExFreePoolWithTag(NewSid, TAG_SID);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
     }
     else if (!CaptureIfKernel)
     {
         *CapturedSid = InputSid;
-        return STATUS_SUCCESS;
     }
     else
     {
         SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
 
         /* allocate a SID and copy it */
-        NewSid = ExAllocatePool(PoolType,
-                                SidSize);
-        if (NewSid != NULL)
-        {
-            RtlCopyMemory(NewSid,
-                          Sid,
-                          SidSize);
+        NewSid = ExAllocatePoolWithTag(PoolType, SidSize, TAG_SID);
+        if (NewSid == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-            *CapturedSid = NewSid;
-        }
-        else
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-        }
+        RtlCopyMemory(NewSid, Sid, SidSize);
+
+        *CapturedSid = NewSid;
     }
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 VOID

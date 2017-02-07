@@ -1,5 +1,5 @@
 
-spec2def(usbd.sys usbd.spec)
+spec2def(usbd.sys usbd.spec ADD_IMPORTLIB)
 
 add_library(usbd SHARED
     usbd.c
@@ -8,4 +8,6 @@ add_library(usbd SHARED
 
 set_module_type(usbd kernelmodedriver)
 add_importlibs(usbd ntoskrnl hal)
-add_importlib_target(usbd.spec)
+
+
+add_cd_file(TARGET usbd DESTINATION reactos/system32/drivers NO_CAB FOR all)

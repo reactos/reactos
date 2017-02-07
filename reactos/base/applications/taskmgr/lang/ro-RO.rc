@@ -52,7 +52,7 @@ BEGIN
         MENUITEM "Aranjări &verticale",              ID_WINDOWS_TILEVERTICALLY
         MENUITEM "Mi&nimizează",                     ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizează",                     ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjare în casca&dă",             ID_WINDOWS_CASCADE
+        MENUITEM "Aranjări în casca&dă",             ID_WINDOWS_CASCADE
         MENUITEM "&Aduce în prim plan",              ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&?"
@@ -69,7 +69,7 @@ BEGIN
     MENUITEM "Aranjări &verticale",                  ID_WINDOWS_TILEVERTICALLY
     MENUITEM "Mi&nimizează",                         ID_WINDOWS_MINIMIZE
     MENUITEM "Ma&ximizează",                         ID_WINDOWS_MAXIMIZE
-    MENUITEM "Aranjare în casca&dă",                 ID_WINDOWS_CASCADE
+    MENUITEM "Aranjări în casca&dă",                 ID_WINDOWS_CASCADE
     MENUITEM "&Aduce în prim plan",                  ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -96,7 +96,7 @@ BEGIN
         MENUITEM "Aranjări &verticale",              ID_WINDOWS_TILEVERTICALLY
         MENUITEM "Mi&nimizează",                     ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizează",                     ID_WINDOWS_MAXIMIZE
-        MENUITEM "Aranjează în casca&dă",            ID_WINDOWS_CASCADE
+        MENUITEM "Aranjări în casca&dă",             ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&Termină",                         ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&Salt la proces",                  ID_APPLICATION_PAGE_GOTOPROCESS

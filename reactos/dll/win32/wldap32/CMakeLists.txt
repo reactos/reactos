@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(wldap32.dll wldap32.spec)
+spec2def(wldap32.dll wldap32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     add.c
@@ -37,5 +37,5 @@ set_module_type(wldap32 win32dll)
 target_link_libraries(wldap32 wine)
 
 add_importlibs(wldap32 user32 msvcrt kernel32 ntdll)
-add_importlib_target(wldap32.spec)
+
 add_cd_file(TARGET wldap32 DESTINATION reactos/system32 FOR all)

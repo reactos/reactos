@@ -66,7 +66,7 @@ target_link_libraries(explorer
     wine
     uuid)
 
-add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 notifyhook msvcrt kernel32 ntdll)
+add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
 set_image_base(explorer 0x00400000)
 add_dependencies(explorer psdk)
 add_cd_file(TARGET explorer DESTINATION reactos FOR all)

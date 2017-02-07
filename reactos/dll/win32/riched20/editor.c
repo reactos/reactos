@@ -285,9 +285,10 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
 {
   WCHAR wszText[STREAMIN_BUFFER_SIZE+1];
   WCHAR *pText;
-  
+  LRESULT total_bytes_read = 0;
+
   TRACE("%08x %p\n", dwFormat, stream);
-  
+
   do {
     LONG nWideChars = 0;
 
@@ -298,8 +299,9 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
         break;
       if (!stream->dwSize)
         break;
+      total_bytes_read += stream->dwSize;
     }
-      
+
     if (!(dwFormat & SF_UNICODE))
     {
       /* FIXME? this is doomed to fail on true MBCS like UTF-8, luckily they're unlikely to be used as CP_ACP */
@@ -311,15 +313,13 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
       nWideChars = stream->dwSize >> 1;
       pText = (WCHAR *)stream->buffer;
     }
-    
+
     ME_InsertTextFromCursor(editor, 0, pText, nWideChars, style);
     if (stream->dwSize == 0)
       break;
     stream->dwSize = 0;
   } while(1);
-  ME_CommitUndo(editor);
-  ME_UpdateRepaint(editor);
-  return 0;
+  return total_bytes_read;
 }
 
 static void ME_ApplyBorderProperties(RTF_Info *info,
@@ -666,6 +666,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
       fmt.dyLineSpacing = info->rtfParam;
       fmt.bLineSpacingRule = 4;
     }
+    break;
   case rtfSpaceMultiply:
     fmt.dwMask = PFM_LINESPACING;
     fmt.dyLineSpacing = info->rtfParam * 20;
@@ -1391,6 +1392,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   ME_InStream inStream;
   BOOL invalidRTF = FALSE;
   ME_Cursor *selStart, *selEnd;
+  LRESULT num_read = 0; /* bytes read for SF_TEXT, non-control chars inserted for SF_RTF */
 
   TRACE("stream==%p editor==%p format==0x%X\n", stream, editor, format);
   editor->nEventMask = 0;
@@ -1468,6 +1470,8 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   if (!invalidRTF && !inStream.editstream->dwError)
   {
     if (format & SF_RTF) {
+      from = ME_GetCursorOfs(&editor->pCursors[0]);
+
       /* setup the RTF parser */
       memset(&parser, 0, sizeof parser);
       RTFSetEditStream(&parser, &inStream);
@@ -1561,11 +1565,13 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
           }
         }
       }
+      to = ME_GetCursorOfs(&editor->pCursors[0]);
+      num_read = to - from;
 
       style = parser.style;
     }
     else if (format & SF_TEXT)
-      ME_StreamInText(editor, format, &inStream, style);
+      num_read = ME_StreamInText(editor, format, &inStream, style);
     else
       ERR("EM_STREAMIN without SF_TEXT or SF_RTF\n");
     /* put the cursor at the top */
@@ -1585,7 +1591,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
 
   ME_ReleaseStyle(style);
   editor->nEventMask = nEventMask;
-  ME_UpdateRepaint(editor);
+  ME_UpdateRepaint(editor, FALSE);
   if (!(format & SFF_SELECTION)) {
     ME_ClearTempStyle(editor);
   }
@@ -1595,7 +1601,7 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
   ME_SendSelChange(editor);
   ME_SendRequestResize(editor, FALSE);
 
-  return 0;
+  return num_read;
 }
 
 
@@ -2139,7 +2145,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
         return TRUE;
       ME_MoveCursorFromTableRowStartParagraph(editor);
       ME_UpdateSelectionLinkAttribute(editor);
-      ME_UpdateRepaint(editor);
+      ME_UpdateRepaint(editor, FALSE);
       ME_SendRequestResize(editor, FALSE);
       return TRUE;
     case VK_RETURN:
@@ -2174,6 +2180,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
         ME_DisplayItem *para = cursor.pPara;
         int from, to;
         const WCHAR endl = '\r';
+        const WCHAR endlv10[] = {'\r','\n'};
         ME_Style *style;
 
         if (editor->styleFlags & ES_READONLY) {
@@ -2195,7 +2202,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
               editor->pCursors[1] = editor->pCursors[0];
               ME_CommitUndo(editor);
               ME_CheckTablesForCorruption(editor);
-              ME_UpdateRepaint(editor);
+              ME_UpdateRepaint(editor, FALSE);
               return TRUE;
             }
             else if (para == editor->pCursors[1].pPara &&
@@ -2220,7 +2227,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
               para->member.para.next_para->member.para.nFlags |= MEPF_ROWSTART;
               ME_CommitCoalescingUndo(editor);
               ME_CheckTablesForCorruption(editor);
-              ME_UpdateRepaint(editor);
+              ME_UpdateRepaint(editor, FALSE);
               return TRUE;
             }
           } else { /* v1.0 - 3.0 */
@@ -2237,7 +2244,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
                   editor->pCursors[0].nOffset = 0;
                   editor->pCursors[1] = editor->pCursors[0];
                   ME_CommitCoalescingUndo(editor);
-                  ME_UpdateRepaint(editor);
+                  ME_UpdateRepaint(editor, FALSE);
                   return TRUE;
                 }
               } else {
@@ -2264,7 +2271,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
                   editor->pCursors[1] = editor->pCursors[0];
                 }
                 ME_CommitCoalescingUndo(editor);
-                ME_UpdateRepaint(editor);
+                ME_UpdateRepaint(editor, FALSE);
                 return TRUE;
               }
             }
@@ -2276,13 +2283,16 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
           if (shift_is_down)
             ME_InsertEndRowFromCursor(editor, 0);
           else
-            ME_InsertTextFromCursor(editor, 0, &endl, 1, style);
+            if (!editor->bEmulateVersion10)
+              ME_InsertTextFromCursor(editor, 0, &endl, 1, style);
+            else
+              ME_InsertTextFromCursor(editor, 0, endlv10, 2, style);
           ME_ReleaseStyle(style);
           ME_CommitCoalescingUndo(editor);
           SetCursor(NULL);
 
           ME_UpdateSelectionLinkAttribute(editor);
-          ME_UpdateRepaint(editor);
+          ME_UpdateRepaint(editor, FALSE);
         }
         return TRUE;
       }
@@ -2321,7 +2331,7 @@ ME_KeyDown(ME_TextEditor *editor, WORD nKey)
         {
           ME_InternalDeleteText(editor, selStart, nChars, FALSE);
           ME_CommitUndo(editor);
-          ME_UpdateRepaint(editor);
+          ME_UpdateRepaint(editor, TRUE);
         }
         return result;
       }
@@ -2451,7 +2461,7 @@ static LRESULT ME_Char(ME_TextEditor *editor, WPARAM charCode,
     }
 
     ME_UpdateSelectionLinkAttribute(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
   }
   return 0;
 }
@@ -3301,7 +3311,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
       editor->nModifyStep = oldModify;
       ME_EmptyUndoStack(editor);
     }
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
     return len;
   }
   case EM_SETBKGNDCOLOR:
@@ -3361,26 +3371,27 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     BOOL bRepaint = TRUE;
     p = ME_ToCF2W(&buf, (CHARFORMAT2W *)lParam);
     if (p == NULL) return 0;
-    if (!wParam)
-      ME_SetDefaultCharFormat(editor, p);
-    else if (wParam == (SCF_WORD | SCF_SELECTION)) {
-      FIXME("EM_SETCHARFORMAT: word selection not supported\n");
-      return 0;
-    } else if (wParam == SCF_ALL) {
-      if (editor->mode & TM_PLAINTEXT)
+    if (wParam & SCF_ALL) {
+      if (editor->mode & TM_PLAINTEXT) {
         ME_SetDefaultCharFormat(editor, p);
-      else {
+      } else {
         ME_Cursor start;
         ME_SetCursorToStart(editor, &start);
         ME_SetCharFormat(editor, &start, NULL, p);
         editor->nModifyStep = 1;
       }
-    } else if (editor->mode & TM_PLAINTEXT) {
-      return 0;
-    } else {
+    } else if (wParam & SCF_SELECTION) {
+      if (editor->mode & TM_PLAINTEXT)
+        return 0;
+      if (wParam & SCF_WORD) {
+        FIXME("EM_SETCHARFORMAT: word selection not supported\n");
+        return 0;
+      }
       bRepaint = ME_IsSelection(editor);
       ME_SetSelectionCharFormat(editor, p);
       if (bRepaint) editor->nModifyStep = 1;
+    } else { /* SCF_DEFAULT */
+      ME_SetDefaultCharFormat(editor, p);
     }
     ME_CommitUndo(editor);
     if (bRepaint)
@@ -3462,7 +3473,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     int nStartCursor = ME_GetSelectionOfs(editor, &from, &to);
     ME_InternalDeleteText(editor, &editor->pCursors[nStartCursor], to-from, FALSE);
     ME_CommitUndo(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, TRUE);
     return 0;
   }
   case EM_REPLACESEL:
@@ -3490,7 +3501,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_UpdateSelectionLinkAttribute(editor);
     if (!wParam)
       ME_EmptyUndoStack(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
     return len;
   }
   case EM_SCROLLCARET:
@@ -3568,7 +3579,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     editor->nModifyStep = 0;
     ME_CommitUndo(editor);
     ME_EmptyUndoStack(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
     return 1;
   }
   case EM_CANPASTE:
@@ -3594,7 +3605,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     {
       ME_InternalDeleteText(editor, selStart, nChars, FALSE);
       ME_CommitUndo(editor);
-      ME_UpdateRepaint(editor);
+      ME_UpdateRepaint(editor, TRUE);
     }
     return 0;
   }
@@ -4248,7 +4259,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     editor->imeStartIndex=ME_GetCursorOfs(&editor->pCursors[0]);
     ME_DeleteSelection(editor);
     ME_CommitUndo(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
     return 0;
   }
   case WM_IME_COMPOSITION:
@@ -4280,7 +4291,7 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     }
     ME_ReleaseStyle(style);
     ME_CommitUndo(editor);
-    ME_UpdateRepaint(editor);
+    ME_UpdateRepaint(editor, FALSE);
     return 0;
   }
   case WM_IME_ENDCOMPOSITION:
@@ -4318,35 +4329,37 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     return editor->mode;
   case EM_SETTEXTMODE:
   {
-    LRESULT ret;
     int mask = 0;
     int changes = 0;
-    GETTEXTLENGTHEX how;
 
-    /* CR/LF conversion required in 2.0 mode, verbatim in 1.0 mode */
-    how.flags = GTL_CLOSE | (editor->bEmulateVersion10 ? 0 : GTL_USECRLF) | GTL_NUMCHARS;
-    how.codepage = unicode ? 1200 : CP_ACP;
-    ret = ME_GetTextLengthEx(editor, &how);
-    if (!ret)
+    if (ME_GetTextLength(editor) || editor->pUndoStack || editor->pRedoStack)
+      return E_UNEXPECTED;
+
+    /* Check for mutually exclusive flags in adjacent bits of wParam */
+    if ((wParam & (TM_RICHTEXT | TM_MULTILEVELUNDO | TM_MULTICODEPAGE)) &
+        (wParam & (TM_PLAINTEXT | TM_SINGLELEVELUNDO | TM_SINGLECODEPAGE)) << 1)
+      return E_INVALIDARG;
+
+    if (wParam & (TM_RICHTEXT | TM_PLAINTEXT))
     {
-      /*Check for valid wParam*/
-      if ((((wParam & TM_RICHTEXT) && ((wParam & TM_PLAINTEXT) << 1))) ||
-	  (((wParam & TM_MULTILEVELUNDO) && ((wParam & TM_SINGLELEVELUNDO) << 1))) ||
-	  (((wParam & TM_MULTICODEPAGE) && ((wParam & TM_SINGLECODEPAGE) << 1))))
-	return 1;
-      else
-      {
-	if (wParam & (TM_RICHTEXT | TM_PLAINTEXT))
-	{
-	  mask |= (TM_RICHTEXT | TM_PLAINTEXT);
-	  changes |= (wParam & (TM_RICHTEXT | TM_PLAINTEXT));
-	}
-	/*FIXME: Currently no support for undo level and code page options*/ 
-	editor->mode = (editor->mode & (~mask)) | changes;
-	return 0;
+      mask |= TM_RICHTEXT | TM_PLAINTEXT;
+      changes |= wParam & (TM_RICHTEXT | TM_PLAINTEXT);
+      if (wParam & TM_PLAINTEXT) {
+        /* Clear selection since it should be possible to select the
+         * end of text run for rich text */
+        ME_InvalidateSelection(editor);
+        ME_SetCursorToStart(editor, &editor->pCursors[0]);
+        editor->pCursors[1] = editor->pCursors[0];
+        /* plain text can only have the default style. */
+        ME_ClearTempStyle(editor);
+        ME_AddRefStyle(editor->pBuffer->pDefaultStyle);
+        ME_ReleaseStyle(editor->pCursors[0].pRun->member.run.style);
+        editor->pCursors[0].pRun->member.run.style = editor->pBuffer->pDefaultStyle;
       }
     }
-    return ret;
+    /* FIXME: Currently no support for undo level and code page options */
+    editor->mode = (editor->mode & ~mask) | changes;
+    return 0;
   }
   case EM_SETPASSWORDCHAR:
   {
@@ -4421,6 +4434,8 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       PAINTSTRUCT ps;
 
       hDC = BeginPaint(editor->hWnd, &ps);
+      if (!editor->bEmulateVersion10 || (editor->nEventMask & ENM_UPDATE))
+        ME_SendOldNotify(editor, EN_UPDATE);
       /* Erase area outside of the formatting rectangle */
       if (ps.rcPaint.top < editor->rcFormat.top)
       {
@@ -4448,7 +4463,7 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
         ps.rcPaint.right = editor->rcFormat.right;
       }
 
-      ME_PaintContent(editor, hDC, FALSE, &ps.rcPaint);
+      ME_PaintContent(editor, hDC, &ps.rcPaint);
       EndPaint(editor->hWnd, &ps);
       return 0;
     }

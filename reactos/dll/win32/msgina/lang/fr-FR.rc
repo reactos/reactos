@@ -10,7 +10,7 @@ END
 
 IDD_NOTICE_DLG DIALOGEX 0, 0, 186, 32
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Bienvenue ‡ ReactOS"
+CAPTION "Bienvenue √† ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
@@ -29,29 +29,29 @@ BEGIN
     EDITTEXT        IDC_PASSWORD,84,91,119,14,ES_AUTOHSCROLL | ES_PASSWORD
     PUSHBUTTON      "OK",IDOK,51,122,50,14,BS_DEFPUSHBUTTON
     PUSHBUTTON      "Annuler",IDCANCEL,115,122,50,14
-    PUSHBUTTON      "…teindre",IDC_SHUTDOWN,179,122,50,14
+    PUSHBUTTON      "√âteindre",IDC_SHUTDOWN,179,122,50,14
 END
 
 IDD_LOGGEDON_DLG DIALOGEX 0, 0, 258, 116
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
-CAPTION "SÈcuritÈ"
+CAPTION "S√©curit√©"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,247,53
     LTEXT           "Que voulez vous faire?",IDC_STATIC, 94, 60, 87, 8
     PUSHBUTTON      "Verrouiller l'ordinateur",IDC_LOCK, 4, 76, 82, 14
-    PUSHBUTTON      "DÈconnecter",IDC_LOGOFF, 93, 76, 85, 14
-    PUSHBUTTON      "…teindre",IDC_SHUTDOWN, 184, 76, 70, 14
-    PUSHBUTTON      "Gestionnaire de t‚ches",IDC_TASKMGR, 93, 95, 85, 14
+    PUSHBUTTON      "D√©connecter",IDC_LOGOFF, 93, 76, 85, 14
+    PUSHBUTTON      "√âteindre",IDC_SHUTDOWN, 184, 76, 70, 14
+    PUSHBUTTON      "Gestionnaire de t√¢ches",IDC_TASKMGR, 93, 95, 85, 14
     PUSHBUTTON      "Annuler",IDCANCEL, 184, 95, 70, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Bienvenue!"
-    IDS_LOCKEDSAS "Cet ordinateur est actuellement verrouillÈ."
+    IDS_LOCKEDSAS "Cet ordinateur est actuellement verrouill√©."
     IDS_PRESSCTRLALTDELETE "Presser Control+Alt+Suppr pour vous connecter."
     IDS_ASKFORUSER "Utilisateur: "
     IDS_ASKFORPASSWORD "Mot de passe: "
-    IDS_FORCELOGOFF "Cela dÈconnectera l'utilisateur en cours et perdra les donnÈes non sauvÈes.  Continuer?"
+    IDS_FORCELOGOFF "Cela d√©connectera l'utilisateur en cours et perdra les donn√©es non sauv√©es.  Continuer?"
 END

@@ -31,7 +31,9 @@ PUBLIC KiSwitchToBootStack
     mov ax, HEX(18)
     mov ss, ax
     mov rsp, rcx
-    sub rsp, HEX(300) // FIXME
+    // Note: 8 bytes extra to compensate for the missing return address on
+    // the stack. On function entry the stack is unaligned by 8!!
+    sub rsp, HEX(308) // FIXME
     .ENDPROLOG
 
     jmp KiSystemStartupBootStack

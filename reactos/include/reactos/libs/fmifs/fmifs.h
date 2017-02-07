@@ -22,6 +22,10 @@
  *
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 /* Output command */
 typedef struct
 {
@@ -197,5 +201,9 @@ typedef NTSTATUS
 	IN BOOLEAN CheckOnlyIfDirty,
 	IN BOOLEAN ScanDrive,
 	IN PFMIFSCALLBACK Callback);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif /* ndef _FMIFS_H */

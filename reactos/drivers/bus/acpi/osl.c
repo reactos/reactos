@@ -264,7 +264,7 @@ AcpiOsCreateMutex(
         return AE_BAD_PARAMETER;
     }
     
-    Mutex = ExAllocatePool(PagedPool, sizeof(FAST_MUTEX));
+    Mutex = ExAllocatePool(NonPagedPool, sizeof(FAST_MUTEX));
     if (!Mutex) return AE_NO_MEMORY;
     
     ExInitializeFastMutex(Mutex);
@@ -298,8 +298,19 @@ AcpiOsAcquireMutex(
         return AE_BAD_PARAMETER;
     }
 
-    ExAcquireFastMutex((PFAST_MUTEX)Handle);
-    
+    /* Check what the caller wants us to do */
+    if (Timeout == ACPI_DO_NOT_WAIT)
+    {
+        /* Try to acquire without waiting */
+        if (!ExTryToAcquireFastMutex((PFAST_MUTEX)Handle))
+            return AE_TIME;
+    }
+    else
+    {
+        /* Block until we get it */
+        ExAcquireFastMutex((PFAST_MUTEX)Handle);
+    }
+
     return AE_OK;
 }
 
@@ -377,8 +388,18 @@ AcpiOsWaitSemaphore(
         DPRINT1("Bad parameter\n");
         return AE_BAD_PARAMETER;
     }
-    
+
     KeAcquireSpinLock(&Sem->Lock, &OldIrql);
+
+    /* Make sure we can wait if we have fewer units than we need */
+    if ((Timeout == ACPI_DO_NOT_WAIT) && (Sem->CurrentUnits < Units))
+    {
+        /* We can't so we must bail now */
+        KeReleaseSpinLock(&Sem->Lock, OldIrql);
+        return AE_TIME;
+    }
+
+    /* Time to block until we get enough units */
     while (Sem->CurrentUnits < Units)
     {
         KeReleaseSpinLock(&Sem->Lock, OldIrql);

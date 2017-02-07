@@ -48,8 +48,8 @@ BOOL WINAPI EncryptionDisable (
 	);
 
 BOOL WINAPI FileEncryptionStatus (
-	LPCTSTR,
-	LPDWORD
+	_In_ LPCTSTR,
+	_Out_ LPDWORD
 	);
 
 DWORD WINAPI QueryUsersOnEncryptedFile (

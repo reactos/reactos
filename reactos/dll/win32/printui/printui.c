@@ -38,7 +38,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(printui);
 
-HINSTANCE PRINTUI_hInstance = NULL;
+static HINSTANCE PRINTUI_hInstance = NULL;
 
 /* ################################# */
 

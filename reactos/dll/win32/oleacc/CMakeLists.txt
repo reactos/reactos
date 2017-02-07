@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
-spec2def(oleacc.dll oleacc.spec)
+spec2def(oleacc.dll oleacc.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     main.c
@@ -19,5 +19,5 @@ target_link_libraries(oleacc wine)
 
 add_importlibs(oleacc user32 msvcrt kernel32 ntdll)
 
-add_importlib_target(oleacc.spec)
+
 add_cd_file(TARGET oleacc DESTINATION reactos/system32 FOR all)

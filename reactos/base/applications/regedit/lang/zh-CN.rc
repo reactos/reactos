@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "导出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "加载配置单元...",	ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "卸载配置单元...",	ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "加载配置单元...",   ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "卸载配置单元...",   ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "连接网络注册表(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
@@ -351,8 +351,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "错误"
-    IDS_WARNING		    "警告"
+    IDS_ERROR               "错误"
+    IDS_WARNING             "警告"
     IDS_BAD_KEY             "不能查询项 '%s'"
     IDS_BAD_VALUE           "不能查询值 '%s'"
     IDS_UNSUPPORTED_TYPE    "不能编辑这类型的项 (%ld)"
@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "无法删除所有指定的值!"
     IDS_ERR_RENVAL_CAPTION  "重命名值时产生错误"
     IDS_ERR_RENVAL_TOEMPTY  "注册表编辑器无法重命名 %s。指定的值名为空。请键入其他名称，再试一次。"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "新项 #%d"
     IDS_NEW_VALUE           "新值 #%d"
 END
@@ -389,9 +391,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "注册文件"
-    IDS_FLT_REGFILES        "注册文件"
+    IDS_FLT_REGFILES        "注册文件 (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 注册文件 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 注册文件 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "所有文件 (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

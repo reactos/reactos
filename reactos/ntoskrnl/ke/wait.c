@@ -126,14 +126,14 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 
     /* We depend on these bits being just right */
     C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
-    
+
     /* Increase the contention count */
     GuardedMutex->Contention++;
-    
+
     /* Start by unlocking the Guarded Mutex */
     BitsToRemove = GM_LOCK_BIT;
     BitsToAdd = GM_LOCK_WAITER_INC;
-    
+
     /* Start change loop */
     for (;;)
     {
@@ -142,10 +142,10 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
                (BitsToRemove == (GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN)));
         ASSERT((BitsToAdd == GM_LOCK_WAITER_INC) ||
                (BitsToAdd == GM_LOCK_WAITER_WOKEN));
-        
+
         /* Get the Count Bits */
         OldValue = GuardedMutex->Count;
-        
+
         /* Start internal bit change loop */
         for (;;)
         {
@@ -155,7 +155,7 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
                 /* Sanity check */
                 ASSERT((BitsToRemove == GM_LOCK_BIT) ||
                        ((OldValue & GM_LOCK_WAITER_WOKEN) != 0));
-                
+
                 /* Unlock it by removing the Lock Bit */
                 NewValue = OldValue ^ BitsToRemove;
                 NewValue = InterlockedCompareExchange(&GuardedMutex->Count,
@@ -172,15 +172,15 @@ KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
                                                       OldValue);
                 if (NewValue == OldValue) break;
             }
-            
+
             /* Old value changed, loop again */
             OldValue = NewValue;
         }
-        
+
         /* Now we have to wait for it */
         KeWaitForGate(&GuardedMutex->Gate, WrGuardedMutex, KernelMode);
         ASSERT((GuardedMutex->Count & GM_LOCK_WAITER_WOKEN) != 0);
-        
+
         /* Ok, the wait is done, so set the new bits */
         BitsToRemove = GM_LOCK_BIT | GM_LOCK_WAITER_WOKEN;
         BitsToAdd = GM_LOCK_WAITER_WOKEN;
@@ -417,6 +417,13 @@ KeWaitForSingleObject(IN PVOID Object,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     ULONG Hand = 0;
 
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else
+        ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
+               (KeGetCurrentIrql() == DISPATCH_LEVEL &&
+                Timeout && Timeout->QuadPart == 0));
+
     /* Check if the lock is already held */
     if (!Thread->WaitNext) goto WaitStart;
 
@@ -582,6 +589,18 @@ KeWaitForMultipleObjects(IN ULONG Count,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     LARGE_INTEGER DueTime = {{0}}, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
+
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
+             (!Timeout || Timeout->QuadPart != 0))
+    {
+        /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
+        DPRINT("%s called at DISPATCH_LEVEL with non-zero timeout!\n",
+               __FUNCTION__);
+    }
+    else
+        ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)

@@ -27,8 +27,7 @@
 #include "winreg.h"
 #include "objbase.h"
 #include "oaidl.h"
-
-#define ATL_INITGUID
+#include "rpcproxy.h"
 #include "atliface.h"
 #include "atlbase.h"
 
@@ -78,7 +77,7 @@ typedef struct rep_list_str {
 } rep_list;
 
 typedef struct {
-    const IRegistrarVtbl *lpVtbl;
+    IRegistrar IRegistrar_iface;
     LONG ref;
     rep_list *rep;
 } Registrar;
@@ -88,6 +87,11 @@ typedef struct {
     DWORD alloc;
     DWORD len;
 } strbuf;
+
+static inline Registrar *impl_from_IRegistrar(IRegistrar *iface)
+{
+    return CONTAINING_RECORD(iface, Registrar, IRegistrar_iface);
+}
 
 static void strbuf_init(strbuf *buf)
 {
@@ -285,15 +289,11 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                     }
                     break;
                 case 'd': {
-                    WCHAR *end;
                     DWORD dw;
-                    if(*iter == '0' && iter[1] == 'x') {
-                        iter += 2;
-                        dw = strtolW(iter, &end, 16);
-                    }else {
-                        dw = strtolW(iter, &end, 10);
-                    }
-                    iter = end;
+                    hres = get_word(&iter, buf);
+                    if(FAILED(hres))
+                        break;
+                    dw = atoiW(buf->str);
                     lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_DWORD,
                             (PBYTE)&dw, sizeof(dw));
                     if(lres != ERROR_SUCCESS) {
@@ -301,6 +301,41 @@ static HRESULT do_process_key(LPCOLESTR *pstr, HKEY parent_key, strbuf *buf, BOO
                         hres = HRESULT_FROM_WIN32(lres);
                         break;
                     }
+                    break;
+                }
+                case 'b': {
+                    BYTE *bytes;
+                    DWORD count;
+                    DWORD i;
+                    hres = get_word(&iter, buf);
+                    if(FAILED(hres))
+                        break;
+                    count = (lstrlenW(buf->str) + 1) / 2;
+                    bytes = HeapAlloc(GetProcessHeap(), 0, count);
+                    if(bytes == NULL) {
+                        hres = E_OUTOFMEMORY;
+                        break;
+                    }
+                    for(i = 0; i < count && buf->str[2*i]; i++) {
+                        WCHAR digits[3];
+                        if(!isxdigitW(buf->str[2*i]) || !isxdigitW(buf->str[2*i + 1])) {
+                            hres = E_FAIL;
+                            break;
+                        }
+                        digits[0] = buf->str[2*i];
+                        digits[1] = buf->str[2*i + 1];
+                        digits[2] = 0;
+                        bytes[i] = (BYTE) strtoulW(digits, NULL, 16);
+                    }
+                    if(SUCCEEDED(hres)) {
+                        lres = RegSetValueExW(hkey, name.len ? name.str :  NULL, 0, REG_BINARY,
+                            bytes, count);
+                        if(lres != ERROR_SUCCESS) {
+                            WARN("Could not set value of key: 0x%08x\n", lres);
+                            hres = HRESULT_FROM_WIN32(lres);
+                        }
+                    }
+                    HeapFree(GetProcessHeap(), 0, bytes);
                     break;
                 }
                 default:
@@ -518,7 +553,7 @@ static HRESULT WINAPI Registrar_QueryInterface(IRegistrar *iface, REFIID riid, v
 
 static ULONG WINAPI Registrar_AddRef(IRegistrar *iface)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ->%d\n", This, ref);
     return ref;
@@ -526,7 +561,7 @@ static ULONG WINAPI Registrar_AddRef(IRegistrar *iface)
 
 static ULONG WINAPI Registrar_Release(IRegistrar *iface)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ->%d\n", This, ref);
@@ -540,7 +575,7 @@ static ULONG WINAPI Registrar_Release(IRegistrar *iface)
 
 static HRESULT WINAPI Registrar_AddReplacement(IRegistrar *iface, LPCOLESTR Key, LPCOLESTR item)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     int len;
     rep_list *new_rep;
 
@@ -564,7 +599,7 @@ static HRESULT WINAPI Registrar_AddReplacement(IRegistrar *iface, LPCOLESTR Key,
 
 static HRESULT WINAPI Registrar_ClearReplacements(IRegistrar *iface)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     rep_list *iter, *iter2;
 
     TRACE("(%p)\n", This);
@@ -588,7 +623,7 @@ static HRESULT WINAPI Registrar_ClearReplacements(IRegistrar *iface)
 static HRESULT WINAPI Registrar_ResourceRegisterSz(IRegistrar* iface, LPCOLESTR resFileName,
                 LPCOLESTR szID, LPCOLESTR szType)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s %s %s)\n", This, debugstr_w(resFileName), debugstr_w(szID), debugstr_w(szType));
     return resource_register(This, resFileName, szID, szType, TRUE);
 }
@@ -596,35 +631,35 @@ static HRESULT WINAPI Registrar_ResourceRegisterSz(IRegistrar* iface, LPCOLESTR 
 static HRESULT WINAPI Registrar_ResourceUnregisterSz(IRegistrar* iface, LPCOLESTR resFileName,
                 LPCOLESTR szID, LPCOLESTR szType)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s %s %s)\n", This, debugstr_w(resFileName), debugstr_w(szID), debugstr_w(szType));
     return resource_register(This, resFileName, szID, szType, FALSE);
 }
 
 static HRESULT WINAPI Registrar_FileRegister(IRegistrar* iface, LPCOLESTR fileName)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_w(fileName));
     return file_register(This, fileName, TRUE);
 }
 
 static HRESULT WINAPI Registrar_FileUnregister(IRegistrar* iface, LPCOLESTR fileName)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(fileName));
     return file_register(This, fileName, FALSE);
 }
 
 static HRESULT WINAPI Registrar_StringRegister(IRegistrar* iface, LPCOLESTR data)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_w(data));
     return string_register(This, data, TRUE);
 }
 
 static HRESULT WINAPI Registrar_StringUnregister(IRegistrar* iface, LPCOLESTR data)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_w(data));
     return string_register(This, data, FALSE);
 }
@@ -632,7 +667,7 @@ static HRESULT WINAPI Registrar_StringUnregister(IRegistrar* iface, LPCOLESTR da
 static HRESULT WINAPI Registrar_ResourceRegister(IRegistrar* iface, LPCOLESTR resFileName,
                 UINT nID, LPCOLESTR szType)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s %d %s)\n", iface, debugstr_w(resFileName), nID, debugstr_w(szType));
     return resource_register(This, resFileName, MAKEINTRESOURCEW(nID), szType, TRUE);
 }
@@ -640,7 +675,7 @@ static HRESULT WINAPI Registrar_ResourceRegister(IRegistrar* iface, LPCOLESTR re
 static HRESULT WINAPI Registrar_ResourceUnregister(IRegistrar* iface, LPCOLESTR resFileName,
                 UINT nID, LPCOLESTR szType)
 {
-    Registrar *This = (Registrar*)iface;
+    Registrar *This = impl_from_IRegistrar(iface);
     TRACE("(%p)->(%s %d %s)\n", This, debugstr_w(resFileName), nID, debugstr_w(szType));
     return resource_register(This, resFileName, MAKEINTRESOURCEW(nID), szType, FALSE);
 }
@@ -669,7 +704,7 @@ static HRESULT Registrar_create(const IUnknown *pUnkOuter, REFIID riid, void **p
         return E_NOINTERFACE;
 
     ret = HeapAlloc(GetProcessHeap(), 0, sizeof(Registrar));
-    ret->lpVtbl = &RegistrarVtbl;
+    ret->IRegistrar_iface.lpVtbl = &RegistrarVtbl;
     ret->ref = 1;
     ret->rep = NULL;
     *ppvObject = ret;
@@ -827,16 +862,15 @@ HRESULT WINAPI AtlModuleUpdateRegistryFromResourceD(_ATL_MODULEW* pM, LPCOLESTR 
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    TRACE("\n");
+    /* Note: we can't use __wine_register_server here because it uses CLSID_Registrar which isn't registred yet */
     return do_register_server(TRUE);
 }
 
 /***********************************************************************
- *              DllRegisterServer (ATL.@)
+ *              DllUnRegisterServer (ATL.@)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    TRACE("\n");
     return do_register_server(FALSE);
 }
 

@@ -1,4 +1,4 @@
-LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDR_MAINMENU MENU
 BEGIN
@@ -16,10 +16,12 @@ BEGIN
   END
   POPUP "Visualizza"
   BEGIN
-    MENUITEM "Dispositivi per tipo",        IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispositivi per connessione", IDC_STATIC, GRAYED
-    MENUITEM "Risorse per tipo",            IDC_STATIC, GRAYED
-    MENUITEM "Risorse per connessione",     IDC_STATIC, GRAYED
+    MENUITEM "Dispositivi per tipo",        IDC_DEVBYTYPE
+    MENUITEM "Dispositivi per connessione", IDC_DEVBYCONN
+    MENUITEM "Risorse per tipo",            IDC_RESBYTYPE, GRAYED
+    MENUITEM "Risorse per connessione",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
   END
   POPUP "Aiuto"
   BEGIN

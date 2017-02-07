@@ -23,6 +23,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
+#include "rpcproxy.h"
 #include "netfw.h"
 
 #include "wine/debug.h"
@@ -30,17 +31,19 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
+static HINSTANCE instance;
+
 typedef HRESULT (*fnCreateInstance)( IUnknown *pUnkOuter, LPVOID *ppObj );
 
 typedef struct
 {
-    const struct IClassFactoryVtbl *vtbl;
+    IClassFactory IClassFactory_iface;
     fnCreateInstance pfnCreateInstance;
 } hnetcfg_cf;
 
 static inline hnetcfg_cf *impl_from_IClassFactory( IClassFactory *iface )
 {
-    return (hnetcfg_cf *)((char *)iface - FIELD_OFFSET( hnetcfg_cf, vtbl ));
+    return CONTAINING_RECORD(iface, hnetcfg_cf, IClassFactory_iface);
 }
 
 static HRESULT WINAPI hnetcfg_cf_QueryInterface( IClassFactory *iface, REFIID riid, LPVOID *ppobj )
@@ -107,8 +110,8 @@ static const struct IClassFactoryVtbl hnetcfg_cf_vtbl =
     hnetcfg_cf_LockServer
 };
 
-static hnetcfg_cf fw_manager_cf = { &hnetcfg_cf_vtbl, NetFwMgr_create };
-static hnetcfg_cf fw_app_cf = { &hnetcfg_cf_vtbl, NetFwAuthorizedApplication_create };
+static hnetcfg_cf fw_manager_cf = { { &hnetcfg_cf_vtbl }, NetFwMgr_create };
+static hnetcfg_cf fw_app_cf = { { &hnetcfg_cf_vtbl }, NetFwAuthorizedApplication_create };
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -118,6 +121,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_WINE_PREATTACH:
             return FALSE;
         case DLL_PROCESS_ATTACH:
+            instance = hInstDLL;
             DisableThreadLibraryCalls(hInstDLL);
             break;
         case DLL_PROCESS_DETACH:
@@ -134,11 +138,11 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 
     if (IsEqualGUID( rclsid, &CLSID_NetFwMgr ))
     {
-       cf = (IClassFactory *)&fw_manager_cf.vtbl;
+       cf = &fw_manager_cf.IClassFactory_iface;
     }
     else if (IsEqualGUID( rclsid, &CLSID_NetFwAuthorizedApplication ))
     {
-       cf = (IClassFactory *)&fw_app_cf.vtbl;
+       cf = &fw_app_cf.IClassFactory_iface;
     }
 
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
@@ -148,4 +152,20 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 HRESULT WINAPI DllCanUnloadNow( void )
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (HNETCFG.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (HNETCFG.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

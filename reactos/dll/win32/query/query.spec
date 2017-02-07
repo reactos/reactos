@@ -33,7 +33,7 @@
 @ stub InitializeFILTERPerformanceData
 @ stub _LoadBHIFilter@16
 @ stub LoadBinaryFilter
-@ stub LoadIFilter
+@ stdcall LoadIFilter(wstr ptr ptr)
 @ stub LoadTextFilter
 @ stub LocateCatalogs
 @ stdcall LocateCatalogsA(str long ptr ptr ptr ptr)

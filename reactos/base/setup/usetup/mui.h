@@ -53,6 +53,9 @@ typedef struct
     const MUI_LAYOUTS * MuiLayouts;
 } MUI_LANGUAGE;
 
+BOOLEAN
+IsLanguageAvailable(PWCHAR LanguageId);
+
 VOID
 MUIDisplayPage (ULONG PageNumber);
 

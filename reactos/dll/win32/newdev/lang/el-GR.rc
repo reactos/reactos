@@ -3,106 +3,106 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Καλώς ήλθατε",IDC_WELCOMETITLE,120,8,195,24
-    LTEXT           "Αυτός ο βοηθός εγκαθιστά έναν οδηγό συσκευής για το:",
+    LTEXT           "ΞΞ±Ξ»ΟΟ‚ Ξ®Ξ»ΞΈΞ±Ο„Ξµ",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Ξ‘Ο…Ο„ΟΟ‚ ΞΏ Ξ²ΞΏΞ·ΞΈΟΟ‚ ΞµΞ³ΞΊΞ±ΞΈΞΉΟƒΟ„Ξ¬ Ξ­Ξ½Ξ±Ξ½ ΞΏΞ΄Ξ·Ξ³Ο ΟƒΟ…ΟƒΞΊΞµΟ…Ξ®Ο‚ Ξ³ΞΉΞ± Ο„ΞΏ:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Πατήστε 'Επόμενο' για να συνεχίσετε.",IDC_STATIC,120,169,195,17
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,134,36,164,11
-    LTEXT           "ΠΡΟΕΙΔΟΠΟΙΗΣΗ! Η ΕΓΚΑΤΆΣΤΑΣΗ ΜΙΑΣ ΔΙΚΗΣ ΣΑΣ ΣΥΣΚΕΥΗΣ ΜΠΟΡΕΙ ΝΑ ΠΑΓΩΣΕΙ ΤΗ ΛΕΙΤΟΥΡΓΙΑ ΤΟΥ ΥΠΟΛΟΓΙΣΤΗ 'Η ΝΑ ΤΟΝ ΚΑΝΕΙ ΜΗ ΕΠΑΝΕΚΚΙΝΗΣΙΜΟ!",IDC_STATIC,120,59,195,25
-    CONTROL         "Αυτόματη εγκατάσταση οδηγού",IDC_RADIO_AUTO,"Button",
+    LTEXT           "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'Ξ•Ο€ΟΞΌΞµΞ½ΞΏ' Ξ³ΞΉΞ± Ξ½Ξ± ΟƒΟ…Ξ½ΞµΟ‡Ξ―ΟƒΞµΟ„Ξµ.",IDC_STATIC,120,169,195,17
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,134,36,164,11
+    LTEXT           "Ξ Ξ΅ΞΞ•Ξ™Ξ”ΞΞ ΞΞ™Ξ—Ξ£Ξ—! Ξ— Ξ•Ξ“ΞΞ‘Ξ¤Ξ†Ξ£Ξ¤Ξ‘Ξ£Ξ— ΞΞ™Ξ‘Ξ£ Ξ”Ξ™ΞΞ—Ξ£ Ξ£Ξ‘Ξ£ Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—Ξ£ ΞΞ ΞΞ΅Ξ•Ξ™ ΞΞ‘ Ξ Ξ‘Ξ“Ξ©Ξ£Ξ•Ξ™ Ξ¤Ξ— Ξ›Ξ•Ξ™Ξ¤ΞΞ¥Ξ΅Ξ“Ξ™Ξ‘ Ξ¤ΞΞ¥ Ξ¥Ξ ΞΞ›ΞΞ“Ξ™Ξ£Ξ¤Ξ— 'Ξ— ΞΞ‘ Ξ¤ΞΞ ΞΞ‘ΞΞ•Ξ™ ΞΞ— Ξ•Ξ Ξ‘ΞΞ•ΞΞΞ™ΞΞ—Ξ£Ξ™ΞΞ!",IDC_STATIC,120,59,195,25
+    CONTROL         "Ξ‘Ο…Ο„ΟΞΌΞ±Ο„Ξ· ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΏΞ΄Ξ·Ξ³ΞΏΟ",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
-    CONTROL         "Εγκατάσταση οδηγού από συγκεκριμένη τοποθεσία",IDC_RADIO_MANUAL,
+    CONTROL         "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΏΞ΄Ξ·Ξ³ΞΏΟ Ξ±Ο€Ο ΟƒΟ…Ξ³ΞΊΞµΞΊΟΞΉΞΌΞ­Ξ½Ξ· Ο„ΞΏΟ€ΞΏΞΈΞµΟƒΞ―Ξ±",IDC_RADIO_MANUAL,
                     "Button",BS_AUTORADIOBUTTON,120,133,184,14
 END
 
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Η εγκατάσταση απέτυχε",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Η συσκευή δεν ήταν δυνατόν να εγκατασταθεί επειδή ο οδηγός δε βρέθηκε.",
+    LTEXT           "Ξ— ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ±Ο€Ξ­Ο„Ο…Ο‡Ξµ",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Ξ— ΟƒΟ…ΟƒΞΊΞµΟ…Ξ® Ξ΄ΞµΞ½ Ξ®Ο„Ξ±Ξ½ Ξ΄Ο…Ξ½Ξ±Ο„ΟΞ½ Ξ½Ξ± ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ±ΞΈΞµΞ― ΞµΟ€ΞµΞΉΞ΄Ξ® ΞΏ ΞΏΞ΄Ξ·Ξ³ΟΟ‚ Ξ΄Ξµ Ξ²ΟΞ­ΞΈΞ·ΞΊΞµ.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Πατήστε 'Προηγούμενο' αν έχετε δισκέτα οδηγού ή ξέρετε τον κατάλογό του.",
+    LTEXT           "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'Ξ ΟΞΏΞ·Ξ³ΞΏΟΞΌΞµΞ½ΞΏ' Ξ±Ξ½ Ξ­Ο‡ΞµΟ„Ξµ Ξ΄ΞΉΟƒΞΊΞ­Ο„Ξ± ΞΏΞ΄Ξ·Ξ³ΞΏΟ Ξ® ΞΎΞ­ΟΞµΟ„Ξµ Ο„ΞΏΞ½ ΞΊΞ±Ο„Ξ¬Ξ»ΞΏΞ³Ο Ο„ΞΏΟ….",
                     IDC_STATIC,120,98,181,24
-    CONTROL         "Να μην εμφανιστεί αυτό το παράθυρο ξανά",IDC_DONOTSHOWDLG,"Button",
+    CONTROL         "ΞΞ± ΞΌΞ·Ξ½ ΞµΞΌΟ†Ξ±Ξ½ΞΉΟƒΟ„ΞµΞ― Ξ±Ο…Ο„Ο Ο„ΞΏ Ο€Ξ±ΟΞ¬ΞΈΟ…ΟΞΏ ΞΎΞ±Ξ½Ξ¬",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
 END
 
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Η εγκατάσταση απέτυχε",IDC_FINISHTITLE,120,8,195,24
-    LTEXT           "Η συσκευή δεν ήταν δυνατόν να εγκατασταθεί γιατί συνέβη ένα απρόσμενο λάθος.",
+    LTEXT           "Ξ— ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ±Ο€Ξ­Ο„Ο…Ο‡Ξµ",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Ξ— ΟƒΟ…ΟƒΞΊΞµΟ…Ξ® Ξ΄ΞµΞ½ Ξ®Ο„Ξ±Ξ½ Ξ΄Ο…Ξ½Ξ±Ο„ΟΞ½ Ξ½Ξ± ΞµΞ³ΞΊΞ±Ο„Ξ±ΟƒΟ„Ξ±ΞΈΞµΞ― Ξ³ΞΉΞ±Ο„Ξ― ΟƒΟ…Ξ½Ξ­Ξ²Ξ· Ξ­Ξ½Ξ± Ξ±Ο€ΟΟΟƒΞΌΞµΞ½ΞΏ Ξ»Ξ¬ΞΈΞΏΟ‚.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,134,55,164,11
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,134,55,164,11
 END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Έρευνα σε αυτές τις τοποθεσίες",IDC_RADIO_SEARCHHERE,"Button",
+    CONTROL         "ΞΟΞµΟ…Ξ½Ξ± ΟƒΞµ Ξ±Ο…Ο„Ξ­Ο‚ Ο„ΞΉΟ‚ Ο„ΞΏΟ€ΞΏΞΈΞµΟƒΞ―ΞµΟ‚",IDC_RADIO_SEARCHHERE,"Button",
                     BS_AUTORADIOBUTTON,27,11,239,13
-    CONTROL         "Επιλογή του οδηγού χειροκίνητα",IDC_RADIO_CHOOSE,"Button",
+    CONTROL         "Ξ•Ο€ΞΉΞ»ΞΏΞ³Ξ® Ο„ΞΏΟ… ΞΏΞ΄Ξ·Ξ³ΞΏΟ Ο‡ΞµΞΉΟΞΏΞΊΞ―Ξ½Ξ·Ο„Ξ±",IDC_RADIO_CHOOSE,"Button",
                     BS_AUTORADIOBUTTON,27,98,171,12
-    CONTROL         "Έρευνα σε αφαιρούμενες συσκευές",IDC_CHECK_MEDIA,"Button",
+    CONTROL         "ΞΟΞµΟ…Ξ½Ξ± ΟƒΞµ Ξ±Ο†Ξ±ΞΉΟΞΏΟΞΌΞµΞ½ΞµΟ‚ ΟƒΟ…ΟƒΞΊΞµΟ…Ξ­Ο‚",IDC_CHECK_MEDIA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
-    CONTROL         "Να συμπεριληφθεί και αυτό το μονοπάτι",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ΞΞ± ΟƒΟ…ΞΌΟ€ΞµΟΞΉΞ»Ξ·Ο†ΞΈΞµΞ― ΞΊΞ±ΞΉ Ξ±Ο…Ο„Ο Ο„ΞΏ ΞΌΞΏΞ½ΞΏΟ€Ξ¬Ο„ΞΉ",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,47,54,162,10
-    PUSHBUTTON      "Αναζήτηση",IDC_BROWSE,248,69,50,14
+    PUSHBUTTON      "Ξ‘Ξ½Ξ±Ξ¶Ξ®Ο„Ξ·ΟƒΞ·",IDC_BROWSE,248,69,50,14
     COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
 END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,51,20,169,16
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,51,20,169,16
 END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,51,20,169,16
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,51,20,169,16
 END
 
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Η εγκατάσταση ολοκληρώθηκε",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Πρέπει να επανεκκινήσετε τον υπολογιστή σας για να ολοκληρώσετε την εγκατάσταση του:",
+    LTEXT           "Ξ— ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΏΞ»ΞΏΞΊΞ»Ξ·ΟΟΞΈΞ·ΞΊΞµ",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Ξ ΟΞ­Ο€ΞµΞΉ Ξ½Ξ± ΞµΟ€Ξ±Ξ½ΞµΞΊΞΊΞΉΞ½Ξ®ΟƒΞµΟ„Ξµ Ο„ΞΏΞ½ Ο…Ο€ΞΏΞ»ΞΏΞ³ΞΉΟƒΟ„Ξ® ΟƒΞ±Ο‚ Ξ³ΞΉΞ± Ξ½Ξ± ΞΏΞ»ΞΏΞΊΞ»Ξ·ΟΟΟƒΞµΟ„Ξµ Ο„Ξ·Ξ½ ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ο„ΞΏΟ…:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Πατήστε 'Ολοκλήρωση' για να κλείσετε το βοηθό.",IDC_STATIC,120,174,
+    LTEXT           "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'ΞΞ»ΞΏΞΊΞ»Ξ®ΟΟ‰ΟƒΞ·' Ξ³ΞΉΞ± Ξ½Ξ± ΞΊΞ»ΞµΞ―ΟƒΞµΟ„Ξµ Ο„ΞΏ Ξ²ΞΏΞ·ΞΈΟ.",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,148,53,147,12
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,148,53,147,12
 END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Εγκατάσταση Συσκευών"
+CAPTION "Ξ•Ξ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· Ξ£Ο…ΟƒΞΊΞµΟ…ΟΞ½"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Η εγκατάσταση ολοκληρώθηκε",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Ο βοηθός ολοκλήρωσε την εγκατάσταση οδηγού για το:",
+    LTEXT           "Ξ— ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΏΞ»ΞΏΞΊΞ»Ξ·ΟΟΞΈΞ·ΞΊΞµ",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Ξ Ξ²ΞΏΞ·ΞΈΟΟ‚ ΞΏΞ»ΞΏΞΊΞ»Ξ®ΟΟ‰ΟƒΞµ Ο„Ξ·Ξ½ ΞµΞ³ΞΊΞ±Ο„Ξ¬ΟƒΟ„Ξ±ΟƒΞ· ΞΏΞ΄Ξ·Ξ³ΞΏΟ Ξ³ΞΉΞ± Ο„ΞΏ:",
                     IDC_STATIC,120,32,195,19
-    LTEXT           "Πατήστε 'Ολοκλήρωση' για να κλείσετε το βοηθό.",IDC_STATIC,120,174,
+    LTEXT           "Ξ Ξ±Ο„Ξ®ΟƒΟ„Ξµ 'ΞΞ»ΞΏΞΊΞ»Ξ®ΟΟ‰ΟƒΞ·' Ξ³ΞΉΞ± Ξ½Ξ± ΞΊΞ»ΞµΞ―ΟƒΞµΟ„Ξµ Ο„ΞΏ Ξ²ΞΏΞ·ΞΈΟ.",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "ΑΓΝΩΣΤΗ ΣΥΣΚΕΥΗ",IDC_DEVICE,148,53,147,12
+    LTEXT           "Ξ‘Ξ“ΞΞ©Ξ£Ξ¤Ξ— Ξ£Ξ¥Ξ£ΞΞ•Ξ¥Ξ—",IDC_DEVICE,148,53,147,12
 END

@@ -11,6 +11,8 @@
 
 #define WIN32_NO_STATUS
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <api.h>
 #define NDEBUG
 #include <debug.h>
@@ -39,12 +41,34 @@ _main(int argc,
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
+    //ULONG Response;
+    UNREFERENCED_PARAMETER(envp);
+    UNREFERENCED_PARAMETER(DebugFlag);
 
     /* Set the Priority */
     NtSetInformationProcess(NtCurrentProcess(),
                             ProcessBasePriority,
                             &BasePriority,
                             sizeof(KPRIORITY));
+
+    /* Give us IOPL so that we can access the VGA registers */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessUserModeIOPL,
+                                     NULL,
+                                     0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Raise a hard error */
+        DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
+#if 0
+        Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
+                                  0,
+                                  0,
+                                  NULL,
+                                  OptionOk,
+                                  &Response);
+#endif
+    }
 
     /* Initialize CSR through CSRSRV */
     Status = CsrServerInitialization(argc, argv);
@@ -62,7 +86,7 @@ _main(int argc,
     if (!NtCurrentPeb()->SessionId) RtlSetProcessIsCritical(TRUE, NULL, FALSE);
 
     /* Kill this thread. CSRSRV keeps us going */
-    NtTerminateThread (NtCurrentThread(), Status);
+    NtTerminateThread(NtCurrentThread(), Status);
     return 0;
 }
 

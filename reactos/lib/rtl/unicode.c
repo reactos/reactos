@@ -1664,7 +1664,7 @@ NTSTATUS
 NTAPI
 RtlUnicodeStringToCountedOemString(
     IN OUT POEM_STRING OemDest,
-    IN PCUNICODE_STRING UniSource,
+    IN PUNICODE_STRING UniSource,
     IN BOOLEAN AllocateDestinationString)
 {
     NTSTATUS Status;
@@ -2525,8 +2525,7 @@ RtlFindCharInUnicodeString(
     BOOLEAN Found;
     const BOOLEAN WantToFind = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_COMPLEMENT_CHAR_SET) == 0;
     const BOOLEAN CaseInSensitive = (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_CASE_INSENSITIVE) != 0;
-    INT Length;
-    INT i;
+    USHORT i, Length;
 
     DPRINT("RtlFindCharInUnicodeString(%u, '%wZ', '%wZ', %p)\n",
            Flags, SearchString, MatchString, Position);
@@ -2546,7 +2545,7 @@ RtlFindCharInUnicodeString(
     Length = SearchString->Length / sizeof(WCHAR);
     if (Flags & RTL_FIND_CHAR_IN_UNICODE_STRING_START_AT_END)
     {
-        for (i = Length - 1; i >= 0; i--)
+        for (i = Length - 1; (SHORT)i >= 0; i--)
         {
             Found = RtlpIsCharInUnicodeString(SearchString->Buffer[i], MatchString, CaseInSensitive);
             if (Found == WantToFind)

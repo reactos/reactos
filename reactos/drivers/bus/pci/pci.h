@@ -17,8 +17,12 @@ typedef struct _PCI_DEVICE
   PCI_SLOT_NUMBER SlotNumber;
   // PCI configuration data
   PCI_COMMON_CONFIG PciConfig;
-  // Flag used during enumeration to locate removed devices
-  BOOLEAN RemovePending;
+  // Enable memory space
+  BOOLEAN EnableMemorySpace;
+  // Enable I/O space
+  BOOLEAN EnableIoSpace;
+  // Enable bus master
+  BOOLEAN EnableBusMaster;
 } PCI_DEVICE, *PPCI_DEVICE;
 
 

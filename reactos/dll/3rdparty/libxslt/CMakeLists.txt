@@ -33,7 +33,7 @@ add_library(libxslt SHARED
     xsltlocale.c
     xsltutils.c)
 
-set_entrypoint(libxslt 0)
+set_module_type(libxslt win32dll ENTRYPOINT 0)
 target_link_libraries(libxslt libxml2)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 

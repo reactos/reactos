@@ -55,11 +55,6 @@ typedef struct _REPARSE_DATA_BUFFER {
     };
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
-typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
-    ULONG FileAttributes;
-    ULONG ReparseTag;
-} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
-
 /* FUNCTIONS *****************************************************************/
 
 /*

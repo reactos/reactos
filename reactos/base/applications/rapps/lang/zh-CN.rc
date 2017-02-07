@@ -102,7 +102,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "关于"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS 程序管理器\版权所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	LTEXT "ReactOS 程序管理器 版权所有 (C) 2009\n作者 Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
 	PUSHBUTTON "关闭", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -126,8 +126,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_INFO_VERSION "\版本："
-	IDS_INFO_DESCRIPTION "\描述："
+	IDS_INFO_VERSION "版本："
+	IDS_INFO_DESCRIPTION "描述："
 	IDS_INFO_PUBLISHER "\n发布者："
 	IDS_INFO_HELPLINK "\n帮助链接："
 	IDS_INFO_HELPPHONE "\n帮助电话："

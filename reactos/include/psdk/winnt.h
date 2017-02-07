@@ -1,5 +1,5 @@
-#ifndef _WINNT_H
-#define _WINNT_H
+#ifndef _WINNT_
+#define _WINNT_
 
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
@@ -81,6 +81,14 @@
 # endif
 #endif
 
+#ifndef NOP_FUNCTION
+#if (_MSC_VER >= 1210)
+#define NOP_FUNCTION __noop
+#else
+#define NOP_FUNCTION (void)0
+#endif
+#endif
+
 # define DECLSPEC_HIDDEN
 
 #ifdef __cplusplus
@@ -101,12 +109,41 @@ extern "C" {
 #ifndef RC_INVOKED
 #include <string.h>
 
-/* FIXME: add more architectures. Is there a way to specify this in GCC? */
-#if defined(_M_AMD64)
-#undef UNALIGNED
+#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64)
+#define ALIGNMENT_MACHINE
 #define UNALIGNED __unaligned
+#if defined(_WIN64)
+#define UNALIGNED64 __unaligned
 #else
+#define UNALIGNED64
+#endif
+#else
+#undef ALIGNMENT_MACHINE
 #define UNALIGNED
+#define UNALIGNED64
+#endif
+
+#if defined(_WIN64) || defined(_M_ALPHA)
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 16
+#else
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 8
+#endif
+
+/* Returns the type's alignment */
+#if defined(_MSC_VER) && (_MSC_VER >= 1300)
+#define TYPE_ALIGNMENT(t) __alignof(t)
+#else
+#define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif
+
+#if defined(_AMD64_) || defined(_X86_)
+#define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
+#elif defined(_IA64_) || defined(_ARM_)
+#define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(ULONG))
+#else
+#error "unknown architecture"
 #endif
 
 #ifndef DECLSPEC_NOVTABLE
@@ -139,7 +176,11 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE extern __inline__ __attribute__((always_inline))
+# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+# else
+#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+# endif
 #endif
 #endif
 
@@ -1227,6 +1268,7 @@ typedef enum {
 #define LANG_USER_DEFAULT	MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT)
 #define LOCALE_NEUTRAL	MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT)
 #define LOCALE_INVARIANT MAKELCID(MAKELANGID(LANG_INVARIANT, SUBLANG_NEUTRAL), SORT_DEFAULT)
+#define LOCALE_NAME_MAX_LENGTH 85
 #define ACL_REVISION	2
 #define ACL_REVISION_DS 4
 #define ACL_REVISION1 1
@@ -1337,6 +1379,7 @@ typedef enum {
 #define REG_WHOLE_HIVE_VOLATILE	1
 #define REG_REFRESH_HIVE	2
 #define REG_NO_LAZY_FLUSH	4
+#define REG_FORCE_RESTORE	8
 #define REG_OPTION_RESERVED	0
 #define REG_OPTION_NON_VOLATILE	0
 #define REG_OPTION_VOLATILE	1
@@ -1397,6 +1440,11 @@ typedef enum {
 #define MESSAGE_RESOURCE_UNICODE 1
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
+
+#define RTL_FIELD_TYPE(type, field)    (((type*)0)->field)
+#define RTL_BITS_OF(sizeOfArg)         (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 /* Also in winddk.h */
 #if !defined(__GNUC__)
 #define FIELD_OFFSET(t,f) ((LONG)(LONG_PTR)&(((t*) 0)->f))
@@ -1429,6 +1477,7 @@ typedef enum {
 #define IMAGE_FILE_MACHINE_AM33       0x1d3
 #define IMAGE_FILE_MACHINE_AMD64      0x8664
 #define IMAGE_FILE_MACHINE_ARM        0x1c0
+#define IMAGE_FILE_MACHINE_ARMV7      0x1c4
 #define IMAGE_FILE_MACHINE_EBC        0xebc
 #define IMAGE_FILE_MACHINE_I386       0x14c
 #define IMAGE_FILE_MACHINE_IA64       0x200
@@ -2209,6 +2258,17 @@ typedef struct _ACL_SIZE_INFORMATION {
   DWORD AclBytesFree;
 } ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
 
+typedef
+EXCEPTION_DISPOSITION
+NTAPI
+EXCEPTION_ROUTINE(
+    _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _In_ PVOID DispatcherContext);
+
+typedef EXCEPTION_ROUTINE *PEXCEPTION_ROUTINE;
+
 #ifndef _LDT_ENTRY_DEFINED
 #define _LDT_ENTRY_DEFINED
 
@@ -2537,6 +2597,27 @@ NTSYSAPI
 BOOLEAN
 __cdecl
 RtlDeleteFunctionTable(PRUNTIME_FUNCTION FunctionTable);
+
+NTSYSAPI
+PRUNTIME_FUNCTION
+NTAPI
+RtlLookupFunctionEntry(
+    _In_ DWORD64 ControlPc,
+    _Out_ PDWORD64 ImageBase,
+    _Inout_opt_ PUNWIND_HISTORY_TABLE HistoryTable);
+
+NTSYSAPI
+PEXCEPTION_ROUTINE
+NTAPI
+RtlVirtualUnwind(
+    _In_ DWORD HandlerType,
+    _In_ DWORD64 ImageBase,
+    _In_ DWORD64 ControlPc,
+    _In_ PRUNTIME_FUNCTION FunctionEntry,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _Out_ PVOID *HandlerData,
+    _Out_ PDWORD64 EstablisherFrame,
+    _Inout_opt_ PKNONVOLATILE_CONTEXT_POINTERS ContextPointers);
 
 #elif defined(_PPC_)
 #define CONTEXT_CONTROL	1L
@@ -5143,12 +5224,19 @@ typedef struct _OBJECT_TYPE_LIST {
 } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 #if defined(_M_IX86)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    return (struct _TEB *)__readfsdword(0x18);
+}
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
     return (PVOID)(ULONG_PTR)__readfsdword(0x10);
 }
-
 #elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
+{
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+}
 FORCEINLINE PVOID GetCurrentFiber(VOID)
 {
   #ifdef NONAMELESSUNION
@@ -5157,12 +5245,10 @@ FORCEINLINE PVOID GetCurrentFiber(VOID)
     return (PVOID)__readgsqword(FIELD_OFFSET(NT_TIB, FiberData));
   #endif
 }
-
 #elif defined (_M_ARM)
     PVOID WINAPI GetCurrentFiber(VOID);
-
 #elif defined(_M_PPC)
-static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_winnt(const unsigned long Offset)
+FORCEINLINE unsigned long _read_teb_dword(const unsigned long Offset)
 {
     unsigned long result;
     __asm__("\tadd 7,13,%1\n"
@@ -5172,18 +5258,17 @@ static __inline__ __attribute__((always_inline)) unsigned long __readfsdword_win
             : "r7");
     return result;
 }
-
-static __inline__ PVOID GetCurrentFiber(void)
+FORCEINLINE struct _TEB * NtCurrentTeb(void)
 {
-    return __readfsdword_winnt(0x10);
+    return (struct _TEB *)_read_teb_dword(0x18);
+}
+FORCEINLINE PVOID GetCurrentFiber(void)
+{
+    return _read_teb_dword(0x10);
 }
 #else
 #error Unknown architecture
 #endif
-
-
-
-#include "inline_ntcurrentteb.h"
 
 static __inline PVOID GetFiberData(void)
 {
@@ -5232,6 +5317,10 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
+#ifdef _M_AMD64
+#define BitScanForward64 _BitScanForward64
+#define BitScanReverse64 _BitScanReverse64
+#endif
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)

@@ -593,6 +593,7 @@ RtlAddVectoredExceptionHandler(
     IN PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
+__analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
@@ -1770,14 +1771,6 @@ RtlUnicodeStringToOemString(
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlUnicodeStringToCountedOemString(
-  IN OUT POEM_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 RtlUpcaseUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
@@ -1826,7 +1819,7 @@ RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1929,15 +1922,6 @@ RtlCreateUnicodeStringFromAsciiz(
     IN PCSZ Source
 );
 
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlEqualString(
-    IN const PSTRING String1,
-    IN const PSTRING String2,
-    IN BOOLEAN CaseInSensitive);
-
-
 //
 // Unicode String Functions
 //
@@ -2013,6 +1997,16 @@ RtlFillMemoryUlong(
     IN SIZE_T Length,
     IN ULONG Fill
 );
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+    OUT PVOID Destination,
+    IN SIZE_T Length,
+    IN ULONGLONG Pattern
+);
+
 
 NTSYSAPI
 SIZE_T
@@ -2338,6 +2332,27 @@ RtlInitializeContext(
     IN PINITIAL_TEB InitialTeb
 );
 
+#ifdef _M_AMD64
+typedef struct _WOW64_CONTEXT *PWOW64_CONTEXT;
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64GetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN OUT PWOW64_CONTEXT ThreadContext
+);
+
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlWow64SetThreadContext(
+    IN HANDLE ThreadHandle,
+    IN PWOW64_CONTEXT ThreadContext
+);
+#endif
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -2376,6 +2391,15 @@ RtlSetProcessIsCritical(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetThreadIsCritical(
+    IN BOOLEAN NewValue,
+    OUT PBOOLEAN OldValue OPTIONAL,
+    IN BOOLEAN NeedBreaks
+);
+
+NTSYSAPI
 ULONG
 NTAPI
 RtlGetCurrentProcessorNumber(
@@ -2387,6 +2411,14 @@ RtlGetCurrentProcessorNumber(
 //
 // Thread Pool Functions
 //
+//
+NTSTATUS
+NTAPI
+RtlSetThreadPoolStartFunc(
+    IN PRTL_START_POOL_THREAD StartPoolThread,
+    IN PRTL_EXIT_POOL_THREAD ExitPoolThread
+);
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2467,25 +2499,10 @@ RtlDoesFileExists_U(
 );
 
 NTSYSAPI
-BOOLEAN
-NTAPI
-RtlDoesFileExists_UstrEx(
-    IN PCUNICODE_STRING FileName,
-    IN BOOLEAN SucceedIfBusy
-);
-
-NTSYSAPI
 ULONG
 NTAPI
 RtlDetermineDosPathNameType_U(
     IN PCWSTR Path
-);
-
-NTSYSAPI
-RTL_PATH_TYPE
-NTAPI
-RtlDetermineDosPathNameType_Ustr(
-    IN PCUNICODE_STRING Path
 );
 
 NTSYSAPI
@@ -2500,7 +2517,8 @@ RtlDosSearchPath_U(
     OUT PWSTR *PartName
 );
 
-ULONG
+NTSYSAPI
+NTSTATUS
 NTAPI
 RtlDosSearchPath_Ustr(
     IN ULONG Flags,
@@ -2510,8 +2528,8 @@ RtlDosSearchPath_Ustr(
     IN PUNICODE_STRING CallerBuffer,
     IN OUT PUNICODE_STRING DynamicString OPTIONAL,
     OUT PUNICODE_STRING* FullNameOut OPTIONAL,
-    OUT PULONG FilePartSize OPTIONAL,
-    OUT PULONG LengthNeeded OPTIONAL
+    OUT PSIZE_T FilePartSize OPTIONAL,
+    OUT PSIZE_T LengthNeeded OPTIONAL
 );
 
 NTSYSAPI
@@ -2530,7 +2548,7 @@ NTAPI
 RtlDosPathNameToRelativeNtPathName_U(
     IN PCWSTR DosName,
     OUT PUNICODE_STRING NtName,
-    OUT PCWSTR * PartName,
+    OUT PCWSTR *PartName,
     OUT PRTL_RELATIVE_NAME_U RelativeName
 );
 
@@ -2562,6 +2580,39 @@ RtlGetFullPathName_U(
     OUT PWSTR *ShortName
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetFullPathName_UEx(
+    IN PWSTR FileName,
+    IN ULONG BufferLength,
+    OUT PWSTR Buffer,
+    OUT OPTIONAL PWSTR *FilePart,
+    OUT OPTIONAL RTL_PATH_TYPE *InputPathType
+    );
+#endif
+
+NTSTATUS
+NTAPI
+RtlGetFullPathName_UstrEx(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING StaticString,
+    IN PUNICODE_STRING DynamicString,
+    IN PUNICODE_STRING *StringUsed,
+    IN PSIZE_T FilePartSize,
+    OUT PBOOLEAN NameInvalid,
+    OUT RTL_PATH_TYPE* PathType,
+    OUT PSIZE_T LengthNeeded
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlGetLongestNtPathLength(
+    VOID
+);
+
 NTSYSAPI
 ULONG
 NTAPI
@@ -2590,9 +2641,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryEnvironmentVariable_U(
-    PWSTR Environment,
-    PUNICODE_STRING Name,
-    PUNICODE_STRING Value
+    IN OPTIONAL PWSTR Environment,
+    IN PUNICODE_STRING Name,
+    OUT PUNICODE_STRING Value
 );
 
 VOID
@@ -2822,6 +2873,13 @@ RtlAreBitsSet(
 NTSYSAPI
 VOID
 NTAPI
+RtlClearAllBits(
+    IN OUT PRTL_BITMAP BitMapHeader
+);
+
+NTSYSAPI
+VOID
+NTAPI
 RtlClearBits(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
@@ -2847,6 +2905,20 @@ RtlFindClearBitsAndSet(
 );
 
 NTSYSAPI
+CCHAR
+NTAPI
+RtlFindLeastSignificantBit(
+    IN ULONGLONG Value
+);
+
+NTSYSAPI
+CCHAR
+NTAPI
+RtlFindMostSignificantBit(
+    IN ULONGLONG Value
+);
+
+NTSYSAPI
 ULONG
 NTAPI
 RtlFindNextForwardRunClear(
@@ -2856,12 +2928,46 @@ RtlFindNextForwardRunClear(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunSet(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG FromIndex,
+    IN PULONG StartingRunIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindSetBits(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindSetBitsAndClear(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
     IN PRTL_BITMAP BitMapHeader,
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberOfClearBits(
+    IN PRTL_BITMAP BitMapHeader
 );
 
 NTSYSAPI
@@ -3811,12 +3917,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlGetSetBootStatusData(
-    HANDLE FileHandle,
-    BOOLEAN WriteMode,
-    DWORD DataClass,
-    PVOID Buffer,
-    ULONG BufferSize,
-    DWORD DataClass2
+    IN HANDLE FileHandle,
+    IN BOOLEAN WriteMode,
+    IN RTL_BSD_ITEM_TYPE DataClass,
+    IN PVOID Buffer,
+    IN ULONG BufferSize,
+    OUT PULONG ReturnLength OPTIONAL
 );
 
 NTSYSAPI
@@ -3841,6 +3947,15 @@ NTAPI
 RtlGUIDFromString(
   IN PUNICODE_STRING GuidString,
   OUT GUID *Guid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlComputeImportTableHash(
+    IN HANDLE hFile,
+    OUT PCHAR Hash,
+    IN ULONG ImportTableHashRevision
+);
 #endif
 
 #ifdef __cplusplus

@@ -14,6 +14,8 @@
 
 static CRITICAL_SECTION ApiCriticalSection;
 
+extern HANDLE AdapterStateChangedEvent;
+
 VOID ApiInit() {
     InitializeCriticalSection( &ApiCriticalSection );
 }
@@ -35,6 +37,7 @@ VOID ApiFree() {
 DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
+    struct protocol* proto;
 
     ApiLock();
 
@@ -43,11 +46,19 @@ DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     Reply.Reply = Adapter ? 1 : 0;
 
     if( Adapter ) {
+        proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
+        if (proto)
+            remove_protocol(proto);
+
         add_protocol( Adapter->DhclientInfo.name,
                       Adapter->DhclientInfo.rfdesc, got_one,
                       &Adapter->DhclientInfo );
-	Adapter->DhclientInfo.client->state = S_INIT;
-	state_reboot(&Adapter->DhclientInfo);
+
+        Adapter->DhclientInfo.client->state = S_INIT;
+        state_reboot(&Adapter->DhclientInfo);
+
+        if (AdapterStateChangedEvent != NULL)
+            SetEvent(AdapterStateChangedEvent);
     }
 
     ApiUnlock();
@@ -90,11 +101,25 @@ DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         if (Adapter->NteContext)
+        {
             DeleteIPAddress( Adapter->NteContext );
+            Adapter->NteContext = 0;
+        }
+        if (Adapter->RouterMib.dwForwardNextHop)
+        {
+            DeleteIpForwardEntry( &Adapter->RouterMib );
+            Adapter->RouterMib.dwForwardNextHop = 0;
+        }
 
         proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
         if (proto)
            remove_protocol(proto);
+
+        Adapter->DhclientInfo.client->active = NULL;
+        Adapter->DhclientInfo.client->state = S_INIT;
+
+        if (AdapterStateChangedEvent != NULL)
+            SetEvent(AdapterStateChangedEvent);
     }
 
     ApiUnlock();
@@ -105,6 +130,7 @@ DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
     COMM_DHCP_REPLY Reply;
     PDHCP_ADAPTER Adapter;
+    struct protocol* proto;
 
     ApiLock();
 
@@ -118,11 +144,19 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     Reply.Reply = 1;
 
+    proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
+    if (proto)
+        remove_protocol(proto);
+
     add_protocol( Adapter->DhclientInfo.name,
                   Adapter->DhclientInfo.rfdesc, got_one,
                   &Adapter->DhclientInfo );
+
     Adapter->DhclientInfo.client->state = S_INIT;
     state_reboot(&Adapter->DhclientInfo);
+
+    if (AdapterStateChangedEvent != NULL)
+        SetEvent(AdapterStateChangedEvent);
 
     ApiUnlock();
 
@@ -143,7 +177,16 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     if( Adapter ) {
         if (Adapter->NteContext)
+        {
             DeleteIPAddress( Adapter->NteContext );
+            Adapter->NteContext = 0;
+        }
+        if (Adapter->RouterMib.dwForwardNextHop)
+        {
+            DeleteIpForwardEntry( &Adapter->RouterMib );
+            Adapter->RouterMib.dwForwardNextHop = 0;
+        }
+        
         Adapter->DhclientState.state = S_STATIC;
         proto = find_protocol_by_adapter( &Adapter->DhclientInfo );
         if (proto)
@@ -154,6 +197,9 @@ DWORD DSStaticRefreshParams( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
                                &Adapter->NteContext,
                                &Adapter->NteInstance );
         Reply.Reply = NT_SUCCESS(Status);
+
+        if (AdapterStateChangedEvent != NULL)
+            SetEvent(AdapterStateChangedEvent);
     }
 
     ApiUnlock();

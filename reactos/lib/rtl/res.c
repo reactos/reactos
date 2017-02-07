@@ -133,7 +133,8 @@ IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( IMAGE_RESOURCE_DIRECTORY *dir,
 {
     const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
     const IMAGE_RESOURCE_DIR_STRING_U *str;
-    int min, max, res, pos, namelen;
+    int min, max, res, pos;
+    size_t namelen;
 
     if (!((ULONG_PTR)name & 0xFFFF0000)) return find_entry_by_id( dir, (ULONG_PTR)name & 0xFFFF, root, want_dir );
     entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);

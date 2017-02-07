@@ -8,6 +8,7 @@ list(APPEND SOURCE
     dllmain.c
     install.c
     logfile.c
+    security.c
     wizard.c
     syssetup.rc
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup_stubs.c

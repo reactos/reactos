@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Click-N-Type Virtual Keyboard
+Version = 3.03
+Licence = Freeware
+Description = Freeware Virtual Keyboard App.
+Size = 1.3MB
+Category = 12
+URLSite = http://http://cnt.lakefolks.com
+URLDownload = http://svn.reactos.org/packages/CNTzip.exe
+CDPath = none

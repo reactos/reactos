@@ -128,7 +128,9 @@ typedef LONG KPRIORITY;
 //
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H) && !defined(_NTSECAPI_)
 
+#ifndef __BCRYPT_H__
 typedef LONG NTSTATUS, *PNTSTATUS;
+#endif
 
 typedef struct _UNICODE_STRING
 {

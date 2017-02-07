@@ -94,13 +94,14 @@ void _SEH2GlobalUnwind(void * target)
 {
 	__asm__ __volatile__
 	(
-		"push %%ebp\n"
-		"push $0\n"
-		"push $0\n"
-		"push $Return%=\n"
-		"push %[target]\n"
+		"push %%ebp\n\t"
+		"push $0\n\t"
+		"push $0\n\t"
+		"push $Return%=\n\t"
+		"push %[target]\n\t"
 		"call %c[RtlUnwind]\n"
-		"Return%=: pop %%ebp\n" :
+		"Return%=:\n\t"
+		"pop %%ebp" :
 		:
 		[target] "g" (target), [RtlUnwind] "g" (&RtlUnwind) :
 		"eax", "ebx", "ecx", "edx", "esi", "edi", "flags", "memory"
@@ -131,13 +132,13 @@ __SEH_EXCEPT_RET _SEH2Except(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * tr
 
 	__asm__ __volatile__
 	(
-		"push %[ep]\n"
-		"push %[frame]\n"
-		"call *%[filter]\n"
-		"pop %%edx\n"
-		"pop %%edx\n" :
+		"push %[ep]\n\t"
+		"push %[frame]\n\t"
+		"call *%[filter]\n\t"
+		"pop %%edx\n\t"
+		"pop %%edx" :
 		[ret] "=a" (ret) :
-		"c" (context), [filter] "r" (filter), [frame] "g" (frame), [ep] "g" (ep) :
+		"c" (context), [filter] "r" (filter), [frame] "r" (frame), [ep] "r" (ep) :
 		"edx", "flags", "memory"
 	);
 
@@ -158,7 +159,7 @@ void _SEH2Finally(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 			body = _SEHFunctionFromTrampoline((_SEHTrampoline_t *)body);
 		}
 
-		__asm__ __volatile__("call *%1\n" : : "c" (context), "r" (body) : "eax", "edx", "flags", "memory");
+		__asm__ __volatile__("call *%1" : : "c" (context), "r" (body) : "eax", "edx", "flags", "memory");
 	}
 }
 

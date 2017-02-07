@@ -337,3 +337,12 @@ proprietary programs.  If your program is a subroutine library, you may
 consider it more useful to permit linking proprietary applications with the
 library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
+
+
+ReactOS may be used, runtime linked, and distributed with non-free software
+(meaning that such software has no obligations to open-source, or render
+free, their non-free code) such as commercial device drivers and commercial
+applications. This exception does not alter any other responsibilities of
+the licensee under the GPL (meaning that such software must still obey
+the GPL for the free ("open-sourced") code that has been integrated into
+the said software).

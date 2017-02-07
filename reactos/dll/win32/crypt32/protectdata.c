@@ -722,8 +722,8 @@ BOOL load_encryption_key(HCRYPTPROV hProv, DWORD key_len, const DATA_BLOB *salt,
     /* This should be the "logon credentials" instead of username */
     dwError=GetLastError();
     dwUsernameLen = 0;
-    if (!GetUserNameA(NULL,&dwUsernameLen) &&
-        GetLastError()==ERROR_MORE_DATA && dwUsernameLen &&
+    if (!GetUserNameA(NULL, &dwUsernameLen) &&
+        GetLastError() == ERROR_INSUFFICIENT_BUFFER && dwUsernameLen &&
         (szUsername = CryptMemAlloc(dwUsernameLen)))
     {
         szUsername[0]='\0';

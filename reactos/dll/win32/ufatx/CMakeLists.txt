@@ -11,6 +11,6 @@ set_module_type(ufatx win32dll ENTRYPOINT 0 )
 
 target_link_libraries(ufatx vfatxlib)
 add_importlibs(ufatx ntdll)
-add_importlib_target(ufatx.spec)
+
 add_dependencies(ufatx psdk)
 add_cd_file(TARGET ufatx DESTINATION reactos/system32 FOR all)

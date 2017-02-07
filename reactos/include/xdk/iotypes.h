@@ -2,7 +2,7 @@ $if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 
 $if (_WDMDDK_)
 
@@ -181,12 +181,14 @@ typedef enum _IO_ALLOCATION_ACTION {
   DeallocateObjectKeepRegisters
 } IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
 
+_Function_class_(DRIVER_CONTROL)
+_IRQL_requires_same_
 typedef IO_ALLOCATION_ACTION
 (NTAPI DRIVER_CONTROL)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp,
-  IN PVOID MapRegisterBase,
-  IN PVOID Context);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID Context);
 typedef DRIVER_CONTROL *PDRIVER_CONTROL;
 
 typedef struct _WAIT_CONTEXT_BLOCK {
@@ -214,7 +216,7 @@ $if (_NTDDK_)
 #define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
 #define DO_DISALLOW_EXECUTE               0x00800000
 
-$endif
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 /* DEVICE_OBJECT.Flags */
 #define DO_VERIFY_VOLUME                  0x00000002
@@ -254,14 +256,14 @@ $if (_WDMDDK_)
 #define FILE_256_BYTE_ALIGNMENT         0x000000ff
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
-$endif
+$endif (_NTDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 /* DEVICE_OBJECT.DeviceType */
 #define DEVICE_TYPE ULONG
 
-$endif
+$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
-typedef struct _DEVICE_OBJECT {
+typedef struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) _DEVICE_OBJECT {
   CSHORT Type;
   USHORT Size;
   LONG ReferenceCount;
@@ -327,48 +329,48 @@ typedef struct _IO_INTERRUPT_MESSAGE_INFO {
 } IO_INTERRUPT_MESSAGE_INFO, *PIO_INTERRUPT_MESSAGE_INFO;
 
 typedef struct _IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
-  OUT PKINTERRUPT *InterruptObject;
-  IN PKSERVICE_ROUTINE ServiceRoutine;
-  IN PVOID ServiceContext;
-  IN PKSPIN_LOCK SpinLock OPTIONAL;
-  IN KIRQL SynchronizeIrql;
-  IN BOOLEAN FloatingSave;
-  IN BOOLEAN ShareVector;
-  IN ULONG Vector;
-  IN KIRQL Irql;
-  IN KINTERRUPT_MODE InterruptMode;
-  IN KAFFINITY ProcessorEnableMask;
-  IN USHORT Group;
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject;
+  _Out_ PKINTERRUPT *InterruptObject;
+  _In_ PKSERVICE_ROUTINE ServiceRoutine;
+  _In_ PVOID ServiceContext;
+  _In_opt_ PKSPIN_LOCK SpinLock;
+  _In_ KIRQL SynchronizeIrql;
+  _In_ BOOLEAN FloatingSave;
+  _In_ BOOLEAN ShareVector;
+  _In_ ULONG Vector;
+  _In_ KIRQL Irql;
+  _In_ KINTERRUPT_MODE InterruptMode;
+  _In_ KAFFINITY ProcessorEnableMask;
+  _In_ USHORT Group;
 } IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS, *PIO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS;
 
 typedef struct _IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
-  OUT PKINTERRUPT *InterruptObject;
-  IN PKSERVICE_ROUTINE ServiceRoutine;
-  IN PVOID ServiceContext;
-  IN PKSPIN_LOCK SpinLock OPTIONAL;
-  IN KIRQL SynchronizeIrql OPTIONAL;
-  IN BOOLEAN FloatingSave;
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject;
+  _Out_ PKINTERRUPT *InterruptObject;
+  _In_ PKSERVICE_ROUTINE ServiceRoutine;
+  _In_ PVOID ServiceContext;
+  _In_opt_ PKSPIN_LOCK SpinLock;
+  _In_opt_ KIRQL SynchronizeIrql;
+  _In_ BOOLEAN FloatingSave;
 } IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS, *PIO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS;
 
 typedef struct _IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject;
   union {
-    OUT PVOID *Generic;
-    OUT PIO_INTERRUPT_MESSAGE_INFO *InterruptMessageTable;
-    OUT PKINTERRUPT *InterruptObject;
+    _Out_ PVOID *Generic;
+    _Out_ PIO_INTERRUPT_MESSAGE_INFO *InterruptMessageTable;
+    _Out_ PKINTERRUPT *InterruptObject;
   } ConnectionContext;
-  IN PKMESSAGE_SERVICE_ROUTINE MessageServiceRoutine;
-  IN PVOID ServiceContext;
-  IN PKSPIN_LOCK SpinLock OPTIONAL;
-  IN KIRQL SynchronizeIrql OPTIONAL;
-  IN BOOLEAN FloatingSave;
-  IN PKSERVICE_ROUTINE FallBackServiceRoutine OPTIONAL;
+  _In_ PKMESSAGE_SERVICE_ROUTINE MessageServiceRoutine;
+  _In_ PVOID ServiceContext;
+  _In_opt_ PKSPIN_LOCK SpinLock;
+  _In_opt_ KIRQL SynchronizeIrql;
+  _In_ BOOLEAN FloatingSave;
+  _In_opt_ PKSERVICE_ROUTINE FallBackServiceRoutine;
 } IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS, *PIO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS;
 
 typedef struct _IO_CONNECT_INTERRUPT_PARAMETERS {
-  IN OUT ULONG Version;
+  _Inout_ ULONG Version;
   _ANONYMOUS_UNION union {
     IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS FullySpecified;
     IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS LineBased;
@@ -377,11 +379,11 @@ typedef struct _IO_CONNECT_INTERRUPT_PARAMETERS {
 } IO_CONNECT_INTERRUPT_PARAMETERS, *PIO_CONNECT_INTERRUPT_PARAMETERS;
 
 typedef struct _IO_DISCONNECT_INTERRUPT_PARAMETERS {
-  IN ULONG Version;
+  _In_ ULONG Version;
   union {
-    IN PVOID Generic;
-    IN PKINTERRUPT InterruptObject;
-    IN PIO_INTERRUPT_MESSAGE_INFO InterruptMessageTable;
+    _In_ PVOID Generic;
+    _In_ PKINTERRUPT InterruptObject;
+    _In_ PIO_INTERRUPT_MESSAGE_INFO InterruptMessageTable;
   } ConnectionContext;
 } IO_DISCONNECT_INTERRUPT_PARAMETERS, *PIO_DISCONNECT_INTERRUPT_PARAMETERS;
 
@@ -428,12 +430,12 @@ typedef NTSTATUS
 
 typedef NTSTATUS
 (NTAPI IO_SESSION_NOTIFICATION_FUNCTION)(
-  IN PVOID SessionObject,
-  IN PVOID IoObject,
-  IN ULONG Event,
-  IN PVOID Context,
-  IN PVOID NotificationPayload,
-  IN ULONG PayloadLength);
+  _In_ PVOID SessionObject,
+  _In_ PVOID IoObject,
+  _In_ ULONG Event,
+  _In_ PVOID Context,
+  _In_reads_bytes_opt_(PayloadLength) PVOID NotificationPayload,
+  _In_ ULONG PayloadLength);
 
 typedef IO_SESSION_NOTIFICATION_FUNCTION *PIO_SESSION_NOTIFICATION_FUNCTION;
 
@@ -470,17 +472,20 @@ typedef struct _IO_REMOVE_LOCK {
 
 typedef struct _IO_WORKITEM *PIO_WORKITEM;
 
+_Function_class_(IO_WORKITEM_ROUTINE)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI IO_WORKITEM_ROUTINE)(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PVOID Context);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_opt_ PVOID Context);
 typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
 
 typedef VOID
 (NTAPI IO_WORKITEM_ROUTINE_EX)(
-  IN PVOID IoObject,
-  IN PVOID Context OPTIONAL,
-  IN PIO_WORKITEM IoWorkItem);
+  _In_ PVOID IoObject,
+  _In_opt_ PVOID Context,
+  _In_ PIO_WORKITEM IoWorkItem);
 typedef IO_WORKITEM_ROUTINE_EX *PIO_WORKITEM_ROUTINE_EX;
 
 typedef struct _SHARE_ACCESS {
@@ -596,9 +601,9 @@ typedef struct _IO_STATUS_BLOCK32 {
 
 typedef VOID
 (NTAPI *PIO_APC_ROUTINE)(
-  IN PVOID ApcContext,
-  IN PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG Reserved);
+  _In_ PVOID ApcContext,
+  _In_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG Reserved);
 
 #define PIO_APC_ROUTINE_DEFINED
 
@@ -828,29 +833,35 @@ typedef VOID
 (NTAPI *PINTERFACE_DEREFERENCE)(
   PVOID Context);
 
+_Function_class_(TRANSLATE_BUS_ADDRESS)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI TRANSLATE_BUS_ADDRESS)(
-  IN PVOID Context,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN ULONG Length,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS  TranslatedAddress);
+  _Inout_opt_ PVOID Context,
+  _In_ PHYSICAL_ADDRESS BusAddress,
+  _In_ ULONG Length,
+  _Out_ PULONG AddressSpace,
+  _Out_ PPHYSICAL_ADDRESS TranslatedAddress);
 typedef TRANSLATE_BUS_ADDRESS *PTRANSLATE_BUS_ADDRESS;
 
+_Function_class_(GET_DMA_ADAPTER)
+_IRQL_requires_same_
 typedef struct _DMA_ADAPTER*
 (NTAPI GET_DMA_ADAPTER)(
-  IN PVOID Context,
-  IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
-  OUT PULONG NumberOfMapRegisters);
+  _Inout_opt_ PVOID Context,
+  _In_ struct _DEVICE_DESCRIPTION *DeviceDescriptor,
+  _Out_ PULONG NumberOfMapRegisters);
 typedef GET_DMA_ADAPTER *PGET_DMA_ADAPTER;
 
+_Function_class_(GET_SET_DEVICE_DATA)
+_IRQL_requires_same_
 typedef ULONG
 (NTAPI GET_SET_DEVICE_DATA)(
-  IN PVOID Context,
-  IN ULONG DataType,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _Inout_opt_ PVOID Context,
+  _In_ ULONG DataType,
+  _Inout_updates_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 typedef GET_SET_DEVICE_DATA *PGET_SET_DEVICE_DATA;
 
 typedef enum _DEVICE_INSTALL_STATE {
@@ -873,8 +884,8 @@ typedef enum _DEVICE_REMOVAL_POLICY {
 } DEVICE_REMOVAL_POLICY, *PDEVICE_REMOVAL_POLICY;
 
 typedef VOID
-(NTAPI*PREENUMERATE_SELF)(
-  IN PVOID Context);
+(NTAPI *PREENUMERATE_SELF)(
+  _In_ PVOID Context);
 
 typedef struct _REENUMERATE_SELF_INTERFACE_STANDARD {
   USHORT Size;
@@ -887,8 +898,8 @@ typedef struct _REENUMERATE_SELF_INTERFACE_STANDARD {
 
 typedef VOID
 (NTAPI *PIO_DEVICE_EJECT_CALLBACK)(
-  IN NTSTATUS Status,
-  IN OUT PVOID Context OPTIONAL);
+  _In_ NTSTATUS Status,
+  _Inout_opt_ PVOID Context);
 
 #define PCI_DEVICE_PRESENT_INTERFACE_VERSION     1
 
@@ -914,20 +925,24 @@ typedef struct _PCI_DEVICE_PRESENCE_PARAMETERS {
   UCHAR ProgIf;
 } PCI_DEVICE_PRESENCE_PARAMETERS, *PPCI_DEVICE_PRESENCE_PARAMETERS;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 typedef BOOLEAN
 (NTAPI PCI_IS_DEVICE_PRESENT)(
-  IN USHORT VendorID,
-  IN USHORT DeviceID,
-  IN UCHAR RevisionID,
-  IN USHORT SubVendorID,
-  IN USHORT SubSystemID,
-  IN ULONG Flags);
+  _In_ USHORT VendorID,
+  _In_ USHORT DeviceID,
+  _In_ UCHAR RevisionID,
+  _In_ USHORT SubVendorID,
+  _In_ USHORT SubSystemID,
+  _In_ ULONG Flags);
 typedef PCI_IS_DEVICE_PRESENT *PPCI_IS_DEVICE_PRESENT;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 typedef BOOLEAN
 (NTAPI PCI_IS_DEVICE_PRESENT_EX)(
-  IN PVOID Context,
-  IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters);
+  _In_ PVOID Context,
+  _In_ PPCI_DEVICE_PRESENCE_PARAMETERS Parameters);
 typedef PCI_IS_DEVICE_PRESENT_EX *PPCI_IS_DEVICE_PRESENT_EX;
 
 typedef struct _BUS_INTERFACE_STANDARD {
@@ -952,8 +967,9 @@ typedef struct _PCI_DEVICE_PRESENT_INTERFACE {
   PPCI_IS_DEVICE_PRESENT_EX IsDevicePresentEx;
 } PCI_DEVICE_PRESENT_INTERFACE, *PPCI_DEVICE_PRESENT_INTERFACE;
 
+_Struct_size_bytes_(Size)
 typedef struct _DEVICE_CAPABILITIES {
-  USHORT Size;
+  _Field_range_(==, sizeof(struct _DEVICE_CAPABILITIES)) USHORT Size;
   USHORT Version;
   ULONG DeviceD1:1;
   ULONG DeviceD2:1;
@@ -1048,13 +1064,14 @@ typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {
 
 #define PNP_REPLACE_NO_MAP             MAXLONGLONG
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_MAP_MEMORY)(
-  IN PHYSICAL_ADDRESS TargetPhysicalAddress,
-  IN PHYSICAL_ADDRESS SparePhysicalAddress,
-  IN OUT PLARGE_INTEGER NumberOfBytes,
-  OUT PVOID *TargetAddress,
-  OUT PVOID *SpareAddress);
+  _In_ PHYSICAL_ADDRESS TargetPhysicalAddress,
+  _In_ PHYSICAL_ADDRESS SparePhysicalAddress,
+  _Inout_ PLARGE_INTEGER NumberOfBytes,
+  _Outptr_ PVOID *TargetAddress,
+  _Outptr_ PVOID *SpareAddress);
 
 typedef struct _PNP_REPLACE_MEMORY_LIST {
   ULONG AllocatedCount;
@@ -1068,7 +1085,7 @@ typedef struct _PNP_REPLACE_MEMORY_LIST {
 
 typedef struct _PNP_REPLACE_PROCESSOR_LIST {
   PKAFFINITY Affinity;
-  ULONG GroupCount;
+  _Field_range_(<=, MAXIMUM_GROUPS) ULONG GroupCount;
   ULONG AllocatedCount;
   ULONG Count;
   ULONG ApicIds[ANYSIZE_ARRAY];
@@ -1099,49 +1116,58 @@ typedef VOID
 (NTAPI *PREPLACE_UNLOAD)(
   VOID);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_BEGIN)(
-  IN PPNP_REPLACE_PARAMETERS Parameters,
-  OUT PVOID *Context);
+  _In_ PPNP_REPLACE_PARAMETERS Parameters,
+  _Outptr_ PVOID *Context);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_END)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_MIRROR_PHYSICAL_MEMORY)(
-  IN PVOID Context,
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN LARGE_INTEGER ByteCount);
+  _In_ PVOID Context,
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ LARGE_INTEGER ByteCount);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_SET_PROCESSOR_ID)(
-  IN PVOID Context,
-  IN ULONG ApicId,
-  IN BOOLEAN Target);
+  _In_ PVOID Context,
+  _In_ ULONG ApicId,
+  _In_ BOOLEAN Target);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_SWAP)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_INITIATE_HARDWARE_MIRROR)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_MIRROR_PLATFORM_MEMORY)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_GET_MEMORY_DESTINATION)(
-  IN PVOID Context,
-  IN PHYSICAL_ADDRESS SourceAddress,
-  OUT PPHYSICAL_ADDRESS DestinationAddress);
+  _In_ PVOID Context,
+  _In_ PHYSICAL_ADDRESS SourceAddress,
+  _Out_ PPHYSICAL_ADDRESS DestinationAddress);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_ENABLE_DISABLE_HARDWARE_QUIESCE)(
-  IN PVOID Context,
-  IN BOOLEAN Enable);
+  _In_ PVOID Context,
+  _In_ BOOLEAN Enable);
 
 #define PNP_REPLACE_DRIVER_INTERFACE_VERSION      1
 #define PNP_REPLACE_DRIVER_INTERFACE_MINIMUM_SIZE \
@@ -1169,10 +1195,11 @@ typedef struct _PNP_REPLACE_DRIVER_INTERFACE {
   PREPLACE_ENABLE_DISABLE_HARDWARE_QUIESCE EnableDisableHardwareQuiesce;
 } PNP_REPLACE_DRIVER_INTERFACE, *PPNP_REPLACE_DRIVER_INTERFACE;
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREPLACE_DRIVER_INIT)(
-  IN OUT PPNP_REPLACE_DRIVER_INTERFACE Interface,
-  IN PVOID Unused);
+  _Inout_ PPNP_REPLACE_DRIVER_INTERFACE Interface,
+  _In_ PVOID Unused);
 
 typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {
   DeviceUsageTypeUndefined,
@@ -1187,30 +1214,40 @@ typedef struct _POWER_SEQUENCE {
   ULONG SequenceD3;
 } POWER_SEQUENCE, *PPOWER_SEQUENCE;
 
+#ifdef _PREFAST_
+#define __string_type      0x1000
+#define __guid_type        0x2000
+#define __multiString_type 0x4000
+#else
+#define __string_type      0
+#define __guid_type        0
+#define __multiString_type 0
+#endif
+
 typedef enum {
-  DevicePropertyDeviceDescription = 0x0,
-  DevicePropertyHardwareID = 0x1,
-  DevicePropertyCompatibleIDs = 0x2,
+  DevicePropertyDeviceDescription = 0x0 | __string_type,
+  DevicePropertyHardwareID = 0x1 | __multiString_type,
+  DevicePropertyCompatibleIDs = 0x2 | __multiString_type,
   DevicePropertyBootConfiguration = 0x3,
   DevicePropertyBootConfigurationTranslated = 0x4,
-  DevicePropertyClassName = 0x5,
-  DevicePropertyClassGuid = 0x6,
-  DevicePropertyDriverKeyName = 0x7,
-  DevicePropertyManufacturer = 0x8,
-  DevicePropertyFriendlyName = 0x9,
-  DevicePropertyLocationInformation = 0xa,
-  DevicePropertyPhysicalDeviceObjectName = 0xb,
-  DevicePropertyBusTypeGuid = 0xc,
+  DevicePropertyClassName = 0x5 | __string_type,
+  DevicePropertyClassGuid = 0x6 | __string_type,
+  DevicePropertyDriverKeyName = 0x7 | __string_type,
+  DevicePropertyManufacturer = 0x8 | __string_type,
+  DevicePropertyFriendlyName = 0x9 | __string_type,
+  DevicePropertyLocationInformation = 0xa | __string_type,
+  DevicePropertyPhysicalDeviceObjectName = 0xb | __string_type,
+  DevicePropertyBusTypeGuid = 0xc | __guid_type,
   DevicePropertyLegacyBusType = 0xd,
   DevicePropertyBusNumber = 0xe,
-  DevicePropertyEnumeratorName = 0xf,
+  DevicePropertyEnumeratorName = 0xf | __string_type,
   DevicePropertyAddress = 0x10,
   DevicePropertyUINumber = 0x11,
   DevicePropertyInstallState = 0x12,
   DevicePropertyRemovalPolicy = 0x13,
   DevicePropertyResourceRequirements = 0x14,
   DevicePropertyAllocatedResources = 0x15,
-  DevicePropertyContainerID = 0x16
+  DevicePropertyContainerID = 0x16 | __string_type
 } DEVICE_REGISTRY_PROPERTY;
 
 typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
@@ -1231,15 +1268,19 @@ typedef enum _IO_PRIORITY_HINT {
 
 #define PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES    0x00000001
 
+_Function_class_(DRIVER_NOTIFICATION_CALLBACK_ROUTINE)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 typedef NTSTATUS
 (NTAPI DRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
-  IN PVOID NotificationStructure,
-  IN PVOID Context);
+  _In_ PVOID NotificationStructure,
+  _Inout_opt_ PVOID Context);
 typedef DRIVER_NOTIFICATION_CALLBACK_ROUTINE *PDRIVER_NOTIFICATION_CALLBACK_ROUTINE;
 
+_Function_class_(DEVICE_CHANGE_COMPLETE_CALLBACK)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI DEVICE_CHANGE_COMPLETE_CALLBACK)(
-  IN PVOID Context);
+  _Inout_opt_ PVOID Context);
 typedef DEVICE_CHANGE_COMPLETE_CALLBACK *PDEVICE_CHANGE_COMPLETE_CALLBACK;
 
 typedef enum _FILE_INFORMATION_CLASS {
@@ -1283,6 +1324,7 @@ typedef enum _FILE_INFORMATION_CLASS {
   FileIdFullDirectoryInformation,
   FileValidDataLengthInformation,
   FileShortNameInformation,
+#if (NTDDI_VERSION >= NTDDI_VISTA)
   FileIoCompletionNotificationInformation,
   FileIoStatusBlockRangeInformation,
   FileIoPriorityHintInformation,
@@ -1292,12 +1334,15 @@ typedef enum _FILE_INFORMATION_CLASS {
   FileProcessIdsUsingFileInformation,
   FileNormalizedNameInformation,
   FileNetworkPhysicalNameInformation,
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
   FileIdGlobalTxDirectoryInformation,
   FileIsRemoteDeviceInformation,
   FileAttributeCacheInformation,
   FileNumaNodeInformation,
   FileStandardLinkInformation,
   FileRemoteProtocolInformation,
+#endif
   FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -1408,251 +1453,305 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
 
+_Function_class_(FAST_IO_CHECK_IF_POSSIBLE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_CHECK_IF_POSSIBLE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN BOOLEAN Wait,
-  IN ULONG LockKey,
-  IN BOOLEAN CheckForReadOperation,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ BOOLEAN Wait,
+  _In_ ULONG LockKey,
+  _In_ BOOLEAN CheckForReadOperation,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_CHECK_IF_POSSIBLE *PFAST_IO_CHECK_IF_POSSIBLE;
 
+_Function_class_(FAST_IO_READ)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_READ)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN BOOLEAN Wait,
-  IN ULONG LockKey,
-  OUT PVOID Buffer,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ BOOLEAN Wait,
+  _In_ ULONG LockKey,
+  _Out_ PVOID Buffer,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_READ *PFAST_IO_READ;
 
+_Function_class_(FAST_IO_WRITE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_WRITE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN BOOLEAN Wait,
-  IN ULONG LockKey,
-  IN PVOID Buffer,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ BOOLEAN Wait,
+  _In_ ULONG LockKey,
+  _In_ PVOID Buffer,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_WRITE *PFAST_IO_WRITE;
 
+_Function_class_(FAST_IO_QUERY_BASIC_INFO)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_QUERY_BASIC_INFO)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN BOOLEAN Wait,
-  OUT PFILE_BASIC_INFORMATION Buffer,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ BOOLEAN Wait,
+  _Out_ PFILE_BASIC_INFORMATION Buffer,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_QUERY_BASIC_INFO *PFAST_IO_QUERY_BASIC_INFO;
 
+_Function_class_(FAST_IO_QUERY_STANDARD_INFO)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_QUERY_STANDARD_INFO)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN BOOLEAN Wait,
-  OUT PFILE_STANDARD_INFORMATION Buffer,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ BOOLEAN Wait,
+  _Out_ PFILE_STANDARD_INFORMATION Buffer,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_QUERY_STANDARD_INFO *PFAST_IO_QUERY_STANDARD_INFO;
 
+_Function_class_(FAST_IO_LOCK)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_LOCK)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN PLARGE_INTEGER Length,
-  PEPROCESS ProcessId,
-  ULONG Key,
-  BOOLEAN FailImmediately,
-  BOOLEAN ExclusiveLock,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ PEPROCESS ProcessId,
+  _In_ ULONG Key,
+  _In_ BOOLEAN FailImmediately,
+  _In_ BOOLEAN ExclusiveLock,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_LOCK *PFAST_IO_LOCK;
 
+_Function_class_(FAST_IO_UNLOCK_SINGLE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_UNLOCK_SINGLE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN PLARGE_INTEGER Length,
-  PEPROCESS ProcessId,
-  ULONG Key,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ PEPROCESS ProcessId,
+  _In_ ULONG Key,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_UNLOCK_SINGLE *PFAST_IO_UNLOCK_SINGLE;
 
+_Function_class_(FAST_IO_UNLOCK_ALL)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_UNLOCK_ALL)(
-  IN struct _FILE_OBJECT *FileObject,
-  PEPROCESS ProcessId,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PEPROCESS ProcessId,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_UNLOCK_ALL *PFAST_IO_UNLOCK_ALL;
 
+_Function_class_(FAST_IO_UNLOCK_ALL_BY_KEY)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_UNLOCK_ALL_BY_KEY)(
-  IN struct _FILE_OBJECT *FileObject,
-  PVOID ProcessId,
-  ULONG Key,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PVOID ProcessId,
+  _In_ ULONG Key,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_UNLOCK_ALL_BY_KEY *PFAST_IO_UNLOCK_ALL_BY_KEY;
 
+_Function_class_(FAST_IO_DEVICE_CONTROL)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_DEVICE_CONTROL)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN BOOLEAN Wait,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength,
-  IN ULONG IoControlCode,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ BOOLEAN Wait,
+  _In_opt_ PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_opt_ PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength,
+  _In_ ULONG IoControlCode,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_DEVICE_CONTROL *PFAST_IO_DEVICE_CONTROL;
 
+_Function_class_(FAST_IO_ACQUIRE_FILE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI FAST_IO_ACQUIRE_FILE)(
-  IN struct _FILE_OBJECT *FileObject);
+  _In_ struct _FILE_OBJECT *FileObject);
 typedef FAST_IO_ACQUIRE_FILE *PFAST_IO_ACQUIRE_FILE;
 
+_Function_class_(FAST_IO_RELEASE_FILE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI FAST_IO_RELEASE_FILE)(
-  IN struct _FILE_OBJECT *FileObject);
+  _In_ struct _FILE_OBJECT *FileObject);
 typedef FAST_IO_RELEASE_FILE *PFAST_IO_RELEASE_FILE;
 
+_Function_class_(FAST_IO_DETACH_DEVICE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI FAST_IO_DETACH_DEVICE)(
-  IN struct _DEVICE_OBJECT *SourceDevice,
-  IN struct _DEVICE_OBJECT *TargetDevice);
+  _In_ struct _DEVICE_OBJECT *SourceDevice,
+  _In_ struct _DEVICE_OBJECT *TargetDevice);
 typedef FAST_IO_DETACH_DEVICE *PFAST_IO_DETACH_DEVICE;
 
+_Function_class_(FAST_IO_QUERY_NETWORK_OPEN_INFO)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_QUERY_NETWORK_OPEN_INFO)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN BOOLEAN Wait,
-  OUT struct _FILE_NETWORK_OPEN_INFORMATION *Buffer,
-  OUT struct _IO_STATUS_BLOCK *IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ BOOLEAN Wait,
+  _Out_ struct _FILE_NETWORK_OPEN_INFORMATION *Buffer,
+  _Out_ struct _IO_STATUS_BLOCK *IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_QUERY_NETWORK_OPEN_INFO *PFAST_IO_QUERY_NETWORK_OPEN_INFO;
 
+_Function_class_(FAST_IO_ACQUIRE_FOR_MOD_WRITE)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI FAST_IO_ACQUIRE_FOR_MOD_WRITE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER EndingOffset,
-  OUT struct _ERESOURCE **ResourceToRelease,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER EndingOffset,
+  _Out_ struct _ERESOURCE **ResourceToRelease,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_ACQUIRE_FOR_MOD_WRITE *PFAST_IO_ACQUIRE_FOR_MOD_WRITE;
 
+_Function_class_(FAST_IO_MDL_READ)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_MDL_READ)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN ULONG LockKey,
-  OUT PMDL *MdlChain,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ ULONG LockKey,
+  _Out_ PMDL *MdlChain,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_MDL_READ *PFAST_IO_MDL_READ;
 
+_Function_class_(FAST_IO_MDL_READ_COMPLETE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_MDL_READ_COMPLETE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PMDL MdlChain,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PMDL MdlChain,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_MDL_READ_COMPLETE *PFAST_IO_MDL_READ_COMPLETE;
 
+_Function_class_(FAST_IO_PREPARE_MDL_WRITE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_PREPARE_MDL_WRITE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN ULONG LockKey,
-  OUT PMDL *MdlChain,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ ULONG LockKey,
+  _Out_ PMDL *MdlChain,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_PREPARE_MDL_WRITE *PFAST_IO_PREPARE_MDL_WRITE;
 
+_Function_class_(FAST_IO_MDL_WRITE_COMPLETE)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_MDL_WRITE_COMPLETE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN PMDL MdlChain,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ PMDL MdlChain,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_MDL_WRITE_COMPLETE *PFAST_IO_MDL_WRITE_COMPLETE;
 
+_Function_class_(FAST_IO_READ_COMPRESSED)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_READ_COMPRESSED)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN ULONG LockKey,
-  OUT PVOID Buffer,
-  OUT PMDL *MdlChain,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  OUT struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
-  IN ULONG CompressedDataInfoLength,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ ULONG LockKey,
+  _Out_ PVOID Buffer,
+  _Out_ PMDL *MdlChain,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _Out_ struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+  _In_ ULONG CompressedDataInfoLength,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_READ_COMPRESSED *PFAST_IO_READ_COMPRESSED;
 
+_Function_class_(FAST_IO_WRITE_COMPRESSED)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_WRITE_COMPRESSED)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN ULONG LockKey,
-  IN PVOID Buffer,
-  OUT PMDL *MdlChain,
-  OUT PIO_STATUS_BLOCK IoStatus,
-  IN struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
-  IN ULONG CompressedDataInfoLength,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ ULONG LockKey,
+  _In_ PVOID Buffer,
+  _Out_ PMDL *MdlChain,
+  _Out_ PIO_STATUS_BLOCK IoStatus,
+  _In_ struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+  _In_ ULONG CompressedDataInfoLength,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_WRITE_COMPRESSED *PFAST_IO_WRITE_COMPRESSED;
 
+_Function_class_(FAST_IO_MDL_READ_COMPLETE_COMPRESSED)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PMDL MdlChain,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PMDL MdlChain,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_MDL_READ_COMPLETE_COMPRESSED *PFAST_IO_MDL_READ_COMPLETE_COMPRESSED;
 
+_Function_class_(FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN PMDL MdlChain,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ PMDL MdlChain,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED *PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED;
 
+_Function_class_(FAST_IO_QUERY_OPEN)
+_IRQL_requires_same_
 typedef BOOLEAN
 (NTAPI FAST_IO_QUERY_OPEN)(
-  IN struct _IRP *Irp,
-  OUT PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _Inout_ struct _IRP *Irp,
+  _Out_ PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_QUERY_OPEN *PFAST_IO_QUERY_OPEN;
 
+_Function_class_(FAST_IO_RELEASE_FOR_MOD_WRITE)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI FAST_IO_RELEASE_FOR_MOD_WRITE)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN struct _ERESOURCE *ResourceToRelease,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ struct _ERESOURCE *ResourceToRelease,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_RELEASE_FOR_MOD_WRITE *PFAST_IO_RELEASE_FOR_MOD_WRITE;
 
+_Function_class_(FAST_IO_ACQUIRE_FOR_CCFLUSH)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI FAST_IO_ACQUIRE_FOR_CCFLUSH)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_ACQUIRE_FOR_CCFLUSH *PFAST_IO_ACQUIRE_FOR_CCFLUSH;
 
+_Function_class_(FAST_IO_RELEASE_FOR_CCFLUSH)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI FAST_IO_RELEASE_FOR_CCFLUSH)(
-  IN struct _FILE_OBJECT *FileObject,
-  IN struct _DEVICE_OBJECT *DeviceObject);
+  _In_ struct _FILE_OBJECT *FileObject,
+  _In_ struct _DEVICE_OBJECT *DeviceObject);
 typedef FAST_IO_RELEASE_FOR_CCFLUSH *PFAST_IO_RELEASE_FOR_CCFLUSH;
 
 typedef struct _FAST_IO_DISPATCH {
@@ -2062,10 +2161,14 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 #endif /* defined(_MSC_EXTENSIONS) || defined(__GNUC__) */
 
+_Function_class_(DRIVER_ADD_DEVICE)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+_When_(return>=0, _Kernel_clear_do_init_(__yes))
 typedef NTSTATUS
 (NTAPI DRIVER_ADD_DEVICE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
+  _In_ struct _DRIVER_OBJECT *DriverObject,
+  _In_ struct _DEVICE_OBJECT *PhysicalDeviceObject);
 typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
 
 typedef struct _DRIVER_EXTENSION {
@@ -2079,27 +2182,39 @@ typedef struct _DRIVER_EXTENSION {
 #define DRVO_LEGACY_DRIVER                0x00000002
 #define DRVO_BUILTIN_DRIVER               0x00000004
 
+_Function_class_(DRIVER_INITIALIZE)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI DRIVER_INITIALIZE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN PUNICODE_STRING RegistryPath);
+  _In_ struct _DRIVER_OBJECT *DriverObject,
+  _In_ PUNICODE_STRING RegistryPath);
 typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
 
+_Function_class_(DRIVER_STARTIO)
+_IRQL_always_function_min_(DISPATCH_LEVEL)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI DRIVER_STARTIO)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp);
+  _Inout_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp);
 typedef DRIVER_STARTIO *PDRIVER_STARTIO;
 
+_Function_class_(DRIVER_UNLOAD)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI DRIVER_UNLOAD)(
-  IN struct _DRIVER_OBJECT *DriverObject);
+  _In_ struct _DRIVER_OBJECT *DriverObject);
 typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
+_Function_class_(DRIVER_DISPATCH)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI DRIVER_DISPATCH)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp);
 typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
 
 typedef struct _DRIVER_OBJECT {
@@ -2128,120 +2243,122 @@ typedef struct _DMA_ADAPTER {
 
 typedef VOID
 (NTAPI *PPUT_DMA_ADAPTER)(
-  IN PDMA_ADAPTER DmaAdapter);
+  PDMA_ADAPTER DmaAdapter);
 
 typedef PVOID
 (NTAPI *PALLOCATE_COMMON_BUFFER)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG Length,
-  OUT PPHYSICAL_ADDRESS LogicalAddress,
-  IN BOOLEAN CacheEnabled);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ ULONG Length,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress,
+  _In_ BOOLEAN CacheEnabled);
 
 typedef VOID
 (NTAPI *PFREE_COMMON_BUFFER)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG Length,
-  IN PHYSICAL_ADDRESS LogicalAddress,
-  IN PVOID VirtualAddress,
-  IN BOOLEAN CacheEnabled);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ ULONG Length,
+  _In_ PHYSICAL_ADDRESS LogicalAddress,
+  _In_ PVOID VirtualAddress,
+  _In_ BOOLEAN CacheEnabled);
 
 typedef NTSTATUS
 (NTAPI *PALLOCATE_ADAPTER_CHANNEL)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG NumberOfMapRegisters,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG NumberOfMapRegisters,
+  _In_ PDRIVER_CONTROL ExecutionRoutine,
+  _In_ PVOID Context);
 
 typedef BOOLEAN
 (NTAPI *PFLUSH_ADAPTER_BUFFERS)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN BOOLEAN WriteToDevice);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ BOOLEAN WriteToDevice);
 
 typedef VOID
 (NTAPI *PFREE_ADAPTER_CHANNEL)(
-  IN PDMA_ADAPTER DmaAdapter);
+  _In_ PDMA_ADAPTER DmaAdapter);
 
 typedef VOID
 (NTAPI *PFREE_MAP_REGISTERS)(
-  IN PDMA_ADAPTER DmaAdapter,
+  _In_ PDMA_ADAPTER DmaAdapter,
   PVOID MapRegisterBase,
   ULONG NumberOfMapRegisters);
 
 typedef PHYSICAL_ADDRESS
 (NTAPI *PMAP_TRANSFER)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN OUT PULONG Length,
-  IN BOOLEAN WriteToDevice);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _Inout_ PULONG Length,
+  _In_ BOOLEAN WriteToDevice);
 
 typedef ULONG
 (NTAPI *PGET_DMA_ALIGNMENT)(
-  IN PDMA_ADAPTER DmaAdapter);
+  _In_ PDMA_ADAPTER DmaAdapter);
 
 typedef ULONG
 (NTAPI *PREAD_DMA_COUNTER)(
-  IN PDMA_ADAPTER DmaAdapter);
+  _In_ PDMA_ADAPTER DmaAdapter);
 
+_Function_class_(DRIVER_LIST_CONTROL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI DRIVER_LIST_CONTROL)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp,
-  IN struct _SCATTER_GATHER_LIST *ScatterGather,
-  IN PVOID Context);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _In_ struct _IRP *Irp,
+  _In_ struct _SCATTER_GATHER_LIST *ScatterGather,
+  _In_ PVOID Context);
 typedef DRIVER_LIST_CONTROL *PDRIVER_LIST_CONTROL;
 
 typedef NTSTATUS
 (NTAPI *PGET_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PMDL Mdl,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
-  IN PVOID Context,
-  IN BOOLEAN WriteToDevice);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PMDL Mdl,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ PDRIVER_LIST_CONTROL ExecutionRoutine,
+  _In_ PVOID Context,
+  _In_ BOOLEAN WriteToDevice);
 
 typedef VOID
 (NTAPI *PPUT_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PSCATTER_GATHER_LIST ScatterGather,
-  IN BOOLEAN WriteToDevice);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PSCATTER_GATHER_LIST ScatterGather,
+  _In_ BOOLEAN WriteToDevice);
 
 typedef NTSTATUS
 (NTAPI *PCALCULATE_SCATTER_GATHER_LIST_SIZE)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PMDL Mdl OPTIONAL,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  OUT PULONG ScatterGatherListSize,
-  OUT PULONG pNumberOfMapRegisters OPTIONAL);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl OPTIONAL,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _Out_ PULONG ScatterGatherListSize,
+  _Out_ OPTIONAL PULONG pNumberOfMapRegisters);
 
 typedef NTSTATUS
 (NTAPI *PBUILD_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PMDL Mdl,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
-  IN PVOID Context,
-  IN BOOLEAN WriteToDevice,
-  IN PVOID ScatterGatherBuffer,
-  IN ULONG ScatterGatherLength);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PMDL Mdl,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ PDRIVER_LIST_CONTROL ExecutionRoutine,
+  _In_ PVOID Context,
+  _In_ BOOLEAN WriteToDevice,
+  _In_ PVOID ScatterGatherBuffer,
+  _In_ ULONG ScatterGatherLength);
 
 typedef NTSTATUS
 (NTAPI *PBUILD_MDL_FROM_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PSCATTER_GATHER_LIST ScatterGather,
-  IN PMDL OriginalMdl,
-  OUT PMDL *TargetMdl);
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PSCATTER_GATHER_LIST ScatterGather,
+  _In_ PMDL OriginalMdl,
+  _Out_ PMDL *TargetMdl);
 
 typedef struct _DMA_OPERATIONS {
   ULONG Size;
@@ -2330,13 +2447,18 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
   IO_RESOURCE_LIST List[1];
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
+_Function_class_(DRIVER_CANCEL)
+_Requires_lock_held_(_Global_cancel_spin_lock_)
+_Releases_lock_(_Global_cancel_spin_lock_)
+_IRQL_requires_min_(DISPATCH_LEVEL)
+_IRQL_requires_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI DRIVER_CANCEL)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp);
+  _Inout_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ _IRQL_uses_cancel_ struct _IRP *Irp);
 typedef DRIVER_CANCEL *PDRIVER_CANCEL;
 
-typedef struct _IRP {
+typedef struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) _IRP {
   CSHORT Type;
   USHORT Size;
   struct _MDL *MdlAddress;
@@ -2402,33 +2524,41 @@ typedef enum _IO_PAGING_PRIORITY {
   IoPagingPriorityReserved2
 } IO_PAGING_PRIORITY;
 
+_Function_class_(IO_COMPLETION_ROUTINE)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI IO_COMPLETION_ROUTINE)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp,
-  IN PVOID Context);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _In_ struct _IRP *Irp,
+  _In_opt_ PVOID Context);
 typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
+_Function_class_(IO_DPC_ROUTINE)
+_IRQL_always_function_min_(DISPATCH_LEVEL)
+_IRQL_requires_(DISPATCH_LEVEL)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI IO_DPC_ROUTINE)(
-  IN struct _KDPC *Dpc,
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN struct _IRP *Irp,
-  IN PVOID Context);
+  _In_ struct _KDPC *Dpc,
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp,
+  _In_opt_ PVOID Context);
 typedef IO_DPC_ROUTINE *PIO_DPC_ROUTINE;
 
 typedef NTSTATUS
 (NTAPI *PMM_DLL_INITIALIZE)(
-  IN PUNICODE_STRING RegistryPath);
+  _In_ PUNICODE_STRING RegistryPath);
 
 typedef NTSTATUS
 (NTAPI *PMM_DLL_UNLOAD)(
   VOID);
 
+_Function_class_(IO_TIMER_ROUTINE)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI IO_TIMER_ROUTINE)(
-  IN struct _DEVICE_OBJECT *DeviceObject,
-  IN PVOID Context);
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _In_opt_ PVOID Context);
 typedef IO_TIMER_ROUTINE *PIO_TIMER_ROUTINE;
 
 typedef struct _IO_SECURITY_CONTEXT {
@@ -2448,41 +2578,41 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
 
 typedef VOID
 (NTAPI *PIO_CSQ_INSERT_IRP)(
-  IN struct _IO_CSQ *Csq,
-  IN PIRP Irp);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ PIRP Irp);
 
 typedef NTSTATUS
 (NTAPI IO_CSQ_INSERT_IRP_EX)(
-  IN struct _IO_CSQ *Csq,
-  IN PIRP Irp,
-  IN PVOID InsertContext);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ PIRP Irp,
+  _In_ PVOID InsertContext);
 typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
 
 typedef VOID
 (NTAPI *PIO_CSQ_REMOVE_IRP)(
-  IN struct _IO_CSQ *Csq,
-  IN PIRP Irp);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ PIRP Irp);
 
 typedef PIRP
 (NTAPI *PIO_CSQ_PEEK_NEXT_IRP)(
-  IN struct _IO_CSQ *Csq,
-  IN PIRP Irp,
-  IN PVOID PeekContext);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ PIRP Irp,
+  _In_ PVOID PeekContext);
 
 typedef VOID
 (NTAPI *PIO_CSQ_ACQUIRE_LOCK)(
-  IN struct _IO_CSQ *Csq,
-  OUT PKIRQL Irql);
+  _In_ struct _IO_CSQ *Csq,
+  _Out_ PKIRQL Irql);
 
 typedef VOID
 (NTAPI *PIO_CSQ_RELEASE_LOCK)(
-  IN struct _IO_CSQ *Csq,
-  IN KIRQL Irql);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ KIRQL Irql);
 
 typedef VOID
 (NTAPI *PIO_CSQ_COMPLETE_CANCELED_IRP)(
-  IN struct _IO_CSQ *Csq,
-  IN PIRP Irp);
+  _In_ struct _IO_CSQ *Csq,
+  _In_ PIRP Irp);
 
 typedef struct _IO_CSQ {
   ULONG Type;
@@ -2513,6 +2643,8 @@ typedef BOOLEAN
   PVOID,
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_CONNECT_VECTOR)(
   PDEVICE_OBJECT,
@@ -2523,20 +2655,28 @@ typedef NTSTATUS
   PVOID,
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_DISCONNECT_VECTOR)(
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_ENABLE_EVENT)(
   PDEVICE_OBJECT,
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_DISABLE_EVENT)(
   PDEVICE_OBJECT,
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_CLEAR_STATUS)(
   PDEVICE_OBJECT,
@@ -2547,12 +2687,15 @@ typedef VOID
   PVOID,
   ULONG);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREGISTER_FOR_DEVICE_NOTIFICATIONS)(
   PDEVICE_OBJECT,
   PDEVICE_NOTIFY_CALLBACK,
   PVOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI *PUNREGISTER_FOR_DEVICE_NOTIFICATIONS)(
   PDEVICE_OBJECT,
@@ -2578,6 +2721,8 @@ typedef BOOLEAN
   PVOID ObjectContext,
   PVOID ServiceContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_CONNECT_VECTOR2)(
   PVOID Context,
@@ -2588,37 +2733,49 @@ typedef NTSTATUS
   PVOID ServiceContext,
   PVOID *ObjectContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_DISCONNECT_VECTOR2)(
   PVOID Context,
   PVOID ObjectContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_ENABLE_EVENT2)(
   PVOID Context,
   PVOID ObjectContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_DISABLE_EVENT2)(
   PVOID Context,
   PVOID ObjectContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGPE_CLEAR_STATUS2)(
   PVOID Context,
   PVOID ObjectContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI *PDEVICE_NOTIFY_CALLBACK2)(
   PVOID NotificationContext,
   ULONG NotifyCode);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
   PVOID Context,
   PDEVICE_NOTIFY_CALLBACK2 NotificationHandler,
   PVOID NotificationContext);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 typedef VOID
 (NTAPI *PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
   PVOID Context);
@@ -2982,6 +3139,8 @@ $if (_WDMDDK_)
 #define WMIREGISTER                 0
 #define WMIUPDATE                   1
 
+_Function_class_(WMI_NOTIFICATION_CALLBACK)
+_IRQL_requires_same_
 typedef VOID
 (NTAPI FWMI_NOTIFICATION_CALLBACK)(
   PVOID Wnode,
@@ -3675,14 +3834,18 @@ typedef struct _PCI_EXPRESS_SRIOV_CAPABILITY {
 
 #define PCI_EXPRESS_LINK_QUIESCENT_INTERFACE_VERSION       1
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_EXPRESS_ENTER_LINK_QUIESCENT_MODE)(
-  IN OUT PVOID Context);
+  _Inout_ PVOID Context);
 typedef PCI_EXPRESS_ENTER_LINK_QUIESCENT_MODE *PPCI_EXPRESS_ENTER_LINK_QUIESCENT_MODE;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_EXPRESS_EXIT_LINK_QUIESCENT_MODE)(
-  IN OUT PVOID Context);
+  _Inout_ PVOID Context);
 typedef PCI_EXPRESS_EXIT_LINK_QUIESCENT_MODE *PPCI_EXPRESS_EXIT_LINK_QUIESCENT_MODE;
 
 typedef struct _PCI_EXPRESS_LINK_QUIESCENT_INTERFACE {
@@ -3699,17 +3862,17 @@ typedef struct _PCI_EXPRESS_LINK_QUIESCENT_INTERFACE {
 
 typedef ULONG
 (NTAPI *PPCI_EXPRESS_ROOT_PORT_READ_CONFIG_SPACE)(
-  IN PVOID Context,
-  OUT PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID Context,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 typedef ULONG
 (NTAPI *PPCI_EXPRESS_ROOT_PORT_WRITE_CONFIG_SPACE)(
-  IN PVOID Context,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID Context,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 typedef struct _PCI_EXPRESS_ROOT_PORT_INTERFACE {
   USHORT Size;
@@ -3723,31 +3886,35 @@ typedef struct _PCI_EXPRESS_ROOT_PORT_INTERFACE {
 
 #define PCI_MSIX_TABLE_CONFIG_INTERFACE_VERSION            1
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_MSIX_SET_ENTRY)(
-  IN PVOID Context,
-  IN ULONG TableEntry,
-  IN ULONG MessageNumber);
+  _In_ PVOID Context,
+  _In_ ULONG TableEntry,
+  _In_ ULONG MessageNumber);
 typedef PCI_MSIX_SET_ENTRY *PPCI_MSIX_SET_ENTRY;
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_MSIX_MASKUNMASK_ENTRY)(
-  IN PVOID Context,
-  IN ULONG TableEntry);
+  _In_ PVOID Context,
+  _In_ ULONG TableEntry);
 typedef PCI_MSIX_MASKUNMASK_ENTRY *PPCI_MSIX_MASKUNMASK_ENTRY;
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_MSIX_GET_ENTRY)(
-  IN PVOID Context,
-  IN ULONG TableEntry,
-  OUT PULONG MessageNumber,
-  OUT PBOOLEAN Masked);
+  _In_ PVOID Context,
+  _In_ ULONG TableEntry,
+  _Out_ PULONG MessageNumber,
+  _Out_ PBOOLEAN Masked);
 typedef PCI_MSIX_GET_ENTRY *PPCI_MSIX_GET_ENTRY;
 
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI PCI_MSIX_GET_TABLE_SIZE)(
-  IN PVOID Context,
-  OUT PULONG TableSize);
+  _In_ PVOID Context,
+  _Out_ PULONG TableSize);
 typedef PCI_MSIX_GET_TABLE_SIZE *PPCI_MSIX_GET_TABLE_SIZE;
 
 typedef struct _PCI_MSIX_TABLE_CONFIG_INTERFACE {
@@ -3855,17 +4022,17 @@ typedef enum _CONFIGURATION_TYPE {
 
 typedef NTSTATUS
 (NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
-  IN PVOID Context,
-  IN PUNICODE_STRING PathName,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
-  IN CONFIGURATION_TYPE ControllerType,
-  IN ULONG ControllerNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
-  IN CONFIGURATION_TYPE PeripheralType,
-  IN ULONG PeripheralNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
+  _In_ PVOID Context,
+  _In_ PUNICODE_STRING PathName,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG BusNumber,
+  _In_ PKEY_VALUE_FULL_INFORMATION *BusInformation,
+  _In_ CONFIGURATION_TYPE ControllerType,
+  _In_ ULONG ControllerNumber,
+  _In_ PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+  _In_ CONFIGURATION_TYPE PeripheralType,
+  _In_ ULONG PeripheralNumber,
+  _In_ PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
 
 typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceIdentifier = 0,
@@ -3876,9 +4043,9 @@ typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
 
 typedef VOID
 (NTAPI *PDRIVER_REINITIALIZE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN PVOID Context OPTIONAL,
-  IN ULONG Count);
+  _In_ struct _DRIVER_OBJECT *DriverObject,
+  _In_opt_ PVOID Context,
+  _In_ ULONG Count);
 
 typedef struct _CONTROLLER_OBJECT {
   CSHORT Type;
@@ -3947,10 +4114,15 @@ typedef struct _AGP_TARGET_BUS_INTERFACE_STANDARD {
   UCHAR CapabilityID;
 } AGP_TARGET_BUS_INTERFACE_STANDARD, *PAGP_TARGET_BUS_INTERFACE_STANDARD;
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
 typedef NTSTATUS
 (NTAPI *PGET_LOCATION_STRING)(
-  IN OUT PVOID Context OPTIONAL,
-  OUT PWCHAR *LocationStrings);
+  _Inout_opt_ PVOID Context,
+  _Outptr_
+  _At_(*LocationStrings,
+    _When_(return == 0, __drv_allocatesMem(Mem)))
+    PZZWSTR *LocationStrings);
 
 typedef struct _PNP_LOCATION_INTERFACE {
   USHORT Size;
@@ -3981,38 +4153,38 @@ typedef struct _ARBITER_CONFLICT_INFO {
 } ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
 
 typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+  _Inout_ PLIST_ENTRY ArbitrationList;
+  _In_ ULONG AllocateFromCount;
+  _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+  _Inout_ PLIST_ENTRY ArbitrationList;
+  _In_ ULONG AllocateFromCount;
+  _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
+  _Inout_ PLIST_ENTRY ArbitrationList;
 } ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
-  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+  _Out_ PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
 } ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
-  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
-  OUT PULONG ConflictCount;
-  OUT PARBITER_CONFLICT_INFO *Conflicts;
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject;
+  _In_ PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+  _Out_ PULONG ConflictCount;
+  _Out_ PARBITER_CONFLICT_INFO *Conflicts;
 } ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
-  IN PLIST_ENTRY ArbitrationList;
+  _In_ PLIST_ENTRY ArbitrationList;
 } ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
 
 typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
-  IN PDEVICE_OBJECT ReserveDevice;
+  _In_ PDEVICE_OBJECT ReserveDevice;
 } ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
 
 typedef struct _ARBITER_PARAMETERS {
@@ -4063,9 +4235,9 @@ typedef struct _ARBITER_LIST_ENTRY {
 
 typedef NTSTATUS
 (NTAPI *PARBITER_HANDLER)(
-  IN OUT PVOID Context,
-  IN ARBITER_ACTION Action,
-  IN OUT PARBITER_PARAMETERS Parameters);
+  _Inout_opt_ PVOID Context,
+  _In_ ARBITER_ACTION Action,
+  _Inout_ PARBITER_PARAMETERS Parameters);
 
 #define ARBITER_PARTIAL 0x00000001
 
@@ -4086,21 +4258,21 @@ typedef enum _RESOURCE_TRANSLATION_DIRECTION {
 
 typedef NTSTATUS
 (NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
-  IN OUT PVOID Context OPTIONAL,
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
-  IN RESOURCE_TRANSLATION_DIRECTION Direction,
-  IN ULONG AlternativesCount OPTIONAL,
-  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
+  _Inout_opt_ PVOID Context,
+  _In_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
+  _In_ RESOURCE_TRANSLATION_DIRECTION Direction,
+  _In_opt_ ULONG AlternativesCount,
+  _In_reads_opt_(AlternativesCount) IO_RESOURCE_DESCRIPTOR Alternatives[],
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _Out_ PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
 
 typedef NTSTATUS
 (NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
-  IN OUT PVOID Context OPTIONAL,
-  IN PIO_RESOURCE_DESCRIPTOR Source,
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PULONG TargetCount,
-  OUT PIO_RESOURCE_DESCRIPTOR *Target);
+  _Inout_opt_ PVOID Context,
+  _In_ PIO_RESOURCE_DESCRIPTOR Source,
+  _In_ PDEVICE_OBJECT PhysicalDeviceObject,
+  _Out_ PULONG TargetCount,
+  _Out_writes_(*TargetCount) PIO_RESOURCE_DESCRIPTOR *Target);
 
 typedef struct _TRANSLATOR_INTERFACE {
   USHORT Size;
@@ -4669,26 +4841,26 @@ typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
 
 typedef VOID
 (NTAPI *PciPin2Line)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN struct _BUS_HANDLER *RootHandler,
-  IN PCI_SLOT_NUMBER SlotNumber,
-  IN PPCI_COMMON_CONFIG PciData);
+  _In_ struct _BUS_HANDLER *BusHandler,
+  _In_ struct _BUS_HANDLER *RootHandler,
+  _In_ PCI_SLOT_NUMBER SlotNumber,
+  _In_ PPCI_COMMON_CONFIG PciData);
 
 typedef VOID
 (NTAPI *PciLine2Pin)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN struct _BUS_HANDLER *RootHandler,
-  IN PCI_SLOT_NUMBER SlotNumber,
-  IN PPCI_COMMON_CONFIG PciNewData,
-  IN PPCI_COMMON_CONFIG PciOldData);
+  _In_ struct _BUS_HANDLER *BusHandler,
+  _In_ struct _BUS_HANDLER *RootHandler,
+  _In_ PCI_SLOT_NUMBER SlotNumber,
+  _In_ PPCI_COMMON_CONFIG PciNewData,
+  _In_ PPCI_COMMON_CONFIG PciOldData);
 
 typedef VOID
 (NTAPI *PciReadWriteConfig)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN PCI_SLOT_NUMBER Slot,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ struct _BUS_HANDLER *BusHandler,
+  _In_ PCI_SLOT_NUMBER Slot,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 #define PCI_DATA_TAG ' ICP'
 #define PCI_DATA_VERSION 1
@@ -4709,33 +4881,33 @@ typedef struct _PCIBUSDATA {
 
 typedef ULONG
 (NTAPI *PCI_READ_WRITE_CONFIG)(
-  IN PVOID Context,
-  IN ULONG BusOffset,
-  IN ULONG Slot,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ PVOID Context,
+  _In_ ULONG BusOffset,
+  _In_ ULONG Slot,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 typedef VOID
 (NTAPI *PCI_PIN_TO_LINE)(
-  IN PVOID Context,
-  IN PPCI_COMMON_CONFIG PciData);
+  _In_ PVOID Context,
+  _In_ PPCI_COMMON_CONFIG PciData);
 
 typedef VOID
 (NTAPI *PCI_LINE_TO_PIN)(
-  IN PVOID Context,
-  IN PPCI_COMMON_CONFIG PciNewData,
-  IN PPCI_COMMON_CONFIG PciOldData);
+  _In_ PVOID Context,
+  _In_ PPCI_COMMON_CONFIG PciNewData,
+  _In_ PPCI_COMMON_CONFIG PciOldData);
 
 typedef VOID
 (NTAPI *PCI_ROOT_BUS_CAPABILITY)(
-  IN PVOID Context,
-  OUT PPCI_ROOT_BUS_HARDWARE_CAPABILITY HardwareCapability);
+  _In_ PVOID Context,
+  _Out_ PPCI_ROOT_BUS_HARDWARE_CAPABILITY HardwareCapability);
 
 typedef VOID
 (NTAPI *PCI_EXPRESS_WAKE_CONTROL)(
-  IN PVOID Context,
-  IN BOOLEAN EnableWake);
+  _In_ PVOID Context,
+  _In_ BOOLEAN EnableWake);
 
 typedef struct _PCI_BUS_INTERFACE_STANDARD {
   USHORT Size;
@@ -6416,8 +6588,8 @@ typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE {
   ULONG ResponseLevel;
   ULONG NumberEntries;
   _ANONYMOUS_UNION union {
-    STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[];
-    STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[];
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[0];
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[0];
   } DUMMYUNIONNAME;
 } STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE, *PSTORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE;
 
@@ -6736,8 +6908,8 @@ typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
 
 typedef VOID
 (NTAPI *PDRIVER_FS_NOTIFICATION) (
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN FsActive);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ BOOLEAN FsActive);
 
 typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
   SyncTypeOther = 0,
@@ -6792,14 +6964,14 @@ typedef struct _FS_FILTER_CALLBACK_DATA {
 
 typedef NTSTATUS
 (NTAPI *PFS_FILTER_CALLBACK) (
-  IN PFS_FILTER_CALLBACK_DATA Data,
-  OUT PVOID *CompletionContext);
+  _In_ PFS_FILTER_CALLBACK_DATA Data,
+  _Out_ PVOID *CompletionContext);
 
 typedef VOID
 (NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
-  IN PFS_FILTER_CALLBACK_DATA Data,
-  IN NTSTATUS OperationStatus,
-  IN PVOID CompletionContext);
+  _In_ PFS_FILTER_CALLBACK_DATA Data,
+  _In_ NTSTATUS OperationStatus,
+  _In_ PVOID CompletionContext);
 
 typedef struct _FS_FILTER_CALLBACKS {
   ULONG SizeOfFsFilterCallbacks;
@@ -6823,8 +6995,8 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 FsRtlRegisterFileSystemFilterCallbacks(
-  IN struct _DRIVER_OBJECT *FilterDriverObject,
-  IN PFS_FILTER_CALLBACKS Callbacks);
+  _In_ struct _DRIVER_OBJECT *FilterDriverObject,
+  _In_ PFS_FILTER_CALLBACKS Callbacks);
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -6832,10 +7004,10 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 FsRtlNotifyStreamFileObject(
-  IN struct _FILE_OBJECT * StreamFileObject,
-  IN struct _DEVICE_OBJECT *DeviceObjectHint OPTIONAL,
-  IN FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
-  IN BOOLEAN SafeToRecurse);
+  _In_ struct _FILE_OBJECT * StreamFileObject,
+  _In_opt_ struct _DEVICE_OBJECT *DeviceObjectHint,
+  _In_ FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
+  _In_ BOOLEAN SafeToRecurse);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #define DO_VERIFY_VOLUME                    0x00000002

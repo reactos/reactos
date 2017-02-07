@@ -1,7 +1,7 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(smdll.dll smdll.spec)
+spec2def(smdll.dll smdll.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dllmain.c
@@ -17,4 +17,4 @@ add_importlibs(smdll ntdll)
 add_pch(smdll precomp.h)
 add_dependencies(smdll psdk)
 add_cd_file(TARGET smdll DESTINATION reactos/system32 FOR all)
-add_importlib_target(smdll.spec)
+

@@ -42,9 +42,7 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#ifndef PATH_MAX
-#define PATH_MAX MAX_PATH
-#endif
+
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
@@ -138,17 +136,23 @@ static void coff_add_symbol(struct CoffFile* coff_file, struct symt* sym)
 {
     if (coff_file->neps + 1 >= coff_file->neps_alloc)
     {
-        coff_file->neps_alloc *= 2;
-        coff_file->entries = (coff_file->entries) ?
-            HeapReAlloc(GetProcessHeap(), 0, coff_file->entries,
-                        coff_file->neps_alloc * sizeof(struct symt*)) :
-            HeapAlloc(GetProcessHeap(), 0, 
-                      coff_file->neps_alloc * sizeof(struct symt*));
+        if (coff_file->entries)
+        {
+            coff_file->neps_alloc *= 2;
+            coff_file->entries = HeapReAlloc(GetProcessHeap(), 0, coff_file->entries,
+                                             coff_file->neps_alloc * sizeof(struct symt*));
+        }
+        else
+        {
+            coff_file->neps_alloc = 32;
+            coff_file->entries = HeapAlloc(GetProcessHeap(), 0,
+                                           coff_file->neps_alloc * sizeof(struct symt*));
+        }
     }
     coff_file->entries[coff_file->neps++] = sym;
 }
 
-BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
+DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 {
     const IMAGE_AUX_SYMBOL*		aux;
     const IMAGE_COFF_SYMBOLS_HEADER*	coff;
@@ -167,7 +171,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
     const char*                         nampnt;
     int		       		        naux;
     BOOL                                ret = FALSE;
-    DWORD                               addr;
+    ULONG64                             addr;
 
     TRACE("Processing COFF symbols...\n");
 
@@ -342,6 +346,8 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             coff_sym->SectionNumber > 0)
 	{
             DWORD base = msc_dbg->sectp[coff_sym->SectionNumber - 1].VirtualAddress;
+            struct location loc;
+
             /*
              * Similar to above, but for the case of data symbols.
              * These aren't treated as entrypoints.
@@ -356,9 +362,11 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             /*
              * Now we need to figure out which file this guy belongs to.
              */
+            loc.kind = loc_absolute;
+            loc.reg = 0;
+            loc.offset = msc_dbg->module->module.BaseOfImage + base + coff_sym->Value;
             symt_new_global_variable(msc_dbg->module, NULL, nampnt, TRUE /* FIXME */,
-                                     msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
-                                     0 /* FIXME */, NULL /* FIXME */);
+                                     loc, 0 /* FIXME */, NULL /* FIXME */);
             i += naux;
             continue;
 	}
@@ -395,7 +403,6 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
         {
             if (coff_files.files[j].entries != NULL)
             {
-                symt_cmp_addr_module = msc_dbg->module;
                 qsort(coff_files.files[j].entries, coff_files.files[j].neps,
                       sizeof(struct symt*), symt_cmp_addr);
             }
@@ -420,7 +427,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                     for (;;)
                     {
                         if (l+1 >= coff_files.files[j].neps) break;
-                        symt_get_info(msc_dbg->module, coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
+                        symt_get_address(coff_files.files[j].entries[l+1], &addr);
                         if (((msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress) < addr))
                             break;
                         l++;
@@ -433,7 +440,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                          * start of the function, so we need to subtract that offset
                          * first.
                          */
-                        symt_get_info(msc_dbg->module, coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
+                        symt_get_address(coff_files.files[j].entries[l+1], &addr);
                         symt_add_func_line(msc_dbg->module, (struct symt_function*)coff_files.files[j].entries[l+1], 
                                            coff_files.files[j].compiland->source, linepnt->Linenumber,
                                            msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress - addr);

@@ -11,14 +11,16 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
+#include <ndk/kefuncs.h>
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
-
+#include <ntlsa.h>
 #include <ntsecapi.h>
+#include <sddl.h>
 
 #include <string.h>
 
@@ -59,20 +61,28 @@ StartAuthenticationPort(VOID);
 NTSTATUS
 LsapInitDatabase(VOID);
 
-LSAPR_HANDLE
-LsapCreateDbObject(LSAPR_HANDLE ParentHandle,
-                   LPWSTR ObjectName,
-                   BOOLEAN Open,
-                   LSA_DB_OBJECT_TYPE HandleType,
-                   ACCESS_MASK DesiredAccess);
+NTSTATUS
+LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
+                   IN LPWSTR ObjectName,
+                   IN LSA_DB_OBJECT_TYPE HandleType,
+                   IN ACCESS_MASK DesiredAccess,
+                   OUT PLSA_DB_OBJECT *DbObject);
 
 NTSTATUS
-LsapValidateDbObject(LSAPR_HANDLE Handle,
-                     LSA_DB_OBJECT_TYPE HandleType,
-                     ACCESS_MASK GrantedAccess);
+LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
+                 IN LPWSTR ObjectName,
+                 IN LSA_DB_OBJECT_TYPE ObjectType,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT PLSA_DB_OBJECT *DbObject);
 
 NTSTATUS
-LsapCloseDbObject(LSAPR_HANDLE Handle);
+LsapValidateDbObject(IN LSAPR_HANDLE Handle,
+                     IN LSA_DB_OBJECT_TYPE HandleType,
+                     IN ACCESS_MASK GrantedAccess,
+                     OUT PLSA_DB_OBJECT *DbObject);
+
+NTSTATUS
+LsapCloseDbObject(IN PLSA_DB_OBJECT DbObject);
 
 NTSTATUS
 LsapGetObjectAttribute(PLSA_DB_OBJECT DbObject,
@@ -92,31 +102,31 @@ LsarStartRpcServer(VOID);
 
 /* policy.c */
 NTSTATUS
-LsarQueryAuditEvents(LSAPR_HANDLE PolicyHandle,
+LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
-LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
-LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryAccountDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
-LsarQueryDnsDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryDnsDomain(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
-LsarSetPrimaryDomain(LSAPR_HANDLE PolicyObject,
+LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info);
 
 NTSTATUS
-LsarSetAccountDomain(LSAPR_HANDLE PolicyObject,
+LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_ACCOUNT_DOM_INFO Info);
 
 NTSTATUS
-LsarSetDnsDomain(LSAPR_HANDLE PolicyObject,
+LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
                  PLSAPR_POLICY_DNS_DOMAIN_INFO Info);
 
 /* privileges.c */

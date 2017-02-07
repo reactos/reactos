@@ -17,4 +17,4 @@ target_link_libraries(compstui wine)
 
 add_importlibs(compstui msvcrt kernel32 ntdll)
 add_cd_file(TARGET compstui DESTINATION reactos/system32 FOR all)
-add_importlib_target(compstui.spec)
+

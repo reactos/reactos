@@ -5,7 +5,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/include
     ${REACTOS_SOURCE_DIR}/lib/tdilib)
 
-spec2def(iphlpapi.dll iphlpapi.spec)
+spec2def(iphlpapi.dll iphlpapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dhcp_reactos.c
@@ -24,7 +24,7 @@ add_library(iphlpapi SHARED ${SOURCE})
 
 set_module_type(iphlpapi win32dll UNICODE)
 target_link_libraries(iphlpapi wine tdilib)
-add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
+add_importlibs(iphlpapi icmp dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_pch(iphlpapi iphlpapi_private.h)
 add_cd_file(TARGET iphlpapi DESTINATION reactos/system32 FOR all)
-add_importlib_target(iphlpapi.spec)
+

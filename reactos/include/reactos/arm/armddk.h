@@ -8,7 +8,7 @@
 #define PAGE_SIZE 0x1000
 #endif
 
-#ifndef _WINNT_H
+#ifndef _WINNT_
 //
 // IRQLs
 //
@@ -34,7 +34,7 @@
 #define PCR                     ((KPCR * const)KIP0PCRADDRESS)
 #define USERPCR                 ((volatile KPCR * const)USPCR)
 #define KeGetPcr()              PCR
-#ifndef _WINNT_H
+#ifndef _WINNT_
 #define SharedUserData          ((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 
 //
@@ -124,7 +124,7 @@ typedef struct _CONTEXT {
 //
 // Processor Control Region
 //
-#ifdef _WINNT_H
+#ifdef _WINNT_
 #define KIRQL ULONG
 #endif
 
@@ -241,7 +241,7 @@ __fastcall
 KfAcquireSpinLock(
   IN OUT ULONG_PTR* SpinLock);
 
-#ifndef _WINNT_H
+#ifndef _WINNT_
 //
 // IRQL Support on ARM is similar to MIPS/ALPHA
 //

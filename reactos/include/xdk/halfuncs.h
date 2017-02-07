@@ -5,14 +5,15 @@
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
 
 $if (_WDMDDK_)
+__drv_preferredFunction("AllocateCommonBuffer","Obsolete")
 FORCEINLINE
 PVOID
 NTAPI
 HalAllocateCommonBuffer(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG Length,
-  OUT PPHYSICAL_ADDRESS LogicalAddress,
-  IN BOOLEAN CacheEnabled)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ ULONG Length,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress,
+  _In_ BOOLEAN CacheEnabled)
 {
   PALLOCATE_COMMON_BUFFER allocateCommonBuffer;
   PVOID commonBuffer;
@@ -23,15 +24,16 @@ HalAllocateCommonBuffer(
   return commonBuffer;
 }
 
+__drv_preferredFunction("FreeCommonBuffer","Obsolete")
 FORCEINLINE
 VOID
 NTAPI
 HalFreeCommonBuffer(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG Length,
-  IN PHYSICAL_ADDRESS LogicalAddress,
-  IN PVOID VirtualAddress,
-  IN BOOLEAN CacheEnabled)
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ ULONG Length,
+  _In_ PHYSICAL_ADDRESS LogicalAddress,
+  _In_ PVOID VirtualAddress,
+  _In_ BOOLEAN CacheEnabled)
 {
   PFREE_COMMON_BUFFER freeCommonBuffer;
 
@@ -40,11 +42,12 @@ HalFreeCommonBuffer(
   freeCommonBuffer( DmaAdapter, Length, LogicalAddress, VirtualAddress, CacheEnabled );
 }
 
+__drv_preferredFunction("ReadDmaCounter","Obsolete")
 FORCEINLINE
 ULONG
 NTAPI
 HalReadDmaCounter(
-  IN PDMA_ADAPTER DmaAdapter)
+  _In_ PDMA_ADAPTER DmaAdapter)
 {
   PREAD_DMA_COUNTER readDmaCounter;
   ULONG counter;
@@ -58,7 +61,7 @@ HalReadDmaCounter(
 FORCEINLINE
 ULONG
 HalGetDmaAlignment(
-  IN PDMA_ADAPTER DmaAdapter)
+  _In_ PDMA_ADAPTER DmaAdapter)
 {
   PGET_DMA_ALIGNMENT getDmaAlignment;
   ULONG alignment;
@@ -80,65 +83,65 @@ NTHALAPI
 VOID
 NTAPI
 IoFreeAdapterChannel(
-  IN PADAPTER_OBJECT AdapterObject);
+  _In_ PADAPTER_OBJECT AdapterObject);
 
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 BOOLEAN
 NTAPI
 IoFlushAdapterBuffers(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN BOOLEAN WriteToDevice);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ BOOLEAN WriteToDevice);
 
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 VOID
 NTAPI
 IoFreeMapRegisters(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PVOID MapRegisterBase,
-  IN ULONG NumberOfMapRegisters);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ PVOID MapRegisterBase,
+  _In_ ULONG NumberOfMapRegisters);
 
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 PVOID
 NTAPI
 HalAllocateCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  OUT PPHYSICAL_ADDRESS LogicalAddress,
-  IN BOOLEAN CacheEnabled);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ ULONG Length,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress,
+  _In_ BOOLEAN CacheEnabled);
 
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 VOID
 NTAPI
 HalFreeCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  IN PHYSICAL_ADDRESS LogicalAddress,
-  IN PVOID VirtualAddress,
-  IN BOOLEAN CacheEnabled);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ ULONG Length,
+  _In_ PHYSICAL_ADDRESS LogicalAddress,
+  _In_ PVOID VirtualAddress,
+  _In_ BOOLEAN CacheEnabled);
 
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 ULONG
 NTAPI
 HalReadDmaCounter(
-  IN PADAPTER_OBJECT AdapterObject);
+  _In_ PADAPTER_OBJECT AdapterObject);
 
 NTHALAPI
 NTSTATUS
 NTAPI
 HalAllocateAdapterChannel(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN PWAIT_CONTEXT_BLOCK  Wcb,
-  IN ULONG  NumberOfMapRegisters,
-  IN PDRIVER_CONTROL  ExecutionRoutine);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _In_ PWAIT_CONTEXT_BLOCK Wcb,
+  _In_ ULONG NumberOfMapRegisters,
+  _In_ PDRIVER_CONTROL ExecutionRoutine);
 
 $endif (_NTDDK_)
 #endif /* USE_DMA_MACROS ... */
@@ -149,142 +152,145 @@ NTHALAPI
 NTSTATUS
 NTAPI
 HalAssignSlotResources(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+  _In_ PUNICODE_STRING RegistryPath,
+  _In_opt_ PUNICODE_STRING DriverClassName,
+  _In_ PDRIVER_OBJECT DriverObject,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ INTERFACE_TYPE BusType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _Inout_ PCM_RESOURCE_LIST *AllocatedResources);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTHALAPI
 ULONG
 NTAPI
 HalGetInterruptVector(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN ULONG BusInterruptLevel,
-  IN ULONG BusInterruptVector,
-  OUT PKIRQL Irql,
-  OUT PKAFFINITY Affinity);
+  _In_ INTERFACE_TYPE InterfaceType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG BusInterruptLevel,
+  _In_ ULONG BusInterruptVector,
+  _Out_ PKIRQL Irql,
+  _Out_ PKAFFINITY Affinity);
 
 NTHALAPI
 ULONG
 NTAPI
 HalSetBusData(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Length);
+  _In_ BUS_DATA_TYPE BusDataType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
 NTHALAPI
 ULONG
 NTAPI
 HalGetBusData(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  OUT PVOID Buffer,
-  IN ULONG Length);
+  _In_ BUS_DATA_TYPE BusDataType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
 NTHALAPI
 BOOLEAN
 NTAPI
 HalMakeBeep(
-  IN ULONG Frequency);
+  _In_ ULONG Frequency);
 #endif /* !defined(NO_LEGACY_DRIVERS) */
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTHALAPI
 PADAPTER_OBJECT
 NTAPI
 HalGetAdapter(
-  IN PDEVICE_DESCRIPTION DeviceDescription,
-  OUT PULONG NumberOfMapRegisters);
+  _In_ PDEVICE_DESCRIPTION DeviceDescription,
+  _Out_ PULONG NumberOfMapRegisters);
 
 VOID
 NTAPI
 HalPutDmaAdapter(
-  IN PADAPTER_OBJECT DmaAdapter);
+  _In_ PADAPTER_OBJECT DmaAdapter);
 
 NTHALAPI
 VOID
 NTAPI
 HalAcquireDisplayOwnership(
-  IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+  _In_ PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
 
 NTHALAPI
 ULONG
 NTAPI
 HalGetBusDataByOffset(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  OUT PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ BUS_DATA_TYPE BusDataType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 NTHALAPI
 ULONG
 NTAPI
 HalSetBusDataByOffset(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
+  _In_ BUS_DATA_TYPE BusDataType,
+  _In_ ULONG BusNumber,
+  _In_ ULONG SlotNumber,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Offset,
+  _In_ ULONG Length);
 
 NTHALAPI
 BOOLEAN
 NTAPI
 HalTranslateBusAddress(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+  _In_ INTERFACE_TYPE InterfaceType,
+  _In_ ULONG BusNumber,
+  _In_ PHYSICAL_ADDRESS BusAddress,
+  _Inout_ PULONG AddressSpace,
+  _Out_ PPHYSICAL_ADDRESS TranslatedAddress);
 
 NTHALAPI
 PVOID
 NTAPI
 HalAllocateCrashDumpRegisters(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN OUT PULONG NumberOfMapRegisters);
+  _In_ PADAPTER_OBJECT AdapterObject,
+  _Inout_ PULONG NumberOfMapRegisters);
 
 NTSTATUS
 NTAPI
 HalGetScatterGatherList(
-  IN PADAPTER_OBJECT DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PMDL Mdl,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
-  IN PVOID Context,
-  IN BOOLEAN WriteToDevice);
+  _In_ PADAPTER_OBJECT DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PMDL Mdl,
+  _In_ PVOID CurrentVa,
+  _In_ ULONG Length,
+  _In_ PDRIVER_LIST_CONTROL ExecutionRoutine,
+  _In_ PVOID Context,
+  _In_ BOOLEAN WriteToDevice);
 
 VOID
 NTAPI
 HalPutScatterGatherList(
-  IN PADAPTER_OBJECT DmaAdapter,
-  IN PSCATTER_GATHER_LIST ScatterGather,
-  IN BOOLEAN WriteToDevice);
+  _In_ PADAPTER_OBJECT DmaAdapter,
+  _In_ PSCATTER_GATHER_LIST ScatterGather,
+  _In_ BOOLEAN WriteToDevice);
 
 $endif (_NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 FASTCALL
 HalExamineMBR(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG MBRTypeIdentifier,
-  OUT PVOID *Buffer);
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ ULONG SectorSize,
+  _In_ ULONG MBRTypeIdentifier,
+  _Out_ PVOID *Buffer);
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -292,15 +298,15 @@ HalExamineMBR(
 NTSTATUS
 NTAPI
 HalAllocateHardwareCounters(
-  IN PGROUP_AFFINITY GroupAffinty,
-  IN ULONG GroupCount,
-  IN PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,
-  OUT PHANDLE CounterSetHandle);
+  _In_reads_(GroupCount) PGROUP_AFFINITY GroupAffinty,
+  _In_ ULONG GroupCount,
+  _In_ PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,
+  _Out_ PHANDLE CounterSetHandle);
 
 NTSTATUS
 NTAPI
 HalFreeHardwareCounters(
-  IN HANDLE CounterSetHandle);
+  _In_ HANDLE CounterSetHandle);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
@@ -326,8 +332,8 @@ NTHALAPI
 VOID
 NTAPI
 HalBugCheckSystem(
-  IN PWHEA_ERROR_SOURCE_DESCRIPTOR ErrorSource,
-  IN PWHEA_ERROR_RECORD ErrorRecord);
+  _In_ PWHEA_ERROR_SOURCE_DESCRIPTOR ErrorSource,
+  _In_ PWHEA_ERROR_RECORD ErrorRecord);
 
 #else
 
@@ -337,7 +343,7 @@ NTHALAPI
 VOID
 NTAPI
 HalBugCheckSystem(
-  IN PWHEA_ERROR_RECORD ErrorRecord);
+  _In_ PWHEA_ERROR_RECORD ErrorRecord);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 

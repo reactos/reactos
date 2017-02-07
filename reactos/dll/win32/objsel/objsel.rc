@@ -23,6 +23,8 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+1 WINE_REGISTRY objsel.rgs
+
 #define WINE_FILENAME_STR "objsel.dll"
 
 #include "wine/wine_common_ver.rc"

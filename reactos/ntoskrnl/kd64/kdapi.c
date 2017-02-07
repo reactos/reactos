@@ -1953,14 +1953,6 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
     {
         switch ((ULONG_PTR)InputBuffer)
         {
-            case 0x30: // ManualBugCheck:
-                KeBugCheck(MANUALLY_INITIATED_CRASH);
-                break;
-
-             case 0x25: // EnterDebugger:
-                DbgBreakPoint();
-                break;
-
             case 0x24:
                 MmDumpArmPfnDatabase(FALSE);
                 break;

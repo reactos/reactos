@@ -16,5 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* @makedep: itss.inf */
-REGINST REGINST itss.inf
+/* @makedep: itss.rgs */
+1 WINE_REGISTRY itss.rgs
+2 WINE_REGISTRY itss_r.rgs

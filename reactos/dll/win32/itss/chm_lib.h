@@ -72,25 +72,25 @@ struct chmUnitInfo
     WCHAR              path[CHM_MAX_PATHLEN+1];
 };
 
-struct chmFile* chm_openW(const WCHAR *filename);
-struct chmFile *chm_dup(struct chmFile *oldHandle);
+struct chmFile* chm_openW(const WCHAR *filename) DECLSPEC_HIDDEN;
+struct chmFile *chm_dup(struct chmFile *oldHandle) DECLSPEC_HIDDEN;
 
 /* close an ITS archive */
-void chm_close(struct chmFile *h);
+void chm_close(struct chmFile *h) DECLSPEC_HIDDEN;
 
 /* resolve a particular object from the archive */
 #define CHM_RESOLVE_SUCCESS (0)
 #define CHM_RESOLVE_FAILURE (1)
 int chm_resolve_object(struct chmFile *h,
                        const WCHAR *objPath,
-                       struct chmUnitInfo *ui);
+                       struct chmUnitInfo *ui) DECLSPEC_HIDDEN;
 
 /* retrieve part of an object from the archive */
 LONGINT64 chm_retrieve_object(struct chmFile *h,
                               struct chmUnitInfo *ui,
                               unsigned char *buf,
                               LONGUINT64 addr,
-                              LONGINT64 len);
+                              LONGINT64 len) DECLSPEC_HIDDEN;
 
 /* enumerate the objects in the .chm archive */
 typedef int (*CHM_ENUMERATOR)(struct chmFile *h,
@@ -109,6 +109,6 @@ int chm_enumerate_dir(struct chmFile *h,
                       const WCHAR *prefix,
                       int what,
                       CHM_ENUMERATOR e,
-                      void *context);
+                      void *context) DECLSPEC_HIDDEN;
 
 #endif /* INCLUDED_CHMLIB_H */

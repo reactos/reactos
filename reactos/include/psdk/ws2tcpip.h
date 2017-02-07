@@ -24,7 +24,7 @@ extern "C" {
 #ifdef _MSC_VER
 #define WS2TCPIP_INLINE __inline
 #else
-#define WS2TCPIP_INLINE static inline
+#define WS2TCPIP_INLINE extern inline
 #endif
 
 /* getaddrinfo error codes */
@@ -370,9 +370,9 @@ getnameinfo(
   IN const SOCKADDR *pSockaddr,
   IN socklen_t SockaddrLength,
   OUT PCHAR pNodeBuffer OPTIONAL,
-  IN socklen_t NodeBufferSize,
+  IN DWORD NodeBufferSize,
   OUT PCHAR pServiceBuffer,
-  IN socklen_t ServiceBufferSize,
+  IN DWORD ServiceBufferSize,
   IN INT Flags);
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2) || (_WIN32_WINNT >= 0x0502)
@@ -758,7 +758,7 @@ idealsendbacklogquery(
 {
   DWORD bytes;
 
-  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_QUERY, 
+  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_QUERY,
                   NULL, 0, pISB, sizeof(*pISB), &bytes, NULL, NULL);
 }
 
@@ -771,8 +771,8 @@ idealsendbacklognotify(
 {
   DWORD bytes;
 
-  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_CHANGE, 
-                  NULL, 0, NULL, 0, &bytes, 
+  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_CHANGE,
+                  NULL, 0, NULL, 0, &bytes,
                   lpOverlapped, lpCompletionRoutine);
 }
 

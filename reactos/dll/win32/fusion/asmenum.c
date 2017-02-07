@@ -236,9 +236,9 @@ static int compare_assembly_names(ASMNAME *asmname1, ASMNAME *asmname2)
     DWORD size, i;
 
     size = sizeof(name1);
-    IAssemblyName_GetProperty(asmname1->name, ASM_NAME_NAME, &name1, &size);
+    IAssemblyName_GetProperty(asmname1->name, ASM_NAME_NAME, name1, &size);
     size = sizeof(name2);
-    IAssemblyName_GetProperty(asmname2->name, ASM_NAME_NAME, &name2, &size);
+    IAssemblyName_GetProperty(asmname2->name, ASM_NAME_NAME, name2, &size);
 
     if ((ret = strcmpiW(name1, name2))) return ret;
 

@@ -32,50 +32,56 @@ typedef const DRMRIGHTS *PCDRMRIGHTS;
 extern "C" {
 #endif
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmAddContentHandlers(
-  IN ULONG ContentId,
-  IN PVOID *paHandlers,
-  IN ULONG NumHandlers);
+  _In_ ULONG ContentId,
+  _In_reads_(NumHandlers) PVOID *paHandlers,
+  _In_ ULONG NumHandlers);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmCreateContentMixed(
-  IN PULONG paContentId,
-  IN ULONG cContentId,
-  OUT PULONG pMixedContentId);
+  _In_ PULONG paContentId,
+  _In_ ULONG cContentId,
+  _Out_ PULONG pMixedContentId);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmDestroyContent(
-  IN ULONG ContentId);
+  _In_ ULONG ContentId);
 
 NTSTATUS
 NTAPI
 DrmForwardContentToDeviceObject(
-  IN ULONG ContentId,
-  IN PVOID Reserved,
-  IN PCDRMFORWARD DrmForward);
+  _In_ ULONG ContentId,
+  _In_opt_ PVOID Reserved,
+  _In_ PCDRMFORWARD DrmForward);
 
+_IRQL_requires_max_(PASSIVE_LEVEL) 
 NTSTATUS
 NTAPI
 DrmForwardContentToFileObject(
-  IN ULONG ContentId,
-  IN PFILE_OBJECT FileObject);
+  _In_ ULONG ContentId,
+  _In_ PFILE_OBJECT FileObject);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmForwardContentToInterface(
-  IN ULONG ContentId,
-  IN PUNKNOWN pUnknown,
-  IN ULONG NumMethods);
+  _In_ ULONG ContentId,
+  _In_ PUNKNOWN pUnknown,
+  _In_ ULONG NumMethods);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 DrmGetContentRights(
-  IN ULONG ContentId,
-  OUT PDRMRIGHTS DrmRights);
+  _In_ ULONG ContentId,
+  _Out_ PDRMRIGHTS DrmRights);
 
 #ifdef __cplusplus
 }
@@ -89,14 +95,14 @@ DEFINE_GUID(IID_IDrmAudioStream,
 
 DECLARE_INTERFACE_(IDrmAudioStream, IUnknown) {
   STDMETHOD_(NTSTATUS, QueryInterface)(THIS_
-    REFIID InterfaceId,
-    PVOID* Interface
+    _In_ REFIID InterfaceId,
+    _Out_ PVOID* Interface
   ) PURE;
   STDMETHOD_(ULONG,AddRef)(THIS) PURE;
   STDMETHOD_(ULONG,Release)(THIS) PURE;
   STDMETHOD_(NTSTATUS,SetContentId)(THIS_
-    IN ULONG ContentId,
-    IN PCDRMRIGHTS DrmRights
+    _In_ ULONG ContentId,
+    _In_ PCDRMRIGHTS DrmRights
   ) PURE;
 };
 
@@ -104,7 +110,7 @@ typedef IDrmAudioStream *PDRMAUDIOSTREAM;
 
 #define IMP_IDrmAudioStream             \
   STDMETHODIMP_(NTSTATUS) SetContentId( \
-    IN ULONG ContentId,                 \
-    IN PCDRMRIGHTS DrmRights);
+    _In_ ULONG ContentId,                 \
+    _In_ PCDRMRIGHTS DrmRights);
 
 #endif /* DRMK_H */

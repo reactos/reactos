@@ -48,11 +48,11 @@ enum
 };
 
 INT
-copy (TCHAR source[MAX_PATH],
-      TCHAR dest[MAX_PATH],
-      INT append,
-      DWORD lpdwFlags,
-      BOOL bTouch)
+copy(TCHAR source[MAX_PATH],
+     TCHAR dest[MAX_PATH],
+     INT append,
+     DWORD lpdwFlags,
+     BOOL bTouch)
 {
     FILETIME srctime,NewFileTime;
     HANDLE hFileSrc;
@@ -289,8 +289,45 @@ static INT CopyOverwrite (LPTSTR fn)
     return res;
 }
 
+/* The following lines of copy were written by someone else
+(most likely Eric Kohl) and it was taken from ren.c */
+static void
+BuildFileName(
+    LPTSTR pszSource,
+    LPTSTR pszTarget,
+    LPTSTR pszOutput)
+{
+    /* build destination file name */
+    while (*pszTarget != 0)
+    {
+        if (*pszTarget == _T('*'))
+        {
+            pszTarget++;
+            while ((*pszSource != 0) && (*pszSource != *pszTarget))
+            {
+                *pszOutput++ = *pszSource++;
+            }
+        }
+        else if (*pszTarget == _T('?'))
+        {
+            pszTarget++;
+            if (*pszSource != 0)
+            {
+                *pszOutput++ = *pszSource++;
+            }
+        }
+        else
+        {
+            *pszOutput++ = *pszTarget++;
+            if (*pszSource != 0)
+                pszSource++;
+        }
+    }
 
-INT cmd_copy (LPTSTR param)
+    *pszOutput = 0;
+}
+
+INT cmd_copy(LPTSTR param)
 {
     LPTSTR *arg;
     INT argc, i, nFiles, nOverwrite = 0, nSrc = -1, nDes = -1;
@@ -301,11 +338,10 @@ INT cmd_copy (LPTSTR param)
     /* If this is the type of copy where we are adding files */
     BOOL bAppend = FALSE;
     WIN32_FIND_DATA findBuffer;
-    HANDLE hFile;
+    HANDLE hFile = NULL;
     BOOL bTouch = FALSE;
     /* Used when something like "copy c*.exe d*.exe" during the process of
        figuring out the new name */
-    TCHAR tmpName[MAX_PATH] = _T("");
     /* Pointer to keep track of how far through the append input(file1+file2+file3) we are */
     TCHAR  * appendPointer = _T("\0");
     /* The full path to src and dest.  This has drive letter, folders, and filename */
@@ -315,17 +351,16 @@ INT cmd_copy (LPTSTR param)
     BOOL bSrcName = FALSE;
     /* Seems like a waste but it is a pointer used to copy from input to PreserveName */
     TCHAR * UseThisName;
-    /* Stores the name( i.e. blah.txt or blah*.txt) which later we might need */
-    TCHAR PreserveName[MAX_PATH];
     /* for CMDCOPY env */
     TCHAR *evar;
     int size;
     TCHAR * szTouch;
-    BOOL bDone = FALSE;
+    BOOL bHasWildcard, bDone = FALSE, bMoreFiles = FALSE;
+    BOOL bMultipleSource = FALSE, bMultipleDest = FALSE;
 
 
     /* Show help/usage info */
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE, STRING_COPY_HELP2);
         return 0;
@@ -350,11 +385,12 @@ INT cmd_copy (LPTSTR param)
     }
 
     /* check see if we did get any env variable */
-    if (size !=0)
+    if (size != 0)
     {
-        int t=0;
+        int t = 0;
+
         /* scan and set the flags */
-        for (t=0;t<size;t++)
+        for (t = 0; t < size; t++)
         {
             if (_tcsncicmp(_T("/A"),&evar[t],2) == 0)
             {
@@ -402,9 +438,8 @@ INT cmd_copy (LPTSTR param)
 
 
     /* Split the user input into array */
-    arg = split (param, &argc, FALSE);
+    arg = split(param, &argc, FALSE, TRUE);
     nFiles = argc;
-
 
     /* Read switches and count files */
     for (i = 0; i < argc; i++)
@@ -469,28 +504,35 @@ INT cmd_copy (LPTSTR param)
         else
         {
             /* If it isn't a switch then it is the source or destination */
-            if(nSrc == -1)
+            if (nSrc == -1)
             {
                 nSrc = i;
             }
-            else if(*arg[i] == _T('+') || *arg[i] == _T(','))
+            else if (*arg[i] == _T('+'))
             {
-                /* Add these onto the source string
+                /* Next file should be appended */
+                bMoreFiles = TRUE;
+                nFiles -= 1;
+            }
+            else if (bMoreFiles)
+            {
+                /* Add this file to the source string
                    this way we can do all checks
                     directly on source string later on */
                 TCHAR * ptr;
-                int length = (_tcslen(arg[nSrc]) +_tcslen(arg[i]) + _tcslen(arg[i+1]) + 1) * sizeof(TCHAR);
+                int length = (_tcslen(arg[nSrc]) + _tcslen(arg[i]) + 2) * sizeof(TCHAR);
                 ptr = cmd_alloc(length);
                 if (ptr)
                 {
                     _tcscpy(ptr, arg[nSrc]);
+                    _tcscat(ptr, _T("|"));
                     _tcscat(ptr, arg[i]);
-                    _tcscat(ptr, arg[i+1]);
                     cmd_free(arg[nSrc]);
                     arg[nSrc] = ptr;
-                    i++;
-                    nFiles -= 2;
+                    nFiles -= 1;
                 }
+
+                bMoreFiles = FALSE;
             }
             else if(nDes == -1)
             {
@@ -501,100 +543,146 @@ INT cmd_copy (LPTSTR param)
 
     /* keep quiet within batch files */
     if (bc != NULL)
-        {
+    {
         dwFlags |= COPY_NO_PROMPT;
         dwFlags &= ~COPY_PROMPT;
-        }
+    }
 
-    if(nFiles < 1)
+    if (nFiles < 1)
     {
         /* There are not enough files, there has to be at least 1 */
         ConOutResPuts(STRING_ERROR_REQ_PARAM_MISSING);
-        freep (arg);
+        freep(arg);
         return 1;
     }
 
-    if(nFiles > 2)
+    if (nFiles > 2)
     {
         /* There are too many file names in command */
         ConErrResPrintf(STRING_ERROR_TOO_MANY_PARAMETERS,_T(""));
         nErrorLevel = 1;
-        freep (arg);
+        freep(arg);
         return 1;
     }
 
-    if (nDes != -1) /* you can only append files when there is a destination */
+    if ((_tcschr(arg[nSrc], _T('|')) != NULL) ||
+        (_tcschr(arg[nSrc], _T('*')) != NULL) ||
+        (_tcschr(arg[nSrc], _T('?')) != NULL) ||
+        IsExistingDirectory(arg[nSrc]))
     {
-        if(((_tcschr (arg[nSrc], _T('+')) != NULL) ||
-            (_tcschr (arg[nSrc], _T('*')) != NULL && _tcschr (arg[nDes], _T('*')) == NULL) ||
-            (IsExistingDirectory (arg[nSrc]) && (_tcschr (arg[nDes], _T('*')) == NULL && !IsExistingDirectory (arg[nDes])))
-            ))
-        {
-            /* There is a + in the source filename, this means
-            that there is more then one file being put into
-            one file. */
-            bAppend = TRUE;
-            if(_tcschr (arg[nSrc], _T('+')) != NULL)
-                appendPointer = arg[nSrc];
-        }
+        bMultipleSource = TRUE;
     }
 
     /* Reusing the number of files variable */
     nFiles = 0;
 
-    do
+    /* Check if no destination argument is passed */
+    if (nDes == -1)
     {
-        /* Set up the string that is the path to the destination */
-        if(nDes != -1)
+        /* If no destination was entered then just use
+        the current directory as the destination */
+        GetCurrentDirectory(MAX_PATH, szDestPath);
+    }
+    else
+    {
+        /* Check if the destination is 'x:' */
+        if ((arg[nDes][1] == _T(':')) && (arg[nDes][2] == _T('\0')))
         {
-            if(_tcslen(arg[nDes]) == 2 && arg[nDes][1] == _T(':'))
-            {
-                GetRootPath(arg[nDes],szDestPath,MAX_PATH);
-            }
-            else
-                /* If the user entered two file names then form the full string path */
-                GetFullPathName (arg[nDes], MAX_PATH, szDestPath, NULL);
+            GetRootPath(arg[nDes], szDestPath, MAX_PATH);
         }
         else
         {
-            /* If no destination was entered then just use
-            the current directory as the destination */
-            GetCurrentDirectory (MAX_PATH, szDestPath);
+            /* If the user entered two file names then form the full string path */
+            GetFullPathName(arg[nDes], MAX_PATH, szDestPath, NULL);
         }
 
-        /* Get the full string of the path to the source file */
-        if(_tcschr (arg[nSrc], _T('+')) != NULL)
+        /* Make sure there is an ending slash to the path if the dest is a folder */
+        if ((_tcschr(szDestPath, _T('*')) == NULL) &&
+            IsExistingDirectory(szDestPath))
         {
-            _tcscpy(tmpName,_T("\0"));
+            bMultipleDest = TRUE;
+            if (szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
+                _tcscat(szDestPath, _T("\\"));
+        }
+
+        /* Check if the destination uses wildcards */
+        if ((_tcschr(arg[nDes], _T('*')) != NULL) ||
+            (_tcschr(arg[nDes], _T('?')) != NULL))
+        {
+            bMultipleDest = TRUE;
+        }
+    }
+
+    if (nDes != -1) /* you can only append files when there is a destination */
+    {
+        if (bMultipleSource && !bMultipleDest)
+        {
+            /* We have multiple source files, but not multiple destination
+               files. This means we are appending the soruce files. */
+            bAppend = TRUE;
+            if (_tcschr(arg[nSrc], _T('|')) != NULL)
+                appendPointer = arg[nSrc];
+        }
+    }
+
+    /* Save the name the user entered */
+    UseThisName = _tcsrchr(szDestPath,_T('\\'));
+    if (UseThisName)
+    {
+        /* Split the name from the path */
+        *UseThisName++ = _T('\0');
+
+        /* Check if the dest path ends with '\*' or '\' */
+        if (((UseThisName[0] == _T('*')) && (UseThisName[1] == _T('\0'))) ||
+            (UseThisName[0] == _T('\0')))
+        {
+            /* In this case we will be using the same name as the source file
+            for the destination file because destination is a folder */
+            bSrcName = TRUE;
+            UseThisName = NULL;
+        }
+    }
+    else
+    {
+        /* Something's seriously wrong! */
+        UseThisName = szDestPath;
+    }
+
+    do
+    {
+        /* Get the full string of the path to the source file */
+        if (_tcschr(arg[nSrc], _T('|')) != NULL)
+        {
+            /* Reset the source path */
+            szSrcPath[0] = _T('\0');
+
             /* Loop through the source file name and copy all
             the chars one at a time until it gets too + */
             while(TRUE)
             {
-                if(!_tcsncmp (appendPointer,_T("+"),1) || !_tcsncmp (appendPointer,_T("\0"),1))
+                if (appendPointer[0] == _T('|'))
                 {
-                    /* Now that the pointer is on the + we
-                       need to go to the start of the next filename */
-                    if(!_tcsncmp (appendPointer,_T("+"),1))
-                       appendPointer++;
-                    else
-                        bDone = TRUE;
+                    /* Skip the | and go to the next file name */
+                    appendPointer++;
+                    break;
+                }
+                else if (appendPointer[0] == _T('\0'))
+                {
+                    bDone = TRUE;
                     break;
                 }
 
-                _tcsncat(tmpName,appendPointer,1);
+                _tcsncat(szSrcPath, appendPointer, 1);
                 appendPointer++;
             }
 
-            /* Finish the string off with a null char */
-            _tcsncat(tmpName,_T("\0"),1);
-
-            if(_tcschr (arg[nSrc], _T(',')) != NULL)
+            if (_tcschr(arg[nSrc], _T(',')) != NULL)
             {
                 /* Only time there is a , in the source is when they are using touch
                    Cant have a destination and can only have on ,, at the end of the string
                     Cant have more then one file name */
-                szTouch = _tcsstr (arg[nSrc], _T("+"));
-                if(_tcsncmp (szTouch,_T("+,,\0"),4) || nDes != -1)
+                szTouch = _tcsstr(arg[nSrc], _T("|"));
+                if (_tcsncmp(szTouch,_T("|,,\0"), 4) || (nDes != -1))
                 {
                     ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT,arg[nSrc]);
                     nErrorLevel = 1;
@@ -608,175 +696,123 @@ INT cmd_copy (LPTSTR param)
         else
         {
             bDone = TRUE;
-            _tcscpy(tmpName, arg[nSrc]);
+            _tcscpy(szSrcPath, arg[nSrc]);
         }
 
-        /* Get full path or root names */
-        if(_tcslen(tmpName) == 2 && tmpName[1] == _T(':'))
+        /* "x:" is not a valid source path format. */
+        if ((szSrcPath[1] == _T(':')) && (szSrcPath[2] == _T('\0')))
         {
-            GetRootPath(tmpName,szSrcPath,MAX_PATH);
+            ConOutPrintf(_T("%s\n"), szSrcPath);
+            ConOutFormatMessage(ERROR_FILE_NOT_FOUND, szSrcPath);
+            nErrorLevel = 1;
+            break;
         }
-        else
-        {
-            /* Get the full path to first file in the string of file names */
-            GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);
 
-            /* We got a device path of form \\.\x */
-            /* FindFirstFile cannot handle this, therefore use the short path */
-            if (szSrcPath[0] == _T('\\') && szSrcPath[1] == _T('\\') &&
-                szSrcPath[2] == _T('.') && szSrcPath[3] == _T('\\'))
-            {
-                _tcscpy(szSrcPath, tmpName);
-            }
-        }
 
         /* From this point on, we can assume that the shortest path is 3 letters long
         and that would be [DriveLetter]:\ */
 
-        /* If there is no * in the path name and it is a folder
-        then we will need to add a wildcard to the pathname
-        so FindFirstFile comes up with all the files in that
-        folder */
-        if(_tcschr (szSrcPath, _T('*')) == NULL &&
-            IsExistingDirectory (szSrcPath))
+        /* Check if the path has a wildcard */
+        bHasWildcard = (_tcschr(szSrcPath, _T('*')) != NULL);
+
+        /* If there is no * in the path name and it is a folder then we will
+           need to add a wildcard to the pathname so FindFirstFile comes up
+           with all the files in that folder */
+        if (!bHasWildcard && IsExistingDirectory(szSrcPath))
         {
             /* If it doesnt have a \ at the end already then on needs to be added */
-            if(szSrcPath[_tcslen(szSrcPath) -  1] != _T('\\'))
-                _tcscat (szSrcPath, _T("\\"));
-            /* Add a wildcard after the \ */
-            _tcscat (szSrcPath, _T("*"));
+            if (szSrcPath[_tcslen(szSrcPath) -  1] != _T('\\'))
+                _tcscat(szSrcPath, _T("\\"));
+            _tcscat(szSrcPath, _T("*"));
+            bHasWildcard = TRUE;
         }
-        /* Make sure there is an ending slash to the path if the dest is a folder */
-        if(_tcschr (szDestPath, _T('*')) == NULL &&
-            IsExistingDirectory(szDestPath))
+
+        /* If the path ends with '\' add a wildcard at the end */
+        if (szSrcPath[_tcslen(szSrcPath) -  1] == _T('\\'))
         {
-            if(szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
-                _tcscat (szDestPath, _T("\\"));
+            _tcscat(szSrcPath, _T("*"));
+            bHasWildcard = TRUE;
         }
 
         /* Get a list of all the files */
-        hFile = FindFirstFile (szSrcPath, &findBuffer);
+        hFile = FindFirstFile(szSrcPath, &findBuffer);
 
-        /* We need to figure out what the name of the file in the is going to be */
-        if((szDestPath[_tcslen(szDestPath) -  1] == _T('*') && szDestPath[_tcslen(szDestPath) -  2] == _T('\\')) ||
-            szDestPath[_tcslen(szDestPath) -  1] == _T('\\'))
+        /* If it couldnt open the file handle, print out the error */
+        if (hFile == INVALID_HANDLE_VALUE)
         {
-            /* In this case we will be using the same name as the source file
-            for the destination file because destination is a folder */
-            bSrcName = TRUE;
-        }
-        else
-        {
-            /* Save the name the user entered */
-            UseThisName = _tcsrchr(szDestPath,_T('\\'));
-            UseThisName++;
-            _tcscpy(PreserveName,UseThisName);
+            /* only print source name when more then one file */
+            if (bMultipleSource)
+                ConOutPrintf(_T("%s\n"), szSrcPath);
+
+            ConOutFormatMessage(GetLastError(), szSrcPath);
+            freep(arg);
+            nErrorLevel = 1;
+            return 1;
         }
 
         /* Strip the paths back to the folder they are in */
-        for(i = (_tcslen(szSrcPath) -  1); i > -1; i--)
-            if(szSrcPath[i] != _T('\\'))
+        for (i = (_tcslen(szSrcPath) -  1); i > -1; i--)
+            if (szSrcPath[i] != _T('\\'))
                 szSrcPath[i] = _T('\0');
-            else
-                break;
-
-        for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
-            if(szDestPath[i] != _T('\\'))
-                szDestPath[i] = _T('\0');
             else
                 break;
 
         do
         {
             /* Check Breaker */
-            if(CheckCtrlBreak(BREAK_INPUT))
+            if (CheckCtrlBreak(BREAK_INPUT))
             {
                 freep(arg);
                 return 1;
             }
+
             /* Set the override to yes each new file */
             nOverwrite = 1;
 
-            /* If it couldnt open the file handle, print out the error */
-            if(hFile == INVALID_HANDLE_VALUE)
-            {
-                ConOutFormatMessage (GetLastError(), szSrcPath);
-                freep (arg);
-                nErrorLevel = 1;
-                return 1;
-            }
-
             /* Ignore the . and .. files */
-            if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
-                !_tcscmp (findBuffer.cFileName, _T(".."))||
+            if (!_tcscmp(findBuffer.cFileName, _T("."))  ||
+                !_tcscmp(findBuffer.cFileName, _T("..")) ||
                 findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
                 continue;
+            }
 
             /* Copy the base folder over to a tmp string */
-            _tcscpy(tmpDestPath,szDestPath);
+            _tcscpy(tmpDestPath, szDestPath);
+            _tcscat(tmpDestPath, _T("\\"));
 
             /* Can't put a file into a folder that isnt there */
-            if(_tcscmp (szDestPath, _T("\\\\.\\")) && !IsExistingDirectory(szDestPath))
+            if (_tcscmp(tmpDestPath, _T("\\\\.\\")) &&
+                !IsExistingDirectory(tmpDestPath))
             {
-                ConOutFormatMessage (GetLastError (), szSrcPath);
-                freep (arg);
+                ConOutFormatMessage(GetLastError(), szSrcPath);
+                freep(arg);
                 nErrorLevel = 1;
                 return 1;
             }
+
             /* Copy over the destination path name */
-            if(bSrcName)
-                _tcscat (tmpDestPath, findBuffer.cFileName);
+            if (bSrcName)
+                _tcscat(tmpDestPath, findBuffer.cFileName);
             else
             {
                 /* If there is no wildcard you can use the name the user entered */
-                if(_tcschr (PreserveName, _T('*')) == NULL)
+                if ((_tcschr(UseThisName, _T('*')) == NULL) &&
+                    (_tcschr(UseThisName, _T('?')) == NULL))
                 {
-                    _tcscat (tmpDestPath, PreserveName);
+                    _tcscat(tmpDestPath, UseThisName);
                 }
                 else
                 {
-                    /* The following lines of copy were written by someone else
-                    (most likely Eric Khoul) and it was taken from ren.c */
-                    LPTSTR p,q,r;
                     TCHAR DoneFile[MAX_PATH];
-                    /* build destination file name */
-                    p = findBuffer.cFileName;
-                    q = PreserveName;
-                    r = DoneFile;
-                    while(*q != 0)
-                    {
-                        if (*q == '*')
-                        {
-                            q++;
-                            while (*p != 0 && *p != *q)
-                            {
-                                *r = *p;
-                                p++;
-                                r++;
-                            }
-                        }
-                        else if (*q == '?')
-                        {
-                            q++;
-                            if (*p != 0)
-                            {
-                                *r = *p;
-                                p++;
-                                r++;
-                            }
-                        }
-                        else
-                        {
-                            *r = *q;
-                            if (*p != 0)
-                                p++;
-                            q++;
-                            r++;
-                        }
-                    }
-                    *r = 0;
+
+                    BuildFileName(findBuffer.cFileName,
+                                  UseThisName,
+                                  DoneFile);
+
+
                     /* Add the filename to the tmp string path */
-                    _tcscat (tmpDestPath, DoneFile);
+                    _tcscat(tmpDestPath, DoneFile);
                 }
             }
 
@@ -785,7 +821,7 @@ INT cmd_copy (LPTSTR param)
             _tcscat (tmpSrcPath, findBuffer.cFileName);
 
             /* Check to see if the file is the same file */
-            if(!bTouch && !_tcscmp (tmpSrcPath, tmpDestPath))
+            if(!bTouch && !_tcscmp(tmpSrcPath, tmpDestPath))
             {
                 ConOutResPrintf(STRING_COPY_ERROR2);
 
@@ -793,21 +829,22 @@ INT cmd_copy (LPTSTR param)
                 break;
             }
 
+            /* only print source name when more then one file */
+            if (bMultipleSource)
+                ConOutPrintf(_T("%s\n"), tmpSrcPath);
+
             /* Handle any overriding / prompting that needs to be done */
-            if(((!(dwFlags & COPY_NO_PROMPT) && IsExistingFile (tmpDestPath)) || dwFlags & COPY_PROMPT) && !bTouch)
+            if (((!(dwFlags & COPY_NO_PROMPT) && IsExistingFile (tmpDestPath)) || dwFlags & COPY_PROMPT) && !bTouch)
                 nOverwrite = CopyOverwrite(tmpDestPath);
-            if(nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
+            if (nOverwrite == PROMPT_NO || nOverwrite == PROMPT_BREAK)
                 continue;
-            if(nOverwrite == PROMPT_ALL || (nOverwrite == PROMPT_YES && bAppend))
+            if (nOverwrite == PROMPT_ALL || (nOverwrite == PROMPT_YES && bAppend))
                 dwFlags |= COPY_NO_PROMPT;
 
             /* Tell weather the copy was successful or not */
             if(copy(tmpSrcPath,tmpDestPath, bAppend, dwFlags, bTouch))
             {
                 nFiles++;
-                /* only print source name when more then one file */
-                if(_tcschr (arg[nSrc], _T('+')) != NULL || _tcschr (arg[nSrc], _T('*')) != NULL)
-                    ConOutPrintf(_T("%s\n"),findBuffer.cFileName);
                 //LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
             }
             else
@@ -819,15 +856,15 @@ INT cmd_copy (LPTSTR param)
             }
 
         /* Loop through all wildcard files */
-        } while(FindNextFile (hFile, &findBuffer));
+        } while (FindNextFile(hFile, &findBuffer));
 
     /* Loop through all files in src string with a + */
     } while(!bDone);
 
     /* print out the number of files copied */
-    ConOutResPrintf(STRING_COPY_FILE, nFiles);
+    ConOutResPrintf(STRING_COPY_FILE, bAppend ? 1 : nFiles);
 
-    FindClose(hFile);
+    if (hFile) FindClose(hFile);
 
     if (arg != NULL)
         freep(arg);

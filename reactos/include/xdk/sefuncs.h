@@ -4,98 +4,103 @@
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAccessCheck(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-  IN BOOLEAN SubjectContextLocked,
-  IN ACCESS_MASK DesiredAccess,
-  IN ACCESS_MASK PreviouslyGrantedAccess,
-  OUT PPRIVILEGE_SET *Privileges OPTIONAL,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+  _In_ BOOLEAN SubjectContextLocked,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ACCESS_MASK PreviouslyGrantedAccess,
+  _Outptr_opt_ PPRIVILEGE_SET *Privileges,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PACCESS_MASK GrantedAccess,
+  _Out_ PNTSTATUS AccessStatus);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeAssignSecurity(
-  IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-  IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-  OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-  IN BOOLEAN IsDirectoryObject,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN POOL_TYPE PoolType);
+  _In_opt_ PSECURITY_DESCRIPTOR ParentDescriptor,
+  _In_opt_ PSECURITY_DESCRIPTOR ExplicitDescriptor,
+  _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+  _In_ BOOLEAN IsDirectoryObject,
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ POOL_TYPE PoolType);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeAssignSecurityEx(
-  IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
-  IN PSECURITY_DESCRIPTOR ExplicitDescriptor OPTIONAL,
-  OUT PSECURITY_DESCRIPTOR *NewDescriptor,
-  IN GUID *ObjectType OPTIONAL,
-  IN BOOLEAN IsDirectoryObject,
-  IN ULONG AutoInheritFlags,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN POOL_TYPE PoolType);
+  _In_opt_ PSECURITY_DESCRIPTOR ParentDescriptor,
+  _In_opt_ PSECURITY_DESCRIPTOR ExplicitDescriptor,
+  _Out_ PSECURITY_DESCRIPTOR *NewDescriptor,
+  _In_opt_ GUID *ObjectType,
+  _In_ BOOLEAN IsDirectoryObject,
+  _In_ ULONG AutoInheritFlags,
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ POOL_TYPE PoolType);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeDeassignSecurity(
-  IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor);
+  _Inout_ PSECURITY_DESCRIPTOR *SecurityDescriptor);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeValidSecurityDescriptor(
-  IN ULONG Length,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ ULONG Length,
+  _In_reads_bytes_(Length) PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTKERNELAPI
 ULONG
 NTAPI
 SeObjectCreateSaclAccessBits(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeReleaseSubjectContext(
-  IN OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
+  _Inout_ PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeUnlockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeCaptureSubjectContext(
-  OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
+  _Out_ PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeLockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext);
 $endif (_WDMDDK_)
 
 $if (_NTDDK_)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeSinglePrivilegeCheck(
-  IN LUID PrivilegeValue,
-  IN KPROCESSOR_MODE PreviousMode);
+  _In_ LUID PrivilegeValue,
+  _In_ KPROCESSOR_MODE PreviousMode);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
@@ -103,200 +108,200 @@ NTKERNELAPI
 VOID
 NTAPI
 SeReleaseSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+  _Inout_ PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SePrivilegeCheck(
-  IN OUT PPRIVILEGE_SET RequiredPrivileges,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-  IN KPROCESSOR_MODE AccessMode);
+  _Inout_ PPRIVILEGE_SET RequiredPrivileges,
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  _In_ KPROCESSOR_MODE AccessMode);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeOpenObjectAuditAlarm(
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PVOID Object OPTIONAL,
-  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PACCESS_STATE AccessState,
-  IN BOOLEAN ObjectCreated,
-  IN BOOLEAN AccessGranted,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_opt_ PVOID Object,
+  _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PACCESS_STATE AccessState,
+  _In_ BOOLEAN ObjectCreated,
+  _In_ BOOLEAN AccessGranted,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PBOOLEAN GenerateOnClose);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeOpenObjectForDeleteAuditAlarm(
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PVOID Object OPTIONAL,
-  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PACCESS_STATE AccessState,
-  IN BOOLEAN ObjectCreated,
-  IN BOOLEAN AccessGranted,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_opt_ PVOID Object,
+  _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PACCESS_STATE AccessState,
+  _In_ BOOLEAN ObjectCreated,
+  _In_ BOOLEAN AccessGranted,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PBOOLEAN GenerateOnClose);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeDeleteObjectAuditAlarm(
-  IN PVOID Object,
-  IN HANDLE Handle);
+  _In_ PVOID Object,
+  _In_ HANDLE Handle);
 
 NTKERNELAPI
 TOKEN_TYPE
 NTAPI
 SeTokenType(
-  IN PACCESS_TOKEN Token);
+  _In_ PACCESS_TOKEN Token);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeTokenIsAdmin(
-  IN PACCESS_TOKEN Token);
+  _In_ PACCESS_TOKEN Token);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeTokenIsRestricted(
-  IN PACCESS_TOKEN Token);
+  _In_ PACCESS_TOKEN Token);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeQueryAuthenticationIdToken(
-  IN PACCESS_TOKEN Token,
-  OUT PLUID AuthenticationId);
+  _In_ PACCESS_TOKEN Token,
+  _Out_ PLUID AuthenticationId);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeQuerySessionIdToken(
-  IN PACCESS_TOKEN Token,
-  OUT PULONG SessionId);
+  _In_ PACCESS_TOKEN Token,
+  _Out_ PULONG SessionId);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCreateClientSecurity(
-  IN PETHREAD ClientThread,
-  IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-  IN BOOLEAN RemoteSession,
-  OUT PSECURITY_CLIENT_CONTEXT ClientContext);
+  _In_ PETHREAD ClientThread,
+  _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+  _In_ BOOLEAN RemoteSession,
+  _Out_ PSECURITY_CLIENT_CONTEXT ClientContext);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeImpersonateClient(
-  IN PSECURITY_CLIENT_CONTEXT ClientContext,
-  IN PETHREAD ServerThread OPTIONAL);
+  _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+  _In_opt_ PETHREAD ServerThread);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeImpersonateClientEx(
-  IN PSECURITY_CLIENT_CONTEXT ClientContext,
-  IN PETHREAD ServerThread OPTIONAL);
+  _In_ PSECURITY_CLIENT_CONTEXT ClientContext,
+  _In_opt_ PETHREAD ServerThread);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCreateClientSecurityFromSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-  IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
-  IN BOOLEAN ServerIsRemote,
-  OUT PSECURITY_CLIENT_CONTEXT ClientContext);
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  _In_ PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+  _In_ BOOLEAN ServerIsRemote,
+  _Out_ PSECURITY_CLIENT_CONTEXT ClientContext);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeQuerySecurityDescriptorInfo(
-  IN PSECURITY_INFORMATION SecurityInformation,
-  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN OUT PULONG Length,
-  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor);
+  _In_ PSECURITY_INFORMATION SecurityInformation,
+  _Out_writes_bytes_(*Length) PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _Inout_ PULONG Length,
+  _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeSetSecurityDescriptorInfo(
-  IN PVOID Object OPTIONAL,
-  IN PSECURITY_INFORMATION SecurityInformation,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-  IN POOL_TYPE PoolType,
-  IN PGENERIC_MAPPING GenericMapping);
+  _In_opt_ PVOID Object,
+  _In_ PSECURITY_INFORMATION SecurityInformation,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+  _In_ POOL_TYPE PoolType,
+  _In_ PGENERIC_MAPPING GenericMapping);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeSetSecurityDescriptorInfoEx(
-  IN PVOID Object OPTIONAL,
-  IN PSECURITY_INFORMATION SecurityInformation,
-  IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-  IN ULONG AutoInheritFlags,
-  IN POOL_TYPE PoolType,
-  IN PGENERIC_MAPPING GenericMapping);
+  _In_opt_ PVOID Object,
+  _In_ PSECURITY_INFORMATION SecurityInformation,
+  _In_ PSECURITY_DESCRIPTOR ModificationDescriptor,
+  _Inout_ PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+  _In_ ULONG AutoInheritFlags,
+  _In_ POOL_TYPE PoolType,
+  _In_ PGENERIC_MAPPING GenericMapping);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeAppendPrivileges(
-  IN OUT PACCESS_STATE AccessState,
-  IN PPRIVILEGE_SET Privileges);
+  _Inout_ PACCESS_STATE AccessState,
+  _In_ PPRIVILEGE_SET Privileges);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingFileEvents(
-  IN BOOLEAN AccessGranted,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ BOOLEAN AccessGranted,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingFileOrGlobalEvents(
-  IN BOOLEAN AccessGranted,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext);
+  _In_ BOOLEAN AccessGranted,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext);
 
 VOID
 NTAPI
 SeSetAccessStateGenericMapping(
-  IN OUT PACCESS_STATE AccessState,
-  IN PGENERIC_MAPPING GenericMapping);
+  _Inout_ PACCESS_STATE AccessState,
+  _In_ PGENERIC_MAPPING GenericMapping);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine(
-  IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
+  _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeUnregisterLogonSessionTerminatedRoutine(
-  IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
+  _In_ PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeMarkLogonSessionForTerminationNotification(
-  IN PLUID LogonId);
+  _In_ PLUID LogonId);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeQueryInformationToken(
-  IN PACCESS_TOKEN Token,
-  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-  OUT PVOID *TokenInformation);
+  _In_ PACCESS_TOKEN Token,
+  _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+  _Outptr_result_buffer_(_Inexpressible_(token-dependent)) PVOID *TokenInformation);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
@@ -306,8 +311,8 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingHardLinkEvents(
-  IN BOOLEAN AccessGranted,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ BOOLEAN AccessGranted,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -316,20 +321,20 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 SeFilterToken(
-  IN PACCESS_TOKEN ExistingToken,
-  IN ULONG Flags,
-  IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-  IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-  IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-  OUT PACCESS_TOKEN *FilteredToken);
+  _In_ PACCESS_TOKEN ExistingToken,
+  _In_ ULONG Flags,
+  _In_opt_ PTOKEN_GROUPS SidsToDisable,
+  _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+  _In_opt_ PTOKEN_GROUPS RestrictedSids,
+  _Outptr_ PACCESS_TOKEN *FilteredToken);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeAuditHardLinkCreation(
-  IN PUNICODE_STRING FileName,
-  IN PUNICODE_STRING LinkName,
-  IN BOOLEAN bSuccess);
+  _In_ PUNICODE_STRING FileName,
+  _In_ PUNICODE_STRING LinkName,
+  _In_ BOOLEAN bSuccess);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
@@ -339,17 +344,17 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingFileEventsWithContext(
-  IN BOOLEAN AccessGranted,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+  _In_ BOOLEAN AccessGranted,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingHardLinkEventsWithContext(
-  IN BOOLEAN AccessGranted,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+  _In_ BOOLEAN AccessGranted,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext);
 
 #endif
 $endif (_NTIFS_)
@@ -357,44 +362,46 @@ $endif (_NTIFS_)
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
+_At_(AuditParameters->ParameterCount, _Const_)
 NTSTATUS
 NTAPI
 SeSetAuditParameter(
-  IN OUT PSE_ADT_PARAMETER_ARRAY AuditParameters,
-  IN SE_ADT_PARAMETER_TYPE Type,
-  IN ULONG Index,
-  IN PVOID Data);
+  _Inout_ PSE_ADT_PARAMETER_ARRAY AuditParameters,
+  _In_ SE_ADT_PARAMETER_TYPE Type,
+  _In_range_(<,SE_MAX_AUDIT_PARAMETERS) ULONG Index,
+  _In_reads_(_Inexpressible_("depends on SE_ADT_PARAMETER_TYPE"))
+    PVOID Data);
 
 NTSTATUS
 NTAPI
 SeReportSecurityEvent(
-  IN ULONG Flags,
-  IN PUNICODE_STRING SourceName,
-  IN PSID UserSid OPTIONAL,
-  IN PSE_ADT_PARAMETER_ARRAY AuditParameters);
+  _In_ ULONG Flags,
+  _In_ PUNICODE_STRING SourceName,
+  _In_opt_ PSID UserSid,
+  _In_ PSE_ADT_PARAMETER_ARRAY AuditParameters);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 $endif (_WDMDDK_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 NTKERNELAPI
 ULONG
 NTAPI
 SeComputeAutoInheritByObjectType(
-  IN PVOID ObjectType,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
-  IN PSECURITY_DESCRIPTOR ParentSecurityDescriptor OPTIONAL);
+  _In_ PVOID ObjectType,
+  _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSECURITY_DESCRIPTOR ParentSecurityDescriptor);
 
 #ifdef SE_NTFS_WORLD_CACHE
 VOID
 NTAPI
 SeGetWorldRights(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PGENERIC_MAPPING GenericMapping,
-  OUT PACCESS_MASK GrantedAccess);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _Out_ PACCESS_MASK GrantedAccess);
 #endif /* SE_NTFS_WORLD_CACHE */
 $endif (_WDMDDK_)
 $if (_NTIFS_)
@@ -403,85 +410,85 @@ NTKERNELAPI
 VOID
 NTAPI
 SeOpenObjectAuditAlarmWithTransaction(
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PVOID Object OPTIONAL,
-  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PACCESS_STATE AccessState,
-  IN BOOLEAN ObjectCreated,
-  IN BOOLEAN AccessGranted,
-  IN KPROCESSOR_MODE AccessMode,
-  IN GUID *TransactionId OPTIONAL,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_opt_ PVOID Object,
+  _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PACCESS_STATE AccessState,
+  _In_ BOOLEAN ObjectCreated,
+  _In_ BOOLEAN AccessGranted,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_opt_ GUID *TransactionId,
+  _Out_ PBOOLEAN GenerateOnClose);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeOpenObjectForDeleteAuditAlarmWithTransaction(
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PVOID Object OPTIONAL,
-  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PACCESS_STATE AccessState,
-  IN BOOLEAN ObjectCreated,
-  IN BOOLEAN AccessGranted,
-  IN KPROCESSOR_MODE AccessMode,
-  IN GUID *TransactionId OPTIONAL,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_opt_ PVOID Object,
+  _In_opt_ PUNICODE_STRING AbsoluteObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PACCESS_STATE AccessState,
+  _In_ BOOLEAN ObjectCreated,
+  _In_ BOOLEAN AccessGranted,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_opt_ GUID *TransactionId,
+  _Out_ PBOOLEAN GenerateOnClose);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeExamineSacl(
-  IN PACL Sacl,
-  IN PACCESS_TOKEN Token,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN AccessGranted,
-  OUT PBOOLEAN GenerateAudit,
-  OUT PBOOLEAN GenerateAlarm);
+  _In_ PACL Sacl,
+  _In_ PACCESS_TOKEN Token,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ BOOLEAN AccessGranted,
+  _Out_ PBOOLEAN GenerateAudit,
+  _Out_ PBOOLEAN GenerateAlarm);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeDeleteObjectAuditAlarmWithTransaction(
-  IN PVOID Object,
-  IN HANDLE Handle,
-  IN GUID *TransactionId OPTIONAL);
+  _In_ PVOID Object,
+  _In_ HANDLE Handle,
+  _In_opt_ GUID *TransactionId);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeQueryTokenIntegrity(
-  IN PACCESS_TOKEN Token,
-  IN OUT PSID_AND_ATTRIBUTES IntegritySA);
+  _In_ PACCESS_TOKEN Token,
+  _Inout_ PSID_AND_ATTRIBUTES IntegritySA);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeSetSessionIdToken(
-  IN PACCESS_TOKEN Token,
-  IN ULONG SessionId);
+  _In_ PACCESS_TOKEN Token,
+  _In_ ULONG SessionId);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeAuditHardLinkCreationWithTransaction(
-  IN PUNICODE_STRING FileName,
-  IN PUNICODE_STRING LinkName,
-  IN BOOLEAN bSuccess,
-  IN GUID *TransactionId OPTIONAL);
+  _In_ PUNICODE_STRING FileName,
+  _In_ PUNICODE_STRING LinkName,
+  _In_ BOOLEAN bSuccess,
+  _In_opt_ GUID *TransactionId);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeAuditTransactionStateChange(
-  IN GUID *TransactionId,
-  IN GUID *ResourceManagerId,
-  IN ULONG NewTransactionState);
+  _In_ GUID *TransactionId,
+  _In_ GUID *ResourceManagerId,
+  _In_ ULONG NewTransactionState);
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA || (NTDDI_VERSION >= NTDDI_WINXPSP2 && NTDDI_VERSION < NTDDI_WS03))
@@ -489,7 +496,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 SeTokenIsWriteRestricted(
-  IN PACCESS_TOKEN Token);
+  _In_ PACCESS_TOKEN Token);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -498,65 +505,67 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 SeAuditingAnyFileEventsWithContext(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+  _Out_opt_ PBOOLEAN StagingEnabled);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeExamineGlobalSacl(
-  IN PUNICODE_STRING ObjectType,
-  IN PACCESS_TOKEN Token,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN AccessGranted,
-  IN OUT PBOOLEAN GenerateAudit,
-  IN OUT PBOOLEAN GenerateAlarm OPTIONAL);
+  _In_ PUNICODE_STRING ObjectType,
+  _In_ PACL ResourceSacl,
+  _In_ PACCESS_TOKEN Token,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ BOOLEAN AccessGranted,
+  _Inout_ PBOOLEAN GenerateAudit,
+  _Inout_opt_ PBOOLEAN GenerateAlarm);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeMaximumAuditMaskFromGlobalSacl(
-  IN PUNICODE_STRING ObjectTypeName OPTIONAL,
-  IN ACCESS_MASK GrantedAccess,
-  IN PACCESS_TOKEN Token,
-  IN OUT PACCESS_MASK AuditMask);
+  _In_opt_ PUNICODE_STRING ObjectTypeName,
+  _In_ ACCESS_MASK GrantedAccess,
+  _In_ PACCESS_TOKEN Token,
+  _Inout_ PACCESS_MASK AuditMask);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 NTSTATUS
 NTAPI
 SeReportSecurityEventWithSubCategory(
-  IN ULONG Flags,
-  IN PUNICODE_STRING SourceName,
-  IN PSID UserSid OPTIONAL,
-  IN PSE_ADT_PARAMETER_ARRAY AuditParameters,
-  IN ULONG AuditSubcategoryId);
+  _In_ ULONG Flags,
+  _In_ PUNICODE_STRING SourceName,
+  _In_opt_ PSID UserSid,
+  _In_ PSE_ADT_PARAMETER_ARRAY AuditParameters,
+  _In_ ULONG AuditSubcategoryId);
 
 BOOLEAN
 NTAPI
 SeAccessCheckFromState(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PTOKEN_ACCESS_INFORMATION PrimaryTokenInformation,
-  IN PTOKEN_ACCESS_INFORMATION ClientTokenInformation OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN ACCESS_MASK PreviouslyGrantedAccess,
-  OUT PPRIVILEGE_SET *Privileges OPTIONAL,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus);
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ PTOKEN_ACCESS_INFORMATION PrimaryTokenInformation,
+  _In_opt_ PTOKEN_ACCESS_INFORMATION ClientTokenInformation,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ACCESS_MASK PreviouslyGrantedAccess,
+  _Outptr_opt_result_maybenull_ PPRIVILEGE_SET *Privileges,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _Out_ PACCESS_MASK GrantedAccess,
+  _Out_ PNTSTATUS AccessStatus);
 
 NTKERNELAPI
 VOID
 NTAPI
 SeFreePrivileges(
-  IN PPRIVILEGE_SET Privileges);
+  _In_ PPRIVILEGE_SET Privileges);
 
 NTSTATUS
 NTAPI
 SeLocateProcessImageName(
-  IN OUT PEPROCESS Process,
-  OUT PUNICODE_STRING *pImageFileName);
+  _Inout_ PEPROCESS Process,
+  _Outptr_ PUNICODE_STRING *pImageFileName);
 
 #define SeLengthSid( Sid ) \
     (8 + (4 * ((SID *)Sid)->SubAuthorityCount))

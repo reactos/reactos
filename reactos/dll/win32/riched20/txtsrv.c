@@ -54,94 +54,57 @@
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 typedef struct ITextServicesImpl {
-   const ITextServicesVtbl *lpVtbl;
-   ITextHost *pMyHost;
+   IUnknown IUnknown_inner;
+   ITextServices ITextServices_iface;
+   IUnknown *outer_unk;
    LONG ref;
+   ITextHost *pMyHost;
    CRITICAL_SECTION csTxtSrv;
    ME_TextEditor *editor;
    char spare[256];
 } ITextServicesImpl;
 
-static const ITextServicesVtbl textservices_Vtbl;
-
-/******************************************************************
- *        CreateTextServices (RICHED20.4)
- */
-HRESULT WINAPI CreateTextServices(IUnknown  * pUnkOuter,
-                                  ITextHost * pITextHost,
-                                  IUnknown  **ppUnk)
+static inline ITextServicesImpl *impl_from_IUnknown(IUnknown *iface)
 {
-   ITextServicesImpl *ITextImpl;
-   HRESULT hres;
-   TRACE("%p %p --> %p\n", pUnkOuter, pITextHost, ppUnk);
-   if (pITextHost == NULL)
-      return E_POINTER;
+   return CONTAINING_RECORD(iface, ITextServicesImpl, IUnknown_inner);
+}
 
-   ITextImpl = CoTaskMemAlloc(sizeof(*ITextImpl));
-   if (ITextImpl == NULL)
-      return E_OUTOFMEMORY;
-   InitializeCriticalSection(&ITextImpl->csTxtSrv);
-   ITextImpl->csTxtSrv.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ITextServicesImpl.csTxtSrv");
-   ITextImpl->ref = 1;
-   ITextHost_AddRef(pITextHost);
-   ITextImpl->pMyHost = pITextHost;
-   ITextImpl->lpVtbl = &textservices_Vtbl;
-   ITextImpl->editor = ME_MakeEditor(pITextHost, FALSE);
-   ITextImpl->editor->exStyleFlags = 0;
-   ITextImpl->editor->rcFormat.left = 0;
-   ITextImpl->editor->rcFormat.top = 0;
-   ITextImpl->editor->rcFormat.right = 0;
-   ITextImpl->editor->rcFormat.bottom = 0;
-   ME_HandleMessage(ITextImpl->editor, WM_CREATE, 0, 0, TRUE, &hres);
+static HRESULT WINAPI ITextServicesImpl_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+   ITextServicesImpl *This = impl_from_IUnknown(iface);
 
-   if (pUnkOuter)
-   {
-      FIXME("Support aggregation\n");
-      return CLASS_E_NOAGGREGATION;
+   TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppv);
+
+   if (IsEqualIID(riid, &IID_IUnknown))
+      *ppv = &This->IUnknown_inner;
+   else if IsEqualIID(riid, &IID_ITextServices)
+      *ppv = &This->ITextServices_iface;
+   else {
+      *ppv = NULL;
+      FIXME("Unknown interface: %s\n", debugstr_guid(riid));
+      return E_NOINTERFACE;
    }
 
-   *ppUnk = (IUnknown *)ITextImpl;
+   IUnknown_AddRef((IUnknown*)*ppv);
    return S_OK;
 }
 
-#define ICOM_THIS_MULTI(impl,field,iface) \
-	            impl* const This=(impl*)((char*)(iface) - offsetof(impl,field))
-
-static HRESULT WINAPI fnTextSrv_QueryInterface(ITextServices * iface,
-                                               REFIID riid,
-                                               LPVOID * ppv)
+static ULONG WINAPI ITextServicesImpl_AddRef(IUnknown *iface)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
-   TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppv);
-   *ppv = NULL;
-   if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_ITextServices))
-      *ppv = This;
+   ITextServicesImpl *This = impl_from_IUnknown(iface);
+   LONG ref = InterlockedIncrement(&This->ref);
 
-   if (*ppv)
-   {
-      IUnknown_AddRef((IUnknown *)(*ppv));
-      TRACE ("-- Interface = %p\n", *ppv);
-      return S_OK;
-   }
-   FIXME("Unknown interface: %s\n", debugstr_guid(riid));
-   return E_NOINTERFACE;
-}
+   TRACE("(%p) ref=%d\n", This, ref);
 
-static ULONG WINAPI fnTextSrv_AddRef(ITextServices *iface)
-{
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
-   DWORD ref = InterlockedIncrement(&This->ref);
-
-   TRACE("(%p/%p)->() AddRef from %d\n", This, iface, ref - 1);
    return ref;
 }
 
-static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
+static ULONG WINAPI ITextServicesImpl_Release(IUnknown *iface)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
-   DWORD ref = InterlockedDecrement(&This->ref);
+   ITextServicesImpl *This = impl_from_IUnknown(iface);
+   LONG ref = InterlockedDecrement(&This->ref);
 
-   TRACE("(%p/%p)->() Release from %d\n", This, iface, ref + 1);
+   TRACE("(%p) ref=%d\n", This, ref);
 
    if (!ref)
    {
@@ -153,13 +116,40 @@ static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
    return ref;
 }
 
-HRESULT WINAPI fnTextSrv_TxSendMessage(ITextServices *iface,
-                                       UINT msg,
-                                       WPARAM wparam,
-                                       LPARAM lparam,
-                                       LRESULT* plresult)
+static const IUnknownVtbl textservices_inner_vtbl =
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl_QueryInterface,
+   ITextServicesImpl_AddRef,
+   ITextServicesImpl_Release
+};
+
+static inline ITextServicesImpl *impl_from_ITextServices(ITextServices *iface)
+{
+   return CONTAINING_RECORD(iface, ITextServicesImpl, ITextServices_iface);
+}
+
+static HRESULT WINAPI fnTextSrv_QueryInterface(ITextServices *iface, REFIID riid, void **ppv)
+{
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
+   return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
+}
+
+static ULONG WINAPI fnTextSrv_AddRef(ITextServices *iface)
+{
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
+   return IUnknown_AddRef(This->outer_unk);
+}
+
+static ULONG WINAPI fnTextSrv_Release(ITextServices *iface)
+{
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
+   return IUnknown_Release(This->outer_unk);
+}
+
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxSendMessage(ITextServices *iface, UINT msg, WPARAM wparam,
+                                       LPARAM lparam, LRESULT *plresult)
+{
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
    HRESULT hresult;
    LRESULT lresult;
 
@@ -168,34 +158,22 @@ HRESULT WINAPI fnTextSrv_TxSendMessage(ITextServices *iface,
    return hresult;
 }
 
-HRESULT WINAPI fnTextSrv_TxDraw(ITextServices *iface,
-                                DWORD dwDrawAspect,
-                                LONG lindex,
-                                void* pvAspect,
-                                DVTARGETDEVICE* ptd,
-                                HDC hdcDraw,
-                                HDC hdcTargetDev,
-                                LPCRECTL lprcBounds,
-                                LPCRECTL lprcWBounds,
-                                LPRECT lprcUpdate,
-                                BOOL (CALLBACK * pfnContinue)(DWORD),
-                                DWORD dwContinue,
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxDraw(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
+                                void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw, HDC hdcTargetDev,
+                                LPCRECTL lprcBounds, LPCRECTL lprcWBounds, LPRECT lprcUpdate,
+                                BOOL (CALLBACK * pfnContinue)(DWORD), DWORD dwContinue,
                                 LONG lViewId)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetHScroll(ITextServices *iface,
-                                      LONG* plMin,
-                                      LONG* plMax,
-                                      LONG* plPos,
-                                      LONG* plPage,
-                                      BOOL* pfEnabled)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetHScroll(ITextServices *iface, LONG *plMin, LONG *plMax, LONG *plPos,
+                                      LONG *plPage, BOOL *pfEnabled)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    *plMin = This->editor->horz_si.nMin;
    *plMax = This->editor->horz_si.nMax;
@@ -205,14 +183,10 @@ HRESULT WINAPI fnTextSrv_TxGetHScroll(ITextServices *iface,
    return S_OK;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetVScroll(ITextServices *iface,
-                                      LONG* plMin,
-                                      LONG* plMax,
-                                      LONG* plPos,
-                                      LONG* plPage,
-                                      BOOL* pfEnabled)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetVScroll(ITextServices *iface, LONG *plMin, LONG *plMax, LONG *plPos,
+                                      LONG *plPage, BOOL *pfEnabled)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    *plMin = This->editor->vert_si.nMin;
    *plMax = This->editor->vert_si.nMax;
@@ -222,76 +196,62 @@ HRESULT WINAPI fnTextSrv_TxGetVScroll(ITextServices *iface,
    return S_OK;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxSetCursor(ITextServices *iface,
-                                       DWORD dwDrawAspect,
-                                       LONG lindex,
-                                       void* pvAspect,
-                                       DVTARGETDEVICE* ptd,
-                                       HDC hdcDraw,
-                                       HDC hicTargetDev,
-                                       LPCRECT lprcClient,
-                                       INT x, INT y)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxSetCursor(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
+                                       void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw,
+                                       HDC hicTargetDev, LPCRECT lprcClient, INT x, INT y)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxQueryHitPoint(ITextServices *iface,
-                                         DWORD dwDrawAspect,
-                                         LONG lindex,
-                                         void* pvAspect,
-                                         DVTARGETDEVICE* ptd,
-                                         HDC hdcDraw,
-                                         HDC hicTargetDev,
-                                         LPCRECT lprcClient,
-                                         INT x, INT y,
-                                         DWORD* pHitResult)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxQueryHitPoint(ITextServices *iface, DWORD dwDrawAspect, LONG lindex,
+                                         void *pvAspect, DVTARGETDEVICE *ptd, HDC hdcDraw,
+                                         HDC hicTargetDev, LPCRECT lprcClient, INT x, INT y,
+                                         DWORD *pHitResult)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxInplaceActivate(ITextServices *iface,
-                                             LPCRECT prcClient)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxInplaceActivate(ITextServices *iface, LPCRECT prcClient)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxInplaceDeactivate(ITextServices *iface)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxInplaceDeactivate(ITextServices *iface)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxUIActivate(ITextServices *iface)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxUIActivate(ITextServices *iface)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxUIDeactivate(ITextServices *iface)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface,
-                                   BSTR* pbstrText)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface, BSTR *pbstrText)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
    int length;
 
    length = ME_GetTextLength(This->editor);
@@ -313,10 +273,9 @@ HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface,
    return S_OK;
 }
 
-HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface,
-                                   LPCWSTR pszText)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface, LPCWSTR pszText)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
    ME_Cursor cursor;
 
    ME_SetCursorToStart(This->editor, &cursor);
@@ -328,69 +287,56 @@ HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface,
    This->editor->nModifyStep = 0;
    OleFlushClipboard();
    ME_EmptyUndoStack(This->editor);
-   ME_UpdateRepaint(This->editor);
+   ME_UpdateRepaint(This->editor, FALSE);
 
    return S_OK;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetCurrentTargetX(ITextServices *iface,
-                                             LONG* x)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCurrentTargetX(ITextServices *iface, LONG *x)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetBaseLinePos(ITextServices *iface,
-                                          LONG* x)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetBaseLinePos(ITextServices *iface, LONG *x)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetNaturalSize(ITextServices *iface,
-                                          DWORD dwAspect,
-                                          HDC hdcDraw,
-                                          HDC hicTargetDev,
-                                          DVTARGETDEVICE* ptd,
-                                          DWORD dwMode,
-                                          const SIZEL* psizelExtent,
-                                          LONG* pwidth,
-                                          LONG* pheight)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetNaturalSize(ITextServices *iface, DWORD dwAspect, HDC hdcDraw,
+                                          HDC hicTargetDev, DVTARGETDEVICE *ptd, DWORD dwMode,
+                                          const SIZEL *psizelExtent, LONG *pwidth, LONG *pheight)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetDropTarget(ITextServices *iface,
-                                         IDropTarget** ppDropTarget)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetDropTarget(ITextServices *iface, IDropTarget **ppDropTarget)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_OnTxPropertyBitsChange(ITextServices *iface,
-                                                DWORD dwMask,
-                                                DWORD dwBits)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_OnTxPropertyBitsChange(ITextServices *iface, DWORD dwMask, DWORD dwBits)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
 }
 
-HRESULT WINAPI fnTextSrv_TxGetCachedSize(ITextServices *iface,
-                                         DWORD* pdwWidth,
-                                         DWORD* pdwHeight)
+DECLSPEC_HIDDEN HRESULT WINAPI fnTextSrv_TxGetCachedSize(ITextServices *iface, DWORD *pdwWidth, DWORD *pdwHeight)
 {
-   ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ITextServicesImpl *This = impl_from_ITextServices(iface);
 
    FIXME("%p: STUB\n", This);
    return E_NOTIMPL;
@@ -415,7 +361,7 @@ DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
 DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
 
-static const ITextServicesVtbl textservices_Vtbl =
+static const ITextServicesVtbl textservices_vtbl =
 {
    fnTextSrv_QueryInterface,
    fnTextSrv_AddRef,
@@ -439,3 +385,42 @@ static const ITextServicesVtbl textservices_Vtbl =
    THISCALL(fnTextSrv_OnTxPropertyBitsChange),
    THISCALL(fnTextSrv_TxGetCachedSize)
 };
+
+/******************************************************************
+ *        CreateTextServices (RICHED20.4)
+ */
+HRESULT WINAPI CreateTextServices(IUnknown  *pUnkOuter, ITextHost *pITextHost, IUnknown  **ppUnk)
+{
+   ITextServicesImpl *ITextImpl;
+   HRESULT hres;
+   TRACE("%p %p --> %p\n", pUnkOuter, pITextHost, ppUnk);
+   if (pITextHost == NULL)
+      return E_POINTER;
+
+   ITextImpl = CoTaskMemAlloc(sizeof(*ITextImpl));
+   if (ITextImpl == NULL)
+      return E_OUTOFMEMORY;
+   InitializeCriticalSection(&ITextImpl->csTxtSrv);
+   ITextImpl->csTxtSrv.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ITextServicesImpl.csTxtSrv");
+   ITextImpl->ref = 1;
+   ITextHost_AddRef(pITextHost);
+   ITextImpl->pMyHost = pITextHost;
+   ITextImpl->IUnknown_inner.lpVtbl = &textservices_inner_vtbl;
+   ITextImpl->ITextServices_iface.lpVtbl = &textservices_vtbl;
+   ITextImpl->editor = ME_MakeEditor(pITextHost, FALSE);
+   ITextImpl->editor->exStyleFlags = 0;
+   ITextImpl->editor->rcFormat.left = 0;
+   ITextImpl->editor->rcFormat.top = 0;
+   ITextImpl->editor->rcFormat.right = 0;
+   ITextImpl->editor->rcFormat.bottom = 0;
+
+   ME_HandleMessage(ITextImpl->editor, WM_CREATE, 0, 0, TRUE, &hres);
+
+   if (pUnkOuter)
+      ITextImpl->outer_unk = pUnkOuter;
+   else
+      ITextImpl->outer_unk = &ITextImpl->IUnknown_inner;
+
+   *ppUnk = &ITextImpl->IUnknown_inner;
+   return S_OK;
+}

@@ -9,74 +9,74 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 IDD_PROPPAGECOMPUTER DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "N·zov poËÌtaËa"
+CAPTION "N√°zov poƒç√≠taƒça"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON        IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT       "ReactOS pouûije nasleduj˙ce inform·cie pri identifik·cii poËÌtaËa v sieti.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT       "&Popis poËÌtaËa:", IDC_STATIC, 6, 40, 70, 9
+    LTEXT       "ReactOS pou≈æije nasleduj√∫ce inform√°cie pri identifik√°cii poƒç√≠taƒça v sieti.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT       "&Popis poƒç√≠taƒça:", IDC_STATIC, 6, 40, 70, 9
     EDITTEXT    IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT       "⁄pln˝ n·zov poËÌtaËa:", IDC_STATIC, 6, 68, 75, 9
+    LTEXT       "√öpln√Ω n√°zov poƒç√≠taƒça:", IDC_STATIC, 6, 68, 75, 9
     EDITTEXT    IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Pracovn· skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 70, 9
+    LTEXT       "Pracovn√° skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 70, 9
     EDITTEXT    IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT       "Ak sa chcete pripojiù pomocou Sprievodcu identifik·ciou v sieti na domÈnu a vytvoriù lok·lne pouûÌvateæskÈ konto, kliknite na tlaËidlo Sieùov· identifik·cia.", IDC_STATIC, 6, 108, 160, 33
-    PUSHBUTTON  "&Sieùov· identifik·cia", IDC_NETWORK_ID, 176, 114, 72, 15
-    LTEXT       "Ak chcete zmeniù n·zov poËÌtaËa alebo sa pripojiù na domÈnu, kliknite na tlaËidlo Zmeniù.", IDC_STATIC, 6, 149, 160, 17
-    PUSHBUTTON  "Z&meniù...",IDC_NETWORK_PROPERTY, 176, 149, 72, 15
-    LTEXT       "Pozn·mka: Identifik·ciu poËÌtaËa mÙûu zmeniù len spr·vcovia poËÌtaËa.", IDC_STATIC, 6, 179, 244, 9
+    LTEXT       "Ak sa chcete pripoji≈• pomocou Sprievodcu identifik√°ciou v sieti na dom√©nu a vytvori≈• lok√°lne pou≈æ√≠vateƒæsk√© konto, kliknite na tlaƒçidlo Sie≈•ov√° identifik√°cia.", IDC_STATIC, 6, 108, 160, 33
+    PUSHBUTTON  "&Sie≈•ov√° identifik√°cia", IDC_NETWORK_ID, 176, 114, 72, 15
+    LTEXT       "Ak chcete zmeni≈• n√°zov poƒç√≠taƒça alebo sa pripoji≈• na dom√©nu, kliknite na tlaƒçidlo Zmeni≈•.", IDC_STATIC, 6, 149, 160, 17
+    PUSHBUTTON  "Z&meni≈•...",IDC_NETWORK_PROPERTY, 176, 149, 72, 15
+    LTEXT       "Pozn√°mka: Identifik√°ciu poƒç√≠taƒça m√¥≈æu zmeni≈• len spr√°vcovia poƒç√≠taƒça.", IDC_STATIC, 6, 179, 244, 9
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Zmena n·zvu poËÌtaËa"
+CAPTION "Zmena n√°zvu poƒç√≠taƒça"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "(spr·va prÌde sem)", 1017, 7, 5, 218, 30
-    LTEXT "&N·zov poËÌtaËa:", -1, 7, 41, 219, 8
+    LTEXT "(spr√°va pr√≠de sem)", 1017, 7, 5, 218, 30
+    LTEXT "&N√°zov poƒç√≠taƒça:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
-    LTEXT "⁄pln˝ n·zov poËÌtaËa:", 1016, 7, 72, 218, 10
+    LTEXT "√öpln√Ω n√°zov poƒç√≠taƒça:", 1016, 7, 72, 218, 10
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    PUSHBUTTON "œ&alöie...", 1003, 150, 102, 75, 14
-    GROUPBOX "»lenstvo", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "&DomÈna:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Pracovn· skupina:", 1004, 17, 161, 191, 10
+    PUSHBUTTON "ƒé&al≈°ie...", 1003, 150, 102, 75, 14
+    GROUPBOX "ƒålenstvo", 1018, 7, 119, 219, 73
+    AUTORADIOBUTTON "&Dom√©na:", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "&Pracovn√° skupina:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "&N·jsù moju domÈnu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "&N√°js≈• moju dom√©nu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
-    PUSHBUTTON "Zruöiù", 2, 176, 203, 50, 14
+    PUSHBUTTON "Zru≈°i≈•", 2, 176, 203, 50, 14
 END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "PrÌpona DNS a n·zov poËÌtaËa pre NetBIOS"
+CAPTION "Pr√≠pona DNS a n√°zov poƒç√≠taƒça pre NetBIOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Pri&m·rna prÌpona poËÌtaËa pre n·zov DNS:", -1, 7, 5, 253, 8
+    LTEXT "Pri&m√°rna pr√≠pona poƒç√≠taƒça pre n√°zov DNS:", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "&Pri zmene Ëlenstva v domÈne zmeniù prim·rnu prÌponu n·zvu DNS", 115, 11, 39, 250, 10
-    LTEXT "N·zov poËÌtaËa pre protokol &NetBIOS:", -1, 7, 57, 148, 8
+    AUTOCHECKBOX "&Pri zmene ƒçlenstva v dom√©ne zmeni≈• prim√°rnu pr√≠ponu n√°zvu DNS", 115, 11, 39, 250, 10
+    LTEXT "N√°zov poƒç√≠taƒça pre protokol &NetBIOS:", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", 1, 153, 104, 50, 14
-    PUSHBUTTON "Zruöiù", 2, 209, 104, 50, 14
-    LTEXT "Tento n·zov sa pouûÌva pri spolupr·ci so staröÌmi poËÌtaËmi alebo sluûbami.", 13, 7, 88, 253, 8
+    PUSHBUTTON "Zru≈°i≈•", 2, 209, 104, 50, 14
+    LTEXT "Tento n√°zov sa pou≈æ√≠va pri spolupr√°ci so star≈°√≠mi poƒç√≠taƒçmi alebo slu≈æbami.", 13, 7, 88, 253, 8
 END
 
 STRINGTABLE
 BEGIN
-    1 "* Nezn·me *"
+    1 "* Nezn√°me *"
     2 "WORKGROUP"
     3 "The following error occurred while attempting to read domain membership information:"
-    4 "Zmena n·zvu poËÌtaËa"
-    5 "Pracovn· skupina:"
-    6 "DomÈna:"
+    4 "Zmena n√°zvu poƒç√≠taƒça"
+    5 "Pracovn√° skupina:"
+    6 "Dom√©na:"
     22 "Vitajte v pracovnej skupine %1."
-    23 "Vitajte v domÈne %1."
-    24 "Aby sa prejavili vykonanÈ zmeny, musÌte reötartovaù poËÌtaË."
+    23 "Vitajte v dom√©ne %1."
+    24 "Aby sa prejavili vykonan√© zmeny, mus√≠te re≈°tartova≈• poƒç√≠taƒç."
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
-    1021 "Pozn·mka: Iba spr·vcovia mÙûu zmeniù identifik·ciu tohto poËÌtaËa."
-    1022 "Pozn·mka: Identifik·cia poËÌtaËa nemÙûe byù zmenen·, lebo:"
+    1021 "Pozn√°mka: Iba spr√°vcovia m√¥≈æu zmeni≈• identifik√°ciu tohto poƒç√≠taƒça."
+    1022 "Pozn√°mka: Identifik√°cia poƒç√≠taƒça nem√¥≈æe by≈• zmenen√°, lebo:"
 	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
     3210 "&Podrobnosti >>"
     3220 "<< &Podrobnosti"

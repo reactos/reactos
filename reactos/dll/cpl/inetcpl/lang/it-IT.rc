@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Italian resources for the Internet control panel applet
  *
  * Copyright 2010 Luca Bennati <lucak3@gmail.com
@@ -40,11 +40,11 @@ BEGIN
     PUSHBUTTON  "Pagina &attuale", IDC_HOME_CURRENT, 58, 36, 80, 14
     PUSHBUTTON  "Pagina &predefinita", IDC_HOME_DEFAULT, 144, 36, 80, 14
     PUSHBUTTON  "Pagina &vuota", IDC_HOME_BLANK, 230, 36, 80, 14
-    GROUPBOX    " Browsing history ", IDC_STATIC, 4, 60, 312, 46
-    LTEXT       "You can delete cached pages, cookies and other data.",
+    GROUPBOX    " Storia navigazione ", IDC_STATIC, 4, 60, 312, 46
+    LTEXT       "E' possibile cancellare le pagine in cache,i cookies e altri dati.",
                 IDC_STATIC, 58, 72, 252, 10
-    PUSHBUTTON  "Delete &files...", IDC_HISTORY_DELETE, 144, 86, 80, 14
-    PUSHBUTTON  "&Settings...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
+    PUSHBUTTON  "Cancella...", IDC_HISTORY_DELETE, 144, 86, 80, 14
+    PUSHBUTTON  "&Impostazioni...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
 
 END
 
@@ -65,13 +65,13 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
+    IDS_CPL_NAME        "Impostazioni Internet"
+    IDS_CPL_INFO        "Configura Internet Browser e impostazioni corelate"
+    IDS_SEC_SETTINGS    "Impostazioni di sicurezza per la zona: "
+    IDS_SEC_LEVEL0      "Personalizzato"
+    IDS_SEC_LEVEL1      "Molto basso"
+    IDS_SEC_LEVEL2      "Basso"
+    IDS_SEC_LEVEL3      "Medio"
+    IDS_SEC_LEVEL4      "Alto"
+    IDS_SEC_LEVEL5      "Molto alto"
 END

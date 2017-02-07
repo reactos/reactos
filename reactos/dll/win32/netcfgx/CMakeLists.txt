@@ -22,6 +22,6 @@ target_link_libraries(netcfgx
     uuid
     wine)
 
-add_importlibs(netcfgx rpcrt4 setupapi advapi32 iphlpapi ole32 user32 comctl32 ws2_32 msvcrt kernel32 ntdll)
+add_importlibs(netcfgx rpcrt4 setupapi advapi32 iphlpapi dhcpcsvc ole32 user32 comctl32 ws2_32 msvcrt kernel32 ntdll)
 add_pch(netcfgx precomp.h)
 add_cd_file(TARGET netcfgx DESTINATION reactos/system32 FOR all)

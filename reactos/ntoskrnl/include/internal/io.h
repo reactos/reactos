@@ -516,7 +516,7 @@ IopAssignDeviceResources(
 
 NTSTATUS
 NTAPI
-IopCreateResourceListFromRequirements(
+IopFixupResourceListWithRequirements(
     IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
     OUT PCM_RESOURCE_LIST *ResourceList
 );
@@ -1026,6 +1026,10 @@ PnpRootCreateDevice(
     OUT PDEVICE_OBJECT *PhysicalDeviceObject,
     OUT OPTIONAL PUNICODE_STRING FullInstancePath
 );
+
+NTSTATUS
+PnpRootRegisterDevice(
+    IN PDEVICE_OBJECT DeviceObject);
 
 //
 // Driver Routines

@@ -36,18 +36,28 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
+static const ICatRegisterVtbl COMCAT_ICatRegister_Vtbl;
+static const ICatInformationVtbl COMCAT_ICatInformation_Vtbl;
+
 typedef struct
 {
-    const ICatRegisterVtbl *lpVtbl;
-    const ICatInformationVtbl *infVtbl;
+    ICatRegister ICatRegister_iface;
+    ICatInformation ICatInformation_iface;
 } ComCatMgrImpl;
+
+/* static ComCatMgr instance */
+static ComCatMgrImpl COMCAT_ComCatMgr =
+{
+    { &COMCAT_ICatRegister_Vtbl },
+    { &COMCAT_ICatInformation_Vtbl }
+};
 
 struct class_categories {
     LPCWSTR impl_strings;
     LPCWSTR req_strings;
 };
 
-static LPENUMCATEGORYINFO COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid);
+static IEnumCATEGORYINFO *COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid);
 static LPENUMGUID COMCAT_CLSID_IEnumGUID_Construct(struct class_categories *class_categories);
 static LPENUMGUID COMCAT_CATID_IEnumGUID_Construct(REFCLSID rclsid, LPCWSTR impl_req);
 
@@ -61,12 +71,6 @@ static const WCHAR impl_keyname[] = {
 static const WCHAR req_keyname[] = {
     'R','e','q','u','i','r','e','d',' ','C','a','t','e','g','o','r','i','e','s',0 };
 static const WCHAR clsid_keyname[] = { 'C','L','S','I','D',0 };
-
-
-static inline ComCatMgrImpl *impl_from_ICatInformation( ICatInformation *iface )
-{
-    return (ComCatMgrImpl *)((char*)iface - FIELD_OFFSET(ComCatMgrImpl, infVtbl));
-}
 
 
 /**********************************************************************
@@ -279,20 +283,19 @@ static HRESULT WINAPI COMCAT_ICatRegister_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    ComCatMgrImpl *This = (ComCatMgrImpl *)iface;
     TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_ICatRegister)) {
 	*ppvObj = iface;
-	IUnknown_AddRef(iface);
+        ICatRegister_AddRef(iface);
 	return S_OK;
     }
 
     if (IsEqualGUID(riid, &IID_ICatInformation)) {
-	*ppvObj = &This->infVtbl;
-	IUnknown_AddRef(iface);
+        *ppvObj = &COMCAT_ComCatMgr.ICatInformation_iface;
+        ICatRegister_AddRef(iface);
 	return S_OK;
     }
 
@@ -462,8 +465,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    ComCatMgrImpl *This = impl_from_ICatInformation( iface );
-    return IUnknown_QueryInterface((LPUNKNOWN)This, riid, ppvObj);
+    return ICatRegister_QueryInterface(&COMCAT_ComCatMgr.ICatRegister_iface, riid, ppvObj);
 }
 
 /**********************************************************************
@@ -471,8 +473,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_QueryInterface(
  */
 static ULONG WINAPI COMCAT_ICatInformation_AddRef(LPCATINFORMATION iface)
 {
-    ComCatMgrImpl *This = impl_from_ICatInformation( iface );
-    return IUnknown_AddRef((LPUNKNOWN)This);
+    return ICatRegister_AddRef(&COMCAT_ComCatMgr.ICatRegister_iface);
 }
 
 /**********************************************************************
@@ -480,8 +481,7 @@ static ULONG WINAPI COMCAT_ICatInformation_AddRef(LPCATINFORMATION iface)
  */
 static ULONG WINAPI COMCAT_ICatInformation_Release(LPCATINFORMATION iface)
 {
-    ComCatMgrImpl *This = impl_from_ICatInformation( iface );
-    return IUnknown_Release((LPUNKNOWN)This);
+    return ICatRegister_Release(&COMCAT_ComCatMgr.ICatRegister_iface);
 }
 
 /**********************************************************************
@@ -490,7 +490,7 @@ static ULONG WINAPI COMCAT_ICatInformation_Release(LPCATINFORMATION iface)
 static HRESULT WINAPI COMCAT_ICatInformation_EnumCategories(
     LPCATINFORMATION iface,
     LCID lcid,
-    LPENUMCATEGORYINFO *ppenumCatInfo)
+    IEnumCATEGORYINFO **ppenumCatInfo)
 {
     TRACE("\n");
 
@@ -596,7 +596,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_IsClassOfCategories(
     struct class_categories *categories;
     HKEY key;
 
-    if (WINE_TRACE_ON(ole)) {
+    if (TRACE_ON(ole)) {
 	ULONG count;
 	TRACE("CLSID: %s Implemented %u\n",debugstr_guid(rclsid),cImplemented);
 	for (count = 0; count < cImplemented; ++count)
@@ -635,7 +635,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumImplCategoriesOfClass(
     REFCLSID rclsid,
     LPENUMCATID *ppenumCATID)
 {
-    static const WCHAR postfix[24] = { '\\', 'I', 'm', 'p', 'l', 'e', 'm', 'e',
+    static const WCHAR postfix[] = { '\\', 'I', 'm', 'p', 'l', 'e', 'm', 'e',
 			  'n', 't', 'e', 'd', ' ', 'C', 'a', 't',
 			  'e', 'g', 'o', 'r', 'i', 'e', 's', 0 };
 
@@ -657,7 +657,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumReqCategoriesOfClass(
     REFCLSID rclsid,
     LPENUMCATID *ppenumCATID)
 {
-    static const WCHAR postfix[21] = { '\\', 'R', 'e', 'q', 'u', 'i', 'r', 'e',
+    static const WCHAR postfix[] = { '\\', 'R', 'e', 'q', 'u', 'i', 'r', 'e',
 			  'd', ' ', 'C', 'a', 't', 'e', 'g', 'o',
 			  'r', 'i', 'e', 's', 0 };
 
@@ -702,15 +702,6 @@ static const ICatInformationVtbl COMCAT_ICatInformation_Vtbl =
     COMCAT_ICatInformation_IsClassOfCategories,
     COMCAT_ICatInformation_EnumImplCategoriesOfClass,
     COMCAT_ICatInformation_EnumReqCategoriesOfClass
-};
-
-/**********************************************************************
- * static ComCatMgr instance
- */
-static ComCatMgrImpl COMCAT_ComCatMgr =
-{
-    &COMCAT_ICatRegister_Vtbl,
-    &COMCAT_ICatInformation_Vtbl
 };
 
 /**********************************************************************
@@ -769,7 +760,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_CreateInstance(
     /* Don't support aggregation (Windows doesn't) */
     if (pUnkOuter != NULL) return CLASS_E_NOAGGREGATION;
 
-    res = IUnknown_QueryInterface((LPUNKNOWN)&COMCAT_ComCatMgr, riid, ppvObj);
+    res = ICatRegister_QueryInterface(&COMCAT_ComCatMgr.ICatRegister_iface, riid, ppvObj);
     if (SUCCEEDED(res)) {
 	return res;
     }
@@ -815,16 +806,21 @@ HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv)
  */
 typedef struct
 {
-    const IEnumCATEGORYINFOVtbl *lpVtbl;
+    IEnumCATEGORYINFO IEnumCATEGORYINFO_iface;
     LONG  ref;
     LCID  lcid;
     HKEY  key;
     DWORD next_index;
 } IEnumCATEGORYINFOImpl;
 
-static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_AddRef(LPENUMCATEGORYINFO iface)
+static inline IEnumCATEGORYINFOImpl *impl_from_IEnumCATEGORYINFO(IEnumCATEGORYINFO *iface)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    return CONTAINING_RECORD(iface, IEnumCATEGORYINFOImpl, IEnumCATEGORYINFO_iface);
+}
+
+static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_AddRef(IEnumCATEGORYINFO *iface)
+{
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
 
     TRACE("\n");
 
@@ -832,7 +828,7 @@ static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_AddRef(LPENUMCATEGORYINFO iface)
 }
 
 static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_QueryInterface(
-    LPENUMCATEGORYINFO iface,
+    IEnumCATEGORYINFO *iface,
     REFIID riid,
     LPVOID *ppvObj)
 {
@@ -851,9 +847,9 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_QueryInterface(
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_Release(LPENUMCATEGORYINFO iface)
+static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_Release(IEnumCATEGORYINFO *iface)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
     ULONG ref;
 
     TRACE("\n");
@@ -868,12 +864,12 @@ static ULONG WINAPI COMCAT_IEnumCATEGORYINFO_Release(LPENUMCATEGORYINFO iface)
 }
 
 static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Next(
-    LPENUMCATEGORYINFO iface,
+    IEnumCATEGORYINFO *iface,
     ULONG celt,
     CATEGORYINFO *rgelt,
     ULONG *pceltFetched)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
     ULONG fetched = 0;
 
     TRACE("\n");
@@ -913,10 +909,10 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Next(
 }
 
 static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Skip(
-    LPENUMCATEGORYINFO iface,
+    IEnumCATEGORYINFO *iface,
     ULONG celt)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
 
     TRACE("\n");
 
@@ -925,9 +921,9 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Skip(
     return S_OK;
 }
 
-static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Reset(LPENUMCATEGORYINFO iface)
+static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Reset(IEnumCATEGORYINFO *iface)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
 
     TRACE("\n");
 
@@ -936,10 +932,10 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Reset(LPENUMCATEGORYINFO iface)
 }
 
 static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Clone(
-    LPENUMCATEGORYINFO iface,
+    IEnumCATEGORYINFO *iface,
     IEnumCATEGORYINFO **ppenum)
 {
-    IEnumCATEGORYINFOImpl *This = (IEnumCATEGORYINFOImpl *)iface;
+    IEnumCATEGORYINFOImpl *This = impl_from_IEnumCATEGORYINFO(iface);
     static const WCHAR keyname[] = { 'C', 'o', 'm', 'p', 'o', 'n', 'e', 'n',
                                      't', ' ', 'C', 'a', 't', 'e', 'g', 'o',
                                      'r', 'i', 'e', 's', 0 };
@@ -952,14 +948,14 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_Clone(
     new_this = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IEnumCATEGORYINFOImpl));
     if (new_this == NULL) return E_OUTOFMEMORY;
 
-    new_this->lpVtbl = This->lpVtbl;
+    new_this->IEnumCATEGORYINFO_iface = This->IEnumCATEGORYINFO_iface;
     new_this->ref = 1;
     new_this->lcid = This->lcid;
     /* FIXME: could we more efficiently use DuplicateHandle? */
     RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &new_this->key);
     new_this->next_index = This->next_index;
 
-    *ppenum = (LPENUMCATEGORYINFO)new_this;
+    *ppenum = &new_this->IEnumCATEGORYINFO_iface;
     return S_OK;
 }
 
@@ -974,7 +970,7 @@ static const IEnumCATEGORYINFOVtbl COMCAT_IEnumCATEGORYINFO_Vtbl =
     COMCAT_IEnumCATEGORYINFO_Clone
 };
 
-static LPENUMCATEGORYINFO COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid)
+static IEnumCATEGORYINFO *COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid)
 {
     IEnumCATEGORYINFOImpl *This;
 
@@ -984,11 +980,11 @@ static LPENUMCATEGORYINFO COMCAT_IEnumCATEGORYINFO_Construct(LCID lcid)
                                          't', ' ', 'C', 'a', 't', 'e', 'g', 'o',
                                          'r', 'i', 'e', 's', 0 };
 
-	This->lpVtbl = &COMCAT_IEnumCATEGORYINFO_Vtbl;
+        This->IEnumCATEGORYINFO_iface.lpVtbl = &COMCAT_IEnumCATEGORYINFO_Vtbl;
 	This->lcid = lcid;
 	RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &This->key);
     }
-    return (LPENUMCATEGORYINFO)This;
+    return &This->IEnumCATEGORYINFO_iface;
 }
 
 /**********************************************************************
@@ -1337,7 +1333,7 @@ static LPENUMGUID COMCAT_CATID_IEnumGUID_Construct(
 
     This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CATID_IEnumGUIDImpl));
     if (This) {
-	WCHAR prefix[6] = { 'C', 'L', 'S', 'I', 'D', '\\' };
+	WCHAR prefix[] = { 'C', 'L', 'S', 'I', 'D', '\\' };
 
 	This->lpVtbl = &COMCAT_CATID_IEnumGUID_Vtbl;
 	memcpy(This->keyname, prefix, sizeof(prefix));

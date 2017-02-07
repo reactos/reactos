@@ -1,0 +1,8 @@
+HKCR
+{
+    NoRemove CLSID
+    {
+        '{000C101D-0000-0000-C000-000000000046}' { DllVersion = s '3.1.4000' }
+        '{000C1090-0000-0000-C000-000000000046}' { InProcHandler32 = s 'ole32.dll' }
+    }
+}

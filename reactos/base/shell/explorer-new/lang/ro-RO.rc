@@ -1,4 +1,4 @@
-//2011.11.01 - Fulea Ștefan: minor changes
+//2012.03.05 - Fulea Ștefan: translate the taskbar context menu additions
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDM_TRAYWND MENU DISCARDABLE
@@ -6,9 +6,18 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
+        MENUITEM "&Modifică Data/Ora", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Personalizare notificări…", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Aranjări în casca&dă", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Aranjări &orizontale", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Aranjări &verticale", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "Afișează &biroul", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "Des&face", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
         MENUITEM "&Gestionar de activități", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Fixează bara de activități", ID_LOCKTASKBAR
+        MENUITEM "Fi&xează bara de activități", ID_LOCKTASKBAR
         MENUITEM "P&referințe", ID_SHELL_CMD_PROPERTIES
     END
 END

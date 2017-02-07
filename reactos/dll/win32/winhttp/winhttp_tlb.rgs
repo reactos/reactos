@@ -1,0 +1,37 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{662901FC-6951-4854-9EB2-D9A2570F2B2E}'
+        {
+            '5.1' = s 'Microsoft WinHTTP Services, version 5.1'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{016FE2EC-B2C8-45F8-B23B-39E53A75396B}' = s 'IWinHttpRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{662901FC-6951-4854-9EB2-D9A2570F2B2E}' { val Version = s '5.1' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{2087C2F4-2CEF-4953-A8AB-66779B670495}' = s 'WinHttpRequest Component version 5.1'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'WinHttp.WinHttpRequest.5.1'
+            TypeLib = s '{662901FC-6951-4854-9EB2-D9A2570F2B2E}'
+            Version = s '5.1'
+        }
+    }
+    'WinHttp.WinHttpRequest.5.1' = s 'WinHttpRequest Component version 5.1'
+    {
+        CLSID = s '{2087C2F4-2CEF-4953-A8AB-66779B670495}'
+    }
+}

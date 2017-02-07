@@ -420,7 +420,7 @@ BEGIN
 	87 "Caracterul introdus nu este valid.\n\nCaracterele valide sunt de la 0 până la 9, de la A până la D, *, #, +, !, spațiu, și virgulă."
 	88 "Pentru această locație este necesară introducerea unui cod (purtător) internațional."
 	89 "Pentru această locație este necesară introducerea unui cod purtător."
-	90 "Această pagină încearcă să efectueze/monitorizeze apeluri telefonice sau conexiuni multimedia din acest calculator.\Permiteți acest lucru?"
+	90 "Această pagină încearcă să efectueze/monitorizeze apeluri telefonice sau conexiuni multimedia din acest calculator.\nPermiteți acest lucru?"
 	91 "Această pagină încearcă să acceseze informații directoare prin rețea.\nPermiteți acest lucru?"
 	92 "Această pagină încearcă accesarea sau modificarea informațiilor de conferință în rețea.\nPermiteți acest lucru?"
 	93 "Această pagină încearcă accesarea sau modificarea informațiilor din registru.\nPermiteți acest lucru?"

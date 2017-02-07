@@ -8,30 +8,31 @@
  *
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME: NDK */
-#define HIGH_PRIORITY 31
 #define SXS_SUPPORT_FIXME
+
+typedef NTSTATUS (NTAPI *PCSR_CREATE_REMOTE_THREAD)(IN HANDLE ThreadHandle, IN PCLIENT_ID ClientId);
 
 NTSTATUS
 WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId);
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
+
 static
 LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 {
    LONG ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
-   
+
    if (RealFilter != NULL)
    {
       _SEH2_TRY
@@ -51,8 +52,8 @@ LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
 __declspec(noreturn)
 VOID
 WINAPI
-BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
-                  LPVOID lpParameter)
+BaseThreadStartup(IN LPTHREAD_START_ROUTINE lpStartAddress,
+                  IN LPVOID lpParameter)
 {
     /* Attempt to call the Thread Start Address */
     _SEH2_TRY
@@ -84,17 +85,58 @@ BaseThreadStartup(LPTHREAD_START_ROUTINE lpStartAddress,
     _SEH2_END;
 }
 
+VOID
+NTAPI
+BaseDispatchApc(IN PAPCFUNC ApcRoutine,
+                IN PVOID Data,
+                IN PACTIVATION_CONTEXT ActivationContext)
+{
+    RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME ActivationFrame;
+
+    /* Setup the activation context */
+    ActivationFrame.Size = sizeof(ActivationFrame);
+    ActivationFrame.Format = RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_FORMAT_WHISTLER;
+
+    /* Check if caller wanted one */
+    if (ActivationContext == INVALID_ACTIVATION_CONTEXT)
+    {
+        /* Do the APC directly */
+        ApcRoutine((ULONG_PTR)Data);
+        return;
+    }
+
+    /* Then activate it */
+    RtlActivateActivationContextUnsafeFast(&ActivationFrame, ActivationContext);
+
+    /* Call the routine under SEH */
+    _SEH2_TRY
+    {
+        ApcRoutine((ULONG_PTR)Data);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+
+    }
+    _SEH2_END;
+
+    /* Now de-activate and release the activation context */
+    RtlDeactivateActivationContextUnsafeFast(&ActivationFrame);
+    RtlReleaseActivationContext(ActivationContext);
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
-             DWORD dwStackSize,
-             LPTHREAD_START_ROUTINE lpStartAddress,
-             LPVOID lpParameter,
-             DWORD dwCreationFlags,
-             LPDWORD lpThreadId)
+CreateThread(IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
+             IN DWORD dwStackSize,
+             IN LPTHREAD_START_ROUTINE lpStartAddress,
+             IN LPVOID lpParameter,
+             IN DWORD dwCreationFlags,
+             OUT LPDWORD lpThreadId)
 {
     /* Act as if we're going to create a remote thread in ourselves */
     return CreateRemoteThread(NtCurrentProcess(),
@@ -111,13 +153,13 @@ CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
  */
 HANDLE
 WINAPI
-CreateRemoteThread(HANDLE hProcess,
-                   LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                   DWORD dwStackSize,
-                   LPTHREAD_START_ROUTINE lpStartAddress,
-                   LPVOID lpParameter,
-                   DWORD dwCreationFlags,
-                   LPDWORD lpThreadId)
+CreateRemoteThread(IN HANDLE hProcess,
+                   IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                   IN DWORD dwStackSize,
+                   IN LPTHREAD_START_ROUTINE lpStartAddress,
+                   IN LPVOID lpParameter,
+                   IN DWORD dwCreationFlags,
+                   OUT LPDWORD lpThreadId)
 {
     NTSTATUS Status;
     INITIAL_TEB InitialTeb;
@@ -127,7 +169,12 @@ CreateRemoteThread(HANDLE hProcess,
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hThread;
     ULONG Dummy;
-
+    PTEB Teb;
+    THREAD_BASIC_INFORMATION ThreadBasicInfo;
+    PVOID ActivationContextStack = NULL;
+    ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
+    ULONG_PTR Cookie;
+    ULONG ReturnLength;
     DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
             ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
@@ -140,10 +187,10 @@ CreateRemoteThread(HANDLE hProcess,
 
     /* Create the Stack */
     Status = BaseCreateStack(hProcess,
-                              dwStackSize,
-                              dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
-                              dwStackSize : 0,
-                              &InitialTeb);
+                             dwStackSize,
+                             dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
+                             dwStackSize : 0,
+                             &InitialTeb);
     if(!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -152,15 +199,15 @@ CreateRemoteThread(HANDLE hProcess,
 
     /* Create Initial Context */
     BaseInitializeContext(&Context,
-                           lpParameter,
-                           lpStartAddress,
-                           InitialTeb.StackBase,
-                           1);
+                          lpParameter,
+                          lpStartAddress,
+                          InitialTeb.StackBase,
+                          1);
 
     /* initialize the attributes for the thread object */
     ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
-                                                    lpThreadAttributes,
-                                                    NULL);
+                                                  lpThreadAttributes,
+                                                  NULL);
 
     /* Create the Kernel Thread Object */
     Status = NtCreateThread(&hThread,
@@ -171,8 +218,9 @@ CreateRemoteThread(HANDLE hProcess,
                             &Context,
                             &InitialTeb,
                             TRUE);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
+        /* Fail the kernel create */
         BaseFreeThreadStack(hProcess, &InitialTeb);
         BaseSetLastNTError(Status);
         return NULL;
@@ -181,78 +229,104 @@ CreateRemoteThread(HANDLE hProcess,
     /* Are we in the same process? */
     if (hProcess == NtCurrentProcess())
     {
-        PTEB Teb;
-        PVOID ActivationContextStack = NULL;
-        THREAD_BASIC_INFORMATION ThreadBasicInfo;
-#ifndef SXS_SUPPORT_FIXME
-        ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
-        ULONG_PTR Cookie;
-#endif
-        ULONG retLen;
-
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
                                           ThreadBasicInformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
-                                          &retLen);
-        if (NT_SUCCESS(Status))
+                                          &ReturnLength);
+        if (!NT_SUCCESS(Status))
         {
-            /* Allocate the Activation Context Stack */
-            Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "NtQueryInformationThread() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
         }
 
-        if (NT_SUCCESS(Status))
+        /* Allocate the Activation Context Stack */
+        Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+        if (!NT_SUCCESS(Status))
         {
-            Teb = ThreadBasicInfo.TebBaseAddress;
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "RtlAllocateActivationContextStack() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
+        }
 
-            /* Save it */
-            Teb->ActivationContextStackPointer = ActivationContextStack;
-#ifndef SXS_SUPPORT_FIXME
-            /* Query the Context */
-            Status = RtlQueryInformationActivationContext(1,
-                                                          0,
-                                                          NULL,
-                                                          ActivationContextBasicInformation,
-                                                          &ActivationCtxInfo,
-                                                          sizeof(ActivationCtxInfo),
-                                                          &retLen);
-            if (NT_SUCCESS(Status))
+        /* Save it */
+        Teb = ThreadBasicInfo.TebBaseAddress;
+        Teb->ActivationContextStackPointer = ActivationContextStack;
+
+        /* Query the Context */
+         // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
+        Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                                                      NULL,
+                                                      0,
+                                                      ActivationContextBasicInformation,
+                                                      &ActCtxInfo,
+                                                      sizeof(ActCtxInfo),
+                                                      &ReturnLength);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "RtlQueryInformationActivationContext() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
+        }
+
+        /* Does it need to be activated? */
+        if ((ActCtxInfo.hActCtx) && !(ActCtxInfo.dwFlags & 1))
+        {
+            /* Activate it */
+            Status = RtlActivateActivationContextEx(RTL_ACTIVATE_ACTIVATION_CONTEXT_EX_FLAG_RELEASE_ON_STACK_DEALLOCATION,
+                                                    Teb,
+                                                    ActCtxInfo.hActCtx,
+                                                    &Cookie);
+            if (!NT_SUCCESS(Status))
             {
-                /* Does it need to be activated? */
-                if (!ActivationCtxInfo.hActCtx)
-                {
-                    /* Activate it */
-                    Status = RtlActivateActivationContext(1,
-                                                          ActivationCtxInfo.hActCtx,
-                                                          &Cookie);
-                    if (!NT_SUCCESS(Status))
-                        DPRINT1("RtlActivateActivationContext failed %x\n", Status);
-                }
+                /* Fail */
+                DbgPrint("SXS: %s - Failing thread create because "
+                         "RtlActivateActivationContextEx() failed with status %08lx\n",
+                         __FUNCTION__, Status);
+                while (TRUE);
             }
-            else
-                DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
-#endif
         }
-        else
-            DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
 
     /* Notify CSR */
-    Status = BasepNotifyCsrOfThread(hThread, &ClientId);
-    if (!NT_SUCCESS(Status))
+    if (!BaseRunningInServerProcess)
     {
-        ASSERT(FALSE);
+        /* Notify CSR */
+        Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    else
+    {
+        if (hProcess != NtCurrentProcess())
+        {
+            PCSR_CREATE_REMOTE_THREAD CsrCreateRemoteThread;
+
+            /* Get the direct CSRSRV export */
+            CsrCreateRemoteThread = (PCSR_CREATE_REMOTE_THREAD)
+                                    GetProcAddress(GetModuleHandleA("csrsrv"),
+                                                   "CsrCreateRemoteThread");
+            if (CsrCreateRemoteThread)
+            {
+                /* Call it instead of going through LPC */
+                Status = CsrCreateRemoteThread(hThread, &ClientId);
+                ASSERT(NT_SUCCESS(Status));
+            }
+        }
     }
 
     /* Success */
-    if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
+    if (lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
     /* Resume it if asked */
-    if (!(dwCreationFlags & CREATE_SUSPENDED))
-    {
-        NtResumeThread(hThread, &Dummy);
-    }
+    if (!(dwCreationFlags & CREATE_SUSPENDED)) NtResumeThread(hThread, &Dummy);
 
     /* Return handle to thread */
     return hThread;
@@ -263,10 +337,15 @@ CreateRemoteThread(HANDLE hProcess,
  */
 VOID
 WINAPI
-ExitThread(DWORD uExitCode)
+ExitThread(IN DWORD uExitCode)
 {
     NTSTATUS Status;
     ULONG LastThread;
+    PRTL_CRITICAL_SECTION LoaderLock;
+
+    /* Make sure loader lock isn't held */
+    LoaderLock = NtCurrentPeb()->LoaderLock;
+    if (LoaderLock) ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
 
     /*
      * Terminate process if this is the last thread
@@ -277,11 +356,7 @@ ExitThread(DWORD uExitCode)
                                       &LastThread,
                                       sizeof(LastThread),
                                       NULL);
-    if (NT_SUCCESS(Status) && LastThread)
-    {
-        /* Exit the Process */
-        ExitProcess(uExitCode);
-    }
+    if ((NT_SUCCESS(Status)) && (LastThread)) ExitProcess(uExitCode);
 
     /* Notify DLLs and TLS Callbacks of termination */
     LdrShutdownThread();
@@ -292,7 +367,7 @@ ExitThread(DWORD uExitCode)
 
     /* We should never reach this place */
     DPRINT1("It should not happen\n");
-    while (TRUE) ;
+    while (TRUE);
 }
 
 /*
@@ -300,14 +375,14 @@ ExitThread(DWORD uExitCode)
  */
 HANDLE
 WINAPI
-OpenThread(DWORD dwDesiredAccess,
-           BOOL bInheritHandle,
-           DWORD dwThreadId)
+OpenThread(IN DWORD dwDesiredAccess,
+           IN BOOL bInheritHandle,
+           IN DWORD dwThreadId)
 {
     NTSTATUS Status;
     HANDLE ThreadHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    CLIENT_ID ClientId ;
+    CLIENT_ID ClientId;
 
     ClientId.UniqueProcess = 0;
     ClientId.UniqueThread = ULongToHandle(dwThreadId);
@@ -366,11 +441,11 @@ GetCurrentThreadId(VOID)
  */
 BOOL
 NTAPI
-GetThreadTimes(HANDLE hThread,
-               LPFILETIME lpCreationTime,
-               LPFILETIME lpExitTime,
-               LPFILETIME lpKernelTime,
-               LPFILETIME lpUserTime)
+GetThreadTimes(IN HANDLE hThread,
+               OUT LPFILETIME lpCreationTime,
+               OUT LPFILETIME lpExitTime,
+               OUT LPFILETIME lpKernelTime,
+               OUT LPFILETIME lpUserTime)
 {
     KERNEL_USER_TIMES KernelUserTimes;
     NTSTATUS Status;
@@ -383,7 +458,7 @@ GetThreadTimes(HANDLE hThread,
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
-        return(FALSE);
+        return FALSE;
     }
 
     *lpCreationTime = *(LPFILETIME)&KernelUserTimes.CreateTime;
@@ -398,8 +473,8 @@ GetThreadTimes(HANDLE hThread,
  */
 BOOL
 WINAPI
-GetThreadContext(HANDLE hThread,
-                 LPCONTEXT lpContext)
+GetThreadContext(IN HANDLE hThread,
+                 OUT LPCONTEXT lpContext)
 {
     NTSTATUS Status;
 
@@ -418,8 +493,8 @@ GetThreadContext(HANDLE hThread,
  */
 BOOL
 WINAPI
-SetThreadContext(HANDLE hThread,
-                 CONST CONTEXT *lpContext)
+SetThreadContext(IN HANDLE hThread,
+                 IN CONST CONTEXT *lpContext)
 {
     NTSTATUS Status;
 
@@ -438,8 +513,8 @@ SetThreadContext(HANDLE hThread,
  */
 BOOL
 WINAPI
-GetExitCodeThread(HANDLE hThread,
-                  LPDWORD lpExitCode)
+GetExitCodeThread(IN HANDLE hThread,
+                  OUT LPDWORD lpExitCode)
 {
     THREAD_BASIC_INFORMATION ThreadBasic;
     NTSTATUS Status;
@@ -452,7 +527,7 @@ GetExitCodeThread(HANDLE hThread,
     if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
-        return(FALSE);
+        return FALSE;
     }
 
     *lpExitCode = ThreadBasic.ExitStatus;
@@ -464,7 +539,7 @@ GetExitCodeThread(HANDLE hThread,
  */
 DWORD
 WINAPI
-ResumeThread(HANDLE hThread)
+ResumeThread(IN HANDLE hThread)
 {
     ULONG PreviousResumeCount;
     NTSTATUS Status;
@@ -484,24 +559,49 @@ ResumeThread(HANDLE hThread)
  */
 BOOL
 WINAPI
-TerminateThread(HANDLE hThread,
-                DWORD dwExitCode)
+TerminateThread(IN HANDLE hThread,
+                IN DWORD dwExitCode)
 {
     NTSTATUS Status;
+    PRTL_CRITICAL_SECTION LoaderLock;
+    THREAD_BASIC_INFORMATION ThreadInfo;
 
+    /* Check for invalid thread handle */
     if (!hThread)
     {
+        /* Fail if one was passed */
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
+    /* Get the loader lock */
+    LoaderLock = NtCurrentPeb()->LoaderLock;
+    if (LoaderLock)
+    {
+        /* Get our TID */
+        Status = NtQueryInformationThread(hThread,
+                                          ThreadBasicInformation,
+                                          &ThreadInfo,
+                                          sizeof(ThreadInfo),
+                                          NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Assert that we don't hold the loader lock */
+            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != ThreadInfo.ClientId.UniqueThread);
+            ASSERT(NtCurrentTeb()->ClientId.UniqueThread != LoaderLock->OwningThread);
+        }
+    }
+
+    /* Now terminate the thread */
     Status = NtTerminateThread(hThread, dwExitCode);
     if (!NT_SUCCESS(Status))
     {
+        /* Fail */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* All done */
     return TRUE;
 }
 
@@ -510,7 +610,7 @@ TerminateThread(HANDLE hThread,
  */
 DWORD
 WINAPI
-SuspendThread(HANDLE hThread)
+SuspendThread(IN HANDLE hThread)
 {
     ULONG PreviousSuspendCount;
     NTSTATUS Status;
@@ -530,8 +630,8 @@ SuspendThread(HANDLE hThread)
  */
 DWORD_PTR
 WINAPI
-SetThreadAffinityMask(HANDLE hThread,
-                      DWORD_PTR dwThreadAffinityMask)
+SetThreadAffinityMask(IN HANDLE hThread,
+                      IN DWORD_PTR dwThreadAffinityMask)
 {
     THREAD_BASIC_INFORMATION ThreadBasic;
     KAFFINITY AffinityMask;
@@ -568,8 +668,8 @@ SetThreadAffinityMask(HANDLE hThread,
  */
 BOOL
 WINAPI
-SetThreadPriority(HANDLE hThread,
-                  int nPriority)
+SetThreadPriority(IN HANDLE hThread,
+                  IN int nPriority)
 {
     LONG Prio = nPriority;
     NTSTATUS Status;
@@ -577,10 +677,12 @@ SetThreadPriority(HANDLE hThread,
     /* Check if values forcing saturation should be used */
     if (Prio == THREAD_PRIORITY_TIME_CRITICAL)
     {
+        /* This is 16 */
         Prio = (HIGH_PRIORITY + 1) / 2;
     }
     else if (Prio == THREAD_PRIORITY_IDLE)
     {
+        /* This is -16 */
         Prio = -((HIGH_PRIORITY + 1) / 2);
     }
 
@@ -605,7 +707,7 @@ SetThreadPriority(HANDLE hThread,
  */
 int
 WINAPI
-GetThreadPriority(HANDLE hThread)
+GetThreadPriority(IN HANDLE hThread)
 {
     THREAD_BASIC_INFORMATION ThreadBasic;
     NTSTATUS Status;
@@ -676,7 +778,7 @@ SetThreadPriorityBoost(IN HANDLE hThread,
     ULONG PriorityBoost;
     NTSTATUS Status;
 
-    PriorityBoost = (ULONG)bDisablePriorityBoost;
+    PriorityBoost = bDisablePriorityBoost != FALSE;
 
     Status = NtSetInformationThread(hThread,
                                     ThreadPriorityBoost,
@@ -732,8 +834,8 @@ GetThreadSelectorEntry(IN HANDLE hThread,
  */
 DWORD
 WINAPI
-SetThreadIdealProcessor(HANDLE hThread,
-                        DWORD dwIdealProcessor)
+SetThreadIdealProcessor(IN HANDLE hThread,
+                        IN DWORD dwIdealProcessor)
 {
     NTSTATUS Status;
 
@@ -753,197 +855,171 @@ SetThreadIdealProcessor(HANDLE hThread,
 /*
  * @implemented
  */
-DWORD WINAPI
-GetProcessIdOfThread(HANDLE Thread)
+DWORD
+WINAPI
+GetProcessIdOfThread(IN HANDLE Thread)
 {
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  NTSTATUS Status;
+    THREAD_BASIC_INFORMATION ThreadBasic;
+    NTSTATUS Status;
 
-  Status = NtQueryInformationThread(Thread,
-                                    ThreadBasicInformation,
-                                    &ThreadBasic,
-                                    sizeof(THREAD_BASIC_INFORMATION),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return 0;
-  }
+    Status = NtQueryInformationThread(Thread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
 
-  return HandleToUlong(ThreadBasic.ClientId.UniqueProcess);
+    return HandleToUlong(ThreadBasic.ClientId.UniqueProcess);
 }
 
 /*
  * @implemented
  */
-DWORD WINAPI
-GetThreadId(HANDLE Thread)
+DWORD
+WINAPI
+GetThreadId(IN HANDLE Thread)
 {
-  THREAD_BASIC_INFORMATION ThreadBasic;
-  NTSTATUS Status;
+    THREAD_BASIC_INFORMATION ThreadBasic;
+    NTSTATUS Status;
 
-  Status = NtQueryInformationThread(Thread,
-                                    ThreadBasicInformation,
-                                    &ThreadBasic,
-                                    sizeof(THREAD_BASIC_INFORMATION),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return 0;
-  }
+    Status = NtQueryInformationThread(Thread,
+                                      ThreadBasicInformation,
+                                      &ThreadBasic,
+                                      sizeof(THREAD_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
 
-  return HandleToUlong(ThreadBasic.ClientId.UniqueThread);
+    return HandleToUlong(ThreadBasic.ClientId.UniqueThread);
 }
 
 /*
  * @unimplemented
  */
-LANGID WINAPI
-SetThreadUILanguage(LANGID LangId)
-{
-  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", LangId);
-  return LangId;
-}
-
-static void CALLBACK
-IntCallUserApc(PVOID Function, PVOID dwData, PVOID Argument3)
-{
-   PAPCFUNC pfnAPC = (PAPCFUNC)Function;
-   pfnAPC((ULONG_PTR)dwData);
-}
-
-/*
- * @implemented
- */
-DWORD WINAPI
-QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
-{
-  NTSTATUS Status;
-
-  Status = NtQueueApcThread(hThread, IntCallUserApc, pfnAPC,
-                            (PVOID)dwData, NULL);
-  if (!NT_SUCCESS(Status))
-  {
-    BaseSetLastNTError(Status);
-    return 0;
-  }
-
-  return 1;
-}
-
-BOOL
+LANGID
 WINAPI
-SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
+SetThreadUILanguage(IN LANGID LangId)
 {
-    STUB;
-    return FALSE;
+    UNIMPLEMENTED;
+    return NtCurrentTeb()->CurrentLocale;
 }
-
 
 /*
  * @implemented
  */
-BOOL WINAPI
-GetThreadIOPendingFlag(HANDLE hThread,
-                       PBOOL lpIOIsPending)
-{
-  ULONG IoPending;
-  NTSTATUS Status;
-
-  if(lpIOIsPending == NULL)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  Status = NtQueryInformationThread(hThread,
-                                    ThreadIsIoPending,
-                                    (PVOID)&IoPending,
-                                    sizeof(IoPending),
-                                    NULL);
-  if(NT_SUCCESS(Status))
-  {
-    *lpIOIsPending = ((IoPending != 0) ? TRUE : FALSE);
-    return TRUE;
-  }
-
-  BaseSetLastNTError(Status);
-  return FALSE;
-}
-
-
-typedef struct _QUEUE_USER_WORKITEM_CONTEXT
-{
-    LPTHREAD_START_ROUTINE Function;
-    PVOID Context;
-} QUEUE_USER_WORKITEM_CONTEXT, *PQUEUE_USER_WORKITEM_CONTEXT;
-
-static VOID
-NTAPI
-InternalWorkItemTrampoline(PVOID Context)
-{
-    QUEUE_USER_WORKITEM_CONTEXT Info;
-
-    ASSERT(Context);
-
-    /* Save the context to the stack */
-    Info = *(volatile QUEUE_USER_WORKITEM_CONTEXT *)Context;
-
-    /* Free the context before calling the callback. This avoids
-       a memory leak in case the thread dies... */
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                Context);
-
-    /* Call the real callback */
-    Info.Function(Info.Context);
-}
-
-
-/*
- * @implemented
- */
-BOOL
+DWORD
 WINAPI
-QueueUserWorkItem(
-    LPTHREAD_START_ROUTINE Function,
-    PVOID Context,
-    ULONG Flags
-    )
+QueueUserAPC(IN PAPCFUNC pfnAPC,
+             IN HANDLE hThread,
+             IN ULONG_PTR dwData)
 {
-    PQUEUE_USER_WORKITEM_CONTEXT WorkItemContext;
     NTSTATUS Status;
+    ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
 
-    /* Save the context for the trampoline function */
-    WorkItemContext = RtlAllocateHeap(RtlGetProcessHeap(),
-                                      0,
-                                      sizeof(*WorkItemContext));
-    if (WorkItemContext == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    WorkItemContext->Function = Function;
-    WorkItemContext->Context = Context;
-
-    /* NOTE: Don't use Function directly since the callback signature
-             differs. This might cause problems on certain platforms... */
-    Status = RtlQueueWorkItem(InternalWorkItemTrampoline,
-                              WorkItemContext,
-                              Flags);
+    /* Zero the activation context and query information on it */
+    RtlZeroMemory(&ActCtxInfo, sizeof(ActCtxInfo));
+    // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
+    Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                                                  NULL,
+                                                  0,
+                                                  ActivationContextBasicInformation,
+                                                  &ActCtxInfo,
+                                                  sizeof(ActCtxInfo),
+                                                  NULL);
     if (!NT_SUCCESS(Status))
     {
-        /* Free the allocated context in case of failure */
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    WorkItemContext);
-
+        /* Fail due to SxS */
+        DbgPrint("SXS: %s failing because RtlQueryInformationActivationContext()"
+                 "returned status %08lx\n", __FUNCTION__, Status);
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Queue the APC */
+    Status = NtQueueApcThread(hThread,
+                              (PKNORMAL_ROUTINE)BaseDispatchApc,
+                              pfnAPC,
+                              (PVOID)dwData,
+                              (ActCtxInfo.dwFlags & 1) ?
+                              INVALID_ACTIVATION_CONTEXT : ActCtxInfo.hActCtx);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* All good */
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetThreadIOPendingFlag(IN HANDLE hThread,
+                       OUT PBOOL lpIOIsPending)
+{
+    ULONG IoPending;
+    NTSTATUS Status;
+
+    /* Query the flag */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadIsIoPending,
+                                      &IoPending,
+                                      sizeof(IoPending),
+                                      NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the flag */
+        *lpIOIsPending = IoPending ? TRUE : FALSE;
+        return TRUE;
+    }
+
+    /* Fail */
+    BaseSetLastNTError(Status);
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+QueueUserWorkItem(IN LPTHREAD_START_ROUTINE Function,
+                  IN PVOID Context,
+                  IN ULONG Flags)
+{
+    NTSTATUS Status;
+
+    /* NOTE: Rtl needs to safely call the function using a trampoline */
+    Status = RtlQueueWorkItem((WORKERCALLBACKFUNC)Function, Context, Flags);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed */
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    /* All good */
     return TRUE;
 }
 
@@ -1182,6 +1258,5 @@ TlsSetValue(IN DWORD Index,
     /* Success */
     return TRUE;
 }
-
 
 /* EOF */

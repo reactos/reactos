@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 spec2def(portcls.sys portcls.spec)
 
-add_library(portcls SHARED
+list(APPEND SOURCE
     adapter.cpp
     api.cpp
     connection.cpp
@@ -48,17 +48,23 @@ add_library(portcls SHARED
     undoc.cpp
     unregister.cpp
     version.cpp
-    portcls.rc
     ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
+
+add_library(portcls SHARED
+    ${SOURCE}
+    portcls.rc)
 
 target_link_libraries(portcls
     libcntpr
     ${PSEH_LIB})
 
+# FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)
-    add_target_compile_flags(portcls "/GR-")
+    #add_target_compile_flags(portcls "/GR-")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/GR-")
 else()
-    add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
+    #add_target_compile_flags(portcls "-fno-exceptions -fno-rtti")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif()
 
 set_module_type(portcls kernelmodedriver ENTRYPOINT 0 )

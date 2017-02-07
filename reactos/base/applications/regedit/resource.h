@@ -136,12 +136,14 @@
 #define IDS_ERR_DELETEVALUE             32855
 #define IDS_ERR_RENVAL_CAPTION          32856
 #define IDS_ERR_RENVAL_TOEMPTY          32857
-#define IDS_BAD_KEY                     32858
-#define IDS_LOAD_HIVE                   32859
-#define IDS_UNLOAD_HIVE                 32860
+#define IDS_QUERY_IMPORT_HIVE_CAPTION   32858
+#define IDS_QUERY_IMPORT_HIVE_MSG       32859
+#define IDS_BAD_KEY                     32860
+#define IDS_LOAD_HIVE                   32861
+#define IDS_UNLOAD_HIVE                 32862
 
-#define ID_EDIT_NEW_MULTISTRINGVALUE		32861
-#define ID_EDIT_NEW_EXPANDABLESTRINGVALUE	32862
+#define ID_EDIT_NEW_MULTISTRINGVALUE    32863
+#define ID_EDIT_NEW_EXPANDABLESTRINGVALUE 32864
 
 #define ID_SWITCH_PANELS                32871
 #define ID_EDIT_PERMISSIONS             32872
@@ -158,10 +160,12 @@
 #define IDS_FLT_REGFILE                 31000
 #define IDS_FLT_REGFILES                31001
 #define IDS_FLT_REGFILES_FLT            31002
-#define IDS_FLT_REGEDIT4                31003
-#define IDS_FLT_REGEDIT4_FLT            31004
-#define IDS_FLT_ALLFILES                31005
-#define IDS_FLT_ALLFILES_FLT            31006
+#define IDS_FLT_HIVFILES                31003
+#define IDS_FLT_HIVFILES_FLT            31004
+#define IDS_FLT_REGEDIT4                31005
+#define IDS_FLT_REGEDIT4_FLT            31006
+#define IDS_FLT_ALLFILES                31007
+#define IDS_FLT_ALLFILES_FLT            31008
 
 #define IDS_ACCESS_FULLCONTROL          31101
 #define IDS_ACCESS_READ                 31102
@@ -176,9 +180,9 @@
 #define IDS_ACCESS_WRITEOWNER           31111
 #define IDS_ACCESS_READCONTROL          31112
 
-#define IDS_INHERIT_THISKEYONLY		    31121
-#define IDS_INHERIT_THISKEYANDSUBKEYS	31122
-#define IDS_INHERIT_SUBKEYSONLY		    31123
+#define IDS_INHERIT_THISKEYONLY         31121
+#define IDS_INHERIT_THISKEYANDSUBKEYS   31122
+#define IDS_INHERIT_SUBKEYSONLY         31123
 #define IDS_EXPAND                      31124
 #define IDS_COLLAPSE                    31125
 #define IDS_NEW_KEY                     31126

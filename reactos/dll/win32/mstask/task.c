@@ -21,9 +21,27 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mstask);
 
+typedef struct
+{
+    ITask ITask_iface;
+    IPersistFile IPersistFile_iface;
+    LONG ref;
+    LPWSTR taskName;
+    LPWSTR applicationName;
+    LPWSTR parameters;
+    LPWSTR comment;
+    DWORD maxRunTime;
+    LPWSTR accountName;
+} TaskImpl;
+
+static inline TaskImpl *impl_from_ITask(ITask *iface)
+{
+    return CONTAINING_RECORD(iface, TaskImpl, ITask_iface);
+}
+
 static inline TaskImpl *impl_from_IPersistFile( IPersistFile *iface )
 {
-    return (TaskImpl*) ((char*)(iface) - FIELD_OFFSET(TaskImpl, persistVtbl));
+    return CONTAINING_RECORD(iface, TaskImpl, IPersistFile_iface);
 }
 
 static void TaskDestructor(TaskImpl *This)
@@ -42,7 +60,7 @@ static HRESULT WINAPI MSTASK_ITask_QueryInterface(
         REFIID riid,
         void **ppvObject)
 {
-    TaskImpl * This = (TaskImpl *)iface;
+    TaskImpl * This = impl_from_ITask(iface);
 
     TRACE("IID: %s\n", debugstr_guid(riid));
     if (ppvObject == NULL)
@@ -51,13 +69,13 @@ static HRESULT WINAPI MSTASK_ITask_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
             IsEqualGUID(riid, &IID_ITask))
     {
-        *ppvObject = &This->lpVtbl;
+        *ppvObject = &This->ITask_iface;
         ITask_AddRef(iface);
         return S_OK;
     }
     else if (IsEqualGUID(riid, &IID_IPersistFile))
     {
-        *ppvObject = &This->persistVtbl;
+        *ppvObject = &This->IPersistFile_iface;
         ITask_AddRef(iface);
         return S_OK;
     }
@@ -70,7 +88,7 @@ static HRESULT WINAPI MSTASK_ITask_QueryInterface(
 static ULONG WINAPI MSTASK_ITask_AddRef(
         ITask* iface)
 {
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
     ULONG ref;
     TRACE("\n");
     ref = InterlockedIncrement(&This->ref);
@@ -80,7 +98,7 @@ static ULONG WINAPI MSTASK_ITask_AddRef(
 static ULONG WINAPI MSTASK_ITask_Release(
         ITask* iface)
 {
-    TaskImpl * This = (TaskImpl *)iface;
+    TaskImpl * This = impl_from_ITask(iface);
     ULONG ref;
     TRACE("\n");
     ref = InterlockedDecrement(&This->ref);
@@ -222,7 +240,7 @@ static HRESULT WINAPI MSTASK_ITask_SetComment(
         LPCWSTR pwszComment)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
     LPWSTR tmp_comment;
 
     TRACE("(%p, %s)\n", iface, debugstr_w(pwszComment));
@@ -252,7 +270,7 @@ static HRESULT WINAPI MSTASK_ITask_GetComment(
         LPWSTR *ppwszComment)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %p)\n", iface, ppwszComment);
 
@@ -357,7 +375,7 @@ static HRESULT WINAPI MSTASK_ITask_SetAccountInformation(
         LPCWSTR pwszPassword)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
     LPWSTR tmp_account_name;
 
     TRACE("(%p, %s, %s): partial stub\n", iface, debugstr_w(pwszAccountName),
@@ -381,7 +399,7 @@ static HRESULT WINAPI MSTASK_ITask_GetAccountInformation(
         LPWSTR *ppwszAccountName)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %p): partial stub\n", iface, ppwszAccountName);
 
@@ -403,7 +421,7 @@ static HRESULT WINAPI MSTASK_ITask_SetApplicationName(
         LPCWSTR pwszApplicationName)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
     LPWSTR tmp_name;
 
     TRACE("(%p, %s)\n", iface, debugstr_w(pwszApplicationName));
@@ -450,7 +468,7 @@ static HRESULT WINAPI MSTASK_ITask_GetApplicationName(
         LPWSTR *ppwszApplicationName)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %p)\n", iface, ppwszApplicationName);
 
@@ -472,7 +490,7 @@ static HRESULT WINAPI MSTASK_ITask_SetParameters(
         LPCWSTR pwszParameters)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
     LPWSTR tmp_parameters;
 
     TRACE("(%p, %s)\n", iface, debugstr_w(pwszParameters));
@@ -501,7 +519,7 @@ static HRESULT WINAPI MSTASK_ITask_GetParameters(
         LPWSTR *ppwszParameters)
 {
     DWORD n;
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %p)\n", iface, ppwszParameters);
 
@@ -570,7 +588,7 @@ static HRESULT WINAPI MSTASK_ITask_SetMaxRunTime(
         ITask* iface,
         DWORD dwMaxRunTime)
 {
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %d)\n", iface, dwMaxRunTime);
 
@@ -582,7 +600,7 @@ static HRESULT WINAPI MSTASK_ITask_GetMaxRunTime(
         ITask* iface,
         DWORD *pdwMaxRunTime)
 {
-    TaskImpl *This = (TaskImpl *)iface;
+    TaskImpl *This = impl_from_ITask(iface);
 
     TRACE("(%p, %p)\n", iface, pdwMaxRunTime);
 
@@ -597,7 +615,7 @@ static HRESULT WINAPI MSTASK_IPersistFile_QueryInterface(
 {
     TaskImpl *This = impl_from_IPersistFile(iface);
     TRACE("(%p, %s, %p)\n", iface, debugstr_guid(riid), ppvObject);
-    return ITask_QueryInterface((ITask *) This, riid, ppvObject);
+    return ITask_QueryInterface(&This->ITask_iface, riid, ppvObject);
 }
 
 static ULONG WINAPI MSTASK_IPersistFile_AddRef(
@@ -746,8 +764,8 @@ HRESULT TaskConstructor(LPCWSTR pwszTaskName, LPVOID *ppObj)
     if (!This)
         return E_OUTOFMEMORY;
 
-    This->lpVtbl = &MSTASK_ITaskVtbl;
-    This->persistVtbl = &MSTASK_IPersistFileVtbl;
+    This->ITask_iface.lpVtbl = &MSTASK_ITaskVtbl;
+    This->IPersistFile_iface.lpVtbl = &MSTASK_IPersistFileVtbl;
     This->ref = 1;
     n = (lstrlenW(pwszTaskName) + 1) * sizeof(WCHAR);
     This->taskName = HeapAlloc(GetProcessHeap(), 0, n);
@@ -765,7 +783,7 @@ HRESULT TaskConstructor(LPCWSTR pwszTaskName, LPVOID *ppObj)
     /* Default time is 3 days = 259200000 ms */
     This->maxRunTime = 259200000;
 
-    *ppObj = &This->lpVtbl;
+    *ppObj = &This->ITask_iface;
     InterlockedIncrement(&dll_ref);
     return S_OK;
 }

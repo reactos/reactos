@@ -459,9 +459,9 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     Status = KeWaitForSingleObject(&Ccb->ReadEvent,
                         UserRequest,
                         Irp->RequestorMode,
-                        (FileObject->Flags & FO_ALERTABLE_IO),
+                        (FileObject->Flags & FO_ALERTABLE_IO) != 0,
                         NULL);
-                    DPRINT("Finished waiting (%wZ)! Status: %x\n", &Ccb->Fcb->PipeName, Status);
+                    DPRINT("Finished waiting (%wZ)! Status: %lx\n", &Ccb->Fcb->PipeName, Status);
 
                     ExAcquireFastMutex(&Ccb->DataListLock);
 
@@ -815,7 +815,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
     while(1)
     {
-        if ((ReaderCcb->WriteQuotaAvailable == 0))
+        if (ReaderCcb->WriteQuotaAvailable == 0)
         {
             if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
@@ -826,13 +826,13 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
             ExReleaseFastMutex(&ReaderCcb->DataListLock);
 
-            DPRINT("Write Waiting for buffer space (%S)\n", Fcb->PipeName.Buffer);
+            DPRINT("Write Waiting for buffer space (%wZ)\n", &Fcb->PipeName);
             Status = KeWaitForSingleObject(&Ccb->WriteEvent,
                 UserRequest,
                 Irp->RequestorMode,
-                (FileObject->Flags & FO_ALERTABLE_IO),
+                (FileObject->Flags & FO_ALERTABLE_IO) != 0,
                 NULL);
-            DPRINT("Write Finished waiting (%S)! Status: %x\n", Fcb->PipeName.Buffer, Status);
+            DPRINT("Write Finished waiting (%wZ)! Status: %lx\n", &Fcb->PipeName, Status);
 
             if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
             {

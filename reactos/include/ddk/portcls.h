@@ -144,14 +144,6 @@ extern "C" {
 #include <ksmedia.h>
 #include <drmk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#include <wdm.h>
-}
-#else
-#include <wdm.h>
-#endif
-
 #ifndef PC_NO_IMPORTS
 #define PORTCLASSAPI EXTERN_C __declspec(dllimport)
 #else
@@ -622,7 +614,7 @@ DECLARE_INTERFACE_(IServiceGroup, IServiceSink) {
 typedef IServiceGroup *PSERVICEGROUP;
 
 
-#if (NTDDI_VERSION >= NTDDI_WIN2003)
+#if (NTDDI_VERSION >= NTDDI_WS03)
 /* ===============================================================
     IUnregisterSubdevice Interface
 */

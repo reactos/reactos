@@ -14,7 +14,6 @@
 
 #include <hal.h>
 #include <ntdddisk.h>
-#include <rosldr.h>
 
 VOID HalpXboxInitPciBus(PBUS_HANDLER BusHandler);
 VOID HalpXboxInitPartIo(VOID);

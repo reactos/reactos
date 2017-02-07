@@ -20,25 +20,68 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#include "Da.rc"
-#include "En.rc"
-#include "Ko.rc"
-#include "Nl.rc"
-#include "No.rc"
-#include "Pl.rc"
-#include "Pt.rc"
-#include "Sv.rc"
+#ifdef LANGUAGE_DA_DK
+    #include "Da.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "En.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "Ko.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "Pt.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "Sv.rc"
+#endif
 
 /* UTF-8 */
-#include "De.rc"
-#include "Es.rc"
-#include "Fr.rc"
-#include "It.rc"
-#include "Ja.rc"
-#include "Lt.rc"
-#include "Ro.rc"
-#include "Ru.rc"
-#include "Si.rc"
-#include "Sr.rc"
-#include "Uk.rc"
-#include "Zh.rc"
+#ifdef LANGUAGE_BG_BG
+    #include "Bg.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "De.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "Fr.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "Ja.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "Lt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "Si.rc"
+#endif
+#ifdef LANGUAGE_SR_SP
+    #include "Sr.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "Zh.rc"
+#endif

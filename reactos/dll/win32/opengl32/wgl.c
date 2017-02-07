@@ -250,6 +250,7 @@ GLDCDATA *
 ROSGL_GetPrivateDCData( HDC hdc )
 {
     GLDCDATA *data;
+    HANDLE handle;
 
     /* check hdc */
     if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
@@ -267,11 +268,17 @@ ROSGL_GetPrivateDCData( HDC hdc )
         return NULL; /* FIXME: do we have to expect such an error and handle it? */
     }
 
+    /* We must use the window to identify our data, as pixel format is
+     * specific to a window for device context */
+    handle = WindowFromDC(hdc);
+    if(!handle)
+        handle = hdc;
+
     /* look for data in list */
     data = OPENGL32_processdata.dcdata_list;
     while (data != NULL)
     {
-        if (data->hdc == hdc) /* found */
+        if (data->handle == handle) /* found */
             break;
         data = data->next;
     }
@@ -288,7 +295,7 @@ ROSGL_GetPrivateDCData( HDC hdc )
         }
         else
         {
-            data->hdc = hdc;
+            data->handle = handle;
 
             /* append data to list */
             if (OPENGL32_processdata.dcdata_list == NULL)
@@ -486,6 +493,32 @@ ROSGL_SetContextCallBack( const ICDTable *table )
 }
 
 
+/*! \brief Returns the current pixelformat.
+ *
+ * \param hdc [IN] Handle to DC to get the pixelformat from
+ *
+ * \return Pixelformat index
+ * \retval 0 Failure
+ */
+int
+WINAPI
+rosglGetPixelFormat( HDC hdc )
+{
+    GLDCDATA *dcdata;
+
+    DBGTRACE( "Called!" );
+
+    dcdata = ROSGL_GetPrivateDCData( hdc );
+    if (dcdata == NULL)
+    {
+        DBGPRINT( "Error: ROSGL_GetPrivateDCData failed!" );
+        return 0;
+    }
+
+    return dcdata->pixel_format;
+}
+
+
 /*! \brief Attempts to find the best matching pixel format for HDC
  *
  * This function is comparing each available format with the preferred one
@@ -673,23 +706,32 @@ rosglCreateLayerContext( HDC hdc, int layer )
         return NULL;
     }
 */
-    /* create new GLRC */
-    glrc = ROSGL_NewContext();
-    if (glrc == NULL)
-        return NULL;
 
     /* load ICD */
     icd = ROSGL_ICDForHDC( hdc );
     if (icd == NULL)
     {
-        ROSGL_DeleteContext( glrc );
         DBGPRINT( "Couldn't get ICD by HDC :-(" );
         /* FIXME: fallback? */
         return NULL;
     }
+
+    /* create new GLRC */
+    glrc = ROSGL_NewContext();
+    if (glrc == NULL)
+        return NULL;
+
     /* Don't forget to refcount it, icd will be released when last context is deleted */
     InterlockedIncrement((LONG*)&icd->refcount);
-    
+
+    /* You can't create a context without first setting a valid pixel format */
+    if(rosglGetPixelFormat(hdc) == 0)
+    {
+        ROSGL_DeleteContext( glrc );
+        SetLastError(ERROR_INVALID_PIXEL_FORMAT);
+        return NULL;
+    }
+
 
     /* create context */
     if (icd->DrvCreateLayerContext != NULL)
@@ -735,7 +777,7 @@ rosglCreateContext( HDC hdc )
 
 /*! \brief Delete an OpenGL context
  *
- * \param hglrc [IN] Handle to GLRC to delete; must not be a threads current RC!
+ * \param hglrc [IN] Handle to GLRC to delete;
  *
  * \retval TRUE  Success
  * \retval FALSE Failure (i.e. GLRC is current for a thread)
@@ -754,12 +796,18 @@ rosglDeleteContext( HGLRC hglrc )
         return FALSE;
     }
 
-    /* make sure GLRC is not current for some thread */
+    /* On windows, this is allowed to delete a context which is current */
     if (glrc->is_current)
     {
-        DBGPRINT( "Error: GLRC is current for DC 0x%08x", glrc->hdc );
-        SetLastError( ERROR_INVALID_FUNCTION );
-        return FALSE;
+        /* But only for its own thread */
+        if(glrc->thread_id != GetCurrentThreadId())
+        {
+            DBGPRINT( "Error: GLRC is current for DC 0x%08x", glrc->hdc );
+            SetLastError( ERROR_INVALID_FUNCTION );
+            return FALSE;
+        }
+        /* Unset it before going further */
+        rosglMakeCurrent(NULL, NULL);
     }
 
     /* release ICD's context */
@@ -830,7 +878,7 @@ HGLRC
 APIENTRY
 rosglGetCurrentContext()
 {
-    return (HGLRC)(OPENGL32_threaddata->glrc);
+    return NtCurrentTeb()->glCurrentRC;
 }
 
 
@@ -843,11 +891,9 @@ HDC
 APIENTRY
 rosglGetCurrentDC()
 {
-    /* FIXME: is it correct to return NULL when there is no current GLRC or
-       is there another way to find out the wanted HDC? */
-    if (OPENGL32_threaddata->glrc == NULL)
-        return NULL;
-    return (HDC)(OPENGL32_threaddata->glrc->hdc);
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
+    if(glrc) return glrc->hdc;
+    return NULL;
 }
 
 
@@ -859,32 +905,6 @@ rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
     UNIMPLEMENTED;
     SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
     return 0;
-}
-
-
-/*! \brief Returns the current pixelformat.
- *
- * \param hdc [IN] Handle to DC to get the pixelformat from
- *
- * \return Pixelformat index
- * \retval 0 Failure
- */
-int
-WINAPI
-rosglGetPixelFormat( HDC hdc )
-{
-    GLDCDATA *dcdata;
-
-    DBGTRACE( "Called!" );
-
-    dcdata = ROSGL_GetPrivateDCData( hdc );
-    if (dcdata == NULL)
-    {
-        DBGPRINT( "Error: ROSGL_GetPrivateDCData failed!" );
-        return 0;
-    }
-
-    return dcdata->pixel_format;
 }
 
 
@@ -903,19 +923,18 @@ APIENTRY
 rosglGetProcAddress( LPCSTR proc )
 {
     PROC func;
-    GLDRIVERDATA *icd;
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
 
     /* FIXME we should Flush the gl here */
 
-    if (OPENGL32_threaddata->glrc == NULL)
+    if (glrc == NULL)
     {
         DBGPRINT( "Error: No current GLRC!" );
         SetLastError( ERROR_INVALID_FUNCTION );
         return NULL;
     }
 
-    icd = OPENGL32_threaddata->glrc->icd;
-    func = icd->DrvGetProcAddress( proc );
+    func = glrc->icd->DrvGetProcAddress( proc );
     if (func != NULL)
     {
         DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
@@ -932,19 +951,18 @@ APIENTRY
 rosglGetDefaultProcAddress( LPCSTR proc )
 {
     PROC func;
-    GLDRIVERDATA *icd;
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
 
     /*  wglGetDefaultProcAddress does not flush the gl */
 
-    if (OPENGL32_threaddata->glrc == NULL)
+    if (glrc == NULL)
     {
         DBGPRINT( "Error: No current GLRC!" );
         SetLastError( ERROR_INVALID_FUNCTION );
         return NULL;
     }
 
-    icd = OPENGL32_threaddata->glrc->icd;
-    func = icd->DrvGetProcAddress( proc );
+    func = glrc->icd->DrvGetProcAddress( proc );
     if (func != NULL)
     {
         DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
@@ -974,27 +992,8 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 
     DBGTRACE( "Called!" );
 
-    if (OPENGL32_threaddata == NULL)
-        return FALSE;
-
-    /* flush current context */
-    if (OPENGL32_threaddata->glrc != NULL)
-    {
-        glFlush();
-    }
-
-    /* check if current context is unset */
-    if (glrc == NULL)
-    {
-        if (OPENGL32_threaddata->glrc != NULL)
-        {
-            glrc = OPENGL32_threaddata->glrc;
-            glrc->icd->DrvReleaseContext( glrc->hglrc );
-            glrc->is_current = FALSE;
-            OPENGL32_threaddata->glrc = NULL;
-        }
-    }
-    else
+    /* Is t a new context ? */
+    if (glrc != NULL)
     {
         /* check hdc */
         if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
@@ -1020,6 +1019,16 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             return FALSE;
         }
 
+        /* Unset previous one */
+        if (NtCurrentTeb()->glCurrentRC != NULL)
+        {
+            GLRC *oldglrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
+            oldglrc->is_current = FALSE;
+            oldglrc->thread_id = 0;
+            oldglrc->hdc = NULL;
+            oldglrc->icd->DrvReleaseContext(oldglrc->hglrc);
+        }
+
         /* call the ICD */
         if (glrc->hglrc != NULL)
         {
@@ -1030,18 +1039,40 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             if (icdTable == NULL)
             {
                 DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
+                NtCurrentTeb()->glCurrentRC = NULL;
                 return FALSE;
             }
             DBGPRINT( "Info: DrvSetContext succeeded!" );
         }
 
         /* make it current */
-        if (OPENGL32_threaddata->glrc != NULL)
-            OPENGL32_threaddata->glrc->is_current = FALSE;
         glrc->is_current = TRUE;
         glrc->thread_id = GetCurrentThreadId();
         glrc->hdc = hdc;
-        OPENGL32_threaddata->glrc = glrc;
+        NtCurrentTeb()->glCurrentRC = (HGLRC)glrc;
+    }
+    else if(NtCurrentTeb()->glCurrentRC)
+    {
+        /* This is a call to unset the context */
+        GLRC *oldglrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
+        oldglrc->is_current = FALSE;
+        oldglrc->thread_id = 0;
+        oldglrc->hdc = NULL;
+        oldglrc->icd->DrvReleaseContext(oldglrc->hglrc);
+        NtCurrentTeb()->glCurrentRC = NULL;
+    }
+    else
+    {
+        /*
+         * To make wine tests happy.
+         * Now, who cares if MakeCurrentContext(NULL, NULL) fails when current context is already NULL
+         */
+        if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
+        {
+            DBGPRINT( "Error: hdc is not a DC handle!" );
+            SetLastError( ERROR_INVALID_HANDLE );
+            return FALSE;
+        }
     }
 
     if (ROSGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS && icdTable == NULL)
@@ -1087,32 +1118,30 @@ BOOL
 WINAPI
 rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
-    GLDRIVERDATA *icd;
     GLDCDATA *dcdata;
+    GLDRIVERDATA* icd;
 
     DBGTRACE( "Called!" );
 
-    /* load ICD */
-    icd = ROSGL_ICDForHDC( hdc );
-    if (icd == NULL)
-    {
-        DBGPRINT( "Warning: ICDForHDC() failed" );
-        return FALSE;
-    }
-
-    /* call ICD */
-    if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
-    {
-        DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
-                  iFormat, GetLastError() );
-        return FALSE;
-    }
-
-    /* store format in private DC data */
+    /* Get private DC data */
     dcdata = ROSGL_GetPrivateDCData( hdc );
     if (dcdata == NULL)
     {
         DBGPRINT( "Error: ROSGL_GetPrivateDCData() failed!" );
+        return FALSE;
+    }
+    /* you can set the same pixel format twice, but you can't modify it */
+    if(dcdata->pixel_format) return dcdata->pixel_format == iFormat;
+
+    icd = ROSGL_ICDForHDC(hdc);
+    if(icd == NULL)
+        return 0;
+
+    /* Call ICD function */
+    if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
+    {
+        DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
+                  iFormat, GetLastError() );
         return FALSE;
     }
     dcdata->pixel_format = iFormat;

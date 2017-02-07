@@ -378,7 +378,7 @@ public:
 		if (bRegister != FALSE)
 			hResult = registrar.ResourceRegister(modulePath, nResID, _T("REGISTRY"));
 		else
-			hResult = registrar.ResourceRegister(modulePath, nResID, _T("REGISTRY"));
+			hResult = registrar.ResourceUnregister(modulePath, nResID, _T("REGISTRY"));
 
 		return hResult;
 	}

@@ -16,6 +16,14 @@ extern "C" {
 #include <limits.h>
 #include <windows.h>
 
+#ifdef __REACTOS__
+#include "malloc.h"
+struct _exception;
+__declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
+#define __mingw_fprintf fprintf
+#define __mingw_vfprintf vfprintf
+#endif
+
 #pragma pack(push,_CRT_PACKING)
 
 #ifndef __INTERNAL_FUNC_DEFINED
@@ -155,7 +163,7 @@ extern char ** __MINGW_IMP_SYMBOL(_wcmdln);
 #define _GUI_APP 2
 
   typedef enum __enative_startup_state {
-    __uninitialized, __initializing, __initialized
+    __uninitialized = 0, __initializing, __initialized
   } __enative_startup_state;
 
   extern volatile __enative_startup_state __native_startup_state;

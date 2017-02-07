@@ -4,9 +4,7 @@ add_typelib(shdocvw_v1.idl)
 add_definitions(-D_SHDOCVW_)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
-spec2def(shdocvw.dll shdocvw.spec)
+spec2def(shdocvw.dll shdocvw.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     classinfo.c
@@ -27,13 +25,15 @@ list(APPEND SOURCE
     urlhist.c
     view.c
     webbrowser.c
-    shdocvw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
 set_source_files_properties(shdocvw.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shdocvw_v1.tlb)
 
-add_library(shdocvw SHARED ${SOURCE})
+add_library(shdocvw SHARED
+    ${SOURCE}
+    shdocvw.rc)
+
 set_module_type(shdocvw win32dll)
 target_link_libraries(shdocvw uuid wine)
 add_delay_importlibs(shdocvw version ole32 oleaut32)
@@ -55,8 +55,9 @@ add_dependencies(shdocvw stdole2)
 
 add_pch(shdocvw shdocvw.h)
 add_cd_file(TARGET shdocvw DESTINATION reactos/system32 FOR all)
-add_importlib_target(shdocvw.spec)
 
 if(NOT MSVC)
-    allow_warnings(shdocvw)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(shdocvw)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()

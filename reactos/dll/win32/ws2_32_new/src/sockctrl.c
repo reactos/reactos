@@ -28,13 +28,14 @@ connect(IN SOCKET s,
     PWSPROCESS Process;
     PWSTHREAD Thread;
     PWSSOCKET Socket;
-    INT ErrorCode, OldErrorCode;
+    INT ErrorCode, OldErrorCode = ERROR_SUCCESS;
     INT Status;
     BOOLEAN TryAgain = TRUE;
     DPRINT("connect: %lx, %p, %lx\n", s, name, namelen);
 
     /* Enter prolog */
-    if ((ErrorCode = WsApiProlog(&Process, &Thread)) == ERROR_SUCCESS)
+    ErrorCode = WsApiProlog(&Process, &Thread);
+    if (ErrorCode == ERROR_SUCCESS)
     {
         /* Get the Socket Context */
         if ((Socket = WsSockGetSocket(s)))

@@ -21,18 +21,30 @@ set(OPTIMIZE "1" CACHE STRING
   4 = -O2
   5 = -O3")
 
+set(LTCG FALSE CACHE BOOL
+"Whether to build with link-time code generation")
+
 set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
 If you don't use GDB, don't	enable this.")
 
-set(DBG TRUE CACHE BOOL
+if(${CMAKE_BUILD_TYPE} MATCHES Release)
+    set(DBG FALSE CACHE BOOL
 "Whether to compile for debugging.")
+else()
+    set(DBG TRUE CACHE BOOL
+"Whether to compile for debugging.")
+endif()
 
 if(MSVC)
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
-    set(_WINKD_ TRUE CACHE BOOL
-"Whether to compile with the KD protocol.")
+    if(${CMAKE_BUILD_TYPE} MATCHES Release)
+        set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
+    else()
+        set(_WINKD_ TRUE CACHE BOOL "Whether to compile with the KD protocol.")
+    endif()
+    
 else()
     set(KDBG TRUE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
@@ -57,6 +69,10 @@ set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a graphml dependency of dlls.")
 
 if(MSVC)
+
 set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
+set(_VS_ANALYZE_ FALSE CACHE BOOL
+"Whether to enable static analysis while compiling.")
+
 endif()

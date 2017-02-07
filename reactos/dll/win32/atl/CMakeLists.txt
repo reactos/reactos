@@ -10,7 +10,7 @@ add_idl_headers(atl_atliface_header atliface.idl)
 generate_idl_iids(atliface.idl)
 
 set_rc_compiler()
-spec2def(atl.dll atl.spec)
+spec2def(atl.dll atl.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     atl_ax.c
@@ -37,7 +37,7 @@ add_importlibs(atl
     kernel32
     ntdll)
 
-add_importlib_target(atl.spec)
+
 
 add_dependencies(atl atl_atliface_header)
 add_cd_file(TARGET atl DESTINATION reactos/system32 FOR all)

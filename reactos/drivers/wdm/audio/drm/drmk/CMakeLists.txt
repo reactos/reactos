@@ -1,7 +1,7 @@
 
 add_definitions(-DBUILDING_DRMK)
 
-spec2def(drmk.sys drmk.spec)
+spec2def(drmk.sys drmk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     stubs.cpp
@@ -13,5 +13,5 @@ add_library(drmk SHARED ${SOURCE})
 set_module_type(drmk kernelmodedriver ENTRYPOINT 0)
 
 add_importlibs(drmk ntoskrnl)
-add_importlib_target(drmk.spec)
+
 add_cd_file(TARGET drmk DESTINATION reactos/system32/drivers FOR all)

@@ -6,7 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#define YDEBUG
 #include "private.hpp"
 
 NTSTATUS
@@ -762,7 +761,7 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
-    DumpFilterDescriptor(FilterDescription);
+    //DumpFilterDescriptor(FilterDescription);
 
     // are any property sets supported by the portcls
     if (FilterPropertiesCount)

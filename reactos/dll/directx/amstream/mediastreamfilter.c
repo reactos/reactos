@@ -3,9 +3,6 @@
  *
  * Copyright 2008 Christian Costa
  *
- * This file contains the (internal) driver registration functions,
- * driver enumeration APIs and DirectDraw creation functions.
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -36,7 +33,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(amstream);
 
 typedef struct {
-    const IMediaStreamFilterVtbl *lpVtbl;
+    IMediaStreamFilter IMediaStreamFilter_iface;
     LONG ref;
     CRITICAL_SECTION csFilter;
     FILTER_STATE state;
@@ -45,37 +42,17 @@ typedef struct {
     FILTER_INFO filterInfo;
 } IMediaStreamFilterImpl;
 
-static const struct IMediaStreamFilterVtbl MediaStreamFilter_Vtbl;
-
-HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, LPVOID *ppObj)
+static inline IMediaStreamFilterImpl *impl_from_IMediaStreamFilter(IMediaStreamFilter *iface)
 {
-    IMediaStreamFilterImpl* object;
-
-    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
-
-    if( pUnkOuter )
-        return CLASS_E_NOAGGREGATION;
-
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMediaStreamFilterImpl));
-    if (!object)
-    {
-        ERR("Out of memory\n");
-        return E_OUTOFMEMORY;
-    }
-
-    object->lpVtbl = &MediaStreamFilter_Vtbl;
-    object->ref = 1;
-
-    *ppObj = object;
-
-    return S_OK;
+    return CONTAINING_RECORD(iface, IMediaStreamFilterImpl, IMediaStreamFilter_iface);
 }
 
 /*** IUnknown methods ***/
 
-static HRESULT WINAPI MediaStreamFilterImpl_QueryInterface(IMediaStreamFilter * iface, REFIID riid, LPVOID * ppv)
+static HRESULT WINAPI MediaStreamFilterImpl_QueryInterface(IMediaStreamFilter *iface, REFIID riid,
+        void **ppv)
 {
-    IMediaStreamFilterImpl *This = (IMediaStreamFilterImpl *)iface;
+    IMediaStreamFilterImpl *This = impl_from_IMediaStreamFilter(iface);
 
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppv);
 
@@ -101,9 +78,9 @@ static HRESULT WINAPI MediaStreamFilterImpl_QueryInterface(IMediaStreamFilter * 
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI MediaStreamFilterImpl_AddRef(IMediaStreamFilter * iface)
+static ULONG WINAPI MediaStreamFilterImpl_AddRef(IMediaStreamFilter *iface)
 {
-    IMediaStreamFilterImpl *This = (IMediaStreamFilterImpl *)iface;
+    IMediaStreamFilterImpl *This = impl_from_IMediaStreamFilter(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->() AddRef from %d\n", iface, refCount - 1);
@@ -111,18 +88,15 @@ static ULONG WINAPI MediaStreamFilterImpl_AddRef(IMediaStreamFilter * iface)
     return refCount;
 }
 
-static ULONG WINAPI MediaStreamFilterImpl_Release(IMediaStreamFilter * iface)
+static ULONG WINAPI MediaStreamFilterImpl_Release(IMediaStreamFilter *iface)
 {
-    IMediaStreamFilterImpl *This = (IMediaStreamFilterImpl *)iface;
+    IMediaStreamFilterImpl *This = impl_from_IMediaStreamFilter(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->() Release from %d\n", iface, refCount + 1);
 
     if (!refCount)
-    {
-        This->lpVtbl = NULL;
         HeapFree(GetProcessHeap(), 0, This);
-    }
 
     return refCount;
 }
@@ -311,3 +285,27 @@ static const IMediaStreamFilterVtbl MediaStreamFilter_Vtbl =
     MediaStreamFilterImpl_Flush,
     MediaStreamFilterImpl_EndOfStream
 };
+
+HRESULT MediaStreamFilter_create(IUnknown *pUnkOuter, void **ppObj)
+{
+    IMediaStreamFilterImpl* object;
+
+    TRACE("(%p,%p)\n", pUnkOuter, ppObj);
+
+    if( pUnkOuter )
+        return CLASS_E_NOAGGREGATION;
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMediaStreamFilterImpl));
+    if (!object)
+    {
+        ERR("Out of memory\n");
+        return E_OUTOFMEMORY;
+    }
+
+    object->IMediaStreamFilter_iface.lpVtbl = &MediaStreamFilter_Vtbl;
+    object->ref = 1;
+
+    *ppObj = object;
+
+    return S_OK;
+}

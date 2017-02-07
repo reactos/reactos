@@ -578,11 +578,16 @@ BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid)
 
 typedef struct rem_unknown
 {
-    const IRemUnknownVtbl *lpVtbl;
+    IRemUnknown IRemUnknown_iface;
     LONG refs;
 } RemUnknown;
 
 static const IRemUnknownVtbl RemUnknown_Vtbl;
+
+static inline RemUnknown *impl_from_IRemUnknown(IRemUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, RemUnknown, IRemUnknown_iface);
+}
 
 
 /* construct an IRemUnknown object with one outstanding reference */
@@ -592,10 +597,10 @@ static HRESULT RemUnknown_Construct(IRemUnknown **ppRemUnknown)
 
     if (!This) return E_OUTOFMEMORY;
 
-    This->lpVtbl = &RemUnknown_Vtbl;
+    This->IRemUnknown_iface.lpVtbl = &RemUnknown_Vtbl;
     This->refs = 1;
 
-    *ppRemUnknown = (IRemUnknown *)This;
+    *ppRemUnknown = &This->IRemUnknown_iface;
     return S_OK;
 }
 
@@ -620,7 +625,7 @@ static HRESULT WINAPI RemUnknown_QueryInterface(IRemUnknown *iface, REFIID riid,
 static ULONG WINAPI RemUnknown_AddRef(IRemUnknown *iface)
 {
     ULONG refs;
-    RemUnknown *This = (RemUnknown *)iface;
+    RemUnknown *This = impl_from_IRemUnknown(iface);
 
     refs = InterlockedIncrement(&This->refs);
 
@@ -631,7 +636,7 @@ static ULONG WINAPI RemUnknown_AddRef(IRemUnknown *iface)
 static ULONG WINAPI RemUnknown_Release(IRemUnknown *iface)
 {
     ULONG refs;
-    RemUnknown *This = (RemUnknown *)iface;
+    RemUnknown *This = impl_from_IRemUnknown(iface);
 
     refs = InterlockedDecrement(&This->refs);
     if (!refs)

@@ -28,7 +28,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "uxtheme.h"
-#include "tmschema.h"
+#include "vssym32.h"
 #include "comctl32.h"
 #include "wine/debug.h"
 
@@ -54,7 +54,9 @@ LRESULT CALLBACK THEMING_DialogSubclassProc (HWND hWnd, UINT msg,
     
     case WM_DESTROY:
         CloseThemeData ( theme );
-	return THEMING_CallOriginalClass (hWnd, msg, wParam, lParam);
+        SetWindowTheme( hWnd, NULL, NULL );
+        OpenThemeData( hWnd, NULL );
+        return THEMING_CallOriginalClass (hWnd, msg, wParam, lParam);
 
     case WM_THEMECHANGED:
         CloseThemeData ( theme );

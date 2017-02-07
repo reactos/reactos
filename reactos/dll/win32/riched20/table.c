@@ -64,10 +64,8 @@ static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
   ME_Style *pStyle = ME_GetInsertStyle(editor, nCursor);
   ME_DisplayItem *tp;
   ME_Cursor* cursor = &editor->pCursors[nCursor];
-  if (cursor->nOffset) {
-    ME_SplitRunSimple(editor, cursor->pRun, cursor->nOffset);
-    cursor = &editor->pCursors[nCursor];
-  }
+  if (cursor->nOffset)
+    ME_SplitRunSimple(editor, cursor);
 
   tp = ME_SplitParagraph(editor, cursor->pRun, pStyle, eol_str, paraFlags);
   ME_ReleaseStyle(pStyle);
@@ -249,7 +247,7 @@ void ME_CheckTablesForCorruption(ME_TextEditor *editor)
       {
         assert(!(p->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)));
         assert(p->member.para.pFmt->dwMask & PFM_TABLE);
-        assert(!(p->member.para.pFmt->wEffects & PFM_TABLEROWDELIMITER));
+        assert(!(p->member.para.pFmt->wEffects & PFE_TABLEROWDELIMITER));
         assert(!p->member.para.pCell);
         p = p->member.para.next_para;
       }

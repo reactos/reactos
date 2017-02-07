@@ -22,20 +22,29 @@ PUBLIC RtlpBreakWithStatusInstruction
 
 .code64
 
-DbgBreakPointNoBugCheck:
+.PROC DbgBreakPointNoBugCheck
+    .endprolog
     int 3
     ret
+.ENDP
 
-DbgBreakPoint:
 DbgUserBreakPoint:
+.PROC DbgBreakPoint
+    .endprolog
     int 3
     ret
+.ENDP
 
-DbgBreakPointWithStatus:
+.PROC DbgBreakPointWithStatus
+    .endprolog
     mov eax, ecx
-RtlpBreakWithStatusInstruction:
+.ENDP
+
+.PROC RtlpBreakWithStatusInstruction
+    .endprolog
     int 3
     ret
+.ENDP
 
 DebugService2:
     ret

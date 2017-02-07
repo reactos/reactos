@@ -426,6 +426,44 @@ SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
     return Result;
 }
 
+BOOLEAN
+NTAPI
+SeCheckPrivilegedObject(IN LUID PrivilegeValue,
+                        IN HANDLE ObjectHandle,
+                        IN ACCESS_MASK DesiredAccess,
+                        IN KPROCESSOR_MODE PreviousMode)
+{
+    SECURITY_SUBJECT_CONTEXT SubjectContext;
+    PRIVILEGE_SET Priv;
+    BOOLEAN Result;
+
+    PAGED_CODE();
+
+    SeCaptureSubjectContext(&SubjectContext);
+
+    Priv.PrivilegeCount = 1;
+    Priv.Control = PRIVILEGE_SET_ALL_NECESSARY;
+    Priv.Privilege[0].Luid = PrivilegeValue;
+    Priv.Privilege[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    Result = SePrivilegeCheck(&Priv, &SubjectContext, PreviousMode);
+    if (PreviousMode != KernelMode)
+    {
+#if 0
+        SePrivilegeObjectAuditAlarm(ObjectHandle,
+                                    &SubjectContext,
+                                    DesiredAccess,
+                                    &PrivilegeValue,
+                                    Result,
+                                    PreviousMode);
+#endif
+    }
+
+    SeReleaseSubjectContext(&SubjectContext);
+
+    return Result;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS
@@ -493,7 +531,7 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
      not doing an anonymous impersonation */
     Status = ObReferenceObjectByHandle(ClientToken,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);

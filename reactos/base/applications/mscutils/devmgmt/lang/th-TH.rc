@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:     ReactOS Device Management
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/devmgmt/lang/th-TH.rc
@@ -24,10 +24,12 @@ BEGIN
   END
   POPUP "มุมมอง"
   BEGIN
-    MENUITEM "อุปกรณ์แบ่งตามประเภท",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "อุปกรณ์แบ่งตามการเชื่อมต่อ",   IDC_STATIC, GRAYED
-    MENUITEM "แหล่งข้อมูลตามประเภท",         IDC_STATIC, GRAYED
-    MENUITEM "แหล่งข้อมูลตามการเชื่อมต่อ",   IDC_STATIC, GRAYED
+    MENUITEM "อุปกรณ์แบ่งตามประเภท",         IDC_DEVBYTYPE
+    MENUITEM "อุปกรณ์แบ่งตามการเชื่อมต่อ",   IDC_DEVBYCONN
+    MENUITEM "แหล่งข้อมูลตามประเภท",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "แหล่งข้อมูลตามการเชื่อมต่อ",   IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",          IDC_SHOWHIDDEN
   END
   POPUP "ช่วยเหลือ"
   BEGIN

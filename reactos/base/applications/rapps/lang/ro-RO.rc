@@ -1,4 +1,4 @@
- /* 
+/* 
  * FILE:             base/applications/rapps/lang/ro-RO.rc
  *                   ReactOS Project (http://www.reactos.org)
  * TRANSLATOR:       Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
@@ -27,7 +27,7 @@ BEGIN
 	END
 	POPUP "&?"
 	BEGIN
-		MENUITEM "&Manual",                ID_HELP, GRAYED
+		MENUITEM "&Manual…",                ID_HELP, GRAYED
 		MENUITEM "&Despre…",               ID_ABOUT
 	END
 END

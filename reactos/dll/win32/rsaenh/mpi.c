@@ -1412,7 +1412,7 @@ static int mp_lshd (mp_int * a, int b)
     bottom = a->dp + a->used - 1 - b;
 
     /* much like mp_rshd this is implemented using a sliding window
-     * except the window goes the otherway around.  Copying from
+     * except the window goes the other way around.  Copying from
      * the bottom to the top.  see bn_mp_rshd.c for more info.
      */
     for (x = a->used - 1; x >= b; x--) {
@@ -3663,7 +3663,7 @@ mp_reduce_2k_setup(const mp_int *a, mp_digit *d)
 }
 
 /* pre-calculate the value required for Barrett reduction
- * For a given modulus "b" it calulates the value required in "a"
+ * For a given modulus "b" it calculates the value required in "a"
  */
 int mp_reduce_setup (mp_int * a, const mp_int * b)
 {

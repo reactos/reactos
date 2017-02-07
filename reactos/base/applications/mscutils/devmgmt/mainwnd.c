@@ -203,22 +203,70 @@ CreateStatusBar(PMAIN_WND_INFO Info)
 static DWORD WINAPI
 DeviceEnumThread(LPVOID lpParameter)
 {
+    PMAIN_WND_INFO Info;
     HTREEITEM hRoot;
-    HWND *hTreeView;
 
-    hTreeView = (HWND *)lpParameter;
+    Info = (PMAIN_WND_INFO)lpParameter;
 
-    if (*hTreeView)
-        FreeDeviceStrings(*hTreeView);
+    if (Info->hTreeView)
+        FreeDeviceStrings(Info->hTreeView);
 
-    hRoot = InitTreeView(*hTreeView);
+    hRoot = InitTreeView(Info->hTreeView);
     if (hRoot)
     {
-        ListDevicesByType(*hTreeView, hRoot);
+        switch (Info->Display)
+        {
+            case DevicesByType:
+                ListDevicesByType(Info->hTreeView, hRoot, Info->bShowHidden);
+                break;
+
+            case DevicesByConnection:
+                ListDevicesByConnection(Info->hTreeView, hRoot, Info->bShowHidden);
+                break;
+
+            default:
+                break;
+        }
         return 0;
     }
 
     return -1;
+}
+
+
+static VOID
+UpdateViewMenu(PMAIN_WND_INFO Info)
+{
+    UINT id = IDC_DEVBYTYPE;
+    HMENU hMenu;
+
+    hMenu = GetMenu(Info->hMainWnd);
+
+    switch (Info->Display)
+    {
+        case DevicesByType:
+            id = IDC_DEVBYTYPE;
+            break;
+        case DevicesByConnection:
+            id = IDC_DEVBYCONN;
+            break;
+        case RessourcesByType:
+            id = IDC_RESBYTYPE;
+            break;
+        case RessourcesByConnection:
+            id = IDC_RESBYCONN;
+            break;
+    }
+
+    CheckMenuRadioItem(hMenu,
+                       IDC_DEVBYTYPE,
+                       IDC_RESBYCONN,
+                       id,
+                       MF_BYCOMMAND);
+
+    CheckMenuItem(hMenu,
+                  IDC_SHOWHIDDEN,
+                  MF_BYCOMMAND | (Info->bShowHidden) ? MF_CHECKED : MF_UNCHECKED);
 }
 
 
@@ -240,6 +288,8 @@ InitMainWnd(PMAIN_WND_INFO Info)
     if (!CreateStatusBar(Info))
         DisplayString(_T("error creating status bar"));
 
+    UpdateViewMenu(Info);
+
     /* make 'properties' bold */
     hMenu = GetMenu(Info->hMainWnd);
     hMenu = GetSubMenu(hMenu, 1);
@@ -256,7 +306,7 @@ InitMainWnd(PMAIN_WND_INFO Info)
     DevEnumThread = CreateThread(NULL,
                                  0,
                                  DeviceEnumThread,
-                                 &Info->hTreeView,
+                                 Info,
                                  0,
                                  NULL);
     if (!DevEnumThread)
@@ -303,11 +353,12 @@ OnContext(PMAIN_WND_INFO Info,
 }
 
 
-static VOID
+static LRESULT
 OnNotify(PMAIN_WND_INFO Info,
          LPARAM lParam)
 {
     LPNMHDR pnmhdr = (LPNMHDR)lParam;
+    LRESULT ret = 0;
 
     switch (pnmhdr->code)
     {
@@ -315,26 +366,52 @@ OnNotify(PMAIN_WND_INFO Info,
         {
             LPNM_TREEVIEW pnmtv = (LPNM_TREEVIEW)lParam;
 
-            if (!TreeView_GetChild(Info->hTreeView,
-                                   pnmtv->itemNew.hItem))
+            if (Info->Display == DevicesByType)
             {
-                SendMessage(Info->hTool,
-                            TB_SETSTATE,
-                            IDC_PROP,
-                            (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+                if (!TreeView_GetChild(Info->hTreeView,
+                                       pnmtv->itemNew.hItem))
+                {
+                    SendMessage(Info->hTool,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
 
-                EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_ENABLED);
-                EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_ENABLED);
+                    EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_ENABLED);
+                    EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_ENABLED);
+                }
+                else
+                {
+                    SendMessage(Info->hTool,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+                    EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
+                    EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+                }
             }
-            else
+            else if (Info->Display == DevicesByConnection)
             {
-                SendMessage(Info->hTool,
-                            TB_SETSTATE,
-                            IDC_PROP,
-                            (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+                if (pnmtv->itemNew.hItem == TreeView_GetRoot(Info->hTreeView))
+                {
+                    SendMessage(Info->hTool,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
 
-                EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
-                EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+                    EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
+                    EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+                }
+                else
+                {
+                    SendMessage(Info->hTool,
+                                TB_SETSTATE,
+                                IDC_PROP,
+                                (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
+
+                    EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_ENABLED);
+                    EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_ENABLED);
+                }
             }
         }
         break;
@@ -344,17 +421,42 @@ OnNotify(PMAIN_WND_INFO Info,
             HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
             TV_HITTESTINFO HitTest;
 
-            if (!TreeView_GetChild(Info->hTreeView,
-                                   hSelected))
+            if (Info->Display == DevicesByType)
             {
-                if (GetCursorPos(&HitTest.pt) &&
-                    ScreenToClient(Info->hTreeView, &HitTest.pt))
+                if (!TreeView_GetChild(Info->hTreeView,
+                                       hSelected))
                 {
-                    if (TreeView_HitTest(Info->hTreeView, &HitTest))
+                    if (GetCursorPos(&HitTest.pt) &&
+                        ScreenToClient(Info->hTreeView, &HitTest.pt))
                     {
-                        if (HitTest.hItem == hSelected)
-                            OpenPropSheet(Info->hTreeView,
-                                          hSelected);
+                        if (TreeView_HitTest(Info->hTreeView, &HitTest))
+                        {
+                            if (HitTest.hItem == hSelected)
+                            {
+                                OpenPropSheet(Info->hTreeView,
+                                              hSelected);
+                                ret = TRUE;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (Info->Display == DevicesByConnection)
+            {
+                if (hSelected != TreeView_GetRoot(Info->hTreeView))
+                {
+                    if (GetCursorPos(&HitTest.pt) &&
+                        ScreenToClient(Info->hTreeView, &HitTest.pt))
+                    {
+                        if (TreeView_HitTest(Info->hTreeView, &HitTest))
+                        {
+                            if (HitTest.hItem == hSelected)
+                            {
+                                OpenPropSheet(Info->hTreeView,
+                                              hSelected);
+                                ret = TRUE;
+                            }
+                        }
                     }
                 }
             }
@@ -403,6 +505,38 @@ OnNotify(PMAIN_WND_INFO Info,
         }
         break;
     }
+
+    return ret;
+}
+
+
+static VOID
+OnRefresh(PMAIN_WND_INFO Info)
+{
+    HANDLE DevEnumThread;
+
+    SendMessage(Info->hTool,
+                TB_SETSTATE,
+                IDC_PROP,
+                (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
+
+    EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
+    EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
+
+    /* create seperate thread to emum devices */
+    DevEnumThread = CreateThread(NULL,
+                                 0,
+                                 DeviceEnumThread,
+                                 Info,
+                                 0,
+                                 NULL);
+    if (!DevEnumThread)
+    {
+        DisplayString(_T("Failed to enumerate devices"));
+        return;
+    }
+
+    CloseHandle(DevEnumThread);
 }
 
 
@@ -425,30 +559,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
 
         case IDC_REFRESH:
         {
-            HANDLE DevEnumThread;
-
-            SendMessage(Info->hTool,
-                        TB_SETSTATE,
-                        IDC_PROP,
-                        (LPARAM)MAKELONG(TBSTATE_INDETERMINATE, 0));
-
-            EnableMenuItem(GetMenu(Info->hMainWnd), IDC_PROP, MF_GRAYED);
-            EnableMenuItem(Info->hShortcutMenu, IDC_PROP, MF_GRAYED);
-
-            /* create seperate thread to emum devices */
-            DevEnumThread = CreateThread(NULL,
-                                         0,
-                                         DeviceEnumThread,
-                                         &Info->hTreeView,
-                                         0,
-                                         NULL);
-            if (!DevEnumThread)
-            {
-                DisplayString(_T("Failed to enumerate devices"));
-                break;
-            }
-
-            CloseHandle(DevEnumThread);
+            OnRefresh(Info);
         }
         break;
 
@@ -479,6 +590,29 @@ MainWndCommand(PMAIN_WND_INFO Info,
         }
         break;
 
+        case IDC_DEVBYTYPE:
+        {
+            Info->Display = DevicesByType;
+            UpdateViewMenu(Info);
+            OnRefresh(Info);
+        }
+        break;
+
+        case IDC_DEVBYCONN:
+        {
+            Info->Display = DevicesByConnection;
+            UpdateViewMenu(Info);
+            OnRefresh(Info);
+        }
+        break;
+
+        case IDC_SHOWHIDDEN:
+        {
+            Info->bShowHidden = !Info->bShowHidden;
+            UpdateViewMenu(Info);
+            OnRefresh(Info);
+        }
+        break;
     }
 }
 
@@ -570,7 +704,7 @@ MainWndProc(HWND hwnd,
 
         case WM_NOTIFY:
         {
-            OnNotify(Info, lParam);
+            Ret = OnNotify(Info, lParam);
         }
         break;
 
@@ -674,6 +808,8 @@ CreateMainWindow(LPCTSTR lpCaption,
     if (Info != NULL)
     {
         Info->nCmdShow = nCmdShow;
+        Info->Display = DevicesByType;
+        Info->bShowHidden = TRUE;
 
         hMainWnd = CreateWindowEx(WS_EX_WINDOWEDGE,
                                   szMainWndClass,

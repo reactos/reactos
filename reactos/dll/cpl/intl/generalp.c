@@ -46,10 +46,8 @@ LocalesEnumProc(LPTSTR lpLocale)
     lcid = _tcstoul(lpLocale, NULL, 16);
 
     /* Display only languages with installed support */
-/*  See bug #4898.
     if (!IsValidLocale(lcid, LCID_INSTALLED))
         return TRUE;
-*/
 
     if (lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) ||
         lcid == MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT))
@@ -331,7 +329,8 @@ GeneralPageProc(HWND hwndDlg,
                 {
                     SetNewLocale(UnattendLCID);
                     PostQuitMessage(0);
-                }
+                } else
+                    DPRINT1("VerifyUnattendLCID failed\n");
                 return TRUE;
             }
             break;

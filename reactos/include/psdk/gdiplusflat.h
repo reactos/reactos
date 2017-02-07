@@ -206,10 +206,15 @@ GpStatus WINGDIPAPI GdipDrawRectanglesI(GpGraphics*,GpPen*,GDIPCONST GpRect*,INT
 GpStatus WINGDIPAPI GdipDrawString(GpGraphics*,GDIPCONST WCHAR*,INT,
     GDIPCONST GpFont*,GDIPCONST RectF*, GDIPCONST GpStringFormat*,
     GDIPCONST GpBrush*);
+GpStatus WINGDIPAPI GdipEnumerateMetafileSrcRectDestPoints(GpGraphics*,
+    GDIPCONST GpMetafile*,GDIPCONST GpPointF*,INT,GDIPCONST GpRectF*,Unit,
+    EnumerateMetafileProc,VOID*,GDIPCONST GpImageAttributes*);
 GpStatus WINGDIPAPI GdipFillClosedCurve2(GpGraphics*,GpBrush*,GDIPCONST GpPointF*,INT,
     REAL,GpFillMode);
 GpStatus WINGDIPAPI GdipFillClosedCurve2I(GpGraphics*,GpBrush*,GDIPCONST GpPoint*,INT,
     REAL,GpFillMode);
+GpStatus WINGDIPAPI GdipFillClosedCurve(GpGraphics*,GpBrush*,GDIPCONST GpPointF*,INT);
+GpStatus WINGDIPAPI GdipFillClosedCurveI(GpGraphics*,GpBrush*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipFillEllipse(GpGraphics*,GpBrush*,REAL,REAL,REAL,REAL);
 GpStatus WINGDIPAPI GdipFillEllipseI(GpGraphics*,GpBrush*,INT,INT,INT,INT);
 GpStatus WINGDIPAPI GdipFillPath(GpGraphics*,GpBrush*,GpPath*);
@@ -472,6 +477,7 @@ GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient*,GDIPCONST ARGB*,
     GDIPCONST REAL*,INT);
 GpStatus WINGDIPAPI GdipGetLinePresetBlend(GpLineGradient*,ARGB*,REAL*,INT);
 GpStatus WINGDIPAPI GdipGetLinePresetBlendCount(GpLineGradient*,INT*);
+GpStatus WINGDIPAPI GdipGetLineTransform(GpLineGradient*,GpMatrix*);
 GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient*);
 GpStatus WINGDIPAPI GdipRotateLineTransform(GpLineGradient*,REAL,GpMatrixOrder);
 GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient*,REAL,REAL,
@@ -520,7 +526,10 @@ GpStatus WINGDIPAPI GdipCreateMetafileFromWmfFile(GDIPCONST WCHAR*, GDIPCONST Wm
     GpMetafile**);
 GpStatus WINGDIPAPI GdipCreateMetafileFromFile(GDIPCONST WCHAR*,GpMetafile**);
 GpStatus WINGDIPAPI GdipCreateMetafileFromStream(IStream*,GpMetafile**);
+GpStatus WINGDIPAPI GdipGetHemfFromMetafile(GpMetafile*,HENHMETAFILE*);
+GpStatus WINGDIPAPI GdipPlayMetafileRecord(GDIPCONST GpMetafile*,EmfPlusRecordType,UINT,UINT,GDIPCONST BYTE*);
 GpStatus WINGDIPAPI GdipSetMetafileDownLevelRasterizationLimit(GpMetafile*,UINT);
+GpStatus WINGDIPAPI GdipRecordMetafile(HDC,EmfType,GDIPCONST GpRectF*,MetafileFrameUnit,GDIPCONST WCHAR*,GpMetafile**);
 
 /* MetafileHeader */
 GpStatus WINGDIPAPI GdipGetMetafileHeaderFromEmf(HENHMETAFILE,MetafileHeader*);
@@ -545,6 +554,9 @@ GpStatus WINGDIPAPI GdipGetPathGradientCenterPoint(GpPathGradient*,GpPointF*);
 GpStatus WINGDIPAPI GdipGetPathGradientCenterPointI(GpPathGradient*,GpPoint*);
 GpStatus WINGDIPAPI GdipGetPathGradientFocusScales(GpPathGradient*,REAL*,REAL*);
 GpStatus WINGDIPAPI GdipGetPathGradientGammaCorrection(GpPathGradient*,BOOL*);
+GpStatus WINGDIPAPI GdipGetPathGradientPath(GpPathGradient*,GpPath*);
+GpStatus WINGDIPAPI GdipGetPathGradientPresetBlend(GpPathGradient*,ARGB*,REAL*,INT);
+GpStatus WINGDIPAPI GdipGetPathGradientPresetBlendCount(GpPathGradient*,INT*);
 GpStatus WINGDIPAPI GdipGetPathGradientPointCount(GpPathGradient*,INT*);
 GpStatus WINGDIPAPI GdipSetPathGradientPresetBlend(GpPathGradient*,
     GDIPCONST ARGB*,GDIPCONST REAL*,INT);
@@ -641,6 +653,9 @@ GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *, GpGraphics *, GpRect *);
 GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *, BYTE *, UINT, UINT *);
 GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *, UINT *);
 GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *, GpGraphics *, HRGN *);
+GpStatus WINGDIPAPI GdipGetRegionScans(GpRegion *, GpRectF *, INT *, GpMatrix *);
+GpStatus WINGDIPAPI GdipGetRegionScansI(GpRegion *, GpRect *, INT *, GpMatrix *);
+GpStatus WINGDIPAPI GdipGetRegionScansCount(GpRegion *, UINT *, GpMatrix *);
 GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *, GpGraphics *, BOOL *);
 GpStatus WINGDIPAPI GdipIsEqualRegion(GpRegion *, GpRegion *, GpGraphics *, BOOL *);
 GpStatus WINGDIPAPI GdipIsInfiniteRegion(GpRegion *, GpGraphics *, BOOL *);

@@ -48,8 +48,8 @@
 52 stdcall MsiGetDatabaseState(long)
 53 stdcall MsiGetFeatureCostA(long str long long ptr)
 54 stdcall MsiGetFeatureCostW(long wstr long long ptr)
-55 stub MsiGetFeatureInfoA
-56 stub MsiGetFeatureInfoW
+55 stdcall MsiGetFeatureInfoA(long str ptr ptr ptr ptr ptr)
+56 stdcall MsiGetFeatureInfoW(long wstr ptr ptr ptr ptr ptr)
 57 stdcall MsiGetFeatureStateA(long str ptr ptr)
 58 stdcall MsiGetFeatureStateW(long wstr ptr ptr)
 59 stdcall MsiGetFeatureUsageA(str str ptr ptr)
@@ -178,8 +178,8 @@
 182 stdcall -private DllGetVersion(ptr)
 183 stub MsiGetProductCodeFromPackageCodeA
 184 stub MsiGetProductCodeFromPackageCodeW
-185 stub MsiCreateTransformSummaryInfoA
-186 stub MsiCreateTransformSummaryInfoW
+185 stdcall MsiCreateTransformSummaryInfoA(long long str long long)
+186 stdcall MsiCreateTransformSummaryInfoW(long long wstr long long)
 187 stub MsiQueryFeatureStateFromDescriptorA
 188 stub MsiQueryFeatureStateFromDescriptorW
 189 stdcall MsiConfigureProductExA(str long long str)
@@ -199,8 +199,8 @@
 203 stdcall MsiProvideQualifiedComponentExW(wstr wstr long wstr long long ptr ptr)
 204 stdcall MsiEnumRelatedProductsA(str long long ptr)
 205 stdcall MsiEnumRelatedProductsW(wstr long long ptr)
-206 stub MsiSetFeatureAttributesA
-207 stub MsiSetFeatureAttributesW
+206 stdcall MsiSetFeatureAttributesA(long str long)
+207 stdcall MsiSetFeatureAttributesW(long wstr long)
 208 stdcall MsiSourceListClearAllA(str str long)
 209 stdcall MsiSourceListClearAllW(wstr wstr long)
 210 stdcall MsiSourceListAddSourceA(str str long str)
@@ -213,7 +213,7 @@
 217 stdcall MsiGetShortcutTargetW(wstr ptr ptr ptr)
 218 stdcall MsiGetFileHashA(str long ptr)
 219 stdcall MsiGetFileHashW(wstr long ptr)
-220 stub MsiEnumComponentCostsA
+220 stdcall MsiEnumComponentCostsA(long str long long ptr ptr ptr ptr)
 221 stdcall MsiEnumComponentCostsW(long wstr long long ptr ptr ptr ptr)
 222 stdcall MsiCreateAndVerifyInstallerDirectory(long)
 223 stdcall MsiGetFileSignatureInformationA(str long ptr ptr ptr)
@@ -282,8 +282,8 @@
 286 stdcall MsiEndTransaction(long)
 287 stub MsiJoinTransaction
 288 stub MsiSetOfflineContextW
-289 stub MsiEnumComponentsExA
-290 stub MsiEnumComponentsExW
+289 stdcall MsiEnumComponentsExA(str long long ptr ptr ptr ptr)
+290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)
 291 stub MsiEnumClientsExA
 292 stub MsiEnumClientsExW
 293 stub MsiGetComponentPathExA

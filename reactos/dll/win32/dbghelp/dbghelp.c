@@ -151,9 +151,9 @@ const char* wine_dbgstr_addr(const ADDRESS64* addr)
     }
 }
 
-extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc;
+extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc, cpu_sparc, cpu_arm;
 
-static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, NULL};
+static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, &cpu_sparc, &cpu_arm, NULL};
 struct cpu*             dbghelp_current_cpu =
 #if defined(__i386__)
     &cpu_i386
@@ -161,6 +161,10 @@ struct cpu*             dbghelp_current_cpu =
     &cpu_x86_64
 #elif defined(__powerpc__)
     &cpu_ppc
+#elif defined(__sparc__)
+    &cpu_sparc
+#elif defined(__arm__)
+    &cpu_arm
 #else
 #error define support for your CPU
 #endif
@@ -549,12 +553,13 @@ static BOOL CALLBACK reg_cb64to32(HANDLE hProcess, ULONG action, ULONG64 data, U
  */
 BOOL pcs_callback(const struct process* pcs, ULONG action, void* data)
 {
+    IMAGEHLP_DEFERRED_SYMBOL_LOAD64 idsl;
+
     TRACE("%p %u %p\n", pcs, action, data);
 
     if (!pcs->reg_cb) return FALSE;
     if (!pcs->reg_is_unicode)
     {
-        IMAGEHLP_DEFERRED_SYMBOL_LOAD64     idsl;
         IMAGEHLP_DEFERRED_SYMBOL_LOADW64*   idslW;
 
         switch (action)

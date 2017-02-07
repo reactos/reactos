@@ -226,26 +226,26 @@ MakeAbsoluteSD(PSECURITY_DESCRIPTOR pSelfRelativeSecurityDescriptor,
                PSID pPrimaryGroup,
                LPDWORD lpdwPrimaryGroupSize)
 {
-	NTSTATUS Status;
+    NTSTATUS Status;
 
-	Status = RtlSelfRelativeToAbsoluteSD (pSelfRelativeSecurityDescriptor,
-	                                      pAbsoluteSecurityDescriptor,
-	                                      lpdwAbsoluteSecurityDescriptorSize,
-	                                      pDacl,
-	                                      lpdwDaclSize,
-	                                      pSacl,
-	                                      lpdwSaclSize,
-	                                      pOwner,
-	                                      lpdwOwnerSize,
-	                                      pPrimaryGroup,
-	                                      lpdwPrimaryGroupSize);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastError (RtlNtStatusToDosError (Status));
-		return FALSE;
-	}
+    Status = RtlSelfRelativeToAbsoluteSD(pSelfRelativeSecurityDescriptor,
+                                         pAbsoluteSecurityDescriptor,
+                                         lpdwAbsoluteSecurityDescriptorSize,
+                                         pDacl,
+                                         lpdwDaclSize,
+                                         pSacl,
+                                         lpdwSaclSize,
+                                         pOwner,
+                                         lpdwOwnerSize,
+                                         pPrimaryGroup,
+                                         lpdwPrimaryGroupSize);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 

@@ -18,6 +18,7 @@
 
 UNICODE_STRING IoArcHalDeviceName, IoArcBootDeviceName;
 PCHAR IoLoaderArcBootDeviceName;
+extern BOOLEAN IoRemoteBootClient;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -40,13 +41,14 @@ INIT_FUNCTION
 NTAPI
 IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
-    CHAR Buffer[128];
-    ANSI_STRING ArcSystemString, ArcString;
-    BOOLEAN SingleDisk;
     SIZE_T Length;
     NTSTATUS Status;
+    CHAR Buffer[128];
+    BOOLEAN SingleDisk;
     BOOLEAN FoundBoot = FALSE;
+    UNICODE_STRING SystemDevice, LoaderPathNameW, BootDeviceName;
+    PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;
+    ANSI_STRING ArcSystemString, ArcString, LanmanRedirector, LoaderPathNameA;
 
     /* Check if we only have one disk on the machine */
     SingleDisk = ArcDiskInfo->DiskSignatureListHead.Flink->Flink ==
@@ -85,7 +87,53 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Build the boot strings */
     RtlInitAnsiString(&ArcSystemString, LoaderBlock->ArcHalDeviceName);
 
-    /* FIXME: Handle IoRemoteBootClient here and create appropriate symbolic link */
+    /* If we are doing remote booting */
+    if (IoRemoteBootClient)
+    {
+        /* Yes, we have found boot device */
+        FoundBoot = TRUE;
+
+        /* Get NT device name */
+        RtlInitAnsiString(&LanmanRedirector, "\\Device\\LanmanRedirector");
+        Status = RtlAnsiStringToUnicodeString(&SystemDevice, &LanmanRedirector, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Get ARC booting device name (in net(0) something) */
+        sprintf(Buffer, "\\ArcName\\%s", LoaderBlock->ArcBootDeviceName);
+        RtlInitAnsiString(&ArcString, Buffer);
+        Status = RtlAnsiStringToUnicodeString(&BootDeviceName, &ArcString, TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Map ARC to NT name */
+            IoAssignArcName(&BootDeviceName, &SystemDevice);
+            RtlFreeUnicodeString(&BootDeviceName);
+
+            /* Now, get loader path name */
+            RtlInitAnsiString(&LoaderPathNameA, LoaderBlock->NtHalPathName);
+            Status = RtlAnsiStringToUnicodeString(&LoaderPathNameW, &LoaderPathNameA, TRUE);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeUnicodeString(&SystemDevice);
+                return Status;
+            }
+
+            /* And set it has system partition */
+            IopStoreSystemPartitionInformation(&SystemDevice, &LoaderPathNameW);
+        }
+
+        RtlFreeUnicodeString(&SystemDevice);
+
+        /* Don't quit here, even if everything went fine!
+         * We need IopCreateArcNamesDisk to properly map
+         * devices with symlinks.
+         * It will return success if the mapping process went fine
+         * even if it didn't find boot device.
+         * It won't reset boot device finding status as well.
+         */
+    }
 
     /* Loop every disk and try to find boot disk */
     Status = IopCreateArcNamesDisk(LoaderBlock, SingleDisk, &FoundBoot);
@@ -333,7 +381,7 @@ IopCreateArcNamesCd(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (NT_SUCCESS(Status))
             {
                 /* Create symbolic link */
-                IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
                 RtlFreeUnicodeString(&ArcNameStringW);
                 DPRINT1("Boot device found\n");
             }
@@ -391,7 +439,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ANSI_STRING ArcBootString, ArcSystemString, DeviceStringA, ArcNameStringA, HalPathStringA;
 
     /* Initialise device number */
-    DeviceNumber.DeviceNumber = 0xFFFFFFFF;
+    DeviceNumber.DeviceNumber = ULONG_MAX;
     /* Get all the disks present in the system */
     DiskCount = IoGetConfigurationInformation()->DiskCount;
 
@@ -487,7 +535,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             if (NotEnabledPresent && *lSymbolicLinkList == UNICODE_NULL)
             {
                 /* No enabled disk worked, reset field */
-                if (DeviceNumber.DeviceNumber == 0xFFFFFFFF)
+                if (DeviceNumber.DeviceNumber == ULONG_MAX)
                 {
                     DeviceNumber.DeviceNumber = 0;
                 }
@@ -521,7 +569,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
             RtlFreeUnicodeString(&DeviceStringW);
             /* This is a security measure, to ensure DiskNumber will be used */
-            DeviceNumber.DeviceNumber = 0xFFFFFFFF;
+            DeviceNumber.DeviceNumber = ULONG_MAX;
         }
 
         /* Something failed somewhere earlier, just skip the disk */
@@ -657,7 +705,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (DriveLayout->PartitionStyle == PARTITION_STYLE_MBR))
             {
                 /* Create device name */
-                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != 0xFFFFFFFF) ? DeviceNumber.DeviceNumber : DiskNumber);
+                sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition0", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber);
                 RtlInitAnsiString(&DeviceStringA, Buffer);
                 Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                 if (!NT_SUCCESS(Status))
@@ -676,7 +724,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 }
 
                 /* Link both */
-                IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
                 /* And release resources */
                 RtlFreeUnicodeString(&ArcNameStringW);
@@ -686,7 +734,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 for (i = 1; i <= DriveLayout->PartitionCount; i++)
                 {
                     /* Create device name */
-                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != 0xFFFFFFFF) ? DeviceNumber.DeviceNumber : DiskNumber, i);
+                    sprintf(Buffer, "\\Device\\Harddisk%lu\\Partition%lu", (DeviceNumber.DeviceNumber != ULONG_MAX) ? DeviceNumber.DeviceNumber : DiskNumber, i);
                     RtlInitAnsiString(&DeviceStringA, Buffer);
                     Status = RtlAnsiStringToUnicodeString(&DeviceStringW, &DeviceStringA, TRUE);
                     if (!NT_SUCCESS(Status))
@@ -733,7 +781,7 @@ IopCreateArcNamesDisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                     }
 
                     /* Link device name & ARC name */
-                    IoCreateSymbolicLink(&ArcNameStringW, &DeviceStringW);
+                    IoAssignArcName(&ArcNameStringW, &DeviceStringW);
 
                     /* Release strings */
                     RtlFreeUnicodeString(&ArcNameStringW);

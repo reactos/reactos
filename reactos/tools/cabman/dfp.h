@@ -97,7 +97,7 @@ private:
     char* FileBuffer;
     ULONG FileBufferSize;
     ULONG CurrentOffset;
-    char Line[128];
+    char Line[PATH_MAX + 6]; /* "PATH" xEOL */
     ULONG LineLength;
     ULONG CurrentLine;
     ULONG CurrentChar;

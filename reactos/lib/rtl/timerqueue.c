@@ -19,6 +19,8 @@
 
 /* FUNCTIONS ***************************************************************/
 
+extern PRTL_START_POOL_THREAD RtlpStartThreadFunc;
+extern PRTL_EXIT_POOL_THREAD RtlpExitThreadFunc;
 HANDLE TimerThreadHandle = NULL;
 
 NTSTATUS
@@ -239,7 +241,7 @@ static void WINAPI timer_queue_thread_proc(LPVOID p)
     NtClose(q->event);
     RtlDeleteCriticalSection(&q->cs);
     RtlFreeHeap(RtlGetProcessHeap(), 0, q);
-    RtlExitUserThread(STATUS_SUCCESS);
+    RtlpExitThreadFunc(STATUS_SUCCESS);
 }
 
 static void queue_destroy_timer(struct queue_timer *t)
@@ -285,8 +287,7 @@ NTSTATUS WINAPI RtlCreateTimerQueue(PHANDLE NewTimerQueue)
         RtlFreeHeap(RtlGetProcessHeap(), 0, q);
         return status;
     }
-    status = RtlCreateUserThread(NtCurrentProcess(), NULL, FALSE, 0, 0, 0,
-                                 (PTHREAD_START_ROUTINE)timer_queue_thread_proc, q, &q->thread, NULL);
+    status = RtlpStartThreadFunc((PVOID)timer_queue_thread_proc, q, &q->thread);
     if (status != STATUS_SUCCESS)
     {
         NtClose(q->event);
@@ -294,6 +295,7 @@ NTSTATUS WINAPI RtlCreateTimerQueue(PHANDLE NewTimerQueue)
         return status;
     }
 
+    NtResumeThread(q->thread, NULL);
     *NewTimerQueue = q;
     return STATUS_SUCCESS;
 }

@@ -18,6 +18,7 @@
  */
 
 #include <freeldr.h>
+#include <debug.h>
 
 PCSTR	OptionsMenuList[] =
 {
@@ -32,6 +33,7 @@ PCSTR	OptionsMenuList[] =
 	"Last Known Good Configuration",
 	"Directory Services Restore Mode",
 	"Debugging Mode",
+	"FreeLdr debugging",
 
 	"SEPARATOR",
 
@@ -42,6 +44,21 @@ PCSTR	OptionsMenuList[] =
 	"Reboot",
 #endif
 };
+
+PCSTR FrldrDbgMsg = "Enable freeldr debug channels\n"
+                    "Acceptable syntax: [level1]#channel1[,[level2]#channel2]\n"
+                    "level can be one of: trace,warn,fixme,err\n"
+                    "  if the level is ommited all levels\n"
+                    "  are enabled for the specified channel\n"
+                    "# can be either + or -\n"
+                    "channel can be one of the following:\n"
+                    "  all,warning,memory,filesystem,inifile,ui,disk,cache,registry,\n"
+                    "  reactos,linux,hwdetect,windows,peloader,scsiport,heap\n"
+                    "Examples:\n"
+                    "  trace+windows,trace+reactos\n"
+                    "  +hwdetect,err-disk\n"
+                    "  +peloader\n"
+                    "NOTE: all letters must be lowercase, no spaces allowed\n";
 
 enum OptionMenuItems
 {
@@ -56,14 +73,15 @@ enum OptionMenuItems
 	LAST_KNOWN_GOOD_CONFIGURATION = 6,
 	DIRECTORY_SERVICES_RESTORE_MODE = 7,
 	DEBUGGING_MODE = 8,
+	FREELDR_DEBUGGING = 9,
 
-	SEPARATOR2 = 9,
+	SEPARATOR2 = 10,
 
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
-	CUSTOM_BOOT = 10,
+	CUSTOM_BOOT = 11,
 #endif
 #ifdef HAS_OPTION_MENU_REBOOT
-	REBOOT = 11,
+	REBOOT = 12,
 #endif
 };
 
@@ -81,6 +99,7 @@ BOOLEAN DebuggingMode = FALSE;
 VOID DoOptionsMenu(VOID)
 {
 	ULONG		SelectedMenuItem;
+	CHAR DebugChannelString[100];
 
 	if (!UiDisplayMenu(OptionsMenuList, OptionsMenuItemCount, 0, -1, &SelectedMenuItem, TRUE, NULL))
 	{
@@ -121,6 +140,11 @@ VOID DoOptionsMenu(VOID)
 		break;
 	case DEBUGGING_MODE:
 		DebuggingMode = TRUE;
+		break;
+	case FREELDR_DEBUGGING:
+		DebugChannelString[0]=0;
+		if(UiEditBox(FrldrDbgMsg, DebugChannelString, 100))
+			DbgParseDebugChannels(DebugChannelString);
 		break;
 	//case SEPARATOR2:
 	//	break;

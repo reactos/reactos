@@ -1,8 +1,8 @@
 @ stdcall CsrAddStaticServerThread(ptr ptr long)
-;@ stdcall CsrCallServerFromServer(ptr ptr)
+@ stdcall CsrCallServerFromServer(ptr ptr)
 ;@ stdcall CsrConnectToUser()
 ;@ stdcall CsrCreateProcess(ptr ptr ptr ptr long ptr)
-;@ stdcall CsrCreateRemoteThread(ptr ptr)
+@ stdcall CsrCreateRemoteThread(ptr ptr)
 @ stdcall CsrCreateThread(ptr ptr ptr)
 ;@ stdcall CsrCreateWait(ptr ptr ptr ptr ptr ptr)
 ;@ stdcall CsrDebugProcess(ptr)
@@ -12,6 +12,7 @@
 ;@ stdcall CsrDereferenceWait(ptr)
 ;@ stdcall CsrDestroyProcess(ptr long)
 ;@ stdcall CsrDestroyThread(ptr)
+@ stdcall CsrEnumProcesses(ptr ptr) ; Temporary hack
 ;@ stdcall CsrExecServerThread(ptr long)
 @ stdcall CsrGetProcessLuid(ptr ptr)
 @ stdcall CsrImpersonateClient(ptr)

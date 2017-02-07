@@ -31,6 +31,9 @@
 #endif
 #include <errno.h>
 #include <limits.h>
+#ifdef HAVE_SECURITY_SECURITY_H
+#include <Security/Security.h>
+#endif
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include "windef.h"
@@ -40,9 +43,6 @@
 #include "winternl.h"
 #include "wine/debug.h"
 #include "crypt32_private.h"
-#ifdef __APPLE__
-#include <Security/Security.h>
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -326,6 +326,32 @@ static BOOL import_certs_from_file(int fd, HCERTSTORE store)
 static BOOL import_certs_from_path(LPCSTR path, HCERTSTORE store,
  BOOL allow_dir);
 
+static BOOL check_buffer_resize(char **ptr_buf, size_t *buf_size, size_t check_size)
+{
+    if (check_size > *buf_size)
+    {
+        *buf_size = check_size;
+
+        if (*ptr_buf)
+        {
+            char *realloc_buf = CryptMemRealloc(*ptr_buf, *buf_size);
+
+            if (!realloc_buf)
+                return FALSE;
+
+            *ptr_buf = realloc_buf;
+        }
+        else
+        {
+            *ptr_buf = CryptMemAlloc(*buf_size);
+            if (!*ptr_buf)
+                return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 /* Opens path, which must be a directory, and imports certificates from every
  * file in the directory into store.
  * Returns TRUE if any certificates were successfully imported.
@@ -341,23 +367,27 @@ static BOOL import_certs_from_dir(LPCSTR path, HCERTSTORE store)
     dir = opendir(path);
     if (dir)
     {
-        size_t bufsize = strlen(path) + 1 + PATH_MAX + 1;
-        char *filebuf = CryptMemAlloc(bufsize);
+        size_t path_len = strlen(path), bufsize = 0;
+        char *filebuf = NULL;
 
-        if (filebuf)
+        struct dirent *entry;
+        while ((entry = readdir(dir)))
         {
-            struct dirent *entry;
-            while ((entry = readdir(dir)))
+            if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
             {
-                if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, ".."))
+                size_t name_len = strlen(entry->d_name);
+
+                if (!check_buffer_resize(&filebuf, &bufsize, path_len + 1 + name_len + 1))
                 {
-                    snprintf(filebuf, bufsize, "%s/%s", path, entry->d_name);
-                    if (import_certs_from_path(filebuf, store, FALSE) && !ret)
-                        ret = TRUE;
+                    ERR("Path buffer (re)allocation failed with out of memory condition\n");
+                    break;
                 }
+                snprintf(filebuf, bufsize, "%s/%s", path, entry->d_name);
+                if (import_certs_from_path(filebuf, store, FALSE) && !ret)
+                    ret = TRUE;
             }
-            CryptMemFree(filebuf);
         }
+        CryptMemFree(filebuf);
         closedir(dir);
     }
     return ret;
@@ -456,6 +486,7 @@ static const char * const CRYPT_knownLocations[] = {
  "/etc/ssl/certs",
  "/etc/pki/tls/certs/ca-bundle.crt",
  "/usr/local/share/certs/",
+ "/etc/sfw/openssl/certs",
 };
 
 static const BYTE authenticode[] = {
@@ -716,7 +747,7 @@ static void read_trusted_roots_from_known_locations(HCERTSTORE store)
         DWORD i;
         BOOL ret = FALSE;
 
-#ifdef __APPLE__
+#ifdef HAVE_SECURITY_SECURITY_H
         OSStatus status;
         CFArrayRef rootCerts;
 

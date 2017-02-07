@@ -27,10 +27,10 @@ typedef struct _FREEBT_RW_CONTEXT
 
 } FREEBT_RW_CONTEXT, * PFREEBT_RW_CONTEXT;
 
-NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context);
-NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context);
+NTSTATUS NTAPI FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context);
+NTSTATUS NTAPI FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context);
 
 #ifdef __cplusplus
 };

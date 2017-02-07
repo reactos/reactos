@@ -1968,6 +1968,12 @@ WSPIoctl(IN  SOCKET Handle,
 	BOOLEAN NeedsCompletion;
     BOOLEAN NonBlocking;
 
+    if (!lpcbBytesReturned)
+    {
+       *lpErrno = WSAEFAULT;
+       return SOCKET_ERROR;
+    }
+
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
     if (!Socket)

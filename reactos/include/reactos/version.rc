@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * Inspired by Wine file include/wine_common_ver.rc
  * Copyright 2001 Dmitry Timoshkov
  *
@@ -20,7 +19,7 @@
 #define REACTOS_DEFAULT_STR_COMPANY_NAME    "ReactOS Development Team\0"
 #define REACTOS_DEFAULT_STR_DESCRIPTION     "ReactOS Core Component\0"
 #define REACTOS_DEFAULT_STR_INTERNAL_NAME   "\0"
-#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "Copyright 1998-"COPYRIGHT_YEAR" ReactOS Team\0"
+#define REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT "Copyright 1998-" COPYRIGHT_YEAR " ReactOS Team\0"
 #define REACTOS_DEFAULT_STR_PRODUCT_NAME    "ReactOS Operating System\0"
 
 /* Set defaults for everything, unless overridden */
@@ -106,36 +105,36 @@
 
 /* The version resource itself */
 VS_VERSION_INFO VERSIONINFO
-  FILEVERSION		REACTOS_FILEVERSION
-  PRODUCTVERSION	REACTOS_PRODUCTVERSION
-  FILEFLAGSMASK		REACTOS_FILEFLAGSMASK
-  FILEFLAGS		REACTOS_FILEFLAGS
-  FILEOS		REACTOS_FILEOS
-  FILETYPE		REACTOS_FILETYPE
-  FILESUBTYPE		REACTOS_FILESUBTYPE
-  BEGIN
+FILEVERSION     REACTOS_FILEVERSION
+PRODUCTVERSION  REACTOS_PRODUCTVERSION
+FILEFLAGSMASK   REACTOS_FILEFLAGSMASK
+FILEFLAGS       REACTOS_FILEFLAGS
+FILEOS          REACTOS_FILEOS
+FILETYPE        REACTOS_FILETYPE
+FILESUBTYPE     REACTOS_FILESUBTYPE
+BEGIN
     BLOCK "StringFileInfo"
-      BEGIN
+    BEGIN
         BLOCK "040904b0"
-          BEGIN
-            VALUE "CompanyName",	REACTOS_STR_COMPANY_NAME
-            VALUE "FileDescription",	REACTOS_STR_FILE_DESCRIPTION
-            VALUE "FileVersion",	REACTOS_STR_FILE_VERSION
-            VALUE "InternalName",	REACTOS_STR_INTERNAL_NAME
+        BEGIN
+            VALUE "CompanyName",        REACTOS_STR_COMPANY_NAME
+            VALUE "FileDescription",    REACTOS_STR_FILE_DESCRIPTION
+            VALUE "FileVersion",        REACTOS_STR_FILE_VERSION
+            VALUE "InternalName",       REACTOS_STR_INTERNAL_NAME
 #ifdef REACTOS_STR_ORIGINAL_COPYRIGHT
-            VALUE "OriginalCopyright",	REACTOS_STR_ORIGINAL_COPYRIGHT
+            VALUE "OriginalCopyright",  REACTOS_STR_ORIGINAL_COPYRIGHT
 #endif /* REACTOS_STR_ORIGINAL_COPYRIGHT */
-            VALUE "LegalCopyright",	REACTOS_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	REACTOS_STR_ORIGINAL_FILENAME
-            VALUE "ProductName",	REACTOS_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	REACTOS_STR_PRODUCT_VERSION
+            VALUE "LegalCopyright",     REACTOS_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalFilename",   REACTOS_STR_ORIGINAL_FILENAME
+            VALUE "ProductName",        REACTOS_STR_PRODUCT_NAME
+            VALUE "ProductVersion",     REACTOS_STR_PRODUCT_VERSION
 #ifdef REACTOS_OLESELFREGISTER
-	    VALUE "OLESelfRegister",	""
+            VALUE "OLESelfRegister",    ""
 #endif /* REACTOS_OLESELFREGISTER */
-          END
-      END
+        END
+    END
     BLOCK "VarFileInfo"
-      BEGIN
+    BEGIN
         VALUE "Translation", 0x409, 1200
-      END
-  END
+    END
+END

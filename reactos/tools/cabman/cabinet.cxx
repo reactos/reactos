@@ -115,7 +115,7 @@ CCFDATAStorage::~CCFDATAStorage()
 }
 
 
-ULONG CCFDATAStorage::Create(const char* FileName)
+ULONG CCFDATAStorage::Create()
 /*
  * FUNCTION: Creates the file
  * ARGUMENTS:
@@ -124,13 +124,16 @@ ULONG CCFDATAStorage::Create(const char* FileName)
  *     Status of operation
  */
 {
+#if defined(_WIN32)
+    char tmpPath[MAX_PATH];
+#endif
     ASSERT(!FileCreated);
 
 #if defined(_WIN32)
-    if (GetTempPath(MAX_PATH, FullName) == 0)
+    if (GetTempPath(MAX_PATH, tmpPath) == 0)
         return CAB_STATUS_CANNOT_CREATE;
-
-    strcat(FullName, FileName);
+    if(GetTempFileName(tmpPath, "cab", 0, FullName) == 0)
+        return CAB_STATUS_CANNOT_CREATE;
 
     /* Create file, overwrite if it already exists */
     FileHandle = CreateFile(FullName,   // Create this file
@@ -512,7 +515,7 @@ void CCabinet::SetDestinationPath(char* DestinationPath)
     strcpy(DestPath, DestinationPath);
     ConvertPath(DestPath, false);
     if (strlen(DestPath) > 0)
-        NormalizePath(DestPath, MAX_PATH);
+        NormalizePath(DestPath, PATH_MAX);
 }
 
 ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
@@ -1030,8 +1033,8 @@ ULONG CCabinet::ExtractFile(char* FileName)
 #if defined(_WIN32)
     FILETIME FileTime;
 #endif
-    CHAR DestName[MAX_PATH];
-    CHAR TempName[MAX_PATH];
+    CHAR DestName[PATH_MAX];
+    CHAR TempName[PATH_MAX];
 
     Status = LocateFile(FileName, &File);
     if (Status != CAB_STATUS_SUCCESS)
@@ -1529,7 +1532,7 @@ ULONG CCabinet::NewCabinet()
         return CAB_STATUS_NOMEMORY;
     }
 
-    Status = ScratchFile->Create("~CAB.tmp");
+    Status = ScratchFile->Create();
 
     CreateNewFolder = false;
 
@@ -2086,8 +2089,8 @@ bool CCabinet::CreateSimpleCabinet()
 {
     bool bRet = false;
     char* pszFile;
-    char szFilePath[MAX_PATH];
-    char szFile[MAX_PATH];
+    char szFilePath[PATH_MAX];
+    char szFile[PATH_MAX];
     PSEARCH_CRITERIA Criteria;
     ULONG Status;
 
@@ -2105,7 +2108,7 @@ bool CCabinet::CreateSimpleCabinet()
     if (Status != CAB_STATUS_SUCCESS)
     {
         DPRINT(MIN_TRACE, ("Cannot create cabinet (%u).\n", (UINT)Status));
-        goto cleanup;
+        goto cleanup2;
     }
 
     // Add each file in the criteria list
@@ -2217,10 +2220,11 @@ bool CCabinet::CreateSimpleCabinet()
         goto cleanup;
     }
 
+cleanup:
     CloseCabinet();
     bRet = true;
 
-cleanup:
+cleanup2:
     DestroySearchCriteria();
     return bRet;
 }
@@ -2554,7 +2558,7 @@ ULONG CCabinet::ReadFileTable()
             return CAB_STATUS_INVALID_CAB;
         }
 
-        File->FileName = (char*)AllocateMemory(MAX_PATH);
+        File->FileName = (char*)AllocateMemory(PATH_MAX);
         if (!File->FileName)
         {
             DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
@@ -2562,7 +2566,7 @@ ULONG CCabinet::ReadFileTable()
         }
 
         /* Read file name */
-        Status = ReadString(File->FileName, MAX_PATH);
+        Status = ReadString(File->FileName, PATH_MAX);
         if (Status != CAB_STATUS_SUCCESS)
             return Status;
 
@@ -3654,7 +3658,7 @@ ULONG CCabinet::GetFileTimes(FILEHANDLE FileHandle, PCFFILE_NODE File)
             &File->File.FileTime);
 #else
     struct stat stbuf;
-    char buf[MAX_PATH];
+    char buf[PATH_MAX];
 
     // Check for an absolute path
     if (IsSeparator(File->FileName[0]))
@@ -3698,7 +3702,7 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
     File->File.Attributes = (USHORT)(Attributes & 0x37);
 #else
     struct stat stbuf;
-    char buf[MAX_PATH];
+    char buf[PATH_MAX];
 
     // Check for an absolute path
     if (IsSeparator(File->FileName[0]))

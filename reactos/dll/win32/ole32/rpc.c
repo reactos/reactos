@@ -453,6 +453,8 @@ void RPC_UnregisterAllChannelHooks(void)
     LIST_FOR_EACH_ENTRY_SAFE(cursor, cursor2, &channel_hooks, struct channel_hook_entry, entry)
         HeapFree(GetProcessHeap(), 0, cursor);
     LeaveCriticalSection(&csChannelHook);
+    DeleteCriticalSection(&csChannelHook);
+    DeleteCriticalSection(&csRegIf);
 }
 
 /* RPC Channel Buffer Functions */
@@ -539,7 +541,10 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
         if (msg->Buffer)
             status = RPC_S_OK;
         else
-            status = ERROR_OUTOFMEMORY;
+        {
+            HeapFree(GetProcessHeap(), 0, channel_hook_data);
+            return E_OUTOFMEMORY;
+        }
     }
     else
         status = I_RpcGetBuffer(msg);
@@ -1637,7 +1642,7 @@ void RPC_StartRemoting(struct apartment *apt)
 }
 
 
-static HRESULT create_server(REFCLSID rclsid)
+static HRESULT create_server(REFCLSID rclsid, HANDLE *process)
 {
     static const WCHAR  wszLocalServer32[] = { 'L','o','c','a','l','S','e','r','v','e','r','3','2',0 };
     static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
@@ -1676,7 +1681,7 @@ static HRESULT create_server(REFCLSID rclsid)
         WARN("failed to run local server %s\n", debugstr_w(command));
         return HRESULT_FROM_WIN32(GetLastError());
     }
-    CloseHandle(pinfo.hProcess);
+    *process = pinfo.hProcess;
     CloseHandle(pinfo.hThread);
 
     return S_OK;
@@ -1813,9 +1818,10 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
         if (hPipe == INVALID_HANDLE_VALUE) {
             DWORD index;
             DWORD start_ticks;
+            HANDLE process = 0;
             if (tries == 1) {
                 if ( (hres = create_local_service(rclsid)) &&
-                     (hres = create_server(rclsid)) )
+                     (hres = create_server(rclsid, &process)) )
                     return hres;
             } else {
                 WARN("Connecting to %s, no response yet, retrying: le is %u\n", debugstr_w(pipefn), GetLastError());
@@ -1823,8 +1829,16 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
             /* wait for one second, even if messages arrive */
             start_ticks = GetTickCount();
             do {
-                CoWaitForMultipleHandles(0, 1000, 0, NULL, &index);
+                if (SUCCEEDED(CoWaitForMultipleHandles(0, 1000, (process != 0),
+                                                       &process, &index)) && process && !index)
+                {
+                    WARN( "server for %s failed to start\n", debugstr_guid(rclsid) );
+                    CloseHandle( hPipe );
+                    CloseHandle( process );
+                    return E_NOINTERFACE;
+                }
             } while (GetTickCount() - start_ticks < 1000);
+            if (process) CloseHandle( process );
             continue;
         }
         bufferlen = 0;
@@ -1870,7 +1884,6 @@ struct local_server_params
 static DWORD WINAPI local_server_thread(LPVOID param)
 {
     struct local_server_params * lsp = param;
-    HANDLE		hPipe;
     WCHAR 		pipefn[100];
     HRESULT		hres;
     IStream		*pStm = lsp->stream;
@@ -1882,28 +1895,27 @@ static DWORD WINAPI local_server_thread(LPVOID param)
     ULONG		res;
     BOOL multi_use = lsp->multi_use;
     OVERLAPPED ovl;
-    HANDLE pipe_event;
+    HANDLE pipe_event, hPipe, new_pipe;
     DWORD  bytes;
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&lsp->clsid));
 
     memset(&ovl, 0, sizeof(ovl));
     get_localserver_pipe_name(pipefn, &lsp->clsid);
+    ovl.hEvent = pipe_event = CreateEventW(NULL, FALSE, FALSE, NULL);
 
     hPipe = CreateNamedPipeW( pipefn, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
                               PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
                               4096, 4096, 500 /* 0.5 second timeout */, NULL );
-
-    SetEvent(lsp->ready_event);
-
     if (hPipe == INVALID_HANDLE_VALUE)
     {
         FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
+        CloseHandle(pipe_event);
         return 1;
     }
 
-    ovl.hEvent = pipe_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    
+    SetEvent(lsp->ready_event);
+
     while (1) {
         if (!ConnectNamedPipe(hPipe, &ovl))
         {
@@ -1914,12 +1926,16 @@ static DWORD WINAPI local_server_thread(LPVOID param)
                 DWORD ret;
                 ret = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
                 if (ret != WAIT_OBJECT_0)
+                {
+                    CloseHandle(hPipe);
                     break;
+                }
             }
             /* client already connected isn't an error */
             else if (error != ERROR_PIPE_CONNECTED)
             {
                 ERR("ConnectNamedPipe failed with error %d\n", GetLastError());
+                CloseHandle(hPipe);
                 break;
             }
         }
@@ -1927,7 +1943,12 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         TRACE("marshalling IClassFactory to client\n");
         
         hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
-        if (hres) return hres;
+        if (hres)
+        {
+            CloseHandle(hPipe);
+            CloseHandle(pipe_event);
+            return hres;
+        }
 
         seekto.u.LowPart = 0;
         seekto.u.HighPart = 0;
@@ -1957,16 +1978,26 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         FlushFileBuffers(hPipe);
         DisconnectNamedPipe(hPipe);
-
         TRACE("done marshalling IClassFactory\n");
 
         if (!multi_use)
         {
             TRACE("single use object, shutting down pipe %s\n", debugstr_w(pipefn));
+            CloseHandle(hPipe);
             break;
         }
+        new_pipe = CreateNamedPipeW( pipefn, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                                     PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
+                                     4096, 4096, 500 /* 0.5 second timeout */, NULL );
+        CloseHandle(hPipe);
+        if (new_pipe == INVALID_HANDLE_VALUE)
+        {
+            FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
+            CloseHandle(pipe_event);
+            return 1;
+        }
+        hPipe = new_pipe;
     }
-    CloseHandle(hPipe);
     CloseHandle(pipe_event);
     return 0;
 }

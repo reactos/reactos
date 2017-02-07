@@ -1,6 +1,4 @@
-; In order to get unattended setup working:
-; 1. Copy unattend.inf.sample to unattend.inf, adjust as needed
-; 2. Uncomment the line in bootdata.rbuild to include it into bootcd
+; Set UnattendSetupEnabled to yes in order to get unattended setup working
 
 [Unattend]
 Signature = "$ReactOS$"

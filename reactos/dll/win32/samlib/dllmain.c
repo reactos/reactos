@@ -29,7 +29,7 @@
 
 #include "precomp.h"
 
-//#define LOG_DEBUG_MESSAGES
+WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
 /* GLOBALS *******************************************************************/
 
@@ -43,52 +43,6 @@ DllMain (HINSTANCE hInstance,
 {
 
   return TRUE;
-}
-
-
-void
-DebugPrint (char* fmt,...)
-{
-#ifdef LOG_DEBUG_MESSAGES
-  char FileName[MAX_PATH];
-  HANDLE hLogFile;
-  DWORD dwBytesWritten;
-#endif
-  char buffer[512];
-  va_list ap;
-
-  va_start (ap, fmt);
-  vsprintf (buffer, fmt, ap);
-  va_end (ap);
-
-  OutputDebugStringA (buffer);
-
-#ifdef LOG_DEBUG_MESSAGES
-  strcpy (FileName, "C:\\reactos\\samlib.log");
-  hLogFile = CreateFileA (FileName,
-			  GENERIC_WRITE,
-			  0,
-			  NULL,
-			  OPEN_ALWAYS,
-			  FILE_ATTRIBUTE_NORMAL,
-			  NULL);
-  if (hLogFile == INVALID_HANDLE_VALUE)
-    return;
-
-  if (SetFilePointer(hLogFile, 0, NULL, FILE_END) == 0xFFFFFFFF)
-    {
-      CloseHandle (hLogFile);
-      return;
-    }
-
-  WriteFile (hLogFile,
-	     buffer,
-	     strlen(buffer),
-	     &dwBytesWritten,
-	     NULL);
-
-  CloseHandle (hLogFile);
-#endif
 }
 
 /* EOF */

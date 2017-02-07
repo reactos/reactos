@@ -540,17 +540,18 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
 {
     HRESULT hr = S_OK;
     static const DWORD dwDesktopAttributes =
-        SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
-        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
+        SFGAO_HASSUBFOLDER | SFGAO_FILESYSTEM | SFGAO_FOLDER | SFGAO_FILESYSANCESTOR |
+        SFGAO_STORAGEANCESTOR | SFGAO_HASPROPSHEET | SFGAO_STORAGE | SFGAO_CANLINK;
     static const DWORD dwMyComputerAttributes =
-        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
-        SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
+        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
+    static DWORD dwMyNetPlacesAttributes =
+        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET | SFGAO_DROPTARGET |
+        SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER | SFGAO_CANLINK;
 
     TRACE("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
           this, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
 
-    if (!rgfInOut)
-        return E_INVALIDARG;
     if (cidl && !apidl)
         return E_INVALIDARG;
 
@@ -558,23 +559,21 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
         *rgfInOut = ~0;
 
     if(cidl == 0)
-    {
         *rgfInOut &= dwDesktopAttributes;
-    }
     else
     {
-        while (cidl > 0 && *apidl)
+        /* TODO: always add SFGAO_CANLINK */
+        for (UINT i = 0; i < cidl; ++i)
         {
             pdump(*apidl);
             if (_ILIsDesktop(*apidl))
                 *rgfInOut &= dwDesktopAttributes;
-            else if (_ILIsMyComputer(*apidl))
+            else if (_ILIsMyComputer(apidl[i]))
                 *rgfInOut &= dwMyComputerAttributes;
+            else if (_ILIsNetHood(apidl[i]))
+                *rgfInOut &= dwMyNetPlacesAttributes;
             else
-                SHELL32_GetItemAttributes((IShellFolder *)this, *apidl, rgfInOut);
-
-            apidl++;
-            cidl--;
+                SHELL32_GetItemAttributes((IShellFolder *)this, apidl[i], rgfInOut);
         }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
@@ -1145,7 +1144,7 @@ HRESULT WINAPI CDesktopFolder::DeleteItems(UINT cidl, LPCITEMIDLIST *apidl)
         wszCaption[(sizeof(wszCaption)/sizeof(WCHAR))-1] = 0;
 
         res = SHELL_ConfirmMsgBox(GetActiveWindow(), wszPath, wszCaption, NULL, cidl > 1);
-        if (res == IDD_YESTOALL || res == IDYES)
+        if (res == IDC_YESTOALL || res == IDYES)
         {
             for(i = 0; i < cidl; i++)
             {

@@ -476,7 +476,7 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
             {
                 /* Release reserved memory */
                 ZwFreeVirtualMemory(NtCurrentProcess(),
-                                    (PVOID *)&UcrDescriptor,
+                                    (PVOID *)&UcrSegment,
                                     &ReserveSize,
                                     MEM_RELEASE);
                 return NULL;
@@ -510,7 +510,7 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
         }
 
         /* There is a whole bunch of new UCR descriptors. Put them into the unused list */
-        while ((PCHAR)UcrDescriptor < ((PCHAR)UcrSegment + UcrSegment->CommittedSize))
+        while ((PCHAR)(UcrDescriptor + 1) <= (PCHAR)UcrSegment + UcrSegment->CommittedSize)
         {
             InsertTailList(&Heap->UCRList, &UcrDescriptor->ListEntry);
             UcrDescriptor++;
@@ -548,7 +548,7 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
     /* Go through the list of UCR descriptors, they are sorted from lowest address
        to the highest */
     Current = Segment->UCRSegmentList.Flink;
-    while(Current != &Segment->UCRSegmentList)
+    while (Current != &Segment->UCRSegmentList)
     {
         UcrDescriptor = CONTAINING_RECORD(Current, HEAP_UCR_DESCRIPTOR, SegmentEntry);
 
@@ -563,7 +563,7 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
                 return;
             }
 
-            /* We found the block after which the new one should go */
+            /* We found the block before which the new one should go */
             break;
         }
         else if (((ULONG_PTR)UcrDescriptor->Address + UcrDescriptor->Size) == Address)
@@ -595,7 +595,7 @@ RtlpInsertUnCommittedPages(PHEAP_SEGMENT Segment,
     UcrDescriptor->Address = (PVOID)Address;
     UcrDescriptor->Size = Size;
 
-    /* "Current" is the descriptor after which our one should go */
+    /* "Current" is the descriptor before which our one should go */
     InsertTailList(Current, &UcrDescriptor->SegmentEntry);
 
     DPRINT("Added segment UCR with base %p, size 0x%x\n", Address, Size);
@@ -620,7 +620,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
 
     /* Go through UCRs in a segment */
     Current = Segment->UCRSegmentList.Flink;
-    while(Current != &Segment->UCRSegmentList)
+    while (Current != &Segment->UCRSegmentList)
     {
         UcrDescriptor = CONTAINING_RECORD(Current, HEAP_UCR_DESCRIPTOR, SegmentEntry);
 
@@ -1694,7 +1694,7 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
 
     /* Free UCR segments if any were created */
     Current = Heap->UCRSegments.Flink;
-    while(Current != &Heap->UCRSegments)
+    while (Current != &Heap->UCRSegments)
     {
         UcrSegment = CONTAINING_RECORD(Current, HEAP_UCR_SEGMENT, ListEntry);
 

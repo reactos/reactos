@@ -5,7 +5,7 @@ Name = mIRC 6
 Version = 6.35
 Licence = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
-Size = 1.7M
+Size = 1.67MB
 Category = 5
 URLSite = http://www.mirc.com/
 URLDownload = http://download.mirc.com/3/mirc635.exe
@@ -25,6 +25,11 @@ Description = Il famoso client per Internet Relay Chat (IRC).
 
 [Section.0415]
 Description = Najpopularniejszy klient IRC (Internet Relay Chat).
+
+[Section.0418]
+Licence = Versiune de evaluare
+Description = Cel mai popular client de IRC (Internet Relay Chat).
+Size = 1.67Mo
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).

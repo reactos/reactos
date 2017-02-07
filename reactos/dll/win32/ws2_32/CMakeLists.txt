@@ -5,7 +5,7 @@ add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
 include_directories(BEFORE include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(ws2_32.dll ws2_32.spec)
+spec2def(ws2_32.dll ws2_32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     misc/bsd.c
@@ -28,4 +28,4 @@ add_delay_importlibs(ws2_32 user32)
 add_importlibs(ws2_32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
 add_pch(ws2_32 include/ws2_32.h)
 add_cd_file(TARGET ws2_32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(ws2_32.spec)
+

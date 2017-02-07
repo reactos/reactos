@@ -22,6 +22,7 @@
 #ifdef __cplusplus
 
 class GpGraphics {};
+class GpPen {};
 class GpBrush {};
 class GpHatch : public GpBrush {};
 class GpSolidFill : public GpBrush {};
@@ -92,6 +93,7 @@ typedef WrapMode GpWrapMode;
 typedef Color GpColor;
 typedef FlushIntention GpFlushIntention;
 typedef CoordinateSpace GpCoordinateSpace;
+typedef PenAlignment GpPenAlignment;
 typedef PenType GpPenType;
 
 #endif

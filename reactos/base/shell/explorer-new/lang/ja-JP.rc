@@ -5,6 +5,15 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
+        MENUITEM "&Adjust Date/Time", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Customize Notifications...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Ca&scade Windows", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Tile Windows &Horizontally", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Tile Windows V&ertically", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show the Desktop", ID_SHELL_CMD_SHOW_DESKTOP
+        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
         MENUITEM "タスク マネージャ", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "タスク バーを固定する(&L)", ID_LOCKTASKBAR

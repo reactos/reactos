@@ -62,542 +62,605 @@ typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
 
 $include (setypes.h)
+$include (obtypes.h)
 $include (rtltypes.h)
 $include (rtlfuncs.h)
 
-typedef enum _OBJECT_INFORMATION_CLASS {
-  ObjectBasicInformation = 0,
-  ObjectNameInformation = 1, /* FIXME, not in WDK */
-  ObjectTypeInformation = 2,
-  ObjectTypesInformation = 3, /* FIXME, not in WDK */
-  ObjectHandleFlagInformation = 4, /* FIXME, not in WDK */
-  ObjectSessionInformation = 5, /* FIXME, not in WDK */
-  MaxObjectInfoClass /* FIXME, not in WDK */
-} OBJECT_INFORMATION_CLASS;
-
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryObject(
-  IN HANDLE Handle OPTIONAL,
-  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-  OUT PVOID ObjectInformation OPTIONAL,
-  IN ULONG ObjectInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_opt_ HANDLE Handle,
+  _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+  _In_ ULONG ObjectInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThreadToken(
-  IN HANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN OpenAsSelf,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ThreadHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ BOOLEAN OpenAsSelf,
+  _Out_ PHANDLE TokenHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenProcessToken(
-  IN HANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ProcessHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _Out_ PHANDLE TokenHandle);
 
+_When_(TokenInformationClass == TokenAccessInformation,
+  _At_(TokenInformationLength,
+       _In_range_(>=, sizeof(TOKEN_ACCESS_INFORMATION))))
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationToken(
-  IN HANDLE TokenHandle,
-  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-  OUT PVOID TokenInformation OPTIONAL,
-  IN ULONG TokenInformationLength,
-  OUT PULONG ReturnLength);
+  _In_ HANDLE TokenHandle,
+  _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+  _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,
+  _In_ ULONG TokenInformationLength,
+  _Out_ PULONG ReturnLength);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAdjustPrivilegesToken(
-  IN HANDLE TokenHandle,
-  IN BOOLEAN DisableAllPrivileges,
-  IN PTOKEN_PRIVILEGES NewState OPTIONAL,
-  IN ULONG BufferLength,
-  OUT PTOKEN_PRIVILEGES PreviousState,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE TokenHandle,
+  _In_ BOOLEAN DisableAllPrivileges,
+  _In_opt_ PTOKEN_PRIVILEGES NewState,
+  _In_ ULONG BufferLength,
+  _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
+  _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG CreateDisposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer,
-  IN ULONG EaLength);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_opt_ PLARGE_INTEGER AllocationSize,
+  _In_ ULONG FileAttributes,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG CreateDisposition,
+  _In_ ULONG CreateOptions,
+  _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
+  _In_ ULONG EaLength);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeviceIoControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG IoControlCode,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFsControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG FsControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG FsControlCode,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLockFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER ByteOffset,
-  IN PLARGE_INTEGER Length,
-  IN ULONG Key,
-  IN BOOLEAN FailImmediately,
-  IN BOOLEAN ExclusiveLock);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ PLARGE_INTEGER ByteOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ ULONG Key,
+  _In_ BOOLEAN FailImmediately,
+  _In_ BOOLEAN ExclusiveLock);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG ShareAccess,
-  IN ULONG OpenOptions);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG OpenOptions);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryDirectoryFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PUNICODE_STRING FileName OPTIONAL,
-  IN BOOLEAN RestartScan);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass,
+  _In_ BOOLEAN ReturnSingleEntry,
+  _In_opt_ PUNICODE_STRING FileName,
+  _In_ BOOLEAN RestartScan);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryQuotaInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PVOID SidList,
-  IN ULONG SidListLength,
-  IN PSID StartSid OPTIONAL,
-  IN BOOLEAN RestartScan);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_ BOOLEAN ReturnSingleEntry,
+  _In_reads_bytes_opt_(SidListLength) PVOID SidList,
+  _In_ ULONG SidListLength,
+  _In_reads_bytes_opt_((8 + (4 * ((SID *)StartSid)->SubAuthorityCount))) PSID StartSid,
+  _In_ BOOLEAN RestartScan);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FsInformation,
+  _In_ ULONG Length,
+  _In_ FS_INFORMATION_CLASS FsInformationClass);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN PLARGE_INTEGER ByteOffset OPTIONAL,
-  IN PULONG Key OPTIONAL);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER ByteOffset,
+  _In_opt_ PULONG Key);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetQuotaInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID Buffer,
-  IN ULONG Length);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID FsInformation,
+  _In_ ULONG Length,
+  _In_ FS_INFORMATION_CLASS FsInformationClass);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID Buffer,
-  IN ULONG Length,
-  IN PLARGE_INTEGER ByteOffset OPTIONAL,
-  IN PULONG Key OPTIONAL);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER ByteOffset,
+  _In_opt_ PULONG Key);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnlockFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER ByteOffset,
-  IN PLARGE_INTEGER Length,
-  IN ULONG Key);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ PLARGE_INTEGER ByteOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ ULONG Key);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSecurityObject(
-  IN HANDLE Handle,
-  IN SECURITY_INFORMATION SecurityInformation,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ HANDLE Handle,
+  _In_ SECURITY_INFORMATION SecurityInformation,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySecurityObject(
-  IN HANDLE Handle,
-  IN SECURITY_INFORMATION SecurityInformation,
-  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN ULONG Length,
-  OUT PULONG LengthNeeded);
+  _In_ HANDLE Handle,
+  _In_ SECURITY_INFORMATION SecurityInformation,
+  _Out_writes_bytes_opt_(Length) PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ ULONG Length,
+  _Out_ PULONG LengthNeeded);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtClose(
-  IN HANDLE Handle);
+  _In_ HANDLE Handle);
 
+_Must_inspect_result_
+__drv_allocatesMem(Mem)
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG_PTR ZeroBits,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG AllocationType,
-  IN ULONG Protect);
+  _In_ HANDLE ProcessHandle,
+  _Outptr_result_bytebuffer_(*RegionSize) PVOID *BaseAddress,
+  _In_ ULONG_PTR ZeroBits,
+  _Inout_ PSIZE_T RegionSize,
+  _In_ ULONG AllocationType,
+  _In_ ULONG Protect);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFreeVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG FreeType);
+  _In_ HANDLE ProcessHandle,
+  _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+  _Inout_ PSIZE_T RegionSize,
+  _In_ ULONG FreeType);
 
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThreadTokenEx(
-  IN HANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN OpenAsSelf,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ThreadHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ BOOLEAN OpenAsSelf,
+  _In_ ULONG HandleAttributes,
+  _Out_ PHANDLE TokenHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenProcessTokenEx(
-  IN HANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ProcessHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG HandleAttributes,
+  _Out_ PHANDLE TokenHandle);
 
+_Must_inspect_result_
 NTSYSAPI
 NTSTATUS
 NTAPI
 NtOpenJobObjectToken(
-  IN HANDLE JobHandle,
-  IN ACCESS_MASK DesiredAccess,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE JobHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _Out_ PHANDLE TokenHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDuplicateToken(
-  IN HANDLE ExistingTokenHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN BOOLEAN EffectiveOnly,
-  IN TOKEN_TYPE TokenType,
-  OUT PHANDLE NewTokenHandle);
+  _In_ HANDLE ExistingTokenHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ BOOLEAN EffectiveOnly,
+  _In_ TOKEN_TYPE TokenType,
+  _Out_ PHANDLE NewTokenHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFilterToken(
-  IN HANDLE ExistingTokenHandle,
-  IN ULONG Flags,
-  IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-  IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-  IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-  OUT PHANDLE NewTokenHandle);
+  _In_ HANDLE ExistingTokenHandle,
+  _In_ ULONG Flags,
+  _In_opt_ PTOKEN_GROUPS SidsToDisable,
+  _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,
+  _In_opt_ PTOKEN_GROUPS RestrictedSids,
+  _Out_ PHANDLE NewTokenHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateAnonymousToken(
-  IN HANDLE ThreadHandle);
+  _In_ HANDLE ThreadHandle);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationToken(
-  IN HANDLE TokenHandle,
-  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-  IN PVOID TokenInformation,
-  IN ULONG TokenInformationLength);
+  _In_ HANDLE TokenHandle,
+  _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+  _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,
+  _In_ ULONG TokenInformationLength);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAdjustGroupsToken(
-  IN HANDLE TokenHandle,
-  IN BOOLEAN ResetToDefault,
-  IN PTOKEN_GROUPS NewState OPTIONAL,
-  IN ULONG BufferLength OPTIONAL,
-  OUT PTOKEN_GROUPS PreviousState,
-  OUT PULONG ReturnLength);
+  _In_ HANDLE TokenHandle,
+  _In_ BOOLEAN ResetToDefault,
+  _In_opt_ PTOKEN_GROUPS NewState,
+  _In_opt_ ULONG BufferLength,
+  _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_GROUPS PreviousState,
+  _Out_ PULONG ReturnLength);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrivilegeCheck(
-  IN HANDLE ClientToken,
-  IN OUT PPRIVILEGE_SET RequiredPrivileges,
-  OUT PBOOLEAN Result);
+  _In_ HANDLE ClientToken,
+  _Inout_ PPRIVILEGE_SET RequiredPrivileges,
+  _Out_ PBOOLEAN Result);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckAndAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PUNICODE_STRING ObjectName,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN ACCESS_MASK DesiredAccess,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN BOOLEAN ObjectCreation,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_ PUNICODE_STRING ObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ BOOLEAN ObjectCreation,
+  _Out_ PACCESS_MASK GrantedAccess,
+  _Out_ PNTSTATUS AccessStatus,
+  _Out_ PBOOLEAN GenerateOnClose);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckByTypeAndAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId,
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PUNICODE_STRING ObjectName,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID PrincipalSelfSid OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN AUDIT_EVENT_TYPE AuditType,
-  IN ULONG Flags,
-  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
-  IN ULONG ObjectTypeLength,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN BOOLEAN ObjectCreation,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_ PUNICODE_STRING ObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSID PrincipalSelfSid,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ AUDIT_EVENT_TYPE AuditType,
+  _In_ ULONG Flags,
+  _In_reads_opt_(ObjectTypeLength) POBJECT_TYPE_LIST ObjectTypeList,
+  _In_ ULONG ObjectTypeLength,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ BOOLEAN ObjectCreation,
+  _Out_ PACCESS_MASK GrantedAccess,
+  _Out_ PNTSTATUS AccessStatus,
+  _Out_ PBOOLEAN GenerateOnClose);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckByTypeResultListAndAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PUNICODE_STRING ObjectName,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID PrincipalSelfSid OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN AUDIT_EVENT_TYPE AuditType,
-  IN ULONG Flags,
-  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
-  IN ULONG ObjectTypeLength,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN BOOLEAN ObjectCreation,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_ PUNICODE_STRING ObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSID PrincipalSelfSid,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ AUDIT_EVENT_TYPE AuditType,
+  _In_ ULONG Flags,
+  _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+  _In_ ULONG ObjectTypeListLength,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ BOOLEAN ObjectCreation,
+  _Out_writes_(ObjectTypeListLength) PACCESS_MASK GrantedAccess,
+  _Out_writes_(ObjectTypeListLength) PNTSTATUS AccessStatus,
+  _Out_ PBOOLEAN GenerateOnClose);
 
+_Must_inspect_result_
+__kernel_entry
+NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN HANDLE ClientToken,
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PUNICODE_STRING ObjectName,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID PrincipalSelfSid OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN AUDIT_EVENT_TYPE AuditType,
-  IN ULONG Flags,
-  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
-  IN ULONG ObjectTypeLength,
-  IN PGENERIC_MAPPING GenericMapping,
-  IN BOOLEAN ObjectCreation,
-  OUT PACCESS_MASK GrantedAccess,
-  OUT PNTSTATUS AccessStatus,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ HANDLE ClientToken,
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_ PUNICODE_STRING ObjectName,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_opt_ PSID PrincipalSelfSid,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ AUDIT_EVENT_TYPE AuditType,
+  _In_ ULONG Flags,
+  _In_reads_opt_(ObjectTypeListLength) POBJECT_TYPE_LIST ObjectTypeList,
+  _In_ ULONG ObjectTypeListLength,
+  _In_ PGENERIC_MAPPING GenericMapping,
+  _In_ BOOLEAN ObjectCreation,
+  _Out_writes_(ObjectTypeListLength) PACCESS_MASK GrantedAccess,
+  _Out_writes_(ObjectTypeListLength) PNTSTATUS AccessStatus,
+  _Out_ PBOOLEAN GenerateOnClose);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenObjectAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN PUNICODE_STRING ObjectTypeName,
-  IN PUNICODE_STRING ObjectName,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
-  IN HANDLE ClientToken,
-  IN ACCESS_MASK DesiredAccess,
-  IN ACCESS_MASK GrantedAccess,
-  IN PPRIVILEGE_SET Privileges OPTIONAL,
-  IN BOOLEAN ObjectCreation,
-  IN BOOLEAN AccessGranted,
-  OUT PBOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ PUNICODE_STRING ObjectTypeName,
+  _In_ PUNICODE_STRING ObjectName,
+  _In_opt_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ HANDLE ClientToken,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ACCESS_MASK GrantedAccess,
+  _In_opt_ PPRIVILEGE_SET Privileges,
+  _In_ BOOLEAN ObjectCreation,
+  _In_ BOOLEAN AccessGranted,
+  _Out_ PBOOLEAN GenerateOnClose);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrivilegeObjectAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN HANDLE ClientToken,
-  IN ACCESS_MASK DesiredAccess,
-  IN PPRIVILEGE_SET Privileges,
-  IN BOOLEAN AccessGranted);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ HANDLE ClientToken,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ PPRIVILEGE_SET Privileges,
+  _In_ BOOLEAN AccessGranted);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCloseObjectAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN BOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ BOOLEAN GenerateOnClose);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteObjectAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PVOID HandleId OPTIONAL,
-  IN BOOLEAN GenerateOnClose);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_opt_ PVOID HandleId,
+  _In_ BOOLEAN GenerateOnClose);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPrivilegedServiceAuditAlarm(
-  IN PUNICODE_STRING SubsystemName,
-  IN PUNICODE_STRING ServiceName,
-  IN HANDLE ClientToken,
-  IN PPRIVILEGE_SET Privileges,
-  IN BOOLEAN AccessGranted);
+  _In_ PUNICODE_STRING SubsystemName,
+  _In_ PUNICODE_STRING ServiceName,
+  _In_ HANDLE ClientToken,
+  _In_ PPRIVILEGE_SET Privileges,
+  _In_ BOOLEAN AccessGranted);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationThread(
-  IN HANDLE ThreadHandle,
-  IN THREADINFOCLASS ThreadInformationClass,
-  IN PVOID ThreadInformation,
-  IN ULONG ThreadInformationLength);
+  _In_ HANDLE ThreadHandle,
+  _In_ THREADINFOCLASS ThreadInformationClass,
+  _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+  _In_ ULONG ThreadInformationLength);
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSection(
-  OUT PHANDLE SectionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PLARGE_INTEGER MaximumSize OPTIONAL,
-  IN ULONG SectionPageProtection,
-  IN ULONG AllocationAttributes,
-  IN HANDLE FileHandle OPTIONAL);
+  _Out_ PHANDLE SectionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PLARGE_INTEGER MaximumSize,
+  _In_ ULONG SectionPageProtection,
+  _In_ ULONG AllocationAttributes,
+  _In_opt_ HANDLE FileHandle);
 
 #endif
 
@@ -646,35 +709,40 @@ typedef enum _SECURITY_LOGON_TYPE {
 
 #endif /* _NTLSA_AUDIT_ */
 
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 LsaRegisterLogonProcess(
-  IN PLSA_STRING LogonProcessName,
-  OUT PHANDLE LsaHandle,
-  OUT PLSA_OPERATIONAL_MODE SecurityMode);
+  _In_ PLSA_STRING LogonProcessName,
+  _Out_ PHANDLE LsaHandle,
+  _Out_ PLSA_OPERATIONAL_MODE SecurityMode);
 
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 LsaLogonUser(
-  IN HANDLE LsaHandle,
-  IN PLSA_STRING OriginName,
-  IN SECURITY_LOGON_TYPE LogonType,
-  IN ULONG AuthenticationPackage,
-  IN PVOID AuthenticationInformation,
-  IN ULONG AuthenticationInformationLength,
-  IN PTOKEN_GROUPS LocalGroups OPTIONAL,
-  IN PTOKEN_SOURCE SourceContext,
-  OUT PVOID *ProfileBuffer,
-  OUT PULONG ProfileBufferLength,
-  OUT PLUID LogonId,
-  OUT PHANDLE Token,
-  OUT PQUOTA_LIMITS Quotas,
-  OUT PNTSTATUS SubStatus);
+  _In_ HANDLE LsaHandle,
+  _In_ PLSA_STRING OriginName,
+  _In_ SECURITY_LOGON_TYPE LogonType,
+  _In_ ULONG AuthenticationPackage,
+  _In_reads_bytes_(AuthenticationInformationLength) PVOID AuthenticationInformation,
+  _In_ ULONG AuthenticationInformationLength,
+  _In_opt_ PTOKEN_GROUPS LocalGroups,
+  _In_ PTOKEN_SOURCE SourceContext,
+  _Out_ PVOID *ProfileBuffer,
+  _Out_ PULONG ProfileBufferLength,
+  _Inout_ PLUID LogonId,
+  _Out_ PHANDLE Token,
+  _Out_ PQUOTA_LIMITS Quotas,
+  _Out_ PNTSTATUS SubStatus);
 
+_IRQL_requires_same_
 NTSTATUS
 NTAPI
 LsaFreeReturnBuffer(
-  IN PVOID Buffer);
+  _In_ PVOID Buffer);
 
 #ifndef _NTLSA_IFS_
 #define _NTLSA_IFS_
@@ -1031,38 +1099,10 @@ typedef struct _PUBLIC_OBJECT_TYPE_INFORMATION {
   ULONG Reserved [22];
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
-typedef struct _SECURITY_CLIENT_CONTEXT {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;
-  PACCESS_TOKEN ClientToken;
-  BOOLEAN DirectlyAccessClientToken;
-  BOOLEAN DirectAccessEffectiveOnly;
-  BOOLEAN ServerIsRemote;
-  TOKEN_CONTROL ClientTokenControl;
-} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
-
 #define SYSTEM_PAGE_PRIORITY_BITS       3
 #define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
 
-typedef struct _KAPC_STATE {
-  LIST_ENTRY ApcListHead[MaximumMode];
-  PKPROCESS Process;
-  BOOLEAN KernelApcInProgress;
-  BOOLEAN KernelApcPending;
-  BOOLEAN UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-
-#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
-
-#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
-
-typedef struct _KQUEUE {
-  DISPATCHER_HEADER Header;
-  LIST_ENTRY EntryListHead;
-  volatile ULONG CurrentCount;
-  ULONG MaximumCount;
-  LIST_ENTRY ThreadListHead;
-} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
-
+$include (ketypes.h)
 $include (kefuncs.h)
 $include (extypes.h)
 $include (exfuncs.h)
@@ -1699,16 +1739,6 @@ FsRtlAllocatePoolWithTag (
     IN POOL_TYPE    PoolType,
     IN ULONG        NumberOfBytes,
     IN ULONG        Tag
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsFatDbcsLegal (
-    IN ANSI_STRING  DbcsName,
-    IN BOOLEAN      WildCardsPermissible,
-    IN BOOLEAN      PathNamePermissible,
-    IN BOOLEAN      LeadingBackslashPermissible
 );
 
 NTKERNELAPI

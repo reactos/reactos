@@ -238,7 +238,7 @@ HTRANSFORM WINAPI CreateMultiProfileTransform( PHPROFILE profiles, DWORD nprofil
         if (out_format == TYPE_Lab_16) cmsconvert = cmsCreateLabProfile( NULL );
     }
 
-    cmsprofiles = HeapAlloc( GetProcessHeap(), 0, (nprofiles + 1) * sizeof(cmsHPROFILE *) );
+    cmsprofiles = HeapAlloc( GetProcessHeap(), 0, (nprofiles + 1) * sizeof(cmsHPROFILE) );
     if (cmsprofiles)
     {
         cmsprofiles[0] = profile0->cmsprofile;
@@ -355,8 +355,8 @@ BOOL WINAPI TranslateBitmapBits( HTRANSFORM handle, PVOID srcbits, BMFORMAT inpu
 BOOL WINAPI TranslateColors( HTRANSFORM handle, PCOLOR in, DWORD count,
                              COLORTYPE input_type, PCOLOR out, COLORTYPE output_type )
 {
-    BOOL ret = FALSE;
 #ifdef HAVE_LCMS
+    BOOL ret = TRUE;
     struct transform *transform = grab_transform( handle );
     cmsHTRANSFORM xfrm;
     unsigned int i;
@@ -374,78 +374,93 @@ BOOL WINAPI TranslateColors( HTRANSFORM handle, PCOLOR in, DWORD count,
     {
         switch (output_type)
         {
-        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].rgb, 1 ); return TRUE;
-        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].Lab, 1 ); return TRUE;
-        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].gray, 1 ); return TRUE;
-        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].cmyk, 1 ); return TRUE;
-        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].XYZ, 1 ); return TRUE;
+        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].rgb, 1 ); goto done;
+        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].Lab, 1 ); goto done;
+        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].gray, 1 ); goto done;
+        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].cmyk, 1 ); goto done;
+        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].rgb, &out[i].XYZ, 1 ); goto done;
         default:
             FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
-            return FALSE;
+            ret = FALSE;
+            break;
         }
+        break;
     }
     case COLOR_Lab:
     {
         switch (output_type)
         {
-        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].rgb, 1 ); return TRUE;
-        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].Lab, 1 ); return TRUE;
-        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].gray, 1 ); return TRUE;
-        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].cmyk, 1 ); return TRUE;
-        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].XYZ, 1 ); return TRUE;
+        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].rgb, 1 ); goto done;
+        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].Lab, 1 ); goto done;
+        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].gray, 1 ); goto done;
+        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].cmyk, 1 ); goto done;
+        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].Lab, &out[i].XYZ, 1 ); goto done;
         default:
             FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
-            return FALSE;
+            ret = FALSE;
+            break;
         }
+        break;
     }
     case COLOR_GRAY:
     {
         switch (output_type)
         {
-        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].rgb, 1 ); return TRUE;
-        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].Lab, 1 ); return TRUE;
-        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].gray, 1 ); return TRUE;
-        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].cmyk, 1 ); return TRUE;
-        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].XYZ, 1 ); return TRUE;
+        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].rgb, 1 ); goto done;
+        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].Lab, 1 ); goto done;
+        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].gray, 1 ); goto done;
+        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].cmyk, 1 ); goto done;
+        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].gray, &out[i].XYZ, 1 ); goto done;
         default:
             FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
-            return FALSE;
+            ret = FALSE;
+            break;
         }
+        break;
     }
     case COLOR_CMYK:
     {
         switch (output_type)
         {
-        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].rgb, 1 ); return TRUE;
-        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].Lab, 1 ); return TRUE;
-        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].gray, 1 ); return TRUE;
-        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].cmyk, 1 ); return TRUE;
-        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].XYZ, 1 ); return TRUE;
+        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].rgb, 1 ); goto done;
+        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].Lab, 1 ); goto done;
+        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].gray, 1 ); goto done;
+        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].cmyk, 1 ); goto done;
+        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].cmyk, &out[i].XYZ, 1 ); goto done;
         default:
             FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
-            return FALSE;
+            ret = FALSE;
+            break;
         }
+        break;
     }
     case COLOR_XYZ:
     {
         switch (output_type)
         {
-        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].rgb, 1 ); return TRUE;
-        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].Lab, 1 ); return TRUE;
-        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].gray, 1 ); return TRUE;
-        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].cmyk, 1 ); return TRUE;
-        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].XYZ, 1 ); return TRUE;
+        case COLOR_RGB:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].rgb, 1 ); goto done;
+        case COLOR_Lab:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].Lab, 1 ); goto done;
+        case COLOR_GRAY: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].gray, 1 ); goto done;
+        case COLOR_CMYK: for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].cmyk, 1 ); goto done;
+        case COLOR_XYZ:  for (i = 0; i < count; i++) cmsDoTransform( xfrm, &in[i].XYZ, &out[i].XYZ, 1 ); goto done;
         default:
             FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
-            return FALSE;
+            ret = FALSE;
+            break;
         }
+        break;
     }
     default:
         FIXME("unhandled input/output pair: %d/%d\n", input_type, output_type);
+        ret = FALSE;
         break;
     }
-    release_transform( transform );
 
-#endif /* HAVE_LCMS */
+done:
+    release_transform( transform );
     return ret;
+
+#else  /* HAVE_LCMS */
+    return FALSE;
+#endif /* HAVE_LCMS */
 }

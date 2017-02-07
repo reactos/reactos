@@ -3117,6 +3117,7 @@ INetCfgComponentControl_fnApplyRegistryChanges(
     WCHAR szBuffer[200];
     TcpipSettings * pCurrentConfig, *pOldConfig;
     ULONG NTEInstance;
+    DWORD DhcpApiVersion;
 
     TcpipConfNotifyImpl * This = impl_from_INetCfgComponentControl(iface);
 
@@ -3197,41 +3198,10 @@ INetCfgComponentControl_fnApplyRegistryChanges(
             RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", 2 * sizeof(WCHAR));
             if (!pOldConfig->DhcpEnabled)
             {
+                /* Delete this adapter's current IP address */
                 DeleteIPAddress(pOldConfig->Ip->NTEContext);
-                //FIXME
-                // start dhcp client service for the adapter
-            }
-        }
-        else
-        {
-            if (!pOldConfig->DhcpEnabled)
-            {
-                DeleteIPAddress(pOldConfig->Ip->NTEContext);
-                //TODO
-                //delete multiple ip addresses when required
-            }
 
-            //TODO
-            // add multiple ip addresses when required
-            if (AddIPAddress(htonl(pCurrentConfig->Ip->IpAddress), htonl(pCurrentConfig->Ip->u.Subnetmask), pCurrentConfig->Index, &pCurrentConfig->Ip->NTEContext, &NTEInstance) == NO_ERROR)
-            {
-                pStr = CreateMultiSzString(pCurrentConfig->Ip, IPADDR, &dwSize, FALSE);
-                if(pStr)
-                {
-                    RegSetValueExW(hKey, L"IPAddress", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                    CoTaskMemFree(pStr);
-                }
-
-                pStr = CreateMultiSzString(pCurrentConfig->Ip, SUBMASK, &dwSize, FALSE);
-                if(pStr)
-                {
-                    RegSetValueExW(hKey, L"SubnetMask", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
-                    CoTaskMemFree(pStr);
-                }
-            }
-
-            if (pOldConfig->Gw)
-            {
+                /* Delete all default routes for this adapter */
                 dwSize = 0;
                 if (GetIpForwardTable(NULL, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
                 {
@@ -3243,7 +3213,8 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                         {
                             for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
                             {
-                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index)
+                                if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index &&
+                                    pIpForwardTable->table[Index].dwForwardDest == 0)
                                 {
                                     DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
                                 }
@@ -3251,6 +3222,69 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                         }
                         CoTaskMemFree(pIpForwardTable);
                     }
+                }
+            }
+        }
+        else
+        {
+            /* Open the DHCP API if DHCP is enabled */
+            if (pOldConfig->DhcpEnabled && DhcpCApiInitialize(&DhcpApiVersion) == NO_ERROR)
+            {
+                /* We have to tell DHCP about this */
+                DhcpStaticRefreshParams(pCurrentConfig->Index,
+                                        htonl(pCurrentConfig->Ip->IpAddress),
+                                        htonl(pCurrentConfig->Ip->u.Subnetmask));
+
+                /* Close the API */
+                DhcpCApiCleanup();
+            }
+            else
+            {
+                /* Delete this adapter's current static IP address */
+                DeleteIPAddress(pOldConfig->Ip->NTEContext);
+
+                /* Add the static IP address via the standard IPHLPAPI function */
+                AddIPAddress(htonl(pCurrentConfig->Ip->IpAddress),
+                             htonl(pCurrentConfig->Ip->u.Subnetmask),
+                             pCurrentConfig->Index,
+                             &pCurrentConfig->Ip->NTEContext,
+                             &NTEInstance);
+            }
+            
+            pStr = CreateMultiSzString(pCurrentConfig->Ip, IPADDR, &dwSize, FALSE);
+            if(pStr)
+            {
+                RegSetValueExW(hKey, L"IPAddress", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                CoTaskMemFree(pStr);
+            }
+            
+            pStr = CreateMultiSzString(pCurrentConfig->Ip, SUBMASK, &dwSize, FALSE);
+            if(pStr)
+            {
+                RegSetValueExW(hKey, L"SubnetMask", 0, REG_MULTI_SZ, (LPBYTE)pStr, dwSize);
+                CoTaskMemFree(pStr);
+            }
+
+            /* Delete all default routes for this adapter */
+            dwSize = 0;
+            if (GetIpForwardTable(NULL, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
+            {
+                DWORD Index;
+                PMIB_IPFORWARDTABLE pIpForwardTable = (PMIB_IPFORWARDTABLE)CoTaskMemAlloc(dwSize);
+                if (pIpForwardTable)
+                {
+                    if (GetIpForwardTable(pIpForwardTable, &dwSize, FALSE) == NO_ERROR)
+                    {
+                        for (Index = 0; Index < pIpForwardTable->dwNumEntries; Index++)
+                        {
+                            if (pIpForwardTable->table[Index].dwForwardIfIndex == pOldConfig->Index &&
+                                pIpForwardTable->table[Index].dwForwardDest == 0)
+                            {
+                                DeleteIpForwardEntry(&pIpForwardTable->table[Index]);
+                            }
+                        }
+                    }
+                    CoTaskMemFree(pIpForwardTable);
                 }
             }
 

@@ -32,16 +32,15 @@
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
-#include <wdm.h>
+#define _USBD_
+#define NDEBUG
+#include <ntddk.h>
 #include <usbdi.h>
-
+#include <usbdlib.h>
+#include <debug.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
 #endif
-typedef struct _USBD_INTERFACE_LIST_ENTRY {
-    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    PUSBD_INTERFACE_INFORMATION Interface;
-} USBD_INTERFACE_LIST_ENTRY, *PUSBD_INTERFACE_LIST_ENTRY;
 
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
@@ -102,6 +101,7 @@ USBD_Debug_LogEntry(PCHAR Name, ULONG_PTR Info1, ULONG_PTR Info2,
 PVOID NTAPI
 USBD_AllocateDeviceName(ULONG Unknown)
 {
+    UNIMPLEMENTED
     return NULL;
 }
 
@@ -139,6 +139,7 @@ USBD_CalculateUsbBandwidth(
 ULONG NTAPI
 USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 {
+    UNIMPLEMENTED
     return 1;
 }
 
@@ -148,6 +149,7 @@ USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 VOID NTAPI
 USBD_FreeDeviceMutex(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -156,6 +158,7 @@ USBD_FreeDeviceMutex(PVOID Unknown)
 VOID NTAPI
 USBD_FreeDeviceName(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -164,6 +167,7 @@ USBD_FreeDeviceName(PVOID Unknown)
 VOID NTAPI
 USBD_WaitDeviceMutex(PVOID Unknown)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -172,6 +176,7 @@ USBD_WaitDeviceMutex(PVOID Unknown)
 ULONG NTAPI
 USBD_GetSuspendPowerState(ULONG Unknown1)
 {
+    UNIMPLEMENTED
     return 0;
 }
 
@@ -182,6 +187,7 @@ NTSTATUS NTAPI
 USBD_InitializeDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -193,6 +199,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6, ULONG Unknown7,
     ULONG Unknown8, ULONG Unknown9, ULONG Unknown10)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -202,6 +209,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_GetDeviceInformation(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -212,6 +220,7 @@ NTSTATUS NTAPI
 USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -221,6 +230,7 @@ USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -230,6 +240,7 @@ USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 VOID NTAPI
 USBD_CompleteRequest(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -241,6 +252,7 @@ USBD_RegisterHcFilter(
     PDEVICE_OBJECT FilterDeviceObject
     )
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -249,6 +261,7 @@ USBD_RegisterHcFilter(
 VOID NTAPI
 USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -257,6 +270,7 @@ USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 NTSTATUS NTAPI
 USBD_MakePdoName(ULONG Unknown1, ULONG Unknown2)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -269,6 +283,7 @@ USBD_QueryBusTime(
     PULONG CurrentFrame
     )
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -283,7 +298,7 @@ USBD_GetUSBDIVersion(
     if (Version != NULL)
     {
         Version->USBDI_Version = USBDI_VERSION;
-        Version->Supported_USB_Version = 0x100;
+        Version->Supported_USB_Version = 0x200;
     }
 }
 
@@ -293,6 +308,7 @@ USBD_GetUSBDIVersion(
 NTSTATUS NTAPI
 USBD_RestoreDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
+    UNIMPLEMENTED
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -303,6 +319,7 @@ VOID NTAPI
 USBD_RegisterHcDeviceCapabilities(ULONG Unknown1, ULONG Unknown2,
     ULONG Unknown3)
 {
+    UNIMPLEMENTED
 }
 
 /*
@@ -316,39 +333,61 @@ USBD_CreateConfigurationRequestEx(
 {
     PURB Urb;
     ULONG UrbSize = 0;
-    ULONG InterfaceCount;
+    ULONG InterfaceCount = 0, PipeCount = 0;
     ULONG InterfaceNumber, EndPointNumber;
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;
 
-    for (InterfaceCount = 0;
-         InterfaceList[InterfaceCount].InterfaceDescriptor != NULL;
-         InterfaceCount++)
+    while(InterfaceList[InterfaceCount].InterfaceDescriptor)
     {
-        UrbSize += sizeof(USBD_INTERFACE_INFORMATION);
-        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
+        // pipe count
+        PipeCount += InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints;
+
+        // interface count
+        InterfaceCount++;
     }
 
-    UrbSize += sizeof(URB) + sizeof(USBD_INTERFACE_INFORMATION);
+    // size of urb
+    UrbSize = GET_SELECT_CONFIGURATION_REQUEST_SIZE(InterfaceCount, PipeCount);
 
+    // allocate urb
     Urb = ExAllocatePool(NonPagedPool, UrbSize);
+    if (!Urb)
+    {
+        // no memory
+        return NULL;
+    }
+
+    // zero urb
     RtlZeroMemory(Urb, UrbSize);
+
+    // init urb header
     Urb->UrbSelectConfiguration.Hdr.Function =  URB_FUNCTION_SELECT_CONFIGURATION;
-    Urb->UrbSelectConfiguration.Hdr.Length = sizeof(Urb->UrbSelectConfiguration);
+    Urb->UrbSelectConfiguration.Hdr.Length = UrbSize;
     Urb->UrbSelectConfiguration.ConfigurationDescriptor = ConfigurationDescriptor;
 
+    // init interface information
     InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
     for (InterfaceNumber = 0; InterfaceNumber < InterfaceCount; InterfaceNumber++)
     {
+        // init interface info
         InterfaceList[InterfaceNumber].Interface = InterfaceInfo;
-        InterfaceInfo->Length = sizeof(USBD_INTERFACE_INFORMATION) +
-                                ((InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION));
         InterfaceInfo->InterfaceNumber = InterfaceList[InterfaceNumber].InterfaceDescriptor->bInterfaceNumber;
         InterfaceInfo->AlternateSetting = InterfaceList[InterfaceNumber].InterfaceDescriptor->bAlternateSetting;
         InterfaceInfo->NumberOfPipes = InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints;
+
+        // store length
+        InterfaceInfo->Length = GET_USBD_INTERFACE_SIZE(InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints);
+
+        // sanity check
+        //C_ASSERT(FIELD_OFFSET(USBD_INTERFACE_INFORMATION, Pipes) == 16);
+
         for (EndPointNumber = 0; EndPointNumber < InterfaceInfo->NumberOfPipes; EndPointNumber++)
         {
+            // init max transfer size
             InterfaceInfo->Pipes[EndPointNumber].MaximumTransferSize = PAGE_SIZE;
         }
+
+        // next interface info
         InterfaceInfo = (PUSBD_INTERFACE_INFORMATION) ((ULONG_PTR)InterfaceInfo + InterfaceInfo->Length);
     }
 
@@ -410,16 +449,39 @@ USBD_ParseDescriptors(
     LONG  DescriptorType
     )
 {
-    PUSB_COMMON_DESCRIPTOR PComDes = StartPosition;
+    PUSB_COMMON_DESCRIPTOR CommonDescriptor;
 
-    while(PComDes)
+    /* use start position */
+    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)StartPosition;
+
+
+    /* find next available descriptor */
+    while(CommonDescriptor)
     {
-       if (PComDes >= (PUSB_COMMON_DESCRIPTOR)
-                            ((PLONG)DescriptorBuffer + TotalLength) ) break;
-       if (PComDes->bDescriptorType == DescriptorType) return PComDes;
-       if (PComDes->bLength == 0) break;
-       PComDes = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)PComDes + PComDes->bLength);
+       if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)DescriptorBuffer + TotalLength))
+       {
+           /* end reached */
+           DPRINT("End reached %p\n", CommonDescriptor);
+           return NULL;
+       }
+
+       DPRINT("CommonDescriptor Type %x Length %x\n", CommonDescriptor->bDescriptorType, CommonDescriptor->bLength);
+
+       /* is the requested one */
+       if (CommonDescriptor->bDescriptorType == DescriptorType)
+       {
+           /* it is */
+           return CommonDescriptor;
+       }
+
+       /* sanity check */
+       ASSERT(CommonDescriptor->bLength);
+
+       /* move to next descriptor */
+       CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
     }
+
+    /* no descriptor found */
     return NULL;
 }
 
@@ -438,45 +500,97 @@ USBD_ParseConfigurationDescriptorEx(
     LONG InterfaceProtocol
     )
 {
-    int x = 0;
-    PUSB_INTERFACE_DESCRIPTOR UsbInterfaceDesc = StartPosition;
+    BOOLEAN Found;
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
 
-    while(UsbInterfaceDesc)
+    /* set to start position */
+    InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)StartPosition;
+
+    DPRINT("USBD_ParseConfigurationDescriptorEx\n");
+    DPRINT("ConfigurationDescriptor %p Length %lu\n", ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength);
+    DPRINT("CurrentOffset %p Offset %lu\n", StartPosition, ((ULONG_PTR)StartPosition - (ULONG_PTR)ConfigurationDescriptor));
+
+    while(InterfaceDescriptor)
     {
-       UsbInterfaceDesc = (PUSB_INTERFACE_DESCRIPTOR)
-                           USBD_ParseDescriptors(ConfigurationDescriptor,
-                                        ConfigurationDescriptor->wTotalLength,
-                                        UsbInterfaceDesc,
-                                        USB_INTERFACE_DESCRIPTOR_TYPE);
+       /* get interface descriptor */
+       InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR) USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, InterfaceDescriptor, USB_INTERFACE_DESCRIPTOR_TYPE);
+       if (!InterfaceDescriptor)
+       {
+           /* no more descriptors available */
+           break;
+       }
 
-       if (!UsbInterfaceDesc) break;
+       DPRINT("InterfaceDescriptor %p InterfaceNumber %x AlternateSetting %x Length %lu\n", InterfaceDescriptor, InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting, InterfaceDescriptor->bLength);
 
+       /* set found */
+       Found = TRUE;
+
+       /* is there an interface number provided */
        if(InterfaceNumber != -1)
        {
-          if(InterfaceNumber != UsbInterfaceDesc->bInterfaceNumber) x = 1;
+          if(InterfaceNumber != InterfaceDescriptor->bInterfaceNumber)
+          {
+              /* interface number does not match */
+              Found = FALSE;
+          }
        }
+
+       /* is there an alternate setting provided */
        if(AlternateSetting != -1)
        {
-          if(AlternateSetting != UsbInterfaceDesc->bAlternateSetting) x = 1;
+          if(AlternateSetting != InterfaceDescriptor->bAlternateSetting)
+          {
+              /* alternate setting does not match */
+              Found = FALSE;
+          }
        }
+
+       /* match on interface class */
        if(InterfaceClass != -1)
        {
-          if(InterfaceClass != UsbInterfaceDesc->bInterfaceClass) x = 1;
+          if(InterfaceClass != InterfaceDescriptor->bInterfaceClass)
+          {
+              /* no match with interface class criteria */
+              Found = FALSE;
+          }
        }
+
+       /* match on interface sub class */
        if(InterfaceSubClass != -1)
        {
-          if(InterfaceSubClass != UsbInterfaceDesc->bInterfaceSubClass) x = 1;
+          if(InterfaceSubClass != InterfaceDescriptor->bInterfaceSubClass)
+          {
+              /* no interface sub class match */
+              Found = FALSE;
+          }
        }
+
+       /* interface protocol criteria */
        if(InterfaceProtocol != -1)
        {
-          if(InterfaceProtocol != UsbInterfaceDesc->bInterfaceProtocol) x = 1;
+          if(InterfaceProtocol != InterfaceDescriptor->bInterfaceProtocol)
+          {
+              /* no interface protocol match */
+              Found = FALSE;
+          }
        }
 
-       if (!x) return UsbInterfaceDesc;
+       if (Found)
+       {
+           /* the choosen one */
+           return InterfaceDescriptor;
+       }
 
-       if (UsbInterfaceDesc->bLength == 0) break;
-       UsbInterfaceDesc = UsbInterfaceDesc + UsbInterfaceDesc->bLength;
+       /* sanity check */
+       ASSERT(InterfaceDescriptor->bLength);
+
+       /* move to next descriptor */
+       InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
     }
+
+    DPRINT("No Descriptor With InterfaceNumber %ld AlternateSetting %ld InterfaceClass %ld InterfaceSubClass %ld InterfaceProtocol %ld found\n", InterfaceNumber,
+            AlternateSetting, InterfaceClass, InterfaceSubClass, InterfaceProtocol);
+
     return NULL;
 }
 
@@ -511,28 +625,58 @@ USBD_GetPdoRegistryParameter(
     NTSTATUS Status;
     HANDLE DevInstRegKey;
 
+    /* Open the device key */
     Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject,
-        PLUGPLAY_REGKEY_DRIVER, STANDARD_RIGHTS_ALL, &DevInstRegKey);
+        PLUGPLAY_REGKEY_DEVICE, STANDARD_RIGHTS_ALL, &DevInstRegKey);
     if (NT_SUCCESS(Status))
     {
-        PKEY_VALUE_FULL_INFORMATION FullInfo;
+        PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
         UNICODE_STRING ValueName;
         ULONG Length;
 
-        RtlInitUnicodeString(&ValueName, KeyName);
-        Length = ParameterLength + KeyNameLength + sizeof(KEY_VALUE_FULL_INFORMATION);
-        FullInfo = ExAllocatePool(PagedPool, Length);
-        if (FullInfo)
+        /* Initialize the unicode string based on caller data */
+        ValueName.Buffer = KeyName;
+        ValueName.Length = ValueName.MaximumLength = KeyNameLength;
+
+        Length = ParameterLength + sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+        PartialInfo = ExAllocatePool(PagedPool, Length);
+        if (PartialInfo)
         {
             Status = ZwQueryValueKey(DevInstRegKey, &ValueName,
-                KeyValueFullInformation, FullInfo, Length, &Length);
+                KeyValuePartialInformation, PartialInfo, Length, &Length);
+            if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                /* The caller doesn't want all the data */
+                ExFreePool(PartialInfo);
+                PartialInfo = ExAllocatePool(PagedPool, Length);
+                if (PartialInfo)
+                {
+                    Status = ZwQueryValueKey(DevInstRegKey, &ValueName,
+                       KeyValuePartialInformation, PartialInfo, Length, &Length);
+                }
+                else
+                {
+                    Status = STATUS_NO_MEMORY;
+                }
+            }
+
             if (NT_SUCCESS(Status))
             {
+                /* Compute the length to copy back */
+                if (ParameterLength < PartialInfo->DataLength)
+                    Length = ParameterLength;
+                else
+                    Length = PartialInfo->DataLength;
+
                 RtlCopyMemory(Parameter,
-                    ((PUCHAR)FullInfo) + FullInfo->DataOffset,
-                    ParameterLength /*FullInfo->DataLength*/);
+                              PartialInfo->Data,
+                              Length);
             }
-            ExFreePool(FullInfo);
+
+            if (PartialInfo)
+            {
+                ExFreePool(PartialInfo);
+            }
         } else
             Status = STATUS_NO_MEMORY;
         ZwClose(DevInstRegKey);

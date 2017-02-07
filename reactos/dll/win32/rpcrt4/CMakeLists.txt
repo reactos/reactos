@@ -1,4 +1,6 @@
 
+spec2def(rpcrt4.dll rpcrt4.spec ADD_IMPORTLIB)
+
 add_rpc_files(client epm.idl)
 
 list(APPEND SOURCE
@@ -17,7 +19,6 @@ list(APPEND SOURCE
     rpc_binding.c
     rpc_epmap.c
     rpc_message.c
-    rpcrt4.rc
     rpcrt4_main.c
     rpc_server.c
     rpc_transport.c
@@ -40,17 +41,20 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(rpcrt4.dll rpcrt4.spec)
+add_library(rpcrt4 SHARED
+    ${SOURCE}
+    rpcrt4.rc)
 
-add_library(rpcrt4 SHARED ${SOURCE})
 set_module_type(rpcrt4 win32dll)
 target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32)
 add_importlibs(rpcrt4 msvcrt advapi32 ws2_32 kernel32 ntdll)
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)
-add_importlib_target(rpcrt4.spec)
+
 
 if(NOT MSVC)
-    allow_warnings(rpcrt4)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(rpcrt4)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()

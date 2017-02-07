@@ -414,6 +414,12 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     return RootKey;
 }
 
+VOID
+PpcHwIdle(VOID)
+{
+    /* UNIMPLEMENTED */
+}
+
 /* Compatibility functions that don't do much */
 VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
 }
@@ -448,6 +454,7 @@ void PpcDefaultMachVtbl()
     MachVtbl.GetTime = PpcGetTime;
 
     MachVtbl.HwDetect = PpcHwDetect;
+    MachVtbl.HwIdle = PpcHwIdle;
 }
 
 void PpcOfwInit()

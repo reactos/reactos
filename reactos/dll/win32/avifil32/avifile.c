@@ -1339,7 +1339,7 @@ static HRESULT WINAPI IAVIStream_fnWriteData(IAVIStream *iface, DWORD fcc,
 
     /* ckid,size => 2 * sizeof(DWORD) */
     dwPos += 2 * sizeof(DWORD) + size;
-    if (size >= This->paf->dwMoviChunkPos - 2 * sizeof(DWORD))
+    if (dwPos >= This->paf->dwMoviChunkPos - 2 * sizeof(DWORD))
       return AVIERR_UNSUPPORTED; /* not enough space left */
   }
 
@@ -1746,10 +1746,10 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
 	case ckidSTREAMHEADER:
 	  {
 	    static const WCHAR streamTypeFmt[] = {'%','4','.','4','h','s',0};
+	    static const WCHAR streamNameFmt[] = {'%','s',' ','%','s',' ','#','%','d',0};
 
 	    AVIStreamHeader streamHdr;
 	    WCHAR           szType[25];
-	    WCHAR           streamNameFmt[25];
 	    UINT            count;
 	    LONG            n = ck.cksize;
 
@@ -1795,8 +1795,6 @@ static HRESULT AVIFILE_LoadFile(IAVIFileImpl *This)
 	    }
 
 	    memset(pStream->sInfo.szName, 0, sizeof(pStream->sInfo.szName));
-
-	    LoadStringW(AVIFILE_hModule, IDS_AVISTREAMFORMAT, streamNameFmt, sizeof(streamNameFmt)/sizeof(streamNameFmt[0]));
 
 	    /* FIXME: avoid overflow -- better use wsnprintfW, which doesn't exists ! */
 	    wsprintfW(pStream->sInfo.szName, streamNameFmt,

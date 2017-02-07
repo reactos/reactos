@@ -34,7 +34,7 @@ WMIGUIDREGINFO FreeBTWmiGuidList[1] =
 
 };
 
-NTSTATUS FreeBT_WmiRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension)
+NTSTATUS NTAPI FreeBT_WmiRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS ntStatus;
 
@@ -56,14 +56,14 @@ NTSTATUS FreeBT_WmiRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension)
 
 }
 
-NTSTATUS FreeBT_WmiDeRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension)
+NTSTATUS NTAPI FreeBT_WmiDeRegistration(IN OUT PDEVICE_EXTENSION DeviceExtension)
 {
     PAGED_CODE();
     return IoWMIRegistrationControl(DeviceExtension->FunctionalDeviceObject, WMIREG_ACTION_DEREGISTER);
 
 }
 
-NTSTATUS FreeBT_DispatchSysCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchSysCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PDEVICE_EXTENSION       deviceExtension;
     SYSCTL_IRP_DISPOSITION  disposition;
@@ -144,7 +144,7 @@ NTSTATUS FreeBT_DispatchSysCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS FreeBT_QueryWmiRegInfo(
+NTSTATUS NTAPI FreeBT_QueryWmiRegInfo(
     IN  PDEVICE_OBJECT  DeviceObject,
     OUT ULONG           *RegFlags,
     OUT PUNICODE_STRING InstanceName,
@@ -214,7 +214,7 @@ Return Value:
 
 }
 
-NTSTATUS FreeBT_QueryWmiDataBlock(
+NTSTATUS NTAPI FreeBT_QueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -324,7 +324,7 @@ Return Value:
 }
 
 
-NTSTATUS FreeBT_SetWmiDataItem(
+NTSTATUS NTAPI FreeBT_SetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -424,7 +424,7 @@ Return Value:
 
 }
 
-NTSTATUS FreeBT_SetWmiDataBlock(
+NTSTATUS NTAPI FreeBT_SetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP           Irp,
     IN ULONG          GuidIndex,
@@ -506,7 +506,7 @@ Arguments:
 
 }
 
-PCHAR WMIMinorFunctionString(UCHAR MinorFunction)
+PCHAR NTAPI WMIMinorFunctionString(UCHAR MinorFunction)
 {
     switch (MinorFunction)
 	{

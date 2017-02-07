@@ -1,6 +1,7 @@
 /*
- * Copyright 2002 Michael G¸nnewig
- * Copyright 2004 Piotr Caban
+ * Top level resource file for avifil32.dll
+ *
+ * Copyright 2002 Michael G√ºnnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,33 +22,32 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
+STRINGTABLE
+{
+  IDS_WAVESTREAMFORMAT	"Kszta≈Çt fali: %s"
+  IDS_WAVEFILETYPE	"Kszta≈Çt fali"
+  IDS_ALLMULTIMEDIA	"Wszystkie pliki multimedialne"
+  IDS_ALLFILES		"Wszystkie pliki (*.*)"
+  IDS_VIDEO		"obraz"
+  IDS_AUDIO		"d≈∫wiƒôk"
+  IDS_AVIFILETYPE	"Wine AVI-domy≈õlna-obs≈Çuga-pliku"
+  IDS_UNCOMPRESSED      "nie skompresowany"
+}
+
 IDD_SAVEOPTIONS DIALOG  43, 37, 226, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Opcje kompresji"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Wybierz strumieÒ:",-1,2,5,154,10
-    COMBOBOX        IDC_STREAM,2,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+    LTEXT           "&Wybierz strumie≈Ñ:",-1,5,5,154,10
+    COMBOBOX        IDC_STREAM,5,18,154,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
     PUSHBUTTON      "&Opcje...",IDC_OPTIONS,170,17,50,14
-    AUTOCHECKBOX    "&Przeplot co",IDC_INTERLEAVE,3,42,85,11,WS_TABSTOP
+    AUTOCHECKBOX    "&Przeplot co",IDC_INTERLEAVE,5,42,85,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,91,41,32,12,ES_AUTOHSCROLL
     LTEXT           "klatek",-1,129,43,36,9
-    LTEXT           "Wybrany format:",-1,2,56,73,9
-    LTEXT           "Zarezerwowane miejsce",IDC_FORMATTEXT,75,56,90,26
+    LTEXT           "Wybrany format:",-1,5,56,73,9
+    LTEXT           "",IDC_FORMATTEXT,80,56,88,26
     DEFPUSHBUTTON   "OK",IDOK,170,42,50,14
     PUSHBUTTON      "Anuluj",IDCANCEL,170,61,50,14
 END
-
-STRINGTABLE
-{
-  IDS_WAVESTREAMFORMAT	"Waveform: %s"
-  IDS_WAVEFILETYPE	"Waveform"
-  IDS_ALLMULTIMEDIA	"Wszystkie pliki multimedialne"
-  IDS_ALLFILES		"Wszystkie pliki (*.*)@*.*"
-  IDS_VIDEO		"obraz"
-  IDS_AUDIO		"düwiÍk"
-  IDS_AVISTREAMFORMAT	"%s %s #%d"
-  IDS_AVIFILETYPE	"Wine AVI-domyúlna-obs≥uga-pliku"
-  IDS_UNCOMPRESSED      "nie skompresowany"
-}

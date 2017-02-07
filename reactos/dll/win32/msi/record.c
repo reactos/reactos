@@ -494,6 +494,7 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
     case MSIFIELD_NULL:
         if( szValue && *pcchValue > 0 )
             szValue[0] = 0;
+        break;
     default:
         break;
     }
@@ -833,7 +834,7 @@ UINT MSI_RecordReadStream(MSIRECORD *rec, UINT iField, char *buf, LPDWORD sz)
 
         ofs.QuadPart = cur.QuadPart = 0;
         end.QuadPart = 0;
-        r = IStream_Seek( stm, ofs, STREAM_SEEK_SET, &cur );
+        IStream_Seek( stm, ofs, STREAM_SEEK_SET, &cur );
         IStream_Seek( stm, ofs, STREAM_SEEK_END, &end );
         ofs.QuadPart = cur.QuadPart;
         IStream_Seek( stm, ofs, STREAM_SEEK_SET, &cur );
@@ -994,6 +995,34 @@ MSIRECORD *MSI_CloneRecord(MSIRECORD *rec)
     return clone;
 }
 
+BOOL MSI_RecordsAreFieldsEqual(MSIRECORD *a, MSIRECORD *b, UINT field)
+{
+    if (a->fields[field].type != b->fields[field].type)
+        return FALSE;
+
+    switch (a->fields[field].type)
+    {
+        case MSIFIELD_NULL:
+            break;
+
+        case MSIFIELD_INT:
+            if (a->fields[field].u.iVal != b->fields[field].u.iVal)
+                return FALSE;
+            break;
+
+        case MSIFIELD_WSTR:
+            if (strcmpW(a->fields[field].u.szwVal, b->fields[field].u.szwVal))
+                return FALSE;
+            break;
+
+        case MSIFIELD_STREAM:
+        default:
+            return FALSE;
+    }
+    return TRUE;
+}
+
+
 BOOL MSI_RecordsAreEqual(MSIRECORD *a, MSIRECORD *b)
 {
     UINT i;
@@ -1003,29 +1032,35 @@ BOOL MSI_RecordsAreEqual(MSIRECORD *a, MSIRECORD *b)
 
     for (i = 0; i <= a->count; i++)
     {
-        if (a->fields[i].type != b->fields[i].type)
+        if (!MSI_RecordsAreFieldsEqual( a, b, i ))
             return FALSE;
-
-        switch (a->fields[i].type)
-        {
-            case MSIFIELD_NULL:
-                break;
-
-            case MSIFIELD_INT:
-                if (a->fields[i].u.iVal != b->fields[i].u.iVal)
-                    return FALSE;
-                break;
-
-            case MSIFIELD_WSTR:
-                if (strcmpW(a->fields[i].u.szwVal, b->fields[i].u.szwVal))
-                    return FALSE;
-                break;
-
-            case MSIFIELD_STREAM:
-            default:
-                return FALSE;
-        }
     }
 
     return TRUE;
+}
+
+WCHAR *msi_dup_record_field( MSIRECORD *rec, INT field )
+{
+    DWORD sz = 0;
+    WCHAR *str;
+    UINT r;
+
+    if (MSI_RecordIsNull( rec, field )) return NULL;
+
+    r = MSI_RecordGetStringW( rec, field, NULL, &sz );
+    if (r != ERROR_SUCCESS)
+        return NULL;
+
+    sz++;
+    str = msi_alloc( sz * sizeof(WCHAR) );
+    if (!str) return NULL;
+    str[0] = 0;
+    r = MSI_RecordGetStringW( rec, field, str, &sz );
+    if (r != ERROR_SUCCESS)
+    {
+        ERR("failed to get string!\n");
+        msi_free( str );
+        return NULL;
+    }
+    return str;
 }

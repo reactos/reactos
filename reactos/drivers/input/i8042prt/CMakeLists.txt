@@ -11,7 +11,6 @@ add_library(i8042prt SHARED
     ps2pp.c
     readwrite.c
     registry.c
-    setup.c
     i8042prt.rc)
 
 set_module_type(i8042prt kernelmodedriver)

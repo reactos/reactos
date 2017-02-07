@@ -49,7 +49,7 @@ STRING_NO_VOLUME         "Nu se poate accesa volumul"
 
 STRING_NO_VOLUME_SIZE    "Nu se poate accesa dimensiunea volumului"
 
-STRING_FILESYSTEM        "Tipul sistemului de fișiere este „%s”.\n"
+STRING_FILESYSTEM        "Tipul sistemului de fișiere este «%s».\n"
 
 STRING_LABEL_NAME_EDIT  "Introduceți eticheta curentă a volumului pentru unitatea %C: "
 

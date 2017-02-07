@@ -13,14 +13,29 @@ IDI_701    ICON "res/701.ico"
 IDI_702    ICON "res/702.ico"
 IDI_703    ICON "res/703.ico"
 
-#include "lang/de-DE.rc"
-#include "lang/en-US.rc"
-#include "lang/es-ES.rc"
-#include "lang/no-NO.rc"
-
 // UTF-8
 #pragma code_page(65001)
-#include "lang/pl-PL.rc"
-#include "lang/ro-RO.rc"
-#include "lang/ru-RU.rc"
-#include "lang/uk-UA.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_NB_NO
+    #include "lang/no-NO.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/uk-UA.rc"
+#endif

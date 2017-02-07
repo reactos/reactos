@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_profile
 {
-    const INetFwProfileVtbl *vtbl;
+    INetFwProfile INetFwProfile_iface;
     LONG refs;
 } fw_profile;
 
 static inline fw_profile *impl_from_INetFwProfile( INetFwProfile *iface )
 {
-    return (fw_profile *)((char *)iface - FIELD_OFFSET( fw_profile, vtbl ));
+    return CONTAINING_RECORD(iface, fw_profile, INetFwProfile_iface);
 }
 
 static ULONG WINAPI fw_profile_AddRef(
@@ -319,10 +319,10 @@ HRESULT NetFwProfile_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_profile_vtbl;
+    fp->INetFwProfile_iface.lpVtbl = &fw_profile_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwProfile_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

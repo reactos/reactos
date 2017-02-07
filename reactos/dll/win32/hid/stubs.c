@@ -15,63 +15,6 @@
  * @unimplemented
  */
 HIDAPI
-BOOLEAN WINAPI
-HidD_GetConfiguration(IN HANDLE HidDeviceObject,
-                      OUT PHIDD_CONFIGURATION Configuration,
-                      IN ULONG ConfigurationLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN WINAPI
-HidD_GetIndexedString(IN HANDLE HidDeviceObject,
-                      IN ULONG StringIndex,
-                      OUT PVOID Buffer,
-                      IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN WINAPI
-HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
-                          OUT PVOID Buffer,
-                          IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN WINAPI
-HidD_SetConfiguration(IN HANDLE HidDeviceObject,
-                      IN PHIDD_CONFIGURATION Configuration,
-                      IN ULONG ConfigurationLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
 NTSTATUS WINAPI
 HidP_GetCaps(IN PHIDP_PREPARSED_DATA PreparsedData,
              OUT PHIDP_CAPS Capabilities)
@@ -235,24 +178,6 @@ HidP_GetUsages(IN HIDP_REPORT_TYPE ReportType,
                IN PHIDP_PREPARSED_DATA PreparsedData,
                IN PCHAR Report,
                IN ULONG ReportLength)
-{
-  UNIMPLEMENTED;
-  return HIDP_STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-NTSTATUS WINAPI
-HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
-                 IN USHORT LinkCollection,
-                 OUT PUSAGE_AND_PAGE ButtonList,
-                 IN OUT ULONG *UsageLength,
-                 IN PHIDP_PREPARSED_DATA PreparsedData,
-                 IN PCHAR Report,
-                 IN ULONG ReportLength)
 {
   UNIMPLEMENTED;
   return HIDP_STATUS_NOT_IMPLEMENTED;

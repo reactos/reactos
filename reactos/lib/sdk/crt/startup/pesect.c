@@ -10,8 +10,8 @@
 #if defined (_WIN64) && defined (__ia64__)
 #error FIXME: Unsupported __ImageBase implementation.
 #else
+#ifdef __GNUC__
 /* Hack, for bug in ld.  Will be removed soon.  */
-#ifndef _MSC_VER
 #define __ImageBase __MINGW_LSYMBOL(_image_base__)
 #endif
 /* This symbol is defined by the linker.  */
@@ -183,4 +183,76 @@ _IsNonwritableInCurrentImage (PBYTE pTarget)
   if (pSection == NULL)
     return FALSE;
   return (pSection->Characteristics & IMAGE_SCN_MEM_WRITE) == 0;
+}
+
+const char *
+__mingw_enum_import_library_names (int);
+
+const char *
+__mingw_enum_import_library_names (int i)
+{
+  PBYTE pImageBase;
+  PIMAGE_NT_HEADERS pNTHeader;
+  PIMAGE_IMPORT_DESCRIPTOR importDesc;
+  PIMAGE_SECTION_HEADER pSection;
+  DWORD importsStartRVA;
+
+  pImageBase = (PBYTE) &__ImageBase;
+  if (! _ValidateImageBase (pImageBase))
+    return NULL;
+
+  pNTHeader = (PIMAGE_NT_HEADERS) (pImageBase + ((PIMAGE_DOS_HEADER) pImageBase)->e_lfanew);
+  
+  importsStartRVA = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
+  if (!importsStartRVA)
+    return NULL;
+
+  pSection = _FindPESection (pImageBase, importsStartRVA);
+  if (!pSection)
+      return NULL;
+
+  importDesc = (PIMAGE_IMPORT_DESCRIPTOR) (pImageBase + importsStartRVA);
+  if (!importDesc)
+    return NULL;
+            
+  for (;;)
+    {
+      if (importDesc->TimeDateStamp == 0 && importDesc->Name == 0)
+        break;
+
+      if (i <= 0)
+       return (char *) (pImageBase + importDesc->Name);
+      --i;
+      importDesc++;
+    }
+
+  return NULL;
+}
+
+HMODULE __mingw_get_msvcrt_handle(void);
+HMODULE __mingw_get_msvcrt_handle(void)
+{
+    static HANDLE msvcrt_handle;
+
+    if(!msvcrt_handle) {
+        const char *lib_name;
+        int i = 0;
+
+        while ((lib_name = __mingw_enum_import_library_names (i++))) {
+            if((lib_name[0] == 'm' || lib_name[0] == 'M')
+               && (lib_name[1] == 's' || lib_name[1] == 'S')
+               && (lib_name[2] == 'v' || lib_name[2] == 'V')
+               && (lib_name[3] == 'c' || lib_name[3] == 'C')
+               && (lib_name[4] == 'r' || lib_name[4] == 'R')
+               && (lib_name[5] == 't' || lib_name[5] == 'T' || ('0' <= lib_name[5] && lib_name[5] <= '9')))
+                break;
+        }
+
+       if(lib_name)
+            msvcrt_handle = GetModuleHandleA(lib_name);
+        if(!msvcrt_handle)
+            msvcrt_handle = LoadLibraryW(L"msvcrt.dll");
+    }
+
+    return msvcrt_handle;
 }

@@ -87,28 +87,28 @@ struct transform
     cmsHTRANSFORM cmstransform;
 };
 
-extern HPROFILE create_profile( struct profile * );
-extern BOOL close_profile( HPROFILE );
+extern HPROFILE create_profile( struct profile * ) DECLSPEC_HIDDEN;
+extern BOOL close_profile( HPROFILE ) DECLSPEC_HIDDEN;
 
-extern HTRANSFORM create_transform( struct transform * );
-extern BOOL close_transform( HTRANSFORM );
+extern HTRANSFORM create_transform( struct transform * ) DECLSPEC_HIDDEN;
+extern BOOL close_transform( HTRANSFORM ) DECLSPEC_HIDDEN;
 
-struct profile *grab_profile( HPROFILE );
-struct transform *grab_transform( HTRANSFORM );
+struct profile *grab_profile( HPROFILE ) DECLSPEC_HIDDEN;
+struct transform *grab_transform( HTRANSFORM ) DECLSPEC_HIDDEN;
 
-void release_profile( struct profile * );
-void release_transform( struct transform * );
+void release_profile( struct profile * ) DECLSPEC_HIDDEN;
+void release_transform( struct transform * ) DECLSPEC_HIDDEN;
 
-extern void free_handle_tables( void );
+extern void free_handle_tables( void ) DECLSPEC_HIDDEN;
 
-extern DWORD MSCMS_get_tag_count( const icProfile *iccprofile );
-extern void MSCMS_get_tag_by_index( icProfile *iccprofile, DWORD index, icTag *tag );
-extern void MSCMS_get_tag_data( const icProfile *iccprofile, const icTag *tag, DWORD offset, void *buffer );
-extern void MSCMS_set_tag_data( icProfile *iccprofile, const icTag *tag, DWORD offset, const void *buffer );
-extern void MSCMS_get_profile_header( const icProfile *iccprofile, PROFILEHEADER *header );
-extern void MSCMS_set_profile_header( icProfile *iccprofile, const PROFILEHEADER *header );
-extern DWORD MSCMS_get_profile_size( const icProfile *iccprofile );
-
-extern const char *MSCMS_dbgstr_tag(DWORD);
+extern DWORD MSCMS_get_tag_count( const icProfile *iccprofile ) DECLSPEC_HIDDEN;
+extern void MSCMS_get_tag_by_index( icProfile *iccprofile, DWORD index, icTag *tag ) DECLSPEC_HIDDEN;
+extern void MSCMS_get_tag_data( const icProfile *iccprofile, const icTag *tag, DWORD offset, void *buffer ) DECLSPEC_HIDDEN;
+extern void MSCMS_set_tag_data( icProfile *iccprofile, const icTag *tag, DWORD offset, const void *buffer ) DECLSPEC_HIDDEN;
+extern void MSCMS_get_profile_header( const icProfile *iccprofile, PROFILEHEADER *header ) DECLSPEC_HIDDEN;
+extern void MSCMS_set_profile_header( icProfile *iccprofile, const PROFILEHEADER *header ) DECLSPEC_HIDDEN;
+extern DWORD MSCMS_get_profile_size( const icProfile *iccprofile ) DECLSPEC_HIDDEN;
 
 #endif /* HAVE_LCMS */
+
+extern const char *MSCMS_dbgstr_tag(DWORD) DECLSPEC_HIDDEN;

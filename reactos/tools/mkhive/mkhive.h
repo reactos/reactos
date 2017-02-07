@@ -47,6 +47,11 @@ unsigned char BitScanForward(ULONG * Index, unsigned long Mask);
 unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask);
 #define RtlFillMemoryUlong(dst, len, val) memset(dst, val, len)
 
+#ifdef _M_AMD64
+#define BitScanForward64 _BitScanForward64
+#define BitScanReverse64 _BitScanReverse64
+#endif
+
 NTSTATUS NTAPI
 RtlAnsiStringToUnicodeString(
     IN OUT PUNICODE_STRING UniDest,

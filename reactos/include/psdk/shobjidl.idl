@@ -3601,6 +3601,99 @@ interface INameSpaceTreeControlEvents : IUnknown
         [out] int *piDefaultIcon,
         [out] int *piOpenIcon);
 }
+
+/*****************************************************************************
+ * INameSpaceTreeControlCustomDraw interface
+ */
+[
+ object,
+ uuid(2D3BA758-33EE-42D5-BB7B-5F3431D86C78),
+ local
+]
+
+interface INameSpaceTreeControlCustomDraw : IUnknown
+{
+    typedef struct NSTCCUSTOMDRAW
+    {
+        IShellItem *psi;
+        UINT uItemState;
+        NSTCITEMSTATE nstcis;
+        LPCWSTR pszText;
+        int iImage;
+        HIMAGELIST himl;
+        int iLevel;
+        int iIndent;
+    } NSTCCUSTOMDRAW;
+
+    HRESULT PrePaint(
+        [in] HDC hdc,
+        [in] RECT *prc,
+        [out] LRESULT *plres);
+
+    HRESULT PostPaint(
+        [in] HDC hdc,
+        [in] RECT *prc);
+
+    HRESULT ItemPrePaint(
+        [in] HDC hdc,
+        [in] RECT *prc,
+        [in, out] COLORREF *pclrText,
+        [in, out] COLORREF *pclrTextBk,
+        [out] LRESULT *plres);
+
+    HRESULT ItemPostPaint(
+        [in] HDC hdc,
+        [in] RECT *prc,
+        [in] NSTCCUSTOMDRAW *pnstccdItem);
+}
+
+/*****************************************************************************
+ * INameSpaceTreeControlDropHandler interface
+ */
+[
+ object,
+ uuid(F9C665D6-C2F2-4C19-BF33-8322D7352F51),
+ local
+]
+interface INameSpaceTreeControlDropHandler : IUnknown
+{
+    HRESULT OnDragEnter(
+        [in, unique] IShellItem *psiOver,
+        [in] IShellItemArray *psiaData,
+        [in] BOOL fOutsideSource,
+        [in] DWORD grfKeyState,
+        [in, out] DWORD *pdwEffect);
+
+    HRESULT OnDragOver(
+        [in, unique] IShellItem *psiOver,
+        [in] IShellItemArray *psiaData,
+        [in] DWORD grfKeyState,
+        [in, out] DWORD *pdwEffect);
+
+    HRESULT OnDragPosition(
+        [in, unique] IShellItem *psiOver,
+        [in] IShellItemArray *psiaData,
+        [in] int iNewPosition,
+        [in] int iOldPosition);
+
+    HRESULT OnDrop(
+        [in, unique] IShellItem *psiOver,
+        [in] IShellItemArray *psiaData,
+        [in] int iPosition,
+        [in] DWORD grfKeyState,
+        [in, out] DWORD *pdwEffect);
+
+    HRESULT OnDropPosition(
+        [in, unique] IShellItem *psiOver,
+        [in] IShellItemArray *psiaData,
+        [in] int iNewPosition,
+        [in] int iOldPosition);
+
+    HRESULT OnDragLeave(
+        [in, unique] IShellItem *psiOver);
+}
+cpp_quote("#define NSTCDHPOS_ONTOP -1")
+
 interface IFileDialog;
 
 typedef [v1_enum] enum FDE_OVERWRITE_RESPONSE
@@ -3666,7 +3759,7 @@ interface IModalWindow : IUnknown
 {
     [local]
     HRESULT Show(
-        [in, unique] HWND hwndOwner);
+        [in, unique, annotation("__in_opt")] HWND hwndOwner);
 
     [call_as(Show)]
     HRESULT RemoteShow(
@@ -3940,6 +4033,159 @@ interface IFileOpenDialog : IFileDialog
 
     HRESULT GetSelectedItems(
         [out] IShellItemArray **ppsai);
+}
+
+typedef [v1_enum] enum CDCONTROLSTATEF
+{
+    CDCS_INACTIVE       = 0x0,
+    CDCS_ENABLED        = 0x1,
+    CDCS_VISIBLE        = 0x2,
+    CDCS_ENABLEDVISIBLE = 0x3
+} CDCONTROLSTATEF;
+cpp_quote("DEFINE_ENUM_FLAG_OPERATORS(CDCONTROLSTATEF)")
+/*****************************************************************************
+ * IFileDialogCustomize interface
+ */
+[
+ object,
+ uuid(E6FDD21A-163F-4975-9C8C-A69F1BA37034),
+ pointer_default(unique)
+]
+interface IFileDialogCustomize : IUnknown
+{
+    HRESULT EnableOpenDropDown(
+        [in] DWORD dwIDCtl);
+
+    HRESULT AddMenu(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszLabel);
+
+    HRESULT AddPushButton(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszLabel);
+
+    HRESULT AddComboBox(
+        [in] DWORD dwIDCtl);
+
+    HRESULT AddRadioButtonList(
+        [in] DWORD dwIDCtl);
+
+    HRESULT AddCheckButton(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszLabel,
+        [in] BOOL bChecked);
+
+    HRESULT AddEditBox(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszText);
+
+    HRESULT AddSeparator(
+        [in] DWORD dwIDCtl);
+
+    HRESULT AddText(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszText);
+
+    HRESULT SetControlLabel(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszLabel);
+
+    HRESULT GetControlState(
+        [in] DWORD dwIDCtl,
+        [out] CDCONTROLSTATEF *pdwState);
+
+    HRESULT SetControlState(
+        [in] DWORD dwIDCtl,
+        [in] CDCONTROLSTATEF dwState);
+
+    HRESULT GetEditBoxText(
+        [in] DWORD dwIDCtl,
+        [out, string] WCHAR **ppszText);
+
+    HRESULT SetEditBoxText(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszText);
+
+    HRESULT GetCheckButtonState(
+        [in] DWORD dwIDCtl,
+        [out] BOOL *pbChecked);
+
+    HRESULT SetCheckButtonState(
+        [in] DWORD dwIDCtl,
+        [in] BOOL bChecked);
+
+    HRESULT AddControlItem(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem,
+        [in] LPCWSTR pszLabel);
+
+    HRESULT RemoveControlItem(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem);
+
+    HRESULT RemoveAllControlItems(
+        [in] DWORD dwIDCtl);
+
+    HRESULT GetControlItemState(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem,
+        [out] CDCONTROLSTATEF *pdwState);
+
+    HRESULT SetControlItemState(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem,
+        [in] CDCONTROLSTATEF dwState);
+
+    HRESULT GetSelectedControlItem(
+        [in] DWORD dwIDCtl,
+        [out] DWORD *pdwIDItem);
+
+    HRESULT SetSelectedControlItem(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem);
+
+    HRESULT StartVisualGroup(
+        [in] DWORD dwIDCtl,
+        [in, string] LPCWSTR pszLabel);
+
+    HRESULT EndVisualGroup();
+
+    HRESULT MakeProminent(
+        [in] DWORD dwIDCtl);
+
+    HRESULT SetControlItemText(
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem,
+        [in, string] LPCWSTR pszLabel);
+}
+
+/*****************************************************************************
+ * IFileDialogControlEvents interface
+ */
+[
+ object,
+ uuid(36116642-D713-4B97-9B83-7484A9D00433),
+ pointer_default(unique)
+]
+interface IFileDialogControlEvents : IUnknown
+{
+    HRESULT OnItemSelected(
+        [in] IFileDialogCustomize *pfdc,
+        [in] DWORD dwIDCtl,
+        [in] DWORD dwIDItem);
+
+    HRESULT OnButtonClicked(
+        [in] IFileDialogCustomize *pfdc,
+        [in] DWORD dwIDCtl);
+
+    HRESULT OnCheckButtonToggled(
+        [in] IFileDialogCustomize *pfdc,
+        [in] BOOL dwIDCtl,
+        [in] BOOL bChecked);
+
+    HRESULT OnControlActivating(
+        [in] IFileDialogCustomize *pfdc,
+        [in] DWORD dwIDCtl);
 }
 
 typedef [v1_enum] enum tagKF_CATEGORY
@@ -4277,5 +4523,4 @@ library ShellObjects
     coclass DestinationList {
         interface ICustomDestinationList;
     }
-
 }

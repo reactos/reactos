@@ -12,31 +12,33 @@
 typedef PVOID PUSB_DEVICE_HANDLE;
 #endif
 
+_Must_inspect_result_
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_SUBMIT_ISO_OUT_URB) (
-  IN PVOID,
-  IN PURB);
+  _In_ PVOID,
+  _In_ PURB);
 
 #define USB_HCD_CAPS_SUPPORTS_RT_THREADS    0x00000001
 
 typedef VOID
 (USB_BUSIFFN *PUSB_BUSIFFN_GETUSBDI_VERSION) (
-  IN PVOID,
-  OUT PUSBD_VERSION_INFORMATION OPTIONAL,
-  OUT PULONG OPTIONAL);
+  _In_ PVOID,
+  _Out_opt_ PUSBD_VERSION_INFORMATION,
+  _Out_opt_ PULONG);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_TIME) (
-  IN PVOID,
-  OUT PULONG OPTIONAL);
+  _In_ PVOID,
+  _Out_opt_ PULONG);
 
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_ENUM_LOG_ENTRY) (
-  IN PVOID,
-  IN ULONG,
-  IN ULONG,
-  IN ULONG,
-  IN ULONG);
+  _In_ PVOID,
+  _In_ ULONG,
+  _In_ ULONG,
+  _In_ ULONG,
+  _In_ ULONG);
 
 typedef struct _USB_BUS_INFORMATION_LEVEL_0 {
   ULONG TotalBandwidth;
@@ -50,17 +52,19 @@ typedef struct _USB_BUS_INFORMATION_LEVEL_1 {
   WCHAR ControllerNameUnicodeString[1];
 } USB_BUS_INFORMATION_LEVEL_1, *PUSB_BUS_INFORMATION_LEVEL_1;
 
+_Must_inspect_result_
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_INFORMATION) (
-  IN PVOID,
-  IN ULONG,
-  IN OUT PVOID,
-  OUT PULONG,
-  OUT PULONG OPTIONAL);
+  _In_ PVOID,
+  _In_ ULONG,
+  _Inout_ PVOID,
+  _Out_ PULONG,
+  _Out_opt_ PULONG);
 
+_Must_inspect_result_
 typedef BOOLEAN
 (USB_BUSIFFN *PUSB_BUSIFFN_IS_DEVICE_HIGH_SPEED) (
-  IN PVOID OPTIONAL);
+  _In_opt_ PVOID);
 
 #define USB_BUSIF_USBDI_VERSION_0         0x0000
 #define USB_BUSIF_USBDI_VERSION_1         0x0001
@@ -113,21 +117,23 @@ typedef struct _USB_BUS_INTERFACE_USBDI_V2 {
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_Must_inspect_result_
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_BUS_TIME_EX) (
-  IN PVOID OPTIONAL,
-  OUT PULONG OPTIONAL);
+  _In_opt_ PVOID,
+  _Out_opt_ PULONG);
 
+_Must_inspect_result_
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_QUERY_CONTROLLER_TYPE) (
-  IN PVOID OPTIONAL,
-  OUT PULONG OPTIONAL,
-  OUT PUSHORT OPTIONAL,
-  OUT PUSHORT OPTIONAL,
-  OUT PUCHAR OPTIONAL,
-  OUT PUCHAR OPTIONAL,
-  OUT PUCHAR OPTIONAL,
-  OUT PUCHAR OPTIONAL);
+  _In_opt_ PVOID,
+  _Out_opt_ PULONG,
+  _Out_opt_ PUSHORT,
+  _Out_opt_ PUSHORT,
+  _Out_opt_ PUCHAR,
+  _Out_opt_ PUCHAR,
+  _Out_opt_ PUCHAR,
+  _Out_opt_ PUCHAR);
 
 typedef struct _USB_BUS_INTERFACE_USBDI_V3 {
   USHORT Size;
@@ -161,25 +167,26 @@ typedef struct _USBC_FUNCTION_DESCRIPTOR{
   PVOID Reserved;
 } USBC_FUNCTION_DESCRIPTOR, *PUSBC_FUNCTION_DESCRIPTOR;
 
-typedef
-NTSTATUS
+_Must_inspect_result_
+typedef NTSTATUS
 (USB_BUSIFFN *USBC_START_DEVICE_CALLBACK)(
-  IN PUSB_DEVICE_DESCRIPTOR DeviceDescriptor,
-  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-  OUT PUSBC_FUNCTION_DESCRIPTOR *FunctionDescriptorBuffer,
-  OUT PULONG FunctionDescriptorBufferLength,
-  IN PDEVICE_OBJECT FdoDeviceObject,
-  IN PDEVICE_OBJECT PdoDeviceObject);
+  _In_ PUSB_DEVICE_DESCRIPTOR DeviceDescriptor,
+  _In_ PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  _Outptr_result_bytebuffer_maybenull_(*FunctionDescriptorBufferLength)
+    PUSBC_FUNCTION_DESCRIPTOR *FunctionDescriptorBuffer,
+  _Out_ PULONG FunctionDescriptorBufferLength,
+  _In_ PDEVICE_OBJECT FdoDeviceObject,
+  _In_ PDEVICE_OBJECT PdoDeviceObject);
 
-typedef
-BOOLEAN
+_Must_inspect_result_
+typedef BOOLEAN
 (USB_BUSIFFN *USBC_PDO_ENABLE_CALLBACK)(
-  IN PVOID  Context,
-  IN USHORT FirstInterfaceNumber,
-  IN USHORT NumberOfInterfaces,
-  IN UCHAR  FunctionClass,
-  IN UCHAR  FunctionSubClass,
-  IN UCHAR  FunctionProtocol);
+  _In_ PVOID Context,
+  _In_ USHORT FirstInterfaceNumber,
+  _In_ USHORT NumberOfInterfaces,
+  _In_ UCHAR FunctionClass,
+  _In_ UCHAR FunctionSubClass,
+  _In_ UCHAR FunctionProtocol);
 
 #define USBC_DEVICE_CONFIGURATION_INTERFACE_VERSION_1         0x0001
 
@@ -190,7 +197,7 @@ typedef struct _USBC_DEVICE_CONFIGURATION_INTERFACE_V1 {
   PINTERFACE_REFERENCE InterfaceReference;
   PINTERFACE_DEREFERENCE InterfaceDereference;
   USBC_START_DEVICE_CALLBACK StartDeviceCallback;
-  USBC_PDO_ENABLE_CALLBACK   PdoEnableCallback;
+  USBC_PDO_ENABLE_CALLBACK PdoEnableCallback;
   PVOID Reserved[7];
 } USBC_DEVICE_CONFIGURATION_INTERFACE_V1, *PUSBC_DEVICE_CONFIGURATION_INTERFACE_V1;
 

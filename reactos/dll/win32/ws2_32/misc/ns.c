@@ -518,20 +518,18 @@ void check_hostent(struct hostent **he)
                            sizeof(struct hostent) + MAX_HOSTNAME_LEN + 1);
 
         new_he->h_name = (PCHAR)(new_he + 1);
-        new_he->h_aliases = 0;
+        new_he->h_aliases = NULL;
         new_he->h_addrtype = 0; // AF_INET
         new_he->h_length = 0;   // sizeof(in_addr)
         new_he->h_addr_list = HeapAlloc(GlobalHeap,
-                                        0,
+                                        HEAP_ZERO_MEMORY,
                                         sizeof(char *) * 2);
 
-        RtlZeroMemory(new_he->h_addr_list,
-                      sizeof(char *) * 2);
         *he = new_he;
     }
 }
 
-void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
+void populate_hostent(struct hostent *he, char* name, IP4_ADDRESS addr)
 {
     ASSERT(he);
 
@@ -544,7 +542,7 @@ void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
 
     if( !he->h_aliases ) {
        he->h_aliases = HeapAlloc(GlobalHeap, 0, sizeof(char *));
-       he->h_aliases[0] = 0;
+       he->h_aliases[0] = NULL;
     }
     he->h_addrtype = AF_INET;
     he->h_length = sizeof(IN_ADDR); //sizeof(struct in_addr);
@@ -563,33 +561,33 @@ void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
     WS_DbgPrint(MID_TRACE,("he->h_addr_list[0] %x\n", he->h_addr_list[0]));
 
     RtlCopyMemory(he->h_addr_list[0],
-                  (char*)&addr.IpAddress,
-                  sizeof(addr.IpAddress));
+                  &addr,
+                  sizeof(addr));
 
-    he->h_addr_list[1] = 0;
+    he->h_addr_list[1] = NULL;
 }
 
-
-#define HFREE(x) if(x) { HeapFree(GlobalHeap, 0, (x)); x=0; }
 void free_hostent(struct hostent *he)
 {
-    if(he)
+    int i;
+
+    if (he)
     {
-       char *next = 0;
-        HFREE(he->h_name);
-        if(he->h_aliases)
-       {
-           next = he->h_aliases[0];
-           while(next) { HFREE(next); next++; }
-       }
-       if(he->h_addr_list)
-       {
-           next = he->h_addr_list[0];
-           while(next) { HFREE(next); next++; }
-       }
-        HFREE(he->h_addr_list);
-       HFREE(he->h_aliases);
-        HFREE(he);
+        if (he->h_name)
+            HeapFree(GlobalHeap, 0, he->h_name);
+        if (he->h_aliases)
+        {
+            for (i = 0; he->h_aliases[i]; i++)
+                HeapFree(GlobalHeap, 0, he->h_aliases[i]);
+            HeapFree(GlobalHeap, 0, he->h_aliases);
+        }
+        if (he->h_addr_list)
+        {
+            for (i = 0; he->h_addr_list[i]; i++)
+                HeapFree(GlobalHeap, 0, he->h_addr_list[i]);
+            HeapFree(GlobalHeap, 0, he->h_addr_list);
+        }
+        HeapFree(GlobalHeap, 0, he);
     }
 }
 
@@ -672,13 +670,22 @@ struct hostent defined in w32api/include/winsock2.h
 
 void free_servent(struct servent* s)
 {
-    char* next;
-    HFREE(s->s_name);
-    next = s->s_aliases[0];
-    while(next) { HFREE(next); next++; }
-    s->s_port = 0;
-    HFREE(s->s_proto);
-    HFREE(s);
+    int i;
+
+    if (s)
+    {
+        if (s->s_name)
+            HeapFree(GlobalHeap, 0, s->s_name);
+        if (s->s_aliases)
+        {
+            for (i = 0; s->s_aliases[i]; i++)
+                HeapFree(GlobalHeap, 0, s->s_aliases[i]);
+            HeapFree(GlobalHeap, 0, s->s_aliases);
+        }
+        if (s->s_proto)
+            HeapFree(GlobalHeap, 0, s->s_proto);
+        HeapFree(GlobalHeap, 0, s);
+    }
 }
 
 /* This function is far from perfect but it works enough */
@@ -806,50 +813,11 @@ FindEntryInHosts(IN CONST CHAR FAR* name)
         return NULL;
     }
 
-    if( !p->Hostent )
-    {
-        p->Hostent = HeapAlloc(GlobalHeap, 0, sizeof(*p->Hostent));
-        if( !p->Hostent )
-        {
-            WSASetLastError( WSATRY_AGAIN );
-            return NULL;
-        }
-    }
-
-    p->Hostent->h_name = HeapAlloc(GlobalHeap, 0, strlen(DnsName));
-    if( !p->Hostent->h_name )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    RtlCopyMemory(p->Hostent->h_name,
-                  DnsName,
-                  strlen(DnsName));
-
-    p->Hostent->h_aliases = HeapAlloc(GlobalHeap, 0, sizeof(char *));
-    if( !p->Hostent->h_aliases )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    p->Hostent->h_aliases[0] = 0;
-
     if (strstr(AddressStr, ":"))
     {
        DbgPrint("AF_INET6 NOT SUPPORTED!\n");
        WSASetLastError(WSAEINVAL);
        return NULL;
-    }
-    else
-       p->Hostent->h_addrtype = AF_INET;
-
-    p->Hostent->h_addr_list = HeapAlloc(GlobalHeap, 0, sizeof(char *));
-    if( !p->Hostent->h_addr_list )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
     }
 
     Address = inet_addr(AddressStr);
@@ -859,18 +827,7 @@ FindEntryInHosts(IN CONST CHAR FAR* name)
         return NULL;
     }
 
-    p->Hostent->h_addr_list[0] = HeapAlloc(GlobalHeap, 0, sizeof(Address));
-    if( !p->Hostent->h_addr_list[0] )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    RtlCopyMemory(p->Hostent->h_addr_list[0],
-                  &Address,
-                  sizeof(Address));
-
-    p->Hostent->h_length = sizeof(Address);
+    populate_hostent(p->Hostent, DnsName, Address);
 
     return p->Hostent;
 }
@@ -989,7 +946,9 @@ gethostbyname(IN  CONST CHAR FAR* name)
             {
                 WS_DbgPrint(MID_TRACE,("populating hostent\n"));
                 WS_DbgPrint(MID_TRACE,("pName is (%s)\n", curr->pName));
-                populate_hostent(p->Hostent, (PCHAR)curr->pName, curr->Data.A);
+                populate_hostent(p->Hostent,
+                                 (PCHAR)curr->pName,
+                                 curr->Data.A.IpAddress);
                 DnsRecordListFree(dp, DnsFreeRecordList);
                 return p->Hostent;
             }
@@ -1052,7 +1011,7 @@ gethostname(OUT CHAR FAR* name,
  *
  * @unimplemented
  */
- 
+
 static CHAR *no_aliases = 0;
 static PROTOENT protocols[] =
 {
@@ -1061,7 +1020,7 @@ static PROTOENT protocols[] =
     {"udp", &no_aliases, IPPROTO_UDP},
     {NULL, NULL, 0}
 };
- 
+
 LPPROTOENT
 EXPORT
 getprotobyname(IN  CONST CHAR FAR* name)
@@ -1203,14 +1162,14 @@ getservbyname(IN  CONST CHAR FAR* name,
         WSASetLastError( WSANO_RECOVERY );
         return NULL;
     }
-    
+
     /* Scan the services file ...
     *
     * We will be share the buffer on the lines. If the line does not fit in
     * the buffer, then moving it to the beginning of the buffer and read
     * the remnants of line from file.
     */
-    
+
     /* Initial Read */
     ReadFile(ServicesFile,
                    ServiceDBData,
@@ -1219,7 +1178,7 @@ getservbyname(IN  CONST CHAR FAR* name,
     ThisLine = NextLine = ServiceDBData;
     EndValid = ServiceDBData + ReadSize;
     ServiceDBData[sizeof(ServiceDBData) - 1] = '\0';
-    
+
     while(ReadSize)
     {
         for(; *NextLine != '\r' && *NextLine != '\n'; NextLine++)
@@ -1227,7 +1186,7 @@ getservbyname(IN  CONST CHAR FAR* name,
             if(NextLine == EndValid)
             {
                 int LineLen = NextLine - ThisLine;
-                
+
                 if(ThisLine == ServiceDBData)
                 {
                     WS_DbgPrint(MIN_TRACE,("Line too long"));
@@ -1236,23 +1195,23 @@ getservbyname(IN  CONST CHAR FAR* name,
                 }
 
                 memmove(ServiceDBData, ThisLine, LineLen);
-           
+
                 ReadFile(ServicesFile, ServiceDBData + LineLen,
                          sizeof( ServiceDBData )-1 - LineLen,
                          &ReadSize, NULL );
-                               
+
                 EndValid = ServiceDBData + LineLen + ReadSize;
                 NextLine = ServiceDBData + LineLen;
                 ThisLine = ServiceDBData;
-                
+
                 if(!ReadSize) break;
             }
         }
-        
+
         *NextLine = '\0';
         Comment = strchr( ThisLine, '#' );
         if( Comment ) *Comment = '\0'; /* Terminate at comment start */
-        
+
         if(DecodeServEntFromString(ThisLine,
                                    &ServiceName,
                                    &PortNumberStr,
@@ -1644,7 +1603,7 @@ getaddrinfo(const char FAR * nodename,
         return WSAEINVAL;
     if (nodename == NULL && servname == NULL)
         return WSAHOST_NOT_FOUND;
-        
+
     if (!WSAINITIALIZED)
         return WSANOTINITIALISED;
 
@@ -1681,7 +1640,7 @@ getaddrinfo(const char FAR * nodename,
         /* Is it an IPv6 address? */
         if (strstr(nodename, ":"))
             return WSAHOST_NOT_FOUND;
-            
+
         /* Is it an IPv4 address? */
         addr = inet_addr(nodename);
         if (addr != INADDR_NONE)
@@ -1720,7 +1679,7 @@ getaddrinfo(const char FAR * nodename,
                 {
                     /* accept only A records */
                     if (currdns->wType != DNS_TYPE_A) continue;
-                    
+
                     ai = new_addrinfo(ai);
                     if (ret == NULL)
                       ret = ai;
@@ -1771,7 +1730,7 @@ getaddrinfo(const char FAR * nodename,
 
     if (ret == NULL)
         return WSAHOST_NOT_FOUND;
-        
+
     if (hints && hints->ai_family != PF_UNSPEC && hints->ai_family != PF_INET)
     {
         freeaddrinfo(ret);

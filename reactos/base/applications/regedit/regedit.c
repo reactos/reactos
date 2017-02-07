@@ -108,7 +108,7 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
             pos++;
         }
     }
-    memcpy(file_name, *command_line, pos * sizeof((*command_line)[0]));
+    memcpy(file_name, *command_line, pos * sizeof(WCHAR));
     /* remove the last backslash */
     if (file_name[pos - 1] == L'\\')
     {
@@ -132,7 +132,7 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
     (*command_line) += pos;
 }
 
-BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s)
+BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
 {
     TCHAR szTitle[256], szText[256];
     switch (action)
@@ -163,10 +163,11 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s)
             }
             import_registry_file(fp);
             get_file_name(&s, filename);
-            LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
-            LoadString(hInst, IDS_IMPORTED_OK, szText, sizeof(szTitle));
+            LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+            LoadString(hInst, IDS_IMPORTED_OK, szText, COUNT_OF(szText));
             /* show successful import */
-            MessageBox(NULL, szText, szTitle, MB_OK);
+            if (!silent)
+                MessageBox(NULL, szText, szTitle, MB_OK);
         }
         break;
     }
@@ -239,6 +240,7 @@ static void error_unknown_switch(WCHAR chu, LPWSTR s)
 
 BOOL ProcessCmdLine(LPWSTR lpCmdLine)
 {
+    BOOL silent = FALSE;
     REGEDIT_ACTION action = ACTION_UNDEF;
     LPWSTR s = lpCmdLine;       /* command line pointer */
     WCHAR ch = *s;              /* current character */
@@ -254,7 +256,11 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
         chu = (WCHAR)towupper(ch);
         if (!ch2 || iswspace(ch2))
         {
-            if (chu == L'S' || chu == L'V')
+            if (chu == L'S')
+            {
+                silent = TRUE;
+            }
+            else if (chu == L'V')
             {
                 /* ignore these switches */
             }
@@ -316,19 +322,18 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
     }
 
     if (*s && action == ACTION_UNDEF)
-	    {
-         TCHAR szTitle[256], szText[256];
-         LoadString(hInst, IDS_APP_TITLE, szTitle, sizeof(szTitle));
-         LoadString(hInst, IDS_IMPORT_PROMPT, szText, sizeof(szTitle));	
-         /* request import confirmation */
-	     if (MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
-	     {
-          action = ACTION_ADD;
-         }
-		 else return TRUE;
-        }
-	if (action == ACTION_UNDEF)
+    {
+        TCHAR szTitle[256], szText[256];
+        LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+        LoadString(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
+        /* request import confirmation */
+        if (silent || MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
+            action = ACTION_ADD;
+        else
+            return TRUE;
+    }
+    if (action == ACTION_UNDEF)
         return FALSE;
 
-    return PerformRegAction(action, s);
+    return PerformRegAction(action, s, silent);
 }

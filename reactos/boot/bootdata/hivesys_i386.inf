@@ -8,6 +8,69 @@ HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
 HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
 
+; Critical Device Database
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A03","Service",0x00000000,"pci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A03","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A08","Service",0x00000000,"pci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0A08","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0604","Service",0x00000000,"pci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0604","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","Service",0x00000000,"acpi"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\*PNP0C08","ClassGUID",0x00000000,"{4D36E97D-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0300","Service",0x00000000,"usbuhci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0300","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0310","Service",0x00000000,"usbohci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0310","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0320","Service",0x00000000,"usbehci"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0C0320","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_06&Prot_50","Service",0x00000000,"usbstor"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_08&SubClass_06&Prot_50","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","Service",0x00000000,"usbccgp"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#COMPOSITE","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","Service",0x00000000,"usbhub"
+;HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#CLASS_09","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB","Service",0x00000000,"usbhub"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB20","Service",0x00000000,"usbhub"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#ROOT_HUB20","ClassGUID",0x00000000,"{36FC9E60-C465-11CF-8056-444553540000}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GenDisk","Service",0x00000000,"disk"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GenDisk","ClassGUID",0x00000000,"{4D36E967-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_03","Service",0x00000000,"hidusb"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\USB#Class_03","ClassGUID",0x00000000,"{745a17a0-74d3-11d0-b6fe-00a0c90f57da}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GENERIC_HID_DEVICE","Service",0x00000000,"hidusb"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\GENERIC_HID_DEVICE","ClassGUID",0x00000000,"{745a17a0-74d3-11d0-b6fe-00a0c90f57da}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_KEYBOARD","Service",0x00000000,"kbdhid"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_KEYBOARD","ClassGUID",0x00000000,"{4D36E96B-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","Service",0x00000000,"mouhid"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\HID_DEVICE_SYSTEM_MOUSE","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0001","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0300","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","Service",0x00000000,"VBE"
+HKLM,"SYSTEM\CurrentControlSet\Control\CriticalDeviceDatabase\PCI#CC_0301","ClassGUID",0x00000000,"{4D36E968-E325-11CE-BFC1-08002BE10318}"
+
+
 HKLM,"SYSTEM\CurrentControlSet\Control\SafeBoot","AlternateShell",2,"cmd.exe"
 
 ; Safe Boot drivers
@@ -1070,7 +1133,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"WinNT"
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,""
 
-HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll,ntlmssp.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
 
 ; Some installers check for SP6
@@ -1173,12 +1236,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",,0x000
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2","Vms"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\OS2 SharedSection=128 Windows=Off SubSystemType=Text ServerDll=os2srv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\POSIX SharedSection=128 Windows=Off SubSystemType=Text ServerDll=psxsrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Vms",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\VMS SharedSection=128 Windows=Off SubSystemType=Text ServerDll=vmssrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,12288,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=win32csr:Win32CsrInitialization,2 ProfileControl=Off MaxRequestThreads=16"
 
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
@@ -1237,7 +1298,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","ImagePath",0x00020000,"system32\drivers\cdfs.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Cdfs","Type",0x00010001,0x00000002
 
 ; Cdrom class driver
@@ -1399,6 +1460,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Type",0x00010001,0x00000001
 
+; NDIS User I/O driver (FIXME: Should be installed via INF and started on demand)
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Group",0x00000000,"NDIS"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","ImagePath",0x00020000,"system32\drivers\ndisuio.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndisuio","Type",0x00010001,0x00000001
+
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Group",0x00000000,"PNP_TDI"
@@ -1406,10 +1474,82 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 
+; USB HID driver
+HKLM,"SYSTEM\CurrentControlSet\Services\hidusb","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\hidusb","Group",0x00000000,"Extended Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\hidusb","ImagePath",0x00020000,"system32\drivers\hidusb.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\hidusb","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\hidusb","Type",0x00010001,0x00000001
+
+; HID keyboard driver
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdhid","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdhid","Group",0x00000000,"Keyboard Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdhid","ImagePath",0x00020000,"system32\drivers\kbdhid.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdhid","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\kbdhid","Type",0x00010001,0x00000001
+
+; HID mouse driver
+HKLM,"SYSTEM\CurrentControlSet\Services\mouhid","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mouhid","Group",0x00000000,"Pointer Port"
+HKLM,"SYSTEM\CurrentControlSet\Services\mouhid","ImagePath",0x00020000,"system32\drivers\mouhid.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\mouhid","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\mouhid","Type",0x00010001,0x00000001
+
+; USB hub driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ImagePath",0x00020000,"system32\drivers\usbhub.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Type",0x00010001,0x00000001
+
+; EHCI controller driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbehci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbehci","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbehci","ImagePath",0x00020000,"system32\drivers\usbehci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbehci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbehci","Type",0x00010001,0x00000001
+
+; OHCI controller driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"system32\drivers\usbohci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Type",0x00010001,0x00000001
+
+; UHCI controller driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ImagePath",0x00020000,"system32\drivers\usbuhci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001
+
+; USB storage driver
+HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Group",0x00000000,"Primary Disk"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ImagePath",0x00020000,"system32\drivers\usbstor.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Type",0x00010001,0x00000001
+
+; USB composite generic parent
+HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","ImagePath",0x00020000,"system32\drivers\usbccgp.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Type",0x00010001,0x00000001
+
+; ACPI driver
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ImagePath",0x00020000,"system32\drivers\acpi.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Type",0x00010001,0x00000001
+
 ; PCI Bus driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus "
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C621",0x00030003,04,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950640",0x00030003,04,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80861230",0x00030003,04,00,00,00,00,00,00,00
@@ -1604,6 +1744,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","DisplayName",0x00000000,"Remote Procedure Call"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"RPC subsystem which is responsible for Remote procedure Calls on the local machine"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","FailureActions",0x00030003, \
+    00,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,60,ea,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000,"COM Infrastructure"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ObjectName",0x00000000,"LocalSystem"
@@ -1615,6 +1757,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DependOnService",0x00010000,"R
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","DisplayName",0x00000000,"Printer Spooler"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Description",0x00000000,"Printer Spooler"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","FailureActions",0x00000003, \
+    60,54,00,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,00,00, \
+    01,00,00,00,60,ea,00,00,01,00,00,00,60,ea,00,00,00,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","Group",0x00000000,"SpoolerGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ImagePath",0x00020000,"%SystemRoot%\system32\spoolsv.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\Spooler","ObjectName",0x00000000,"LocalSystem"
@@ -1629,7 +1774,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ErrorControl",0x00010001,0x000
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Group",0x00000000,"TDI"
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ImagePath",0x00020000,"%SystemRoot%\system32\wlansvc.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\WlanSvc","Type",0x00010001,0x00000110
 
 ; Simple TCP services
@@ -1656,6 +1801,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","DisplayName",0x00000000,"Themes"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Description",0x00000000,"Themes support"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Themes","FailureActions",0x00000003, \
+    80,51,01,00,00,00,00,00,00,00,00,00,03,00,00,00,00,00,00,00, \
+    01,00,00,00,60,ea,00,00,01,00,00,00,60,ea,00,00,00,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Group",0x00000000,"UIGroup"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ImagePath",0x00020000,"%SystemRoot%\system32\thmsvc.exe"
 HKLM,"SYSTEM\CurrentControlSet\Services\Themes","ObjectName",0x00000000,"LocalSystem"
@@ -1674,7 +1822,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Themes","Type",0x00010001,0x00000020
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","ImagePath",0x00020000,"system32\drivers\fastfat.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\fastfat","Type",0x00010001,0x00000002
 
 ; RAM Disk class driver
@@ -1688,7 +1836,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RamDisk","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Group",0x00000000,"Boot File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","ImagePath",0x00020000,"system32\drivers\ext2.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Ext2fs","Type",0x00010001,0x00000002
 
 ; VBE SVGA driver
@@ -1722,20 +1870,6 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.BitsPerPel",0x00010001,8
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
-
-; USB uhci/ehci driver
-HKLM,"SYSTEM\CurrentControlSet\Services\usbdrv","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\usbdrv","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbdrv","ImagePath",0x00020000,"system32\drivers\usbdrv.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbdrv","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\usbdrv","Type",0x00010001,0x00000001
-
-; USB storage driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Group",0x00000000,"Extended Base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ImagePath",0x00020000,"system32\drivers\usbstor.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Start",0x00010001,0x00000003
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Type",0x00010001,0x00000001
 
 ; Windows Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"

@@ -109,6 +109,30 @@ KdbpSymFindModule(
                                    pLdrEntry);
 }
 
+PCHAR
+NTAPI
+KdbpSymUnicodeToAnsi(IN PUNICODE_STRING Unicode,
+                     OUT PCHAR Ansi,
+                     IN ULONG Length)
+{
+    PCHAR p;
+    PWCHAR pw;
+    ULONG i;
+
+    /* Set length and normalize it */
+    i = Unicode->Length / sizeof(WCHAR);
+    i = min(i, Length - 1);
+
+    /* Set source and destination, and copy */
+    pw = Unicode->Buffer;
+    p = Ansi;
+    while (i--) *p++ = (CHAR)*pw++;
+
+    /* Null terminate and return */
+    *p = ANSI_NULL;
+    return Ansi;
+}
+
 /*! \brief Print address...
  *
  * Tries to lookup line number, file name and function name for the given
@@ -131,9 +155,14 @@ KdbSymPrintAddress(
     ULONG LineNumber;
     CHAR FileName[256];
     CHAR FunctionName[256];
+    CHAR ModuleNameAnsi[64];
 
     if (!KdbpSymbolsInitialized || !KdbpSymFindModule(Address, NULL, -1, &LdrEntry))
         return FALSE;
+        
+    KdbpSymUnicodeToAnsi(&LdrEntry->BaseDllName,
+                         ModuleNameAnsi,
+                         sizeof(ModuleNameAnsi));
 
     RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
     Status = KdbSymGetAddressInformation(LdrEntry->PatchInformation,
@@ -143,12 +172,12 @@ KdbSymPrintAddress(
                                          FunctionName);
     if (NT_SUCCESS(Status))
     {
-        DbgPrint("<%wZ:%x (%s:%d (%s))>",
-            &LdrEntry->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
+        DbgPrint("<%s:%x (%s:%d (%s))>",
+            ModuleNameAnsi, RelativeAddress, FileName, LineNumber, FunctionName);
     }
     else
     {
-        DbgPrint("<%wZ:%x>", &LdrEntry->BaseDllName, RelativeAddress);
+        DbgPrint("<%s:%x>", ModuleNameAnsi, RelativeAddress);
     }
 
     return TRUE;

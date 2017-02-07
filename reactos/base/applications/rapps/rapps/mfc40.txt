@@ -5,7 +5,7 @@ Name = OLE Viewer and Microsoft Foundation Classes version 4
 Version = 4.0
 Licence = Unknown
 Description = MFC 4 is needed by some applications. Contains: mfc40.dll, msvcrt40.dll.
-Size = 865kB
+Size = 865.04kB
 Category = 14
 URLSite = http://support.microsoft.com/kb/122244/
 URLDownload = http://download.microsoft.com/download/ole/ole2v/3.5/w351/en-us/ole2v.exe
@@ -30,6 +30,11 @@ Description = MFC 4 est nécessaire pour certaines applications.
 Name = Przeglądarka OLE oraz MFC (Microsoft Foundation Classes) wersja 4
 Licence = Nieznana
 Description = Biblioteka MFC 4 jest używana przez część aplikacji.
+
+[Section.0418]
+Licence = Nespecificată
+Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt40.dll.
+Size = 865.04ko
 
 [Section.0422]
 Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4

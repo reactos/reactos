@@ -202,7 +202,7 @@ int winetest_interactive = 0;
 const char *winetest_platform = "windows";
 
 /* report successful tests (BOOL) */
-static int report_success = 1;
+static int report_success = 0;
 
 /* passing arguments around */
 static int winetest_argc;
@@ -314,7 +314,8 @@ int winetest_vok( int condition, const char *msg, __winetest_va_list args )
         }
         else
         {
-            if (winetest_debug > 0)
+            /* show todos even if traces are disabled*/
+            /*if (winetest_debug > 0)*/
             {
                 fprintf( stdout, "%s:%d: Test marked todo: ",
                          data->current_file, data->current_line );
@@ -538,6 +539,11 @@ static void list_tests(void)
     for (test = winetest_testlist; test->name; test++) fprintf( stdout, "    %s\n", test->name );
 }
 
+/* Disable false-positive claiming "test" would be NULL-dereferenced */
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:28182)
+#endif
 
 /* Run a named test, and return exit status */
 static int run_test( const char *name )
@@ -555,7 +561,8 @@ static int run_test( const char *name )
     current_test = test;
     test->func();
 
-    if (winetest_debug)
+    /* show test results even if traces are disabled */
+    /*if (winetest_debug)*/
     {
         fprintf( stdout, "%s: %d tests executed (%d marked as todo, %d %s), %d skipped.\n",
                  test->name, successes + failures + todo_successes + todo_failures,
@@ -567,6 +574,9 @@ static int run_test( const char *name )
     return status;
 }
 
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 /* Display usage and exit */
 static void usage( const char *argv0 )
@@ -612,5 +622,39 @@ int main( int argc, char **argv )
 
 // hack for ntdll winetest (this is defined in excpt.h)
 #undef exception_info
+
+// Some helpful definitions
+
+#define ok_hex(expression, result) \
+    do { \
+        int _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
+           #expression, (int)(result), _value); \
+    } while (0)
+
+#define ok_dec(expression, result) \
+    do { \
+        int _value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
+           #expression, (int)(result), _value); \
+    } while (0)
+
+#define ok_ptr(expression, result) \
+    do { \
+        void *_value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+           #expression, (void*)(result), _value); \
+    } while (0)
+
+#define ok_err(error) \
+    ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got %d\n", (int)GetLastError())
+
+#define ok_str(x, y) \
+    ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
+
+#define ok_long(expression, result) ok_hex(expression, result)
+#define ok_int(expression, result) ok_dec(expression, result)
+#define ok_ntstatus(status, expected) ok_hex(status, expected)
+#define ok_hdl ok_ptr
 
 #endif  /* __WINE_WINE_TEST_H */

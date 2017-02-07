@@ -136,10 +136,10 @@ static INT_PTR ConfirmMsgBox_Paint(HWND hDlg)
     BeginPaint(hDlg, &ps);
     hdc = ps.hdc;
 
-    GetClientRect(GetDlgItem(hDlg, IDD_MESSAGE), &r);
+    GetClientRect(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), &r);
     /* this will remap the rect to dialog coords */
-    MapWindowPoints(GetDlgItem(hDlg, IDD_MESSAGE), hDlg, (LPPOINT)&r, 2);
-    hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDD_MESSAGE, WM_GETFONT, 0, 0));
+    MapWindowPoints(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), hDlg, (LPPOINT)&r, 2);
+    hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDC_YESTOALL_MESSAGE, WM_GETFONT, 0, 0));
     DrawTextW(hdc, (LPWSTR)GetPropW(hDlg, CONFIRM_MSG_PROP), -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK);
     SelectObject(hdc, hOldFont);
     EndPaint(hDlg, &ps);
@@ -157,15 +157,15 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
     RECT r;
 
     SetWindowTextW(hDlg, info->lpszCaption);
-    ShowWindow(GetDlgItem(hDlg, IDD_MESSAGE), SW_HIDE);
+    ShowWindow(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), SW_HIDE);
     SetPropW(hDlg, CONFIRM_MSG_PROP, info->lpszText);
-    SendDlgItemMessageW(hDlg, IDD_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
+    SendDlgItemMessageW(hDlg, IDC_YESTOALL_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
 
     /* compute the text height and resize the dialog */
-    GetClientRect(GetDlgItem(hDlg, IDD_MESSAGE), &r);
+    GetClientRect(GetDlgItem(hDlg, IDC_YESTOALL_MESSAGE), &r);
     hdc = GetDC(hDlg);
     yOffset = r.bottom;
-    hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDD_MESSAGE, WM_GETFONT, 0, 0));
+    hOldFont = (HFONT)SelectObject(hdc, (HFONT)SendDlgItemMessageW(hDlg, IDC_YESTOALL_MESSAGE, WM_GETFONT, 0, 0));
     DrawTextW(hdc, info->lpszText, -1, &r, DT_NOPREFIX | DT_PATH_ELLIPSIS | DT_WORDBREAK | DT_CALCRECT);
     SelectObject(hdc, hOldFont);
     yOffset -= r.bottom;
@@ -182,7 +182,7 @@ static INT_PTR ConfirmMsgBox_Init(HWND hDlg, LPARAM lParam)
 
     confirm_msg_move_button(hDlg, IDCANCEL,     &xPos, yOffset, info->bYesToAll);
     confirm_msg_move_button(hDlg, IDNO,         &xPos, yOffset, TRUE);
-    confirm_msg_move_button(hDlg, IDD_YESTOALL, &xPos, yOffset, info->bYesToAll);
+    confirm_msg_move_button(hDlg, IDC_YESTOALL, &xPos, yOffset, info->bYesToAll);
     confirm_msg_move_button(hDlg, IDYES,        &xPos, yOffset, TRUE);
 
     return TRUE;
@@ -208,14 +208,13 @@ static INT_PTR CALLBACK ConfirmMsgBoxProc(HWND hDlg, UINT uMsg, WPARAM wParam, L
 
 int SHELL_ConfirmMsgBox(HWND hWnd, LPWSTR lpszText, LPWSTR lpszCaption, HICON hIcon, BOOL bYesToAll)
 {
-    static const WCHAR wszTemplate[] = {'S','H','E','L','L','_','Y','E','S','T','O','A','L','L','_','M','S','G','B','O','X',0};
     struct confirm_msg_info info;
 
     info.lpszText = lpszText;
     info.lpszCaption = lpszCaption;
     info.hIcon = hIcon;
     info.bYesToAll = bYesToAll;
-    return DialogBoxParamW(shell32_hInstance, wszTemplate, hWnd, ConfirmMsgBoxProc, (LPARAM)&info);
+    return DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_YESTOALL_MSGBOX), hWnd, ConfirmMsgBoxProc, (LPARAM)&info);
 }
 
 /* confirmation dialogs content */
@@ -324,7 +323,7 @@ static BOOL SHELL_ConfirmDialogW(HWND hWnd, int nKindOfDialog, LPCWSTR szDir, FI
     ret = SHELL_ConfirmMsgBox(hWnd, szBuffer, szCaption, hIcon, op && op->bManyItems);
     if (op)
     {
-        if (ret == IDD_YESTOALL)
+        if (ret == IDC_YESTOALL)
         {
             op->dwYesToAllMask |= (1 << nKindOfDialog);
             ret = IDYES;
@@ -702,7 +701,7 @@ SHShowFileOperationDialog(FILE_OPERATION *op, FILE_LIST *flFrom, FILE_LIST *flTo
     Context.Index = 0;
     Context.op->bCancelled = FALSE;
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_SH_FILE_COPY), NULL, SHOperationDialog, (LPARAM)&Context);
+    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_FILE_COPY), NULL, SHOperationDialog, (LPARAM)&Context);
     if (hwnd == NULL)
     {
         ERR("Failed to create dialog\n");

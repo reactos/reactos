@@ -382,10 +382,12 @@ static HRESULT create_stream_from_map(HANDLE map, IStream **stream)
  * IDropTarget::QueryInterface().  Windows doesn't expose this because it
  * doesn't call CoMarshallInterface() in RegisterDragDrop().
  * The wrapper is only used internally, and only exists for the life of
- * the marshal. */
+ * the marshal.  We don't want to hold a ref on the app provided target
+ * as some apps destroy this prior to CoUninitialize without calling
+ * RevokeDragDrop.  The only (long-term) ref is held by the window prop. */
 typedef struct {
     IDropTarget IDropTarget_iface;
-    IDropTarget* inner;
+    HWND hwnd;
     LONG refs;
 } DropTargetWrapper;
 
@@ -420,12 +422,17 @@ static ULONG WINAPI DropTargetWrapper_Release(IDropTarget* iface)
 {
     DropTargetWrapper* This = impl_from_IDropTarget(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
-    if (!refs)
-    {
-        IDropTarget_Release(This->inner);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
+    if (!refs) HeapFree(GetProcessHeap(), 0, This);
     return refs;
+}
+
+static inline HRESULT get_target_from_wrapper( IDropTarget *wrapper, IDropTarget **target )
+{
+    DropTargetWrapper* This = impl_from_IDropTarget( wrapper );
+    *target = GetPropW( This->hwnd, prop_oledroptarget );
+    if (!*target) return DRAGDROP_E_NOTREGISTERED;
+    IDropTarget_AddRef( *target );
+    return S_OK;
 }
 
 static HRESULT WINAPI DropTargetWrapper_DragEnter(IDropTarget* iface,
@@ -434,8 +441,15 @@ static HRESULT WINAPI DropTargetWrapper_DragEnter(IDropTarget* iface,
                                                   POINTL pt,
                                                   DWORD* pdwEffect)
 {
-    DropTargetWrapper* This = impl_from_IDropTarget(iface);
-    return IDropTarget_DragEnter(This->inner, pDataObj, grfKeyState, pt, pdwEffect);
+    IDropTarget *target;
+    HRESULT r = get_target_from_wrapper( iface, &target );
+
+    if (SUCCEEDED( r ))
+    {
+        r = IDropTarget_DragEnter( target, pDataObj, grfKeyState, pt, pdwEffect );
+        IDropTarget_Release( target );
+    }
+    return r;
 }
 
 static HRESULT WINAPI DropTargetWrapper_DragOver(IDropTarget* iface,
@@ -443,14 +457,28 @@ static HRESULT WINAPI DropTargetWrapper_DragOver(IDropTarget* iface,
                                                  POINTL pt,
                                                  DWORD* pdwEffect)
 {
-    DropTargetWrapper* This = impl_from_IDropTarget(iface);
-    return IDropTarget_DragOver(This->inner, grfKeyState, pt, pdwEffect);
+    IDropTarget *target;
+    HRESULT r = get_target_from_wrapper( iface, &target );
+
+    if (SUCCEEDED( r ))
+    {
+        r = IDropTarget_DragOver( target, grfKeyState, pt, pdwEffect );
+        IDropTarget_Release( target );
+    }
+    return r;
 }
 
 static HRESULT WINAPI DropTargetWrapper_DragLeave(IDropTarget* iface)
 {
-    DropTargetWrapper* This = impl_from_IDropTarget(iface);
-    return IDropTarget_DragLeave(This->inner);
+    IDropTarget *target;
+    HRESULT r = get_target_from_wrapper( iface, &target );
+
+    if (SUCCEEDED( r ))
+    {
+        r = IDropTarget_DragLeave( target );
+        IDropTarget_Release( target );
+    }
+    return r;
 }
 
 static HRESULT WINAPI DropTargetWrapper_Drop(IDropTarget* iface,
@@ -459,8 +487,15 @@ static HRESULT WINAPI DropTargetWrapper_Drop(IDropTarget* iface,
                                              POINTL pt,
                                              DWORD* pdwEffect)
 {
-    DropTargetWrapper* This = impl_from_IDropTarget(iface);
-    return IDropTarget_Drop(This->inner, pDataObj, grfKeyState, pt, pdwEffect);
+    IDropTarget *target;
+    HRESULT r = get_target_from_wrapper( iface, &target );
+
+    if (SUCCEEDED( r ))
+    {
+        r = IDropTarget_Drop( target, pDataObj, grfKeyState, pt, pdwEffect );
+        IDropTarget_Release( target );
+    }
+    return r;
 }
 
 static const IDropTargetVtbl DropTargetWrapperVTbl =
@@ -474,15 +509,14 @@ static const IDropTargetVtbl DropTargetWrapperVTbl =
     DropTargetWrapper_Drop
 };
 
-static IDropTarget* WrapDropTarget(IDropTarget* inner)
+static IDropTarget* WrapDropTarget( HWND hwnd )
 {
     DropTargetWrapper* This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
 
     if (This)
     {
-        IDropTarget_AddRef(inner);
         This->IDropTarget_iface.lpVtbl = &DropTargetWrapperVTbl;
-        This->inner = inner;
+        This->hwnd = hwnd;
         This->refs = 1;
     }
     return &This->IDropTarget_iface;
@@ -562,7 +596,7 @@ HRESULT WINAPI RegisterDragDrop(HWND hwnd, LPDROPTARGET pDropTarget)
   if(FAILED(hr)) return hr;
 
   /* IDropTarget::QueryInterface() shouldn't be called, some (broken) apps depend on this. */
-  wrapper = WrapDropTarget(pDropTarget);
+  wrapper = WrapDropTarget( hwnd );
   if(!wrapper)
   {
     IStream_Release(stream);
@@ -739,7 +773,7 @@ HRESULT WINAPI DoDragDrop (
   HWND            hwndTrackWindow;
   MSG             msg;
 
-  TRACE("(%p, %p, %d, %p)\n", pDataObject, pDropSource, dwOKEffect, pdwEffect);
+  TRACE("(%p, %p, %08x, %p)\n", pDataObject, pDropSource, dwOKEffect, pdwEffect);
 
   if (!pDataObject || !pDropSource || !pdwEffect)
       return E_INVALIDARG;

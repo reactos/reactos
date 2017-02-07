@@ -45,7 +45,7 @@ list(APPEND SOURCE
     src/startup.c
     src/wsautil.c
     ws2_32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def)
 
 add_library(ws2_32_new SHARED ${SOURCE})
 set_module_type(ws2_32_new win32dll)

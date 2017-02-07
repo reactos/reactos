@@ -1,0 +1,5 @@
+/* @makedep: wuapi_tlb.tlb */
+1 TYPELIB wuapi_tlb.tlb
+
+/* @makedep: wuapi.rgs */
+1 WINE_REGISTRY wuapi.rgs

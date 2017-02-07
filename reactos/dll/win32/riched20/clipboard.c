@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 static UINT cfRTF = 0;
 
 typedef struct DataObjectImpl {
-    const IDataObjectVtbl *lpVtbl;
+    IDataObject IDataObject_iface;
     LONG ref;
 
     FORMATETC *fmtetc;
@@ -36,7 +36,7 @@ typedef struct DataObjectImpl {
 } DataObjectImpl;
 
 typedef struct EnumFormatImpl {
-    const IEnumFORMATETCVtbl *lpVtbl;
+    IEnumFORMATETC IEnumFORMATETC_iface;
     LONG ref;
 
     FORMATETC *fmtetc;
@@ -47,9 +47,19 @@ typedef struct EnumFormatImpl {
 
 static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT size, LPENUMFORMATETC *lplpformatetc);
 
+static inline DataObjectImpl *impl_from_IDataObject(IDataObject *iface)
+{
+    return CONTAINING_RECORD(iface, DataObjectImpl, IDataObject_iface);
+}
+
+static inline EnumFormatImpl *impl_from_IEnumFORMATETC(IEnumFORMATETC *iface)
+{
+    return CONTAINING_RECORD(iface, EnumFormatImpl, IEnumFORMATETC_iface);
+}
+
 static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFIID riid, LPVOID *ppvObj)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     TRACE("%p %s\n", This, debugstr_guid(riid));
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IEnumFORMATETC)) {
@@ -63,7 +73,7 @@ static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFII
 
 static ULONG WINAPI EnumFormatImpl_AddRef(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -71,7 +81,7 @@ static ULONG WINAPI EnumFormatImpl_AddRef(IEnumFORMATETC *iface)
 
 static ULONG WINAPI EnumFormatImpl_Release(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
 
@@ -86,7 +96,7 @@ static ULONG WINAPI EnumFormatImpl_Release(IEnumFORMATETC *iface)
 static HRESULT WINAPI EnumFormatImpl_Next(IEnumFORMATETC *iface, ULONG celt,
                                           FORMATETC *rgelt, ULONG *pceltFetched)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG count = 0;
     TRACE("(%p)->(%d %p %p)\n", This, celt, rgelt, pceltFetched);
 
@@ -105,7 +115,7 @@ static HRESULT WINAPI EnumFormatImpl_Next(IEnumFORMATETC *iface, ULONG celt,
 
 static HRESULT WINAPI EnumFormatImpl_Skip(IEnumFORMATETC *iface, ULONG celt)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG count = 0;
     TRACE("(%p)->(%d)\n", This, celt);
 
@@ -116,7 +126,7 @@ static HRESULT WINAPI EnumFormatImpl_Skip(IEnumFORMATETC *iface, ULONG celt)
 
 static HRESULT WINAPI EnumFormatImpl_Reset(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     TRACE("(%p)\n", This);
 
     This->cur = 0;
@@ -125,7 +135,7 @@ static HRESULT WINAPI EnumFormatImpl_Reset(IEnumFORMATETC *iface)
 
 static HRESULT WINAPI EnumFormatImpl_Clone(IEnumFORMATETC *iface, IEnumFORMATETC **ppenum)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     HRESULT hr;
     TRACE("(%p)->(%p)\n", This, ppenum);
 
@@ -153,7 +163,7 @@ static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT fmtetc_cnt, I
     TRACE("\n");
 
     ret = heap_alloc(sizeof(EnumFormatImpl));
-    ret->lpVtbl = &VT_EnumFormatImpl;
+    ret->IEnumFORMATETC_iface.lpVtbl = &VT_EnumFormatImpl;
     ret->ref = 1;
     ret->cur = 0;
     ret->fmtetc_cnt = fmtetc_cnt;
@@ -165,7 +175,7 @@ static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT fmtetc_cnt, I
 
 static HRESULT WINAPI DataObjectImpl_QueryInterface(IDataObject *iface, REFIID riid, LPVOID *ppvObj)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     TRACE("(%p)->(%s)\n", This, debugstr_guid(riid));
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDataObject)) {
@@ -179,7 +189,7 @@ static HRESULT WINAPI DataObjectImpl_QueryInterface(IDataObject *iface, REFIID r
 
 static ULONG WINAPI DataObjectImpl_AddRef(IDataObject* iface)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
@@ -187,7 +197,7 @@ static ULONG WINAPI DataObjectImpl_AddRef(IDataObject* iface)
 
 static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
     TRACE("(%p) ref=%d\n",This, ref);
 
@@ -203,7 +213,7 @@ static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 
 static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pformatetc, STGMEDIUM *pmedium)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     TRACE("(%p)->(fmt=0x%08x tym=0x%08x)\n", This, pformatetc->cfFormat, pformatetc->tymed);
 
     if(pformatetc->lindex != -1)
@@ -227,14 +237,14 @@ static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pfor
 
 static HRESULT WINAPI DataObjectImpl_GetDataHere(IDataObject* iface, FORMATETC *pformatetc, STGMEDIUM *pmedium)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     FIXME("(%p): stub\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DataObjectImpl_QueryGetData(IDataObject* iface, FORMATETC *pformatetc)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     UINT i;
     BOOL foundFormat = FALSE;
     TRACE("(%p)->(fmt=0x%08x tym=0x%08x)\n", This, pformatetc->cfFormat, pformatetc->tymed);
@@ -255,7 +265,7 @@ static HRESULT WINAPI DataObjectImpl_QueryGetData(IDataObject* iface, FORMATETC 
 static HRESULT WINAPI DataObjectImpl_GetCanonicalFormatEtc(IDataObject* iface, FORMATETC *pformatetcIn,
                                                            FORMATETC *pformatetcOut)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     TRACE("(%p)->(%p,%p)\n", This, pformatetcIn, pformatetcOut);
 
     if(pformatetcOut) {
@@ -268,7 +278,7 @@ static HRESULT WINAPI DataObjectImpl_GetCanonicalFormatEtc(IDataObject* iface, F
 static HRESULT WINAPI DataObjectImpl_SetData(IDataObject* iface, FORMATETC *pformatetc,
                                              STGMEDIUM *pmedium, BOOL fRelease)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     FIXME("(%p): stub\n", This);
     return E_NOTIMPL;
 }
@@ -276,7 +286,7 @@ static HRESULT WINAPI DataObjectImpl_SetData(IDataObject* iface, FORMATETC *pfor
 static HRESULT WINAPI DataObjectImpl_EnumFormatEtc(IDataObject* iface, DWORD dwDirection,
                                                    IEnumFORMATETC **ppenumFormatEtc)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     TRACE("(%p)->(%d)\n", This, dwDirection);
 
     if(dwDirection != DATADIR_GET) {
@@ -291,21 +301,21 @@ static HRESULT WINAPI DataObjectImpl_EnumFormatEtc(IDataObject* iface, DWORD dwD
 static HRESULT WINAPI DataObjectImpl_DAdvise(IDataObject* iface, FORMATETC *pformatetc, DWORD advf,
                                              IAdviseSink *pAdvSink, DWORD *pdwConnection)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     FIXME("(%p): stub\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DataObjectImpl_DUnadvise(IDataObject* iface, DWORD dwConnection)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     FIXME("(%p): stub\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DataObjectImpl_EnumDAdvise(IDataObject* iface, IEnumSTATDATA **ppenumAdvise)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     FIXME("(%p): stub\n", This);
     return E_NOTIMPL;
 }
@@ -399,7 +409,7 @@ HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start,
     if(cfRTF == 0)
         cfRTF = RegisterClipboardFormatA("Rich Text Format");
 
-    obj->lpVtbl = &VT_DataObjectImpl;
+    obj->IDataObject_iface.lpVtbl = &VT_DataObjectImpl;
     obj->ref = 1;
     obj->unicode = get_unicode_text(editor, start, nChars);
     obj->rtf = NULL;

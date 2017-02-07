@@ -1021,8 +1021,9 @@ RegCreateKeyExA(HKEY hKey,
 {
     UNICODE_STRING SubKeyString;
     UNICODE_STRING ClassString;
-    OBJECT_ATTRIBUTES Attributes;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ParentKey;
+    ULONG Attributes = OBJ_CASE_INSENSITIVE;
     NTSTATUS Status;
 
     TRACE("RegCreateKeyExA() called\n");
@@ -1046,15 +1047,18 @@ RegCreateKeyExA(HKEY hKey,
                                          lpClass);
     }
 
+    if (dwOptions & REG_OPTION_OPEN_LINK)
+        Attributes |= OBJ_OPENLINK;
+
     RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
                                      (LPSTR)lpSubKey);
-    InitializeObjectAttributes(&Attributes,
+    InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
-                               OBJ_CASE_INSENSITIVE,
+                               Attributes,
                                (HANDLE)ParentKey,
                                lpSecurityAttributes ? (PSECURITY_DESCRIPTOR)lpSecurityAttributes->lpSecurityDescriptor : NULL);
     Status = CreateNestedKey(phkResult,
-                             &Attributes,
+                             &ObjectAttributes,
                              (lpClass == NULL)? NULL : &ClassString,
                              dwOptions,
                              samDesired,
@@ -1095,8 +1099,9 @@ RegCreateKeyExW(HKEY hKey,
 {
     UNICODE_STRING SubKeyString;
     UNICODE_STRING ClassString;
-    OBJECT_ATTRIBUTES Attributes;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ParentKey;
+    ULONG Attributes = OBJ_CASE_INSENSITIVE;
     NTSTATUS Status;
 
     TRACE("RegCreateKeyExW() called\n");
@@ -1114,17 +1119,20 @@ RegCreateKeyExW(HKEY hKey,
 
     TRACE("ParentKey %p\n", ParentKey);
 
+    if (dwOptions & REG_OPTION_OPEN_LINK)
+        Attributes |= OBJ_OPENLINK;
+
     RtlInitUnicodeString(&ClassString,
                          lpClass);
     RtlInitUnicodeString(&SubKeyString,
                          lpSubKey);
-    InitializeObjectAttributes(&Attributes,
+    InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
-                               OBJ_CASE_INSENSITIVE,
+                               Attributes,
                                (HANDLE)ParentKey,
                                lpSecurityAttributes ? (PSECURITY_DESCRIPTOR)lpSecurityAttributes->lpSecurityDescriptor : NULL);
     Status = CreateNestedKey(phkResult,
-                             &Attributes,
+                             &ObjectAttributes,
                              (lpClass == NULL)? NULL : &ClassString,
                              dwOptions,
                              samDesired,
@@ -3347,6 +3355,7 @@ RegOpenKeyExA(HKEY hKey,
     UNICODE_STRING SubKeyString;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    ULONG Attributes = OBJ_CASE_INSENSITIVE;
     LONG ErrorCode = ERROR_SUCCESS;
 
     TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
@@ -3363,11 +3372,14 @@ RegOpenKeyExA(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (ulOptions & REG_OPTION_OPEN_LINK)
+        Attributes |= OBJ_OPENLINK;
+
     RtlCreateUnicodeStringFromAsciiz(&SubKeyString,
                                      (LPSTR)lpSubKey);
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
-                               OBJ_CASE_INSENSITIVE,
+                               Attributes,
                                KeyHandle,
                                NULL);
 
@@ -3402,6 +3414,7 @@ RegOpenKeyExW(HKEY hKey,
     UNICODE_STRING SubKeyString;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    ULONG Attributes = OBJ_CASE_INSENSITIVE;
     LONG ErrorCode = ERROR_SUCCESS;
 
     TRACE("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
@@ -3417,6 +3430,9 @@ RegOpenKeyExW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
+    if (ulOptions & REG_OPTION_OPEN_LINK)
+        Attributes |= OBJ_OPENLINK;
+
     if (lpSubKey != NULL)
         RtlInitUnicodeString(&SubKeyString, (LPWSTR)lpSubKey);
     else
@@ -3424,7 +3440,7 @@ RegOpenKeyExW(HKEY hKey,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &SubKeyString,
-                               OBJ_CASE_INSENSITIVE,
+                               Attributes,
                                KeyHandle,
                                NULL);
 

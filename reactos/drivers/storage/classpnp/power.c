@@ -26,6 +26,7 @@ Revision History:
 #define CLASS_TAG_POWER     'WLcS'
 
 NTSTATUS
+NTAPI
 ClasspPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -33,6 +34,7 @@ ClasspPowerHandler(
     );
 
 NTSTATUS
+NTAPI
 ClasspPowerDownCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -40,6 +42,7 @@ ClasspPowerDownCompletion(
     );
 
 NTSTATUS
+NTAPI
 ClasspPowerUpCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -47,6 +50,7 @@ ClasspPowerUpCompletion(
     );
 
 VOID
+NTAPI
 RetryPowerRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -54,13 +58,14 @@ RetryPowerRequest(
     );
 
 NTSTATUS
+NTAPI
 ClasspStartNextPowerIrpCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID Context
     );
 
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassDispatchPower()
@@ -79,6 +84,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -94,7 +100,7 @@ ClassDispatchPower(
     //       don't do anything that would break under either circumstance.
     //
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
 
@@ -108,7 +114,7 @@ ClassDispatchPower(
 
     return commonExtension->DevInfo->ClassPowerDevice(DeviceObject, Irp);
 } // end ClassDispatchPower()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerUpCompletion()
@@ -149,6 +155,7 @@ Return Value:
     
 --*/
 NTSTATUS
+NTAPI
 ClasspPowerUpCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -476,7 +483,7 @@ ClasspPowerUpCompletionFailure:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspPowerUpCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerDownCompletion()
@@ -517,6 +524,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClasspPowerDownCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -974,7 +982,7 @@ ClasspPowerDownCompletion(
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 } // end ClasspPowerDownCompletion()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspPowerHandler()
@@ -998,6 +1006,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClasspPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1278,7 +1287,7 @@ ClasspPowerHandlerCleanup:
                            TRUE);
     return PoCallDriver(lowerDevice, Irp);
 } // end ClasspPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassMinimalPowerHandler()
@@ -1290,6 +1299,7 @@ Routine Description:
 
 --*/
 NTSTATUS
+NTAPI
 ClassMinimalPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1355,7 +1365,7 @@ ClassMinimalPowerHandler(
         return status;
     }
 } // end ClassMinimalPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassSpinDownPowerHandler()
@@ -1383,6 +1393,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 ClassSpinDownPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1434,7 +1445,7 @@ ClassSpinDownPowerHandler(
 
     return ClasspPowerHandler(DeviceObject, Irp, options);
 } // end ClassSpinDownPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClassStopUnitPowerHandler()
@@ -1450,6 +1461,7 @@ Routine Description:
 
 --*/
 NTSTATUS
+NTAPI
 ClassStopUnitPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1475,7 +1487,7 @@ ClassStopUnitPowerHandler(
 
     return ClassSpinDownPowerHandler(DeviceObject, Irp);
 } // end ClassStopUnitPowerHandler()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 RetryPowerRequest()
@@ -1499,6 +1511,7 @@ Return Value:
 
 --*/
 VOID
+NTAPI
 RetryPowerRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -1574,7 +1587,7 @@ RetryPowerRequest(
     return;
 
 } // end RetryRequest()
-
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 ClasspStartNextPowerIrpCompletion()
@@ -1586,6 +1599,7 @@ Routine Description:
 
 --*/
 NTSTATUS
+NTAPI
 ClasspStartNextPowerIrpCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1599,4 +1613,3 @@ ClasspStartNextPowerIrpCompletion(
     PoStartNextPowerIrp(Irp);
     return STATUS_SUCCESS;
 } // end ClasspStartNextPowerIrpCompletion()
-

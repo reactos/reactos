@@ -49,7 +49,7 @@ typedef struct
     HWND hDlgCtrl;
     WCHAR szName[MAX_PATH];
     INT Index;
-}PICK_ICON_CONTEXT, *PPICK_ICON_CONTEXT;
+} PICK_ICON_CONTEXT, *PPICK_ICON_CONTEXT;
 
 BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     LPCWSTR lpszType,
@@ -79,7 +79,7 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     return TRUE;
 }
 
-void
+static void
 DestroyIconList(HWND hDlgCtrl)
 {
     int count;
@@ -249,7 +249,7 @@ BOOL WINAPI PickIconDlg(
     IconContext.Index = *lpdwIconIndex;
     wcscpy(IconContext.szName, lpstrFile);
 
-    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON_DIALOG), hwndOwner, PickIconProc, (LPARAM)&IconContext);
+    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hwndOwner, PickIconProc, (LPARAM)&IconContext);
     if (res)
     {
         wcscpy(lpstrFile, IconContext.szName);
@@ -273,12 +273,9 @@ void WINAPI RunFileDlg(
     LPCWSTR lpstrDescription,
     UINT uFlags)
 {
-    static const WCHAR resnameW[] = {'S','H','E','L','L','_','R','U','N','_','D','L','G',0};
-    RUNFILEDLGPARAMS rfdp;
-    HRSRC hRes;
-    LPVOID tmplate;
     TRACE("\n");
 
+    RUNFILEDLGPARAMS rfdp;
     rfdp.hwndOwner        = hwndOwner;
     rfdp.hIcon            = hIcon;
     rfdp.lpstrDirectory   = lpstrDirectory;
@@ -286,16 +283,7 @@ void WINAPI RunFileDlg(
     rfdp.lpstrDescription = lpstrDescription;
     rfdp.uFlags           = uFlags;
 
-    if (!(hRes = FindResourceW(shell32_hInstance, resnameW, (LPWSTR)RT_DIALOG)) ||
-        !(tmplate = LoadResource(shell32_hInstance, hRes)))
-    {
-        ERR("Couldn't load SHELL_RUN_DLG resource\n");
-        ShellMessageBoxW(shell32_hInstance, hwndOwner, MAKEINTRESOURCEW(IDS_RUNDLG_ERROR), NULL, MB_OK | MB_ICONERROR);
-        return;
-    }
-
-    DialogBoxIndirectParamW(shell32_hInstance,
-                (LPCDLGTEMPLATEW)tmplate, hwndOwner, RunDlgProc, (LPARAM)&rfdp);
+    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN), hwndOwner, RunDlgProc, (LPARAM)&rfdp);
 
 }
 
@@ -305,7 +293,7 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
 {
     const WCHAR *src;
     WCHAR *dest, *result, *result_end=NULL;
-    static const WCHAR dotexeW[] = {'.','e','x','e',0};
+    static const WCHAR dotexeW[] = L".exe";
 
     result = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(strlenW(cmdline)+5));
 
@@ -360,8 +348,8 @@ static LPWSTR RunDlg_GetParentDir(LPCWSTR cmdline)
 
 
 /* Dialog procedure for RunFileDlg */
-static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-    {
+static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
     RUNFILEDLGPARAMS *prfdp = (RUNFILEDLGPARAMS *)GetWindowLongPtrW(hwnd, DWLP_USER);
 
     switch (message)
@@ -454,7 +442,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                     {
                     HMODULE hComdlg = NULL ;
                     LPFNOFN ofnProc = NULL ;
-                    static const WCHAR comdlg32W[] = {'c','o','m','d','l','g','3','2',0};
+                    static const WCHAR comdlg32W[] = L"comdlg32";
                     WCHAR szFName[1024] = {0};
                     WCHAR filter[MAX_PATH], szCaption[MAX_PATH];
                     OPENFILENAMEW ofn;
@@ -500,7 +488,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
 
 /* This grabs the MRU list from the registry and fills the combo for the "Run" dialog above */
 /* fShowDefault ignored if pszLatest != NULL */
-static void FillList (HWND hCb, char *pszLatest, BOOL fShowDefault)
+static void FillList(HWND hCb, char *pszLatest, BOOL fShowDefault)
 {
     HKEY hkey ;
 /*    char szDbgMsg[256] = "" ; */
@@ -693,10 +681,10 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
     if (ConfirmDialog(hWndOwner, IDS_LOGOFF_PROMPT, IDS_LOGOFF_TITLE))
-    {
         ExitWindowsEx(EWX_LOGOFF, 0);
-    }
-    return 0;}
+
+    return 0;
+}
 
 
 /*************************************************************************
@@ -715,7 +703,7 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
  * NOTES
  *     exported by ordinal
  */
-void WINAPI ExitWindowsDialog (HWND hWndOwner)
+void WINAPI ExitWindowsDialog(HWND hWndOwner)
 {
     TRACE("(%p)\n", hWndOwner);
 

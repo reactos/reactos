@@ -4,65 +4,72 @@
 
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CmRegisterCallback(
-  IN PEX_CALLBACK_FUNCTION Function,
-  IN PVOID Context OPTIONAL,
-  OUT PLARGE_INTEGER Cookie);
+  _In_ PEX_CALLBACK_FUNCTION Function,
+  _In_opt_ PVOID Context,
+  _Out_ PLARGE_INTEGER Cookie);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CmUnRegisterCallback(
-  IN LARGE_INTEGER Cookie);
+  _In_ LARGE_INTEGER Cookie);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CmRegisterCallbackEx(
-  PEX_CALLBACK_FUNCTION Function,
-  PCUNICODE_STRING Altitude,
-  PVOID Driver,
-  PVOID Context,
-  PLARGE_INTEGER Cookie,
-  PVOID Reserved);
+  _In_ PEX_CALLBACK_FUNCTION Function,
+  _In_ PCUNICODE_STRING Altitude,
+  _In_ PVOID Driver,
+  _In_opt_ PVOID Context,
+  _Out_ PLARGE_INTEGER Cookie,
+  _Reserved_ PVOID Reserved);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 CmGetCallbackVersion(
-  OUT PULONG Major OPTIONAL,
-  OUT PULONG Minor OPTIONAL);
+  _Out_opt_ PULONG Major,
+  _Out_opt_ PULONG Minor);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CmSetCallbackObjectContext(
-  IN OUT PVOID Object,
-  IN PLARGE_INTEGER Cookie,
-  IN PVOID NewContext,
-  OUT PVOID *OldContext OPTIONAL);
+  _Inout_ PVOID Object,
+  _In_ PLARGE_INTEGER Cookie,
+  _In_ PVOID NewContext,
+  _Out_opt_ PVOID *OldContext);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CmCallbackGetKeyObjectID(
-  IN PLARGE_INTEGER Cookie,
-  IN PVOID Object,
-  OUT PULONG_PTR ObjectID OPTIONAL,
-  OUT PCUNICODE_STRING *ObjectName OPTIONAL);
+  _In_ PLARGE_INTEGER Cookie,
+  _In_ PVOID Object,
+  _Out_opt_ PULONG_PTR ObjectID,
+  _Outptr_opt_ PCUNICODE_STRING *ObjectName);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 CmGetBoundTransaction(
-  IN PLARGE_INTEGER Cookie,
-  IN PVOID Object);
+  _In_ PLARGE_INTEGER Cookie,
+  _In_ PVOID Object);
 
 #endif // NTDDI_VERSION >= NTDDI_VISTA
 

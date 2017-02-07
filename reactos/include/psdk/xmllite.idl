@@ -109,3 +109,65 @@ cpp_quote("typedef IUnknown IXmlReaderInput;")
 cpp_quote("STDAPI CreateXmlReaderInputWithEncodingName(IUnknown *stream, IMalloc *pMalloc,")
 cpp_quote("                                            LPCWSTR encoding, BOOL hint,")
 cpp_quote("                                            LPCWSTR base_uri, IXmlReaderInput **ppInput);")
+
+typedef enum XmlStandalone
+{
+    XmlStandalone_Omit,
+    XmlStandalone_Yes,
+    XmlStandalone_No,
+    _XmlStandalone_Last = XmlStandalone_No
+} XmlStandalone;
+
+typedef enum XmlWriterProperty
+{
+    XmlWriterProperty_MultiLanguage,
+    XmlWriterProperty_Indent,
+    XmlWriterProperty_ByteOrderMark,
+    XmlWriterProperty_OmitXmlDeclaration,
+    XmlWriterProperty_ConformanceLevel,
+    _XmlWriterProperty_Last = XmlWriterProperty_OmitXmlDeclaration
+} XmlWriterProperty;
+
+/* IXmlWriter */
+[
+  local,
+  object,
+  uuid(7279FC88-709D-4095-B63D-69FE4B0D9030),
+  pointer_default(unique)
+]
+interface IXmlWriter : IUnknown
+{
+    HRESULT SetOutput([in] IUnknown *pOutput);
+    HRESULT GetProperty([in] UINT nProperty, [out] LONG_PTR *ppValue);
+    HRESULT SetProperty([in] UINT nProperty, [in] LONG_PTR pValue);
+    HRESULT WriteAttributes([in] IXmlReader *pReader, [in] BOOL fWriteDefaultAttributes);
+    HRESULT WriteAttributeString([in] LPCWSTR pwszPrefix, [in] LPCWSTR pwszLocalName,
+                                 [in] LPCWSTR pwszNamespaceUri, [in] LPCWSTR pwszValue);
+    HRESULT WriteCData([in] LPCWSTR pwszText);
+    HRESULT WriteCharEntity([in] WCHAR wch);
+    HRESULT WriteChars([in] const WCHAR *pwch, [in] UINT cwch);
+    HRESULT WriteComment([in] LPCWSTR pwszComment);
+    HRESULT WriteDocType([in] LPCWSTR pwszName, [in] LPCWSTR pwszPublicId,
+                         [in] LPCWSTR pwszSystemId, [in] LPCWSTR pwszSubset);
+    HRESULT WriteElementString([in] LPCWSTR pwszPrefix, [in] LPCWSTR pwszLocalName,
+                               [in] LPCWSTR pwszNamespaceUri, [in] LPCWSTR pwszValue);
+    HRESULT WriteEndDocument();
+    HRESULT WriteEndElement();
+    HRESULT WriteEntityRef([in] LPCWSTR pwszName);
+    HRESULT WriteFullEndElement();
+    HRESULT WriteName([in] LPCWSTR pwszName);
+    HRESULT WriteNmToken([in] LPCWSTR pwszNmToken);
+    HRESULT WriteNode([in] IXmlReader *pReader, [in] BOOL fWriteDefaultAttributes);
+    HRESULT WriteNodeShallow([in] IXmlReader *pReader, [in] BOOL fWriteDefaultAttributes);
+    HRESULT WriteProcessingInstruction([in] LPCWSTR pwszName, [in] LPCWSTR pwszText);
+    HRESULT WriteQualifiedName([in] LPCWSTR pwszLocalName, [in] LPCWSTR pwszNamespaceUri);
+    HRESULT WriteRaw([in] LPCWSTR pwszData);
+    HRESULT WriteRawChars([in] const WCHAR *pwch, [in] UINT cwch);
+    HRESULT WriteStartDocument([in] XmlStandalone standalone);
+    HRESULT WriteStartElement([in] LPCWSTR pwszPrefix, [in] LPCWSTR pwszLocalName,
+                              [in]  LPCWSTR pwszNamespaceUri);
+    HRESULT WriteString([in] LPCWSTR pwszText);
+    HRESULT WriteSurrogateCharEntity([in] WCHAR wchLow, [in] WCHAR wchHigh);
+    HRESULT WriteWhitespace([in] LPCWSTR pwszWhitespace);
+    HRESULT Flush();
+}

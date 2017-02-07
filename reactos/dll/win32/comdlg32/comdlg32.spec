@@ -3,6 +3,9 @@
 @ stdcall ChooseFontA(ptr)
 @ stdcall ChooseFontW(ptr)
 @ stdcall CommDlgExtendedError()
+;@ stdcall -private DllGetClassObject(ptr ptr ptr) ; Win 7
+;@ stdcall -private DllRegisterServer() ; Win 7
+;@ stdcall -private DllUnregisterServer() ; Win 7
 @ stdcall FindTextA(ptr)
 @ stdcall FindTextW(ptr)
 @ stdcall GetFileTitleA(str ptr long)

@@ -60,6 +60,8 @@ void free_handle_tables( void )
     HeapFree( GetProcessHeap(), 0, transformtable );
     transformtable = NULL;
     num_transform_handles = 0;
+
+    DeleteCriticalSection( &MSCMS_handle_cs );
 }
 
 struct profile *grab_profile( HPROFILE handle )

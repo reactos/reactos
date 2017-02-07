@@ -12,945 +12,1055 @@ $if (_WDMDDK_)
 $endif (_WDMDDK_)
 
 $if (_NTDDK_)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateLocallyUniqueId(
-  OUT PLUID Luid);
+  _Out_ PLUID Luid);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateProcess(
-  IN HANDLE ProcessHandle OPTIONAL,
-  IN NTSTATUS ExitStatus);
+  _In_opt_ HANDLE ProcessHandle,
+  _In_ NTSTATUS ExitStatus);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcess(
-  OUT PHANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId OPTIONAL);
+  _Out_ PHANDLE ProcessHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PCLIENT_ID ClientId);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEaFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PVOID EaList OPTIONAL,
-  IN ULONG EaListLength,
-  IN PULONG EaIndex OPTIONAL,
-  IN BOOLEAN RestartScan);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_ BOOLEAN ReturnSingleEntry,
+  _In_reads_bytes_opt_(EaListLength) PVOID EaList,
+  _In_ ULONG EaListLength,
+  _In_opt_ PULONG EaIndex,
+  _In_ BOOLEAN RestartScan);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEaFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateToken(
-  IN HANDLE ExistingTokenHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN BOOLEAN EffectiveOnly,
-  IN TOKEN_TYPE TokenType,
-  OUT PHANDLE NewTokenHandle);
+  _In_ HANDLE ExistingTokenHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ BOOLEAN EffectiveOnly,
+  _In_ TOKEN_TYPE TokenType,
+  _Out_ PHANDLE NewTokenHandle);
 $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClose(
-  IN HANDLE Handle);
+  _In_ HANDLE Handle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateDirectoryObject(
-  OUT PHANDLE DirectoryHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE DirectoryHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG CreateDisposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_opt_ PLARGE_INTEGER AllocationSize,
+  _In_ ULONG FileAttributes,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG CreateDisposition,
+  _In_ ULONG CreateOptions,
+  _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
+  _In_ ULONG EaLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateKey(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ULONG TitleIndex,
-  IN PUNICODE_STRING Class OPTIONAL,
-  IN ULONG CreateOptions,
-  OUT PULONG Disposition OPTIONAL);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Reserved_ ULONG TitleIndex,
+  _In_opt_ PUNICODE_STRING Class,
+  _In_ ULONG CreateOptions,
+  _Out_opt_ PULONG Disposition);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSection(
-  OUT PHANDLE SectionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PLARGE_INTEGER MaximumSize OPTIONAL,
-  IN ULONG SectionPageProtection,
-  IN ULONG AllocationAttributes,
-  IN HANDLE FileHandle OPTIONAL);
+  _Out_ PHANDLE SectionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PLARGE_INTEGER MaximumSize,
+  _In_ ULONG SectionPageProtection,
+  _In_ ULONG AllocationAttributes,
+  _In_opt_ HANDLE FileHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteKey(
-  IN HANDLE KeyHandle);
+  _In_ HANDLE KeyHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteValueKey(
-  IN HANDLE KeyHandle,
-  IN PUNICODE_STRING ValueName);
+  _In_ HANDLE KeyHandle,
+  _In_ PUNICODE_STRING ValueName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateKey(
-  IN HANDLE KeyHandle,
-  IN ULONG Index,
-  IN KEY_INFORMATION_CLASS KeyInformationClass,
-  OUT PVOID KeyInformation OPTIONAL,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE KeyHandle,
+  _In_ ULONG Index,
+  _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+  _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateValueKey(
-  IN HANDLE KeyHandle,
-  IN ULONG Index,
-  IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-  OUT PVOID KeyValueInformation OPTIONAL,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE KeyHandle,
+  _In_ ULONG Index,
+  _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+  _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushKey(
-  IN HANDLE KeyHandle);
+  _In_ HANDLE KeyHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadDriver(
-  IN PUNICODE_STRING DriverServiceName);
+  _In_ PUNICODE_STRING DriverServiceName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakeTemporaryObject(
-  IN HANDLE Handle);
+  _In_ HANDLE Handle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMapViewOfSection(
-  IN HANDLE SectionHandle,
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG_PTR ZeroBits,
-  IN SIZE_T CommitSize,
-  IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-  IN OUT PSIZE_T ViewSize,
-  IN SECTION_INHERIT InheritDisposition,
-  IN ULONG AllocationType,
-  IN ULONG Protect);
+  _In_ HANDLE SectionHandle,
+  _In_ HANDLE ProcessHandle,
+  _Outptr_result_bytebuffer_(*ViewSize) PVOID *BaseAddress,
+  _In_ ULONG_PTR ZeroBits,
+  _In_ SIZE_T CommitSize,
+  _Inout_opt_ PLARGE_INTEGER SectionOffset,
+  _Inout_ PSIZE_T ViewSize,
+  _In_ SECTION_INHERIT InheritDisposition,
+  _In_ ULONG AllocationType,
+  _In_ ULONG Protect);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG ShareAccess,
-  IN ULONG OpenOptions);
+  _Out_ PHANDLE FileHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG ShareAccess,
+  _In_ ULONG OpenOptions);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKey(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSection(
-  OUT PHANDLE SectionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE SectionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSymbolicLinkObject(
-  OUT PHANDLE LinkHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE LinkHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryKey(
-  IN HANDLE KeyHandle,
-  IN KEY_INFORMATION_CLASS KeyInformationClass,
-  OUT PVOID KeyInformation OPTIONAL,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE KeyHandle,
+  _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+  _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySymbolicLinkObject(
-  IN HANDLE LinkHandle,
-  IN OUT PUNICODE_STRING LinkTarget,
-  OUT PULONG ReturnedLength OPTIONAL);
+  _In_ HANDLE LinkHandle,
+  _Inout_ PUNICODE_STRING LinkTarget,
+  _Out_opt_ PULONG ReturnedLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryValueKey(
-  IN HANDLE KeyHandle,
-  IN PUNICODE_STRING ValueName,
-  IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-  OUT PVOID KeyValueInformation OPTIONAL,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE KeyHandle,
+  _In_ PUNICODE_STRING ValueName,
+  _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+  _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN PLARGE_INTEGER ByteOffset OPTIONAL,
-  IN PULONG Key OPTIONAL);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER ByteOffset,
+  _In_opt_ PULONG Key);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetValueKey(
-  IN HANDLE KeyHandle,
-  IN PUNICODE_STRING ValueName,
-  IN ULONG TitleIndex OPTIONAL,
-  IN ULONG Type,
-  IN PVOID Data OPTIONAL,
-  IN ULONG DataSize);
+  _In_ HANDLE KeyHandle,
+  _In_ PUNICODE_STRING ValueName,
+  _In_opt_ ULONG TitleIndex,
+  _In_ ULONG Type,
+  _In_reads_bytes_opt_(DataSize) PVOID Data,
+  _In_ ULONG DataSize);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadDriver(
-  IN PUNICODE_STRING DriverServiceName);
+  _In_ PUNICODE_STRING DriverServiceName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnmapViewOfSection(
-  IN HANDLE ProcessHandle,
-  IN PVOID BaseAddress OPTIONAL);
+  _In_ HANDLE ProcessHandle,
+  _In_opt_ PVOID BaseAddress);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID Buffer,
-  IN ULONG Length,
-  IN PLARGE_INTEGER ByteOffset OPTIONAL,
-  IN PULONG Key OPTIONAL);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_opt_ PLARGE_INTEGER ByteOffset,
+  _In_opt_ PULONG Key);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryFullAttributesFile(
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Out_ PFILE_NETWORK_OPEN_INFORMATION FileInformation);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ZwCancelTimer(
-  IN HANDLE TimerHandle,
-  OUT PBOOLEAN CurrentState OPTIONAL);
+  _In_ HANDLE TimerHandle,
+  _Out_opt_ PBOOLEAN CurrentState);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(return == 0, __drv_allocatesMem(TimerObject))
 NTSTATUS
 NTAPI
 ZwCreateTimer(
-  OUT PHANDLE TimerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN TIMER_TYPE TimerType);
+  _Out_ PHANDLE TimerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ TIMER_TYPE TimerType);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ZwOpenTimer(
-  OUT PHANDLE TimerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE TimerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationThread(
-  IN HANDLE ThreadHandle,
-  IN THREADINFOCLASS ThreadInformationClass,
-  IN PVOID ThreadInformation,
-  IN ULONG ThreadInformationLength);
+  _In_ HANDLE ThreadHandle,
+  _In_ THREADINFOCLASS ThreadInformationClass,
+  _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+  _In_ ULONG ThreadInformationLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ZwSetTimer(
-  IN HANDLE TimerHandle,
-  IN PLARGE_INTEGER DueTime,
-  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
-  IN PVOID TimerContext OPTIONAL,
-  IN BOOLEAN ResumeTimer,
-  IN LONG Period OPTIONAL,
-  OUT PBOOLEAN PreviousState OPTIONAL);
+  _In_ HANDLE TimerHandle,
+  _In_ PLARGE_INTEGER DueTime,
+  _In_opt_ PTIMER_APC_ROUTINE TimerApcRoutine,
+  _In_opt_ PVOID TimerContext,
+  _In_ BOOLEAN ResumeTimer,
+  _In_opt_ LONG Period,
+  _Out_opt_ PBOOLEAN PreviousState);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDisplayString(
-  IN PUNICODE_STRING String);
+  _In_ PUNICODE_STRING String);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
-  IN POWER_INFORMATION_LEVEL PowerInformationLevel,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ POWER_INFORMATION_LEVEL PowerInformationLevel,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FsInformation,
+  _In_ ULONG Length,
+  _In_ FS_INFORMATION_CLASS FsInformationClass);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeviceIoControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG IoControlCode,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryObject(
-  IN HANDLE Handle OPTIONAL,
-  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
-  OUT PVOID ObjectInformation OPTIONAL,
-  IN ULONG ObjectInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_opt_ HANDLE Handle,
+  _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
+  _In_ ULONG ObjectInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeKey(
-  IN HANDLE KeyHandle,
-  IN HANDLE EventHandle OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG NotifyFilter,
-  IN BOOLEAN WatchSubtree,
-  OUT PVOID Buffer,
-  IN ULONG BufferLength,
-  IN BOOLEAN Asynchronous);
+  _In_ HANDLE KeyHandle,
+  _In_opt_ HANDLE EventHandle,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG NotifyFilter,
+  _In_ BOOLEAN WatchSubtree,
+  _Out_writes_bytes_opt_(BufferLength) PVOID Buffer,
+  _In_ ULONG BufferLength,
+  _In_ BOOLEAN Asynchronous);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEvent(
-  OUT PHANDLE EventHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN EVENT_TYPE EventType,
-  IN BOOLEAN InitialState);
+  _Out_ PHANDLE EventHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ EVENT_TYPE EventType,
+  _In_ BOOLEAN InitialState);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteFile(
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FileInformation,
-  IN ULONG Length,
-  IN FILE_INFORMATION_CLASS FileInformationClass,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PUNICODE_STRING FileName OPTIONAL,
-  IN BOOLEAN RestartScan);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID FileInformation,
+  _In_ ULONG Length,
+  _In_ FILE_INFORMATION_CLASS FileInformationClass,
+  _In_ BOOLEAN ReturnSingleEntry,
+  _In_opt_ PUNICODE_STRING FileName,
+  _In_ BOOLEAN RestartScan);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID FsInformation,
+  _In_ ULONG Length,
+  _In_ FS_INFORMATION_CLASS FsInformationClass);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFsControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG FsControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG FsControlCode,
+  _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+  _In_ ULONG InputBufferLength,
+  _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+  _In_ ULONG OutputBufferLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateObject(
-  IN HANDLE SourceProcessHandle,
-  IN HANDLE SourceHandle,
-  IN HANDLE TargetProcessHandle OPTIONAL,
-  OUT PHANDLE TargetHandle OPTIONAL,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG HandleAttributes,
-  IN ULONG Options);
+  _In_ HANDLE SourceProcessHandle,
+  _In_ HANDLE SourceHandle,
+  _In_opt_ HANDLE TargetProcessHandle,
+  _Out_opt_ PHANDLE TargetHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG HandleAttributes,
+  _In_ ULONG Options);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenDirectoryObject(
-  OUT PHANDLE DirectoryHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE DirectoryHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(return==0, __drv_allocatesMem(Region))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN ULONG_PTR ZeroBits,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG AllocationType,
-  IN ULONG Protect);
+  _In_ HANDLE ProcessHandle,
+  _Inout_ PVOID *BaseAddress,
+  _In_ ULONG_PTR ZeroBits,
+  _Inout_ PSIZE_T RegionSize,
+  _In_ ULONG AllocationType,
+  _In_ ULONG Protect);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(return==0, __drv_freesMem(Region))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN OUT PSIZE_T RegionSize,
-  IN ULONG FreeType);
+  _In_ HANDLE ProcessHandle,
+  _Inout_ PVOID *BaseAddress,
+  _Inout_ PSIZE_T RegionSize,
+  _In_ ULONG FreeType);
 
+_When_(Timeout == NULL, _IRQL_requires_max_(APC_LEVEL))
+_When_(Timeout->QuadPart != 0, _IRQL_requires_max_(APC_LEVEL))
+_When_(Timeout->QuadPart == 0, _IRQL_requires_max_(DISPATCH_LEVEL))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForSingleObject(
-  IN HANDLE Handle,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
+  _In_ HANDLE Handle,
+  _In_ BOOLEAN Alertable,
+  _In_opt_ PLARGE_INTEGER Timeout);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEvent(
-  IN HANDLE EventHandle,
-  OUT PLONG PreviousState OPTIONAL);
+  _In_ HANDLE EventHandle,
+  _Out_opt_ PLONG PreviousState);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushVirtualMemory(
-  IN HANDLE ProcessHandle,
-  IN OUT PVOID *BaseAddress,
-  IN OUT PSIZE_T RegionSize,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ HANDLE ProcessHandle,
+  _Inout_ PVOID *BaseAddress,
+  _Inout_ PSIZE_T RegionSize,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationToken(
-  IN HANDLE TokenHandle,
-  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-  OUT PVOID TokenInformation,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE TokenHandle,
+  _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+  _Out_writes_bytes_to_opt_(Length,*ResultLength) PVOID TokenInformation,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSecurityObject(
-  IN HANDLE Handle,
-  IN SECURITY_INFORMATION SecurityInformation,
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+  _In_ HANDLE Handle,
+  _In_ SECURITY_INFORMATION SecurityInformation,
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySecurityObject(
-  IN HANDLE FileHandle,
-  IN SECURITY_INFORMATION SecurityInformation,
-  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN ULONG Length,
-  OUT PULONG ResultLength);
+  _In_ HANDLE FileHandle,
+  _In_ SECURITY_INFORMATION SecurityInformation,
+  _Out_writes_bytes_to_(Length,*ResultLength) PSECURITY_DESCRIPTOR SecurityDescriptor,
+  _In_ ULONG Length,
+  _Out_ PULONG ResultLength);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcessTokenEx(
-  IN HANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ProcessHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ ULONG HandleAttributes,
+  _Out_ PHANDLE TokenHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadTokenEx(
-  IN HANDLE ThreadHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN BOOLEAN OpenAsSelf,
-  IN ULONG HandleAttributes,
-  OUT PHANDLE TokenHandle);
+  _In_ HANDLE ThreadHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ BOOLEAN OpenAsSelf,
+  _In_ ULONG HandleAttributes,
+  _Out_ PHANDLE TokenHandle);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 $endif (_NTIFS_)
 $if (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenEvent(
-  OUT PHANDLE EventHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes);
+  _Out_ PHANDLE EventHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 #endif
 $endif (_WDMDDK_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 ZwCreateKeyTransacted(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ULONG TitleIndex,
-  IN PUNICODE_STRING Class OPTIONAL,
-  IN ULONG CreateOptions,
-  IN HANDLE TransactionHandle,
-  OUT PULONG Disposition OPTIONAL);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _Reserved_ ULONG TitleIndex,
+  _In_opt_ PUNICODE_STRING Class,
+  _In_ ULONG CreateOptions,
+  _In_ HANDLE TransactionHandle,
+  _Out_opt_ PULONG Disposition);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKeyTransacted(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN HANDLE TransactionHandle);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ HANDLE TransactionHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCreateTransactionManager(
-  OUT PHANDLE TmHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PUNICODE_STRING LogFileName OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN ULONG CommitStrength OPTIONAL);
+  _Out_ PHANDLE TmHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PUNICODE_STRING LogFileName,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ ULONG CommitStrength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenTransactionManager(
-  OUT PHANDLE TmHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN PUNICODE_STRING LogFileName OPTIONAL,
-  IN LPGUID TmIdentity OPTIONAL,
-  IN ULONG OpenOptions OPTIONAL);
+  _Out_ PHANDLE TmHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PUNICODE_STRING LogFileName,
+  _In_opt_ LPGUID TmIdentity,
+  _In_opt_ ULONG OpenOptions);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRollforwardTransactionManager(
-  IN HANDLE TransactionManagerHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE TransactionManagerHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRecoverTransactionManager(
-  IN HANDLE TransactionManagerHandle);
+  _In_ HANDLE TransactionManagerHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationTransactionManager(
-  IN HANDLE TransactionManagerHandle,
-  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
-  OUT PVOID TransactionManagerInformation,
-  IN ULONG TransactionManagerInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE TransactionManagerHandle,
+  _In_ TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  _Out_writes_bytes_(TransactionManagerInformationLength) PVOID TransactionManagerInformation,
+  _In_ ULONG TransactionManagerInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetInformationTransactionManager(
-  IN HANDLE TmHandle,
-  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
-  IN PVOID TransactionManagerInformation,
-  IN ULONG TransactionManagerInformationLength);
+  _In_ HANDLE TmHandle,
+  _In_ TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  _In_ PVOID TransactionManagerInformation,
+  _In_ ULONG TransactionManagerInformationLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwEnumerateTransactionObject(
-  IN HANDLE RootObjectHandle OPTIONAL,
-  IN KTMOBJECT_TYPE QueryType,
-  IN OUT PKTMOBJECT_CURSOR ObjectCursor,
-  IN ULONG ObjectCursorLength,
-  OUT PULONG ReturnLength);
+  _In_opt_ HANDLE RootObjectHandle,
+  _In_ KTMOBJECT_TYPE QueryType,
+  _Inout_updates_bytes_(ObjectCursorLength) PKTMOBJECT_CURSOR ObjectCursor,
+  _In_ ULONG ObjectCursorLength,
+  _Out_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCreateTransaction(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN LPGUID Uow OPTIONAL,
-  IN HANDLE TmHandle OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN ULONG IsolationLevel OPTIONAL,
-  IN ULONG IsolationFlags OPTIONAL,
-  IN PLARGE_INTEGER Timeout OPTIONAL,
-  IN PUNICODE_STRING Description OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ ULONG IsolationLevel,
+  _In_opt_ ULONG IsolationFlags,
+  _In_opt_ PLARGE_INTEGER Timeout,
+  _In_opt_ PUNICODE_STRING Description);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenTransaction(
-  OUT PHANDLE TransactionHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN LPGUID Uow,
-  IN HANDLE TmHandle OPTIONAL);
+  _Out_ PHANDLE TransactionHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ LPGUID Uow,
+  _In_opt_ HANDLE TmHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationTransaction(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  OUT PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _Out_writes_bytes_(TransactionInformationLength) PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetInformationTransaction(
-  IN HANDLE TransactionHandle,
-  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
-  IN PVOID TransactionInformation,
-  IN ULONG TransactionInformationLength);
+  _In_ HANDLE TransactionHandle,
+  _In_ TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  _In_ PVOID TransactionInformation,
+  _In_ ULONG TransactionInformationLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCommitTransaction(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRollbackTransaction(
-  IN HANDLE TransactionHandle,
-  IN BOOLEAN Wait);
+  _In_ HANDLE TransactionHandle,
+  _In_ BOOLEAN Wait);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCreateResourceManager(
-  OUT PHANDLE ResourceManagerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE TmHandle,
-  IN LPGUID ResourceManagerGuid OPTIONAL,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN PUNICODE_STRING Description OPTIONAL);
+  _Out_ PHANDLE ResourceManagerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE TmHandle,
+  _In_opt_ LPGUID ResourceManagerGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ ULONG CreateOptions,
+  _In_opt_ PUNICODE_STRING Description);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenResourceManager(
-  OUT PHANDLE ResourceManagerHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE TmHandle,
-  IN LPGUID ResourceManagerGuid,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+  _Out_ PHANDLE ResourceManagerHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE TmHandle,
+  _In_ LPGUID ResourceManagerGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRecoverResourceManager(
-  IN HANDLE ResourceManagerHandle);
+  _In_ HANDLE ResourceManagerHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwGetNotificationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  OUT PTRANSACTION_NOTIFICATION TransactionNotification,
-  IN ULONG NotificationLength,
-  IN PLARGE_INTEGER Timeout,
-  IN PULONG ReturnLength OPTIONAL,
-  IN ULONG Asynchronous,
-  IN ULONG_PTR AsynchronousContext OPTIONAL);
+  _In_ HANDLE ResourceManagerHandle,
+  _Out_ PTRANSACTION_NOTIFICATION TransactionNotification,
+  _In_ ULONG NotificationLength,
+  _In_ PLARGE_INTEGER Timeout,
+  _Out_opt_ PULONG ReturnLength,
+  _In_ ULONG Asynchronous,
+  _In_opt_ ULONG_PTR AsynchronousContext);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
-  OUT PVOID ResourceManagerInformation,
-  IN ULONG ResourceManagerInformationLength,
-  IN PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  _Out_writes_bytes_(ResourceManagerInformationLength) PVOID ResourceManagerInformation,
+  _In_ ULONG ResourceManagerInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetInformationResourceManager(
-  IN HANDLE ResourceManagerHandle,
-  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
-  IN PVOID ResourceManagerInformation,
-  IN ULONG ResourceManagerInformationLength);
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  _In_reads_bytes_(ResourceManagerInformationLength) PVOID ResourceManagerInformation,
+  _In_ ULONG ResourceManagerInformationLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCreateEnlistment(
-  OUT PHANDLE EnlistmentHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE ResourceManagerHandle,
-  IN HANDLE TransactionHandle,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN ULONG CreateOptions OPTIONAL,
-  IN NOTIFICATION_MASK NotificationMask,
-  IN PVOID EnlistmentKey OPTIONAL);
+  _Out_ PHANDLE EnlistmentHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE ResourceManagerHandle,
+  _In_ HANDLE TransactionHandle,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ ULONG CreateOptions,
+  _In_ NOTIFICATION_MASK NotificationMask,
+  _In_opt_ PVOID EnlistmentKey);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwOpenEnlistment(
-  OUT PHANDLE EnlistmentHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN HANDLE RmHandle,
-  IN LPGUID EnlistmentGuid,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+  _Out_ PHANDLE EnlistmentHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ HANDLE RmHandle,
+  _In_ LPGUID EnlistmentGuid,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
-  OUT PVOID EnlistmentInformation,
-  IN ULONG EnlistmentInformationLength,
-  IN PULONG ReturnLength OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_ ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  _Out_writes_bytes_(EnlistmentInformationLength) PVOID EnlistmentInformation,
+  _In_ ULONG EnlistmentInformationLength,
+  _Out_opt_ PULONG ReturnLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetInformationEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
-  IN PVOID EnlistmentInformation,
-  IN ULONG EnlistmentInformationLength);
+  _In_ HANDLE EnlistmentHandle,
+  _In_ ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  _In_reads_bytes_(EnlistmentInformationLength) PVOID EnlistmentInformation,
+  _In_ ULONG EnlistmentInformationLength);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRecoverEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PVOID EnlistmentKey OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PVOID EnlistmentKey);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPrePrepareEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPrepareEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCommitEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRollbackEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPrePrepareComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwPrepareComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwCommitComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwReadOnlyEnlistment(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -963,90 +1073,97 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSinglePhaseReject(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER ByteOffset,
-  IN PLARGE_INTEGER Length,
-  IN ULONG Key,
-  IN BOOLEAN FailImmediately,
-  IN BOOLEAN ExclusiveLock);
+  _In_ HANDLE FileHandle,
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ PLARGE_INTEGER ByteOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ ULONG Key,
+  _In_ BOOLEAN FailImmediately,
+  _In_ BOOLEAN ExclusiveLock);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnlockFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER ByteOffset,
-  IN PLARGE_INTEGER Length,
-  IN ULONG Key);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ PLARGE_INTEGER ByteOffset,
+  _In_ PLARGE_INTEGER Length,
+  _In_ ULONG Key);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryQuotaInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PVOID SidList,
-  IN ULONG SidListLength,
-  IN PSID StartSid OPTIONAL,
-  IN BOOLEAN RestartScan);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _Out_writes_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length,
+  _In_ BOOLEAN ReturnSingleEntry,
+  _In_reads_bytes_opt_(SidListLength) PVOID SidList,
+  _In_ ULONG SidListLength,
+  _In_opt_ PSID StartSid,
+  _In_ BOOLEAN RestartScan);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetQuotaInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PVOID Buffer,
-  IN ULONG Length);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_reads_bytes_(Length) PVOID Buffer,
+  _In_ ULONG Length);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushBuffersFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock);
+  _In_ HANDLE FileHandle,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock);
 $endif (_NTIFS_)
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 $if (_WDMDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKeyEx(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ULONG OpenOptions);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ ULONG OpenOptions);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKeyTransactedEx(
-  OUT PHANDLE KeyHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN ULONG OpenOptions,
-  IN HANDLE TransactionHandle);
+  _Out_ PHANDLE KeyHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_ ULONG OpenOptions,
+  _In_ HANDLE TransactionHandle);
 
 NTSYSAPI
 NTSTATUS
@@ -1076,43 +1193,47 @@ ZwQueryMultipleValueKey(
   IN OUT PULONG BufferLength,
   OUT PULONG RequiredBufferLength OPTIONAL);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRenameKey(
-  IN HANDLE KeyHandle,
-  IN PUNICODE_STRING NewName);
+  _In_ HANDLE KeyHandle,
+  _In_ PUNICODE_STRING NewName);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationKey(
-  IN HANDLE KeyHandle,
-  IN KEY_SET_INFORMATION_CLASS KeySetInformationClass,
-  IN PVOID KeySetInformation,
-  IN ULONG KeySetInformationLength);
+  _In_ HANDLE KeyHandle,
+  _In_ __drv_strictTypeMatch(__drv_typeConst) KEY_SET_INFORMATION_CLASS KeySetInformationClass,
+  _In_reads_bytes_(KeySetInformationLength) PVOID KeySetInformation,
+  _In_ ULONG KeySetInformationLength);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 ZwSetTimerEx(
-  IN HANDLE TimerHandle,
-  IN TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
-  IN OUT PVOID TimerSetInformation,
-  IN ULONG TimerSetInformationLength);
+  _In_ HANDLE TimerHandle,
+  _In_ TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
+  _Inout_updates_bytes_opt_(TimerSetInformationLength) PVOID TimerSetInformation,
+  _In_ ULONG TimerSetInformationLength);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationToken(
-  IN HANDLE TokenHandle,
-  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-  IN PVOID TokenInformation,
-  IN ULONG TokenInformationLength);
+  _In_ HANDLE TokenHandle,
+  _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
+  _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,
+  _In_ ULONG TokenInformationLength);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 

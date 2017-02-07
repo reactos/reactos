@@ -411,7 +411,7 @@ condition_done:
 	return Cmd;
 }
 
-/* Parse a FOR command. 
+/* Parse a FOR command.
  * Syntax is: FOR [options] %var IN (list) DO command */
 static PARSED_COMMAND *ParseFor(void)
 {
@@ -536,7 +536,7 @@ static DECLSPEC_NOINLINE PARSED_COMMAND *ParseCommandPart(REDIRECTION *RedirList
 	PARSED_COMMAND *(*Func)(void);
 
 	TCHAR *Pos = _stpcpy(ParsedLine, CurrentToken) + 1;
-	DWORD TailOffset = Pos - ParsedLine;
+	DWORD_PTR TailOffset = Pos - ParsedLine;
 
 	/* Check for special forms */
 	if ((Func = ParseFor, _tcsicmp(ParsedLine, _T("for")) == 0) ||

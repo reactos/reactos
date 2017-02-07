@@ -19,21 +19,21 @@ typedef struct _CC_FILE_SIZES {
 
 typedef BOOLEAN
 (NTAPI *PACQUIRE_FOR_LAZY_WRITE) (
-  IN PVOID Context,
-  IN BOOLEAN Wait);
+  _In_ PVOID Context,
+  _In_ BOOLEAN Wait);
 
 typedef VOID
 (NTAPI *PRELEASE_FROM_LAZY_WRITE) (
-  IN PVOID Context);
+  _In_ PVOID Context);
 
 typedef BOOLEAN
 (NTAPI *PACQUIRE_FOR_READ_AHEAD) (
-  IN PVOID Context,
-  IN BOOLEAN Wait);
+  _In_ PVOID Context,
+  _In_ BOOLEAN Wait);
 
 typedef VOID
 (NTAPI *PRELEASE_FROM_READ_AHEAD) (
-  IN PVOID Context);
+  _In_ PVOID Context);
 
 typedef struct _CACHE_MANAGER_CALLBACKS {
   PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
@@ -49,23 +49,23 @@ typedef struct _CACHE_UNINITIALIZE_EVENT {
 
 typedef VOID
 (NTAPI *PDIRTY_PAGE_ROUTINE) (
-  IN PFILE_OBJECT FileObject,
-  IN PLARGE_INTEGER FileOffset,
-  IN ULONG Length,
-  IN PLARGE_INTEGER OldestLsn,
-  IN PLARGE_INTEGER NewestLsn,
-  IN PVOID Context1,
-  IN PVOID Context2);
+  _In_ PFILE_OBJECT FileObject,
+  _In_ PLARGE_INTEGER FileOffset,
+  _In_ ULONG Length,
+  _In_ PLARGE_INTEGER OldestLsn,
+  _In_ PLARGE_INTEGER NewestLsn,
+  _In_ PVOID Context1,
+  _In_ PVOID Context2);
 
 typedef VOID
 (NTAPI *PFLUSH_TO_LSN) (
-  IN PVOID LogHandle,
-  IN LARGE_INTEGER Lsn);
+  _In_ PVOID LogHandle,
+  _In_ LARGE_INTEGER Lsn);
 
 typedef VOID
 (NTAPI *PCC_POST_DEFERRED_WRITE) (
-  IN PVOID Context1,
-  IN PVOID Context2);
+  _In_ PVOID Context1,
+  _In_ PVOID Context2);
 
 #define UNINITIALIZE_CACHE_MAPS          (1)
 #define DO_NOT_RETRY_PURGE               (2)

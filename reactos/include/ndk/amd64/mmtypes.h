@@ -1,7 +1,6 @@
 /*++ NDK Version: 0095
 
 Copyright (c) Alex Ionescu.  All rights reserved.
-Copyright (c) Timo Kreuzer  All rights reserved.
 
 Header Name:
 
@@ -32,6 +31,11 @@ Author:
 #define PAGE_SHIFT                        12L
 #define MM_ALLOCATION_GRANULARITY         0x10000
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
+
+//
+// Address of the shared user page
+//
+#define MM_SHARED_USER_DATA_VA 0x7FFE0000ULL
 
 //
 // Sanity checks for Paging Macros

@@ -181,8 +181,8 @@ $if (_NTIFS_)
 FORCEINLINE
 ULONG
 HEAP_MAKE_TAG_FLAGS(
-  IN ULONG TagBase,
-  IN ULONG Tag)
+  _In_ ULONG TagBase,
+  _In_ ULONG Tag)
 {
   //__assume_bound(TagBase); // FIXME
   return ((ULONG)((TagBase) + ((Tag) << HEAP_TAG_SHIFT)));
@@ -191,191 +191,235 @@ $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_ (return != NULL, _Post_writable_byte_size_ (NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemory(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_ (return != NULL, _Post_writable_byte_size_ (NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemorySpecifyCache(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
+  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 PMDL
 NTAPI
 MmAllocatePagesForMdl(
-  IN PHYSICAL_ADDRESS LowAddress,
-  IN PHYSICAL_ADDRESS HighAddress,
-  IN PHYSICAL_ADDRESS SkipBytes,
-  IN SIZE_T TotalBytes);
+  _In_ PHYSICAL_ADDRESS LowAddress,
+  _In_ PHYSICAL_ADDRESS HighAddress,
+  _In_ PHYSICAL_ADDRESS SkipBytes,
+  _In_ SIZE_T TotalBytes);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
-  IN OUT PMDLX MemoryDescriptorList);
+  _Inout_ PMDLX MemoryDescriptorList);
 
 //DECLSPEC_DEPRECATED_DDK
 NTKERNELAPI
 PMDL
 NTAPI
 MmCreateMdl(
-  IN PMDL MemoryDescriptorList OPTIONAL,
-  IN PVOID Base,
-  IN SIZE_T Length);
+  _Out_writes_bytes_opt_ (sizeof (MDL) + (sizeof (PFN_NUMBER) * ADDRESS_AND_SIZE_TO_SPAN_PAGES (Base, Length)))
+    PMDL MemoryDescriptorList,
+  _In_reads_bytes_opt_ (Length) PVOID Base,
+  _In_ SIZE_T Length);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemory(
-  IN PVOID BaseAddress);
+  _In_ PVOID BaseAddress);
 
+_IRQL_requires_max_ (DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemorySpecifyCache(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_reads_bytes_ (NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreePagesFromMdl(
-  IN PMDLX MemoryDescriptorList);
+  _Inout_ PMDLX MemoryDescriptorList);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 MmGetSystemRoutineAddress(
-  IN PUNICODE_STRING SystemRoutineName);
+  _In_ PUNICODE_STRING SystemRoutineName);
 
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsDriverVerifying(
-  IN struct _DRIVER_OBJECT *DriverObject);
+  _In_ struct _DRIVER_OBJECT *DriverObject);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 MmLockPagableDataSection(
-  IN PVOID AddressWithinSection);
+  _In_ PVOID AddressWithinSection);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_Out_writes_bytes_opt_ (NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapIoSpace(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN SIZE_T NumberOfBytes,
-  IN MEMORY_CACHING_TYPE CacheEnable);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 
+_Must_inspect_result_
+_When_(AccessMode==0, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==1, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPages(
-  IN PMDL MemoryDescriptorList,
-  IN KPROCESSOR_MODE AccessMode);
+  _Inout_ PMDL MemoryDescriptorList,
+  _In_ __drv_strictType(KPROCESSOR_MODE/enum _MODE,__drv_typeConst)
+    KPROCESSOR_MODE AccessMode);
 
+_Post_writable_byte_size_(MemoryDescriptorList->ByteCount)
+_When_(AccessMode==KernelMode, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==UserMode, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL) _Post_notnull_)
+_At_(MemoryDescriptorList->MappedSystemVa, _Post_writable_byte_size_(MemoryDescriptorList->ByteCount))
+_Must_inspect_result_
+_Success_(return != NULL)
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPagesSpecifyCache(
-  IN PMDLX MemoryDescriptorList,
-  IN KPROCESSOR_MODE AccessMode,
-  IN MEMORY_CACHING_TYPE CacheType,
-  IN PVOID BaseAddress OPTIONAL,
-  IN ULONG BugCheckOnFailure,
-  IN MM_PAGE_PRIORITY Priority);
+  _Inout_ PMDLX MemoryDescriptorList,
+  _In_ __drv_strictType(KPROCESSOR_MODE/enum _MODE,__drv_typeConst)
+    KPROCESSOR_MODE AccessMode,
+  _In_ __drv_strictTypeMatch(__drv_typeCond) MEMORY_CACHING_TYPE CacheType,
+  _In_opt_ PVOID BaseAddress,
+  _In_ ULONG BugCheckOnFailure,
+  _In_ MM_PAGE_PRIORITY Priority);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PVOID
 NTAPI
 MmPageEntireDriver(
-  IN PVOID AddressWithinSection);
+  _In_ PVOID AddressWithinSection);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_At_(MemoryDescriptorList->StartVa + MemoryDescriptorList->ByteOffset,
+  _Field_size_bytes_opt_(MemoryDescriptorList->ByteCount))
 NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockPages(
-  IN OUT PMDL MemoryDescriptorList,
-  IN KPROCESSOR_MODE AccessMode,
-  IN LOCK_OPERATION Operation);
+  _Inout_ PMDLX MemoryDescriptorList,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_ LOCK_OPERATION Operation);
 
 NTKERNELAPI
 MM_SYSTEMSIZE
 NTAPI
 MmQuerySystemSize(VOID);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmResetDriverPaging(
-  IN PVOID AddressWithinSection);
+  _In_ PVOID AddressWithinSection);
 
 NTKERNELAPI
 SIZE_T
 NTAPI
 MmSizeOfMdl(
-  IN PVOID Base,
-  IN SIZE_T Length);
+  _In_reads_bytes_opt_ (Length) PVOID Base,
+  _In_ SIZE_T Length);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPagableImageSection(
-  IN PVOID ImageSectionHandle);
+  _In_ PVOID ImageSectionHandle);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPages(
-  IN OUT PMDL MemoryDescriptorList);
+  _Inout_ PMDLX MemoryDescriptorList);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapIoSpace(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes);
+  _In_reads_bytes_ (NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockProcessPages(
-  IN OUT PMDL MemoryDescriptorList,
-  IN PEPROCESS Process,
-  IN KPROCESSOR_MODE AccessMode,
-  IN LOCK_OPERATION Operation);
+  _Inout_ PMDL MemoryDescriptorList,
+  _In_ PEPROCESS Process,
+  _In_ KPROCESSOR_MODE AccessMode,
+  _In_ LOCK_OPERATION Operation);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapLockedPages(
-  IN PVOID BaseAddress,
-  IN PMDL MemoryDescriptorList);
+  _In_ PVOID BaseAddress,
+  _Inout_ PMDL MemoryDescriptorList);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_ (return != NULL, _Post_writable_byte_size_ (NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemorySpecifyCacheNode(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-  IN MEMORY_CACHING_TYPE CacheType,
-  IN NODE_REQUIREMENT PreferredNode);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
+  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
+  _In_ MEMORY_CACHING_TYPE CacheType,
+  _In_ NODE_REQUIREMENT PreferredNode);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+_IRQL_requires_max_ (PASSIVE_LEVEL)
 NTKERNELAPI
 PPHYSICAL_MEMORY_RANGE
 NTAPI
@@ -385,299 +429,357 @@ NTKERNELAPI
 PHYSICAL_ADDRESS
 NTAPI
 MmGetPhysicalAddress(
-  IN PVOID BaseAddress);
+  _In_ PVOID BaseAddress);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmIsNonPagedSystemAddressValid(
-  IN PVOID VirtualAddress);
+  _In_ PVOID VirtualAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
+_Out_writes_bytes_opt_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateNonCachedMemory(
-  IN SIZE_T NumberOfBytes);
+  _In_ SIZE_T NumberOfBytes);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeNonCachedMemory(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes);
+  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmGetVirtualForPhysical(
-  IN PHYSICAL_ADDRESS PhysicalAddress);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmMapUserAddressesToPage(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes,
-  IN PVOID PageAddress);
+  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PVOID PageAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
+_Out_writes_bytes_opt_(NumberOfBytes)
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapVideoDisplay(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN SIZE_T NumberOfBytes,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_ PHYSICAL_ADDRESS PhysicalAddress,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmMapViewInSessionSpace(
-  IN PVOID Section,
-  OUT PVOID *MappedBase,
-  IN OUT PSIZE_T ViewSize);
+  _In_ PVOID Section,
+  _Outptr_result_bytebuffer_(*ViewSize) PVOID *MappedBase,
+  _Inout_ PSIZE_T ViewSize);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmMapViewInSystemSpace(
-  IN PVOID Section,
-  OUT PVOID *MappedBase,
-  IN OUT PSIZE_T ViewSize);
+  _In_ PVOID Section,
+  _Outptr_result_bytebuffer_(*ViewSize) PVOID *MappedBase,
+  _Inout_ PSIZE_T ViewSize);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmIsAddressValid(
-  IN PVOID VirtualAddress);
+  _In_ PVOID VirtualAddress);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmIsThisAnNtAsSystem(VOID);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmLockPagableSectionByHandle(
-  IN PVOID ImageSectionHandle);
+  _In_ PVOID ImageSectionHandle);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmUnmapViewInSessionSpace(
-  IN PVOID MappedBase);
+  _In_ PVOID MappedBase);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmUnmapViewInSystemSpace(
-  IN PVOID MappedBase);
+  _In_ PVOID MappedBase);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnsecureVirtualMemory(
-  IN HANDLE SecureHandle);
+  _In_ HANDLE SecureHandle);
 
+_IRQL_requires_max_ (PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmRemovePhysicalMemory(
-  IN PPHYSICAL_ADDRESS StartAddress,
-  IN OUT PLARGE_INTEGER NumberOfBytes);
+  _In_ PPHYSICAL_ADDRESS StartAddress,
+  _Inout_ PLARGE_INTEGER NumberOfBytes);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
 MmSecureVirtualMemory(
-  IN PVOID Address,
-  IN SIZE_T Size,
-  IN ULONG ProbeMode);
+  __in_data_source(USER_MODE) _In_reads_bytes_ (Size) PVOID Address,
+  _In_ __in_data_source(USER_MODE) SIZE_T Size,
+  _In_ ULONG ProbeMode);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapVideoDisplay(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes);
+  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes);
 
+_IRQL_requires_max_ (PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmAddPhysicalMemory(
-  IN PPHYSICAL_ADDRESS StartAddress,
-  IN OUT PLARGE_INTEGER NumberOfBytes);
+  _In_ PPHYSICAL_ADDRESS StartAddress,
+  _Inout_ PLARGE_INTEGER NumberOfBytes);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemory(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemorySpecifyCache(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
+  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemorySpecifyCacheNode(
-  IN SIZE_T NumberOfBytes,
-  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-  IN MEMORY_CACHING_TYPE CacheType,
-  IN NODE_REQUIREMENT PreferredNode);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
+  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
+  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
+  _In_ MEMORY_CACHING_TYPE CacheType,
+  _In_ NODE_REQUIREMENT PreferredNode);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemory(
-  IN PVOID BaseAddress);
+  _In_ PVOID BaseAddress);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemorySpecifyCache(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
+  _In_ SIZE_T NumberOfBytes,
+  _In_ MEMORY_CACHING_TYPE CacheType);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
-MmIsRecursiveIoFault(
-  VOID);
+MmIsRecursiveIoFault(VOID);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmForceSectionClosed(
-  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-  IN BOOLEAN DelayClose);
+  _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  _In_ BOOLEAN DelayClose);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmFlushImageSection(
-  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-  IN MMFLUSH_TYPE FlushType);
+  _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  _In_ MMFLUSH_TYPE FlushType);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmCanFileBeTruncated(
-  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-  IN PLARGE_INTEGER NewFileSize OPTIONAL);
+  _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  _In_opt_ PLARGE_INTEGER NewFileSize);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 MmSetAddressRangeModified(
-  IN PVOID Address,
-  IN SIZE_T Length);
+  _In_reads_bytes_ (Length) PVOID Address,
+  _In_ SIZE_T Length);
 $endif (_NTIFS_)
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 
 $if (_WDMDDK_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmAdvanceMdl(
-  IN OUT PMDL Mdl,
-  IN ULONG NumberOfBytes);
+  _Inout_ PMDLX Mdl,
+  _In_ ULONG NumberOfBytes);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
+_When_ (return != NULL, _Out_writes_bytes_opt_ (NumberOfBytes))
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateMappingAddress(
-  IN SIZE_T NumberOfBytes,
-  IN ULONG PoolTag);
+  _In_ SIZE_T NumberOfBytes,
+  _In_ ULONG PoolTag);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeMappingAddress(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag);
+  _In_ PVOID BaseAddress,
+  _In_ ULONG PoolTag);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmIsVerifierEnabled(
-  OUT PULONG VerifierFlags);
+  _Out_ PULONG VerifierFlags);
 
+_Post_writable_byte_size_(MemoryDescriptorList->ByteCount)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_At_(MemoryDescriptorList->MappedSystemVa + MemoryDescriptorList->ByteOffset,
+  _Post_writable_byte_size_(MemoryDescriptorList->ByteCount))
+_Must_inspect_result_
+_Success_(return != NULL)
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPagesWithReservedMapping(
-  IN PVOID MappingAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList,
-  IN MEMORY_CACHING_TYPE CacheType);
+  _In_ PVOID MappingAddress,
+  _In_ ULONG PoolTag,
+  _Inout_ PMDLX MemoryDescriptorList,
+  _In_ __drv_strictTypeMatch(__drv_typeCond)
+    MEMORY_CACHING_TYPE CacheType);
 
+_Must_inspect_result_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmProtectMdlSystemAddress(
-  IN PMDL MemoryDescriptorList,
-  IN ULONG NewProtect);
+  _In_ PMDLX MemoryDescriptorList,
+  _In_ ULONG NewProtect);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapReservedMapping(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList);
+  _In_ PVOID BaseAddress,
+  _In_ ULONG PoolTag,
+  _Inout_ PMDLX MemoryDescriptorList);
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmAddVerifierThunks(
-  IN PVOID ThunkBuffer,
-  IN ULONG ThunkBufferSize);
+  _In_reads_bytes_ (ThunkBufferSize) PVOID ThunkBuffer,
+  _In_ ULONG ThunkBufferSize);
 $endif (_WDMDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_ (PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmPrefetchPages(
-  IN ULONG NumberOfLists,
-  IN PREAD_LIST *ReadLists);
+  _In_ ULONG NumberOfLists,
+  _In_reads_ (NumberOfLists) PREAD_LIST *ReadLists);
 $endif (_NTIFS_)
 
 $if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_WDMDDK_ || _NTIFS_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
+_IRQL_requires_max_ (DISPATCH_LEVEL)
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsIoSpaceActive(
-  IN PHYSICAL_ADDRESS StartAddress,
-  IN SIZE_T NumberOfBytes);
+  _In_ PHYSICAL_ADDRESS StartAddress,
+  _In_ SIZE_T NumberOfBytes);
 $endif (_WDMDDK_)
 
 $if (_NTDDK_)
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -685,48 +787,54 @@ MmCreateMirror(VOID);
 $endif (_NTDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-$endif
+$endif (_WDMDDK_ || _NTDDK_)
 $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+_Must_inspect_result_
+_IRQL_requires_max_ (DISPATCH_LEVEL)
 NTKERNELAPI
 PMDL
 NTAPI
 MmAllocatePagesForMdlEx(
-  IN PHYSICAL_ADDRESS LowAddress,
-  IN PHYSICAL_ADDRESS HighAddress,
-  IN PHYSICAL_ADDRESS SkipBytes,
-  IN SIZE_T TotalBytes,
-  IN MEMORY_CACHING_TYPE CacheType,
-  IN ULONG Flags);
+  _In_ PHYSICAL_ADDRESS LowAddress,
+  _In_ PHYSICAL_ADDRESS HighAddress,
+  _In_ PHYSICAL_ADDRESS SkipBytes,
+  _In_ SIZE_T TotalBytes,
+  _In_ MEMORY_CACHING_TYPE CacheType,
+  _In_ ULONG Flags);
 #endif
-$endif
+$endif (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_WDMDDK_)
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsDriverVerifyingByAddress(
-  IN PVOID AddressWithinSection);
+  _In_ PVOID AddressWithinSection);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 MmRotatePhysicalView(
-  IN PVOID VirtualAddress,
-  IN OUT PSIZE_T NumberOfBytes,
-  IN PMDLX NewMdl OPTIONAL,
-  IN MM_ROTATE_DIRECTION Direction,
-  IN PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
-  IN PVOID Context OPTIONAL);
+  _In_ PVOID VirtualAddress,
+  _Inout_ PSIZE_T NumberOfBytes,
+  _In_opt_ PMDLX NewMdl,
+  _In_ MM_ROTATE_DIRECTION Direction,
+  _In_ PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
+  _In_opt_ PVOID Context);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_ (APC_LEVEL)
 NTKERNELAPI
 ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(
-  IN PSECTION_OBJECT_POINTERS SectionPointer);
+  _In_ PSECTION_OBJECT_POINTERS SectionPointer);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

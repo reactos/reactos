@@ -48,35 +48,32 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
             if (!CallBack) continue;
 
             /* Check it this is a matching block */
-            if (ExGetCallBackBlockRoutine(CallBack) != (PVOID)NotifyRoutine)
+            if (ExGetCallBackBlockRoutine(CallBack) == (PVOID)NotifyRoutine)
             {
-                /* It's not, try the next one */
-                continue;
-            }
+                /* Try removing it if it matches */
+                if (ExCompareExchangeCallBack(&PspProcessNotifyRoutine[i],
+                                              NULL,
+                                              CallBack))
+                {
+                    /* Decrement the number of routines */
+                    InterlockedDecrement((PLONG)&PspProcessNotifyRoutineCount);
 
-            /* It is, clear the current routine */
-            if (ExCompareExchangeCallBack(&PspProcessNotifyRoutine[i],
-                                          NULL,
-                                          CallBack))
-            {
-                /* Decrement the number of routines */
-                InterlockedDecrement((PLONG)&PspProcessNotifyRoutineCount);
+                    /* Dereference the block */
+                    ExDereferenceCallBackBlock(&PspProcessNotifyRoutine[i],
+                                               CallBack);
+
+                    /* Wait for active callbacks */
+                    ExWaitForCallBacks(CallBack);
+
+                    /* Free the callback and exit */
+                    ExFreeCallBack(CallBack);
+                    return STATUS_SUCCESS;
+                }
 
                 /* Dereference the block */
                 ExDereferenceCallBackBlock(&PspProcessNotifyRoutine[i],
                                            CallBack);
-
-                /* Wait for actice callbacks */
-                ExWaitForCallBacks(CallBack);
-
-                /* Free the callback and exit */
-                ExFreeCallBack (CallBack);
-                return STATUS_SUCCESS;
             }
-
-            /* Dereference the block */
-            ExDereferenceCallBackBlock(&PspProcessNotifyRoutine[i],
-                                       CallBack);
         }
 
         /* We didn't find any matching block */

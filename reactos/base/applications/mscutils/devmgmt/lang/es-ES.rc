@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Spanish Language resource file
  * Traducido por: Javier Remacha 2007-12-21
  */
@@ -21,10 +21,12 @@ BEGIN
   END
   POPUP "Ver"
   BEGIN
-    MENUITEM "Dispositivos por tipo",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Dispositivos por conexión",   IDC_STATIC, GRAYED
-    MENUITEM "Recursos por tipo",       IDC_STATIC, GRAYED
-    MENUITEM "Recursos por conexión", IDC_STATIC, GRAYED
+    MENUITEM "Dispositivos por tipo",     IDC_DEVBYTYPE
+    MENUITEM "Dispositivos por conexión", IDC_DEVBYCONN
+    MENUITEM "Recursos por tipo",         IDC_RESBYTYPE, GRAYED
+    MENUITEM "Recursos por conexión",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",       IDC_SHOWHIDDEN
   END
   POPUP "Ayuda"
   BEGIN

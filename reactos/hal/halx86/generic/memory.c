@@ -31,21 +31,21 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                         IN PFN_NUMBER PageCount,
                         IN BOOLEAN Aligned)
 {
-    ULONG UsedDescriptors, Alignment;
+    ULONG UsedDescriptors;
     ULONG_PTR PhysicalAddress;
-    PFN_NUMBER MaxPage, BasePage;
+    PFN_NUMBER MaxPage, BasePage, Alignment;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock, NewBlock, FreeBlock;
-    
+
     /* Highest page we'll go */
     MaxPage = MaxAddress >> PAGE_SHIFT;
-    
+
     /* We need at least two blocks */
     if ((HalpUsedAllocDescriptors + 2) > 64) return 0;
-    
+
     /* Remember how many we have now */
     UsedDescriptors = HalpUsedAllocDescriptors;
-        
+
     /* Loop the loader block memory descriptors */
     NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
     while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
@@ -54,13 +54,13 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         MdBlock = CONTAINING_RECORD(NextEntry,
                                     MEMORY_ALLOCATION_DESCRIPTOR,
                                     ListEntry);
-        
+
         /* No alignment by default */
         Alignment = 0;
-        
+
         /* Unless requested, in which case we use a 64KB block alignment */
         if (Aligned) Alignment = ((MdBlock->BasePage + 0x0F) & ~0x0F) - MdBlock->BasePage;
-        
+
         /* Search for free memory */
         if ((MdBlock->MemoryType == LoaderFree) ||
             (MdBlock->MemoryType == LoaderFirmwareTemporary))
@@ -71,30 +71,30 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 (MdBlock->PageCount >= PageCount + Alignment) &&
                 (BasePage + PageCount + Alignment < MaxPage))
             {
-                
+
                 /* We found an address */
                 PhysicalAddress = (BasePage + Alignment) << PAGE_SHIFT;
                 break;
             }
         }
-        
+
         /* Keep trying */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* If we didn't find anything, get out of here */
     if (NextEntry == &LoaderBlock->MemoryDescriptorListHead) return 0;
-    
+
     /* Okay, now get a descriptor */
     NewBlock = &HalpAllocationDescriptorArray[HalpUsedAllocDescriptors];
     NewBlock->PageCount = (ULONG)PageCount;
     NewBlock->BasePage = MdBlock->BasePage + Alignment;
     NewBlock->MemoryType = LoaderHALCachedMemory;
-    
+
     /* Update count */
     UsedDescriptors++;
     HalpUsedAllocDescriptors = UsedDescriptors;
-    
+
     /* Check if we had any alignment */
     if (Alignment)
     {
@@ -105,14 +105,14 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             FreeBlock = &HalpAllocationDescriptorArray[UsedDescriptors];
             FreeBlock->PageCount = MdBlock->PageCount - Alignment - (ULONG)PageCount;
             FreeBlock->BasePage = MdBlock->BasePage + Alignment + (ULONG)PageCount;
-            
+
             /* One more */
             HalpUsedAllocDescriptors++;
-            
+
             /* Insert it into the list */
             InsertHeadList(&MdBlock->ListEntry, &FreeBlock->ListEntry);
         }
-        
+
         /* Trim the original block to the alignment only */
         MdBlock->PageCount = Alignment;
 
@@ -124,7 +124,7 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         /* Consume memory from this block */
         MdBlock->BasePage += (ULONG)PageCount;
         MdBlock->PageCount -= (ULONG)PageCount;
-        
+
         /* Insert the descriptor before the original one */
         InsertTailList(&MdBlock->ListEntry, &NewBlock->ListEntry);
 
@@ -139,7 +139,7 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN PFN_NUMBER PageCount)
+                        IN PFN_COUNT PageCount)
 {
     PHARDWARE_PTE PointerPte;
     PFN_NUMBER UsedPages = 0;
@@ -207,7 +207,7 @@ HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
 VOID
 NTAPI
 HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN PFN_NUMBER PageCount)
+                        IN PFN_COUNT PageCount)
 {
     PHARDWARE_PTE PointerPte;
     ULONG i;

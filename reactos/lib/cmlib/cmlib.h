@@ -113,7 +113,7 @@
 #endif
 #endif
 
-#define TAG_CM 0x68742020
+#define TAG_CM 'CM25'
 
 #define CMAPI NTAPI
 
@@ -151,7 +151,7 @@ typedef struct _CM_USE_COUNT_LOG
 typedef struct _CMHIVE
 {
     HHIVE Hive;
-    HANDLE FileHandles[3];
+    HANDLE FileHandles[HFILE_TYPE_MAX];
     LIST_ENTRY NotifyList;
     LIST_ENTRY HiveList;
     EX_PUSH_LOCK HiveLock;
@@ -253,7 +253,7 @@ HvGetCellSize(
 HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
-   SIZE_T Size,
+   ULONG Size,
    HSTORAGE_TYPE Storage,
    IN HCELL_INDEX Vicinity);
 

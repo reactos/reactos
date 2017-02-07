@@ -27,12 +27,12 @@ VOID		MemAllocTest(VOID);
 
 DBG_DEFAULT_CHANNEL(MEMORY);
 
-ULONG LoaderPagesSpanned = 0;
+PFN_NUMBER LoaderPagesSpanned = 0;
 
-PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
+PVOID MmAllocateMemoryWithType(SIZE_T MemorySize, TYPE_OF_MEMORY MemoryType)
 {
-	ULONG	PagesNeeded;
-	ULONG	FirstFreePageFromEnd;
+	PFN_NUMBER	PagesNeeded;
+	PFN_NUMBER	FirstFreePageFromEnd;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -83,10 +83,10 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	return MemPointer;
 }
 
-PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
+PVOID MmAllocateMemoryAtAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
 {
-	ULONG		PagesNeeded;
-	ULONG		StartPageNumber;
+	PFN_NUMBER		PagesNeeded;
+	PFN_NUMBER		StartPageNumber;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -142,10 +142,10 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	return MemPointer;
 }
 
-VOID MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewType)
+VOID MmSetMemoryType(PVOID MemoryAddress, SIZE_T MemorySize, TYPE_OF_MEMORY NewType)
 {
-	ULONG		PagesNeeded;
-	ULONG		StartPageNumber;
+	PFN_NUMBER		PagesNeeded;
+	PFN_NUMBER		StartPageNumber;
 
 	// Find out how many blocks it will take to
 	// satisfy this allocation
@@ -158,11 +158,11 @@ VOID MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewTy
 	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded, NewType);
 }
 
-PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
+PVOID MmAllocateHighestMemoryBelowAddress(SIZE_T MemorySize, PVOID DesiredAddress, TYPE_OF_MEMORY MemoryType)
 {
-	ULONG		PagesNeeded;
-	ULONG		FirstFreePageFromEnd;
-	ULONG		DesiredAddressPageNumber;
+	PFN_NUMBER		PagesNeeded;
+	PFN_NUMBER		FirstFreePageFromEnd;
+	PFN_NUMBER		DesiredAddressPageNumber;
 	PVOID	MemPointer;
 
 	if (MemorySize == 0)
@@ -221,7 +221,7 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 
 VOID DumpMemoryAllocMap(VOID)
 {
-	ULONG							Idx;
+	PFN_NUMBER	Idx;
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 
 	DbgPrint("----------- Memory Allocation Bitmap -----------\n");
@@ -295,7 +295,7 @@ VOID DumpMemoryAllocMap(VOID)
 }
 #endif // DBG
 
-PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
+PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(PFN_NUMBER *NoEntries)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
 

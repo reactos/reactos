@@ -138,6 +138,24 @@ extern "C" {
 #define LOCALE_IREADINGLAYOUT       0x0070
 #define LOCALE_INEUTRAL             0x0071
 
+#if defined(__GNUC__)
+# define LOCALE_NAME_INVARIANT      (const WCHAR []){ 0 }
+#elif defined(_MSC_VER)
+# define LOCALE_NAME_INVARIANT      L""
+#else
+static const WCHAR LOCALE_NAME_INVARIANT[] = { 0 };
+#endif
+
+#if defined(__GNUC__)
+# define LOCALE_NAME_SYSTEM_DEFAULT      (const WCHAR []){'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0}
+#elif defined(_MSC_VER)
+# define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
+#else
+static const WCHAR LOCALE_NAME_SYSTEM_DEFAULT[] = {'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0};
+#endif
+
+#define LOCALE_NAME_USER_DEFAULT    NULL
+
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
 
 #define NORM_IGNORECASE	1
@@ -507,7 +525,7 @@ enum SYSGEOTYPE {
 	GEO_FRIENDLYNAME      = 0x0008,
 	GEO_OFFICIALNAME      = 0x0009,
 	GEO_TIMEZONES         = 0x000a,
-	GEO_OFFICIALLANGUAGES = 0x000a
+	GEO_OFFICIALLANGUAGES = 0x000b
 };
 
 typedef struct _cpinfo {
@@ -596,6 +614,15 @@ typedef struct _FILEMUIINFO {
     DWORD dwTypeNameMUIOffset;
     BYTE abBuffer[8];
 } FILEMUIINFO, *PFILEMUIINFO;
+
+#define HIGH_SURROGATE_START 0xd800
+#define HIGH_SURROGATE_END   0xdbff
+#define LOW_SURROGATE_START  0xdc00
+#define LOW_SURROGATE_END    0xdfff
+
+#define IS_HIGH_SURROGATE(ch) ((ch) >= HIGH_SURROGATE_START && (ch) <= HIGH_SURROGATE_END)
+#define IS_LOW_SURROGATE(ch) ((ch) >= LOW_SURROGATE_START  && (ch) <= LOW_SURROGATE_END)
+#define IS_SURROGATE_PAIR(high,low) (IS_HIGH_SURROGATE(high) && IS_LOW_SURROGATE(low))
 
 int WINAPI CompareStringA(LCID,DWORD,LPCSTR,int,LPCSTR,int);
 int WINAPI CompareStringW(LCID,DWORD,LPCWSTR,int,LPCWSTR,int);

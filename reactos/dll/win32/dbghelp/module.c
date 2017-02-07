@@ -38,7 +38,6 @@ static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
 static const WCHAR S_DotDylibW[]    = {'.','d','y','l','i','b','\0'};
 static const WCHAR S_DotPdbW[]      = {'.','p','d','b','\0'};
 static const WCHAR S_DotDbgW[]      = {'.','d','b','g','\0'};
-const WCHAR        S_WineW[]        = {'w','i','n','e',0};
 const WCHAR        S_SlashW[]       = {'/','\0'};
 
 static const WCHAR S_AcmW[] = {'.','a','c','m','\0'};
@@ -78,6 +77,7 @@ static const WCHAR* get_filename(const WCHAR* name, const WCHAR* endptr)
 
 static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 {
+    const WCHAR *loader = get_wine_loader_name();
     const WCHAR *ptr, *endptr;
     size_t      len, l;
 
@@ -87,7 +87,7 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
     out[len] = '\0';
     if (len > 4 && (l = match_ext(out, len)))
         out[len - l] = '\0';
-    else if (len > 4 && !strcmpiW(out + len - 4, S_WineW))
+    else if (len > strlenW(loader) && !strcmpiW(out + len - strlenW(loader), loader))
         lstrcpynW(out, S_WineLoaderW, size);
     else
     {
@@ -104,6 +104,45 @@ void module_set_module(struct module* module, const WCHAR* name)
     WideCharToMultiByte(CP_ACP, 0, module->module.ModuleName, -1,
                         module->module_name, sizeof(module->module_name),
                         NULL, NULL);
+}
+
+const WCHAR *get_wine_loader_name(void)
+{
+    static const int is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
+    static const WCHAR wineW[] = {'w','i','n','e',0};
+    static const WCHAR suffixW[] = {'6','4',0};
+    static const WCHAR *loader;
+
+    if (!loader)
+    {
+        WCHAR *p, *buffer;
+        const char *ptr;
+
+        /* All binaries are loaded with WINELOADER (if run from tree) or by the
+         * main executable
+         */
+        if ((ptr = getenv("WINELOADER")))
+        {
+            DWORD len = 2 + MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, NULL, 0 );
+            buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+            MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, buffer, len );
+        }
+        else
+        {
+            buffer = HeapAlloc( GetProcessHeap(), 0, sizeof(wineW) + 2 * sizeof(WCHAR) );
+            strcpyW( buffer, wineW );
+        }
+        p = buffer + strlenW( buffer ) - strlenW( suffixW );
+        if (p > buffer && !strcmpW( p, suffixW ))
+        {
+            if (!is_win64) *p = 0;
+        }
+        else if (is_win64) strcatW( buffer, suffixW );
+
+        TRACE( "returning %s\n", debugstr_w(buffer) );
+        loader = buffer;
+    }
+    return loader;
 }
 
 static const char*      get_module_type(enum module_type type, BOOL virtual)
@@ -154,7 +193,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
     module->module.TimeDateStamp = stamp;
     module->module.CheckSum = checksum;
 
-    memset(module->module.LoadedPdbName, 0, sizeof(module->module.CVData));
+    memset(module->module.LoadedPdbName, 0, sizeof(module->module.LoadedPdbName));
     module->module.CVSig = 0;
     memset(module->module.CVData, 0, sizeof(module->module.CVData));
     module->module.PdbSig = 0;
@@ -189,15 +228,16 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
     module->sources_used      = 0;
     module->sources_alloc     = 0;
     module->sources           = 0;
+    wine_rb_init(&module->sources_offsets_tree, &source_rb_functions);
 
     return module;
 }
 
 /***********************************************************************
- *	module_find_by_name
+ *	module_find_by_nameW
  *
  */
-static struct module* module_find_by_name(const struct process* pcs, const WCHAR* name)
+struct module* module_find_by_nameW(const struct process* pcs, const WCHAR* name)
 {
     struct module*      module;
 
@@ -214,7 +254,7 @@ struct module* module_find_by_nameA(const struct process* pcs, const char* name)
     WCHAR wname[MAX_PATH];
 
     MultiByteToWideChar(CP_ACP, 0, name, -1, wname, sizeof(wname) / sizeof(WCHAR));
-    return module_find_by_name(pcs, wname);
+    return module_find_by_nameW(pcs, wname);
 }
 
 /***********************************************************************
@@ -310,7 +350,7 @@ BOOL module_get_debug(struct module_pair* pair)
         else switch (pair->effective->type)
         {
         case DMT_ELF:
-            ret = elf_load_debug_info(pair->effective, NULL);
+            ret = elf_load_debug_info(pair->effective);
             break;
         case DMT_PE:
             idslW64.SizeOfStruct = sizeof(idslW64);
@@ -416,7 +456,8 @@ static BOOL module_is_container_loaded(const struct process* pcs,
  */
 enum module_type module_get_type_by_name(const WCHAR* name)
 {
-    int len = strlenW(name);
+    int loader_len, len = strlenW(name);
+    const WCHAR *loader;
 
     /* Skip all version extensions (.[digits]) regex: "(\.\d+)*$" */
     do
@@ -451,7 +492,10 @@ enum module_type module_get_type_by_name(const WCHAR* name)
         return DMT_DBG;
 
     /* wine is also a native module (Mach-O on Mac OS X, ELF elsewhere) */
-    if (((len > 4 && name[len - 5] == '/') || len == 4) && !strcmpiW(name + len - 4, S_WineW))
+    loader = get_wine_loader_name();
+    loader_len = strlenW( loader );
+    if ((len == loader_len || (len > loader_len && name[len - loader_len - 1] == '/')) &&
+        !strcmpiW(name + len - loader_len, loader))
     {
 #ifdef __APPLE__
         return DMT_MACHO;
@@ -638,6 +682,7 @@ BOOL module_remove(struct process* pcs, struct module* module)
     }
     hash_table_destroy(&module->ht_symbols);
     hash_table_destroy(&module->ht_types);
+    wine_rb_destroy(&module->sources_offsets_tree, NULL, NULL);
     HeapFree(GetProcessHeap(), 0, module->sources);
     HeapFree(GetProcessHeap(), 0, module->addr_sorttab);
     pool_destroy(&module->pool);

@@ -39,9 +39,9 @@ BEGIN
         MENUITEM "내보내기(&E)",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "하이브 로드...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "하이브 언로드...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "하이브 로드...",               ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "하이브 언로드...",             ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "네트워크 레지스트리에 연결(&C)",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -336,8 +336,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "에러"
-    IDS_WARNING		    "경고"
+    IDS_ERROR               "에러"
+    IDS_WARNING             "경고"
     IDS_BAD_KEY             "'%s' 키를 조회할 수 없습니다"
     IDS_BAD_VALUE           "'%s' 값을 조회할 수 없습니다"
     IDS_UNSUPPORTED_TYPE    "이런 타입의 키를 편집할 수 없습니다 (%ld)"
@@ -353,6 +353,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "모든 선택된 값을 제거할 수 없습니다!"
     IDS_ERR_RENVAL_CAPTION  "값 이름 바꾸기 오류"
     IDS_ERR_RENVAL_TOEMPTY  "%s의 이름을 바꿀 수 없습니다. 값의 이름이 없습니다. 다른 이름으로 해 보세요."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "새 키 #%d"
     IDS_NEW_VALUE           "새 값 #%d"
 END
@@ -374,9 +376,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "레지스트리 파일"
-    IDS_FLT_REGFILES        "레지스트리 파일들"
+    IDS_FLT_REGFILES        "레지스트리 파일들 (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 레지스트리 파일 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 레지스트리 파일 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "모든 파일 (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

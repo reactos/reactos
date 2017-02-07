@@ -200,7 +200,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         DPRINT1("Signaling Failed for: %p, %p, 0x%08lx\n",
                 CriticalSection,
                 CriticalSection->LockSemaphore,
-		Status);
+                Status);
         RtlRaiseStatus(Status);
     }
 }
@@ -316,13 +316,20 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
                NtCurrentTeb()->ClientId.UniqueProcess);
         RtlpDebugInfoFreeList[EntryId] = FALSE;
 
-    } else {
+    } else if (!DebugInfo->Flags) {
 
         /* It's a dynamic one, so free from the heap */
         DPRINT("Freeing from Heap: %p inside Process: %p\n",
                DebugInfo,
                NtCurrentTeb()->ClientId.UniqueProcess);
         RtlFreeHeap(NtCurrentPeb()->ProcessHeap, 0, DebugInfo);
+
+    } else {
+
+        /* Wine stores a section name pointer in the Flags member */
+        DPRINT("Assuming static: %p inside Process: %p\n",
+               DebugInfo,
+               NtCurrentTeb()->ClientId.UniqueProcess);
 
     }
 }
@@ -365,7 +372,9 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     {
         /* Remove it from the list */
         RemoveEntryList(&CriticalSection->DebugInfo->ProcessLocksList);
+#if 0 /* We need to preserve Flags for RtlpFreeDebugInfo */
         RtlZeroMemory(CriticalSection->DebugInfo, sizeof(RTL_CRITICAL_SECTION_DEBUG));
+#endif
     }
 
     /* Unprotect */
@@ -546,6 +555,7 @@ RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
     CritcalSectionDebugData->ContentionCount = 0;
     CritcalSectionDebugData->EntryCount = 0;
     CritcalSectionDebugData->CriticalSection = CriticalSection;
+    CritcalSectionDebugData->Flags = 0;
     CriticalSection->DebugInfo = CritcalSectionDebugData;
 
     /*
@@ -603,7 +613,7 @@ NTSTATUS
 NTAPI
 RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
-#ifndef NDEBUG
+#if DBG
     HANDLE Thread = (HANDLE)NtCurrentTeb()->ClientId.UniqueThread;
 
     /* In win this case isn't checked. However it's a valid check so it should only

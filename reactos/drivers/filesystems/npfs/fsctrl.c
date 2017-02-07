@@ -186,7 +186,7 @@ NpfsConnectPipe(PIRP Irp,
         KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
             WaitMode,
-            (Flags & FO_ALERTABLE_IO),
+            (Flags & FO_ALERTABLE_IO) != 0,
             NULL);
     }
 
@@ -375,7 +375,7 @@ NpfsWaitPipe(PIRP Irp,
         {
             /* found a listening server CCB */
             DPRINT("Listening server CCB found -- connecting\n");
-
+            NpfsDereferenceFcb(Fcb);
             return STATUS_SUCCESS;
         }
 
@@ -402,11 +402,12 @@ NpfsWaitPipe(PIRP Irp,
         /* Wait forever */
         TimeOut = NULL;
     }
+    NpfsDereferenceFcb(Fcb);
 
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
                                    UserRequest,
                                    Irp->RequestorMode,
-                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
                                    TimeOut);
     if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
         Status = STATUS_CANCELLED;
@@ -507,7 +508,9 @@ NpfsWaitPipe2(PIRP Irp,
         {
             /* found a listening server CCB */
             DPRINT("Listening server CCB found -- connecting\n");
-
+#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
+            NpfsDereferenceFcb(Fcb);
+#endif
             return STATUS_SUCCESS;
         }
 
@@ -521,12 +524,15 @@ NpfsWaitPipe2(PIRP Irp,
         TimeOut = WaitPipe->Timeout;
     else
         TimeOut = Fcb->TimeOut;
+#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
+    NpfsDereferenceFcb(Fcb);
+#endif
 
     /* Wait for one */
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
         UserRequest,
         Irp->RequestorMode,
-        (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+        (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
         &TimeOut);
     if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
         Status = STATUS_CANCELLED;

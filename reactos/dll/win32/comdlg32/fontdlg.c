@@ -754,7 +754,7 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
         {
             j=SendDlgItemMessageW(hDlg,cmb2,CB_SETCURSEL,j,0);
             SendMessageW(hDlg,WM_COMMAND,cmb2,
-                    MAKELONG(HWND_16(GetDlgItem(hDlg,cmb2)),CBN_SELCHANGE));
+                    MAKELONG(LOWORD(GetDlgItem(hDlg,cmb2)),CBN_SELCHANGE));
         }
     }
     CFn_ReleaseDC(lpcf, hdc);
@@ -772,12 +772,12 @@ static LRESULT CFn_WMMeasureItem(HWND hDlg, LPARAM lParam)
     HFONT hfontprev;
     TEXTMETRICW tm;
     LPMEASUREITEMSTRUCT lpmi=(LPMEASUREITEMSTRUCT)lParam;
-    INT height = 0;
+    INT height = 0, cx;
 
     if (!himlTT)
         himlTT = ImageList_LoadImageW( COMDLG32_hInstance, MAKEINTRESOURCEW(38),
                 TTBITMAP_XSIZE, 0, CLR_DEFAULT, IMAGE_BITMAP, 0);
-    ImageList_GetIconSize( himlTT, 0, &height);
+    ImageList_GetIconSize( himlTT, &cx, &height);
     lpmi->itemHeight = height + 2;
     /* use MAX of bitmap height and tm.tmHeight .*/
     hdc=GetDC(hDlg);
@@ -955,6 +955,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
             }
             CFn_ReleaseDC(lpcf, hdc);
         }
+        break;
     case chx1:
     case chx2:
     case cmb2:
@@ -1054,8 +1055,13 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         {
             WCHAR buffer[80];
             WCHAR format[80];
+            DWORD_PTR args[2];
             LoadStringW(COMDLG32_hInstance, IDS_FONT_SIZE, format, sizeof(format)/sizeof(WCHAR));
-            wsprintfW(buffer, format, lpcf->nSizeMin,lpcf->nSizeMax);
+            args[0] = lpcf->nSizeMin;
+            args[1] = lpcf->nSizeMax;
+            FormatMessageW(FORMAT_MESSAGE_FROM_STRING|FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                           format, 0, 0, buffer, sizeof(buffer)/sizeof(*buffer),
+                           (__ms_va_list*)args);
             MessageBoxW(hDlg, buffer, NULL, MB_OK);
         }
         return(TRUE);

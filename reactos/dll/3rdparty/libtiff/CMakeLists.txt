@@ -52,7 +52,7 @@ add_library(libtiff SHARED
 
 set_module_type(libtiff win32dll ENTRYPOINT 0)
 target_link_libraries(libtiff zlib getopt)
-add_importlibs(libtiff user32 msvcrt kernel32)
+add_importlibs(libtiff user32 msvcrt kernel32 ntdll)
 add_dependencies(libtiff psdk)
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 

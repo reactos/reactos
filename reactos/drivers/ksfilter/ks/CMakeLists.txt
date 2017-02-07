@@ -1,5 +1,5 @@
 
-spec2def(ks.sys ks.spec)
+spec2def(ks.sys ks.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DBUILDING_KS
@@ -48,4 +48,4 @@ add_pch(ks priv.h)
 add_importlibs(ks ntoskrnl hal)
 add_dependencies(ks psdk bugcodes)
 add_cd_file(TARGET ks DESTINATION reactos/system32/drivers FOR all)
-add_importlib_target(ks.spec)
+

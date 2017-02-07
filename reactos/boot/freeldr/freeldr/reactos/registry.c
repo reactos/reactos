@@ -174,8 +174,8 @@ RegCreateKey(FRLDRHKEY ParentKey,
     FRLDRHKEY NewKey;
     PWCHAR p;
     PCWSTR name;
-    int subkeyLength;
-    int stringLength;
+    SIZE_T subkeyLength;
+    SIZE_T stringLength;
     ULONG NameSize;
     int CmpResult;
 
@@ -220,7 +220,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
             stringLength = subkeyLength;
             name = KeyName;
         }
-        NameSize = (subkeyLength + 1) * sizeof(WCHAR);
+        NameSize = (ULONG)((subkeyLength + 1) * sizeof(WCHAR));
 
         Ptr = CurrentKey->SubKeyList.Flink;
         CmpResult = 1;
@@ -345,8 +345,8 @@ RegOpenKey(FRLDRHKEY ParentKey,
     FRLDRHKEY CurrentKey;
     PWCHAR p;
     PCWSTR name;
-    int subkeyLength;
-    int stringLength;
+    SIZE_T subkeyLength;
+    SIZE_T stringLength;
     ULONG NameSize;
 
     TRACE("KeyName '%S'\n", KeyName);
@@ -391,7 +391,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
             stringLength = subkeyLength;
             name = KeyName;
         }
-        NameSize = (subkeyLength + 1) * sizeof(WCHAR);
+        NameSize = (ULONG)((subkeyLength + 1) * sizeof(WCHAR));
 
         Ptr = CurrentKey->SubKeyList.Flink;
         while (Ptr != &CurrentKey->SubKeyList)
@@ -495,7 +495,7 @@ RegSetValue(FRLDRHKEY Key,
             InsertTailList(&Key->ValueList, &Value->ValueList);
             Key->ValueCount++;
 
-            Value->NameSize = (wcslen(ValueName)+1) * sizeof(WCHAR);
+            Value->NameSize = (ULONG)(wcslen(ValueName)+1) * sizeof(WCHAR);
             Value->Name = MmHeapAlloc(Value->NameSize);
             if (Value->Name == NULL) return ERROR_OUTOFMEMORY;
             wcscpy(Value->Name, ValueName);

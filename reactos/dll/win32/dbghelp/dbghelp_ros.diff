@@ -2,12 +2,41 @@ Index: stabs.c
 ===================================================================
 --- stabs.c	(revision 35085)
 +++ stabs.c	(working copy)
-@@ -63,8 +63,6 @@
- 
+@@ -64,6 +64,8 @@
+
  WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
- 
+
 +#define strtoull _strtoui64
 +
- #ifndef N_UNDF
- #define N_UNDF		0x00
- #endif
+ /* Masks for n_type field */
+ #ifndef N_STAB
+ #define N_STAB		0xe0
+Index: cpu_sparc.c
+===================================================================
+--- cpu_sparc.c	(revision 35085)
++++ cpu_sparc.c	(working copy)
+@@ -29,6 +29,8 @@
+
+ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+
++#define IMAGE_FILE_MACHINE_SPARC   0x2000
++
+ static unsigned sparc_get_addr(HANDLE hThread, const CONTEXT* ctx,
+                              enum cpu_addr ca, ADDRESS64* addr)
+ {
+Index: cpu_x86_64.c
+===================================================================
+--- cpu_x86_64.c	(Revision 56237)
++++ cpu_x86_64.c	(Arbeitskopie)
+@@ -281,10 +281,10 @@
+     if ((op0 & 0xf8) == 0x48)
+     {
+         if (!sw_read_mem(csw, pc + 1, &op1, 1)) return FALSE;
++        if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
+         switch (op1)
+         {
+         case 0x81: /* add $nnnn,%rsp */
+-            if (!sw_read_mem(csw, pc + 2, &op2, 1)) return FALSE;
+             if (op0 == 0x48 && op2 == 0xc4)
+             {
+                 pc += 7;

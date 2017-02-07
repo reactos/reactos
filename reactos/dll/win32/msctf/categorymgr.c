@@ -41,9 +41,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 typedef struct tagCategoryMgr {
-    const ITfCategoryMgrVtbl *CategoryMgrVtbl;
+    ITfCategoryMgr ITfCategoryMgr_iface;
     LONG refCount;
 } CategoryMgr;
+
+static inline CategoryMgr *impl_from_ITfCategoryMgr(ITfCategoryMgr *iface)
+{
+    return CONTAINING_RECORD(iface, CategoryMgr, ITfCategoryMgr_iface);
+}
 
 static void CategoryMgr_Destructor(CategoryMgr *This)
 {
@@ -53,7 +58,7 @@ static void CategoryMgr_Destructor(CategoryMgr *This)
 
 static HRESULT WINAPI CategoryMgr_QueryInterface(ITfCategoryMgr *iface, REFIID iid, LPVOID *ppvOut)
 {
-    CategoryMgr *This = (CategoryMgr *)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfCategoryMgr))
@@ -73,13 +78,13 @@ static HRESULT WINAPI CategoryMgr_QueryInterface(ITfCategoryMgr *iface, REFIID i
 
 static ULONG WINAPI CategoryMgr_AddRef(ITfCategoryMgr *iface)
 {
-    CategoryMgr *This = (CategoryMgr *)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI CategoryMgr_Release(ITfCategoryMgr *iface)
 {
-    CategoryMgr *This = (CategoryMgr *)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -100,7 +105,7 @@ static HRESULT WINAPI CategoryMgr_RegisterCategory ( ITfCategoryMgr *iface,
     WCHAR buf2[39];
     ULONG res;
     HKEY tipkey,catkey,itmkey;
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     static const WCHAR ctg[] = {'C','a','t','e','g','o','r','y',0};
     static const WCHAR itm[] = {'I','t','e','m',0};
@@ -148,7 +153,7 @@ static HRESULT WINAPI CategoryMgr_UnregisterCategory ( ITfCategoryMgr *iface,
     WCHAR buf[39];
     WCHAR buf2[39];
     HKEY tipkey;
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     static const WCHAR ctg[] = {'C','a','t','e','g','o','r','y',0};
     static const WCHAR itm[] = {'I','t','e','m',0};
@@ -180,7 +185,7 @@ static HRESULT WINAPI CategoryMgr_UnregisterCategory ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_EnumCategoriesInItem ( ITfCategoryMgr *iface,
         REFGUID rguid, IEnumGUID **ppEnum)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -188,7 +193,7 @@ static HRESULT WINAPI CategoryMgr_EnumCategoriesInItem ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_EnumItemsInCategory ( ITfCategoryMgr *iface,
         REFGUID rcatid, IEnumGUID **ppEnum)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -198,12 +203,12 @@ static HRESULT WINAPI CategoryMgr_FindClosestCategory ( ITfCategoryMgr *iface,
 {
     static const WCHAR fmt[] = { '%','s','\\','%','s','\\','C','a','t','e','g','o','r','y','\\','I','t','e','m','\\','%','s',0};
 
-    WCHAR fullkey[110];
+    WCHAR fullkey[120];
     WCHAR buf[39];
     HKEY key;
     HRESULT hr = S_FALSE;
     INT index = 0;
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     TRACE("(%p)\n",This);
 
@@ -263,7 +268,7 @@ static HRESULT WINAPI CategoryMgr_RegisterGUIDDescription (
         ITfCategoryMgr *iface, REFCLSID rclsid, REFGUID rguid,
         const WCHAR *pchDesc, ULONG cch)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -271,7 +276,7 @@ static HRESULT WINAPI CategoryMgr_RegisterGUIDDescription (
 static HRESULT WINAPI CategoryMgr_UnregisterGUIDDescription (
         ITfCategoryMgr *iface, REFCLSID rclsid, REFGUID rguid)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -279,7 +284,7 @@ static HRESULT WINAPI CategoryMgr_UnregisterGUIDDescription (
 static HRESULT WINAPI CategoryMgr_GetGUIDDescription ( ITfCategoryMgr *iface,
         REFGUID rguid, BSTR *pbstrDesc)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -287,7 +292,7 @@ static HRESULT WINAPI CategoryMgr_GetGUIDDescription ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_RegisterGUIDDWORD ( ITfCategoryMgr *iface,
         REFCLSID rclsid, REFGUID rguid, DWORD dw)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -295,7 +300,7 @@ static HRESULT WINAPI CategoryMgr_RegisterGUIDDWORD ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_UnregisterGUIDDWORD ( ITfCategoryMgr *iface,
         REFCLSID rclsid, REFGUID rguid)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -303,7 +308,7 @@ static HRESULT WINAPI CategoryMgr_UnregisterGUIDDWORD ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_GetGUIDDWORD ( ITfCategoryMgr *iface,
         REFGUID rguid, DWORD *pdw)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
 }
@@ -315,7 +320,7 @@ static HRESULT WINAPI CategoryMgr_RegisterGUID ( ITfCategoryMgr *iface,
     DWORD index;
     GUID *checkguid;
     DWORD id;
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     TRACE("(%p) %s %p\n",This,debugstr_guid(rguid),pguidatom);
 
@@ -350,7 +355,7 @@ static HRESULT WINAPI CategoryMgr_RegisterGUID ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_GetGUID ( ITfCategoryMgr *iface,
         TfGuidAtom guidatom, GUID *pguid)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     TRACE("(%p) %i\n",This,guidatom);
 
@@ -368,7 +373,7 @@ static HRESULT WINAPI CategoryMgr_GetGUID ( ITfCategoryMgr *iface,
 static HRESULT WINAPI CategoryMgr_IsEqualTfGuidAtom ( ITfCategoryMgr *iface,
         TfGuidAtom guidatom, REFGUID rguid, BOOL *pfEqual)
 {
-    CategoryMgr *This = (CategoryMgr*)iface;
+    CategoryMgr *This = impl_from_ITfCategoryMgr(iface);
 
     TRACE("(%p) %i %s %p\n",This,guidatom,debugstr_guid(rguid),pfEqual);
 
@@ -418,7 +423,7 @@ HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->CategoryMgrVtbl= &CategoryMgr_CategoryMgrVtbl;
+    This->ITfCategoryMgr_iface.lpVtbl = &CategoryMgr_CategoryMgrVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n", This);

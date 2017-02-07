@@ -31,11 +31,16 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 typedef struct tagLangBarMgr {
-    const ITfLangBarMgrVtbl *LangBarMgrVtbl;
+    ITfLangBarMgr ITfLangBarMgr_iface;
 
     LONG refCount;
 
 } LangBarMgr;
+
+static inline LangBarMgr *impl_from_ITfLangBarMgr(ITfLangBarMgr *iface)
+{
+    return CONTAINING_RECORD(iface, LangBarMgr, ITfLangBarMgr_iface);
+}
 
 static void LangBarMgr_Destructor(LangBarMgr *This)
 {
@@ -46,7 +51,7 @@ static void LangBarMgr_Destructor(LangBarMgr *This)
 
 static HRESULT WINAPI LangBarMgr_QueryInterface(ITfLangBarMgr *iface, REFIID iid, LPVOID *ppvOut)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfLangBarMgr))
@@ -66,13 +71,13 @@ static HRESULT WINAPI LangBarMgr_QueryInterface(ITfLangBarMgr *iface, REFIID iid
 
 static ULONG WINAPI LangBarMgr_AddRef(ITfLangBarMgr *iface)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
     return InterlockedIncrement(&This->refCount);
 }
 
 static ULONG WINAPI LangBarMgr_Release(ITfLangBarMgr *iface)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
     ULONG ret;
 
     ret = InterlockedDecrement(&This->refCount);
@@ -87,7 +92,7 @@ static ULONG WINAPI LangBarMgr_Release(ITfLangBarMgr *iface)
 
 static HRESULT WINAPI LangBarMgr_AdviseEventSink( ITfLangBarMgr* iface, ITfLangBarEventSink *pSink, HWND hwnd, DWORD dwflags, DWORD *pdwCookie)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -95,7 +100,7 @@ static HRESULT WINAPI LangBarMgr_AdviseEventSink( ITfLangBarMgr* iface, ITfLangB
 
 static HRESULT WINAPI LangBarMgr_UnAdviseEventSink( ITfLangBarMgr* iface, DWORD dwCookie)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -103,7 +108,7 @@ static HRESULT WINAPI LangBarMgr_UnAdviseEventSink( ITfLangBarMgr* iface, DWORD 
 
 static HRESULT WINAPI LangBarMgr_GetThreadMarshalInterface( ITfLangBarMgr* iface, DWORD dwThreadId, DWORD dwType, REFIID riid, IUnknown **ppunk)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -111,7 +116,7 @@ static HRESULT WINAPI LangBarMgr_GetThreadMarshalInterface( ITfLangBarMgr* iface
 
 static HRESULT WINAPI LangBarMgr_GetThreadLangBarItemMgr( ITfLangBarMgr* iface, DWORD dwThreadId, ITfLangBarItemMgr **pplbi, DWORD *pdwThreadid)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -119,7 +124,7 @@ static HRESULT WINAPI LangBarMgr_GetThreadLangBarItemMgr( ITfLangBarMgr* iface, 
 
 static HRESULT WINAPI LangBarMgr_GetInputProcessorProfiles( ITfLangBarMgr* iface, DWORD dwThreadId, ITfInputProcessorProfiles **ppaip, DWORD *pdwThreadid)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -127,7 +132,7 @@ static HRESULT WINAPI LangBarMgr_GetInputProcessorProfiles( ITfLangBarMgr* iface
 
 static HRESULT WINAPI LangBarMgr_RestoreLastFocus( ITfLangBarMgr* iface, DWORD *dwThreadId, BOOL fPrev)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -135,7 +140,7 @@ static HRESULT WINAPI LangBarMgr_RestoreLastFocus( ITfLangBarMgr* iface, DWORD *
 
 static HRESULT WINAPI LangBarMgr_SetModalInput( ITfLangBarMgr* iface, ITfLangBarEventSink *pSink, DWORD dwThreadId, DWORD dwFlags)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -143,7 +148,7 @@ static HRESULT WINAPI LangBarMgr_SetModalInput( ITfLangBarMgr* iface, ITfLangBar
 
 static HRESULT WINAPI LangBarMgr_ShowFloating( ITfLangBarMgr* iface, DWORD dwFlags)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -151,7 +156,7 @@ static HRESULT WINAPI LangBarMgr_ShowFloating( ITfLangBarMgr* iface, DWORD dwFla
 
 static HRESULT WINAPI LangBarMgr_GetShowFloatingStatus( ITfLangBarMgr* iface, DWORD *pdwFlags)
 {
-    LangBarMgr *This = (LangBarMgr *)iface;
+    LangBarMgr *This = impl_from_ITfLangBarMgr(iface);
 
     FIXME("STUB:(%p)\n",This);
     return E_NOTIMPL;
@@ -184,7 +189,7 @@ HRESULT LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     if (This == NULL)
         return E_OUTOFMEMORY;
 
-    This->LangBarMgrVtbl= &LangBarMgr_LangBarMgrVtbl;
+    This->ITfLangBarMgr_iface.lpVtbl = &LangBarMgr_LangBarMgrVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n", This);

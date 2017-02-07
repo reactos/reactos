@@ -26,7 +26,7 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Willkommen beim ReactOS-Setupassistenten.", IDC_WELCOMETITLE, 115, 9, 189, 31
-    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Der Assistent benötigt einige Informationen, um ReactOS installieren zu können.", IDC_STATIC, 115, 50, 189, 100
+    LTEXT "Dieser Assistent wird ReactOS auf Ihrem Computer installieren. Der Assistent benÃ¶tigt einige Informationen, um ReactOS installieren zu kÃ¶nnen.", IDC_STATIC, 115, 50, 189, 100
     LTEXT "Klicken Sie auf Weiter, um fortzufahren.", IDC_STATIC, 115, 160, 189, 31
 END
 
@@ -36,11 +36,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Die ReactOS-Programmierer möchten folgende Open-Source-Projekte anerkennen, die (teils) verwendet wurden, um ReactOS zu erstellen:",
+    LTEXT           "Die ReactOS-Programmierer mÃ¶chten folgende Open-Source-Projekte anerkennen, die (teils) verwendet wurden, um ReactOS zu erstellen:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS ist unter der GPL veröffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden oder wiederveröffentlichen wollen, müssen Sie die Bestimmungen der GPL anerkennen.",
+    LTEXT           "ReactOS ist unter der GPL verÃ¶ffentlicht, wenn Sie (Teile von) ReactOS wiederverwenden oder wiederverÃ¶ffentlichen wollen, mÃ¼ssen Sie die Bestimmungen der GPL anerkennen.",
                     IDC_STATIC,15,110,227,24
     PUSHBUTTON      "GPL &ansehen...",IDC_VIEWGPL,251,110,55,19
     LTEXT           "Klicken Sie auf Weiter, um mit der Einrichtung fortzufahren.",IDC_STATIC,15,136,
@@ -74,13 +74,13 @@ BEGIN
     LTEXT "&Computername:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Das Setup wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benötigen.",
+    LTEXT "Das Setup wird ein Administratorkonto erstellen. Benutzen Sie es, wenn Sie vollen Zugriff auf Ihren Computer benÃ¶tigen.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Geben Sie ein Passwort für das Administratorkonto mit max. 14 Zeichen ein.",
+    LTEXT "Geben Sie ein Passwort fÃ¼r das Administratorkonto mit max. 14 Zeichen ein.",
           IDC_STATIC, 54, 87, 250, 8
     LTEXT "&Administratorpasswort:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "&Passwort bestätigen:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "&Passwort bestÃ¤tigen:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -91,15 +91,15 @@ CAPTION "ReactOS-Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, die Sie nutzen wollen übereinstimmen. Die lokalen Nutzereinstellungen geben vor, wie Nummern, Währungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
+    LTEXT "Die lokalen Systemeinstellungen sollten mit der Sprache der Anwendungen, die Sie nutzen wollen Ã¼bereinstimmen. Die lokalen Nutzereinstellungen geben vor, wie Nummern, WÃ¤hrungen und Datumsangaben dargestellt werden.", IDC_STATIC, 53, 6, 253, 30
     LTEXT "", IDC_LOCALETEXT, 54, 34, 250, 16
-    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu ändern, klicken Sie auf Einstellen.",
+    LTEXT "Um die lokalen Nutzer- oder Systemeinstellungen zu Ã¤ndern, klicken Sie auf Einstellen.",
           IDC_STATIC, 53, 57, 188, 15
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Das Tastaturlayout gibt vor, welches Zeichen ein Tastendruck bewirkt.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Um das Tastaturlayout zu ändern, klicken Sie auf Einstellen.",
+    LTEXT "Um das Tastaturlayout zu Ã¤ndern, klicken Sie auf Einstellen.",
           IDC_STATIC, 53, 126, 189, 8
     PUSHBUTTON "&Einstellen...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
 END
@@ -172,13 +172,13 @@ BEGIN
     IDS_ACKTITLE         "Anerkennungen"
     IDS_ACKSUBTITLE      "Das Fundament, auf dem ReactOS gebaut ist, und Lizenzinformationen"
     IDS_OWNERTITLE       "Personalisieren Sie Ihre Software"
-    IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen über Sie, um ReactOS zu personalisieren."
+    IDS_OWNERSUBTITLE    "Das Setup nutzt diese Informationen Ã¼ber Sie, um ReactOS zu personalisieren."
     IDS_COMPUTERTITLE    "Computername und Administratorpasswort"
-    IDS_COMPUTERSUBTITLE "Sie müssen einen Namen und ein Adminstratorpasswort für Ihren Computer festlegen."
+    IDS_COMPUTERSUBTITLE "Sie mÃ¼ssen einen Namen und ein Adminstratorpasswort fÃ¼r Ihren Computer festlegen."
     IDS_LOCALETITLE      "Regionale Einstellungen"
-    IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
+    IDS_LOCALESUBTITLE   "Sie kÃ¶nnen ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
     IDS_DATETIMETITLE    "Datum und Uhrzeit"
-    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für Ihren Computer."
+    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit fÃ¼r Ihren Computer."
     IDS_PROCESSTITLE     "Registriere Komponenten"
     IDS_PROCESSSUBTITLE  "Bitte warten..."
 END
@@ -190,15 +190,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Zubehör"
+    IDS_ACCESSORIES     "ZubehÃ¶r"
     IDS_CMT_CALC        "Starte Taschenrechner"
-    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
+    IDS_CMT_CMD         "Ã–ffne Kommandozeilenfenster"
     IDS_CMT_EXPLORER    "Starte Explorer"
     IDS_CMT_NOTEPAD     "Starte Texteditor"
     IDS_CMT_REGEDIT     "Starte Registrierungseditor"
     IDS_CMT_WORDPAD     "Starte Dokumenteneditor"
     IDS_CMT_SCREENSHOT  "Screenshot erstellen"
-    IDS_CMT_DEVMGMT     "Starte Gerätemanager"
+    IDS_CMT_DEVMGMT     "Starte GerÃ¤temanager"
     IDS_CMT_SERVMAN     "Starte Dienstmanager"
     IDS_CMT_RDESKTOP    "Starte Remote Desktop"
     IDS_CMT_EVENTVIEW   "Starte Ereignisanzeige"
@@ -209,7 +209,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_GAMES		"Spiele"
-    IDS_CMT_SOLITAIRE	"Solitär"
+    IDS_CMT_SOLITAIRE	"SolitÃ¤r"
     IDS_CMT_WINEMINE	"WineMine"
 	IDS_CMT_SPIDER      "Spider Solitaire"
 END
@@ -233,7 +233,7 @@ STRINGTABLE
 BEGIN
     IDS_SYS_ENTERTAINMENT       "Unterhaltung"
     IDS_CMT_MPLAY32             "Starte Multimedia-Player"
-    IDS_CMT_SNDVOL32            "Starte Lautstärkeregelung"
+    IDS_CMT_SNDVOL32            "Starte LautstÃ¤rkeregelung"
     IDS_CMT_SNDREC32            "Starte Audiorekorder"
 END
 
@@ -246,7 +246,7 @@ BEGIN
     IDS_GETPROCADDR_FAILED	"GetProcAddr fehlgeschlagen: "
     IDS_REGSVR_FAILED           "DllRegisterServer fehlgeschlagen: "
     IDS_DLLINSTALL_FAILED	"DllInstall fehlgeschlagen: "
-    IDS_TIMEOUT			"Zeitüberschreitung während der Registrierung"
+    IDS_TIMEOUT			"ZeitÃ¼berschreitung wÃ¤hrend der Registrierung"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -256,14 +256,14 @@ BEGIN
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
     IDS_SHORT_DOWNLOADER "ReactOS Anwendungsmanager.lnk"
     IDS_SHORT_SERVICE    "Dienste-Manager.lnk"
-    IDS_SHORT_DEVICE     "Geräte-Manager.lnk"
+    IDS_SHORT_DEVICE     "GerÃ¤te-Manager.lnk"
     IDS_SHORT_MPLAY32    "Multimedia-Player.lnk"
     IDS_SHORT_CALC       "Rechner.lnk"
     IDS_SHORT_REGEDIT    "Registrierungseditor.lnk"
     IDS_SHORT_NOTEPAD    "Editor.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
-    IDS_SHORT_SOLITAIRE  "Solitär.lnk"
+    IDS_SHORT_SOLITAIRE  "SolitÃ¤r.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_CHARMAP    "Zeichentabelle.lnk"
     IDS_SHORT_MAGNIFY    "Bildschirmlupe.lnk"
@@ -271,7 +271,7 @@ BEGIN
     IDS_SHORT_KBSWITCH   "Tastaturlayout-Umschalter.lnk"
     IDS_SHORT_EVENTVIEW  "Ereignisanzeige.lnk"
     IDS_SHORT_MSCONFIG   "Systemkonfiguration.lnk"
-    IDS_SHORT_SNDVOL32   "Lautstärkeregelung.lnk"
+    IDS_SHORT_SNDVOL32   "LautstÃ¤rkeregelung.lnk"
     IDS_SHORT_SNDREC32   "Audiorekorder.lnk"
     IDS_SHORT_DXDIAG     "ReactX-Diagnose.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
@@ -283,15 +283,15 @@ BEGIN
     IDS_WZD_NAME         "Setup kann erst fortgesetzt werden, wenn ein Name eingegeben wurde."
     IDS_WZD_SETCOMPUTERNAME  "Setup konnte den Computernamen nicht setzen."
     IDS_WZD_COMPUTERNAME  "Setup kann erst fortgesetzt werden, wenn ein Computername eingegeben wurde."
-    IDS_WZD_PASSWORDEMPTY  "Sie müssen ein Passwort setzen!"
-    IDS_WZD_PASSWORDMATCH  "Die Passwörter sind nicht gleich. Bitte setzen Sie die Passwörter erneut."
-    IDS_WZD_PASSWORDCHAR  "Das Passwort, das Sie setzten, enthält ungültige Zeichen. Bitte setzen Sie ein gültiges Passwort."
+    IDS_WZD_PASSWORDEMPTY  "Sie mÃ¼ssen ein Passwort setzen!"
+    IDS_WZD_PASSWORDMATCH  "Die PasswÃ¶rter sind nicht gleich. Bitte setzen Sie die PasswÃ¶rter erneut."
+    IDS_WZD_PASSWORDCHAR  "Das Passwort, das Sie setzten, enthÃ¤lt ungÃ¼ltige Zeichen. Bitte setzen Sie ein gÃ¼ltiges Passwort."
     IDS_WZD_LOCALTIME    "Setup konnte die lokale Zeit nicht setzen."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Geräte werden installiert..."
+    IDS_STATUS_INSTALL_DEV "GerÃ¤te werden installiert..."
 END
 
 /* EOF */

@@ -92,6 +92,7 @@ typedef struct _LOGFILE
     PEVENT_OFFSET_INFO OffsetInfo;
     ULONG OffsetInfoSize;
     ULONG OffsetInfoNext;
+    BOOL Permanent;
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
@@ -102,12 +103,17 @@ typedef struct _EVENTSOURCE
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
+
+/* Log Handle Flags */
+#define LOG_HANDLE_BACKUP_FILE 1
+
 typedef struct _LOGHANDLE
 {
     LIST_ENTRY LogHandleListEntry;
     PEVENTSOURCE EventSource;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
+    ULONG Flags;
     WCHAR szName[1];
 } LOGHANDLE, *PLOGHANDLE;
 
@@ -149,16 +155,18 @@ NTSTATUS
 LogfBackupFile(PLOGFILE LogFile,
                PUNICODE_STRING BackupFileName);
 
-PLOGFILE LogfCreate(WCHAR * LogName,
-                    WCHAR * FileName);
+NTSTATUS
+LogfCreate(PLOGFILE *Logfile,
+           WCHAR * LogName,
+           PUNICODE_STRING FileName,
+           BOOL Permanent,
+           BOOL Backup);
 
-VOID LogfClose(PLOGFILE LogFile);
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOL ForceClose);
 
 VOID LogfCloseAll(VOID);
-
-BOOL LogfInitializeNew(PLOGFILE LogFile);
-
-BOOL LogfInitializeExisting(PLOGFILE LogFile);
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 

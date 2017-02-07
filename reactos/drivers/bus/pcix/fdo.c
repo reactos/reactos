@@ -127,7 +127,6 @@ PciFdoIrpQueryRemoveDevice(IN PIRP Irp,
                            IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 

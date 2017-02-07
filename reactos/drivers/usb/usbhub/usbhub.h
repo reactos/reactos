@@ -1,15 +1,23 @@
+#pragma once
+
+#define NDEBUG
+#include <ntifs.h>
 #include <ntddk.h>
+#include <wdmguid.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 #include <usbioctl.h>
 #include <usb.h>
+#include <stdio.h>
+#include <usbdlib.h>
 #include <debug.h>
 //BROKEN: #include <usbprotocoldefs.h>
+#include <pseh/pseh2.h>
 
 #define USB_HUB_TAG 'hbsu'
 #define USB_MAXCHILDREN 127
 
-/* Lifted from broken header above */
+// Lifted from broken header above
 #define C_HUB_LOCAL_POWER                    0
 #define C_HUB_OVER_CURRENT                   1
 #define PORT_CONNECTION                      0
@@ -27,86 +35,62 @@
 #define PORT_TEST                            21
 #define PORT_INDICATOR                       22
 
-typedef struct _USB_ENDPOINT
+typedef struct _PORT_STATUS_CHANGE
 {
-    ULONG Flags;
-    LIST_ENTRY  UrbList;
-    struct _USB_INTERFACE *Interface;
-    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
-} USB_ENDPOINT, *PUSB_ENDPOINT;
+    USHORT Status;
+    USHORT Change;
+} PORT_STATUS_CHANGE, *PPORT_STATUS_CHANGE;
 
-typedef struct _USB_INTERFACE
-{
-    struct _USB_CONFIGURATION *Config;
-    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    USB_ENDPOINT *EndPoints[];
-} USB_INTERFACE, *PUSB_INTERFACE;
-
-typedef struct _USB_CONFIGURATION
-{
-    struct _USB_DEVICE *Device;
-    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-    USB_INTERFACE *Interfaces[];
-} USB_CONFIGURATION, *PUSB_CONFIGURATION;
-
-typedef struct _USB_DEVICE
-{
-    UCHAR Address;
-    ULONG Port;
-    PVOID ParentDevice;
-    BOOLEAN IsHub;
-    USB_DEVICE_SPEED DeviceSpeed;
-    USB_DEVICE_TYPE DeviceType;
-    USB_DEVICE_DESCRIPTOR DeviceDescriptor;
-    USB_CONFIGURATION *ActiveConfig;
-    USB_INTERFACE *ActiveInterface;
-    USB_CONFIGURATION **Configs;
-} USB_DEVICE, *PUSB_DEVICE;
-
-typedef struct _WORKITEMDATA
+typedef struct _WORK_ITEM_DATA
 {
     WORK_QUEUE_ITEM WorkItem;
     PVOID Context;
-} WORKITEMDATA, *PWORKITEMDATA;
+} WORK_ITEM_DATA, *PWORK_ITEM_DATA;
+
+typedef struct
+{
+    BOOLEAN IsFDO;
+} COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
 typedef struct _HUB_CHILDDEVICE_EXTENSION
 {
-    BOOLEAN IsFDO;
-    PDEVICE_OBJECT Parent;
-    PWCHAR DeviceId;          // REG_SZ
-    PWCHAR InstanceId;        // REG_SZ
-    PWCHAR HardwareIds;       // REG_MULTI_SZ
-    PWCHAR CompatibleIds;     // REG_MULTI_SZ
-    PWCHAR TextDescription;
+    COMMON_DEVICE_EXTENSION Common;
+    PDEVICE_OBJECT ParentDeviceObject;
+    PUSB_DEVICE_HANDLE UsbDeviceHandle;
+    ULONG PortNumber;
+    UNICODE_STRING usDeviceId;
+    UNICODE_STRING usInstanceId;
+    UNICODE_STRING usHardwareIds;
+    UNICODE_STRING usCompatibleIds;
+    UNICODE_STRING usTextDescription;
+    UNICODE_STRING usLocationInformation;
+    USB_DEVICE_DESCRIPTOR DeviceDesc;
+    PUSB_CONFIGURATION_DESCRIPTOR FullConfigDesc;
     UNICODE_STRING SymbolicLinkName;
+    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 } HUB_CHILDDEVICE_EXTENSION, *PHUB_CHILDDEVICE_EXTENSION;
 
 typedef struct _HUB_DEVICE_EXTENSION
 {
-    BOOLEAN IsFDO;
-    USB_DEVICE* dev;
-    PDEVICE_OBJECT LowerDevice;
+    COMMON_DEVICE_EXTENSION Common;
+    PDEVICE_OBJECT LowerDeviceObject;
     ULONG ChildCount;
-    PDEVICE_OBJECT Children[USB_MAXCHILDREN];
+    PDEVICE_OBJECT ChildDeviceObject[USB_MAXCHILDREN];
+    PDEVICE_OBJECT RootHubPhysicalDeviceObject;
+    PDEVICE_OBJECT RootHubFunctionalDeviceObject;
 
-    PUSB_DEVICE UsbChildren[USB_MAXCHILDREN];
+    ULONG NumberOfHubs;
+    KEVENT ResetComplete;
 
-    PUSB_DEVICE RootHubUsbDevice;
-
-    PDEVICE_OBJECT RootHubPdo;
-    PDEVICE_OBJECT RootHubFdo;
-
-    ULONG HubCount;
-
-    USHORT PortStatus[256];
-    URB Urb;
+    PORT_STATUS_CHANGE *PortStatusChange;
+    URB PendingSCEUrb;
+    PIRP PendingSCEIrp;
 
     USB_BUS_INTERFACE_HUB_V5 HubInterface;
     USB_BUS_INTERFACE_USBDI_V2 UsbDInterface;
 
     USB_HUB_DESCRIPTOR HubDescriptor;
     USB_DEVICE_DESCRIPTOR HubDeviceDescriptor;
-
     USB_CONFIGURATION_DESCRIPTOR HubConfigDescriptor;
     USB_INTERFACE_DESCRIPTOR HubInterfaceDescriptor;
     USB_ENDPOINT_DESCRIPTOR HubEndPointDescriptor;
@@ -116,66 +100,95 @@ typedef struct _HUB_DEVICE_EXTENSION
 
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;
     USBD_PIPE_HANDLE PipeHandle;
+    PVOID RootHubHandle;
+    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
+
 
     UNICODE_STRING SymbolicLinkName;
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
-/* createclose.c */
+// createclose.c
 NTSTATUS NTAPI
-UsbhubCreate(
+USBHUB_Create(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
 NTSTATUS NTAPI
-UsbhubClose(
+USBHUB_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
 NTSTATUS NTAPI
-UsbhubCleanup(
+USBHUB_Cleanup(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
-/* fdo.c */
-NTSTATUS NTAPI
-UsbhubPnpFdo(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
+// fdo.c
+NTSTATUS
+USBHUB_FdoHandleDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
 
 NTSTATUS
-UsbhubDeviceControlFdo(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
+USBHUB_FdoHandlePnp(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
 
-/* misc.c */
+// misc.c
 NTSTATUS
 ForwardIrpAndWait(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
-NTSTATUS NTAPI
+NTSTATUS
 ForwardIrpAndForget(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
 NTSTATUS
-UsbhubDuplicateUnicodeString(
-    OUT PUNICODE_STRING Destination,
-    IN PUNICODE_STRING Source,
-    IN POOL_TYPE PoolType);
+SubmitRequestToRootHub(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG IoControlCode,
+    OUT PVOID OutParameter1,
+    OUT PVOID OutParameter2);
 
 NTSTATUS
-UsbhubInitMultiSzString(
-    OUT PUNICODE_STRING Destination,
-    .../* list of PCSZ */);
-
-/* pdo.c */
-NTSTATUS NTAPI
-UsbhubPnpPdo(
+FDO_QueryInterface(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp);
+    IN OUT PUSB_BUS_INTERFACE_USBDI_V2 Interface);
+
+// pdo.c
+NTSTATUS
+USBHUB_PdoHandlePnp(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
 
 NTSTATUS
-UsbhubInternalDeviceControlPdo(
+USBHUB_PdoHandleInternalDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+VOID
+DumpDeviceDescriptor(
+    PUSB_DEVICE_DESCRIPTOR DeviceDescriptor);
+
+VOID
+DumpConfigurationDescriptor(
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+
+VOID
+DumpFullConfigurationDescriptor(
+    PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
+
+NTSTATUS
+GetPortStatusAndChange(
+    IN PDEVICE_OBJECT RootHubDeviceObject,
+    IN ULONG PortId,
+    OUT PPORT_STATUS_CHANGE StatusChange);
+
+// hub_fdo.c
+
+NTSTATUS
+USBHUB_ParentFDOStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);

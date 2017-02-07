@@ -881,6 +881,131 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	return Status;
 }
 
+NTSTATUS
+NTAPI
+RamdiskGetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    PPARTITION_INFORMATION PartitionInfo;
+    PVOID BaseAddress;
+    LARGE_INTEGER Zero = {{0, 0}};
+    ULONG Length;
+    PIO_STACK_LOCATION IoStackLocation;
+    
+    //
+    // Validate the length
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStackLocation->Parameters.DeviceIoControl.
+        OutputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        //
+        // Invalid length
+        //
+        Status = STATUS_BUFFER_TOO_SMALL;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Map the partition table
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
+    if (!BaseAddress)
+    {
+        //
+        // No memory
+        //
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Fill out the information
+    //
+    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
+    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
+    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
+                                              DeviceExtension->SectorsPerTrack *
+                                              DeviceExtension->NumberOfHeads *
+                                              DeviceExtension->Cylinders;
+    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
+    PartitionInfo->PartitionNumber = 0;
+    PartitionInfo->PartitionType = *((PCHAR)BaseAddress + 450);
+    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
+                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
+    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
+                                                               PartitionType);
+    PartitionInfo->RewritePartition = FALSE;
+
+    //
+    // Unmap the partition table
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
+    
+    //
+    // Done
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskSetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    ULONG BytesRead;
+    NTSTATUS Status;
+    PVOID BaseAddress;
+    PIO_STACK_LOCATION Stack;
+    LARGE_INTEGER Zero = {{0, 0}};
+    PPARTITION_INFORMATION PartitionInfo;
+
+    //
+    // First validate input
+    //
+    Stack = IoGetCurrentIrpStackLocation(Irp);
+    if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto SetAndQuit;
+    }
+
+    //
+    // Map to get MBR
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &BytesRead);
+    if (BaseAddress == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto SetAndQuit;
+    }
+
+    //
+    // Set the new partition type
+    // On partition 0, field system indicator
+    //
+    PartitionInfo = (PPARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+    *((PCHAR)BaseAddress + 450) = PartitionInfo->PartitionType;
+
+    //
+    // And unmap
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, BytesRead);
+    Status = STATUS_SUCCESS;
+
+SetAndQuit:
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    return Status;
+}
+
 VOID
 NTAPI
 RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
@@ -935,12 +1060,10 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         break;
                         
                     case IOCTL_DISK_SET_PARTITION_INFO:
-                        
-                        DPRINT1("Set partition info request\n");
-                        UNIMPLEMENTED;
-                        while (TRUE);
+
+                        Status = RamdiskSetPartitionInfo(Irp, (PRAMDISK_DRIVE_EXTENSION)DeviceExtension);
                         break;
-                        
+
                     case IOCTL_DISK_GET_DRIVE_LAYOUT:
                         
                         DPRINT1("Get drive layout request\n");
@@ -949,12 +1072,10 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         break;
                         
                     case IOCTL_DISK_GET_PARTITION_INFO:
-                        
-                        DPRINT1("Get partitinon info request\n");
-                        UNIMPLEMENTED;
-                        while (TRUE);
+
+                        Status = RamdiskGetPartitionInfo(Irp, (PRAMDISK_DRIVE_EXTENSION)DeviceExtension);
                         break;
-                        
+
                     default:
                         
                         DPRINT1("Invalid request\n");
@@ -1193,80 +1314,6 @@ DoCopy:
         //
         if (!BytesLeft) return Status;
     }
-}
-
-NTSTATUS
-NTAPI
-RamdiskGetPartitionInfo(IN PIRP Irp,
-                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
-{
-    NTSTATUS Status;
-    PPARTITION_INFORMATION PartitionInfo;
-    PVOID BaseAddress;
-    LARGE_INTEGER Zero = {{0, 0}};
-    ULONG Length;
-    PIO_STACK_LOCATION IoStackLocation;
-    
-    //
-    // Validate the length
-    //
-    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
-    if (IoStackLocation->Parameters.DeviceIoControl.
-        OutputBufferLength < sizeof(PARTITION_INFORMATION))
-    {
-        //
-        // Invalid length
-        //
-        Status = STATUS_BUFFER_TOO_SMALL;
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-        return Status;
-    }
-    
-    //
-    // Map the partition table
-    //
-    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
-    if (!BaseAddress)
-    {
-        //
-        // No memory
-        //
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-        return Status;
-    }
-    
-    //
-    // Fill out the information
-    //
-    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
-    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
-    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
-                                              DeviceExtension->SectorsPerTrack *
-                                              DeviceExtension->NumberOfHeads *
-                                              DeviceExtension->Cylinders;
-    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
-    PartitionInfo->PartitionNumber = 0;
-    PartitionInfo->PartitionType = PARTITION_FAT32; //*((PCHAR)BaseAddress + 450);
-    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
-                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
-    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
-                                                               PartitionType);
-    PartitionInfo->RewritePartition = FALSE;
-
-    //
-    // Unmap the partition table
-    //
-    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
-    
-    //
-    // Done
-    //
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1572,8 +1619,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 
             case IOCTL_DISK_SET_PARTITION_INFO:
                 
-                UNIMPLEMENTED;
-                while (TRUE);
+                Status = RamdiskSetPartitionInfo(Irp, DriveExtension);
                 break;
                 
             case IOCTL_DISK_GET_PARTITION_INFO:
@@ -1930,6 +1976,120 @@ PassToNext:
 
 NTSTATUS
 NTAPI
+RamdiskDeleteDiskDevice(IN PDEVICE_OBJECT DeviceObject,
+                        IN PIRP Irp)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskRemoveBusDevice(IN PDEVICE_OBJECT DeviceObject,
+                       IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PLIST_ENTRY ListHead, NextEntry;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+    PRAMDISK_DRIVE_EXTENSION DriveExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Acquire disks list lock
+    //
+    KeEnterCriticalRegion();
+    ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+
+    //
+    // Loop over drives
+    //
+    ListHead = &DeviceExtension->DiskList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        DriveExtension = CONTAINING_RECORD(NextEntry,
+                                           RAMDISK_DRIVE_EXTENSION,
+                                           DiskList);
+
+        //
+        // Delete the disk
+        //
+        IoAcquireRemoveLock(&DriveExtension->RemoveLock, NULL);
+        RamdiskDeleteDiskDevice(DriveExtension->PhysicalDeviceObject, NULL);
+
+        //
+        // RamdiskDeleteDiskDevice releases list lock, so reacquire it
+        //
+        KeEnterCriticalRegion();
+        ExAcquireFastMutex(&DeviceExtension->DiskListLock);
+    }
+
+    //
+    // Release disks list lock
+    //
+    ExReleaseFastMutex(&DeviceExtension->DiskListLock);
+    KeLeaveCriticalRegion();
+
+    //
+    // Prepare to pass to the lower driver
+    //
+    IoSkipCurrentIrpStackLocation(Irp);
+    //
+    // Here everything went fine
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    //
+    // Call lower driver
+    //
+    Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+
+    //
+    // Update state
+    //
+    DeviceExtension->State = RamdiskStateBusRemoved;
+
+    //
+    // Release the lock, and ensure that everyone
+    // has finished its job before we continue
+    // The lock has been acquired by the dispatcher
+    //
+    IoReleaseRemoveLockAndWait(&DeviceExtension->RemoveLock, Irp);
+
+    //
+    // If there's a drive name
+    //
+    if (DeviceExtension->DriveDeviceName.Buffer)
+    {
+        //
+        // Inform it's going to be disabled
+        // and free the drive name
+        //
+        IoSetDeviceInterfaceState(&DeviceExtension->DriveDeviceName, FALSE);
+        RtlFreeUnicodeString(&DeviceExtension->DriveDeviceName);
+    }
+
+    //
+    // Part from the stack, detach from lower device
+    //
+    IoDetachDevice(DeviceExtension->AttachedDevice);
+
+    //
+    // Finally, delete device
+    //
+    RamdiskBusFdo = NULL;
+    IoDeleteDevice(DeviceObject);
+
+    //
+    // Return status from lower driver
+    //
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
@@ -2022,10 +2182,33 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             break;
             
         case IRP_MN_REMOVE_DEVICE:
-            
-            DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
-            break;
+
+            //
+            // Remove the proper device
+            //
+            if (DeviceExtension->Type == RamdiskBus)
+            {
+                Status = RamdiskRemoveBusDevice(DeviceObject, Irp);
+
+                //
+                // Return here, lower device has already been called
+                // And remove lock released. This is needed by the function.
+                //
+                return Status;
+            }
+            else
+            {
+                Status = RamdiskDeleteDiskDevice(DeviceObject, Irp);
+
+                //
+                // Complete the IRP here and return
+                // Here again we don't have to release remove lock
+                // This has already been done by the function.
+                //
+                Irp->IoStatus.Status = Status;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return Status;
+            }
 
         case IRP_MN_SURPRISE_REMOVAL:
             
@@ -2145,9 +2328,87 @@ NTAPI
 RamdiskPower(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // If we have a device extension, take extra caution
+    // with the lower driver
+    //
+    if (DeviceExtension != NULL)
+    {
+        PoStartNextPowerIrp(Irp);
+
+        //
+        // Device has not been removed yet, so
+        // pass to the attached/lower driver
+        //
+        if (DeviceExtension->State < RamdiskStateBusRemoved)
+        {
+            IoSkipCurrentIrpStackLocation(Irp);
+            return PoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        }
+        //
+        // Otherwise, simply complete the IRP
+        // Notifying that deletion is pending
+        //
+        else
+        {
+            Irp->IoStatus.Status = STATUS_DELETE_PENDING;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_DELETE_PENDING;
+        }
+    }
+
+    //
+    // Get stack and deal with minor functions
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    switch (IoStackLocation->MinorFunction)
+    {
+        case IRP_MN_SET_POWER:
+            //
+            // If setting device power state
+            // it's all fine and return success
+            //
+            if (DevicePowerState)
+            {
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+            }
+
+            //
+            // Get appropriate status for return
+            //
+            Status = Irp->IoStatus.Status;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+
+        case IRP_MN_QUERY_POWER:
+            //
+            // We can obviously accept all states
+            // So just return success
+            //
+            Status =
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+
+        default:
+            //
+            // Just complete and save status for return
+            //
+            Status = Irp->IoStatus.Status;
+            PoStartNextPowerIrp(Irp);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -2155,9 +2416,31 @@ NTAPI
 RamdiskSystemControl(IN PDEVICE_OBJECT DeviceObject,
                      IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // If we have a device extension, forward the IRP
+    // to the attached device
+    //
+    if (DeviceExtension != NULL)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+    //
+    // Otherwise just complete the request
+    // And return the status with which we complete it
+    //
+    else
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -2165,9 +2448,51 @@ NTAPI
 RamdiskScsi(IN PDEVICE_OBJECT DeviceObject,
             IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_BUS_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Having a proper device is mandatory
+    //
+    if (DeviceExtension->State > RamdiskStateStopped)
+    {
+        Status = STATUS_DEVICE_DOES_NOT_EXIST;
+        goto CompleteIRP;
+    }
+
+    //
+    // Acquire the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        goto CompleteIRP;
+    }
+
+    //
+    // Queue the IRP for worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        goto CompleteIRP;
+    }
+
+    //
+    // Release the remove lock
+    //
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    goto Quit;
+
+CompleteIRP:
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+Quit:
+    return Status;
 }
 
 NTSTATUS
@@ -2175,17 +2500,54 @@ NTAPI
 RamdiskFlushBuffers(IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    NTSTATUS Status;
+    PRAMDISK_DRIVE_EXTENSION DeviceExtension;
+
+    DeviceExtension = DeviceObject->DeviceExtension;
+
+    //
+    // Ensure we have drive extension
+    // Only perform flush on disks that have been created
+    // from registry entries
+    //
+    if (DeviceExtension->Type != RamdiskDrive ||
+        DeviceExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    //
+    // Queue the IRP for worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        //
+        // Queueing failed - complete the IRP
+        // and return failure
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 VOID
 NTAPI
 RamdiskUnload(IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Just release registry path if previously allocated
+    //
+    if (DriverRegistryPath.Buffer)
+    {
+        ExFreePoolWithTag(DriverRegistryPath.Buffer, 'dmaR');
+    }
 }
 
 NTSTATUS

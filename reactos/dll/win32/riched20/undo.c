@@ -206,7 +206,7 @@ void ME_CommitUndo(ME_TextEditor *editor) {
 }
 
 /**
- * Groups supsequent changes with previous ones for an undo if coalescing.
+ * Groups subsequent changes with previous ones for an undo if coalescing.
  *
  * Has no effect if the previous changes were followed by a ME_CommitUndo. This
  * function will only have an affect if the previous changes were followed by
@@ -336,7 +336,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     int paraFlags = pItem->member.para.nFlags & (MEPF_ROWSTART|MEPF_CELL|MEPF_ROWEND);
     ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
     if (tmp.nOffset)
-      tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
+      ME_SplitRunSimple(editor, &tmp);
     assert(pUItem->eol_str);
     this_para = tmp.pPara;
     bFixRowStart = this_para->member.para.nFlags & MEPF_ROWSTART;
@@ -402,7 +402,7 @@ BOOL ME_Undo(ME_TextEditor *editor) {
   ME_CheckTablesForCorruption(editor);
   editor->nUndoStackSize--;
   editor->nUndoMode = nMode;
-  ME_UpdateRepaint(editor);
+  ME_UpdateRepaint(editor, FALSE);
   return TRUE;
 }
 
@@ -438,6 +438,6 @@ BOOL ME_Redo(ME_TextEditor *editor) {
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_CheckTablesForCorruption(editor);
   editor->nUndoMode = nMode;
-  ME_UpdateRepaint(editor);
+  ME_UpdateRepaint(editor, FALSE);
   return TRUE;
 }

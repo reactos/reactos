@@ -1,13 +1,18 @@
 
+if(SEPARATE_DBG)
+    # FIXME: http://sourceware.org/bugzilla/show_bug.cgi?id=11822
+    set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+endif()
+
 spec2def(freeldr.sys freeldr.spec)
 
 if(ARCH MATCHES i386)
-    CreateBootSectorTarget2(frldr16
+    CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
 elseif(ARCH MATCHES amd64)
-    CreateBootSectorTarget2(frldr16
+    CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
@@ -90,11 +95,11 @@ if(ARCH MATCHES i386)
         arch/i386/i386bug.c
         arch/i386/i386disk.c
         arch/i386/i386idt.c
-        arch/i386/i386pnp.cmake.S
+        arch/i386/i386pnp.S
         arch/i386/i386rtl.c
         arch/i386/i386trap.S
         arch/i386/i386vid.c
-        arch/i386/linux.cmake.S
+        arch/i386/linux.S
         arch/i386/machpc.c
         arch/i386/mb.S
         arch/i386/miscboot.c
@@ -145,8 +150,12 @@ else()
 #TBD
 endif()
 
-add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
-add_dependencies(freeldr_common bugcodes)
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(freeldr_common OBJECT ${FREELDR_COMMON_SOURCE})
+else()
+    add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
+    add_dependencies(freeldr_common bugcodes)
+endif()
 
 if(ARCH MATCHES i386 AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
@@ -155,19 +164,24 @@ endif()
 list(APPEND FREELDR_BASE_SOURCE
     bootmgr.c # This file is compiled with custom definitions
     freeldr.c
-    rtl/bget.c
     rtl/libsupp.c)
 
-if (NOT MSVC)
+if(NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
 endif()
 
-add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
-add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(freeldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+    add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+else()
+    add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
+    add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+endif()
 
 if(NOT MSVC)
-    add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
-    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
+    add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
 else()
     add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
     add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
@@ -186,21 +200,13 @@ if(ARCH MATCHES i386)
     target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
 
-target_link_libraries(freeldr_pe
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    target_link_libraries(freeldr_pe freeldr_common)
+    target_link_libraries(freeldr_pe_dbg freeldr_common)
+endif()
 
-target_link_libraries(freeldr_pe_dbg
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+target_link_libraries(freeldr_pe cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(freeldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
 
 # add_pch(freeldr_pe include/freeldr.h)
 
@@ -225,12 +231,17 @@ if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
-add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
-add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(setupldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+else()
+    add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+endif()
 
 if(NOT MSVC)
-    add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
-    add_target_link_flags(setupldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lnk")
+    add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
+    add_target_link_flags(setupldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
 else()
     add_target_link_flags(setupldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
     add_target_link_flags(setupldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
@@ -252,21 +263,13 @@ if(ARCH MATCHES i386)
     target_link_libraries(setupldr_pe_dbg mini_hal)
 endif()
 
-target_link_libraries(setupldr_pe
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    target_link_libraries(setupldr_pe freeldr_common)
+    target_link_libraries(setupldr_pe_dbg freeldr_common)
+endif()
 
-target_link_libraries(setupldr_pe_dbg
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+target_link_libraries(setupldr_pe cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(setupldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
 
 add_dependencies(setupldr_pe asm)
 add_dependencies(setupldr_pe_dbg asm)
@@ -277,5 +280,4 @@ concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
-
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)

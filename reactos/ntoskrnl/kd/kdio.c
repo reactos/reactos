@@ -485,6 +485,15 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
       KdpDmesgFreeBytes = KdpDmesgBufferSize;
       KdbDmesgTotalWritten = 0;
 
+      /* Take control of the display */
+      InbvAcquireDisplayOwnership();
+      InbvResetDisplay();
+      InbvSolidColorFill(0, 0, 639, 479, 0);
+      InbvSetTextColor(15);
+      InbvSetScrollRegion(0, 0, 639, 479);
+      InbvInstallDisplayStringFilter(NULL);
+      InbvEnableDisplayString(TRUE);
+
       /* Initialize spinlock */
       KeInitializeSpinLock(&KdpDmesgLogSpinLock);
 

@@ -5,7 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 set_rc_compiler()
 
-spec2def(kernel32.dll kernel32.spec)
+spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
 	client/appcache.c
@@ -99,4 +99,4 @@ add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(kernel32.spec)
+

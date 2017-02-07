@@ -94,6 +94,14 @@ typedef struct
     HWND hWndTrayProperties;
 } ITrayWindowImpl;
 
+BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
+{
+    TCHAR szParams[MAX_PATH];
+    _tcscpy(szParams, TEXT("shell32.dll,Control_RunDLL "));
+    _tcscat(szParams, applet);
+    return (ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), szParams, NULL, SW_SHOWDEFAULT) > (HINSTANCE)32);
+}
+
 static IUnknown *
 IUnknown_from_impl(ITrayWindowImpl *This)
 {
@@ -1797,6 +1805,30 @@ ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
             OpenTaskManager(This->hWnd);
             break;
 
+        case ID_SHELL_CMD_UNDO_ACTION:
+            break;
+
+        case ID_SHELL_CMD_SHOW_DESKTOP:
+            break;
+
+        case ID_SHELL_CMD_TILE_WND_H:
+             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
+            break;
+
+        case ID_SHELL_CMD_TILE_WND_V:
+             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
+            break;
+
+        case ID_SHELL_CMD_CASCADE_WND:
+             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
+            break;
+
+        case ID_SHELL_CMD_CUST_NOTIF:
+            break;
+
+        case ID_SHELL_CMD_ADJUST_DAT:
+            LaunchCPanel(NULL, TEXT("timedate.cpl"));
+            break;
 
         default:
             DbgPrint("ITrayWindow::ExecContextMenuCmd(%u): Unhandled Command ID!\n", uiCmd);

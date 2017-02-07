@@ -12,6 +12,7 @@
 static SP_CLASSIMAGELIST_DATA ImageListData;
 static HDEVINFO hDevInfo;
 
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 VOID
 FreeDeviceStrings(HWND hTreeView)
@@ -135,10 +136,13 @@ InsertIntoTreeView(HWND hTreeView,
 
 static INT
 EnumDeviceClasses(INT ClassIndex,
+                  BOOL ShowHidden,
                   LPTSTR DevClassName,
                   LPTSTR DevClassDesc,
                   BOOL *DevPresent,
-                  INT *ClassImage)
+                  INT *ClassImage,
+                  BOOL *IsUnknown,
+                  BOOL *IsHidden)
 {
     GUID ClassGuid;
     HKEY KeyClass;
@@ -148,6 +152,7 @@ EnumDeviceClasses(INT ClassIndex,
 
     *DevPresent = FALSE;
     *DevClassName = _T('\0');
+    *IsHidden = FALSE;
 
     Ret = CM_Enumerate_Classes(ClassIndex,
                                &ClassGuid,
@@ -157,7 +162,6 @@ EnumDeviceClasses(INT ClassIndex,
         /* all classes enumerated */
         if(Ret == CR_NO_SUCH_VALUE)
         {
-            hDevInfo = NULL;
             return -1;
         }
 
@@ -168,6 +172,14 @@ EnumDeviceClasses(INT ClassIndex,
 
         /* handle other errors... */
     }
+
+    /* This case is special because these devices don't show up with normal class enumeration */
+    *IsUnknown = IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_UNKNOWN);
+
+    if (ShowHidden == FALSE &&
+        (IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_LEGACYDRIVER) ||
+         IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_VOLUME)))
+        *IsHidden = TRUE;
 
     if (SetupDiClassNameFromGuid(&ClassGuid,
                                  ClassName,
@@ -188,13 +200,12 @@ EnumDeviceClasses(INT ClassIndex,
     }
 
     /* Get device info for all devices of a particular class */
-    hDevInfo = SetupDiGetClassDevs(&ClassGuid,
+    hDevInfo = SetupDiGetClassDevs(*IsUnknown ? NULL : &ClassGuid,
                                    NULL,
                                    NULL,
-                                   DIGCF_PRESENT);
+                                   DIGCF_PRESENT | (*IsUnknown ? DIGCF_ALLCLASSES : 0));
     if (hDevInfo == INVALID_HANDLE_VALUE)
     {
-        hDevInfo = NULL;
         return 0;
     }
 
@@ -218,7 +229,7 @@ EnumDeviceClasses(INT ClassIndex,
     }
     else
     {
-        return -3;
+        return 0;
     }
 
     *DevPresent = TRUE;
@@ -252,6 +263,12 @@ EnumDevices(INT index,
     {
         /* no such device */
         return -1;
+    }
+
+    if (DeviceClassName == NULL && !IsEqualGUID(&DeviceInfoData.ClassGuid, &GUID_NULL))
+    {
+        /* we're looking for unknown devices and this isn't one */
+        return -2;
     }
 
     /* get the device ID */
@@ -318,7 +335,8 @@ EnumDevices(INT index,
 
 VOID
 ListDevicesByType(HWND hTreeView,
-                  HTREEITEM hRoot)
+                  HTREEITEM hRoot,
+                  BOOL bShowHidden)
 {
     HTREEITEM hDevItem;
     TCHAR DevName[MAX_DEV_LEN];
@@ -328,16 +346,21 @@ ListDevicesByType(HWND hTreeView,
     INT ClassRet;
     INT index = 0;
     INT DevImage;
+    BOOL IsUnknown = FALSE;
+    BOOL IsHidden = FALSE;
 
     do
     {
         ClassRet = EnumDeviceClasses(index,
+                                     bShowHidden,
                                      DevName,
                                      DevDesc,
                                      &DevExist,
-                                     &DevImage);
+                                     &DevImage,
+                                     &IsUnknown,
+                                     &IsHidden);
 
-        if ((ClassRet != -1) && (DevExist))
+        if ((ClassRet != -1) && (DevExist) && !IsHidden)
         {
             TCHAR DeviceName[MAX_DEV_LEN];
             INT DevIndex = 0;
@@ -365,7 +388,7 @@ ListDevicesByType(HWND hTreeView,
             do
             {
                 Ret = EnumDevices(DevIndex,
-                                  DevName,
+                                  IsUnknown ? NULL : DevName,
                                   DeviceName,
                                   &DeviceID);
                 if (Ret >= 0)
@@ -376,6 +399,13 @@ ListDevicesByType(HWND hTreeView,
                                        DeviceID,
                                        DevImage,
                                        Ret);
+                    if (Ret != 0)
+                    {
+                        /* Expand the class if the device has a problem */
+                        (void)TreeView_Expand(hTreeView,
+                                              hDevItem,
+                                              TVE_EXPAND);
+                    }
                 }
 
                 DevIndex++;
@@ -415,6 +445,183 @@ ListDevicesByType(HWND hTreeView,
     (void)TreeView_SortChildren(hTreeView,
                                 hRoot,
                                 0);
+
+    (void)TreeView_SelectItem(hTreeView,
+                              hRoot);
+}
+
+
+static HTREEITEM
+AddDeviceToTree(HWND hTreeView,
+                HTREEITEM hRoot,
+                DEVINST dnDevInst,
+                BOOL bShowHidden)
+{
+    TCHAR DevName[MAX_DEV_LEN];
+    TCHAR FriendlyName[MAX_DEV_LEN];
+    TCHAR ClassGuidString[MAX_GUID_STRING_LEN];
+    GUID ClassGuid;
+    ULONG ulLength;
+    LPTSTR DeviceID;
+    INT ClassImage = 24;
+    CONFIGRET cr;
+
+    ulLength = MAX_GUID_STRING_LEN * sizeof(TCHAR);
+    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                          CM_DRP_CLASSGUID,
+                                          NULL,
+                                          ClassGuidString,
+                                          &ulLength,
+                                          0);
+    if (cr == CR_SUCCESS)
+    {
+        pSetupGuidFromString(ClassGuidString, &ClassGuid);
+
+        if (bShowHidden == FALSE &&
+            (IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_LEGACYDRIVER) ||
+             IsEqualGUID(&ClassGuid, &GUID_DEVCLASS_VOLUME)))
+            return NULL;
+    }
+    else
+    {
+        /* It's a device with no driver */
+        ClassGuid = GUID_DEVCLASS_UNKNOWN;
+    }
+
+    cr = CM_Get_Device_ID(dnDevInst,
+                          DevName,
+                          MAX_DEV_LEN,
+                          0);
+    if (cr != CR_SUCCESS)
+        return NULL;
+
+    ulLength = MAX_DEV_LEN * sizeof(TCHAR);
+    cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                          CM_DRP_FRIENDLYNAME,
+                                          NULL,
+                                          FriendlyName,
+                                          &ulLength,
+                                          0);
+    if (cr != CR_SUCCESS)
+    {
+        ulLength = MAX_DEV_LEN * sizeof(TCHAR);
+        cr = CM_Get_DevNode_Registry_Property(dnDevInst,
+                                              CM_DRP_DEVICEDESC,
+                                              NULL,
+                                              FriendlyName,
+                                              &ulLength,
+                                              0);
+        if (cr != CR_SUCCESS)
+            return NULL;
+    }
+
+    if (!SetupDiGetClassImageIndex(&ImageListData,
+                                   &ClassGuid,
+                                   &ClassImage))
+    {
+        /* FIXME: can we do this?
+         * Set the blank icon: IDI_SETUPAPI_BLANK = 41
+         * it'll be image 24 in the imagelist */
+        ClassImage = 24;
+    }
+
+    if (DevName != NULL)
+    {
+        DeviceID = HeapAlloc(GetProcessHeap(),
+                             0,
+                             (lstrlen(DevName) + 1) * sizeof(TCHAR));
+        if (DeviceID == NULL)
+        {
+            return NULL;
+        }
+
+        lstrcpy(DeviceID, DevName);
+    }
+
+    return InsertIntoTreeView(hTreeView,
+                              hRoot,
+                              FriendlyName,
+                              DeviceID,
+                              ClassImage,
+                              0);
+}
+
+
+static VOID
+EnumChildDevices(HWND hTreeView,
+                 HTREEITEM hRoot,
+                 DEVINST dnParentDevInst,
+                 BOOL bShowHidden)
+{
+    HTREEITEM hDevItem;
+    DEVINST dnDevInst;
+    CONFIGRET cr;
+
+    cr = CM_Get_Child(&dnDevInst,
+                      dnParentDevInst,
+                      0);
+    if (cr != CR_SUCCESS)
+        return;
+
+    hDevItem = AddDeviceToTree(hTreeView,
+                               hRoot,
+                               dnDevInst,
+                               bShowHidden);
+    if (hDevItem != NULL)
+    {
+        EnumChildDevices(hTreeView,
+                         hDevItem,
+                         dnDevInst,
+                         bShowHidden);
+    }
+
+    while (cr == CR_SUCCESS)
+    {
+        cr = CM_Get_Sibling(&dnDevInst,
+                            dnDevInst,
+                            0);
+        if (cr != CR_SUCCESS)
+            break;
+
+        hDevItem = AddDeviceToTree(hTreeView,
+                                   hRoot,
+                                   dnDevInst,
+                                   bShowHidden);
+        if (hDevItem != NULL)
+        {
+            EnumChildDevices(hTreeView,
+                             hDevItem,
+                             dnDevInst,
+                             bShowHidden);
+        }
+    }
+
+    (void)TreeView_SortChildren(hTreeView,
+                                hRoot,
+                                0);
+}
+
+
+VOID
+ListDevicesByConnection(HWND hTreeView,
+                        HTREEITEM hRoot,
+                        BOOL bShowHidden)
+{
+    DEVINST devInst;
+    CONFIGRET cr;
+
+    cr = CM_Locate_DevNode(&devInst,
+                           NULL,
+                           CM_LOCATE_DEVNODE_NORMAL);
+    if (cr == CR_SUCCESS)
+        EnumChildDevices(hTreeView,
+                         hRoot,
+                         devInst,
+                         bShowHidden);
+
+    (void)TreeView_Expand(hTreeView,
+                          hRoot,
+                          TVE_EXPAND);
 
     (void)TreeView_SelectItem(hTreeView,
                               hRoot);

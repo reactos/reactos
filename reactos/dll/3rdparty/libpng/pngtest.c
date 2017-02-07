@@ -1,7 +1,7 @@
 
 /* pngtest.c - a simple test program to test libpng
  *
- * Last changed in libpng 1.5.4 [July 7, 2011]
+ * Last changed in libpng 1.5.6 [November 3, 2011]
  * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -98,6 +98,7 @@ static char tIME_string[PNG_tIME_STRING_LENGTH] = "tIME chunk is not present";
 #endif
 
 static int verbose = 0;
+static int strict = 0;
 
 int test_one_file PNGARG((PNG_CONST char *inname, PNG_CONST char *outname));
 
@@ -1162,6 +1163,10 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
       if (png_get_text(read_ptr, read_info_ptr, &text_ptr, &num_text) > 0)
       {
          pngtest_debug1("Handling %d iTXt/tEXt/zTXt chunks", num_text);
+
+         if (verbose)
+            printf("\n Text compression=%d\n", text_ptr->compression);
+
          png_set_text(write_ptr, write_info_ptr, text_ptr, num_text);
       }
    }
@@ -1479,7 +1484,12 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
 
          FCLOSE(fpin);
          FCLOSE(fpout);
-         return (0);
+
+         if (strict != 0)
+           return (1);
+
+         else
+           return (0);
       }
 
       if (!num_in)
@@ -1504,7 +1514,12 @@ test_one_file(PNG_CONST char *inname, PNG_CONST char *outname)
 
          FCLOSE(fpin);
          FCLOSE(fpout);
-         return (0);
+
+         if (strict != 0)
+           return (1);
+
+         else
+           return (0);
       }
    }
 
@@ -1584,6 +1599,14 @@ main(int argc, char *argv[])
          verbose = 1;
          status_dots_requested = 1;
          inname = argv[2];
+      }
+
+      else if (strcmp(argv[1], "--strict") == 0)
+      {
+         status_dots_requested = 0;
+         verbose = 1;
+         inname = argv[2];
+         strict++;
       }
 
       else
@@ -1794,4 +1817,4 @@ main(int argc, char *argv[])
 }
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_5_5 Your_png_h_is_not_version_1_5_5;
+typedef png_libpng_version_1_5_9 Your_png_h_is_not_version_1_5_9;

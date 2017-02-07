@@ -67,7 +67,7 @@ typedef struct _GUID
 #define _GUIDDEF_H_
 
 #ifndef __LPGUID_DEFINED__
-#define __LPGUID_DEFINED___
+#define __LPGUID_DEFINED__
 typedef GUID *LPGUID;
 #endif
 
@@ -119,10 +119,17 @@ __inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
         ((unsigned long *) &rguid1)[2] == ((unsigned long *) &rguid2)[2] &&
         ((unsigned long *) &rguid1)[3] == ((unsigned long *) &rguid2)[3]);
 }
-
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(&(rguid1), &(rguid2), sizeof(GUID)))
+
 #else /* defined(__cplusplus) && !defined(CINTERFACE) */
+
+#define InlineIsEqualGUID(rguid1, rguid2) \
+    (((unsigned long *)rguid1)[0] == ((unsigned long *)rguid2)[0] && \
+     ((unsigned long *)rguid1)[1] == ((unsigned long *)rguid2)[1] && \
+     ((unsigned long *)rguid1)[2] == ((unsigned long *)rguid2)[2] && \
+     ((unsigned long *)rguid1)[3] == ((unsigned long *)rguid2)[3])
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))
+
 #endif /* defined(__cplusplus) && !defined(CINTERFACE) */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)

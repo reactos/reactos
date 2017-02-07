@@ -1,11 +1,11 @@
-/* $Id: en-US.rc 29690 2007-10-19 23:21:45Z dreimer $
- *
+/*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/msgina/lang/it-IT.rc
  * PURPOSE:         Italian resource file
- * PROGRAMMERS:     Paolo Devoti, devotip at tiscali.it, 2007-11-02
+ * TRANSLATOR:      Paolo Devoti, devotip at tiscali.it, 2007-11-02
  */
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
@@ -57,9 +57,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Benvenuti!"
-    IDS_LOCKEDSAS "Il computer al momento Ë bloccato."
+    IDS_LOCKEDSAS "Il computer al momento √® bloccato."
     IDS_PRESSCTRLALTDELETE "Premere Ctrl+Alt+Canc per accedere."
     IDS_ASKFORUSER "Nome utente: "
     IDS_ASKFORPASSWORD "Password: "
-    IDS_FORCELOGOFF "Verr‡ terminata la sessione dell'utente attuale e tutti i dati non salvati verranno persi.  Volete procedere?"
+    IDS_FORCELOGOFF "Verr√† terminata la sessione dell'utente attuale e tutti i dati non salvati verranno persi.  Volete procedere?"
 END

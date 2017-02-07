@@ -34,8 +34,6 @@ HMENU hMenuFrame;
 HMENU hPopupMenus = 0;
 UINT nClipboardFormat;
 LPCTSTR strClipboardFormat = _T("TODO: SET CORRECT FORMAT");
-const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit");
-
 
 #define MAX_LOADSTRING  100
 TCHAR szTitle[MAX_LOADSTRING];
@@ -60,7 +58,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
-    TCHAR szBuffer[256];
 
     WNDCLASSEX wcFrame;
     WNDCLASSEX wcChild;
@@ -85,10 +82,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.cbWndExtra = sizeof(HANDLE);
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
-    wcChild.hCursor = LoadCursor(0, IDC_ARROW),
-            wcChild.lpszClassName =  szChildClass,
-                    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wcChild.hCursor = LoadCursor(0, IDC_ARROW);
+    wcChild.lpszClassName = szChildClass;
+    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
+                                       IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                       GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
     RegisterClassEx(&wcChild); /* register child windows class */
 
@@ -142,14 +140,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
 
-    /* Restore position */
-    if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"),
-                         szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
-    {
-        SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
-    }
-
-    ShowWindow(hFrameWnd, nCmdShow);
+    LoadSettings();
     UpdateWindow(hFrameWnd);
     return TRUE;
 }
@@ -177,6 +168,16 @@ void ExitInstance(HINSTANCE hInstance)
 BOOL TranslateChildTabMessage(MSG *msg)
 {
     if (msg->message != WM_KEYDOWN) return FALSE;
+
+    /* Allow Ctrl+A on address bar */
+    if ((msg->hwnd == g_pChildWnd->hAddressBarWnd) &&
+        (msg->message == WM_KEYDOWN) &&
+        (msg->wParam == 'A') && (GetKeyState(VK_CONTROL) < 0))
+    {
+        SendMessage(msg->hwnd, EM_SETSEL, 0, -1);
+        return TRUE;
+    }
+
     if (msg->wParam != VK_TAB) return FALSE;
     if (GetParent(msg->hwnd) != g_pChildWnd->hWnd) return FALSE;
     PostMessage(g_pChildWnd->hWnd, WM_COMMAND, ID_SWITCH_PANELS, 0);

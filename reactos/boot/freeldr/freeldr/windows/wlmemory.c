@@ -49,8 +49,8 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 extern PFREELDR_MEMORY_DESCRIPTOR BiosMemoryMap;
 extern ULONG BiosMemoryMapEntryCount;
-extern ULONG MmLowestPhysicalPage;
-extern ULONG MmHighestPhysicalPage;
+extern PFN_NUMBER MmLowestPhysicalPage;
+extern PFN_NUMBER MmHighestPhysicalPage;
 
 /* GLOBALS ***************************************************************/
 
@@ -63,8 +63,8 @@ ULONG MadCount = 0;
 
 VOID
 MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   ULONG BasePage,
-                   ULONG PageCount,
+                   PFN_NUMBER BasePage,
+                   PFN_NUMBER PageCount,
                    ULONG Type)
 {
 	BOOLEAN Status = TRUE;
@@ -195,15 +195,18 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 BOOLEAN
 WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-	ULONG i, PagesCount, MemoryMapSizeInPages;
-	ULONG LastPageIndex, LastPageType, MemoryMapStartPage;
+	PFN_NUMBER i, PagesCount, MemoryMapSizeInPages, NoEntries;
+	PFN_NUMBER LastPageIndex, MemoryMapStartPage;
 	PPAGE_LOOKUP_TABLE_ITEM MemoryMap;
-	ULONG NoEntries;
+	ULONG LastPageType;
 	//PKTSS Tss;
-	BOOLEAN Status;
+	//BOOLEAN Status;
+
+	/* Cleanup heap */
+	HeapCleanupAll();
 
 	//
-	// Creating a suitable memory map for the Windows can be tricky, so let's
+	// Creating a suitable memory map for Windows can be tricky, so let's
 	// give a few advices:
 	// 1) One must not map the whole available memory pages to PDE!
 	//    Map only what's needed - 16Mb, 24Mb, 32Mb max I think,
@@ -241,7 +244,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 	MemoryMapSizeInPages = (NoEntries * sizeof(PAGE_LOOKUP_TABLE_ITEM) + MM_PAGE_SIZE - 1) / MM_PAGE_SIZE;
 
 	TRACE("Got memory map with %d entries\n", NoEntries);
-
+#if 0
 	// Always contiguously map low 1Mb of memory
 	Status = MempSetupPaging(0, 0x100, FALSE);
 	if (!Status)
@@ -249,7 +252,7 @@ WinLdrSetupMemoryLayout(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock)
 		ERR("Error during MempSetupPaging of low 1Mb\n");
 		return FALSE;
 	}
-
+#endif
 	// Construct a good memory map from what we've got,
 	// but mark entries which the memory allocation bitmap takes
 	// as free entries (this is done in order to have the ability
@@ -412,4 +415,3 @@ WinLdrInsertDescriptor(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	return;
 }
-

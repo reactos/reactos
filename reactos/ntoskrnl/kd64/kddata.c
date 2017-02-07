@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 #include "../mm/ARM3/miarm.h"
+#undef MmSystemRangeStart
 
 VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 

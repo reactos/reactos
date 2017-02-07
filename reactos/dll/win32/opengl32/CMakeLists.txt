@@ -1,6 +1,11 @@
 
 
-spec2def(opengl32.dll opengl32.spec)
+spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
+
+add_definitions(
+    -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
+    -DBUILD_GL32 # declare gl* as __declspec(dllexport) in Mesa headers
+)
 
 list(APPEND SOURCE
     font.c
@@ -26,4 +31,4 @@ add_importlibs(opengl32
 add_pch(opengl32 opengl32.h)
 
 add_cd_file(TARGET opengl32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(opengl32.spec)
+

@@ -539,7 +539,7 @@ HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
     UNIMPLEMENTED;
     while (TRUE);
 }
-        
+
 VOID
 NTAPI
 HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
@@ -560,30 +560,30 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
                       OUT PSUPPORTED_RANGE *Range)
 {
     PCI_COMMON_HEADER PciData;
-    
+
     /* Read PCI configuration data */
     HalGetBusData(PCIConfiguration,
                   BusHandler->BusNumber,
                   PciSlot.u.AsULONG,
                   &PciData,
                   PCI_COMMON_HDR_LENGTH);
-                
+
     /* Make sure it's a real device */
     if (PciData.VendorID == PCI_INVALID_VENDORID) return STATUS_UNSUCCESSFUL;
-    
+
     /* Allocate the supported range structure */
     *Range = ExAllocatePoolWithTag(PagedPool, sizeof(SUPPORTED_RANGE), TAG_HAL);
     if (!*Range) return STATUS_INSUFFICIENT_RESOURCES;
-    
+
     /* Set it up */
     RtlZeroMemory(*Range, sizeof(SUPPORTED_RANGE));
     (*Range)->Base = 1;
-    
+
     /* If the PCI device has no IRQ, nothing to do */
     if (!PciData.u.type0.InterruptPin) return STATUS_SUCCESS;
-    
+
     /* FIXME: The PCI IRQ Routing Miniport should be called */
-    
+
     /* Also if the INT# seems bogus, nothing to do either */
     if ((PciData.u.type0.InterruptLine == 0) ||
         (PciData.u.type0.InterruptLine == 255))
@@ -591,7 +591,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
         /* Fake success */
         return STATUS_SUCCESS;
     }
-    
+
     /* Otherwise, the INT# should be valid, return it to the caller */
     (*Range)->Base = PciData.u.type0.InterruptLine;
     (*Range)->Limit = PciData.u.type0.InterruptLine;
@@ -639,7 +639,7 @@ HalpRegisterPciDebuggingDeviceInfo(VOID)
 
     /* Bail out if there aren't any */
     if (!Found) return;
-    
+
     /* FIXME: TODO */
     DPRINT1("You have implemented the KD routines for searching PCI debugger"
             "devices, but you have forgotten to implement this routine\n");
@@ -664,11 +664,11 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
     PCI_SLOT_NUMBER SlotNumber;
     PSUPPORTED_RANGE Interrupt;
     NTSTATUS Status;
-    
+
     /* Get PCI bus data */
     BusData = BusHandler->BusData;
     SlotNumber.u.AsULONG = (*pResourceList)->SlotNumber;
-    
+
     /* Get the IRQ supported range */
     Status = BusData->GetIrqRange(BusHandler, RootHandler, SlotNumber, &Interrupt);
     if (!NT_SUCCESS(Status)) return Status;
@@ -709,7 +709,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
 {
     PCI_COMMON_CONFIG PciConfig;
     SIZE_T Address;
-    SIZE_T ResourceCount;
+    ULONG ResourceCount;
     ULONG Size[PCI_TYPE0_ADDRESSES];
     NTSTATUS Status = STATUS_SUCCESS;
     UCHAR Offset;

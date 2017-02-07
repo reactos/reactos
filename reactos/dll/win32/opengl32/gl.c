@@ -124,4 +124,11 @@ GLFUNCS_MACRO
 # undef X
 #endif /* !defined(_M_IX86) */
 
+/* Unknown debugging function */
+GLint WINAPI glDebugEntry( GLint unknown1, GLint unknown2 )
+{
+    return 0;
+}
+
+
 /* EOF */

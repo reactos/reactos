@@ -24,6 +24,7 @@
 
 HINSTANCE g_hInstance;
 EXTLOGFONTW g_ExtLogFontW;
+LPCWSTR g_fileName;
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -92,6 +93,7 @@ WinMain (HINSTANCE hThisInstance,
 	WNDCLASSEXW wincl;
 	HINSTANCE hDLL;
 	PGFRI GetFontResourceInfoW;
+	LPCWSTR fileName;
 
 	g_hInstance = hThisInstance;
 
@@ -99,14 +101,51 @@ WinMain (HINSTANCE hThisInstance,
 	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if (argc < 2)
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_BADCMD, argv[1]);
-		return -1;
+		OPENFILENAMEW fontOpen;
+		WCHAR szFileName[MAX_PATH] = L"";
+		HLOCAL dialogTitle = NULL;
+		
+		/* Gets the title for the dialog box ready */
+		FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,
+		          NULL, IDS_OPEN, 0, (LPWSTR)&dialogTitle, 0, NULL);
+		
+		/* Clears out any values of fontOpen before we use it */
+		ZeroMemory(&fontOpen, sizeof(fontOpen));
+		
+		/* Sets up the open dialog box */
+		fontOpen.lStructSize = sizeof(fontOpen);
+		fontOpen.hwndOwner = NULL;
+		fontOpen.lpstrFilter = L"TrueType Font (*.ttf)\0*.ttf\0"
+			L"All Files (*.*)\0*.*\0";
+		fontOpen.lpstrFile = szFileName;
+		fontOpen.lpstrTitle = dialogTitle;
+		fontOpen.nMaxFile = MAX_PATH;
+		fontOpen.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+		fontOpen.lpstrDefExt = L"ttf";
+		
+		/* Opens up the Open File dialog box in order to chose a font file. */
+		if(GetOpenFileNameW(&fontOpen))
+		{
+			fileName = fontOpen.lpstrFile;
+			g_fileName = fileName;
+		} else {
+			/* If the user decides to close out of the open dialog effectively
+			exiting the program altogether */
+			return 0;
+		}
+		
+		LocalFree(dialogTitle);
 	}
-
-	/* Try to add the font resource */
-	if (!AddFontResourceW(argv[1]))
+	else
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, argv[1]);
+		/* Try to add the font resource from command line */
+		fileName = argv[1];
+		g_fileName = fileName;
+	}
+	
+	if (!AddFontResourceW(fileName))
+	{
+		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
@@ -116,16 +155,16 @@ WinMain (HINSTANCE hThisInstance,
 
 	/* Get the font name */
 	dwSize = sizeof(g_ExtLogFontW.elfFullName);
-	if (!GetFontResourceInfoW(argv[1], &dwSize, g_ExtLogFontW.elfFullName, 1))
+	if (!GetFontResourceInfoW(fileName, &dwSize, g_ExtLogFontW.elfFullName, 1))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, argv[1]);
+		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
 	dwSize = sizeof(LOGFONTW);
-	if (!GetFontResourceInfoW(argv[1], &dwSize, &g_ExtLogFontW.elfLogFont, 2))
+	if (!GetFontResourceInfoW(fileName, &dwSize, &g_ExtLogFontW.elfLogFont, 2))
 	{
-		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, argv[1]);
+		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
@@ -191,7 +230,7 @@ MainWnd_OnCreate(HWND hwnd)
 	WCHAR szQuit[MAX_BUTTONNAME];
 	WCHAR szPrint[MAX_BUTTONNAME];
 	WCHAR szString[MAX_STRING];
-	HWND hDisplay, hButtonQuit, hButtonPrint;
+	HWND hDisplay, hButtonInstall, hButtonPrint;
 
 	/* create the display window */
 	hDisplay = CreateWindowExW(
@@ -217,8 +256,8 @@ MainWnd_OnCreate(HWND hwnd)
 	ShowWindow(hDisplay, SW_SHOWNORMAL);
 
 	/* Create the quit button */
-	LoadStringW(g_hInstance, IDS_QUIT, szQuit, MAX_BUTTONNAME);
-	hButtonQuit = CreateWindowExW(
+	LoadStringW(g_hInstance, IDS_INSTALL, szQuit, MAX_BUTTONNAME);
+	hButtonInstall = CreateWindowExW(
 				0,						/* Extended style */
 				L"button",				/* Classname */
 				szQuit,					/* Title text */
@@ -228,11 +267,11 @@ MainWnd_OnCreate(HWND hwnd)
 				BUTTON_WIDTH,			/* Width */
 				BUTTON_HEIGHT,			/* Height */
 				hwnd,					/* Parent */
-				(HMENU)IDC_QUIT,		/* Identifier */
+				(HMENU)IDC_INSTALL,		/* Identifier */
 				g_hInstance,			/* Program Instance handler */
 				NULL					/* Window Creation data */
 			);
-	SendMessage(hButtonQuit, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
+	SendMessage(hButtonInstall, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
 
 	/* Create the print button */
 	LoadStringW(g_hInstance, IDS_PRINT, szPrint, MAX_BUTTONNAME);
@@ -283,6 +322,26 @@ MainWnd_OnPaint(HWND hwnd)
 	return 0;
 }
 
+static LRESULT
+MainWnd_OnInstall(HWND hwnd)
+{
+	DWORD fontExists;
+	
+	/* First, we have to find out if the font still exists. */
+	fontExists = GetFileAttributes((LPCSTR)g_fileName);
+	if (fontExists != 0xFFFFFFFF) /* If the file does not exist */
+	{
+		ErrorMsgBox(0, IDS_ERROR, IDS_ERROR_NOFONT, g_fileName);
+		return -1;
+	}
+	
+	//CopyFile(g_fileName, NULL, TRUE);
+	
+	MessageBox(hwnd, TEXT("This function is unimplemented"), TEXT("Unimplemented"), MB_OK);
+	
+	return 0;
+}
+
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -300,12 +359,12 @@ MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_COMMAND:
 			switch(LOWORD(wParam))
 			{
-				case IDC_QUIT:
-					PostQuitMessage (0);	/* send a WM_QUIT to the message queue */
+				case IDC_INSTALL:
+					return MainWnd_OnInstall(hwnd);
 					break;
 
 				case IDC_PRINT:
-					MessageBox(hwnd, TEXT("This function is unimplemented"), TEXT("Unimplemented"), MB_OK);
+					return Display_OnPrint(hwnd);
 					break;
 			}
 			break;

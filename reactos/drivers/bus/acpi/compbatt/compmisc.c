@@ -43,7 +43,7 @@ BatteryIoctl(IN ULONG IoControlCode,
     if (Irp)
     {
         /* Call the class driver miniport */
-        Status = IofCallDriver(DeviceObject, Irp);
+        Status = IoCallDriver(DeviceObject, Irp);
         if (Status == STATUS_PENDING)
         {
             /* Wait for result */

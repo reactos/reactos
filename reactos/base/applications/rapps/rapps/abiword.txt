@@ -5,7 +5,7 @@ Name = AbiWord
 Version = 2.6.8
 Licence = GPL
 Description = Word processor.
-Size = 5.6MB
+Size = 5.64MB
 Category = 6
 URLSite = http://www.abisource.com/
 URLDownload = http://www.abisource.com/downloads/abiword/2.6.8/Windows/abiword-setup-2.6.8.exe
@@ -25,6 +25,10 @@ Description = Editor di testo.
 
 [Section.0415]
 Description = Edytor tekstu.
+
+[Section.0418]
+Description = Procesor de text.
+Size = 5.64Mo
 
 [Section.0422]
 Description = Текстовий процесор.

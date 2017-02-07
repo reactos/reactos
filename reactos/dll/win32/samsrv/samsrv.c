@@ -19,34 +19,48 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/umtypes.h>
+#include <samsrv.h>
 
-//#include <samsrv.h>
-
-#define NDEBUG
-#include <debug.h>
-
+WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS WINAPI
+NTSTATUS
+NTAPI
 SamIInitialize(VOID)
 {
-  DPRINT1("SamIInitialize() called\n");
+    NTSTATUS Status = STATUS_SUCCESS;
 
-  return STATUS_SUCCESS;
+    TRACE("SamIInitialize() called\n");
+
+    if (SampIsSetupRunning())
+    {
+        Status = SampInitializeRegistry();
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    /* Initialize the SAM database */
+    Status = SampInitDatabase();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Start the RPC server */
+    SampStartRpcServer();
+
+    return Status;
 }
 
 
-NTSTATUS WINAPI
+NTSTATUS
+NTAPI
 SampInitializeRegistry(VOID)
 {
-  DPRINT1("SampInitializeRegistry() called\n");
+    TRACE("SampInitializeRegistry() called\n");
 
-  return STATUS_SUCCESS;
+    SampInitializeSAM();
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

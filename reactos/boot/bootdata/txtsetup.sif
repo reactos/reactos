@@ -31,8 +31,18 @@ isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
-i8042prt.sys=,,,,,,x,,,,,,4
-usbdrv.sys=,,,,,,,,,,,,4
+i8042prt.sys=,,,,,,,,,,,,4
+hidclass.sys=,,,,,,,,,,,,4
+hidparse.sys=,,,,,,,,,,,,4
+hidusb.sys=,,,,,,,,,,,,4
+usbccgp.sys=,,,,,,x,,,,,,4
+usbd.sys=,,,,,,x,,,,,,4
+usbhub.sys=,,,,,,x,,,,,,4
+usbuhci.sys=,,,,,,x,,,,,,4
+usbohci.sys=,,,,,,x,,,,,,4
+usbehci.sys=,,,,,,x,,,,,,4
+usbstor.sys=,,,,,,x,,,,,,4
+kbdhid.sys=,,,,,,,,,,,,4
 kbdclass.sys=,,,,,,x,,,,,,4
 l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
@@ -52,6 +62,7 @@ ntdll.dll=,,,,,,,,,,,,2
 [HardwareIdsDatabase]
 ;*PNP0A00 = isapnp
 *PNP0A03 = pci
+*PNP0A08 = pci
 *PNP0C08 = acpi
 ;PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
@@ -61,11 +72,37 @@ PCI\CC_0104 = uniata
 PCI\CC_0105 = uniata
 PCI\CC_0106 = uniata
 *PNP0600 = uniata
+;USB\CLASS_09 = usbhub
+USB\ROOT_HUB = usbhub
+USB\ROOT_HUB20 = usbhub
+PCI\CC_0C0300 = usbuhci
+PCI\CC_0C0310 = usbohci
+PCI\CC_0C0320 = usbehci
+USB\Class_08&SubClass_06&Prot_50 = usbstor
+HID_DEVICE_SYSTEM_KEYBOARD = kbdhid
+USB\COMPOSITE = usbccgp
+GenDisk = disk
+USB\Class_03 = hidusb
+GENERIC_HID_DEVICE = hidusb
+*PNP0303 = i8042prt
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
 pci = pci.sys
 isapnp = isapnp.sys
+
+[InputDevicesSupport.Load]
+usbehci = usbehci.sys
+usbohci = usbohci.sys
+usbuhci = usbuhci.sys
+usbhub = usbhub.sys
+usbccgp = usbccgp.sys
+hidusb = hidusb.sys
+usbstor = usbstor.sys
+
+[Keyboard.Load]
+kbdhid = kbdhid.sys
+i8042prt = i8042prt.sys
 
 [BusExtenders.Load]
 pciide = pciide.sys
@@ -73,16 +110,17 @@ pciide = pciide.sys
 [SCSI.Load]
 uniata = uniata.sys
 buslogic = buslogic.sys
+disk = disk.sys
 
 [Cabinets]
 Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1 /FIRSTCHANCE"
-DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1 /FIRSTCHANCE"
-;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
-;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
+OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+DbgOsLoadOptions = "/NOGUIBOOT /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+;DbgOsLoadOptions = "/SOS /DEBUGPORT=SCREEN"
+;DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
 [NLS]
 AnsiCodepage     = c_1252.nls

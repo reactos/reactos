@@ -475,7 +475,7 @@ void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048])
 
 /* we take for granted that PFE_xxx is the hiword of the corresponding PFM_xxx */
 #define DUMP_EFFECT(mask, name) \
-  p += sprintf(p, "%-22s%s\n", name, (pFmt->dwMask & (mask)) ? ((pFmt->wEffects & ((mask) >> 8)) ? "yes" : "no") : "N/A");
+  p += sprintf(p, "%-22s%s\n", name, (pFmt->dwMask & (mask)) ? ((pFmt->wEffects & ((mask) >> 16)) ? "yes" : "no") : "N/A");
 
   DUMP(PFM_NUMBERING,      "Numbering:",         "%u", wNumbering);
   DUMP_EFFECT(PFM_DONOTHYPHEN,     "Disable auto-hyphen:");

@@ -22,7 +22,6 @@
 #define __WINE_RPC_BINDING_H
 
 #include "rpcndr.h"
-#define SECURITY_WIN32
 #include "security.h"
 #include "wine/list.h"
 #include "rpc_defs.h"

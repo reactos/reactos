@@ -9,13 +9,13 @@ BEGIN
     LTEXT "Koble til med:", -1, 9,9,217,8
     EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
     PUSHBUTTON "&Konfigurere", IDC_CONFIGURE, 189, 38, 50, 14
-    LTEXT "Komponentene bruker følgende elementer for tilkobling:", -1, 9, 59, 217, 8
+    LTEXT "Komponentene bruker fÃ¸lgende elementer for tilkobling:", -1, 9, 59, 217, 8
     PUSHBUTTON "&Installere", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Avinstallere", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Egenskaper", IDC_PROPERTIES, 174, 130, 65, 14
     GROUPBOX "Beskrivelse", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Komponent beskrivelse kommer her...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "Vis ikon i oppgavelinjen når tilkoblet", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Vis ikon i oppgavelinjen nÃ¥r tilkoblet", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CHECKBOX "Gi beskjed hvis denne tilkoblingen har begrenset eller ingen tilkobling", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
@@ -98,7 +98,7 @@ BEGIN
     IDS_SHV_COLUMN_DEVNAME      "Enhetsnavn"
     IDS_SHV_COLUMN_PHONE        "Telefon # eller vert addresse"
     IDS_SHV_COLUMN_OWNER        "Eier"
-    IDS_TYPE_ETHERNET           "Nettverk eller høy-hastighet internett"
+    IDS_TYPE_ETHERNET           "Nettverk eller hÃ¸y-hastighet internett"
     IDS_STATUS_NON_OPERATIONAL  "Deaktivert"
     IDS_STATUS_UNREACHABLE      "Ikke tilkoblet"
     IDS_STATUS_DISCONNECTED     "Nettverkkabel er frakoblet"

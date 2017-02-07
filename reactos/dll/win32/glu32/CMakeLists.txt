@@ -16,7 +16,7 @@ include_directories(
     libtess
     libutil)
 
-spec2def(glu32.dll glu32.spec)
+spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     libnurbs/interface/bezierEval.cc
@@ -122,4 +122,4 @@ add_importlibs(glu32
     ntdll)
 
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
-add_importlib_target(glu32.spec)
+

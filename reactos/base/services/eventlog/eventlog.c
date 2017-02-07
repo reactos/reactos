@@ -267,7 +267,9 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
     DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
     WCHAR *Buf = NULL, *Expanded = NULL;
     LONG Result;
-    PLOGFILE pLogf;
+    PLOGFILE pLogf = NULL;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
 
     DPRINT("LoadLogFile: %S\n", LogName);
 
@@ -314,13 +316,21 @@ PLOGFILE LoadLogFile(HKEY hKey, WCHAR * LogName)
 
     ExpandEnvironmentStrings(Buf, Expanded, ExpandedLen);
 
+    if (!RtlDosPathNameToNtPathName_U(Expanded, &FileName,
+                                      NULL, NULL))
+    {
+        DPRINT1("Can't convert path!\n");
+        HeapFree(MyHeap, 0, Expanded);
+        HeapFree(MyHeap, 0, Buf);
+        return NULL;
+    }
+
     DPRINT("%S -> %S\n", Buf, Expanded);
 
-    pLogf = LogfCreate(LogName, Expanded);
-
-    if (pLogf == NULL)
+    Status = LogfCreate(&pLogf, LogName, &FileName, TRUE, FALSE);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create %S!\n", Expanded);
+        DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);
     }
 
     HeapFree(MyHeap, 0, Buf);

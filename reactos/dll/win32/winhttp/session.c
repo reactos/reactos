@@ -28,6 +28,10 @@
 #include "winhttp.h"
 #include "wincrypt.h"
 #include "winreg.h"
+#define COBJMACROS
+#include "ole2.h"
+#include "dispex.h"
+#include "activscp.h"
 
 #include "winhttp_private.h"
 
@@ -38,8 +42,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 #define DEFAULT_SEND_TIMEOUT        30000
 #define DEFAULT_RECEIVE_TIMEOUT     30000
 
-/* FIXME */
-#define CP_UNIXCP CP_ACP
+static const WCHAR global_funcsW[] = {'g','l','o','b','a','l','_','f','u','n','c','s',0};
+static const WCHAR dns_resolveW[] = {'d','n','s','_','r','e','s','o','l','v','e',0};
 
 void set_last_error( DWORD error )
 {
@@ -91,6 +95,9 @@ static void session_destroy( object_header_t *hdr )
     heap_free( session->proxy_username );
     heap_free( session->proxy_password );
     heap_free( session );
+#ifdef __REACTOS__
+    WSACleanup();
+#endif
 }
 
 static BOOL session_query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPDWORD buflen )
@@ -199,6 +206,11 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR agent, DWORD access, LPCWSTR proxy, LPCWST
 {
     session_t *session;
     HINTERNET handle = NULL;
+#ifdef __REACTOS__
+    WSADATA wsaData;
+    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (error) ERR("WSAStartup failed: %d\n", error);
+#endif
 
     TRACE("%s, %u, %s, %s, 0x%08x\n", debugstr_w(agent), access, debugstr_w(proxy), debugstr_w(bypass), flags);
 
@@ -209,6 +221,7 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR agent, DWORD access, LPCWSTR proxy, LPCWST
     session->hdr.flags = flags;
     session->hdr.refs = 1;
     session->hdr.redirect_policy = WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP;
+    list_init( &session->hdr.children );
     session->resolve_timeout = DEFAULT_RESOLVE_TIMEOUT;
     session->connect_timeout = DEFAULT_CONNECT_TIMEOUT;
     session->send_timeout = DEFAULT_SEND_TIMEOUT;
@@ -418,6 +431,7 @@ BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT 
                 session->proxy_server, colon - session->proxy_server - 1 ))
             {
                 heap_free( connect->servername );
+                connect->resolved = FALSE;
                 if (!(connect->servername = heap_alloc(
                     (colon - session->proxy_server + 1) * sizeof(WCHAR) )))
                 {
@@ -439,6 +453,7 @@ BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT 
                 session->proxy_server ))
             {
                 heap_free( connect->servername );
+                connect->resolved = FALSE;
                 if (!(connect->servername = strdupW( session->proxy_server )))
                 {
                     ret = FALSE;
@@ -451,6 +466,7 @@ BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT 
     else if (server)
     {
         heap_free( connect->servername );
+        connect->resolved = FALSE;
         if (!(connect->servername = strdupW( server )))
         {
             ret = FALSE;
@@ -501,6 +517,7 @@ HINTERNET WINAPI WinHttpConnect( HINTERNET hsession, LPCWSTR server, INTERNET_PO
     connect->hdr.callback = session->hdr.callback;
     connect->hdr.notify_mask = session->hdr.notify_mask;
     connect->hdr.context = session->hdr.context;
+    list_init( &connect->hdr.children );
 
     addref_object( &session->hdr );
     connect->session = session;
@@ -508,9 +525,7 @@ HINTERNET WINAPI WinHttpConnect( HINTERNET hsession, LPCWSTR server, INTERNET_PO
 
     if (!(connect->hostname = strdupW( server ))) goto end;
     connect->hostport = port;
-
-    if (!set_server_for_hostname( connect, server, port ))
-        goto end;
+    if (!set_server_for_hostname( connect, server, port )) goto end;
 
     if (!(hconnect = alloc_handle( &connect->hdr ))) goto end;
     connect->hdr.handle = hconnect;
@@ -519,7 +534,7 @@ HINTERNET WINAPI WinHttpConnect( HINTERNET hsession, LPCWSTR server, INTERNET_PO
 
 end:
     release_object( &connect->hdr );
-
+    release_object( &session->hdr );
     TRACE("returning %p\n", hconnect);
     return hconnect;
 }
@@ -530,7 +545,7 @@ end:
 static void request_destroy( object_header_t *hdr )
 {
     request_t *request = (request_t *)hdr;
-    DWORD i;
+    unsigned int i;
 
     TRACE("%p\n", request);
 
@@ -547,6 +562,8 @@ static void request_destroy( object_header_t *hdr )
         heap_free( request->headers[i].value );
     }
     heap_free( request->headers );
+    for (i = 0; i < request->num_accept_types; i++) heap_free( request->accept_types[i] );
+    heap_free( request->accept_types );
     heap_free( request );
 }
 
@@ -556,7 +573,7 @@ static void str_to_buffer( WCHAR *buffer, const WCHAR *str, LPDWORD buflen )
     if (str) len = strlenW( str );
     if (buffer && *buflen > len)
     {
-        memcpy( buffer, str, len * sizeof(WCHAR) );
+        if (str) memcpy( buffer, str, len * sizeof(WCHAR) );
         buffer[len] = 0;
     }
     *buflen = len * sizeof(WCHAR);
@@ -862,6 +879,39 @@ static const object_vtbl_t request_vtbl =
     request_set_option
 };
 
+static BOOL store_accept_types( request_t *request, const WCHAR **accept_types )
+{
+    const WCHAR **types = accept_types;
+    int i;
+
+    if (!types) return TRUE;
+    while (*types)
+    {
+        request->num_accept_types++;
+        types++;
+    }
+    if (!request->num_accept_types) return TRUE;
+    if (!(request->accept_types = heap_alloc( request->num_accept_types * sizeof(WCHAR *))))
+    {
+        request->num_accept_types = 0;
+        return FALSE;
+    }
+    types = accept_types;
+    for (i = 0; i < request->num_accept_types; i++)
+    {
+        if (!(request->accept_types[i] = strdupW( *types )))
+        {
+            for (; i >= 0; i--) heap_free( request->accept_types[i] );
+            heap_free( request->accept_types );
+            request->accept_types = NULL;
+            request->num_accept_types = 0;
+            return FALSE;
+        }
+        types++;
+    }
+    return TRUE;
+}
+
 /***********************************************************************
  *          WinHttpOpenRequest (winhttp.@)
  */
@@ -874,6 +924,14 @@ HINTERNET WINAPI WinHttpOpenRequest( HINTERNET hconnect, LPCWSTR verb, LPCWSTR o
 
     TRACE("%p, %s, %s, %s, %s, %p, 0x%08x\n", hconnect, debugstr_w(verb), debugstr_w(object),
           debugstr_w(version), debugstr_w(referrer), types, flags);
+
+    if(types && TRACE_ON(winhttp)) {
+        const WCHAR **iter;
+
+        TRACE("accept types:\n");
+        for(iter = types; *iter; iter++)
+            TRACE("    %s\n", debugstr_w(*iter));
+    }
 
     if (!(connect = (connect_t *)grab_object( hconnect )))
     {
@@ -898,6 +956,7 @@ HINTERNET WINAPI WinHttpOpenRequest( HINTERNET hconnect, LPCWSTR verb, LPCWSTR o
     request->hdr.callback = connect->hdr.callback;
     request->hdr.notify_mask = connect->hdr.notify_mask;
     request->hdr.context = connect->hdr.context;
+    list_init( &request->hdr.children );
 
     addref_object( &connect->hdr );
     request->connect = connect;
@@ -929,6 +988,7 @@ HINTERNET WINAPI WinHttpOpenRequest( HINTERNET hconnect, LPCWSTR verb, LPCWSTR o
 
     if (!version || !version[0]) version = http1_1;
     if (!(request->version = strdupW( version ))) goto end;
+    if (!(store_accept_types( request, types ))) goto end;
 
     if (!(hrequest = alloc_handle( &request->hdr ))) goto end;
     request->hdr.handle = hrequest;
@@ -937,7 +997,7 @@ HINTERNET WINAPI WinHttpOpenRequest( HINTERNET hconnect, LPCWSTR verb, LPCWSTR o
 
 end:
     release_object( &request->hdr );
-
+    release_object( &connect->hdr );
     TRACE("returning %p\n", hrequest);
     return hrequest;
 }
@@ -1079,15 +1139,119 @@ BOOL WINAPI WinHttpSetOption( HINTERNET handle, DWORD option, LPVOID buffer, DWO
     return ret;
 }
 
+static char *get_computer_name( COMPUTER_NAME_FORMAT format )
+{
+    char *ret;
+    DWORD size = 0;
+
+    GetComputerNameExA( format, NULL, &size );
+    if (GetLastError() != ERROR_MORE_DATA) return NULL;
+    if (!(ret = heap_alloc( size ))) return NULL;
+    if (!GetComputerNameExA( format, ret, &size ))
+    {
+        heap_free( ret );
+        return NULL;
+    }
+    return ret;
+}
+
+static BOOL is_domain_suffix( const char *domain, const char *suffix )
+{
+    int len_domain = strlen( domain ), len_suffix = strlen( suffix );
+
+    if (len_suffix > len_domain) return FALSE;
+    if (!strcasecmp( domain + len_domain - len_suffix, suffix )) return TRUE;
+    return FALSE;
+}
+
+static void printf_addr( const WCHAR *fmt, WCHAR *buf, struct sockaddr_in *addr )
+{
+    sprintfW( buf, fmt,
+              (unsigned int)(ntohl( addr->sin_addr.s_addr ) >> 24 & 0xff),
+              (unsigned int)(ntohl( addr->sin_addr.s_addr ) >> 16 & 0xff),
+              (unsigned int)(ntohl( addr->sin_addr.s_addr ) >> 8 & 0xff),
+              (unsigned int)(ntohl( addr->sin_addr.s_addr ) & 0xff) );
+}
+
+static WCHAR *build_wpad_url( const struct addrinfo *ai )
+{
+    static const WCHAR fmtW[] =
+        {'h','t','t','p',':','/','/','%','u','.','%','u','.','%','u','.','%','u',
+         '/','w','p','a','d','.','d','a','t',0};
+    WCHAR *ret;
+
+    while (ai && ai->ai_family != AF_INET) ai = ai->ai_next;
+    if (!ai) return NULL;
+
+    if (!(ret = GlobalAlloc( 0, sizeof(fmtW) + 12 * sizeof(WCHAR) ))) return NULL;
+    printf_addr( fmtW, ret, (struct sockaddr_in *)ai->ai_addr );
+    return ret;
+}
+
 /***********************************************************************
  *          WinHttpDetectAutoProxyConfigUrl (winhttp.@)
  */
 BOOL WINAPI WinHttpDetectAutoProxyConfigUrl( DWORD flags, LPWSTR *url )
 {
-    FIXME("0x%08x, %p\n", flags, url);
+    BOOL ret = FALSE;
 
-    set_last_error( ERROR_WINHTTP_AUTODETECTION_FAILED );
-    return FALSE;
+    TRACE("0x%08x, %p\n", flags, url);
+
+    if (!flags || !url)
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (flags & WINHTTP_AUTO_DETECT_TYPE_DHCP) FIXME("discovery via DHCP not supported\n");
+    if (flags & WINHTTP_AUTO_DETECT_TYPE_DNS_A)
+    {
+#ifdef HAVE_GETADDRINFO
+        char *fqdn, *domain, *p;
+
+        if (!(fqdn = get_computer_name( ComputerNamePhysicalDnsFullyQualified ))) return FALSE;
+        if (!(domain = get_computer_name( ComputerNamePhysicalDnsDomain )))
+        {
+            heap_free( fqdn );
+            return FALSE;
+        }
+        p = fqdn;
+        while ((p = strchr( p, '.' )) && is_domain_suffix( p + 1, domain ))
+        {
+            struct addrinfo *ai;
+            char *name;
+            int res;
+
+            if (!(name = heap_alloc( sizeof("wpad") + strlen(p) )))
+            {
+                heap_free( fqdn );
+                heap_free( domain );
+                return FALSE;
+            }
+            strcpy( name, "wpad" );
+            strcat( name, p );
+            res = getaddrinfo( name, NULL, NULL, &ai );
+            heap_free( name );
+            if (!res)
+            {
+                *url = build_wpad_url( ai );
+                freeaddrinfo( ai );
+                if (*url)
+                {
+                    TRACE("returning %s\n", debugstr_w(*url));
+                    ret = TRUE;
+                    break;
+                }
+            }
+            p++;
+        }
+        heap_free( domain );
+        heap_free( fqdn );
+#else
+    FIXME("getaddrinfo not found at build time\n");
+#endif
+    }
+    if (!ret) set_last_error( ERROR_WINHTTP_AUTODETECTION_FAILED );
+    return ret;
 }
 
 static const WCHAR Connections[] = {
@@ -1099,15 +1263,18 @@ static const WCHAR Connections[] = {
     'C','o','n','n','e','c','t','i','o','n','s',0 };
 static const WCHAR WinHttpSettings[] = {
     'W','i','n','H','t','t','p','S','e','t','t','i','n','g','s',0 };
-static const DWORD WINHTTPSETTINGS_MAGIC = 0x18;
-static const DWORD WINHTTP_PROXY_TYPE_DIRECT = 1;
-static const DWORD WINHTTP_PROXY_TYPE_PROXY = 2;
+static const DWORD WINHTTP_SETTINGS_MAGIC = 0x18;
+static const DWORD WININET_SETTINGS_MAGIC = 0x46;
+static const DWORD PROXY_TYPE_DIRECT         = 1;
+static const DWORD PROXY_TYPE_PROXY          = 2;
+static const DWORD PROXY_USE_PAC_SCRIPT      = 4;
+static const DWORD PROXY_AUTODETECT_SETTINGS = 8;
 
-struct winhttp_settings_header
+struct connection_settings_header
 {
     DWORD magic;
     DWORD unknown; /* always zero? */
-    DWORD flags;   /* one of WINHTTP_PROXY_TYPE_* */
+    DWORD flags;   /* one or more of PROXY_* */
 };
 
 static inline void copy_char_to_wchar_sz(const BYTE *src, DWORD len, WCHAR *dst)
@@ -1138,22 +1305,22 @@ BOOL WINAPI WinHttpGetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
 
         l = RegQueryValueExW( key, WinHttpSettings, NULL, &type, NULL, &size );
         if (!l && type == REG_BINARY &&
-            size >= sizeof(struct winhttp_settings_header) + 2 * sizeof(DWORD))
+            size >= sizeof(struct connection_settings_header) + 2 * sizeof(DWORD))
         {
             BYTE *buf = heap_alloc( size );
 
             if (buf)
             {
-                struct winhttp_settings_header *hdr =
-                    (struct winhttp_settings_header *)buf;
+                struct connection_settings_header *hdr =
+                    (struct connection_settings_header *)buf;
                 DWORD *len = (DWORD *)(hdr + 1);
 
                 l = RegQueryValueExW( key, WinHttpSettings, NULL, NULL, buf,
                     &size );
-                if (!l && hdr->magic == WINHTTPSETTINGS_MAGIC &&
+                if (!l && hdr->magic == WINHTTP_SETTINGS_MAGIC &&
                     hdr->unknown == 0)
                 {
-                    if (hdr->flags & WINHTTP_PROXY_TYPE_PROXY)
+                    if (hdr->flags & PROXY_TYPE_PROXY)
                     {
                        BOOL sane = FALSE;
                        LPWSTR proxy = NULL;
@@ -1259,6 +1426,13 @@ BOOL WINAPI WinHttpGetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
  */
 BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser( WINHTTP_CURRENT_USER_IE_PROXY_CONFIG *config )
 {
+    static const WCHAR settingsW[] =
+        {'D','e','f','a','u','l','t','C','o','n','n','e','c','t','i','o','n','S','e','t','t','i','n','g','s',0};
+    HKEY hkey = NULL;
+    struct connection_settings_header *hdr = NULL;
+    DWORD type, offset, len, size = 0;
+    BOOL ret = FALSE;
+
     TRACE("%p\n", config);
 
     if (!config)
@@ -1266,16 +1440,543 @@ BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser( WINHTTP_CURRENT_USER_IE_PROXY
         set_last_error( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
+    memset( config, 0, sizeof(*config) );
+    config->fAutoDetect = TRUE;
 
-    /* FIXME: read from HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings */
+    if (RegOpenKeyExW( HKEY_CURRENT_USER, Connections, 0, KEY_READ, &hkey ) ||
+        RegQueryValueExW( hkey, settingsW, NULL, &type, NULL, &size ) ||
+        type != REG_BINARY || size < sizeof(struct connection_settings_header))
+    {
+        ret = TRUE;
+        goto done;
+    }
+    if (!(hdr = heap_alloc( size ))) goto done;
+    if (RegQueryValueExW( hkey, settingsW, NULL, &type, (BYTE *)hdr, &size ) ||
+        hdr->magic != WININET_SETTINGS_MAGIC)
+    {
+        ret = TRUE;
+        goto done;
+    }
 
-    FIXME("returning no proxy used\n");
-    config->fAutoDetect       = FALSE;
-    config->lpszAutoConfigUrl = NULL;
-    config->lpszProxy         = NULL;
-    config->lpszProxyBypass   = NULL;
+    config->fAutoDetect = (hdr->flags & PROXY_AUTODETECT_SETTINGS) != 0;
+    offset = sizeof(*hdr);
+    if (offset + sizeof(DWORD) > size) goto done;
+    len = *(DWORD *)((char *)hdr + offset);
+    offset += sizeof(DWORD);
+    if (len && hdr->flags & PROXY_TYPE_PROXY)
+    {
+        if (!(config->lpszProxy = GlobalAlloc( 0, (len + 1) * sizeof(WCHAR) ))) goto done;
+        copy_char_to_wchar_sz( (const BYTE *)hdr + offset , len, config->lpszProxy );
+    }
+    offset += len;
+    if (offset + sizeof(DWORD) > size) goto done;
+    len = *(DWORD *)((char *)hdr + offset);
+    offset += sizeof(DWORD);
+    if (len && (hdr->flags & PROXY_TYPE_PROXY))
+    {
+        if (!(config->lpszProxyBypass = GlobalAlloc( 0, (len + 1) * sizeof(WCHAR) ))) goto done;
+        copy_char_to_wchar_sz( (const BYTE *)hdr + offset , len, config->lpszProxyBypass );
+    }
+    offset += len;
+    if (offset + sizeof(DWORD) > size) goto done;
+    len = *(DWORD *)((char *)hdr + offset);
+    offset += sizeof(DWORD);
+    if (len && (hdr->flags & PROXY_USE_PAC_SCRIPT))
+    {
+        if (!(config->lpszAutoConfigUrl = GlobalAlloc( 0, (len + 1) * sizeof(WCHAR) ))) goto done;
+        copy_char_to_wchar_sz( (const BYTE *)hdr + offset , len, config->lpszAutoConfigUrl );
+    }
+    ret = TRUE;
 
+done:
+    RegCloseKey( hkey );
+    heap_free( hdr );
+    if (!ret)
+    {
+        heap_free( config->lpszAutoConfigUrl );
+        config->lpszAutoConfigUrl = NULL;
+        heap_free( config->lpszProxy );
+        config->lpszProxy = NULL;
+        heap_free( config->lpszProxyBypass );
+        config->lpszProxyBypass = NULL;
+    }
+    return ret;
+}
+
+static HRESULT WINAPI dispex_QueryInterface(
+    IDispatchEx *iface, REFIID riid, void **ppv )
+{
+    *ppv = NULL;
+
+    if (IsEqualGUID( riid, &IID_IUnknown )  ||
+        IsEqualGUID( riid, &IID_IDispatch ) ||
+        IsEqualGUID( riid, &IID_IDispatchEx ))
+        *ppv = iface;
+    else
+        return E_NOINTERFACE;
+
+    return S_OK;
+}
+
+static ULONG WINAPI dispex_AddRef(
+    IDispatchEx *iface )
+{
+    return 2;
+}
+
+static ULONG WINAPI dispex_Release(
+    IDispatchEx *iface )
+{
+    return 1;
+}
+
+static HRESULT WINAPI dispex_GetTypeInfoCount(
+    IDispatchEx *iface, UINT *info )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetTypeInfo(
+    IDispatchEx *iface, UINT info, LCID lcid, ITypeInfo **type_info )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetIDsOfNames(
+    IDispatchEx *iface, REFIID riid, LPOLESTR *names, UINT count, LCID lcid, DISPID *id )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_Invoke(
+    IDispatchEx *iface, DISPID member, REFIID riid, LCID lcid, WORD flags,
+    DISPPARAMS *params, VARIANT *result, EXCEPINFO *excep, UINT *err )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_DeleteMemberByName(
+    IDispatchEx *iface, BSTR name, DWORD flags )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_DeleteMemberByDispID(
+    IDispatchEx *iface, DISPID id )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetMemberProperties(
+    IDispatchEx *iface, DISPID id, DWORD flags_fetch, DWORD *flags )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetMemberName(
+    IDispatchEx *iface, DISPID id, BSTR *name )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetNextDispID(
+    IDispatchEx *iface, DWORD flags, DISPID id, DISPID *next )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI dispex_GetNameSpaceParent(
+    IDispatchEx *iface, IUnknown **unk )
+{
+    return E_NOTIMPL;
+}
+
+#define DISPID_GLOBAL_DNSRESOLVE  0x1000
+
+static HRESULT WINAPI dispex_GetDispID(
+    IDispatchEx *iface, BSTR name, DWORD flags, DISPID *id )
+{
+    if (!strcmpW( name, dns_resolveW ))
+    {
+        *id = DISPID_GLOBAL_DNSRESOLVE;
+        return S_OK;
+    }
+    return DISP_E_UNKNOWNNAME;
+}
+
+static HRESULT dns_resolve( const WCHAR *hostname, VARIANT *result )
+{
+#ifdef HAVE_GETADDRINFO
+        static const WCHAR fmtW[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
+        WCHAR addr[16];
+        struct addrinfo *ai, *elem;
+        char *hostnameA;
+        int res;
+
+        if (hostname[0])
+            hostnameA = strdupWA( hostname );
+        else
+            hostnameA = get_computer_name( ComputerNamePhysicalDnsFullyQualified );
+
+        if (!hostnameA) return E_OUTOFMEMORY;
+        res = getaddrinfo( hostnameA, NULL, NULL, &ai );
+        heap_free( hostnameA );
+        if (res) return S_FALSE;
+
+        elem = ai;
+        while (elem && elem->ai_family != AF_INET) elem = elem->ai_next;
+        if (!elem)
+        {
+            freeaddrinfo( ai );
+            return S_FALSE;
+        }
+        printf_addr( fmtW, addr, (struct sockaddr_in *)elem->ai_addr );
+        freeaddrinfo( ai );
+        V_VT( result ) = VT_BSTR;
+        V_BSTR( result ) = SysAllocString( addr );
+        return S_OK;
+#else
+        FIXME("getaddrinfo not found at build time\n");
+        return S_FALSE;
+#endif
+}
+
+static HRESULT WINAPI dispex_InvokeEx(
+    IDispatchEx *iface, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
+    VARIANT *result, EXCEPINFO *exep, IServiceProvider *caller )
+{
+    if (id == DISPID_GLOBAL_DNSRESOLVE)
+    {
+        if (params->cArgs != 1) return DISP_E_BADPARAMCOUNT;
+        if (V_VT(&params->rgvarg[0]) != VT_BSTR) return DISP_E_BADVARTYPE;
+        return dns_resolve( V_BSTR(&params->rgvarg[0]), result );
+    }
+    return DISP_E_MEMBERNOTFOUND;
+}
+
+static const IDispatchExVtbl dispex_vtbl =
+{
+    dispex_QueryInterface,
+    dispex_AddRef,
+    dispex_Release,
+    dispex_GetTypeInfoCount,
+    dispex_GetTypeInfo,
+    dispex_GetIDsOfNames,
+    dispex_Invoke,
+    dispex_GetDispID,
+    dispex_InvokeEx,
+    dispex_DeleteMemberByName,
+    dispex_DeleteMemberByDispID,
+    dispex_GetMemberProperties,
+    dispex_GetMemberName,
+    dispex_GetNextDispID,
+    dispex_GetNameSpaceParent
+};
+
+static IDispatchEx global_dispex = { &dispex_vtbl };
+
+static HRESULT WINAPI site_QueryInterface(
+    IActiveScriptSite *iface, REFIID riid, void **ppv )
+{
+    *ppv = NULL;
+
+    if (IsEqualGUID( &IID_IUnknown, riid ))
+        *ppv = iface;
+    else if (IsEqualGUID( &IID_IActiveScriptSite, riid ))
+        *ppv = iface;
+    else
+        return E_NOINTERFACE;
+
+    IUnknown_AddRef( (IUnknown *)*ppv );
+    return S_OK;
+}
+
+static ULONG WINAPI site_AddRef(
+    IActiveScriptSite *iface )
+{
+    return 2;
+}
+
+static ULONG WINAPI site_Release(
+    IActiveScriptSite *iface )
+{
+    return 1;
+}
+
+static HRESULT WINAPI site_GetLCID(
+    IActiveScriptSite *iface, LCID *lcid )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_GetItemInfo(
+    IActiveScriptSite *iface, LPCOLESTR name, DWORD mask,
+    IUnknown **item, ITypeInfo **type_info )
+{
+    if (!strcmpW( name, global_funcsW ) && mask == SCRIPTINFO_IUNKNOWN)
+    {
+        *item = (IUnknown *)&global_dispex;
+        return S_OK;
+    }
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_GetDocVersionString(
+    IActiveScriptSite *iface, BSTR *version )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_OnScriptTerminate(
+    IActiveScriptSite *iface, const VARIANT *result, const EXCEPINFO *info )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_OnStateChange(
+    IActiveScriptSite *iface, SCRIPTSTATE state )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_OnScriptError(
+    IActiveScriptSite *iface, IActiveScriptError *error )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_OnEnterScript(
+    IActiveScriptSite *iface )
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI site_OnLeaveScript(
+    IActiveScriptSite *iface )
+{
+    return E_NOTIMPL;
+}
+
+static const IActiveScriptSiteVtbl site_vtbl =
+{
+    site_QueryInterface,
+    site_AddRef,
+    site_Release,
+    site_GetLCID,
+    site_GetItemInfo,
+    site_GetDocVersionString,
+    site_OnScriptTerminate,
+    site_OnStateChange,
+    site_OnScriptError,
+    site_OnEnterScript,
+    site_OnLeaveScript
+};
+
+static IActiveScriptSite script_site = { &site_vtbl };
+
+static BOOL parse_script_result( VARIANT result, WINHTTP_PROXY_INFO *info )
+{
+    static const WCHAR proxyW[] = {'P','R','O','X','Y'};
+    const WCHAR *p;
+    WCHAR *q;
+    int len;
+
+    info->dwAccessType    = WINHTTP_ACCESS_TYPE_NO_PROXY;
+    info->lpszProxy       = NULL;
+    info->lpszProxyBypass = NULL;
+
+    if (V_VT( &result ) != VT_BSTR) return TRUE;
+    TRACE("%s\n", debugstr_w( V_BSTR( &result ) ));
+
+    p = V_BSTR( &result );
+    while (*p == ' ') p++;
+    len = strlenW( p );
+    if (len >= 5 && !memicmpW( p, proxyW, sizeof(proxyW)/sizeof(WCHAR) ))
+    {
+        p += 5;
+        while (*p == ' ') p++;
+        if (!*p || *p == ';') return TRUE;
+        if (!(info->lpszProxy = q = strdupW( p ))) return FALSE;
+        info->dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+        for (; *q; q++)
+        {
+            if (*q == ' ' || *q == ';')
+            {
+                *q = 0;
+                break;
+            }
+        }
+    }
     return TRUE;
+}
+
+static BSTR include_pac_utils( BSTR script )
+{
+    static const WCHAR pacjsW[] = {'p','a','c','.','j','s',0};
+    HMODULE hmod = GetModuleHandleA( "winhttp.dll" );
+    HRSRC rsrc;
+    DWORD size;
+    const char *data;
+    BSTR ret;
+    int len;
+
+    if (!(rsrc = FindResourceW( hmod, pacjsW, (LPCWSTR)40 ))) return NULL;
+    size = SizeofResource( hmod, rsrc );
+    data = LoadResource( hmod, rsrc );
+
+    len = MultiByteToWideChar( CP_ACP, 0, data, size, NULL, 0 );
+    if (!(ret = SysAllocStringLen( NULL, len + SysStringLen( script ) + 1 ))) return NULL;
+    MultiByteToWideChar( CP_ACP, 0, data, size, ret, len );
+    ret[len] = 0;
+    strcatW( ret, script );
+    return ret;
+}
+
+static BOOL run_script( const BSTR script, const WCHAR *url, WINHTTP_PROXY_INFO *info )
+{
+    static const WCHAR jscriptW[] = {'J','S','c','r','i','p','t',0};
+    static const WCHAR findproxyW[] = {'F','i','n','d','P','r','o','x','y','F','o','r','U','R','L',0};
+    IActiveScriptParse *parser = NULL;
+    IActiveScript *engine = NULL;
+    IDispatch *dispatch = NULL;
+    BOOL ret = FALSE;
+    CLSID clsid;
+    DISPID dispid;
+    BSTR func = NULL, hostname = NULL, full_script = NULL;
+    URL_COMPONENTSW uc;
+    VARIANT args[2], result;
+    DISPPARAMS params;
+    HRESULT hr, init;
+
+    memset( &uc, 0, sizeof(uc) );
+    uc.dwStructSize = sizeof(uc);
+    if (!WinHttpCrackUrl( url, 0, 0, &uc )) return FALSE;
+    if (!(hostname = SysAllocStringLen( NULL, uc.dwHostNameLength + 1 ))) return FALSE;
+    memcpy( hostname, uc.lpszHostName, uc.dwHostNameLength * sizeof(WCHAR) );
+    hostname[uc.dwHostNameLength] = 0;
+
+    init = CoInitialize( NULL );
+    hr = CLSIDFromProgID( jscriptW, &clsid );
+    if (hr != S_OK) goto done;
+
+    hr = CoCreateInstance( &clsid, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+                           &IID_IActiveScript, (void **)&engine );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScript_QueryInterface( engine, &IID_IActiveScriptParse, (void **)&parser );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScriptParse64_InitNew( parser );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScript_SetScriptSite( engine, &script_site );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScript_AddNamedItem( engine, global_funcsW, SCRIPTITEM_GLOBALMEMBERS );
+    if (hr != S_OK) goto done;
+
+    if (!(full_script = include_pac_utils( script ))) goto done;
+
+    hr = IActiveScriptParse64_ParseScriptText( parser, full_script, NULL, NULL, NULL, 0, 0, 0, NULL, NULL );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScript_SetScriptState( engine, SCRIPTSTATE_STARTED );
+    if (hr != S_OK) goto done;
+
+    hr = IActiveScript_GetScriptDispatch( engine, NULL, &dispatch );
+    if (hr != S_OK) goto done;
+
+    if (!(func = SysAllocString( findproxyW ))) goto done;
+    hr = IDispatch_GetIDsOfNames( dispatch, &IID_NULL, &func, 1, LOCALE_SYSTEM_DEFAULT, &dispid );
+    if (hr != S_OK) goto done;
+
+    V_VT( &args[0] ) = VT_BSTR;
+    V_BSTR( &args[0] ) = hostname;
+    V_VT( &args[1] ) = VT_BSTR;
+    V_BSTR( &args[1] ) = SysAllocString( url );
+
+    params.rgvarg = args;
+    params.rgdispidNamedArgs = NULL;
+    params.cArgs = 2;
+    params.cNamedArgs = 0;
+    hr = IDispatch_Invoke( dispatch, dispid, &IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
+                           &params, &result, NULL, NULL );
+    VariantClear( &args[1] );
+    if (hr != S_OK)
+    {
+        WARN("script failed 0x%08x\n", hr);
+        goto done;
+    }
+    ret = parse_script_result( result, info );
+
+done:
+    SysFreeString( full_script );
+    SysFreeString( hostname );
+    SysFreeString( func );
+    if (dispatch) IDispatch_Release( dispatch );
+    if (parser) IUnknown_Release( parser );
+    if (engine) IActiveScript_Release( engine );
+    if (SUCCEEDED( init )) CoUninitialize();
+    if (!ret) set_last_error( ERROR_WINHTTP_BAD_AUTO_PROXY_SCRIPT );
+    return ret;
+}
+
+static BSTR download_script( const WCHAR *url )
+{
+    static const WCHAR typeW[] = {'*','/','*',0};
+    static const WCHAR *acceptW[] = {typeW, NULL};
+    HINTERNET ses, con = NULL, req = NULL;
+    WCHAR *hostname;
+    URL_COMPONENTSW uc;
+    DWORD size = 4096, offset, to_read, bytes_read, flags = 0;
+    char *tmp, *buffer = NULL;
+    BSTR script = NULL;
+    int len;
+
+    memset( &uc, 0, sizeof(uc) );
+    uc.dwStructSize = sizeof(uc);
+    if (!WinHttpCrackUrl( url, 0, 0, &uc )) return NULL;
+    if (!(hostname = heap_alloc( (uc.dwHostNameLength + 1) * sizeof(WCHAR) ))) return NULL;
+    memcpy( hostname, uc.lpszHostName, uc.dwHostNameLength * sizeof(WCHAR) );
+    hostname[uc.dwHostNameLength] = 0;
+
+    if (!(ses = WinHttpOpen( NULL, WINHTTP_ACCESS_TYPE_NO_PROXY, NULL, NULL, 0 ))) goto done;
+    if (!(con = WinHttpConnect( ses, hostname, uc.nPort, 0 ))) goto done;
+    if (uc.nScheme == INTERNET_SCHEME_HTTPS) flags |= WINHTTP_FLAG_SECURE;
+    if (!(req = WinHttpOpenRequest( con, NULL, uc.lpszUrlPath, NULL, NULL, acceptW, flags ))) goto done;
+    if (!WinHttpSendRequest( req, NULL, 0, NULL, 0, 0, 0 )) goto done;
+    if (!(WinHttpReceiveResponse( req, 0 ))) goto done;
+
+    if (!(buffer = heap_alloc( size ))) goto done;
+    to_read = size;
+    offset = 0;
+    for (;;)
+    {
+        if (!WinHttpReadData( req, buffer + offset, to_read, &bytes_read )) goto done;
+        if (!bytes_read) break;
+        to_read -= bytes_read;
+        offset += bytes_read;
+        if (!to_read)
+        {
+            to_read = size;
+            size *= 2;
+            if (!(tmp = heap_realloc( buffer, size ))) goto done;
+            buffer = tmp;
+        }
+    }
+    len = MultiByteToWideChar( CP_ACP, 0, buffer, offset, NULL, 0 );
+    if (!(script = SysAllocStringLen( NULL, len ))) goto done;
+    MultiByteToWideChar( CP_ACP, 0, buffer, offset, script, len );
+    script[len] = 0;
+
+done:
+    WinHttpCloseHandle( req );
+    WinHttpCloseHandle( con );
+    WinHttpCloseHandle( ses );
+    heap_free( buffer );
+    heap_free( hostname );
+    if (!script) set_last_error( ERROR_WINHTTP_UNABLE_TO_DOWNLOAD_SCRIPT );
+    return script;
 }
 
 /***********************************************************************
@@ -1284,10 +1985,52 @@ BOOL WINAPI WinHttpGetIEProxyConfigForCurrentUser( WINHTTP_CURRENT_USER_IE_PROXY
 BOOL WINAPI WinHttpGetProxyForUrl( HINTERNET hsession, LPCWSTR url, WINHTTP_AUTOPROXY_OPTIONS *options,
                                    WINHTTP_PROXY_INFO *info )
 {
-    FIXME("%p, %s, %p, %p\n", hsession, debugstr_w(url), options, info);
+    WCHAR *detected_pac_url = NULL;
+    const WCHAR *pac_url;
+    session_t *session;
+    BSTR script;
+    BOOL ret = FALSE;
 
-    set_last_error( ERROR_WINHTTP_AUTO_PROXY_SERVICE_ERROR );
-    return FALSE;
+    TRACE("%p, %s, %p, %p\n", hsession, debugstr_w(url), options, info);
+
+    if (!(session = (session_t *)grab_object( hsession )))
+    {
+        set_last_error( ERROR_INVALID_HANDLE );
+        return FALSE;
+    }
+    if (session->hdr.type != WINHTTP_HANDLE_TYPE_SESSION)
+    {
+        release_object( &session->hdr );
+        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+        return FALSE;
+    }
+    if (!url || !options || !info ||
+        !(options->dwFlags & (WINHTTP_AUTOPROXY_AUTO_DETECT|WINHTTP_AUTOPROXY_CONFIG_URL)) ||
+        ((options->dwFlags & WINHTTP_AUTOPROXY_AUTO_DETECT) && !options->dwAutoDetectFlags) ||
+        ((options->dwFlags & WINHTTP_AUTOPROXY_AUTO_DETECT) &&
+         (options->dwFlags & WINHTTP_AUTOPROXY_CONFIG_URL)))
+    {
+        release_object( &session->hdr );
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (options->dwFlags & WINHTTP_AUTOPROXY_AUTO_DETECT &&
+        !WinHttpDetectAutoProxyConfigUrl( options->dwAutoDetectFlags, &detected_pac_url ))
+    {
+        set_last_error( ERROR_WINHTTP_AUTO_PROXY_SERVICE_ERROR );
+        goto done;
+    }
+    if (options->dwFlags & WINHTTP_AUTOPROXY_CONFIG_URL) pac_url = options->lpszAutoConfigUrl;
+    else pac_url = detected_pac_url;
+
+    if (!(script = download_script( pac_url ))) goto done;
+    ret = run_script( script, url, info );
+    SysFreeString( script );
+
+done:
+    GlobalFree( detected_pac_url );
+    release_object( &session->hdr );
+    return ret;
 }
 
 /***********************************************************************
@@ -1343,7 +2086,7 @@ BOOL WINAPI WinHttpSetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
         KEY_WRITE, NULL, &key, NULL );
     if (!l)
     {
-        DWORD size = sizeof(struct winhttp_settings_header) + 2 * sizeof(DWORD);
+        DWORD size = sizeof(struct connection_settings_header) + 2 * sizeof(DWORD);
         BYTE *buf;
 
         if (info->dwAccessType == WINHTTP_ACCESS_TYPE_NAMED_PROXY)
@@ -1355,17 +2098,17 @@ BOOL WINAPI WinHttpSetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
         buf = heap_alloc( size );
         if (buf)
         {
-            struct winhttp_settings_header *hdr =
-                (struct winhttp_settings_header *)buf;
+            struct connection_settings_header *hdr =
+                (struct connection_settings_header *)buf;
             DWORD *len = (DWORD *)(hdr + 1);
 
-            hdr->magic = WINHTTPSETTINGS_MAGIC;
+            hdr->magic = WINHTTP_SETTINGS_MAGIC;
             hdr->unknown = 0;
             if (info->dwAccessType == WINHTTP_ACCESS_TYPE_NAMED_PROXY)
             {
                 BYTE *dst;
 
-                hdr->flags = WINHTTP_PROXY_TYPE_PROXY;
+                hdr->flags = PROXY_TYPE_PROXY;
                 *len++ = strlenW( info->lpszProxy );
                 for (dst = (BYTE *)len, src = info->lpszProxy; *src;
                     src++, dst++)
@@ -1383,7 +2126,7 @@ BOOL WINAPI WinHttpSetDefaultProxyConfiguration( WINHTTP_PROXY_INFO *info )
             }
             else
             {
-                hdr->flags = WINHTTP_PROXY_TYPE_DIRECT;
+                hdr->flags = PROXY_TYPE_DIRECT;
                 *len++ = 0;
                 *len++ = 0;
             }
@@ -1598,7 +2341,6 @@ BOOL WINAPI WinHttpTimeToSystemTime( LPCWSTR string, SYSTEMTIME *time )
     while (*s && !isdigitW( *s )) s++;
     if (*s == '\0') return TRUE;
     time->wSecond = strtolW( s, &end, 10 );
-    s = end;
 
     time->wMilliseconds = 0;
     return TRUE;

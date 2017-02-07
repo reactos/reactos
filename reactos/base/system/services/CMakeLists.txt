@@ -9,9 +9,11 @@ add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/svcctl.idl)
 
 list(APPEND SOURCE
     config.c
+    controlset.c
     database.c
     driver.c
     groupdb.c
+    lock.c
     rpcserver.c
     services.c
     services.rc

@@ -15,7 +15,7 @@ BEGIN
   LTEXT "Tilatt", IDC_LABEL_ALLOW, 135, 107, 32, 8, SS_CENTER
   LTEXT "Nekte", IDC_LABEL_DENY, 176, 107, 32, 8, SS_CENTER
   CONTROL "", IDC_ACE_CHECKLIST, "CHECKLIST_ACLUI", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 117, 213, 72, WS_EX_CLIENTEDGE
-  LTEXT "For spesielle tilatelser eller for avanserte innstillinger, trykk på avansert.", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
+  LTEXT "For spesielle tilatelser eller for avanserte innstillinger, trykk pÃ¥ avansert.", IDC_LABEL_ADVANCED, 7, 194, 153, 16, SS_LEFT
   PUSHBUTTON "A&vansert", IDC_ADVANCED, 165, 194, 55, 14
 END
 

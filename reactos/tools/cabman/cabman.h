@@ -38,7 +38,7 @@ private:
     bool ProcessAll;
     ULONG Mode;
     bool PromptOnOverwrite;
-    char FileName[MAX_PATH];
+    char FileName[PATH_MAX];
 };
 
 /* EOF */

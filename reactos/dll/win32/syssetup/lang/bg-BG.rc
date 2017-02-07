@@ -23,111 +23,111 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Съветникът за настройка на РеактОС ви приветства!", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Този съветник ще сложи РеактОС на компютъра ви. Съветникът трябва да събере сведения за компютъра, за да настрои РеактОС правилно.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Натиснете „Напред“ за продължаване на настройката.", IDC_STATIC, 115, 169, 200, 17
+    LTEXT "РЎСЉРІРµС‚РЅРёРєСЉС‚ Р·Р° РЅР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ РІРё РїСЂРёРІРµС‚СЃС‚РІР°!", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "РўРѕР·Рё СЃСЉРІРµС‚РЅРёРє С‰Рµ СЃР»РѕР¶Рё Р РµР°РєС‚РћРЎ РЅР° РєРѕРјРїСЋС‚СЉСЂР° РІРё. РЎСЉРІРµС‚РЅРёРєСЉС‚ С‚СЂСЏР±РІР° РґР° СЃСЉР±РµСЂРµ СЃРІРµРґРµРЅРёСЏ Р·Р° РєРѕРјРїСЋС‚СЉСЂР°, Р·Р° РґР° РЅР°СЃС‚СЂРѕРё Р РµР°РєС‚РћРЎ РїСЂР°РІРёР»РЅРѕ.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° РїСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ РЅР° РЅР°СЃС‚СЂРѕР№РєР°С‚Р°.", IDC_STATIC, 115, 169, 200, 17
 END
 
 
 IDD_ACKPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Разработчиците на РеактОС биха желали да изразят признателността си към следните проекти с отворен код, (части от) които са използвани при създаването на РеактОС:",
+    LTEXT           "Р Р°Р·СЂР°Р±РѕС‚С‡РёС†РёС‚Рµ РЅР° Р РµР°РєС‚РћРЎ Р±РёС…Р° Р¶РµР»Р°Р»Рё РґР° РёР·СЂР°Р·СЏС‚ РїСЂРёР·РЅР°С‚РµР»РЅРѕСЃС‚С‚Р° СЃРё РєСЉРј СЃР»РµРґРЅРёС‚Рµ РїСЂРѕРµРєС‚Рё СЃ РѕС‚РІРѕСЂРµРЅ РєРѕРґ, (С‡Р°СЃС‚Рё РѕС‚) РєРѕРёС‚Рѕ СЃР° РёР·РїРѕР»Р·РІР°РЅРё РїСЂРё СЃСЉР·РґР°РІР°РЅРµС‚Рѕ РЅР° Р РµР°РєС‚РћРЎ:",
                     IDC_STATIC,15,2,286,24
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "РеактОС е лицензиран според GPL и ако искате да го използвате или разпространявате (части от него), трябва да спазвате GPL.",
+    LTEXT           "Р РµР°РєС‚РћРЎ Рµ Р»РёС†РµРЅР·РёСЂР°РЅ СЃРїРѕСЂРµРґ GPL Рё Р°РєРѕ РёСЃРєР°С‚Рµ РґР° РіРѕ РёР·РїРѕР»Р·РІР°С‚Рµ РёР»Рё СЂР°Р·РїСЂРѕСЃС‚СЂР°РЅСЏРІР°С‚Рµ (С‡Р°СЃС‚Рё РѕС‚ РЅРµРіРѕ), С‚СЂСЏР±РІР° РґР° СЃРїР°Р·РІР°С‚Рµ GPL.",
                     IDC_STATIC,15,110,227,20
-    PUSHBUTTON      "&Вижте GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Натиснете „Напред“ за продължаване на настройката.",IDC_STATIC,15,136,
+    PUSHBUTTON      "&Р’РёР¶С‚Рµ GPL...",IDC_VIEWGPL,251,110,50,19
+    LTEXT           "РќР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РїСЂРµРґвЂњ Р·Р° РїСЂРѕРґСЉР»Р¶Р°РІР°РЅРµ РЅР° РЅР°СЃС‚СЂРѕР№РєР°С‚Р°.",IDC_STATIC,15,136,
                     195,17
 END
 
 
 IDD_OWNERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Напишете имената си и името на вашето предприятието.",
+    LTEXT "РќР°РїРёС€РµС‚Рµ РёРјРµРЅР°С‚Р° СЃРё Рё РёРјРµС‚Рѕ РЅР° РІР°С€РµС‚Рѕ РїСЂРµРґРїСЂРёСЏС‚РёРµС‚Рѕ.",
           IDC_STATIC, 54, 7, 242, 21
-    LTEXT "&Име:", IDC_STATIC, 54, 37, 44, 8
+    LTEXT "&РРјРµ:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Предприятие:", IDC_STATIC, 54, 57, 50, 8
+    LTEXT "&РџСЂРµРґРїСЂРёСЏС‚РёРµ:", IDC_STATIC, 54, 57, 50, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 
 IDD_COMPUTERPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Напишете ненадвишаващо 15 знака име на компютъра. Ако сте в мрежа, никой друг компютър не трябва да има същото име.",
+    LTEXT "РќР°РїРёС€РµС‚Рµ РЅРµРЅР°РґРІРёС€Р°РІР°С‰Рѕ 15 Р·РЅР°РєР° РёРјРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°. РђРєРѕ СЃС‚Рµ РІ РјСЂРµР¶Р°, РЅРёРєРѕР№ РґСЂСѓРі РєРѕРјРїСЋС‚СЉСЂ РЅРµ С‚СЂСЏР±РІР° РґР° РёРјР° СЃСЉС‰РѕС‚Рѕ РёРјРµ.",
           IDC_STATIC, 45, 7, 250, 24
-    LTEXT "Име на &компютъра:", IDC_STATIC, 45, 38, 75, 8
+    LTEXT "РРјРµ РЅР° &РєРѕРјРїСЋС‚СЉСЂР°:", IDC_STATIC, 45, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Настройката ще създаде потребителска сметка, под името „Administrator“. Можете да използвате тази сметка, за да получите пълен достъп до компютъра.",
+    LTEXT "РќР°СЃС‚СЂРѕР№РєР°С‚Р° С‰Рµ СЃСЉР·РґР°РґРµ РїРѕС‚СЂРµР±РёС‚РµР»СЃРєР° СЃРјРµС‚РєР°, РїРѕРґ РёРјРµС‚Рѕ вЂћAdministratorвЂњ. РњРѕР¶РµС‚Рµ РґР° РёР·РїРѕР»Р·РІР°С‚Рµ С‚Р°Р·Рё СЃРјРµС‚РєР°, Р·Р° РґР° РїРѕР»СѓС‡РёС‚Рµ РїСЉР»РµРЅ РґРѕСЃС‚СЉРї РґРѕ РєРѕРјРїСЋС‚СЉСЂР°.",
           IDC_STATIC, 45, 57, 250, 25
-    LTEXT "Напишете парола за „Administrator“, не по- дълга от 14 знака.",
+    LTEXT "РќР°РїРёС€РµС‚Рµ РїР°СЂРѕР»Р° Р·Р° вЂћAdministratorвЂњ, РЅРµ РїРѕ- РґСЉР»РіР° РѕС‚ 14 Р·РЅР°РєР°.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Парола за „Administrator“:", IDC_STATIC, 45, 104, 95, 8
+    LTEXT "&РџР°СЂРѕР»Р° Р·Р° вЂћAdministratorвЂњ:", IDC_STATIC, 45, 104, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "По&твърдете паролата:", IDC_STATIC, 45, 123, 95, 8
+    LTEXT "РџРѕ&С‚РІСЉСЂРґРµС‚Рµ РїР°СЂРѕР»Р°С‚Р°:", IDC_STATIC, 45, 123, 95, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
 IDD_LOCALEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Местната стойност на уредбата трябва да отговаря на езика на приложенията, които ще използвате. Местната стойност определя как се изобразават паричните стойности и датите.", IDC_STATIC, 53, 2, 253, 26
+    LTEXT "РњРµСЃС‚РЅР°С‚Р° СЃС‚РѕР№РЅРѕСЃС‚ РЅР° СѓСЂРµРґР±Р°С‚Р° С‚СЂСЏР±РІР° РґР° РѕС‚РіРѕРІР°СЂСЏ РЅР° РµР·РёРєР° РЅР° РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р°, РєРѕРёС‚Рѕ С‰Рµ РёР·РїРѕР»Р·РІР°С‚Рµ. РњРµСЃС‚РЅР°С‚Р° СЃС‚РѕР№РЅРѕСЃС‚ РѕРїСЂРµРґРµР»СЏ РєР°Рє СЃРµ РёР·РѕР±СЂР°Р·Р°РІР°С‚ РїР°СЂРёС‡РЅРёС‚Рµ СЃС‚РѕР№РЅРѕСЃС‚Рё Рё РґР°С‚РёС‚Рµ.", IDC_STATIC, 53, 2, 253, 26
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "За промяна на уредбените или местните настройки, натиснете „Нагласяване“.",
+    LTEXT "Р—Р° РїСЂРѕРјСЏРЅР° РЅР° СѓСЂРµРґР±РµРЅРёС‚Рµ РёР»Рё РјРµСЃС‚РЅРёС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё, РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РіР»Р°СЃСЏРІР°РЅРµвЂњ.",
           IDC_STATIC, 53, 60, 184, 16
-    PUSHBUTTON "&Нагласяване...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
-    LTEXT "Клавиатурната подредба определя знаците, появяващи се при писане.",
+    PUSHBUTTON "&РќР°РіР»Р°СЃСЏРІР°РЅРµ...", IDC_CUSTOMLOCALE, 245, 57, 55, 14
+    LTEXT "РљР»Р°РІРёР°С‚СѓСЂРЅР°С‚Р° РїРѕРґСЂРµРґР±Р° РѕРїСЂРµРґРµР»СЏ Р·РЅР°С†РёС‚Рµ, РїРѕСЏРІСЏРІР°С‰Рё СЃРµ РїСЂРё РїРёСЃР°РЅРµ.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "За смяна на клавиатурната подредба, натиснете „Нагласяване“.",
+    LTEXT "Р—Р° СЃРјСЏРЅР° РЅР° РєР»Р°РІРёР°С‚СѓСЂРЅР°С‚Р° РїРѕРґСЂРµРґР±Р°, РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРќР°РіР»Р°СЃСЏРІР°РЅРµвЂњ.",
           IDC_STATIC, 53, 126, 184, 16
-    PUSHBUTTON "На&гласяване...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
+    PUSHBUTTON "РќР°&РіР»Р°СЃСЏРІР°РЅРµ...", IDC_CUSTOMLAYOUT, 245, 122, 55, 14
 END
 
 
 IDD_DATETIMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Дата и време", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Р”Р°С‚Р° Рё РІСЂРµРјРµ", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Часови пояс", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Р§Р°СЃРѕРІРё РїРѕСЏСЃ", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Самопревключване на часовника за зимно и лятно време",
+    AUTOCHECKBOX "РЎР°РјРѕРїСЂРµРІРєР»СЋС‡РІР°РЅРµ РЅР° С‡Р°СЃРѕРІРЅРёРєР° Р·Р° Р·РёРјРЅРѕ Рё Р»СЏС‚РЅРѕ РІСЂРµРјРµ",
                  IDC_AUTODAYLIGHT, 53, 124, 220, 10
 END
 
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройка на РеактОС"
+CAPTION "РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "", IDC_ACTIVITY, 53, 7, 253, 20
@@ -139,30 +139,30 @@ END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Завършване настройката на РеактОС"
+CAPTION "Р—Р°РІСЉСЂС€РІР°РЅРµ РЅР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Приключване на съветника по настройката на РеактОС", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Настройката на РеактОС завърши успешно.\n\nКогато натиснете „Приключи“, компютърът ви ще се презапусне.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "РџСЂРёРєР»СЋС‡РІР°РЅРµ РЅР° СЃСЉРІРµС‚РЅРёРєР° РїРѕ РЅР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅР° Р РµР°РєС‚РћРЎ Р·Р°РІСЉСЂС€Рё СѓСЃРїРµС€РЅРѕ.\n\nРљРѕРіР°С‚Рѕ РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РёвЂњ, РєРѕРјРїСЋС‚СЉСЂСЉС‚ РІРё С‰Рµ СЃРµ РїСЂРµР·Р°РїСѓСЃРЅРµ.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Ако в КД устройството има диск, го извадете. След това презапуснете компютъра и натиснете „Приключи“.", IDC_STATIC, 115, 169, 200, 17
+    LTEXT "РђРєРѕ РІ РљР” СѓСЃС‚СЂРѕР№СЃС‚РІРѕС‚Рѕ РёРјР° РґРёСЃРє, РіРѕ РёР·РІР°РґРµС‚Рµ. РЎР»РµРґ С‚РѕРІР° РїСЂРµР·Р°РїСѓСЃРЅРµС‚Рµ РєРѕРјРїСЋС‚СЉСЂР° Рё РЅР°С‚РёСЃРЅРµС‚Рµ вЂћРџСЂРёРєР»СЋС‡РёвЂњ.", IDC_STATIC, 115, 169, 200, 17
 END
 
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Отворено разрешително споразумение GNU"
+CAPTION "РћС‚РІРѕСЂРµРЅРѕ СЂР°Р·СЂРµС€РёС‚РµР»РЅРѕ СЃРїРѕСЂР°Р·СѓРјРµРЅРёРµ GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
                     ES_READONLY | WS_VSCROLL
-    DEFPUSHBUTTON   "Добре",IDOK,141,209,50,14
+    DEFPUSHBUTTON   "Р”РѕР±СЂРµ",IDOK,141,209,50,14
 END
 
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Почакайте..."
+CAPTION "РџРѕС‡Р°РєР°Р№С‚Рµ..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -171,132 +171,132 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ACKTITLE         "Благодарности"
-    IDS_ACKSUBTITLE      "Основи на РеактОС и разрешителни сведения"
-    IDS_OWNERTITLE       "Нагласяване на приложенията."
-    IDS_OWNERSUBTITLE    "Настройката използва сведенията за вас, за да нагласи РеактОС."
-    IDS_COMPUTERTITLE    "Име на компютъра и администраторска парола"
-    IDS_COMPUTERSUBTITLE "Трябва да въведете администраторска парола и име на компютъра"
-    IDS_LOCALETITLE      "Местни настройки"
-    IDS_LOCALESUBTITLE   "Можете да нагласите РеактОС за различни области и езици."
-    IDS_DATETIMETITLE    "Дата и време"
-    IDS_DATETIMESUBTITLE "Задайте правилните дата и време."
-    IDS_PROCESSTITLE     "Вписване на съставните"
-    IDS_PROCESSSUBTITLE  "Почакайте..."
+    IDS_ACKTITLE         "Р‘Р»Р°РіРѕРґР°СЂРЅРѕСЃС‚Рё"
+    IDS_ACKSUBTITLE      "РћСЃРЅРѕРІРё РЅР° Р РµР°РєС‚РћРЎ Рё СЂР°Р·СЂРµС€РёС‚РµР»РЅРё СЃРІРµРґРµРЅРёСЏ"
+    IDS_OWNERTITLE       "РќР°РіР»Р°СЃСЏРІР°РЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р°."
+    IDS_OWNERSUBTITLE    "РќР°СЃС‚СЂРѕР№РєР°С‚Р° РёР·РїРѕР»Р·РІР° СЃРІРµРґРµРЅРёСЏС‚Р° Р·Р° РІР°СЃ, Р·Р° РґР° РЅР°РіР»Р°СЃРё Р РµР°РєС‚РћРЎ."
+    IDS_COMPUTERTITLE    "РРјРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР° Рё Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСЃРєР° РїР°СЂРѕР»Р°"
+    IDS_COMPUTERSUBTITLE "РўСЂСЏР±РІР° РґР° РІСЉРІРµРґРµС‚Рµ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСЃРєР° РїР°СЂРѕР»Р° Рё РёРјРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°"
+    IDS_LOCALETITLE      "РњРµСЃС‚РЅРё РЅР°СЃС‚СЂРѕР№РєРё"
+    IDS_LOCALESUBTITLE   "РњРѕР¶РµС‚Рµ РґР° РЅР°РіР»Р°СЃРёС‚Рµ Р РµР°РєС‚РћРЎ Р·Р° СЂР°Р·Р»РёС‡РЅРё РѕР±Р»Р°СЃС‚Рё Рё РµР·РёС†Рё."
+    IDS_DATETIMETITLE    "Р”Р°С‚Р° Рё РІСЂРµРјРµ"
+    IDS_DATETIMESUBTITLE "Р—Р°РґР°Р№С‚Рµ РїСЂР°РІРёР»РЅРёС‚Рµ РґР°С‚Р° Рё РІСЂРµРјРµ."
+    IDS_PROCESSTITLE     "Р’РїРёСЃРІР°РЅРµ РЅР° СЃСЉСЃС‚Р°РІРЅРёС‚Рµ"
+    IDS_PROCESSSUBTITLE  "РџРѕС‡Р°РєР°Р№С‚Рµ..."
 END
 
 
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Сваляне и слагане на различни приложения"
+    IDS_CMT_DOWNLOADER  "РЎРІР°Р»СЏРЅРµ Рё СЃР»Р°РіР°РЅРµ РЅР° СЂР°Р·Р»РёС‡РЅРё РїСЂРёР»РѕР¶РµРЅРёСЏ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ACCESSORIES     "Принадлежности"
-    IDS_CMT_CALC        "Пускане на изчислителя"
-    IDS_CMT_CMD         "Отваряне на командния прозорец"
-    IDS_CMT_EXPLORER    "Пускане на изследователя"
-    IDS_CMT_NOTEPAD     "Пускане на текстообратващата"
-    IDS_CMT_REGEDIT     "Пускане на регистрообработващата"
-    IDS_CMT_WORDPAD     "Пускане на документната обработваща"
-    IDS_CMT_SCREENSHOT  "Заснемане на екрана"
-    IDS_CMT_DEVMGMT     "Пускане на управителя на устройствата"
-    IDS_CMT_SERVMAN     "Пускане на управителя на услугите"
-    IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
-    IDS_CMT_EVENTVIEW   "Пускане на прегледника на събития"
-    IDS_CMT_MSCONFIG    "Пускане на приложението за настройка на уредбата"
-    IDS_CMT_PAINT       "Пускане на приложението за рисуване"
+    IDS_ACCESSORIES     "РџСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚Рё"
+    IDS_CMT_CALC        "РџСѓСЃРєР°РЅРµ РЅР° РёР·С‡РёСЃР»РёС‚РµР»СЏ"
+    IDS_CMT_CMD         "РћС‚РІР°СЂСЏРЅРµ РЅР° РєРѕРјР°РЅРґРЅРёСЏ РїСЂРѕР·РѕСЂРµС†"
+    IDS_CMT_EXPLORER    "РџСѓСЃРєР°РЅРµ РЅР° РёР·СЃР»РµРґРѕРІР°С‚РµР»СЏ"
+    IDS_CMT_NOTEPAD     "РџСѓСЃРєР°РЅРµ РЅР° С‚РµРєСЃС‚РѕРѕР±СЂР°С‚РІР°С‰Р°С‚Р°"
+    IDS_CMT_REGEDIT     "РџСѓСЃРєР°РЅРµ РЅР° СЂРµРіРёСЃС‚СЂРѕРѕР±СЂР°Р±РѕС‚РІР°С‰Р°С‚Р°"
+    IDS_CMT_WORDPAD     "РџСѓСЃРєР°РЅРµ РЅР° РґРѕРєСѓРјРµРЅС‚РЅР°С‚Р° РѕР±СЂР°Р±РѕС‚РІР°С‰Р°"
+    IDS_CMT_SCREENSHOT  "Р—Р°СЃРЅРµРјР°РЅРµ РЅР° РµРєСЂР°РЅР°"
+    IDS_CMT_DEVMGMT     "РџСѓСЃРєР°РЅРµ РЅР° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°"
+    IDS_CMT_SERVMAN     "РџСѓСЃРєР°РЅРµ РЅР° СѓРїСЂР°РІРёС‚РµР»СЏ РЅР° СѓСЃР»СѓРіРёС‚Рµ"
+    IDS_CMT_RDESKTOP    "РџСѓСЃРєР°РЅРµ РЅР° РѕС‚РґР°Р»РµС‡РµРЅР°С‚Р° СЂР°Р±РѕС‚РЅР° РїР»РѕС‰"
+    IDS_CMT_EVENTVIEW   "РџСѓСЃРєР°РЅРµ РЅР° РїСЂРµРіР»РµРґРЅРёРєР° РЅР° СЃСЉР±РёС‚РёСЏ"
+    IDS_CMT_MSCONFIG    "РџСѓСЃРєР°РЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ Р·Р° РЅР°СЃС‚СЂРѕР№РєР° РЅР° СѓСЂРµРґР±Р°С‚Р°"
+    IDS_CMT_PAINT       "РџСѓСЃРєР°РЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ Р·Р° СЂРёСЃСѓРІР°РЅРµ"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"Игри"
-    IDS_CMT_SOLITAIRE	"Пасианс"
-    IDS_CMT_WINEMINE	"Минички"
-	IDS_CMT_SPIDER      "Пасианс „Паяк“"
+    IDS_GAMES		"РРіСЂРё"
+    IDS_CMT_SOLITAIRE	"РџР°СЃРёР°РЅСЃ"
+    IDS_CMT_WINEMINE	"РњРёРЅРёС‡РєРё"
+	IDS_CMT_SPIDER      "РџР°СЃРёР°РЅСЃ вЂћРџР°СЏРєвЂњ"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Системни средства"
-	IDS_CMT_CHARMAP      "Знакова таблица"
-	IDS_CMT_KBSWITCH     "Превключвател на клавиатурните подредби"
-	IDS_CMT_DXDIAG       "Пускане на приложението за преглеждане на РеактХ"
+	IDS_SYS_TOOLS        "РЎРёСЃС‚РµРјРЅРё СЃСЂРµРґСЃС‚РІР°"
+	IDS_CMT_CHARMAP      "Р—РЅР°РєРѕРІР° С‚Р°Р±Р»РёС†Р°"
+	IDS_CMT_KBSWITCH     "РџСЂРµРІРєР»СЋС‡РІР°С‚РµР» РЅР° РєР»Р°РІРёР°С‚СѓСЂРЅРёС‚Рµ РїРѕРґСЂРµРґР±Рё"
+	IDS_CMT_DXDIAG       "РџСѓСЃРєР°РЅРµ РЅР° РїСЂРёР»РѕР¶РµРЅРёРµС‚Рѕ Р·Р° РїСЂРµРіР»РµР¶РґР°РЅРµ РЅР° Р РµР°РєС‚РҐ"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Достъпност"
-	IDS_CMT_MAGNIFY      	     "Лупа"
+	IDS_SYS_ACCESSIBILITY        "Р”РѕСЃС‚СЉРїРЅРѕСЃС‚"
+	IDS_CMT_MAGNIFY      	     "Р›СѓРїР°"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Забавление"
-    IDS_CMT_MPLAY32             "Пускане на мултимедийния възпроизводител"
-    IDS_CMT_SNDVOL32            "Пускане на упрвлението на силата на звука"
-    IDS_CMT_SNDREC32            "Пускане на Звукозаписвача"
+    IDS_SYS_ENTERTAINMENT       "Р—Р°Р±Р°РІР»РµРЅРёРµ"
+    IDS_CMT_MPLAY32             "РџСѓСЃРєР°РЅРµ РЅР° РјСѓР»С‚РёРјРµРґРёР№РЅРёСЏ РІСЉР·РїСЂРѕРёР·РІРѕРґРёС‚РµР»"
+    IDS_CMT_SNDVOL32            "РџСѓСЃРєР°РЅРµ РЅР° СѓРїСЂРІР»РµРЅРёРµС‚Рѕ РЅР° СЃРёР»Р°С‚Р° РЅР° Р·РІСѓРєР°"
+    IDS_CMT_SNDREC32            "РџСѓСЃРєР°РЅРµ РЅР° Р—РІСѓРєРѕР·Р°РїРёСЃРІР°С‡Р°"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		"Настройка на РеактОС"
-    IDS_UNKNOWN_ERROR           "Неизвестна грешка"
-    IDS_REGISTERING_COMPONENTS  "Вписване на съставните..."
-    IDS_LOADLIBRARY_FAILED	"Грешка при LoadLibrary: "
-    IDS_GETPROCADDR_FAILED	"Грешка при GetProcAddr: "
-    IDS_REGSVR_FAILED           "Грешка при DllRegisterServer: "
-    IDS_DLLINSTALL_FAILED	"Грешка при DllInstall: "
-    IDS_TIMEOUT			"Просрочване на рагистрирането"
+    IDS_REACTOS_SETUP		"РќР°СЃС‚СЂРѕР№РєР° РЅР° Р РµР°РєС‚РћРЎ"
+    IDS_UNKNOWN_ERROR           "РќРµРёР·РІРµСЃС‚РЅР° РіСЂРµС€РєР°"
+    IDS_REGISTERING_COMPONENTS  "Р’РїРёСЃРІР°РЅРµ РЅР° СЃСЉСЃС‚Р°РІРЅРёС‚Рµ..."
+    IDS_LOADLIBRARY_FAILED	"Р“СЂРµС€РєР° РїСЂРё LoadLibrary: "
+    IDS_GETPROCADDR_FAILED	"Р“СЂРµС€РєР° РїСЂРё GetProcAddr: "
+    IDS_REGSVR_FAILED           "Р“СЂРµС€РєР° РїСЂРё DllRegisterServer: "
+    IDS_DLLINSTALL_FAILED	"Р“СЂРµС€РєР° РїСЂРё DllInstall: "
+    IDS_TIMEOUT			"РџСЂРѕСЃСЂРѕС‡РІР°РЅРµ РЅР° СЂР°РіРёСЃС‚СЂРёСЂР°РЅРµС‚Рѕ"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Команден прозорец.lnk"
-    IDS_SHORT_EXPLORER   "Изследователят на РеактОС.lnk"
-    IDS_SHORT_DOWNLOADER "Управител на приложенията за РеактОС.lnk"
-    IDS_SHORT_SERVICE    "Управител на услугите.lnk"
-    IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
-    IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
-    IDS_SHORT_CALC       "Изчислител.lnk"
-    IDS_SHORT_REGEDIT    "Обработка на регистъра.lnk"
-    IDS_SHORT_NOTEPAD    "Бележник.lnk"
-    IDS_SHORT_WORDPAD    "Тетрадка.lnk"
-    IDS_SHORT_SNAP       "Снимка.lnk"
-    IDS_SHORT_SOLITAIRE  "Пасианс.lnk"
-    IDS_SHORT_WINEMINE   "Минички.lnk"
-    IDS_SHORT_CHARMAP    "Знакова таблица.lnk"
-    IDS_SHORT_MAGNIFY    "Лупа.lnk"
-    IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
-    IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
-    IDS_SHORT_EVENTVIEW  "Преглед на събития.lnk"
-    IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
-    IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
-    IDS_SHORT_SNDREC32   "Звукозаписвач.lnk"
-    IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
-    IDS_SHORT_PAINT      "Рисунък.lnk"
-	IDS_SHORT_SPIDER     "Пасианс „Паяк“.lnk"
+    IDS_SHORT_CMD        "РљРѕРјР°РЅРґРµРЅ РїСЂРѕР·РѕСЂРµС†.lnk"
+    IDS_SHORT_EXPLORER   "РР·СЃР»РµРґРѕРІР°С‚РµР»СЏС‚ РЅР° Р РµР°РєС‚РћРЎ.lnk"
+    IDS_SHORT_DOWNLOADER "РЈРїСЂР°РІРёС‚РµР» РЅР° РїСЂРёР»РѕР¶РµРЅРёСЏС‚Р° Р·Р° Р РµР°РєС‚РћРЎ.lnk"
+    IDS_SHORT_SERVICE    "РЈРїСЂР°РІРёС‚РµР» РЅР° СѓСЃР»СѓРіРёС‚Рµ.lnk"
+    IDS_SHORT_DEVICE     "РЈРїСЂР°РІРёС‚РµР» РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°.lnk"
+    IDS_SHORT_MPLAY32    "РњСѓР»С‚РёРјРµРґРёРµРЅ РІСЉР·РїСЂРѕРёР·РІРѕРґРёС‚РµР».lnk"
+    IDS_SHORT_CALC       "РР·С‡РёСЃР»РёС‚РµР».lnk"
+    IDS_SHORT_REGEDIT    "РћР±СЂР°Р±РѕС‚РєР° РЅР° СЂРµРіРёСЃС‚СЉСЂР°.lnk"
+    IDS_SHORT_NOTEPAD    "Р‘РµР»РµР¶РЅРёРє.lnk"
+    IDS_SHORT_WORDPAD    "РўРµС‚СЂР°РґРєР°.lnk"
+    IDS_SHORT_SNAP       "РЎРЅРёРјРєР°.lnk"
+    IDS_SHORT_SOLITAIRE  "РџР°СЃРёР°РЅСЃ.lnk"
+    IDS_SHORT_WINEMINE   "РњРёРЅРёС‡РєРё.lnk"
+    IDS_SHORT_CHARMAP    "Р—РЅР°РєРѕРІР° С‚Р°Р±Р»РёС†Р°.lnk"
+    IDS_SHORT_MAGNIFY    "Р›СѓРїР°.lnk"
+    IDS_SHORT_RDESKTOP   "Р”Р°Р»РµС‡РЅР° СЂР°Р±РѕС‚РЅР° РїР»РѕС‰.lnk"
+    IDS_SHORT_KBSWITCH   "РџСЂРµРІРєР»СЋС‡РІР°С‚РµР» РЅР° РєР»Р°РІРёР°С‚СѓСЂРЅРёС‚Рµ РїРѕРґСЂРµРґР±Рё.lnk"
+    IDS_SHORT_EVENTVIEW  "РџСЂРµРіР»РµРґ РЅР° СЃСЉР±РёС‚РёСЏ.lnk"
+    IDS_SHORT_MSCONFIG   "РќР°СЃС‚СЂРѕР№РєР° РЅР° СѓСЂРµРґР±Р°С‚Р°.lnk"
+    IDS_SHORT_SNDVOL32   "РЎРёР»Р° РЅР° Р·РІСѓРєР°.lnk"
+    IDS_SHORT_SNDREC32   "Р—РІСѓРєРѕР·Р°РїРёСЃРІР°С‡.lnk"
+    IDS_SHORT_DXDIAG     "РџСЂРµРіР»РµР¶РґР°РЅРµ РЅР° Р РµР°РєС‚РҐ.lnk"
+    IDS_SHORT_PAINT      "Р РёСЃСѓРЅСЉРє.lnk"
+    IDS_SHORT_SPIDER     "РџР°СЃРёР°РЅСЃ вЂћРџР°СЏРєвЂњ.lnk"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME		"Настройката не може да продължи, докато не въведете името си."
-    IDS_WZD_SETCOMPUTERNAME	"Настройката не успя да зададе име на компютъра."
-    IDS_WZD_COMPUTERNAME	"Настройката не може да продължи, докато не въведете името на компютъра."
-    IDS_WZD_PASSWORDEMPTY	"Трябва да въведете парола!"
-    IDS_WZD_PASSWORDMATCH	"Паролите, които сте въвели на съвпадат. Въведете ги отново."
-    IDS_WZD_PASSWORDCHAR	"Паролата, която сте въвели съдържа забранени знаци. Въведете изчистена парола."
-    IDS_WZD_LOCALTIME		"Вълшебникът не успя да зададе местното време."
+    IDS_WZD_NAME		"РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅРµ РјРѕР¶Рµ РґР° РїСЂРѕРґСЉР»Р¶Рё, РґРѕРєР°С‚Рѕ РЅРµ РІСЉРІРµРґРµС‚Рµ РёРјРµС‚Рѕ СЃРё."
+    IDS_WZD_SETCOMPUTERNAME	"РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅРµ СѓСЃРїСЏ РґР° Р·Р°РґР°РґРµ РёРјРµ РЅР° РєРѕРјРїСЋС‚СЉСЂР°."
+    IDS_WZD_COMPUTERNAME	"РќР°СЃС‚СЂРѕР№РєР°С‚Р° РЅРµ РјРѕР¶Рµ РґР° РїСЂРѕРґСЉР»Р¶Рё, РґРѕРєР°С‚Рѕ РЅРµ РІСЉРІРµРґРµС‚Рµ РёРјРµС‚Рѕ РЅР° РєРѕРјРїСЋС‚СЉСЂР°."
+    IDS_WZD_PASSWORDEMPTY	"РўСЂСЏР±РІР° РґР° РІСЉРІРµРґРµС‚Рµ РїР°СЂРѕР»Р°!"
+    IDS_WZD_PASSWORDMATCH	"РџР°СЂРѕР»РёС‚Рµ, РєРѕРёС‚Рѕ СЃС‚Рµ РІСЉРІРµР»Рё РЅРµ СЃСЉРІРїР°РґР°С‚. Р’СЉРІРµРґРµС‚Рµ РіРё РѕС‚РЅРѕРІРѕ."
+    IDS_WZD_PASSWORDCHAR	"РџР°СЂРѕР»Р°С‚Р°, РєРѕСЏС‚Рѕ СЃС‚Рµ РІСЉРІРµР»Рё СЃСЉРґСЉСЂР¶Р° Р·Р°Р±СЂР°РЅРµРЅРё Р·РЅР°С†Рё. Р’СЉРІРµРґРµС‚Рµ РёР·С‡РёСЃС‚РµРЅР° РїР°СЂРѕР»Р°."
+    IDS_WZD_LOCALTIME		"Р’СЉР»С€РµР±РЅРёРєСЉС‚ РЅРµ СѓСЃРїСЏ РґР° Р·Р°РґР°РґРµ РјРµСЃС‚РЅРѕС‚Рѕ РІСЂРµРјРµ."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Подкарване на устройствата..."
+    IDS_STATUS_INSTALL_DEV "РџРѕРґРєР°СЂРІР°РЅРµ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІР°С‚Р°..."
 END
 
 /* EOF */

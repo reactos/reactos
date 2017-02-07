@@ -52,20 +52,19 @@ IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&Registro"
     BEGIN
-        MENUITEM "&Importa...",    ID_REGISTRY_IMPORTREGISTRYFILE
+        MENUITEM "&Importa...",     ID_REGISTRY_IMPORTREGISTRYFILE
 
-        MENUITEM "&Esporta...",    ID_REGISTRY_EXPORTREGISTRYFILE
+        MENUITEM "&Esporta...",     ID_REGISTRY_EXPORTREGISTRYFILE
 
-	MENUITEM SEPARATOR
-	MENUITEM "Carica Hive...",	ID_REGISTRY_LOADHIVE, GRAYED
-	MENUITEM "Scarica Hive...",	ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Carica Hive...",  ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Scarica Hive...", ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connetti a Registro in rete...",
-						ID_REGISTRY_CONNECTNETWORKREGISTRY
+                        ID_REGISTRY_CONNECTNETWORKREGISTRY
 
         MENUITEM "&Disconnetti da Registro di rete...",
-						ID_REGISTRY_DISCONNECTNETWORKREGISTRY
-						,GRAYED
+                        ID_REGISTRY_DISCONNECTNETWORKREGISTRY,GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Stampa\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -354,8 +353,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Errore"
-    IDS_WARNING		    "Segnalazione"
+    IDS_ERROR               "Errore"
+    IDS_WARNING             "Segnalazione"
     IDS_BAD_KEY             "Impossibile interrogare la chiave '%s'"
     IDS_BAD_VALUE           "Impossibile interrogare il valore '%s'"
     IDS_UNSUPPORTED_TYPE    "Impossibile editare valori di questo tipo (%ld)"
@@ -371,6 +370,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Impossibile cancellare tutti i valori indicati!"
     IDS_ERR_RENVAL_CAPTION  "Errore nel rinominare il valore"
     IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato è vuoto. Riprovate con un altro nome."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Nuova chiave #%d"
     IDS_NEW_VALUE           "Nuovo valore #%d"
 END
@@ -392,9 +393,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "File di Registrazione"
-    IDS_FLT_REGFILES        "File di Registrazione"
+    IDS_FLT_REGFILES        "File di Registrazione (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "File di Registrazione Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "File di Registrazione Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tutti i file (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

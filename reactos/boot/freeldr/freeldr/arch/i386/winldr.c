@@ -143,13 +143,13 @@ MempAllocatePTE(ULONG Entry, PHARDWARE_PTE *PhysicalPT, PHARDWARE_PTE *KernelPT)
 }
 
 BOOLEAN
-MempSetupPaging(IN ULONG StartPage,
-		IN ULONG NumberOfPages,
+MempSetupPaging(IN PFN_NUMBER StartPage,
+		IN PFN_COUNT NumberOfPages,
 		IN BOOLEAN KernelMapping)
 {
 	PHARDWARE_PTE PhysicalPT;
 	PHARDWARE_PTE KernelPT;
-	ULONG Entry, Page;
+	PFN_COUNT Entry, Page;
 
 	TRACE("MempSetupPaging: SP 0x%X, Number: 0x%X, Kernel: %s\n",
        StartPage, NumberOfPages, KernelMapping ? "yes" : "no");
@@ -199,10 +199,10 @@ MempSetupPaging(IN ULONG StartPage,
 }
 
 VOID
-MempUnmapPage(ULONG Page)
+MempUnmapPage(PFN_NUMBER Page)
 {
     PHARDWARE_PTE KernelPT;
-    ULONG Entry = (Page >> 10) + (KSEG0_BASE >> 22);
+    PFN_NUMBER Entry = (Page >> 10) + (KSEG0_BASE >> 22);
 
     /* Don't unmap hyperspace or HAL entries */
     if (Entry == HYPER_SPACE_ENTRY || Entry == 1023)

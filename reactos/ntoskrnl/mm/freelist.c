@@ -167,6 +167,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     PPHYSICAL_PAGE Pfn1;
     INT LookForZeroedPages;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    DPRINT1("ARM3-DEBUG: Being called with %I64x %I64x %I64x %lx %d %d\n", LowAddress, HighAddress, SkipBytes, TotalBytes, CacheAttribute, MdlFlags);
 
     //
     // Convert the low address into a PFN
@@ -492,15 +493,15 @@ MmReferencePage(PFN_NUMBER Pfn)
 
    DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   if (Pfn == 0 || Pfn > MmHighestPhysicalPage)
-   {
-      return;
-   }
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+   ASSERT(Pfn != 0);
+   ASSERT(Pfn <= MmHighestPhysicalPage);
 
    Page = MiGetPfnEntry(Pfn);
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
 
+   ASSERT(Page->u3.e2.ReferenceCount != 0);
    Page->u3.e2.ReferenceCount++;
 }
 
@@ -543,6 +544,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
    ASSERT(Page);
    ASSERT_IS_ROS_PFN(Page);
 
+   ASSERT(Page->u3.e2.ReferenceCount != 0);
    Page->u3.e2.ReferenceCount--;
    if (Page->u3.e2.ReferenceCount == 0)
    {

@@ -27,7 +27,7 @@
 #ifdef SPRINTF_CHAR
 # define SPRINTF(x) strlen(sprintf/**/x)
 #else
-# define SPRINTF(x) ((size_t)sprintf x)
+# define SPRINTF(x) ((socklen_t)sprintf x)
 #endif
 
 /*
@@ -35,10 +35,10 @@
  * sizeof(int) < 4.  sizeof(int) > 4 is fine; all the world's not a VAX.
  */
 
-static const char *inet_ntop4(const u_char *src, char *dst, size_t size);
+static const char *inet_ntop4(const u_char *src, char *dst, socklen_t size);
 
 #ifdef INET6
-static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
+static const char *inet_ntop6(const u_char *src, char *dst, socklen_t size);
 #endif
 
 /* char *
@@ -50,7 +50,7 @@ static const char *inet_ntop6(const u_char *src, char *dst, size_t size);
  *	Paul Vixie, 1996.
  */
 const char *
-inet_ntop(int af, const void *src, char *dst, size_t size)
+inet_ntop(int af, const void *src, char *dst, socklen_t size)
 {
 
 	switch (af) {
@@ -79,7 +79,7 @@ inet_ntop(int af, const void *src, char *dst, size_t size)
  *	Paul Vixie, 1996.
  */
 static const char *
-inet_ntop4(const u_char *src, char *dst, size_t size)
+inet_ntop4(const u_char *src, char *dst, socklen_t size)
 {
 	static const char fmt[] = "%u.%u.%u.%u";
 	char tmp[sizeof "255.255.255.255"];
@@ -100,7 +100,7 @@ inet_ntop4(const u_char *src, char *dst, size_t size)
  *	Paul Vixie, 1996.
  */
 static const char *
-inet_ntop6(const u_char *src, char *dst, size_t size)
+inet_ntop6(const u_char *src, char *dst, socklen_t size)
 {
 	/*
 	 * Note that int32_t and int16_t need only be "at least" large enough
@@ -178,7 +178,7 @@ inet_ntop6(const u_char *src, char *dst, size_t size)
 	/*
 	 * Check for overflow, copy, and we're done.
 	 */
-	if ((size_t)(tp - tmp) > size) {
+	if ((socklen_t)(tp - tmp) > size) {
 		WSASetLastError(WSAEINVAL);
 		return (NULL);
 	}

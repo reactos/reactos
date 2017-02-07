@@ -23,12 +23,12 @@
 extern "C" {
 #endif
 
-/*
-*  Current server information
-*/
-#define WTS_CURRENT_SERVER         ((HANDLE)NULL)
-#define WTS_CURRENT_SERVER_HANDLE  ((HANDLE)NULL)
-#define WTS_CURRENT_SERVER_NAME    (NULL)
+
+typedef enum _WTS_VIRTUAL_CLASS
+{
+    WTSVirtualClientData,
+    WTSVirtualFileHandle
+} WTS_VIRTUAL_CLASS;
 
 typedef enum tagWTS_INFO_CLASS
 {
@@ -136,6 +136,9 @@ DECL_WINELIB_TYPE_AW(WTS_SERVER_INFO)
 DECL_WINELIB_TYPE_AW(PWTS_SERVER_INFO)
 
 void WINAPI WTSCloseServer(HANDLE);
+BOOL WINAPI WTSConnectSessionA(ULONG, ULONG, PSTR, BOOL);
+BOOL WINAPI WTSConnectSessionW(ULONG, ULONG, PWSTR, BOOL);
+#define     WTSConnectSession WINELIB_NAME_AW(WTSConnectSession)
 BOOL WINAPI WTSDisconnectSession(HANDLE, DWORD, BOOL);
 BOOL WINAPI WTSEnumerateProcessesA(HANDLE, DWORD, DWORD, PWTS_PROCESS_INFOA *, DWORD *);
 BOOL WINAPI WTSEnumerateProcessesW(HANDLE, DWORD, DWORD, PWTS_PROCESS_INFOW *, DWORD *);
@@ -158,8 +161,14 @@ BOOL WINAPI WTSQueryUserConfigW(LPWSTR,LPWSTR,WTS_CONFIG_CLASS,LPWSTR*,DWORD*);
 #define     WTSQueryUserConfig WINELIB_NAME_AW(WTSQueryUserConfig)
 BOOL WINAPI WTSQueryUserToken(ULONG, PHANDLE);
 BOOL WINAPI WTSRegisterSessionNotification(HWND, DWORD);
+BOOL WINAPI WTSRegisterSessionNotificationEx(HANDLE, HWND, DWORD);
+BOOL WINAPI WTSStartRemoteControlSessionA(LPSTR, ULONG, BYTE, USHORT);
+BOOL WINAPI WTSStartRemoteControlSessionW(LPWSTR, ULONG, BYTE, USHORT);
+#define     WTSStartRemoteControlSession WINELIB_NAME_AW(WTSStartRemoteControlSession)
+BOOL WINAPI WTSStopRemoteControlSession(ULONG);
 BOOL WINAPI WTSTerminateProcess(HANDLE, DWORD, DWORD);
 BOOL WINAPI WTSUnRegisterSessionNotification(HWND);
+BOOL WINAPI WTSUnRegisterSessionNotificationEx(HANDLE, HWND);
 BOOL WINAPI WTSWaitSystemEvent(HANDLE, DWORD, DWORD*);
 
 #ifdef __cplusplus

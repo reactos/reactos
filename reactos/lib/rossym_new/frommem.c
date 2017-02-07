@@ -70,8 +70,8 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 			NTSTATUS Status;
 			ULONG StringOffset;
 			
-			Status = RtlCreateUnicodeStringFromAsciiz(&intConv, (PCSZ)SectionHeaders[SectionIndex].Name + 1);
-			if (!NT_SUCCESS(Status)) goto freeall;
+			if (!RtlCreateUnicodeStringFromAsciiz(&intConv, (PCSZ)SectionHeaders[SectionIndex].Name + 1))
+				goto freeall;
 			Status = RtlUnicodeStringToInteger(&intConv, 10, &StringOffset);
 			RtlFreeUnicodeString(&intConv);
 			if (!NT_SUCCESS(Status)) goto freeall;

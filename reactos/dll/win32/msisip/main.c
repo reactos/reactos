@@ -24,6 +24,7 @@
 #include "mssip.h"
 #define COBJMACROS
 #include "objbase.h"
+#include "initguid.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msisip);
@@ -217,34 +218,39 @@ end:
     return ret;
 }
 
+DEFINE_GUID(CLSID_MsiTransform, 0x000c1082,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID(CLSID_MsiDatabase,  0x000c1084,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID(CLSID_MsiPatch,     0x000c1086,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+
 /***********************************************************************
  *              MsiSIPIsMyTypeOfFile (MSISIP.@)
  */
 BOOL WINAPI MsiSIPIsMyTypeOfFile(WCHAR *name, GUID *subject)
 {
-    static const WCHAR msi[] = { '.','m','s','i',0 };
-    static const WCHAR msp[] = { '.','m','s','p',0 };
     BOOL ret = FALSE;
+    IStorage *stg = NULL;
+    HRESULT r;
 
     TRACE("(%s, %p)\n", debugstr_w(name), subject);
 
-    if (lstrlenW(name) < lstrlenW(msi))
-        return FALSE;
-    else if (lstrcmpiW(name + lstrlenW(name) - lstrlenW(msi), msi) &&
-     lstrcmpiW(name + lstrlenW(name) - lstrlenW(msp), msp))
-        return FALSE;
-    else
+    r = StgOpenStorage(name, NULL, STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE,
+     NULL, 0, &stg);
+    if (SUCCEEDED(r))
     {
-        IStorage *stg = NULL;
-        HRESULT r = StgOpenStorage(name, NULL,
-         STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
+        STATSTG stat;
 
+        r = IStorage_Stat(stg, &stat, STATFLAG_NONAME);
         if (SUCCEEDED(r))
         {
-            IStorage_Release(stg);
-            *subject = mySubject;
-            ret = TRUE;
+            if (IsEqualGUID(&stat.clsid, &CLSID_MsiDatabase) ||
+             IsEqualGUID(&stat.clsid, &CLSID_MsiPatch) ||
+             IsEqualGUID(&stat.clsid, &CLSID_MsiTransform))
+            {
+                ret = TRUE;
+                *subject = mySubject;
+            }
         }
+        IStorage_Release(stg);
     }
     return ret;
 }

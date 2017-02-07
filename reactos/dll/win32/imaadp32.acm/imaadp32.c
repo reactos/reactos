@@ -38,14 +38,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(adpcm);
 
 /***********************************************************************
- *           ADPCM_drvOpen
- */
-static LRESULT ADPCM_drvOpen(LPCSTR str)
-{
-    return 1;
-}
-
-/***********************************************************************
  *           ADPCM_drvClose
  */
 static LRESULT ADPCM_drvClose(DWORD_PTR dwDevID)
@@ -169,7 +161,7 @@ static void     init_wfx_ima_adpcm(IMAADPCMWAVEFORMAT* awfx/*, DWORD nba*/)
 /***********************************************************************
  *           R16
  *
- * Read a 16 bit sample (correctly handles endianess)
+ * Read a 16 bit sample (correctly handles endianness)
  */
 static inline short  R16(const unsigned char* src)
 {
@@ -179,7 +171,7 @@ static inline short  R16(const unsigned char* src)
 /***********************************************************************
  *           W16
  *
- * Write a 16 bit sample (correctly handles endianess)
+ * Write a 16 bit sample (correctly handles endianness)
  */
 static inline void  W16(unsigned char* dst, short s)
 {
@@ -928,7 +920,7 @@ LRESULT CALLBACK ADPCM_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     {
     case DRV_LOAD:		return 1;
     case DRV_FREE:		return 1;
-    case DRV_OPEN:		return ADPCM_drvOpen((LPSTR)dwParam1);
+    case DRV_OPEN:		return 1;
     case DRV_CLOSE:		return ADPCM_drvClose(dwDevID);
     case DRV_ENABLE:		return 1;
     case DRV_DISABLE:		return 1;

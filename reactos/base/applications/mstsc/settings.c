@@ -8,6 +8,8 @@ LPWSTR lpSettings[NUM_SETTINGS] =
     L"desktopheight",
     L"session bpp",
     L"full address",
+    L"username",
+    L"screen mode id",
 };
 
 VOID
@@ -27,7 +29,7 @@ SaveAllSettings(PINFO pInfo)
                             szValue);
     }
 
-    /* resolution */
+    /* resolution and fullscreen*/
     ret = SendDlgItemMessage(pInfo->hDisplayPage,
                              IDC_GEOSLIDER,
                              TBM_GETPOS,
@@ -35,6 +37,9 @@ SaveAllSettings(PINFO pInfo)
                              0);
     if (ret != -1)
     {
+        SetIntegerToSettings(pInfo->pRdpSettings,
+                             L"screen mode id",
+                             (ret == SendDlgItemMessageW(pInfo->hDisplayPage, IDC_GEOSLIDER, TBM_GETRANGEMAX, 0, 0)) ? 2 : 1);
         SetIntegerToSettings(pInfo->pRdpSettings,
                              L"desktopwidth",
                              pInfo->DisplayDeviceList->Resolutions[ret].dmPelsWidth);
@@ -62,6 +67,17 @@ SaveAllSettings(PINFO pInfo)
                                  L"session bpp",
                                  ret);
         }
+    }
+
+    /* user name */
+    if (GetDlgItemText(pInfo->hGeneralPage,
+                       IDC_NAMEEDIT,
+                       szValue,
+                       MAXVALUE))
+    {
+        SetStringToSettings(pInfo->pRdpSettings,
+                            L"username",
+                            szValue);
     }
 }
 
@@ -230,6 +246,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 {
     LPWSTR lpStr = lpBuffer;
     WCHAR szSeps[] = L":\r\n";
+    WCHAR szNewline[] = L"\r\n";
     LPWSTR lpToken;
     BOOL bFound;
     INT i;
@@ -258,7 +275,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
                 else if (lpToken[0] == L's')
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
-                    lpToken = wcstok(NULL, szSeps);
+                    lpToken = wcstok(NULL, szNewline);
                     if (lpToken != NULL)
                         wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
                 }
@@ -268,10 +285,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 
         /* move past the type and value */
         if (!bFound)
-        {
-            lpToken = wcstok(NULL, szSeps);
-            lpToken = wcstok(NULL, szSeps);
-        }
+            lpToken = wcstok(NULL, szNewline);
 
         /* move to next key */
         lpToken = wcstok(NULL, szSeps);

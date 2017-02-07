@@ -1627,7 +1627,7 @@ void quit(int argc, const char *argv[])
  */
 void disconnect(int argc, const char *argv[])
 {
-	extern int cout;
+	extern SOCKET cout;
 	extern int data;
 
 	if (!connected)

@@ -114,7 +114,7 @@ Return Value:
     status = IoAllocateDriverObjectExtension(DriverObject,
                                              CDROM_DRIVER_EXTENSION_ID,
                                              sizeof(CDROM_DRIVER_EXTENSION),
-                                             &driverExtension);    
+                                             (PVOID*)&driverExtension);    
 
     if (!NT_SUCCESS(status)) {
         TraceLog((CdromDebugWarning,
@@ -555,7 +555,7 @@ Return Value:
     PVOID senseData = NULL;
 
     ULONG timeOut;
-    PCDROM_DATA cddata;
+    PCDROM_DATA cddata = NULL;
 
     BOOLEAN changerDevice;
     BOOLEAN isMmcDevice = FALSE;
@@ -3366,7 +3366,7 @@ Return Value:
     }
 
     if ((startingOffset.QuadPart > commonExtension->PartitionLength.QuadPart) ||
-        (transferByteCount & fdoExtension->DiskGeometry.BytesPerSector - 1)) {
+        (transferByteCount & (fdoExtension->DiskGeometry.BytesPerSector - 1))) {
 
         //
         // Fail request with status of invalid parameters.
@@ -3390,18 +3390,18 @@ CdRomSwitchModeCompletion(
     IN PVOID Context
     )
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
-
-    PIO_STACK_LOCATION  irpStack = IoGetCurrentIrpStackLocation(Irp);
-    PCDROM_DATA         cdData = (PCDROM_DATA)(commonExtension->DriverData);
-    BOOLEAN             use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
     PIO_STACK_LOCATION  realIrpStack;
     PIO_STACK_LOCATION  realIrpNextStack;
-    PSCSI_REQUEST_BLOCK srb     = Context;
     PIRP                realIrp = NULL;
     NTSTATUS            status;
     BOOLEAN             retry;
+    PSCSI_REQUEST_BLOCK srb     = Context;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    PCDROM_DATA         cdData = (PCDROM_DATA)(commonExtension->DriverData);
+    PIO_STACK_LOCATION  irpStack = IoGetCurrentIrpStackLocation(Irp);
+    BOOLEAN             use6Byte = TEST_FLAG(cdData->XAFlags, XA_USE_6_BYTE);
+    ULONG retryCount;
 
     //
     // Extract the 'real' irp from the irpstack.
@@ -3454,7 +3454,17 @@ CdRomSwitchModeCompletion(
             retry = TRUE;
         }
 
-        if (retry && realIrpNextStack->Parameters.Others.Argument1--) {
+        //
+        // get current retry count
+        //
+        retryCount = PtrToUlong(realIrpNextStack->Parameters.Others.Argument1);
+
+        if (retry && retryCount) {
+
+            //
+            // decrement retryCount and update
+            //
+            realIrpNextStack->Parameters.Others.Argument1 = UlongToPtr(retryCount-1);
 
             if (((ULONG)(ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -5923,6 +5933,8 @@ Return Value:
     ULONG pickDvdRegion;
     ULONG defaultDvdRegion;
     ULONG dvdRegion;
+    ULONG a, b;
+
 
     PAGED_CODE();
 
@@ -5948,8 +5960,7 @@ Return Value:
     }
 
 
-    ULONG a, b;
-    
+
     a = max(sizeof(DVD_DESCRIPTOR_HEADER) +
                             sizeof(DVD_COPYRIGHT_DESCRIPTOR),
                         sizeof(DVD_READ_STRUCTURE)
@@ -6434,7 +6445,9 @@ Return Value:
     NTSTATUS
 
 --*/
-NTSTATUS
+
+VOID
+NTAPI
 CdRomMmcErrorHandler(
     IN PDEVICE_OBJECT Fdo,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -6600,8 +6613,6 @@ CdRomMmcErrorHandler(
         } // end of SenseKey switch
 
     } // end of SRB_STATUS_AUTOSENSE_VALID
-
-    return STATUS_SUCCESS;
 }
 
 /*++
@@ -6748,6 +6759,7 @@ Return Value:
 
 --*/
 NTSTATUS
+NTAPI
 CdRomShutdownFlushCompletion(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP NewIrp,
@@ -6836,7 +6848,7 @@ CdRomShutdownFlushCompletion(
         newIrpStack = IoGetCurrentIrpStackLocation(newIrp);
         newIrpStack->DeviceObject = Fdo;
         IoSetCompletionRoutine(newIrp,
-                               CdRomShutdownFlushCompletion,
+                               (PIO_COMPLETION_ROUTINE)CdRomShutdownFlushCompletion,
                                OriginalIrp,
                                TRUE, TRUE, TRUE);
         IoSetNextIrpStackLocation(newIrp);

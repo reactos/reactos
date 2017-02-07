@@ -59,7 +59,7 @@ ExAllocateCallBack(IN PEX_CALLBACK_FUNCTION Function,
     /* Allocate a callback */
     CallbackBlock = ExAllocatePoolWithTag(PagedPool,
                                           sizeof(EX_CALLBACK_ROUTINE_BLOCK),
-                                          'CbRb');
+                                          TAG_CALLBACK_ROUTINE_BLOCK);
     if (CallbackBlock)
     {
         /* Initialize it */
@@ -77,7 +77,7 @@ NTAPI
 ExFreeCallBack(IN PEX_CALLBACK_ROUTINE_BLOCK CallbackBlock)
 {
     /* Just free it from memory */
-    ExFreePoolWithTag(CallbackBlock, CALLBACK_TAG);
+    ExFreePoolWithTag(CallbackBlock, TAG_CALLBACK_ROUTINE_BLOCK);
 }
 
 VOID
@@ -124,7 +124,7 @@ ExReferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack)
     EX_FAST_REF OldValue;
     ULONG_PTR Count;
     PEX_CALLBACK_ROUTINE_BLOCK CallbackBlock;
-    
+
     /* Acquire a reference */
     OldValue = ExAcquireFastReference(&CallBack->RoutineBlock);
     Count = ExGetCountFastReference(OldValue);
@@ -140,10 +140,10 @@ ExReferenceCallBackBlock(IN OUT PEX_CALLBACK CallBack)
         ASSERT(FALSE);
         return NULL;
     }
-    
+
     /* Get the callback block */
     CallbackBlock = ExGetObjectFastReference(OldValue);
-    
+
     /* Check if this is the last reference */
     if (Count == 1)
     {
@@ -425,7 +425,7 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
                                            0,
                                            ExCallbackObjectType,
                                            KernelMode,
-                                           (PVOID)&Callback,
+                                           (PVOID *)&Callback,
                                            NULL);
 
         /* Close the Handle, since we now have the pointer */
@@ -567,7 +567,7 @@ ExRegisterCallback(IN PCALLBACK_OBJECT CallbackObject,
     /* Allocate memory for the structure */
     CallbackRegistration = ExAllocatePoolWithTag(NonPagedPool,
                                                  sizeof(CALLBACK_REGISTRATION),
-                                                 CALLBACK_TAG);
+                                                 TAG_CALLBACK_REGISTRATION);
     if (!CallbackRegistration)
     {
         /* Dereference and fail */
@@ -602,7 +602,7 @@ ExRegisterCallback(IN PCALLBACK_OBJECT CallbackObject,
         KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
         /* Free the registration */
-        ExFreePoolWithTag(CallbackRegistration, CALLBACK_TAG);
+        ExFreePoolWithTag(CallbackRegistration, TAG_CALLBACK_REGISTRATION);
         CallbackRegistration = NULL;
 
         /* Dereference the object */
@@ -676,7 +676,7 @@ ExUnregisterCallback(IN PVOID CallbackRegistrationHandle)
     KeReleaseSpinLock(&CallbackObject->Lock, OldIrql);
 
     /* Delete this registration */
-    ExFreePoolWithTag(CallbackRegistration, CALLBACK_TAG);
+    ExFreePoolWithTag(CallbackRegistration, TAG_CALLBACK_REGISTRATION);
 
     /* Remove the reference */
     ObDereferenceObject(CallbackObject);

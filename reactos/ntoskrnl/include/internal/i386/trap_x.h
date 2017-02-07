@@ -64,7 +64,7 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DbgPrint("Ecx: %x\n", TrapFrame->Ecx);
     DbgPrint("Eax: %x\n", TrapFrame->Eax);
     DbgPrint("PreviousPreviousMode: %x\n", TrapFrame->PreviousPreviousMode);
-    DbgPrint("ExceptionList: %x\n", TrapFrame->ExceptionList);
+    DbgPrint("ExceptionList: %p\n", TrapFrame->ExceptionList);
     DbgPrint("SegFs: %x\n", TrapFrame->SegFs);
     DbgPrint("Edi: %x\n", TrapFrame->Edi);
     DbgPrint("Esi: %x\n", TrapFrame->Esi);
@@ -95,18 +95,37 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->PreviousPreviousMode = -1;
 }
 
+#define DR7_RESERVED_READ_AS_1 0x400
+
+#define CheckDr(DrNumner, ExpectedValue) \
+    { \
+        ULONG DrValue = __readdr(DrNumner); \
+        if (DrValue != (ExpectedValue)) \
+        { \
+            DbgPrint("Dr%ld: expected %.8lx, got %.8lx\n", \
+                    DrNumner, ExpectedValue, DrValue); \
+            __debugbreak(); \
+        } \
+    }
+
+extern BOOLEAN StopChecking;
+
 VOID
 FORCEINLINE
 KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
-                      IN KTRAP_EXIT_SKIP_BITS SkipBits)
+                      IN BOOLEAN SkipPreviousMode)
 {
+    /* Don't check recursively */
+    if (StopChecking) return;
+    StopChecking = TRUE;
+
     /* Make sure interrupts are disabled */
     if (__readeflags() & EFLAGS_INTERRUPT_MASK)
     {
         DbgPrint("Exiting with interrupts enabled: %lx\n", __readeflags());
         __debugbreak();
     }
-    
+
     /* Make sure this is a real trap frame */
     if (TrapFrame->DbgArgMark != 0xBADB0D00)
     {
@@ -114,34 +133,61 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         KiDumpTrapFrame(TrapFrame);
         __debugbreak();
     }
-    
+
     /* Make sure we're not in user-mode or something */
     if (Ke386GetFs() != KGDT_R0_PCR)
     {
         DbgPrint("Exiting with an invalid FS: %lx\n", Ke386GetFs());
         __debugbreak();
     }
-    
+
     /* Make sure we have a valid SEH chain */
     if (KeGetPcr()->NtTib.ExceptionList == 0)
     {
         DbgPrint("Exiting with NULL exception chain: %p\n", KeGetPcr()->NtTib.ExceptionList);
         __debugbreak();
     }
-    
+
     /* Make sure we're restoring a valid SEH chain */
     if (TrapFrame->ExceptionList == 0)
     {
         DbgPrint("Entered a trap with a NULL exception chain: %p\n", TrapFrame->ExceptionList);
         __debugbreak();
     }
-    
+
     /* If we're ignoring previous mode, make sure caller doesn't actually want it */
-    if ((SkipBits.SkipPreviousMode) && (TrapFrame->PreviousPreviousMode != -1))
+    if (SkipPreviousMode && (TrapFrame->PreviousPreviousMode != -1))
     {
         DbgPrint("Exiting a trap witout restoring previous mode, yet previous mode seems valid: %lx\n", TrapFrame->PreviousPreviousMode);
         __debugbreak();
     }
+
+    /* Check DR values */
+    if (TrapFrame->SegCs & MODE_MASK)
+    {
+        /* Check for active debugging */
+        if (KeGetCurrentThread()->Header.DebugActive)
+        {
+            if ((TrapFrame->Dr7 & ~DR7_RESERVED_MASK) == 0) __debugbreak();
+
+            CheckDr(0, TrapFrame->Dr0);
+            CheckDr(1, TrapFrame->Dr1);
+            CheckDr(2, TrapFrame->Dr2);
+            CheckDr(3, TrapFrame->Dr3);
+            CheckDr(7, TrapFrame->Dr7 | DR7_RESERVED_READ_AS_1);
+        }
+    }
+    else
+    {
+        PKPRCB Prcb = KeGetCurrentPrcb();
+        CheckDr(0, Prcb->ProcessorState.SpecialRegisters.KernelDr0);
+        CheckDr(1, Prcb->ProcessorState.SpecialRegisters.KernelDr1);
+        CheckDr(2, Prcb->ProcessorState.SpecialRegisters.KernelDr2);
+        CheckDr(3, Prcb->ProcessorState.SpecialRegisters.KernelDr3);
+        //CheckDr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7);
+    }
+
+    StopChecking = FALSE;
 }
 
 VOID
@@ -150,7 +196,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
                             IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL OldIrql;
-    
+
     /* Check if this was a user call */
     if (KiUserTrap(TrapFrame))
     {
@@ -161,7 +207,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
             /* Forcibly put us in a sane state */
             KeGetPcr()->Irql = PASSIVE_LEVEL;
             _disable();
-            
+
             /* Fail */
             KeBugCheckEx(IRQL_GT_ZERO_AT_SYSTEM_SERVICE,
                          SystemCall,
@@ -171,7 +217,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
         }
 
         /* Make sure we're not attached and that APCs are not disabled */
-        if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
+        if ((KeGetCurrentThread()->ApcStateIndex != OriginalApcEnvironment) ||
             (KeGetCurrentThread()->CombinedApcDisable != 0))
         {
             /* Fail */
@@ -209,6 +255,53 @@ VOID
 extern PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
 
 //
+// Save user mode debug registers and restore kernel values
+//
+VOID
+FORCEINLINE
+KiHandleDebugRegistersOnTrapEntry(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    /* Save all debug registers in the trap frame */
+    TrapFrame->Dr0 = __readdr(0);
+    TrapFrame->Dr1 = __readdr(1);
+    TrapFrame->Dr2 = __readdr(2);
+    TrapFrame->Dr3 = __readdr(3);
+    TrapFrame->Dr6 = __readdr(6);
+    TrapFrame->Dr7 = __readdr(7);
+
+    /* Disable all active debugging */
+    __writedr(7, 0);
+
+    /* Restore kernel values */
+    __writedr(0, Prcb->ProcessorState.SpecialRegisters.KernelDr0);
+    __writedr(1, Prcb->ProcessorState.SpecialRegisters.KernelDr1);
+    __writedr(2, Prcb->ProcessorState.SpecialRegisters.KernelDr2);
+    __writedr(3, Prcb->ProcessorState.SpecialRegisters.KernelDr3);
+    __writedr(6, Prcb->ProcessorState.SpecialRegisters.KernelDr6);
+    __writedr(7, Prcb->ProcessorState.SpecialRegisters.KernelDr7);
+}
+
+VOID
+FORCEINLINE
+KiHandleDebugRegistersOnTrapExit(
+    PKTRAP_FRAME TrapFrame)
+{
+    /* Disable all active debugging */
+    __writedr(7, 0);
+
+    /* Load all debug registers from the trap frame */
+    __writedr(0, TrapFrame->Dr0);
+    __writedr(1, TrapFrame->Dr1);
+    __writedr(2, TrapFrame->Dr2);
+    __writedr(3, TrapFrame->Dr3);
+    __writedr(6, TrapFrame->Dr6);
+    __writedr(7, TrapFrame->Dr7);
+}
+
+//
 // Virtual 8086 Mode Optimized Trap Exit
 //
 VOID
@@ -218,7 +311,7 @@ KiExitV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     KIRQL OldIrql;
-    
+
     /* Get the thread */
     Thread = KeGetCurrentThread();
     while (TRUE)
@@ -243,15 +336,14 @@ KiExitV86Trap(IN PKTRAP_FRAME TrapFrame)
         KfLowerIrql(OldIrql);
         _disable();
     }
-     
+
     /* If we got here, we're still in a valid V8086 context, so quit it */
     if (__builtin_expect(TrapFrame->Dr7 & ~DR7_RESERVED_MASK, 0))
     {
-        /* Not handled yet */
-        DbgPrint("Need Hardware Breakpoint Support!\n");
-        while (TRUE);
+        /* Restore debug registers from the trap frame */
+        KiHandleDebugRegistersOnTrapExit(TrapFrame);
     }
-     
+
     /* Return from interrupt */
     KiTrapReturnNoSegments(TrapFrame);
 }
@@ -270,8 +362,8 @@ KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->Dr7 = __readdr(7);
     if (__builtin_expect(TrapFrame->Dr7 & ~DR7_RESERVED_MASK, 0))
     {
-        DbgPrint("Need Hardware Breakpoint Support!\n");
-        while (TRUE);
+        /* Handle debug registers */
+        KiHandleDebugRegistersOnTrapEntry(TrapFrame);
     }
 }
 
@@ -286,14 +378,21 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
-    /* Flush DR7 and check for debugging */
+    /* Default to debugging disabled */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(KeGetCurrentThread()->Header.DebugActive & 0xFF, 0))
+
+    /* Check if the frame was from user mode or v86 mode */
+    if ((TrapFrame->SegCs & MODE_MASK) ||
+        (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
-        DbgPrint("Need Hardware Breakpoint Support!\n");
-        while (TRUE);
+        /* Check for active debugging */
+        if (KeGetCurrentThread()->Header.DebugActive & 0xFF)
+        {
+            /* Handle debug registers */
+            KiHandleDebugRegistersOnTrapEntry(TrapFrame);
+        }
     }
-    
+
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }
@@ -307,15 +406,22 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
-    
-    /* Flush DR7 and check for debugging */
+
+    /* Default to debugging disabled */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(KeGetCurrentThread()->Header.DebugActive & 0xFF, 0))
+
+    /* Check if the frame was from user mode or v86 mode */
+    if ((TrapFrame->SegCs & MODE_MASK) ||
+        (TrapFrame->EFlags & EFLAGS_V86_MASK))
     {
-        DbgPrint("Need Hardware Breakpoint Support!\n");
-        while (TRUE);
+        /* Check for active debugging */
+        if (KeGetCurrentThread()->Header.DebugActive & 0xFF)
+        {
+            /* Handle debug registers */
+            KiHandleDebugRegistersOnTrapEntry(TrapFrame);
+        }
     }
-    
+
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }

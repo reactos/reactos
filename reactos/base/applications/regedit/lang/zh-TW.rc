@@ -56,9 +56,9 @@ BEGIN
         MENUITEM "匯出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "載入登錄區...",	ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "卸載登錄區...",	ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "載入登錄區...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "卸載登錄區...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "連接網絡登錄(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
@@ -352,8 +352,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "錯誤"
-    IDS_WARNING		    "警告"
+    IDS_ERROR               "錯誤"
+    IDS_WARNING             "警告"
     IDS_BAD_KEY             "不能查詢機碼 '%s'"
     IDS_BAD_VALUE           "不能查詢值 '%s'"
     IDS_UNSUPPORTED_TYPE    "不能編輯這類型的機碼 (%ld)"
@@ -369,6 +369,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "無法刪除所有指定的值！"
     IDS_ERR_RENVAL_CAPTION  "重新命名值時產生錯誤"
     IDS_ERR_RENVAL_TOEMPTY  "登錄編輯器無法重新命名 %s。指定的值為空。請輸入其他名稱，再試一次。"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "新機碼 #%d"
     IDS_NEW_VALUE           "新值 #%d"
 END
@@ -390,9 +392,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "登錄文件"
-    IDS_FLT_REGFILES        "登錄文件"
+    IDS_FLT_REGFILES        "登錄文件 (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 登錄文件 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 登錄文件 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "所有文件 (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

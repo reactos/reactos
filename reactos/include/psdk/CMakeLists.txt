@@ -21,6 +21,8 @@ list(APPEND SOURCE
     comcat.idl
     commoncontrols.idl
     control.idl
+    cor.idl
+    cordebug.idl
 #   crtrow.idl
     ctxtcall.idl
 #   dbccmd.idl
@@ -39,11 +41,13 @@ list(APPEND SOURCE
     fusion.idl
     hlink.idl
     htiframe.idl
+    httprequest.idl
     iads.idl
     icftypes.idl
     imnact.idl
     imnxport.idl
     indexsrv.idl
+    metahost.idl
     mimeinfo.idl
     mimeole.idl
     mlang.idl

@@ -7,9 +7,9 @@ BEGIN
     IDS_PREVIEW     "Vorschau"
 
     /* Tooltips */
-    IDS_TOOLTIP_NEXT_PIC   "Nächstes Bild"
+    IDS_TOOLTIP_NEXT_PIC   "NÃ¤chstes Bild"
     IDS_TOOLTIP_PREV_PIC   "Vorheriges Bild"
-    IDS_TOOLTIP_ZOOM_IN    "Vergrößern (+)"
+    IDS_TOOLTIP_ZOOM_IN    "VergrÃ¶ÃŸern (+)"
     IDS_TOOLTIP_ZOOM_OUT   "Verkleinern (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Drehen im Uhrzeigersinn (Strg+K)"
     IDS_TOOLTIP_ROT_COUNCW "Drehen gegen den Uhrzeigersinn (Strg+L)"

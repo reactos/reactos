@@ -138,7 +138,7 @@ PopGracefulShutdown(IN PVOID Context)
         /* Get the next process */
         Process = PsGetNextProcess(Process);
     }
-    
+
     /* First, the HAL handles any "end of boot" special functionality */
     DPRINT1("HAL shutting down\n");
     HalEndOfBoot();
@@ -152,15 +152,16 @@ PopGracefulShutdown(IN PVOID Context)
     CmShutdownSystem();
     
     /* Note that modified pages should be written here (MiShutdownSystem) */
+#ifdef NEWCC
+	/* Flush all user files before we start shutting down IO */
+	/* This is where modified pages are written back by the IO manager */
+	CcShutdownSystem();
+#endif
 
     /* In this step, the I/O manager does last-chance shutdown notification */
     DPRINT1("I/O manager shutting down in phase 1\n"); 
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
-
-#ifdef NEWCC
-	CcShutdownSystem();
-#endif
 
     /* Note that here, we should broadcast the power IRP to devices */
 

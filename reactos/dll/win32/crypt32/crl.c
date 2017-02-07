@@ -58,7 +58,7 @@ PCCRL_CONTEXT WINAPI CertCreateCRLContext(DWORD dwCertEncodingType,
         data = CryptMemAlloc(cbCrlEncoded);
         if (!data)
         {
-            CryptMemFree(crl);
+            CertFreeCRLContext(crl);
             crl = NULL;
             goto end;
         }
@@ -472,8 +472,10 @@ BOOL WINAPI CertGetCRLContextProperty(PCCRL_CONTEXT pCRLContext,
                 ret = CertGetStoreProperty(pCRLContext->hCertStore, dwPropId,
                  pvData, pcbData);
             else
+            {
                 *(DWORD *)pvData = 0;
-            ret = TRUE;
+                ret = TRUE;
+            }
         }
         break;
     default:

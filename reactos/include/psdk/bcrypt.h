@@ -35,4 +35,11 @@
 #define OPTIONAL
 #endif
 
+typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
+{
+    LPWSTR pszName;
+    ULONG  dwClass;
+    ULONG  dwFlags;
+} BCRYPT_ALGORITHM_IDENTIFIER;
+
 #endif  /* __WINE_BCRYPT_H */

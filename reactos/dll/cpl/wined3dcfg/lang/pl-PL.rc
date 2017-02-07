@@ -1,0 +1,33 @@
+/*
+ *         translated by Caemyr - Olaf Siejka (Mar 2012)
+ *         http://www.reactos.org
+ *         IRC: irc.freenode.net #reactos-pl;
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ogólne"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8, 5, 21, 20
+    GROUPBOX "Cieniowanie", -1, 5, 35, 230, 65
+    AUTOCHECKBOX "Włącz &GLSL", IDC_GLSL, 15, 50, 150, 10
+    AUTOCHECKBOX "Włącz cieniowanie &pikseli", IDC_PIXELSHADERS, 15, 65, 150, 10
+    AUTOCHECKBOX "Włącz cieniowanie &werteksów", IDC_VERTEXSHADERS, 15, 80, 150, 10
+    GROUPBOX "Renderowanie", -1, 5, 110, 230, 85
+    AUTOCHECKBOX "Wymuś &multipróbkowanie", IDC_MULTISAMPLING, 15, 125, 150, 10
+    AUTOCHECKBOX "Wymuś &strict draw ordering", IDC_STRICTDRAWORDERING, 15, 140, 150, 10
+    LTEXT "Renderowanie pozaekranowe:", -1, 15, 157, 80, 10
+    COMBOBOX IDC_OFFSCREEN, 95, 155, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+    LTEXT "Blokowanie renderowanego obiektu:", -1, 15, 175, 72, 10, SS_LEFT
+    COMBOBOX IDC_LOCKING, 95, 173, 90, 50, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "WineD3D"
+    IDS_CPLDESCRIPTION "Konfiguracja środowiska WineD3D."
+END

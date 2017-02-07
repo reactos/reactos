@@ -55,9 +55,9 @@ BEGIN
         MENUITEM "&Exportar...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "&Carregar Seção...",				 ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "&Descarregar Seção...",			 ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "&Carregar Seção...",               ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "&Descarregar Seção...",            ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "C&onectar Registro da rede...",    ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
@@ -352,8 +352,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Erro"
-    IDS_WARNING		    "Aviso"
+    IDS_ERROR               "Erro"
+    IDS_WARNING             "Aviso"
     IDS_BAD_KEY             "Não pode consultar chave '%s'"
     IDS_BAD_VALUE           "Não pode consultar valor '%s'"
     IDS_UNSUPPORTED_TYPE    "Não pode editar chaves deste tipo (%ld)"
@@ -369,6 +369,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Não foi possível excluir todos os valores especificados"
     IDS_ERR_RENVAL_CAPTION  "Erro renomeando valor"
     IDS_ERR_RENVAL_TOEMPTY  "Não pode renomear %s. O nome do valor especificado está vazio. Tente novamente com outro nome."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Nova chave #%d"
     IDS_NEW_VALUE           "Novo valor #%d"
 END
@@ -390,9 +392,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Registration File"
-    IDS_FLT_REGFILES        "Arquivos do Registro"
+    IDS_FLT_REGFILES        "Arquivos do Registro (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Arquivos do Registro Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Arquivos do Registro Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Todos os arquivos (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

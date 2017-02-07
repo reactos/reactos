@@ -55,31 +55,22 @@ CanDisableDevice(
 	IN HMACHINE hMachine,
 	OUT BOOL *CanDisable)
 {
-#if 0
-	/* hpoussin, Dec 2005. I've disabled this code because
-	 * ntoskrnl never sets the DN_DISABLEABLE flag.
-	 */
 	CONFIGRET cr;
 	ULONG Status, ProblemNumber;
 	BOOL Ret = FALSE;
 
-	cr = CM_Get_DevNode_Status_Ex(
-		&Status,
-		&ProblemNumber,
-		DevInst,
-		0,
-		hMachine);
+	cr = CM_Get_DevNode_Status_Ex(&Status,
+                                  &ProblemNumber,
+                                  DevInst,
+                                  0,
+                                  hMachine);
 	if (cr == CR_SUCCESS)
 	{
 		*CanDisable = ((Status & DN_DISABLEABLE) != 0);
-	Ret = TRUE;
+        Ret = TRUE;
 	}
 
 	return Ret;
-#else
-	*CanDisable = TRUE;
-	return TRUE;
-#endif
 }
 
 static BOOL

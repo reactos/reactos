@@ -139,21 +139,16 @@ void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(to, from, to->cbSize);
 }
 
-ME_Style *ME_MakeStyle(CHARFORMAT2W *style) {
-  CHARFORMAT2W styledata;
+ME_Style *ME_MakeStyle(CHARFORMAT2W *style)
+{
   ME_Style *s = ALLOC_OBJ(ME_Style);
-  
-  style = ME_ToCF2W(&styledata, style);
-  memset(s, 0, sizeof(ME_Style));
-  if (style->cbSize <= sizeof(CHARFORMAT2W))
-    CopyMemory(&s->fmt, style, style->cbSize);
-  else
-    s->fmt = *style;
-  s->fmt.cbSize = sizeof(CHARFORMAT2W);
 
+  assert(style->cbSize == sizeof(CHARFORMAT2W));
+  s->fmt = *style;
   s->nSequence = -2;
   s->nRefs = 1;
   s->hFont = NULL;
+  memset(&s->tm, 0, sizeof(s->tm));
   s->tm.tmAscent = -1;
   all_refs++;
   TRACE_(richedit_style)("ME_MakeStyle %p, total refs=%d\n", s, all_refs);
@@ -171,7 +166,7 @@ ME_Style *ME_MakeStyle(CHARFORMAT2W *style) {
     s->fmt.dwMask |= mask;\
     CopyMemory(s->fmt.member, style->member, sizeof(style->member));\
   }
-  
+
 void ME_InitCharFormat2W(CHARFORMAT2W *pFmt)
 {
   ZeroMemory(pFmt, sizeof(CHARFORMAT2W));
@@ -180,9 +175,8 @@ void ME_InitCharFormat2W(CHARFORMAT2W *pFmt)
 
 ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style)
 {
-  CHARFORMAT2W styledata;
   ME_Style *s = ME_MakeStyle(&sSrc->fmt);
-  style = ME_ToCF2W(&styledata, style);
+  assert(style->cbSize == sizeof(CHARFORMAT2W));
   COPY_STYLE_ITEM(CFM_ANIMATION, bAnimation);
   COPY_STYLE_ITEM(CFM_BACKCOLOR, crBackColor);
   COPY_STYLE_ITEM(CFM_CHARSET, bCharSet);

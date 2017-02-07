@@ -114,7 +114,6 @@ static const SSL_METHOD *meth;
 static SSL_METHOD *meth;
 #endif
 static SSL_CTX *ctx;
-static int hostname_idx;
 static int error_idx;
 static int conn_idx;
 
@@ -210,7 +209,7 @@ static PCCERT_CONTEXT X509_to_cert_context(X509 *cert)
     if (malloced)
         free(buffer);
     else
-        HeapFree(GetProcessHeap(),0,buffer);
+        heap_free(buffer);
 
     return ret;
 }
@@ -238,6 +237,7 @@ static DWORD netconn_verify_cert(PCCERT_CONTEXT cert, HCERTSTORE store,
             static const DWORD supportedErrors =
                 CERT_TRUST_IS_NOT_TIME_VALID |
                 CERT_TRUST_IS_UNTRUSTED_ROOT |
+                CERT_TRUST_IS_PARTIAL_CHAIN |
                 CERT_TRUST_IS_OFFLINE_REVOCATION |
                 CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
                 CERT_TRUST_IS_REVOKED |
@@ -247,7 +247,7 @@ static DWORD netconn_verify_cert(PCCERT_CONTEXT cert, HCERTSTORE store,
                 !(security_flags & SECURITY_FLAG_IGNORE_CERT_DATE_INVALID))
                 err = ERROR_INTERNET_SEC_CERT_DATE_INVALID;
             else if (chain->TrustStatus.dwErrorStatus &
-                     CERT_TRUST_IS_UNTRUSTED_ROOT &&
+                     (CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN) &&
                      !(security_flags & SECURITY_FLAG_IGNORE_UNKNOWN_CA))
                 err = ERROR_INTERNET_INVALID_CA;
             else if (!(security_flags & SECURITY_FLAG_IGNORE_REVOCATION) &&
@@ -308,7 +308,6 @@ static DWORD netconn_verify_cert(PCCERT_CONTEXT cert, HCERTSTORE store,
 static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
 {
     SSL *ssl;
-    WCHAR *server;
     BOOL ret = FALSE;
     HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
         CERT_STORE_CREATE_NEW_FLAG, NULL);
@@ -316,7 +315,6 @@ static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
 
     ssl = pX509_STORE_CTX_get_ex_data(ctx,
         pSSL_get_ex_data_X509_STORE_CTX_idx());
-    server = pSSL_get_ex_data(ssl, hostname_idx);
     conn = pSSL_get_ex_data(ssl, conn_idx);
     if (store)
     {
@@ -333,19 +331,15 @@ static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
             cert = (X509 *)psk_value(chain, i);
             if ((context = X509_to_cert_context(cert)))
             {
-                if (i == 0)
-                    ret = CertAddCertificateContextToStore(store, context,
-                        CERT_STORE_ADD_ALWAYS, &endCert);
-                else
-                    ret = CertAddCertificateContextToStore(store, context,
-                        CERT_STORE_ADD_ALWAYS, NULL);
+                ret = CertAddCertificateContextToStore(store, context,
+                        CERT_STORE_ADD_ALWAYS, i ? NULL : &endCert);
                 CertFreeCertificateContext(context);
             }
         }
         if (!endCert) ret = FALSE;
         if (ret)
         {
-            DWORD_PTR err = netconn_verify_cert(endCert, store, server,
+            DWORD_PTR err = netconn_verify_cert(endCert, store, conn->server->name,
                                                 conn->security_flags);
 
             if (err)
@@ -460,12 +454,6 @@ static DWORD init_openssl(void)
         return ERROR_OUTOFMEMORY;
     }
 
-    hostname_idx = pSSL_get_ex_new_index(0, (void *)"hostname index", NULL, NULL, NULL);
-    if(hostname_idx == -1) {
-        ERR("SSL_get_ex_new_index failed; %s\n", pERR_error_string(pERR_get_error(), 0));
-        return ERROR_OUTOFMEMORY;
-    }
-
     error_idx = pSSL_get_ex_new_index(0, (void *)"error index", NULL, NULL, NULL);
     if(error_idx == -1) {
         ERR("SSL_get_ex_new_index failed; %s\n", pERR_error_string(pERR_get_error(), 0));
@@ -482,12 +470,15 @@ static DWORD init_openssl(void)
 
     pCRYPTO_set_id_callback(ssl_thread_id);
     num_ssl_locks = pCRYPTO_num_locks();
-    ssl_locks = HeapAlloc(GetProcessHeap(), 0, num_ssl_locks * sizeof(CRITICAL_SECTION));
+    ssl_locks = heap_alloc(num_ssl_locks * sizeof(CRITICAL_SECTION));
     if(!ssl_locks)
         return ERROR_OUTOFMEMORY;
 
     for(i = 0; i < num_ssl_locks; i++)
+    {
         InitializeCriticalSection(&ssl_locks[i]);
+        ssl_locks[i].DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ssl_locks");
+    }
     pCRYPTO_set_locking_callback(ssl_lock_callback);
 
     return ERROR_SUCCESS;
@@ -497,7 +488,7 @@ static DWORD init_openssl(void)
 #endif
 }
 
-DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, netconn_t **ret)
+DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, DWORD timeout, netconn_t **ret)
 {
     netconn_t *netconn;
     int result, flag;
@@ -526,9 +517,43 @@ DWORD create_netconn(BOOL useSSL, server_t *server, DWORD security_flags, netcon
     assert(server->addr_len);
     result = netconn->socketFD = socket(server->addr.ss_family, SOCK_STREAM, 0);
     if(result != -1) {
+        flag = 1;
+        ioctlsocket(netconn->socketFD, FIONBIO, &flag);
         result = connect(netconn->socketFD, (struct sockaddr*)&server->addr, server->addr_len);
         if(result == -1)
+        {
+            if (sock_get_error(errno) == WSAEINPROGRESS) {
+                // ReactOS: use select instead of poll
+                fd_set outfd;
+                struct timeval tv;
+                int res;
+
+                FD_ZERO(&outfd);
+                FD_SET(netconn->socketFD, &outfd);
+                tv.tv_sec = timeout / 1000;
+                tv.tv_usec = (timeout % 1000) * 1000;
+                res = select(0, NULL, &outfd, NULL, &tv);
+                if (!res)
+                {
+                    closesocket(netconn->socketFD);
+                    heap_free(netconn);
+                    return ERROR_INTERNET_CANNOT_CONNECT;
+                }
+                else if (res > 0)
+                {
+                    int err;
+                    socklen_t len = sizeof(err);
+                    if (!getsockopt(netconn->socketFD, SOL_SOCKET, SO_ERROR, &err, &len) && !err)
+                        result = 0;
+                }
+            }
+        }
+        if(result == -1)
             closesocket(netconn->socketFD);
+        else {
+            flag = 0;
+            ioctlsocket(netconn->socketFD, FIONBIO, &flag);
+        }
     }
     if(result == -1) {
         heap_free(netconn);
@@ -581,13 +606,17 @@ void NETCON_unload(void)
     if (ssl_locks)
     {
         int i;
-        for (i = 0; i < num_ssl_locks; i++) DeleteCriticalSection(&ssl_locks[i]);
-        HeapFree(GetProcessHeap(), 0, ssl_locks);
+        for (i = 0; i < num_ssl_locks; i++)
+        {
+            ssl_locks[i].DebugInfo->Spare[0] = 0;
+            DeleteCriticalSection(&ssl_locks[i]);
+        }
+        heap_free(ssl_locks);
     }
 #endif
 }
 
-#if 0
+#ifndef __REACTOS__
 /* translate a unix error code into a winsock one */
 int sock_get_error( int err )
 {
@@ -660,12 +689,12 @@ int sock_get_error( int err )
  * NETCON_secure_connect
  * Initiates a secure connection over an existing plaintext connection.
  */
-DWORD NETCON_secure_connect(netconn_t *connection, LPWSTR hostname)
+DWORD NETCON_secure_connect(netconn_t *connection)
 {
-    void *ssl_s;
     DWORD res = ERROR_NOT_SUPPORTED;
-
 #ifdef SONAME_LIBSSL
+    void *ssl_s;
+
     /* can't connect if we are already connected */
     if (connection->ssl_s)
     {
@@ -689,13 +718,6 @@ DWORD NETCON_secure_connect(netconn_t *connection, LPWSTR hostname)
         goto fail;
     }
 
-    if (!pSSL_set_ex_data(ssl_s, hostname_idx, hostname))
-    {
-        ERR("SSL_set_ex_data failed: %s\n",
-            pERR_error_string(pERR_get_error(), 0));
-        res = ERROR_INTERNET_SECURITY_CHANNEL_ERROR;
-        goto fail;
-    }
     if (!pSSL_set_ex_data(ssl_s, conn_idx, connection))
     {
         ERR("SSL_set_ex_data failed: %s\n",
@@ -895,24 +917,29 @@ int NETCON_GetCipherStrength(netconn_t *connection)
 #endif
 }
 
-DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, int value)
+DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value)
 {
     int result;
     struct timeval tv;
 
     /* value is in milliseconds, convert to struct timeval */
-    tv.tv_sec = value / 1000;
-    tv.tv_usec = (value % 1000) * 1000;
-
+    if (value == INFINITE)
+    {
+        tv.tv_sec = 0;
+        tv.tv_usec = 0;
+    }
+    else
+    {
+        tv.tv_sec = value / 1000;
+        tv.tv_usec = (value % 1000) * 1000;
+    }
     result = setsockopt(connection->socketFD, SOL_SOCKET,
                         send ? SO_SNDTIMEO : SO_RCVTIMEO, (void*)&tv,
                         sizeof(tv));
-
     if (result == -1)
     {
         WARN("setsockopt failed (%s)\n", strerror(errno));
         return sock_get_error(errno);
     }
-
     return ERROR_SUCCESS;
 }

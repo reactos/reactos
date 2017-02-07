@@ -16,6 +16,7 @@
 #define IDC_GEOSLIDER                   1012
 #define IDC_BPPCOMBO                    1013
 #define IDC_SETTINGS_RESOLUTION_TEXT    1014
+#define IDC_NAMEEDIT                    1015
 
 #define IDC_LOGONICON                   1016
 #define IDC_CONNICON                    1017

@@ -1,6 +1,7 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
+ * LICENSE:         GNU GPL - See COPYING in the top level directory
+ *                  BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/rtl/bitmap.c
  * PURPOSE:         Bitmap functions
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -13,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+// FIXME: hack
+#undef ASSERT
+#define ASSERT(...)
 
 /* DATA *********************************************************************/
 
@@ -150,6 +154,12 @@ RtlFindMostSignificantBit(ULONGLONG Value)
 {
     ULONG Position;
 
+#ifdef _M_AMD64
+    if (BitScanReverse64(&Position, Value))
+    {
+        return (CCHAR)Position;
+    }
+#else
     if (BitScanReverse(&Position, Value >> 32))
     {
         return (CCHAR)(Position + 32);
@@ -158,7 +168,7 @@ RtlFindMostSignificantBit(ULONGLONG Value)
     {
         return (CCHAR)Position;
     }
-
+#endif
     return -1;
 }
 
@@ -168,6 +178,12 @@ RtlFindLeastSignificantBit(ULONGLONG Value)
 {
     ULONG Position;
 
+#ifdef _M_AMD64
+    if (BitScanForward64(&Position, Value))
+    {
+        return (CCHAR)Position;
+    }
+#else
     if (BitScanForward(&Position, (ULONG)Value))
     {
         return (CCHAR)Position;
@@ -176,7 +192,7 @@ RtlFindLeastSignificantBit(ULONGLONG Value)
     {
         return (CCHAR)(Position + 32);
     }
-
+#endif
     return -1;
 }
 
@@ -365,6 +381,11 @@ RtlAreBitsClear(
     IN ULONG StartingIndex,
     IN ULONG Length)
 {
+    /* Verify parameters */
+    if ((StartingIndex + Length > BitMapHeader->SizeOfBitMap) ||
+        (StartingIndex + Length <= StartingIndex))
+        return FALSE;
+
     return RtlpGetLengthOfRunClear(BitMapHeader, StartingIndex, Length) >= Length;
 }
 
@@ -375,6 +396,11 @@ RtlAreBitsSet(
     IN ULONG StartingIndex,
     IN ULONG Length)
 {
+    /* Verify parameters */
+    if ((StartingIndex + Length > BitMapHeader->SizeOfBitMap) ||
+        (StartingIndex + Length <= StartingIndex))
+        return FALSE;
+
     return RtlpGetLengthOfRunSet(BitMapHeader, StartingIndex, Length) >= Length;
 }
 
@@ -384,16 +410,18 @@ RtlNumberOfSetBits(
     IN PRTL_BITMAP BitMapHeader)
 {
     PUCHAR Byte, MaxByte;
-    ULONG BitCount = 0;
+    ULONG BitCount = 0, Shift;
 
     Byte = (PUCHAR)BitMapHeader->Buffer;
-    MaxByte = Byte + (BitMapHeader->SizeOfBitMap + 7) / 8;
+    MaxByte = Byte + BitMapHeader->SizeOfBitMap / 8;
 
-    do
+    while (Byte < MaxByte)
     {
         BitCount += BitCountTable[*Byte++];
     }
-    while (Byte <= MaxByte);
+
+    Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
+    BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
 
     return BitCount;
 }
@@ -422,10 +450,14 @@ RtlFindClearBits(
         return MAXULONG;
     }
 
+    /* Check if the hint is outside the bitmap */
+    if (HintIndex >= BitMapHeader->SizeOfBitMap) HintIndex = 0;
+
     /* Check for trivial case */
     if (NumberToFind == 0)
     {
-        return HintIndex;
+        /* Return hint rounded down to byte margin */
+        return HintIndex & ~7;
     }
 
     /* First margin is end of bitmap */
@@ -486,10 +518,14 @@ RtlFindSetBits(
         return MAXULONG;
     }
 
+    /* Check if the hint is outside the bitmap */
+    if (HintIndex >= BitMapHeader->SizeOfBitMap) HintIndex = 0;
+
     /* Check for trivial case */
     if (NumberToFind == 0)
     {
-        return HintIndex;
+        /* Return hint rounded down to byte margin */
+        return HintIndex & ~7;
     }
 
     /* First margin is end of bitmap */
@@ -590,6 +626,13 @@ RtlFindNextForwardRunClear(
 {
     ULONG Length;
 
+    /* Check for buffer overrun */
+    if (FromIndex >= BitMapHeader->SizeOfBitMap)
+    {
+        *StartingRunIndex = FromIndex;
+        return 0;
+    }
+
     /* Assume a set run first, count it's length */
     Length = RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);
     *StartingRunIndex = FromIndex + Length;
@@ -606,6 +649,13 @@ RtlFindNextForwardRunSet(
     IN PULONG StartingRunIndex)
 {
     ULONG Length;
+
+    /* Check for buffer overrun */
+    if (FromIndex >= BitMapHeader->SizeOfBitMap)
+    {
+        *StartingRunIndex = FromIndex;
+        return 0;
+    }
 
     /* Assume a clear run first, count it's length */
     Length = RtlpGetLengthOfRunClear(BitMapHeader, FromIndex, MAXULONG);

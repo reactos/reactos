@@ -109,23 +109,16 @@ err:
  */
 static BOOL msi_columns_in_order(MSIINSERTVIEW *iv, UINT col_count)
 {
-    LPWSTR a, b = NULL;
+    LPCWSTR a, b;
     UINT i;
-    int res;
 
     for (i = 1; i <= col_count; i++)
     {
         iv->sv->ops->get_column_info(iv->sv, i, &a, NULL, NULL, NULL);
         iv->table->ops->get_column_info(iv->table, i, &b, NULL, NULL, NULL);
 
-        res = strcmpW( a, b );
-        msi_free(a);
-        msi_free(b);
-
-        if (res != 0)
-            return FALSE;
+        if (strcmpW( a, b )) return FALSE;
     }
-
     return TRUE;
 }
 
@@ -137,8 +130,7 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
     MSIRECORD *padded;
     UINT col_count, val_count;
     UINT r, i, colidx;
-    LPWSTR a, b = NULL;
-    int res;
+    LPCWSTR a, b;
 
     r = iv->table->ops->get_dimensions(iv->table, NULL, &col_count);
     if (r != ERROR_SUCCESS)
@@ -169,22 +161,15 @@ static UINT msi_arrange_record(MSIINSERTVIEW *iv, MSIRECORD **values)
             if (r != ERROR_SUCCESS)
                 goto err;
 
-            res = strcmpW( a, b );
-            msi_free(b);
-
-            if (res == 0)
+            if (!strcmpW( a, b ))
             {
                 MSI_RecordCopyField(*values, colidx, padded, i);
                 break;
             }
         }
-
-        msi_free(a);
     }
-
     msiobj_release(&(*values)->hdr);
     *values = padded;
-
     return ERROR_SUCCESS;
 
 err:
@@ -293,9 +278,8 @@ static UINT INSERT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
     return sv->ops->get_dimensions( sv, rows, cols );
 }
 
-static UINT INSERT_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
-                LPWSTR *table_name)
+static UINT INSERT_get_column_info( struct tagMSIVIEW *view, UINT n, LPCWSTR *name,
+                                    UINT *type, BOOL *temporary, LPCWSTR *table_name )
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
     MSIVIEW *sv;

@@ -151,7 +151,7 @@ CDmaChannelInit::CopyTo(
     DPRINT("CDmaChannelInit_CopyTo: this %p Destination %p Source %p ByteCount %u\n", this, Destination, Source, ByteCount);
     RtlCopyMemory(Destination, Source, ByteCount);
 }
-  
+
 VOID
 NTAPI
 CDmaChannelInit::FreeBuffer()
@@ -217,7 +217,7 @@ CDmaChannelInit::PhysicalAddress(
     PHYSICAL_ADDRESS Result;
 
     Address->QuadPart = m_Address.QuadPart;
-    Result.QuadPart = (PtrToUlong(Address));
+    Result.QuadPart = (ULONG_PTR)Address;
     return Result;
 }
 
@@ -365,7 +365,7 @@ CDmaChannelInit::Stop()
     if (!m_DmaStarted)
         return STATUS_SUCCESS;
 
-    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter, 
+    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter,
                                                        m_Mdl,
                                                        m_MapRegisterBase,
                                                        (PVOID)((ULONG_PTR)m_Mdl->StartVa + m_Mdl->ByteOffset),

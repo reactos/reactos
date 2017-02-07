@@ -60,9 +60,9 @@
 @ stdcall -arch=i386 KiFastSystemCall()
 @ stdcall -arch=i386 KiFastSystemCallRet()
 @ stdcall -arch=i386 KiIntSystemCall()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListEnd()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListFault()
-@ stdcall -arch=i386 ExpInterlockedPopEntrySListResume()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListEnd()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListFault()
+@ stdcall -arch=i386,x86_64 ExpInterlockedPopEntrySListResume()
 @ stdcall KiRaiseUserExceptionDispatcher()
 @ stdcall KiUserApcDispatcher(ptr ptr ptr ptr)
 @ stdcall KiUserCallbackDispatcher(ptr ptr long) ; CHECKME
@@ -83,7 +83,7 @@
 @ stdcall LdrFindResource_U(long ptr long ptr)
 ;@ stdcall LdrFlushAlternateResourceModules
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
-@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr) 
+@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 ;@ stdcall LdrHotPatchRoutine
 ;@ stdcall LdrInitShimEngineDynamic
@@ -417,7 +417,7 @@
 @ stdcall RtlAcquireSRWLockExclusive(ptr)
 @ stdcall RtlAcquireSRWLockShared(ptr)
 @ stdcall RtlActivateActivationContext(long ptr ptr)
-;@ stdcall RtlActivateActivationContextEx
+@ stdcall RtlActivateActivationContextEx(long ptr ptr ptr)
 @ fastcall RtlActivateActivationContextUnsafeFast(ptr ptr)
 @ stdcall RtlAddAccessAllowedAce(ptr long long ptr)
 @ stdcall RtlAddAccessAllowedAceEx(ptr long long long ptr)
@@ -483,7 +483,7 @@
 @ stdcall RtlCompareUnicodeString (ptr ptr long)
 @ stdcall RtlCompressBuffer(long ptr long ptr long long ptr ptr)
 @ stdcall RtlComputeCrc32(long ptr long)
-;@ stdcall RtlComputeImportTableHash
+@ stdcall RtlComputeImportTableHash(ptr ptr long)
 ;@ stdcall RtlComputePrivatizedDllName_U
 ;@ stdcall RtlConsoleMultiByteToUnicodeN
 @ stdcall RtlConvertExclusiveToShared(ptr)
@@ -681,7 +681,7 @@
 @ stdcall RtlGetSaclSecurityDescriptor(ptr ptr ptr ptr)
 @ stdcall RtlGetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlGetSetBootStatusData(ptr long long ptr long long)
-;@ stdcall RtlGetThreadErrorMode
+@ stdcall RtlGetThreadErrorMode()
 ;@ stdcall RtlGetUnloadEventTrace
 @ stdcall RtlGetUserInfoHeap(ptr long ptr ptr ptr)
 @ stdcall RtlGetVersion(ptr)
@@ -894,9 +894,9 @@
 @ stdcall RtlSetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
 ;@ stdcall RtlSetSecurityObjectEx
-;@ stdcall RtlSetThreadErrorMode
-;@ stdcall RtlSetThreadIsCritical
-;@ stdcall RtlSetThreadPoolStartFunc
+@ stdcall RtlSetThreadErrorMode(long ptr)
+@ stdcall RtlSetThreadIsCritical(long ptr long)
+@ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
 @ stdcall RtlSetTimeZoneInformation(ptr)
 ;@ stdcall RtlSetTimer
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)
@@ -1292,11 +1292,11 @@
 @ stdcall ZwWriteRequestData(ptr ptr long ptr long ptr)
 @ stdcall ZwWriteVirtualMemory(long ptr ptr long ptr)
 @ stdcall ZwYieldExecution()
-;@ cdecl _CIcos
-;@ cdecl _CIlog
-;@ cdecl -private -arch=i386 _CIpow()
-;@ cdecl _CIsin
-;@ cdecl _CIsqrt
+@ cdecl -arch=i386 _CIcos()
+@ cdecl -arch=i386 _CIlog()
+@ cdecl -arch=i386 _CIpow()
+@ cdecl -arch=i386 _CIsin()
+@ cdecl -arch=i386 _CIsqrt()
 @ cdecl -arch=x86_64 __C_specific_handler(ptr long ptr ptr)
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
@@ -1314,7 +1314,7 @@
 @ cdecl -arch=i386 _aulldvrm()
 @ cdecl -arch=i386 -ret64 _aullrem(double double)
 @ cdecl -arch=i386 _aullshr()
-@ cdecl -arch=i386 -norelay _chkstk()
+@ extern -arch=i386 _chkstk
 @ cdecl -arch=i386,x86_64 _fltused()
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl _i64toa(double ptr long)
@@ -1343,7 +1343,7 @@
 @ cdecl _ui64tow(double ptr long)
 @ cdecl _ultoa(long ptr long)
 @ cdecl _ultow(long ptr long)
-;@ cdecl _vscwprintf
+@ cdecl _vscwprintf(wstr ptr)
 @ cdecl _vsnprintf(ptr long str ptr)
 @ cdecl _vsnwprintf(ptr long wstr ptr)
 @ cdecl _wcsicmp(wstr wstr)

@@ -16,33 +16,417 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef INT (WINAPI *MessageBoxW_Proc) (HWND, LPCWSTR, LPCWSTR, UINT);
-
 /* GLOBALS *******************************************************************/
 
-static UNICODE_STRING CommandLineStringW;
-static ANSI_STRING CommandLineStringA;
+WaitForInputIdleType UserWaitForInputIdleRoutine;
+UNICODE_STRING BaseUnicodeCommandLine;
+ANSI_STRING BaseAnsiCommandLine;
 UNICODE_STRING BasePathVariableName = RTL_CONSTANT_STRING(L"PATH");
+LPSTARTUPINFOA BaseAnsiStartupInfo = NULL;
+PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
+BOOLEAN g_AppCertInitialized;
+BOOLEAN g_HaveAppCerts;
+LIST_ENTRY BasepAppCertDllsList;
+RTL_CRITICAL_SECTION gcsAppCert;
+PBASEP_APPCERT_EMBEDDED_FUNC fEmbeddedCertFunc;
+NTSTATUS g_AppCertStatus;
+RTL_QUERY_REGISTRY_TABLE BasepAppCertTable[2] =
+{
+    {
+        BasepConfigureAppCertDlls,
+        1,
+        L"AppCertDlls",
+        &BasepAppCertDllsList,
+        0,
+        NULL,
+        0
+    }
+};
 
-static BOOL bCommandLineInitialized = FALSE;
-
-WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
-
-LPSTARTUPINFOA lpLocalStartupInfo = NULL;
+PSAFER_REPLACE_PROCESS_THREAD_TOKENS g_SaferReplaceProcessThreadTokens;
+HMODULE gSaferHandle = (HMODULE)-1;
 
 VOID WINAPI
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
 
-PLDR_DATA_TABLE_ENTRY BasepExeLdrEntry;
-
 #define CMD_STRING L"cmd /c "
 
-extern __declspec(noreturn)
-VOID
-CALLBACK
-ConsoleControlDispatcher(DWORD CodeAndFlag);
-
 /* FUNCTIONS ****************************************************************/
+
+VOID
+WINAPI
+StuffStdHandle(IN HANDLE ProcessHandle,
+               IN HANDLE StandardHandle,
+               IN PHANDLE Address)
+{
+    NTSTATUS Status;
+    HANDLE DuplicatedHandle;
+    SIZE_T Dummy;
+
+    /* Duplicate the handle */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               StandardHandle,
+                               ProcessHandle,
+                               &DuplicatedHandle,
+                               DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES,
+                               0,
+                               0);
+    if (NT_SUCCESS(Status))
+    {
+        /* Write it */
+        NtWriteVirtualMemory(ProcessHandle,
+                             Address,
+                             &DuplicatedHandle,
+                             sizeof(HANDLE),
+                             &Dummy);
+    }
+}
+
+BOOLEAN
+WINAPI
+BuildSubSysCommandLine(IN LPWSTR SubsystemName,
+                       IN LPWSTR ApplicationName,
+                       IN LPWSTR CommandLine,
+                       OUT PUNICODE_STRING SubsysCommandLine)
+{
+    UNICODE_STRING CommandLineString, ApplicationNameString;
+    PWCHAR Buffer;
+    ULONG Length;
+
+    /* Convert to unicode strings */
+    RtlInitUnicodeString(&CommandLineString, ApplicationName);
+    RtlInitUnicodeString(&ApplicationNameString, CommandLine);
+
+    /* Allocate buffer for the output string */
+    Length = CommandLineString.MaximumLength + ApplicationNameString.MaximumLength + 32;
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    RtlInitEmptyUnicodeString(SubsysCommandLine, Buffer, Length);
+    if (!Buffer)
+    {
+        /* Fail, no memory */
+        BaseSetLastNTError(STATUS_NO_MEMORY);
+        return FALSE;
+    }
+
+    /* Build the final subsystem command line */
+    RtlAppendUnicodeToString(SubsysCommandLine, SubsystemName);
+    RtlAppendUnicodeStringToString(SubsysCommandLine, &CommandLineString);
+    RtlAppendUnicodeToString(SubsysCommandLine, L" /C ");
+    RtlAppendUnicodeStringToString(SubsysCommandLine, &ApplicationNameString);
+    return TRUE;
+}
+
+BOOLEAN
+WINAPI
+BasepIsImageVersionOk(IN ULONG ImageMajorVersion,
+                      IN ULONG ImageMinorVersion)
+{
+    /* Accept images for NT 3.1 or higher, as long as they're not newer than us */
+    return ((ImageMajorVersion >= 3) &&
+            ((ImageMajorVersion != 3) ||
+             (ImageMinorVersion >= 10)) &&
+            (ImageMajorVersion <= SharedUserData->NtMajorVersion) &&
+            ((ImageMajorVersion != SharedUserData->NtMajorVersion) ||
+             (ImageMinorVersion <= SharedUserData->NtMinorVersion)));
+}
+
+NTSTATUS
+WINAPI
+BasepCheckWebBladeHashes(IN HANDLE FileHandle)
+{
+    NTSTATUS Status;
+    CHAR Hash[16];
+
+    /* Get all the MD5 hashes */
+    Status = RtlComputeImportTableHash(FileHandle, Hash, 1);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Depending on which suite this is, run a bsearch and block the appropriate ones */
+    if (SharedUserData->SuiteMask & VER_SUITE_COMPUTE_SERVER)
+    {
+        DPRINT1("Egad! This is a ReactOS Compute Server and we should prevent you from using certain APIs...but we won't.");
+    }
+    else if (SharedUserData->SuiteMask & VER_SUITE_STORAGE_SERVER)
+    {
+        DPRINT1("Gasp! This is a ReactOS Storage Server and we should prevent you from using certain APIs...but we won't.");
+    }
+    else if (SharedUserData->SuiteMask & VER_SUITE_BLADE)
+    {
+        DPRINT1("Golly! This is a ReactOS Web Blade Server and we should prevent you from using certain APIs...but we won't.");
+    }
+
+    /* Actually, fuck it, don't block anything, we're open source */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+BasepSaveAppCertRegistryValue(IN PLIST_ENTRY List,
+                              IN PWCHAR ComponentName,
+                              IN PWCHAR DllName)
+{
+    /* Pretty much the only thing this key is used for, is malware */
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+BasepConfigureAppCertDlls(IN PWSTR ValueName,
+                          IN ULONG ValueType,
+                          IN PVOID ValueData,
+                          IN ULONG ValueLength,
+                          IN PVOID Context,
+                          IN PVOID EntryContext)
+{
+    /* Add this to the certification list */
+    return BasepSaveAppCertRegistryValue(Context, ValueName, ValueData);
+}
+
+NTSTATUS
+WINAPI
+BasepIsProcessAllowed(IN PCHAR ApplicationName)
+{
+    NTSTATUS Status;
+    PWCHAR Buffer;
+    UINT Length;
+    HMODULE TrustLibrary;
+    PBASEP_APPCERT_ENTRY Entry;
+    ULONG CertFlag;
+    PLIST_ENTRY NextEntry;
+    HANDLE KeyHandle;
+    UNICODE_STRING CertKey = RTL_CONSTANT_STRING(L"\\Registry\\MACHINE\\System\\CurrentControlSet\\Control\\Session Manager\\AppCertDlls");
+    OBJECT_ATTRIBUTES KeyAttributes = RTL_CONSTANT_OBJECT_ATTRIBUTES(&CertKey, OBJ_CASE_INSENSITIVE);
+
+    /* Try to initialize the certification subsystem */
+    while (!g_AppCertInitialized)
+    {
+        /* Defaults */
+        Status = STATUS_SUCCESS;
+        Buffer = NULL;
+
+        /* Acquire the lock while initializing and see if we lost a race */
+        RtlEnterCriticalSection(&gcsAppCert);
+        if (g_AppCertInitialized) break;
+
+        /* On embedded, there is a special DLL */
+        if (SharedUserData->SuiteMask & VER_SUITE_EMBEDDEDNT)
+        {
+            /* Allocate a buffer for the name */
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                     0,
+                                     MAX_PATH * sizeof(WCHAR) +
+                                     sizeof(UNICODE_NULL));
+            if (!Buffer)
+            {
+                /* Fail if no memory */
+                Status = STATUS_NO_MEMORY;
+            }
+            else
+            {
+                /* Now get the system32 directory in our buffer, make sure it fits */
+                Length = GetSystemDirectoryW(Buffer, MAX_PATH - sizeof("EmbdTrst.DLL"));
+                if ((Length) && (Length <= MAX_PATH - sizeof("EmbdTrst.DLL")))
+                {
+                    /* Add a slash if needed, and add the embedded cert DLL name */
+                    if (Buffer[Length - 1] != '\\') Buffer[Length++] = '\\';
+                    RtlCopyMemory(&Buffer[Length],
+                                  L"EmbdTrst.DLL",
+                                  sizeof(L"EmbdTrst.DLL"));
+
+                    /* Try to load it */
+                    TrustLibrary = LoadLibraryW(Buffer);
+                    if (TrustLibrary)
+                    {
+                        /* And extract the special function out of it */
+                        fEmbeddedCertFunc = (PVOID)GetProcAddress(TrustLibrary,
+                                                                  "ImageOkToRunOnEmbeddedNT");
+                    }
+                }
+
+                /* If we didn't get this far, set a failure code */
+                if (!fEmbeddedCertFunc) Status = STATUS_UNSUCCESSFUL;
+            }
+        }
+        else
+        {
+            /* Other systems have a registry entry for this */
+            Status = NtOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+            if (NT_SUCCESS(Status))
+            {
+                /* Close it, we'll query it through Rtl */
+                NtClose(KeyHandle);
+
+                /* Do the query, which will call a special callback */
+                Status = RtlQueryRegistryValues(2,
+                                                L"Session Manager",
+                                                BasepAppCertTable,
+                                                0,
+                                                0);
+                if (Status == 0xC0000034) Status = STATUS_SUCCESS;
+            }
+        }
+
+        /* Free any buffer if we had one */
+        if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+        /* Check for errors, or a missing embedded/custom certification DLL */
+        if (!NT_SUCCESS(Status) ||
+            (!(fEmbeddedCertFunc) && (IsListEmpty(&BasepAppCertDllsList))))
+        {
+            /* The subsystem is not active on this machine, so give up */
+            g_HaveAppCerts = FALSE;
+            g_AppCertStatus = Status;
+        }
+        else
+        {
+            /* We have certification DLLs active, remember this */
+            g_HaveAppCerts = TRUE;
+        }
+
+        /* We are done the initialization phase, release the lock */
+        g_AppCertInitialized = TRUE;
+        RtlLeaveCriticalSection(&gcsAppCert);
+    }
+
+    /* If there's no certification DLLs present, return the failure code */
+    if (!g_HaveAppCerts) return g_AppCertStatus;
+
+    /* Otherwise, assume success and make sure we have *something* */
+    ASSERT(fEmbeddedCertFunc || !IsListEmpty(&BasepAppCertDllsList));
+    Status = STATUS_SUCCESS;
+
+    /* If the something is an embedded certification DLL, call it and return */
+    if (fEmbeddedCertFunc) return fEmbeddedCertFunc(ApplicationName);
+
+    /* Otherwise we have custom certification DLLs, parse them */
+    NextEntry = BasepAppCertDllsList.Flink;
+    CertFlag = 2;
+    while (NextEntry != &BasepAppCertDllsList)
+    {
+        /* Make sure the entry has a callback */
+        Entry = CONTAINING_RECORD(NextEntry, BASEP_APPCERT_ENTRY, Entry);
+        ASSERT(Entry->fPluginCertFunc != NULL);
+
+        /* Call it and check if it failed */
+        Status = Entry->fPluginCertFunc(ApplicationName, 1);
+        if (!NT_SUCCESS(Status)) CertFlag = 3;
+
+        /* Move on */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Now loop them again */
+    NextEntry = BasepAppCertDllsList.Flink;
+    while (NextEntry != &BasepAppCertDllsList)
+    {
+        /* Make sure the entry has a callback */
+        Entry = CONTAINING_RECORD(NextEntry, BASEP_APPCERT_ENTRY, Entry);
+        ASSERT(Entry->fPluginCertFunc != NULL);
+
+        /* Call it, this time with the flag from the loop above */
+        Status = Entry->fPluginCertFunc(ApplicationName, CertFlag);
+    }
+
+    /* All done, return the status */
+    return Status;
+}
+
+NTSTATUS
+WINAPI
+BasepReplaceProcessThreadTokens(IN HANDLE TokenHandle,
+                                IN HANDLE ProcessHandle,
+                                IN HANDLE ThreadHandle)
+{
+    NTSTATUS Status;
+    ANSI_STRING SaferiReplaceProcessThreadTokens = RTL_CONSTANT_STRING("SaferiReplaceProcessThreadTokens");
+
+    /* Enter the application certification lock */
+    RtlEnterCriticalSection(&gcsAppCert);
+
+    /* Check if we already know the function */
+    if (g_SaferReplaceProcessThreadTokens)
+    {
+        /* Call it */
+        Status = g_SaferReplaceProcessThreadTokens(TokenHandle,
+                                                   ProcessHandle,
+                                                   ThreadHandle) ?
+                                                   STATUS_SUCCESS :
+                                                   STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Check if the app certification DLL isn't loaded */
+        if (!(gSaferHandle) ||
+            (gSaferHandle == (HMODULE)-1) ||
+            (gSaferHandle == (HMODULE)-2))
+        {
+            /* Then we can't call the function */
+            Status = STATUS_ENTRYPOINT_NOT_FOUND;
+        }
+        else
+        {
+            /* We have the DLL, find the address of the Safer function */
+            Status = LdrGetProcedureAddress(gSaferHandle,
+                                            &SaferiReplaceProcessThreadTokens,
+                                            0,
+                                            (PVOID*)&g_SaferReplaceProcessThreadTokens);
+            if (NT_SUCCESS(Status))
+            {
+                /* Found it, now call it */
+                Status = g_SaferReplaceProcessThreadTokens(TokenHandle,
+                                                           ProcessHandle,
+                                                           ThreadHandle) ?
+                                                           STATUS_SUCCESS :
+                                                           STATUS_UNSUCCESSFUL;
+            }
+            else
+            {
+                /* We couldn't find it, so this must be an unsupported DLL */
+                LdrUnloadDll(gSaferHandle);
+                gSaferHandle = NULL;
+                Status = STATUS_ENTRYPOINT_NOT_FOUND;
+            }
+        }
+    }
+
+    /* Release the lock and return the result */
+    RtlLeaveCriticalSection(&gcsAppCert);
+    return Status;
+}
+
+VOID
+WINAPI
+BasepSxsCloseHandles(IN PBASE_MSG_SXS_HANDLES Handles)
+{
+    NTSTATUS Status;
+
+    /* Sanity checks */
+    ASSERT(Handles != NULL);
+    ASSERT(Handles->Process == NULL || Handles->Process == NtCurrentProcess());
+
+    /* Close the file handle */
+    if (Handles->File)
+    {
+        Status = NtClose(Handles->File);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Close the section handle */
+    if (Handles->Section)
+    {
+        Status = NtClose(Handles->Section);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Unmap the section view */
+    if (Handles->ViewBase.QuadPart)
+    {
+        Status = NtUnmapViewOfSection(NtCurrentProcess(),
+                                      (PVOID)Handles->ViewBase.LowPart);
+        ASSERT(NT_SUCCESS(Status));
+    }
+}
 
 static
 LONG BaseExceptionFilter(EXCEPTION_POINTERS *ExceptionInfo)
@@ -75,8 +459,6 @@ VOID
 WINAPI
 BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
 {
-    UINT uExitCode = 0;
-
     DPRINT("BaseProcessStartup(..) - setting up exception frame.\n");
 
     _SEH2_TRY
@@ -88,53 +470,23 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
                                sizeof(PPROCESS_START_ROUTINE));
 
         /* Call the Start Routine */
-        uExitCode = (lpStartAddress)();
+        ExitThread(lpStartAddress());
     }
     _SEH2_EXCEPT(BaseExceptionFilter(_SEH2_GetExceptionInformation()))
     {
-        /* Get the SEH Error */
-        uExitCode = _SEH2_GetExceptionCode();
+        /* Get the Exit code from the SEH Handler */
+        if (!BaseRunningInServerProcess)
+        {
+            /* Kill the whole process, usually */
+            ExitProcess(_SEH2_GetExceptionCode());
+        }
+        else
+        {
+            /* If running inside CSRSS, kill just this thread */
+            ExitThread(_SEH2_GetExceptionCode());
+        }
     }
     _SEH2_END;
-
-    /* Exit the Process with our error */
-    ExitProcess(uExitCode);
-}
-
-/*
- * Tells CSR that a new process was created
- */
-NTSTATUS
-WINAPI
-BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
-                         IN HANDLE ProcessId,
-                         IN BOOL InheritHandles)
-{
-    ULONG Request = CREATE_PROCESS;
-    CSR_API_MESSAGE CsrRequest;
-    NTSTATUS Status;
-
-    DPRINT("BasepNotifyCsrOfCreation: Process: %lx, Flags %lx\n",
-            ProcessId, dwCreationFlags);
-
-    /* Fill out the request */
-    CsrRequest.Data.CreateProcessRequest.NewProcessId = ProcessId;
-    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
-    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
-
-    /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
-                                 NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
-    {
-        DPRINT1("Failed to tell csrss about new process\n");
-        return CsrRequest.Status;
-    }
-
-    /* Return Success */
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -160,7 +512,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        DPRINT1("Failed to tell csrss about new thread\n");
+        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, CsrRequest.Status);
         return CsrRequest.Status;
     }
 
@@ -176,7 +528,9 @@ WINAPI
 BasepCreateFirstThread(HANDLE ProcessHandle,
                        LPSECURITY_ATTRIBUTES lpThreadAttributes,
                        PSECTION_IMAGE_INFORMATION SectionImageInfo,
-                       PCLIENT_ID ClientId)
+                       PCLIENT_ID ClientId,
+                       BOOLEAN InheritHandles,
+                       DWORD dwCreationFlags)
 {
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
@@ -184,7 +538,8 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     INITIAL_TEB InitialTeb;
     NTSTATUS Status;
     HANDLE hThread;
-
+    ULONG Request = CREATE_PROCESS;
+    CSR_API_MESSAGE CsrRequest;
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
     /* Create the Thread's Stack */
@@ -219,10 +574,22 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
         return NULL;
     }
 
-    Status = BasepNotifyCsrOfThread(hThread, ClientId);
-    if (!NT_SUCCESS(Status))
+    /* Fill out the request to notify CSRSS */
+    CsrRequest.Data.CreateProcessRequest.ClientId = *ClientId;
+    CsrRequest.Data.CreateProcessRequest.ProcessHandle = ProcessHandle;
+    CsrRequest.Data.CreateProcessRequest.ThreadHandle = hThread;
+    CsrRequest.Data.CreateProcessRequest.CreationFlags = dwCreationFlags;
+    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
+
+    /* Call CSR */
+    Status = CsrClientCallServer(&CsrRequest,
+                                 NULL,
+                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        ASSERT(FALSE);
+        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
+        return NULL;
     }
 
     /* Success */
@@ -375,58 +742,33 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
     }
 }
 
-VOID
+BOOLEAN
 WINAPI
-BasepCopyHandles(IN PRTL_USER_PROCESS_PARAMETERS Params,
-                 IN PRTL_USER_PROCESS_PARAMETERS PebParams,
-                 IN BOOL InheritHandles)
-{
-    DPRINT("BasepCopyHandles %p %p, %d\n", Params, PebParams, InheritHandles);
-
-    /* Copy the handle if we are inheriting or if it's a console handle */
-    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardInput)))
-    {
-        Params->StandardInput = PebParams->StandardInput;
-    }
-
-    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardOutput)))
-    {
-        Params->StandardOutput = PebParams->StandardOutput;
-    }
-
-    if ((InheritHandles) || (IsConsoleHandle(PebParams->StandardError)))
-    {
-        Params->StandardError = PebParams->StandardError;
-    }
-}
-
-NTSTATUS
-WINAPI
-BasePushProcessParameters(IN HANDLE ProcessHandle,
-                          IN PPEB Peb,
-                          IN LPWSTR ApplicationPathName,
+BasePushProcessParameters(IN ULONG ParameterFlags,
+                          IN HANDLE ProcessHandle,
+                          IN PPEB RemotePeb,
+                          IN LPCWSTR ApplicationPathName,
                           IN LPWSTR lpCurrentDirectory,
                           IN LPWSTR lpCommandLine,
                           IN LPVOID lpEnvironment,
-                          IN SIZE_T EnvSize,
                           IN LPSTARTUPINFOW StartupInfo,
                           IN DWORD CreationFlags,
-                          IN BOOL InheritHandles)
+                          IN BOOL InheritHandles,
+                          IN ULONG ImageSubsystem,
+                          IN PVOID AppCompatData,
+                          IN ULONG AppCompatDataSize)
 {
     WCHAR FullPath[MAX_PATH + 5];
-    LPWSTR Remaining;
-    LPWSTR DllPathString;
-    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-    PRTL_USER_PROCESS_PARAMETERS RemoteParameters = NULL;
+    PWCHAR Remaining, DllPathString, ScanChar;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters, RemoteParameters;
+    PVOID RemoteAppCompatData;
     UNICODE_STRING DllPath, ImageName, CommandLine, CurrentDirectory;
+    UNICODE_STRING Desktop, Shell, Runtime, Title;
     NTSTATUS Status;
-    PWCHAR ScanChar;
     ULONG EnviroSize;
     SIZE_T Size;
-    UNICODE_STRING Desktop, Shell, Runtime, Title;
-    PPEB OurPeb = NtCurrentPeb();
-    LPVOID Environment = lpEnvironment;
-    DPRINT("BasePushProcessParameters\n");
+    BOOLEAN HavePebLock = FALSE, Result;
+    PPEB Peb = NtCurrentPeb();
 
     /* Get the full path name */
     Size = GetFullPathNameW(ApplicationPathName,
@@ -436,25 +778,34 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     if ((Size) && (Size <= (MAX_PATH + 4)))
     {
         /* Get the DLL Path */
-        DllPathString = BaseComputeProcessDllPath(ApplicationPathName,
-                                                  Environment);
-        if (!DllPathString) return STATUS_NO_MEMORY;
-
-        /* Initialize Strings */
-        RtlInitUnicodeString(&DllPath, DllPathString);
-        RtlInitUnicodeString(&ImageName, ApplicationPathName);
-    }
-    else
-    {
-        /* Get the DLL Path */
-        DllPathString = BaseComputeProcessDllPath(FullPath, Environment);
-        if (!DllPathString) return STATUS_NO_MEMORY;
+        DllPathString = BaseComputeProcessDllPath(FullPath, lpEnvironment);
+        if (!DllPathString)
+        {
+            /* Fail */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
 
         /* Initialize Strings */
         RtlInitUnicodeString(&DllPath, DllPathString);
         RtlInitUnicodeString(&ImageName, FullPath);
     }
-    DPRINT("DllPath: %wZ, ImageName: %wZ\n", DllPath, ImageName);
+    else
+    {
+        /* Couldn't get the path name. Just take the original path */
+        DllPathString = BaseComputeProcessDllPath((LPWSTR)ApplicationPathName,
+                                                  lpEnvironment);
+        if (!DllPathString)
+        {
+            /* Fail */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Initialize Strings */
+        RtlInitUnicodeString(&DllPath, DllPathString);
+        RtlInitUnicodeString(&ImageName, ApplicationPathName);
+    }
 
     /* Initialize Strings */
     RtlInitUnicodeString(&CommandLine, lpCommandLine);
@@ -490,65 +841,79 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     Runtime.Buffer = (LPWSTR)StartupInfo->lpReserved2;
     Runtime.MaximumLength = Runtime.Length = StartupInfo->cbReserved2;
 
+    /* Enforce no app compat data if the pointer was NULL */
+    if (!AppCompatData) AppCompatDataSize = 0;
+
     /* Create the Parameter Block */
-    DPRINT("Creating Process Parameters: %wZ %wZ %wZ %wZ %wZ %wZ %wZ\n",
-            &ImageName, &DllPath, &CommandLine, &Desktop, &Title, &Shell,
-            &Runtime);
+    ProcessParameters = NULL;
     Status = RtlCreateProcessParameters(&ProcessParameters,
                                         &ImageName,
                                         &DllPath,
                                         lpCurrentDirectory ?
                                         &CurrentDirectory : NULL,
                                         &CommandLine,
-                                        Environment,
+                                        lpEnvironment,
                                         &Title,
                                         &Desktop,
                                         &Shell,
                                         &Runtime);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create process parameters!\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) goto FailPath;
 
     /* Clear the current directory handle if not inheriting */
     if (!InheritHandles) ProcessParameters->CurrentDirectory.Handle = NULL;
 
+    /* Check if the user passed in an environment */
+    if (lpEnvironment)
+    {
+        /* We should've made it part of the parameters block, enforce this */
+        ASSERT(ProcessParameters->Environment == lpEnvironment);
+        lpEnvironment = ProcessParameters->Environment;
+    }
+    else
+    {
+        /* The user did not, so use the one from the current PEB */
+        HavePebLock = TRUE;
+        RtlAcquirePebLock();
+        lpEnvironment = Peb->ProcessParameters->Environment;
+    }
+
     /* Save pointer and start lookup */
-    Environment = ScanChar = ProcessParameters->Environment;
-    if (Environment)
+    ScanChar = lpEnvironment;
+    if (lpEnvironment)
     {
         /* Find the environment size */
-        while (*ScanChar) ScanChar += wcslen(ScanChar) + 1;
-        EnviroSize = (ULONG_PTR)ScanChar - (ULONG_PTR)Environment;
-        DPRINT("EnvironmentSize %ld\n", EnviroSize);
+        while ((ScanChar[0]) || (ScanChar[1])) ++ScanChar;
+        ScanChar += (2 * sizeof(UNICODE_NULL));
+        EnviroSize = (ULONG_PTR)ScanChar - (ULONG_PTR)lpEnvironment;
 
         /* Allocate and Initialize new Environment Block */
         Size = EnviroSize;
         ProcessParameters->Environment = NULL;
-        Status = ZwAllocateVirtualMemory(ProcessHandle,
+        Status = NtAllocateVirtualMemory(ProcessHandle,
                                          (PVOID*)&ProcessParameters->Environment,
                                          0,
                                          &Size,
                                          MEM_COMMIT,
                                          PAGE_READWRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to allocate Environment Block\n");
-            return Status;
-        }
+        if (!NT_SUCCESS(Status)) goto FailPath;
 
         /* Write the Environment Block */
-        Status = ZwWriteVirtualMemory(ProcessHandle,
+        Status = NtWriteVirtualMemory(ProcessHandle,
                                       ProcessParameters->Environment,
-                                      Environment,
+                                      lpEnvironment,
                                       EnviroSize,
                                       NULL);
-        if (!NT_SUCCESS(Status))
+
+        /* No longer need the PEB lock anymore */
+        if (HavePebLock)
         {
-            DPRINT1("Failed to write Environment Block\n");
-            return Status;
+            /* Release it */
+            RtlReleasePebLock();
+            HavePebLock = FALSE;
         }
+
+        /* Check if the write failed */
+        if (!NT_SUCCESS(Status)) goto FailPath;
     }
 
     /* Write new parameters */
@@ -566,7 +931,6 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     if (StartupInfo->dwFlags &
         (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE))
     {
-        DPRINT("Using Standard Handles\n");
         ProcessParameters->StandardInput = StartupInfo->hStdInput;
         ProcessParameters->StandardOutput = StartupInfo->hStdOutput;
         ProcessParameters->StandardError = StartupInfo->hStdError;
@@ -588,17 +952,28 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     else
     {
         /* Inherit our Console Handle */
-        ProcessParameters->ConsoleHandle = OurPeb->ProcessParameters->ConsoleHandle;
+        ProcessParameters->ConsoleHandle = Peb->ProcessParameters->ConsoleHandle;
 
-        /* Is the shell trampling on our Handles? */
+        /* Make sure that the shell isn't trampling on our handles first */
         if (!(StartupInfo->dwFlags &
              (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE)))
         {
-            /* Use handles from PEB, if inheriting or they are console */
-            DPRINT("Copying handles from parent\n");
-            BasepCopyHandles(ProcessParameters,
-                             OurPeb->ProcessParameters,
-                             InheritHandles);
+            /* Copy the handle if we are inheriting or if it's a console handle */
+            if ((InheritHandles) ||
+                (IsConsoleHandle(Peb->ProcessParameters->StandardInput)))
+            {
+                ProcessParameters->StandardInput = Peb->ProcessParameters->StandardInput;
+            }
+            if ((InheritHandles) ||
+                (IsConsoleHandle(Peb->ProcessParameters->StandardOutput)))
+            {
+                ProcessParameters->StandardOutput = Peb->ProcessParameters->StandardOutput;
+            }
+            if ((InheritHandles) ||
+                (IsConsoleHandle(Peb->ProcessParameters->StandardError)))
+            {
+                ProcessParameters->StandardError = Peb->ProcessParameters->StandardError;
+            }
         }
     }
 
@@ -608,32 +983,29 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
     {
         ProcessParameters->ConsoleFlags = 1;
     }
-    
+
     /* See if the first 1MB should be reserved */
-    if ((ULONG_PTR)ApplicationPathName & 1)
+    if (ParameterFlags & 1)
     {
         ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
     }
 
     /* See if the first 16MB should be reserved */
-    if ((ULONG_PTR)ApplicationPathName & 2)
+    if (ParameterFlags & 2)
     {
         ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB;
     }
 
     /* Allocate memory for the parameter block */
     Size = ProcessParameters->Length;
+    RemoteParameters = NULL;
     Status = NtAllocateVirtualMemory(ProcessHandle,
                                      (PVOID*)&RemoteParameters,
                                      0,
                                      &Size,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to allocate Parameters Block\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) goto FailPath;
 
     /* Set the allocated size */
     ProcessParameters->MaximumLength = Size;
@@ -645,7 +1017,7 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
                                  RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL : 0;
     ProcessParameters->Flags |= (CreationFlags & PROFILE_SERVER) ?
                                  RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER : 0;
-    ProcessParameters->Flags |= (NtCurrentPeb()->ProcessParameters->Flags &
+    ProcessParameters->Flags |= (Peb->ProcessParameters->Flags &
                                  RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS);
 
     /* Write the Parameter Block */
@@ -654,101 +1026,104 @@ BasePushProcessParameters(IN HANDLE ProcessHandle,
                                   ProcessParameters,
                                   ProcessParameters->Length,
                                   NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to write Parameters Block\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) goto FailPath;
 
     /* Write the PEB Pointer */
     Status = NtWriteVirtualMemory(ProcessHandle,
-                                  &Peb->ProcessParameters,
+                                  &RemotePeb->ProcessParameters,
                                   &RemoteParameters,
                                   sizeof(PVOID),
                                   NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) goto FailPath;
+
+    /* Check if there's any app compat data to write */
+    RemoteAppCompatData = NULL;
+    if (AppCompatData)
     {
-        DPRINT1("Failed to write Parameters Block\n");
-        return Status;
+        /* Allocate some space for the application compatibility data */
+        Size = AppCompatDataSize;
+        Status = NtAllocateVirtualMemory(ProcessHandle,
+                                         &RemoteAppCompatData,
+                                         0,
+                                         &Size,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status)) goto FailPath;
+
+        /* Write the application compatibility data */
+        Status = NtWriteVirtualMemory(ProcessHandle,
+                                      RemoteAppCompatData,
+                                      AppCompatData,
+                                      AppCompatDataSize,
+                                      NULL);
+        if (!NT_SUCCESS(Status)) goto FailPath;
     }
 
-    /* FIXME: Write Peb->ImageSubSystem */
+    /* Write the PEB Pointer to the app compat data (might be NULL) */
+    Status = NtWriteVirtualMemory(ProcessHandle,
+                                  &RemotePeb->pShimData,
+                                  &RemoteAppCompatData,
+                                  sizeof(PVOID),
+                                  NULL);
+    if (!NT_SUCCESS(Status)) goto FailPath;
 
+    /* Now write Peb->ImageSubSystem */
+    if (ImageSubsystem)
+    {
+        NtWriteVirtualMemory(ProcessHandle,
+                             &RemotePeb->ImageSubsystem,
+                             &ImageSubsystem,
+                             sizeof(ImageSubsystem),
+                             NULL);
+    }
 
+    /* Success path */
+    Result = TRUE;
+
+Quickie:
     /* Cleanup */
+    if (HavePebLock) RtlReleasePebLock();
     RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath.Buffer);
-    RtlDestroyProcessParameters(ProcessParameters);
-
-    DPRINT("Completed\n");
-    return STATUS_SUCCESS;
+    if (ProcessParameters) RtlDestroyProcessParameters(ProcessParameters);
+    return Result;
+FailPath:
+    DPRINT1("Failure to create proecss parameters: %lx\n", Status);
+    BaseSetLastNTError(Status);
+    Result = FALSE;
+    goto Quickie;
 }
 
 VOID
 WINAPI
 InitCommandLines(VOID)
 {
-    PRTL_USER_PROCESS_PARAMETERS Params;
+    NTSTATUS Status;
 
-    /* get command line */
-    Params = NtCurrentPeb()->ProcessParameters;
-    RtlNormalizeProcessParams (Params);
+    /* Read the UNICODE_STRING from the PEB */
+    BaseUnicodeCommandLine = NtCurrentPeb()->ProcessParameters->CommandLine;
 
-    /* initialize command line buffers */
-    CommandLineStringW.Length = Params->CommandLine.Length;
-    CommandLineStringW.MaximumLength = CommandLineStringW.Length + sizeof(WCHAR);
-    CommandLineStringW.Buffer = RtlAllocateHeap(GetProcessHeap(),
-                                                HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
-                                                CommandLineStringW.MaximumLength);
-    if (CommandLineStringW.Buffer == NULL)
-    {
-        return;
-    }
-
-    RtlInitAnsiString(&CommandLineStringA, NULL);
-
-    /* Copy command line */
-    RtlCopyUnicodeString(&CommandLineStringW,
-                         &(Params->CommandLine));
-    CommandLineStringW.Buffer[CommandLineStringW.Length / sizeof(WCHAR)] = 0;
-
-    /* convert unicode string to ansi (or oem) */
-    if (bIsFileApiAnsi)
-        RtlUnicodeStringToAnsiString(&CommandLineStringA,
-                                     &CommandLineStringW,
-                                     TRUE);
-    else
-        RtlUnicodeStringToOemString(&CommandLineStringA,
-                                    &CommandLineStringW,
-                                    TRUE);
-
-    CommandLineStringA.Buffer[CommandLineStringA.Length] = 0;
-
-    bCommandLineInitialized = TRUE;
+    /* Convert to ANSI_STRING for the *A callers */
+    Status = RtlUnicodeStringToAnsiString(&BaseAnsiCommandLine,
+                                          &BaseUnicodeCommandLine,
+                                          TRUE);
+    if (!NT_SUCCESS(Status)) RtlInitEmptyAnsiString(&BaseAnsiCommandLine, 0, 0);
 }
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessAffinityMask(HANDLE hProcess,
-                       PDWORD_PTR lpProcessAffinityMask,
-                       PDWORD_PTR lpSystemAffinityMask)
+GetProcessAffinityMask(IN HANDLE hProcess,
+                       OUT PDWORD_PTR lpProcessAffinityMask,
+                       OUT PDWORD_PTR lpSystemAffinityMask)
 {
     PROCESS_BASIC_INFORMATION ProcessInfo;
-    SYSTEM_BASIC_INFORMATION SystemInfo;
     NTSTATUS Status;
 
-    Status = NtQuerySystemInformation(SystemBasicInformation,
-                                      &SystemInfo,
-                                      sizeof(SystemInfo),
-                                      NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
+    /* Query information on the process from the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessBasicInformation,
                                        (PVOID)&ProcessInfo,
@@ -756,174 +1131,237 @@ GetProcessAffinityMask(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Fail */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Copy the affinity mask, and get the system one from our shared data */
     *lpProcessAffinityMask = (DWORD)ProcessInfo.AffinityMask;
-    *lpSystemAffinityMask = (DWORD)SystemInfo.ActiveProcessorsAffinityMask;
-
+    *lpSystemAffinityMask = (DWORD)BaseStaticServerData->SysInfo.ActiveProcessorsAffinityMask;
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetProcessAffinityMask(HANDLE hProcess,
-                       DWORD_PTR dwProcessAffinityMask)
+SetProcessAffinityMask(IN HANDLE hProcess,
+                       IN DWORD_PTR dwProcessAffinityMask)
 {
     NTSTATUS Status;
 
+    /* Directly set the affinity mask */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessAffinityMask,
                                      (PVOID)&dwProcessAffinityMask,
                                      sizeof(DWORD));
     if (!NT_SUCCESS(Status))
     {
+        /* Handle failure */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Everything was ok */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessShutdownParameters(LPDWORD lpdwLevel,
-                             LPDWORD lpdwFlags)
+GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
+                             OUT LPDWORD lpdwFlags)
 {
     CSR_API_MESSAGE CsrRequest;
-    ULONG Request;
     NTSTATUS Status;
 
-    Request = GET_SHUTDOWN_PARAMETERS;
+    /* Ask CSRSS for shutdown information */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 MAKE_CSR_API(GET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
                                  sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(CsrRequest.Status)))
     {
-        BaseSetLastNTError(Status);
+        /* Return the failure from CSRSS */
+        BaseSetLastNTError(CsrRequest.Status);
         return FALSE;
     }
 
+    /* Get the data out of the LCP reply */
     *lpdwLevel = CsrRequest.Data.GetShutdownParametersRequest.Level;
     *lpdwFlags = CsrRequest.Data.GetShutdownParametersRequest.Flags;
-
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetProcessShutdownParameters(DWORD dwLevel,
-                             DWORD dwFlags)
+SetProcessShutdownParameters(IN DWORD dwLevel,
+                             IN DWORD dwFlags)
 {
     CSR_API_MESSAGE CsrRequest;
-    ULONG Request;
     NTSTATUS Status;
 
+    /* Write the data into the CSRSS request and send it */
     CsrRequest.Data.SetShutdownParametersRequest.Level = dwLevel;
     CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
-
-    Request = SET_SHUTDOWN_PARAMETERS;
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 MAKE_CSR_API(SET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
-        BaseSetLastNTError(Status);
+        /* Return the failure from CSRSS */
+        BaseSetLastNTError(CsrRequest.Status);
         return FALSE;
     }
 
+    /* All went well */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessWorkingSetSize(HANDLE hProcess,
-                         PSIZE_T lpMinimumWorkingSetSize,
-                         PSIZE_T lpMaximumWorkingSetSize)
+GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           OUT PSIZE_T lpMinimumWorkingSetSize,
+                           OUT PSIZE_T lpMaximumWorkingSetSize,
+                           OUT PDWORD Flags)
 {
-    QUOTA_LIMITS QuotaLimits;
+    QUOTA_LIMITS_EX QuotaLimits;
     NTSTATUS Status;
 
+    /* Query the kernel about this */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessQuotaLimits,
                                        &QuotaLimits,
-                                       sizeof(QUOTA_LIMITS),
+                                       sizeof(QUOTA_LIMITS_EX),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Return error */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Copy the quota information out */
     *lpMinimumWorkingSetSize = QuotaLimits.MinimumWorkingSetSize;
     *lpMaximumWorkingSetSize = QuotaLimits.MaximumWorkingSetSize;
-
+    *Flags = QuotaLimits.Flags;
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetProcessWorkingSetSize(HANDLE hProcess,
-                         SIZE_T dwMinimumWorkingSetSize,
-                         SIZE_T dwMaximumWorkingSetSize)
+GetProcessWorkingSetSize(IN HANDLE hProcess,
+                         OUT PSIZE_T lpMinimumWorkingSetSize,
+                         OUT PSIZE_T lpMaximumWorkingSetSize)
 {
-    QUOTA_LIMITS QuotaLimits;
-    NTSTATUS Status;
+    DWORD Dummy;
+    return GetProcessWorkingSetSizeEx(hProcess,
+                                      lpMinimumWorkingSetSize,
+                                      lpMaximumWorkingSetSize,
+                                      &Dummy);
+}
 
-    QuotaLimits.MinimumWorkingSetSize = dwMinimumWorkingSetSize;
-    QuotaLimits.MaximumWorkingSetSize = dwMaximumWorkingSetSize;
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+SetProcessWorkingSetSizeEx(IN HANDLE hProcess,
+                           IN SIZE_T dwMinimumWorkingSetSize,
+                           IN SIZE_T dwMaximumWorkingSetSize,
+                           IN DWORD Flags)
+{
+    QUOTA_LIMITS_EX QuotaLimits;
+    NTSTATUS Status, ReturnStatus;
+    BOOL Result;
+    PVOID State;
+    ULONG Privilege = SE_INC_BASE_PRIORITY_PRIVILEGE;
 
-    Status = NtSetInformationProcess(hProcess,
-                                     ProcessQuotaLimits,
-                                     &QuotaLimits,
-                                     sizeof(QUOTA_LIMITS));
-    if (!NT_SUCCESS(Status))
+    /* Zero out the input structure */
+    RtlZeroMemory(&QuotaLimits, sizeof(QuotaLimits));
+
+    /* Check if the caller sent any limits */
+    if ((dwMinimumWorkingSetSize) && (dwMaximumWorkingSetSize))
     {
-        BaseSetLastNTError(Status);
-        return FALSE;
+        /* Write the quota information */
+        QuotaLimits.MinimumWorkingSetSize = dwMinimumWorkingSetSize;
+        QuotaLimits.MaximumWorkingSetSize = dwMaximumWorkingSetSize;
+        QuotaLimits.Flags = Flags;
+
+        /* Acquire the required privilege */
+        Status = RtlAcquirePrivilege(&Privilege, 1, 0, &State);
+
+        /* Request the new quotas */
+        ReturnStatus = NtSetInformationProcess(hProcess,
+                                               ProcessQuotaLimits,
+                                               &QuotaLimits,
+                                               sizeof(QuotaLimits));
+        Result = NT_SUCCESS(ReturnStatus);
+        if (NT_SUCCESS(Status))
+        {
+            /* Release the privilege and set succes code */
+            ASSERT(State != NULL);
+            RtlReleasePrivilege(State);
+            State = NULL;
+        }
+    }
+    else
+    {
+        /* No limits, fail the call */
+        ReturnStatus = STATUS_INVALID_PARAMETER;
+        Result = FALSE;
     }
 
-    return TRUE;
+    /* Return result code, set error code if this was a failure */
+    if (!Result) BaseSetLastNTError(ReturnStatus);
+    return Result;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessTimes(HANDLE hProcess,
-                LPFILETIME lpCreationTime,
-                LPFILETIME lpExitTime,
-                LPFILETIME lpKernelTime,
-                LPFILETIME lpUserTime)
+SetProcessWorkingSetSize(IN HANDLE hProcess,
+                         IN SIZE_T dwMinimumWorkingSetSize,
+                         IN SIZE_T dwMaximumWorkingSetSize)
+{
+    /* Call the newer API */
+    return SetProcessWorkingSetSizeEx(hProcess,
+                                      dwMinimumWorkingSetSize,
+                                      dwMaximumWorkingSetSize,
+                                      0);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetProcessTimes(IN HANDLE hProcess,
+                IN LPFILETIME lpCreationTime,
+                IN LPFILETIME lpExitTime,
+                IN LPFILETIME lpKernelTime,
+                IN LPFILETIME lpUserTime)
 {
     KERNEL_USER_TIMES Kut;
     NTSTATUS Status;
 
+    /* Query the times */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessTimes,
                                        &Kut,
@@ -931,25 +1369,22 @@ GetProcessTimes(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Handle failure */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Copy all the times and return success */
     lpCreationTime->dwLowDateTime = Kut.CreateTime.u.LowPart;
     lpCreationTime->dwHighDateTime = Kut.CreateTime.u.HighPart;
-
     lpExitTime->dwLowDateTime = Kut.ExitTime.u.LowPart;
     lpExitTime->dwHighDateTime = Kut.ExitTime.u.HighPart;
-
     lpKernelTime->dwLowDateTime = Kut.KernelTime.u.LowPart;
     lpKernelTime->dwHighDateTime = Kut.KernelTime.u.HighPart;
-
     lpUserTime->dwLowDateTime = Kut.UserTime.u.LowPart;
     lpUserTime->dwHighDateTime = Kut.UserTime.u.HighPart;
-
     return TRUE;
 }
-
 
 /*
  * @implemented
@@ -961,7 +1396,6 @@ GetCurrentProcess(VOID)
     return (HANDLE)NtCurrentProcess();
 }
 
-
 /*
  * @implemented
  */
@@ -972,7 +1406,6 @@ GetCurrentThread(VOID)
     return (HANDLE)NtCurrentThread();
 }
 
-
 /*
  * @implemented
  */
@@ -980,21 +1413,21 @@ DWORD
 WINAPI
 GetCurrentProcessId(VOID)
 {
-    return HandleToUlong(GetTeb()->ClientId.UniqueProcess);
+    return HandleToUlong(NtCurrentTeb()->ClientId.UniqueProcess);
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetExitCodeProcess(HANDLE hProcess,
-                   LPDWORD lpExitCode)
+GetExitCodeProcess(IN HANDLE hProcess,
+                   IN LPDWORD lpExitCode)
 {
     PROCESS_BASIC_INFORMATION ProcessBasic;
     NTSTATUS Status;
 
+    /* Ask the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessBasicInformation,
                                        &ProcessBasic,
@@ -1002,26 +1435,30 @@ GetExitCodeProcess(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* We failed, was this because this is a VDM process? */
+        if (BaseCheckForVDM(hProcess, lpExitCode) == TRUE) return TRUE;
+
+        /* Not a VDM process, fail the call */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Succes case, return the exit code */
     *lpExitCode = (DWORD)ProcessBasic.ExitStatus;
-
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 DWORD
 WINAPI
-GetProcessId(HANDLE Process)
+GetProcessId(IN HANDLE Process)
 {
     PROCESS_BASIC_INFORMATION ProcessBasic;
     NTSTATUS Status;
 
+    /* Query the kernel */
     Status = NtQueryInformationProcess(Process,
                                        ProcessBasicInformation,
                                        &ProcessBasic,
@@ -1029,105 +1466,65 @@ GetProcessId(HANDLE Process)
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Handle failure */
         BaseSetLastNTError(Status);
         return 0;
     }
 
+    /* Return the PID */
     return (DWORD)ProcessBasic.UniqueProcessId;
 }
-
 
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-OpenProcess(DWORD dwDesiredAccess,
-            BOOL bInheritHandle,
-            DWORD dwProcessId)
+OpenProcess(IN DWORD dwDesiredAccess,
+            IN BOOL bInheritHandle,
+            IN DWORD dwProcessId)
 {
-    NTSTATUS errCode;
+    NTSTATUS Status;
     HANDLE ProcessHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     CLIENT_ID ClientId;
 
+    /* Setup the input client ID structure */
     ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     ClientId.UniqueThread = 0;
 
+    /* This is needed just to define the inheritance flags */
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
                                (bInheritHandle ? OBJ_INHERIT : 0),
                                NULL,
                                NULL);
 
-    errCode = NtOpenProcess(&ProcessHandle,
-                            dwDesiredAccess,
-                            &ObjectAttributes,
-                            &ClientId);
-    if (!NT_SUCCESS(errCode))
+    /* Now try to open the process */
+    Status = NtOpenProcess(&ProcessHandle,
+                           dwDesiredAccess,
+                           &ObjectAttributes,
+                           &ClientId);
+    if (!NT_SUCCESS(Status))
     {
-        BaseSetLastNTError(errCode);
+        /* Handle failure */
+        BaseSetLastNTError(Status);
         return NULL;
     }
 
+    /* Otherwise return a handle to the process */
     return ProcessHandle;
 }
 
-
-/*
- * @implemented
- */
-UINT
-WINAPI
-WinExec(LPCSTR lpCmdLine,
-        UINT uCmdShow)
-{
-    STARTUPINFOA StartupInfo;
-    PROCESS_INFORMATION  ProcessInformation;
-    DWORD dosErr;
-
-    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(STARTUPINFOA);
-    StartupInfo.wShowWindow = (WORD)uCmdShow;
-    StartupInfo.dwFlags = 0;
-
-    if (!CreateProcessA(NULL,
-                        (PVOID)lpCmdLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        NULL,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInformation))
-    {
-        dosErr = GetLastError();
-        return dosErr < 32 ? dosErr : ERROR_BAD_FORMAT;
-    }
-
-    if (NULL != lpfnGlobalRegisterWaitForInputIdle)
-    {
-        lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess,
-                                           10000);
-    }
-
-    NtClose(ProcessInformation.hProcess);
-    NtClose(ProcessInformation.hThread);
-
-    return 33; /* Something bigger than 31 means success. */
-}
-
-
 /*
  * @implemented
  */
 VOID
 WINAPI
-RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle)
+RegisterWaitForInputIdle(IN WaitForInputIdleType lpfnRegisterWaitForInputIdle)
 {
-    lpfnGlobalRegisterWaitForInputIdle = lpfnRegisterWaitForInputIdle;
-    return;
+    /* Write the global function pointer */
+    UserWaitForInputIdleRoutine = lpfnRegisterWaitForInputIdle;
 }
 
 /*
@@ -1135,19 +1532,16 @@ RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle)
  */
 VOID
 WINAPI
-GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
+GetStartupInfoW(IN LPSTARTUPINFOW lpStartupInfo)
 {
     PRTL_USER_PROCESS_PARAMETERS Params;
 
-    if (lpStartupInfo == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return;
-    }
-
+    /* Get the process parameters */
     Params = NtCurrentPeb()->ProcessParameters;
 
+    /* Copy the data out of there */
     lpStartupInfo->cb = sizeof(STARTUPINFOW);
+    lpStartupInfo->lpReserved = Params->ShellInfo.Buffer;
     lpStartupInfo->lpDesktop = Params->DesktopInfo.Buffer;
     lpStartupInfo->lpTitle = Params->WindowTitle.Buffer;
     lpStartupInfo->dwX = Params->StartingX;
@@ -1162,298 +1556,394 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
     lpStartupInfo->cbReserved2 = Params->RuntimeData.Length;
     lpStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
 
-    lpStartupInfo->hStdInput = Params->StandardInput;
-    lpStartupInfo->hStdOutput = Params->StandardOutput;
-    lpStartupInfo->hStdError = Params->StandardError;
+    /* Check if the standard handles are being used for other features */
+    if (lpStartupInfo->dwFlags & (STARTF_USESTDHANDLES |
+                                  STARTF_USEHOTKEY |
+                                  STARTF_SHELLPRIVATE))
+    {
+        /* These are, so copy the standard handles too */
+        lpStartupInfo->hStdInput = Params->StandardInput;
+        lpStartupInfo->hStdOutput = Params->StandardOutput;
+        lpStartupInfo->hStdError = Params->StandardError;
+    }
 }
-
 
 /*
  * @implemented
  */
 VOID
 WINAPI
-GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
+GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
 {
     PRTL_USER_PROCESS_PARAMETERS Params;
-    ANSI_STRING AnsiString;
+    ANSI_STRING TitleString, ShellString, DesktopString;
+    LPSTARTUPINFOA StartupInfo;
+    NTSTATUS Status;
 
-    if (lpStartupInfo == NULL)
+    /* Get the cached information as well as the PEB parameters */
+    StartupInfo = BaseAnsiStartupInfo;
+    Params = NtCurrentPeb()->ProcessParameters;
+
+    /* Check if this is the first time we have to get the cached version */
+    while (!StartupInfo)
     {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return;
-    }
-
-    Params = NtCurrentPeb ()->ProcessParameters;
-
-    RtlAcquirePebLock ();
-
-    /* FIXME - not thread-safe */
-    if (lpLocalStartupInfo == NULL)
-    {
-        /* create new local startup info (ansi) */
-        lpLocalStartupInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                             0,
-                                             sizeof(STARTUPINFOA));
-        if (lpLocalStartupInfo == NULL)
+        /* Create new ANSI startup info */
+        StartupInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      0,
+                                      sizeof(*StartupInfo));
+        if (StartupInfo)
         {
-            RtlReleasePebLock();
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return;
+            /* Zero out string pointers in case we fail to create them */
+            StartupInfo->lpReserved = 0;
+            StartupInfo->lpDesktop = 0;
+            StartupInfo->lpTitle = 0;
+
+            /* Set the size */
+            StartupInfo->cb = sizeof(*StartupInfo);
+
+            /* Copy what's already stored in the PEB */
+            StartupInfo->dwX = Params->StartingX;
+            StartupInfo->dwY = Params->StartingY;
+            StartupInfo->dwXSize = Params->CountX;
+            StartupInfo->dwYSize = Params->CountY;
+            StartupInfo->dwXCountChars = Params->CountCharsX;
+            StartupInfo->dwYCountChars = Params->CountCharsY;
+            StartupInfo->dwFillAttribute = Params->FillAttribute;
+            StartupInfo->dwFlags = Params->WindowFlags;
+            StartupInfo->wShowWindow = (WORD)Params->ShowWindowFlags;
+            StartupInfo->cbReserved2 = Params->RuntimeData.Length;
+            StartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
+            StartupInfo->hStdInput = Params->StandardInput;
+            StartupInfo->hStdOutput = Params->StandardOutput;
+            StartupInfo->hStdError = Params->StandardError;
+
+            /* Copy shell info string */
+            Status = RtlUnicodeStringToAnsiString(&ShellString,
+                                                  &Params->ShellInfo,
+                                                  TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                /* Save it */
+                StartupInfo->lpReserved = ShellString.Buffer;
+
+                /* Copy desktop info string */
+                Status = RtlUnicodeStringToAnsiString(&DesktopString,
+                                                      &Params->DesktopInfo,
+                                                      TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Save it */
+                    StartupInfo->lpDesktop = DesktopString.Buffer;
+
+                    /* Copy window title string */
+                    Status = RtlUnicodeStringToAnsiString(&TitleString,
+                                                          &Params->WindowTitle,
+                                                          TRUE);
+                    if (NT_SUCCESS(Status))
+                    {
+                        /* Save it */
+                        StartupInfo->lpTitle = TitleString.Buffer;
+
+                        /* We finished with the ANSI version, try to cache it */
+                        if (!InterlockedCompareExchangePointer(&BaseAnsiStartupInfo,
+                                                               StartupInfo,
+                                                               NULL))
+                        {
+                            /* We were the first thread through, use the data */
+                            break;
+                        }
+
+                        /* Someone beat us to it, use their data instead */
+                        StartupInfo = BaseAnsiStartupInfo;
+                        Status = STATUS_SUCCESS;
+
+                        /* We're going to free our own stuff, but not raise */
+                        RtlFreeAnsiString(&TitleString);
+                    }
+                    RtlFreeAnsiString(&DesktopString);
+                }
+                RtlFreeAnsiString(&ShellString);
+            }
+            RtlFreeHeap(RtlGetProcessHeap(), 0, StartupInfo);
+        }
+        else
+        {
+            /* No memory, fail */
+            Status = STATUS_NO_MEMORY;
         }
 
-        lpLocalStartupInfo->cb = sizeof(STARTUPINFOA);
-
-        /* copy window title string */
-        RtlUnicodeStringToAnsiString(&AnsiString,
-                                     &Params->WindowTitle,
-                                     TRUE);
-        lpLocalStartupInfo->lpTitle = AnsiString.Buffer;
-
-        /* copy desktop info string */
-        RtlUnicodeStringToAnsiString(&AnsiString,
-                                     &Params->DesktopInfo,
-                                     TRUE);
-        lpLocalStartupInfo->lpDesktop = AnsiString.Buffer;
-
-        /* copy shell info string */
-        RtlUnicodeStringToAnsiString(&AnsiString,
-                                     &Params->ShellInfo,
-                                     TRUE);
-        lpLocalStartupInfo->lpReserved = AnsiString.Buffer;
-
-        lpLocalStartupInfo->dwX = Params->StartingX;
-        lpLocalStartupInfo->dwY = Params->StartingY;
-        lpLocalStartupInfo->dwXSize = Params->CountX;
-        lpLocalStartupInfo->dwYSize = Params->CountY;
-        lpLocalStartupInfo->dwXCountChars = Params->CountCharsX;
-        lpLocalStartupInfo->dwYCountChars = Params->CountCharsY;
-        lpLocalStartupInfo->dwFillAttribute = Params->FillAttribute;
-        lpLocalStartupInfo->dwFlags = Params->WindowFlags;
-        lpLocalStartupInfo->wShowWindow = (WORD)Params->ShowWindowFlags;
-        lpLocalStartupInfo->cbReserved2 = Params->RuntimeData.Length;
-        lpLocalStartupInfo->lpReserved2 = (LPBYTE)Params->RuntimeData.Buffer;
-
-        lpLocalStartupInfo->hStdInput = Params->StandardInput;
-        lpLocalStartupInfo->hStdOutput = Params->StandardOutput;
-        lpLocalStartupInfo->hStdError = Params->StandardError;
+        /* Raise an error unless we got here due to the race condition */
+        if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
     }
 
-    RtlReleasePebLock();
+    /* Now copy from the cached ANSI version */
+    lpStartupInfo->cb = StartupInfo->cb;
+    lpStartupInfo->lpReserved = StartupInfo->lpReserved;
+    lpStartupInfo->lpDesktop = StartupInfo->lpDesktop;
+    lpStartupInfo->lpTitle = StartupInfo->lpTitle;
+    lpStartupInfo->dwX = StartupInfo->dwX;
+    lpStartupInfo->dwY = StartupInfo->dwY;
+    lpStartupInfo->dwXSize = StartupInfo->dwXSize;
+    lpStartupInfo->dwYSize = StartupInfo->dwYSize;
+    lpStartupInfo->dwXCountChars = StartupInfo->dwXCountChars;
+    lpStartupInfo->dwYCountChars = StartupInfo->dwYCountChars;
+    lpStartupInfo->dwFillAttribute = StartupInfo->dwFillAttribute;
+    lpStartupInfo->dwFlags = StartupInfo->dwFlags;
+    lpStartupInfo->wShowWindow = StartupInfo->wShowWindow;
+    lpStartupInfo->cbReserved2 = StartupInfo->cbReserved2;
+    lpStartupInfo->lpReserved2 = StartupInfo->lpReserved2;
 
-    /* copy local startup info data to external startup info */
-    memcpy(lpStartupInfo,
-           lpLocalStartupInfo,
-           sizeof(STARTUPINFOA));
+    /* Check if the shell is hijacking the handles for other features */
+    if (lpStartupInfo->dwFlags &
+        (STARTF_USESTDHANDLES | STARTF_USEHOTKEY | STARTF_SHELLPRIVATE))
+    {
+        /* It isn't, so we can return the raw values */
+        lpStartupInfo->hStdInput = StartupInfo->hStdInput;
+        lpStartupInfo->hStdOutput = StartupInfo->hStdOutput;
+        lpStartupInfo->hStdError = StartupInfo->hStdError;
+    }
+    else
+    {
+        /* It is, so make sure nobody uses these as console handles */
+        lpStartupInfo->hStdInput = INVALID_HANDLE_VALUE;
+        lpStartupInfo->hStdOutput = INVALID_HANDLE_VALUE;
+        lpStartupInfo->hStdError = INVALID_HANDLE_VALUE;
+    }
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-FlushInstructionCache(HANDLE hProcess,
-                      LPCVOID lpBaseAddress,
-                      SIZE_T dwSize)
+FlushInstructionCache(IN HANDLE hProcess,
+                      IN LPCVOID lpBaseAddress,
+                      IN SIZE_T dwSize)
 {
     NTSTATUS Status;
 
-    Status = NtFlushInstructionCache(hProcess,
-                                     (PVOID)lpBaseAddress,
-                                     dwSize);
+    /* Call the native function */
+    Status = NtFlushInstructionCache(hProcess, (PVOID)lpBaseAddress, dwSize);
     if (!NT_SUCCESS(Status))
     {
+        /* Handle failure case */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* All good */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 VOID
 WINAPI
-ExitProcess(UINT uExitCode)
+ExitProcess(IN UINT uExitCode)
 {
     CSR_API_MESSAGE CsrRequest;
-    ULONG Request;
-    NTSTATUS Status;
+    ASSERT(!BaseRunningInServerProcess);
 
-    /* kill sibling threads ... we want to be alone at this point */
-    NtTerminateProcess(NULL, 0);
-
-    /* unload all dll's */
-    LdrShutdownProcess();
-
-    /* notify csrss of process termination */
-    Request = TERMINATE_PROCESS;
-    Status = CsrClientCallServer(&CsrRequest,
-                                 NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+    _SEH2_TRY
     {
-        DPRINT("Failed to tell csrss about terminating process\n");
-    }
+        /* Acquire the PEB lock */
+        RtlAcquirePebLock();
 
-    NtTerminateProcess(NtCurrentProcess (),
-                       uExitCode);
+        /* Kill all the threads */
+        NtTerminateProcess(NULL, 0);
+
+        /* Unload all DLLs */
+        LdrShutdownProcess();
+
+        /* Notify Base Server of process termination */
+        CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
+        CsrClientCallServer(&CsrRequest,
+                            NULL,
+                            MAKE_CSR_API(TERMINATE_PROCESS, CSR_NATIVE),
+                            sizeof(CSR_API_MESSAGE));
+
+        /* Now do it again */
+        NtTerminateProcess(NtCurrentProcess(), uExitCode);
+    }
+    _SEH2_FINALLY
+    {
+        /* Release the PEB lock */
+        RtlReleasePebLock();
+    }
+    _SEH2_END;
 
     /* should never get here */
     ASSERT(0);
     while(1);
 }
 
-
 /*
  * @implemented
  */
 BOOL
 WINAPI
-TerminateProcess(HANDLE hProcess,
-                 UINT uExitCode)
+TerminateProcess(IN HANDLE hProcess,
+                 IN UINT uExitCode)
 {
     NTSTATUS Status;
 
-    if (hProcess == NULL)
+    /* Check if no handle was passed in */
+    if (!hProcess)
     {
-      return FALSE;
+        /* Set error code */
+        SetLastError(ERROR_INVALID_HANDLE);
+    }
+    else
+    {
+        /* Otherwise, try to terminate the process */
+        Status = NtTerminateProcess(hProcess, uExitCode);
+        if (NT_SUCCESS(Status)) return TRUE;
+
+        /* It failed, convert error code */
+        BaseSetLastNTError(Status);
     }
 
-    Status = NtTerminateProcess(hProcess, uExitCode);
-    if (NT_SUCCESS(Status))
-    {
-        return TRUE;
-    }
-
-    BaseSetLastNTError(Status);
+    /* This is the failure path */
     return FALSE;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 WINAPI
 FatalAppExitA(UINT uAction,
               LPCSTR lpMessageText)
 {
-    UNICODE_STRING MessageTextU;
+    PUNICODE_STRING MessageTextU;
     ANSI_STRING MessageText;
+    NTSTATUS Status;
 
+    /* Initialize the string using the static TEB pointer */
+    MessageTextU = &NtCurrentTeb()->StaticUnicodeString;
     RtlInitAnsiString(&MessageText, (LPSTR)lpMessageText);
 
-    RtlAnsiStringToUnicodeString(&MessageTextU,
-                                 &MessageText,
-                                 TRUE);
+    /* Convert to unicode and just exit normally if this failed */
+    Status = RtlAnsiStringToUnicodeString(MessageTextU, &MessageText, FALSE);
+    if (!NT_SUCCESS(Status)) ExitProcess(0);
 
-    FatalAppExitW(uAction, MessageTextU.Buffer);
-
-    RtlFreeUnicodeString(&MessageTextU);
+    /* Call the Wide function */
+    FatalAppExitW(uAction, MessageTextU->Buffer);
 }
-
-
-/*
- * @unimplemented
- */
-VOID
-WINAPI
-FatalAppExitW(UINT uAction,
-              LPCWSTR lpMessageText)
-{
-    static const WCHAR szUser32[] = L"user32.dll\0";
-
-    HMODULE hModule = GetModuleHandleW(szUser32);
-    MessageBoxW_Proc pMessageBoxW = NULL;
-
-    DPRINT1("AppExit\n");
-
-    if (hModule)
-        pMessageBoxW = (MessageBoxW_Proc)GetProcAddress(hModule, "MessageBoxW");
-
-    if (pMessageBoxW)
-        pMessageBoxW(0, lpMessageText, NULL, MB_SYSTEMMODAL | MB_OK);
-    else
-        DPRINT1("%s\n", lpMessageText);
-
-    ExitProcess(0);
-}
-
 
 /*
  * @implemented
  */
 VOID
 WINAPI
-FatalExit(int ExitCode)
+FatalAppExitW(IN UINT uAction,
+              IN LPCWSTR lpMessageText)
 {
-    ExitProcess(ExitCode);
+    UNICODE_STRING UnicodeString;
+    ULONG Response;
+    NTSTATUS Status;
+
+    /* Setup the stirng to print out */
+    RtlInitUnicodeString(&UnicodeString, lpMessageText);
+
+    /* Display the hard error no matter what */
+    Status = NtRaiseHardError(STATUS_FATAL_APP_EXIT | HARDERROR_OVERRIDE_ERRORMODE,
+                              1,
+                              1,
+                              (PULONG_PTR)&UnicodeString,
+                              OptionOkCancel,
+                              &Response);
+
+    /* Give the user a chance to abort */
+    if ((NT_SUCCESS(Status)) && (Response == ResponseCancel)) return;
+
+    /* Otherwise kill the process */
+    ExitProcess(0);
 }
 
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+FatalExit(IN int ExitCode)
+{
+#if DBG
+    /* On Checked builds, Windows gives you a nice little debugger UI */
+    CHAR ch[2];
+    DbgPrint("FatalExit...\n");
+    DbgPrint("\n");
+
+    while (TRUE)
+    {
+        DbgPrompt( "A (Abort), B (Break), I (Ignore)? ", ch, sizeof(ch));
+        switch (ch[0])
+        {
+            case 'B': case 'b':
+                 DbgBreakPoint();
+                 break;
+
+            case 'A': case 'a':
+                ExitProcess(ExitCode);
+
+            case 'I': case 'i':
+                return;
+        }
+    }
+#endif
+    /* On other builds, just kill the process */
+    ExitProcess(ExitCode);
+}
 
 /*
  * @implemented
  */
 DWORD
 WINAPI
-GetPriorityClass(HANDLE hProcess)
+GetPriorityClass(IN HANDLE hProcess)
 {
-  NTSTATUS Status;
-  PROCESS_PRIORITY_CLASS PriorityClass;
+    NTSTATUS Status;
+    PROCESS_PRIORITY_CLASS PriorityClass;
 
-  Status = NtQueryInformationProcess(hProcess,
-                                     ProcessPriorityClass,
-                                     &PriorityClass,
-                                     sizeof(PROCESS_PRIORITY_CLASS),
-                                     NULL);
-  if(NT_SUCCESS(Status))
-  {
-    switch(PriorityClass.PriorityClass)
+    /* Query the kernel */
+    Status = NtQueryInformationProcess(hProcess,
+                                       ProcessPriorityClass,
+                                       &PriorityClass,
+                                       sizeof(PROCESS_PRIORITY_CLASS),
+                                       NULL);
+    if (NT_SUCCESS(Status))
     {
-      case PROCESS_PRIORITY_CLASS_IDLE:
-        return IDLE_PRIORITY_CLASS;
-
-      case PROCESS_PRIORITY_CLASS_BELOW_NORMAL:
-        return BELOW_NORMAL_PRIORITY_CLASS;
-
-      case PROCESS_PRIORITY_CLASS_NORMAL:
-        return NORMAL_PRIORITY_CLASS;
-
-      case PROCESS_PRIORITY_CLASS_ABOVE_NORMAL:
-        return ABOVE_NORMAL_PRIORITY_CLASS;
-
-      case PROCESS_PRIORITY_CLASS_HIGH:
-        return HIGH_PRIORITY_CLASS;
-
-      case PROCESS_PRIORITY_CLASS_REALTIME:
-        return REALTIME_PRIORITY_CLASS;
-
-      default:
-        return NORMAL_PRIORITY_CLASS;
+        /* Handle the conversion from NT to Win32 classes */
+        switch (PriorityClass.PriorityClass)
+        {
+            case PROCESS_PRIORITY_CLASS_IDLE: return IDLE_PRIORITY_CLASS;
+            case PROCESS_PRIORITY_CLASS_BELOW_NORMAL: return BELOW_NORMAL_PRIORITY_CLASS;
+            case PROCESS_PRIORITY_CLASS_ABOVE_NORMAL: return ABOVE_NORMAL_PRIORITY_CLASS;
+            case PROCESS_PRIORITY_CLASS_HIGH: return HIGH_PRIORITY_CLASS;
+            case PROCESS_PRIORITY_CLASS_REALTIME: return REALTIME_PRIORITY_CLASS;
+            case PROCESS_PRIORITY_CLASS_NORMAL: default: return NORMAL_PRIORITY_CLASS;
+        }
     }
-  }
 
-  BaseSetLastNTError(Status);
-  return FALSE;
+    /* Failure path */
+    BaseSetLastNTError(Status);
+    return FALSE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetPriorityClass(HANDLE hProcess,
-                 DWORD dwPriorityClass)
+SetPriorityClass(IN HANDLE hProcess,
+                 IN DWORD dwPriorityClass)
 {
     NTSTATUS Status;
+    PVOID State = NULL;
     PROCESS_PRIORITY_CLASS PriorityClass;
 
+    /* Handle conversion from Win32 to NT priority classes */
     switch (dwPriorityClass)
     {
         case IDLE_PRIORITY_CLASS:
@@ -1477,68 +1967,85 @@ SetPriorityClass(HANDLE hProcess,
             break;
 
         case REALTIME_PRIORITY_CLASS:
-            PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_REALTIME;
+            /* Try to acquire the privilege. If it fails, just use HIGH */
+            State = BasepIsRealtimeAllowed(TRUE);
+            PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+            PriorityClass.PriorityClass += (State != NULL);
             break;
 
         default:
+            /* Unrecognized priority classes don't make it to the kernel */
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
+    /* Send the request to the kernel, and don't touch the foreground flag */
     PriorityClass.Foreground = FALSE;
-
     Status = NtSetInformationProcess(hProcess,
                                      ProcessPriorityClass,
                                      &PriorityClass,
                                      sizeof(PROCESS_PRIORITY_CLASS));
+
+    /* Release the privilege if we had it */
+    if (State) RtlReleasePrivilege(State);
     if (!NT_SUCCESS(Status))
     {
+        /* Handle error path */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* All done */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 DWORD
 WINAPI
-GetProcessVersion(DWORD ProcessId)
+GetProcessVersion(IN DWORD ProcessId)
 {
     DWORD Version = 0;
-    PIMAGE_NT_HEADERS NtHeader = NULL;
-    IMAGE_NT_HEADERS NtHeaders;
-    IMAGE_DOS_HEADER DosHeader;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_DOS_HEADER DosHeader;
+    PPEB Peb;
     PROCESS_BASIC_INFORMATION ProcessBasicInfo;
-    PVOID BaseAddress = NULL;
+    PVOID BaseAddress;
+    ULONG e_lfanew;
     HANDLE ProcessHandle = NULL;
     NTSTATUS Status;
-    SIZE_T Count;
-    PEB Peb;
+    USHORT VersionData[2];
+    BOOLEAN Result;
 
+    /* We'll be accessing stuff that can fault, so protect everything with SEH */
     _SEH2_TRY
     {
-        if (0 == ProcessId || GetCurrentProcessId() == ProcessId)
+        /* It this an in-process or out-of-process request? */
+        if (!(ProcessId) || (GetCurrentProcessId() == ProcessId))
         {
-            /* Caller's */
-            BaseAddress = (PVOID) NtCurrentPeb()->ImageBaseAddress;
-            NtHeader = RtlImageNtHeader(BaseAddress);
+            /* It's in-process, so just read our own header */
+            NtHeader = RtlImageNtHeader(NtCurrentPeb()->ImageBaseAddress);
+            if (!NtHeader)
+            {
+                /* Unable to read the NT header, something is wrong here... */
+                Status = STATUS_INVALID_IMAGE_FORMAT;
+                goto Error;
+            }
 
-            Version = (NtHeader->OptionalHeader.MajorOperatingSystemVersion << 16) |
-                      (NtHeader->OptionalHeader.MinorOperatingSystemVersion);
+            /* Get the version straight out of the NT header */
+            Version = MAKELONG(NtHeader->OptionalHeader.MinorSubsystemVersion,
+                               NtHeader->OptionalHeader.MajorSubsystemVersion);
         }
         else
         {
-            /* Other process */
+            /* Out-of-process, so open it */
             ProcessHandle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
                                         FALSE,
                                         ProcessId);
-
             if (!ProcessHandle) return 0;
 
+            /* Try to find out where its PEB lives */
             Status = NtQueryInformationProcess(ProcessHandle,
                                                ProcessBasicInformation,
                                                &ProcessBasicInfo,
@@ -1546,65 +2053,64 @@ GetProcessVersion(DWORD ProcessId)
                                                NULL);
 
             if (!NT_SUCCESS(Status)) goto Error;
+            Peb = ProcessBasicInfo.PebBaseAddress;
 
-            Status = NtReadVirtualMemory(ProcessHandle,
-                                         ProcessBasicInfo.PebBaseAddress,
-                                         &Peb,
-                                         sizeof(Peb),
-                                         &Count);
+            /* Now that we have the PEB, read the image base address out of it */
+            Result = ReadProcessMemory(ProcessHandle,
+                                       &Peb->ImageBaseAddress,
+                                       &BaseAddress,
+                                       sizeof(BaseAddress),
+                                       NULL);
+            if (!Result) goto Error;
 
-            if (!NT_SUCCESS(Status) || Count != sizeof(Peb)) goto Error;
+            /* Now read the e_lfanew (offset to NT header) from the base */
+            DosHeader = BaseAddress;
+            Result = ReadProcessMemory(ProcessHandle,
+                                       &DosHeader->e_lfanew,
+                                       &e_lfanew,
+                                       sizeof(e_lfanew),
+                                       NULL);
+            if (!Result) goto Error;
 
-            memset(&DosHeader, 0, sizeof(DosHeader));
-            Status = NtReadVirtualMemory(ProcessHandle,
-                                         Peb.ImageBaseAddress,
-                                         &DosHeader,
-                                         sizeof(DosHeader),
-                                         &Count);
+            /* And finally, read the NT header itself by adding the offset */
+            NtHeader = (PVOID)((ULONG_PTR)BaseAddress + e_lfanew);
+            Result = ReadProcessMemory(ProcessHandle,
+                                       &NtHeader->OptionalHeader.MajorSubsystemVersion,
+                                       &VersionData,
+                                       sizeof(VersionData),
+                                       NULL);
+            if (!Result) goto Error;
 
-            if (!NT_SUCCESS(Status) || Count != sizeof(DosHeader)) goto Error;
-            if (DosHeader.e_magic != IMAGE_DOS_SIGNATURE) goto Error;
-
-            memset(&NtHeaders, 0, sizeof(NtHeaders));
-            Status = NtReadVirtualMemory(ProcessHandle,
-                                         (char *)Peb.ImageBaseAddress + DosHeader.e_lfanew,
-                                         &NtHeaders,
-                                         sizeof(NtHeaders),
-                                         &Count);
-
-            if (!NT_SUCCESS(Status) || Count != sizeof(NtHeaders)) goto Error;
-            if (NtHeaders.Signature != IMAGE_NT_SIGNATURE) goto Error;
-
-            Version = MAKELONG(NtHeaders.OptionalHeader.MinorSubsystemVersion,
-                               NtHeaders.OptionalHeader.MajorSubsystemVersion);
+            /* Get the version straight out of the NT header */
+            Version = MAKELONG(VersionData[0], VersionData[1]);
 
 Error:
-            if (!NT_SUCCESS(Status))
-            {
-                BaseSetLastNTError(Status);
-            }
+            /* If there was an error anywhere, set the last error */
+            if (!NT_SUCCESS(Status)) BaseSetLastNTError(Status);
         }
     }
     _SEH2_FINALLY
     {
+        /* Close the process handle */
         if (ProcessHandle) CloseHandle(ProcessHandle);
     }
     _SEH2_END;
 
+    /* And return the version data */
     return Version;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessIoCounters(HANDLE hProcess,
-                     PIO_COUNTERS lpIoCounters)
+GetProcessIoCounters(IN HANDLE hProcess,
+                     OUT PIO_COUNTERS lpIoCounters)
 {
     NTSTATUS Status;
 
+    /* Query the kernel. Structures are identical, so let it do the copy too. */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessIoCounters,
                                        lpIoCounters,
@@ -1612,25 +2118,27 @@ GetProcessIoCounters(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        /* Handle error path */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* All done */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessPriorityBoost(HANDLE hProcess,
-                        PBOOL pDisablePriorityBoost)
+GetProcessPriorityBoost(IN HANDLE hProcess,
+                        OUT PBOOL pDisablePriorityBoost)
 {
     NTSTATUS Status;
     ULONG PriorityBoost;
 
+    /* Query the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessPriorityBoost,
                                        &PriorityBoost,
@@ -1638,78 +2146,85 @@ GetProcessPriorityBoost(HANDLE hProcess,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        *pDisablePriorityBoost = PriorityBoost;
+        /* Convert from ULONG to a BOOL */
+        *pDisablePriorityBoost = PriorityBoost ? TRUE : FALSE;
         return TRUE;
     }
 
+    /* Handle error path */
     BaseSetLastNTError(Status);
     return FALSE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-SetProcessPriorityBoost(HANDLE hProcess,
-                        BOOL bDisablePriorityBoost)
+SetProcessPriorityBoost(IN HANDLE hProcess,
+                        IN BOOL bDisablePriorityBoost)
 {
     NTSTATUS Status;
-    ULONG PriorityBoost = (bDisablePriorityBoost ? TRUE : FALSE); /* prevent setting values other than 1 and 0 */
+    ULONG PriorityBoost;
 
+    /* Enforce that this is a BOOL, and send it to the kernel as a ULONG */
+    PriorityBoost = (bDisablePriorityBoost ? TRUE : FALSE);
     Status = NtSetInformationProcess(hProcess,
                                      ProcessPriorityBoost,
                                      &PriorityBoost,
                                      sizeof(ULONG));
     if (!NT_SUCCESS(Status))
     {
+        /* Handle error path */
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* All done */
     return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetProcessHandleCount(HANDLE hProcess,
-                      PDWORD pdwHandleCount)
+GetProcessHandleCount(IN HANDLE hProcess,
+                      OUT PDWORD pdwHandleCount)
 {
     ULONG phc;
     NTSTATUS Status;
 
+    /* Query the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessHandleCount,
                                        &phc,
                                        sizeof(ULONG),
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-      *pdwHandleCount = phc;
-      return TRUE;
+        /* Copy the count and return sucecss */
+        *pdwHandleCount = phc;
+        return TRUE;
     }
 
+    /* Handle error path */
     BaseSetLastNTError(Status);
     return FALSE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-IsWow64Process(HANDLE hProcess,
-               PBOOL Wow64Process)
+IsWow64Process(IN HANDLE hProcess,
+               OUT PBOOL Wow64Process)
 {
     ULONG_PTR pbi;
     NTSTATUS Status;
 
+    /* Query the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessWow64Information,
                                        &pbi,
@@ -1717,12 +2232,13 @@ IsWow64Process(HANDLE hProcess,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        /* Handle error path */
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Enforce this is a BOOL, and return success */
     *Wow64Process = (pbi != 0);
-
     return TRUE;
 }
 
@@ -1733,10 +2249,8 @@ LPSTR
 WINAPI
 GetCommandLineA(VOID)
 {
-    DPRINT("CommandLine \'%s\'\n", CommandLineStringA.Buffer);
-    return CommandLineStringA.Buffer;
+    return BaseAnsiCommandLine.Buffer;
 }
-
 
 /*
  * @implemented
@@ -1745,8 +2259,7 @@ LPWSTR
 WINAPI
 GetCommandLineW(VOID)
 {
-    DPRINT("CommandLine \'%S\'\n", CommandLineStringW.Buffer);
-    return CommandLineStringW.Buffer;
+    return BaseUnicodeCommandLine.Buffer;
 }
 
 /*
@@ -1767,11 +2280,14 @@ ReadProcessMemory(IN HANDLE hProcess,
                                  (PVOID)lpBaseAddress,
                                  lpBuffer,
                                  nSize,
-                                 lpNumberOfBytesRead);
+                                 &nSize);
+
+    /* In user-mode, this parameter is optional */
+    if (lpNumberOfBytesRead) *lpNumberOfBytesRead = nSize;
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
-        BaseSetLastNTError (Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1827,7 +2343,11 @@ WriteProcessMemory(IN HANDLE hProcess,
                                           lpBaseAddress,
                                           (LPVOID)lpBuffer,
                                           nSize,
-                                          lpNumberOfBytesWritten);
+                                          &nSize);
+
+            /* In Win32, the parameter is optional, so handle this case */
+            if (lpNumberOfBytesWritten) *lpNumberOfBytesWritten = nSize;
+
             if (!NT_SUCCESS(Status))
             {
                 /* We failed */
@@ -1842,7 +2362,7 @@ WriteProcessMemory(IN HANDLE hProcess,
         else
         {
             /* Check if we were read only */
-            if ((OldValue & PAGE_NOACCESS) || (OldValue & PAGE_READONLY))
+            if (OldValue & (PAGE_NOACCESS | PAGE_READONLY))
             {
                 /* Restore protection and fail */
                 NtProtectVirtualMemory(hProcess,
@@ -1851,7 +2371,9 @@ WriteProcessMemory(IN HANDLE hProcess,
                                        OldValue,
                                        &OldValue);
                 BaseSetLastNTError(STATUS_ACCESS_VIOLATION);
-                return FALSE;
+
+                /* Note: This is what Windows returns and code depends on it */
+                return STATUS_ACCESS_VIOLATION;
             }
 
             /* Otherwise, do the write */
@@ -1859,7 +2381,10 @@ WriteProcessMemory(IN HANDLE hProcess,
                                           lpBaseAddress,
                                           (LPVOID)lpBuffer,
                                           nSize,
-                                          lpNumberOfBytesWritten);
+                                          &nSize);
+
+            /* In Win32, the parameter is optional, so handle this case */
+            if (lpNumberOfBytesWritten) *lpNumberOfBytesWritten = nSize;
 
             /* And restore the protection */
             NtProtectVirtualMemory(hProcess,
@@ -1871,7 +2396,9 @@ WriteProcessMemory(IN HANDLE hProcess,
             {
                 /* We failed */
                 BaseSetLastNTError(STATUS_ACCESS_VIOLATION);
-                return FALSE;
+
+                /* Note: This is what Windows returns and code depends on it */
+                return STATUS_ACCESS_VIOLATION;
             }
 
             /* Flush the ITLB */
@@ -1893,7 +2420,7 @@ WriteProcessMemory(IN HANDLE hProcess,
 BOOL
 WINAPI
 ProcessIdToSessionId(IN DWORD dwProcessId,
-                     OUT DWORD *pSessionId)
+                     OUT PDWORD pSessionId)
 {
     PROCESS_SESSION_INFORMATION SessionInformation;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1901,61 +2428,43 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
     HANDLE ProcessHandle;
     NTSTATUS Status;
 
+    /* Do a quick check if the pointer is not writable */
     if (IsBadWritePtr(pSessionId, sizeof(DWORD)))
     {
+        /* Fail fast */
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
+    /* Open the process passed in by ID */
     ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     ClientId.UniqueThread = 0;
-
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-
     Status = NtOpenProcess(&ProcessHandle,
                            PROCESS_QUERY_INFORMATION,
                            &ObjectAttributes,
                            &ClientId);
     if (NT_SUCCESS(Status))
     {
+        /* Query the session ID from the kernel */
         Status = NtQueryInformationProcess(ProcessHandle,
                                            ProcessSessionInformation,
                                            &SessionInformation,
                                            sizeof(SessionInformation),
                                            NULL);
-        NtClose(ProcessHandle);
 
+        /* Close the handle and check if we suceeded */
+        NtClose(ProcessHandle);
         if (NT_SUCCESS(Status))
         {
+            /* Return the session ID */
             *pSessionId = SessionInformation.SessionId;
             return TRUE;
         }
     }
 
+    /* Set error code and fail */
     BaseSetLastNTError(Status);
-    return FALSE;
-}
-
-BOOL
-WINAPI
-SetProcessWorkingSetSizeEx(IN HANDLE hProcess,
-                           IN SIZE_T dwMinimumWorkingSetSize,
-                           IN SIZE_T dwMaximumWorkingSetSize,
-                           IN DWORD Flags)
-{
-    STUB;
-    return FALSE;
-}
-
-
-BOOL
-WINAPI
-GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
-                           OUT PSIZE_T lpMinimumWorkingSetSize,
-                           OUT PSIZE_T lpMaximumWorkingSetSize,
-                           OUT PDWORD Flags)
-{
-    STUB;
     return FALSE;
 }
 
@@ -2438,7 +2947,7 @@ GetAppName:
     /* FIXME: Allow CREATE_SEPARATE only for WOW Apps, once we have that. */
 
     /* Get some information about the executable */
-    Status = ZwQuerySection(hSection,
+    Status = NtQuerySection(hSection,
                             SectionImageInformation,
                             &SectionImageInfo,
                             sizeof(SectionImageInfo),
@@ -2507,7 +3016,8 @@ GetAppName:
         /* Check if only this process will be debugged */
         if (dwCreationFlags & DEBUG_ONLY_THIS_PROCESS)
         {
-            /* FIXME: Set process flag */
+            /* Set process flag */
+            hDebug = (HANDLE)((ULONG_PTR)hDebug | 0x1);
         }
     }
 
@@ -2659,29 +3169,26 @@ GetAppName:
 
     /* Create Process Environment */
     RemotePeb = ProcessBasicInfo.PebBaseAddress;
-    Status = BasePushProcessParameters(hProcess,
-                                       RemotePeb,
-                                       (LPWSTR)lpApplicationName,
-                                       CurrentDirectory,
-                                       (QuotesNeeded || CmdLineIsAppName || Escape) ?
-                                       QuotedCmdLine : lpCommandLine,
-                                       lpEnvironment,
-                                       EnvSize,
-                                       &StartupInfo,
-                                       dwCreationFlags,
-                                       bInheritHandles);
+    Ret = BasePushProcessParameters(0,
+                                    hProcess,
+                                    RemotePeb,
+                                    (LPWSTR)lpApplicationName,
+                                    CurrentDirectory,
+                                    (QuotesNeeded || CmdLineIsAppName || Escape) ?
+                                    QuotedCmdLine : lpCommandLine,
+                                    lpEnvironment,
+                                    &StartupInfo,
+                                    dwCreationFlags,
+                                    bInheritHandles,
+                                    0,
+                                    NULL,
+                                    0);
+    if (!Ret) goto Cleanup;
 
     /* Cleanup Environment */
     if (lpEnvironment && !(dwCreationFlags & CREATE_UNICODE_ENVIRONMENT))
     {
         RtlDestroyEnvironment(lpEnvironment);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not initialize Process Environment\n");
-        BaseSetLastNTError(Status);
-        goto Cleanup;
     }
 
     /* Close the section */
@@ -2718,25 +3225,15 @@ GetAppName:
                                      &RemoteParameters->StandardError);
     }
 
-    /* Notify CSRSS */
-    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
-                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
-                                      bInheritHandles);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR Notification Failed\n");
-        BaseSetLastNTError(Status);
-        goto Cleanup;
-    }
-
     /* Create the first thread */
     DPRINT("Creating thread for process (EntryPoint = 0x%p)\n",
             SectionImageInfo.TransferAddress);
     hThread = BasepCreateFirstThread(hProcess,
                                      lpThreadAttributes,
                                      &SectionImageInfo,
-                                     &ClientId);
+                                     &ClientId,
+                                     bInheritHandles,
+                                     dwCreationFlags);
 
     if (hThread == NULL)
     {
@@ -2979,6 +3476,50 @@ CreateProcessA(LPCSTR lpApplicationName,
                                   lpStartupInfo,
                                   lpProcessInformation,
                                   NULL);
+}
+
+/*
+ * @implemented
+ */
+UINT
+WINAPI
+WinExec(LPCSTR lpCmdLine,
+        UINT uCmdShow)
+{
+    STARTUPINFOA StartupInfo;
+    PROCESS_INFORMATION  ProcessInformation;
+    DWORD dosErr;
+
+    RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(STARTUPINFOA);
+    StartupInfo.wShowWindow = (WORD)uCmdShow;
+    StartupInfo.dwFlags = 0;
+
+    if (!CreateProcessA(NULL,
+                        (PVOID)lpCmdLine,
+                        NULL,
+                        NULL,
+                        FALSE,
+                        0,
+                        NULL,
+                        NULL,
+                        &StartupInfo,
+                        &ProcessInformation))
+    {
+        dosErr = GetLastError();
+        return dosErr < 32 ? dosErr : ERROR_BAD_FORMAT;
+    }
+
+    if (NULL != UserWaitForInputIdleRoutine)
+    {
+        UserWaitForInputIdleRoutine(ProcessInformation.hProcess,
+                                           10000);
+    }
+
+    NtClose(ProcessInformation.hProcess);
+    NtClose(ProcessInformation.hThread);
+
+    return 33; /* Something bigger than 31 means success. */
 }
 
 /* EOF */

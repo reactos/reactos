@@ -36,14 +36,17 @@ typedef struct _RTL_BITMAP_RUN {
   ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
+_Function_class_(RTL_QUERY_REGISTRY_ROUTINE)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
-  IN PWSTR ValueName,
-  IN ULONG ValueType,
-  IN PVOID ValueData,
-  IN ULONG ValueLength,
-  IN PVOID Context,
-  IN PVOID EntryContext);
+  _In_z_ PWSTR ValueName,
+  _In_ ULONG ValueType,
+  _In_reads_bytes_opt_(ValueLength) PVOID ValueData,
+  _In_ ULONG ValueLength,
+  _In_opt_ PVOID Context,
+  _In_opt_ PVOID EntryContext);
 
 typedef struct _RTL_QUERY_REGISTRY_TABLE {
   PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
@@ -161,11 +164,11 @@ extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
 
 typedef BOOLEAN
 (*PFN_RTL_IS_NTDDI_VERSION_AVAILABLE)(
-  IN ULONG Version);
+  _In_ ULONG Version);
 
 typedef BOOLEAN
 (*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
-  IN ULONG Version);
+  _In_ ULONG Version);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
@@ -221,11 +224,13 @@ typedef union _RTL_RUN_ONCE {
   PVOID Ptr;
 } RTL_RUN_ONCE, *PRTL_RUN_ONCE;
 
+_Function_class_(RTL_RUN_ONCE_INIT_FN)
+_IRQL_requires_same_
 typedef ULONG /* LOGICAL */
 (NTAPI *PRTL_RUN_ONCE_INIT_FN) (
-  IN OUT PRTL_RUN_ONCE RunOnce,
-  IN OUT PVOID Parameter OPTIONAL,
-  IN OUT PVOID *Context OPTIONAL);
+  _Inout_ PRTL_RUN_ONCE RunOnce,
+  _Inout_opt_ PVOID Parameter,
+  _Inout_opt_ PVOID *Context);
 
 #endif /* _RTL_RUN_ONCE_DEF */
 
@@ -245,30 +250,39 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS {
 // Forwarder
 struct _RTL_AVL_TABLE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_AVL_COMPARE_ROUTINE)
 typedef RTL_GENERIC_COMPARE_RESULTS
 (NTAPI RTL_AVL_COMPARE_ROUTINE) (
-  IN struct _RTL_AVL_TABLE *Table,
-  IN PVOID FirstStruct,
-  IN PVOID SecondStruct);
+  _In_ struct _RTL_AVL_TABLE *Table,
+  _In_ PVOID FirstStruct,
+  _In_ PVOID SecondStruct);
 typedef RTL_AVL_COMPARE_ROUTINE *PRTL_AVL_COMPARE_ROUTINE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_AVL_ALLOCATE_ROUTINE)
+__drv_allocatesMem(Mem)
 typedef PVOID
 (NTAPI RTL_AVL_ALLOCATE_ROUTINE) (
-  IN struct _RTL_AVL_TABLE *Table,
-  IN CLONG ByteSize);
+  _In_ struct _RTL_AVL_TABLE *Table,
+  _In_ CLONG ByteSize);
 typedef RTL_AVL_ALLOCATE_ROUTINE *PRTL_AVL_ALLOCATE_ROUTINE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_AVL_FREE_ROUTINE)
 typedef VOID
 (NTAPI RTL_AVL_FREE_ROUTINE) (
-  IN struct _RTL_AVL_TABLE *Table,
-  IN PVOID Buffer);
+  _In_ struct _RTL_AVL_TABLE *Table,
+  _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer);
 typedef RTL_AVL_FREE_ROUTINE *PRTL_AVL_FREE_ROUTINE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_AVL_MATCH_FUNCTION)
 typedef NTSTATUS
 (NTAPI RTL_AVL_MATCH_FUNCTION) (
-  IN struct _RTL_AVL_TABLE *Table,
-  IN PVOID UserData,
-  IN PVOID MatchData);
+  _In_ struct _RTL_AVL_TABLE *Table,
+  _In_ PVOID UserData,
+  _In_ PVOID MatchData);
 typedef RTL_AVL_MATCH_FUNCTION *PRTL_AVL_MATCH_FUNCTION;
 
 typedef struct _RTL_BALANCED_LINKS {
@@ -303,23 +317,30 @@ typedef struct _RTL_SPLAY_LINKS {
 
 struct _RTL_GENERIC_TABLE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_GENERIC_COMPARE_ROUTINE)
 typedef RTL_GENERIC_COMPARE_RESULTS
 (NTAPI RTL_GENERIC_COMPARE_ROUTINE) (
-  IN struct _RTL_GENERIC_TABLE *Table,
-  IN PVOID FirstStruct,
-  IN PVOID SecondStruct);
+  _In_ struct _RTL_GENERIC_TABLE *Table,
+  _In_ PVOID FirstStruct,
+  _In_ PVOID SecondStruct);
 typedef RTL_GENERIC_COMPARE_ROUTINE *PRTL_GENERIC_COMPARE_ROUTINE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_GENERIC_ALLOCATE_ROUTINE)
+__drv_allocatesMem(Mem)
 typedef PVOID
 (NTAPI RTL_GENERIC_ALLOCATE_ROUTINE) (
-  IN struct _RTL_GENERIC_TABLE *Table,
-  IN CLONG ByteSize);
+  _In_ struct _RTL_GENERIC_TABLE *Table,
+  _In_ CLONG ByteSize);
 typedef RTL_GENERIC_ALLOCATE_ROUTINE *PRTL_GENERIC_ALLOCATE_ROUTINE;
 
+_IRQL_requires_same_
+_Function_class_(RTL_GENERIC_FREE_ROUTINE)
 typedef VOID
 (NTAPI RTL_GENERIC_FREE_ROUTINE) (
-  IN struct _RTL_GENERIC_TABLE *Table,
-  IN PVOID Buffer);
+  _In_ struct _RTL_GENERIC_TABLE *Table,
+  _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer);
 typedef RTL_GENERIC_FREE_ROUTINE *PRTL_GENERIC_FREE_ROUTINE;
 
 typedef struct _RTL_GENERIC_TABLE {
@@ -357,6 +378,8 @@ typedef struct _RTL_GENERIC_TABLE {
 #define PRTL_GENERIC_TABLE              PRTL_AVL_TABLE
 
 #endif /* RTL_USE_AVL_TABLES */
+
+#define RTL_HASH_ALLOCATED_HEADER 0x00000001
 
 typedef struct _RTL_DYNAMIC_HASH_TABLE_ENTRY {
   LIST_ENTRY Linkage;
@@ -456,20 +479,26 @@ $if (_NTIFS_)
 
 #define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
 
+_Function_class_(RTL_ALLOCATE_STRING_ROUTINE)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__drv_allocatesMem(Mem)
 typedef PVOID
 (NTAPI *PRTL_ALLOCATE_STRING_ROUTINE)(
-  IN SIZE_T NumberOfBytes);
+  _In_ SIZE_T NumberOfBytes);
 
 #if _WIN32_WINNT >= 0x0600
+_Function_class_(RTL_REALLOCATE_STRING_ROUTINE)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+__drv_allocatesMem(Mem)
 typedef PVOID
 (NTAPI *PRTL_REALLOCATE_STRING_ROUTINE)(
-  IN SIZE_T NumberOfBytes,
+  _In_ SIZE_T NumberOfBytes,
   IN PVOID Buffer);
 #endif
 
 typedef VOID
 (NTAPI *PRTL_FREE_STRING_ROUTINE)(
-  IN PVOID Buffer);
+  _In_ __drv_freesMem(Mem) _Post_invalid_ PVOID Buffer);
 
 extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
 extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
@@ -478,11 +507,13 @@ extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif
 
+_Function_class_(RTL_HEAP_COMMIT_ROUTINE)
+_IRQL_requires_same_
 typedef NTSTATUS
-(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
-  IN PVOID Base,
-  IN OUT PVOID *CommitAddress,
-  IN OUT PSIZE_T CommitSize);
+(NTAPI *PRTL_HEAP_COMMIT_ROUTINE) (
+  _In_ PVOID Base,
+  _Inout_ PVOID *CommitAddress,
+  _Inout_ PSIZE_T CommitSize);
 
 typedef struct _RTL_HEAP_PARAMETERS {
   ULONG Length;
@@ -503,9 +534,9 @@ typedef struct _RTL_HEAP_PARAMETERS {
 typedef struct _GENERATE_NAME_CONTEXT {
   USHORT Checksum;
   BOOLEAN CheckSumInserted;
-  UCHAR NameLength;
+  _Field_range_(<=, 8) UCHAR NameLength;
   WCHAR NameBuffer[8];
-  ULONG ExtensionLength;
+  _Field_range_(<=, 4) ULONG ExtensionLength;
   WCHAR ExtensionBuffer[4];
   ULONG LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
@@ -553,4 +584,4 @@ typedef struct _COMPRESSED_DATA_INFO {
   ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 #endif
-$endif
+$endif (_NTIFS_)

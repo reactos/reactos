@@ -438,14 +438,3 @@ NTSTATUS
 ReadRegistryEntries(
 	IN PUNICODE_STRING RegistryPath,
 	OUT PI8042_SETTINGS Settings);
-
-/* setup.c */
-
-BOOLEAN
-IsFirstStageSetup(
-	VOID);
-
-NTSTATUS
-i8042AddLegacyKeyboard(
-	IN PDRIVER_OBJECT DriverObject,
-	IN PUNICODE_STRING RegistryPath);

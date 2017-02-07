@@ -111,7 +111,7 @@ FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
 
         Status = STATUS_SUCCESS;
     }
-    ObfDereferenceObject(DeviceObject);
+    ObDereferenceObject(DeviceObject);
 
     return Status;
 }

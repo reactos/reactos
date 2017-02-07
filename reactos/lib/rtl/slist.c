@@ -58,13 +58,13 @@ RtlFirstEntrySList(IN const SLIST_HEADER *ListHead)
 #endif
 }
 
-WORD  
+WORD
 NTAPI
 RtlQueryDepthSList(IN PSLIST_HEADER ListHead)
 {
 #ifdef _WIN64
-    return ListHead->Header8.HeaderType ? 
-        ListHead->Header16.Sequence : ListHead->Header8.Sequence;
+    return ListHead->Header8.HeaderType ?
+        (WORD)ListHead->Header16.Sequence : (WORD)ListHead->Header8.Sequence;
 #else
     return ListHead->Depth;
 #endif

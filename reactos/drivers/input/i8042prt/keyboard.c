@@ -812,16 +812,30 @@ i8042KbdInterruptService(
 		else if (DeviceExtension->TabPressed)
 		{
 			DeviceExtension->TabPressed = FALSE;
-
-			/* Send request to the kernel debugger. 
-			 * Unknown requests will be ignored. */
-			KdSystemDebugControl(' soR',
-			                     (PVOID)(ULONG_PTR)InputData->MakeCode,
-			                     0,
-			                     NULL,
-			                     0,
-			                     NULL,
-			                     KernelMode);
+            
+            /* Check which action to do */
+            if (InputData->MakeCode == 0x25)
+            {
+                /* k - Breakpoint */
+                DbgBreakPoint();
+            }
+            else if (InputData->MakeCode == 0x30)
+            {
+                /* b - Bugcheck */
+                KeBugCheck(MANUALLY_INITIATED_CRASH);
+            }
+            else
+            {
+			    /* Send request to the kernel debugger. 
+			     * Unknown requests will be ignored. */
+			    KdSystemDebugControl(' soR',
+			                         (PVOID)(ULONG_PTR)InputData->MakeCode,
+			                         0,
+			                         NULL,
+			                         0,
+			                         NULL,
+			                         KernelMode);
+            }
 		}
 	}
 

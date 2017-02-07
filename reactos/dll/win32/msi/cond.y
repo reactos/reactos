@@ -488,7 +488,7 @@ static INT compare_substring( LPCWSTR a, INT operator, LPCWSTR b )
         return !strncmpiW( a + (l - r), b, r );
     }
     default:
-    	ERR("invalid substring operator\n");
+        ERR("invalid substring operator\n");
         return 0;
     }
     return 0;
@@ -498,7 +498,7 @@ static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert )
 {
     if (operator >= COND_SS && operator <= COND_RHS)
         return compare_substring( a, operator, b );
-	
+
     /* null and empty string are equivalent */
     if (!a) a = szEmpty;
     if (!b) b = szEmpty;
@@ -665,8 +665,7 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
     if (ch == '"' )
     {
         LPCWSTR p = strchrW( str->data + 1, '"' );
-	if (!p)
-            return COND_ERROR;
+        if (!p) return COND_ERROR;
         len = p - str->data + 1;
         rc = COND_LITER;
     }
@@ -813,8 +812,7 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
 
     TRACE("%s\n", debugstr_w( szCondition ) );
 
-    if ( szCondition == NULL )
-    	return MSICONDITION_NONE;
+    if (szCondition == NULL) return MSICONDITION_NONE;
 
     cond.package = package;
     cond.str   = szCondition;

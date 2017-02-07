@@ -267,19 +267,18 @@ ProIndicatePacket(
   MiniDisplayPacket(Packet);
 #endif
 
-  LookaheadBuffer = ExAllocatePool(NonPagedPool, Adapter->NdisMiniportBlock.CurrentLookahead + Adapter->MediumHeaderSize);
+  NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
+
+  LookaheadBuffer = ExAllocatePool(NonPagedPool, PacketLength);
   if (!LookaheadBuffer) {
       NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
   }
 
-  NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
-
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
-      BufferedLength = CopyPacketToBuffer(LookaheadBuffer, Packet, 0, Adapter->NdisMiniportBlock.CurrentLookahead +
-                                                                      Adapter->MediumHeaderSize);
+      BufferedLength = CopyPacketToBuffer(LookaheadBuffer, Packet, 0, PacketLength);
       Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = Packet;
     }
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);

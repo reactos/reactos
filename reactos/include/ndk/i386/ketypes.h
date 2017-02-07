@@ -142,6 +142,7 @@ Author:
 #define HYPERSPACE_BASE         0xc0800000
 #endif
 #define MM_HAL_VA_START         0xFFC00000
+#define MM_HAL_VA_END           0xFFFFFFFF
 #define APIC_BASE               0xFFFE0000
 
 //

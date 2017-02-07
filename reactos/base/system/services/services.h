@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <netevent.h>
@@ -67,6 +68,16 @@ typedef struct _SERVICE
 } SERVICE, *PSERVICE;
 
 
+#define LOCK_TAG 0x4C697041 /* 'ApiL' */
+
+typedef struct _START_LOCK
+{
+    DWORD Tag;             /* Must be LOCK_TAG */
+    DWORD TimeWhenLocked;  /* Number of seconds since 1970 */
+    PSID LockOwnerSid;     /* It is NULL if the SCM aquired the lock */
+} START_LOCK, *PSTART_LOCK;
+
+
 /* VARIABLES ***************************************************************/
 
 extern LIST_ENTRY ServiceListHead;
@@ -102,6 +113,11 @@ DWORD
 ScmReadDependencies(HKEY hServiceKey,
                     LPWSTR *lpDependencies,
                     DWORD *lpdwDependenciesLength);
+
+
+/* controlset.c */
+
+BOOL ScmGetControlSetValues(VOID);
 
 
 /* database.c */
@@ -150,6 +166,14 @@ DWORD ScmSetServiceGroup(PSERVICE lpService,
                          LPCWSTR lpGroupName);
 
 
+/* lock.c */
+DWORD ScmAcquireServiceStartLock(IN BOOL IsServiceController,
+                                 OUT LPSC_RPC_LOCK lpLock);
+DWORD ScmReleaseServiceStartLock(IN OUT LPSC_RPC_LOCK lpLock);
+VOID ScmQueryServiceLockStatusW(OUT LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus);
+VOID ScmQueryServiceLockStatusA(OUT LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus);
+
+
 /* rpcserver.c */
 
 VOID ScmStartRpcServer(VOID);
@@ -161,6 +185,7 @@ VOID PrintString(LPCSTR fmt, ...);
 VOID ScmLogError(DWORD dwEventId,
                  WORD wStrings,
                  LPCWSTR *lpStrings);
+VOID ScmWaitForLsa(VOID);
 
 /* EOF */
 

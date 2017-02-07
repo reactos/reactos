@@ -13,7 +13,7 @@ extern "C" {
 #ifdef _MSC_VER
 #define WS2TCPIP_INLINE __inline
 #else
-#define WS2TCPIP_INLINE static inline
+#define WS2TCPIP_INLINE extern inline
 #endif
 
 #include <in6addr.h>
@@ -355,21 +355,21 @@ IN6_IS_ADDR_SUBNET_RESERVED_ANYCAST(CONST IN6_ADDR *a) {
 WS2TCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_ANYCAST(CONST IN6_ADDR *a) {
-  return (IN6_IS_ADDR_SUBNET_RESERVED_ANYCAST(a) || 
+  return (IN6_IS_ADDR_SUBNET_RESERVED_ANYCAST(a) ||
           IN6_IS_ADDR_SUBNET_ROUTER_ANYCAST(a));
 }
 
 WS2TCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_LINKLOCAL(CONST IN6_ADDR *a) {
-  return (BOOLEAN)((a->s6_bytes[0] == 0xfe) && 
+  return (BOOLEAN)((a->s6_bytes[0] == 0xfe) &&
                    ((a->s6_bytes[1] & 0xc0) == 0x80));
 }
 
 WS2TCPIP_INLINE
 BOOLEAN
 IN6_IS_ADDR_SITELOCAL(CONST IN6_ADDR *a) {
-  return (BOOLEAN)((a->s6_bytes[0] == 0xfe) && 
+  return (BOOLEAN)((a->s6_bytes[0] == 0xfe) &&
                    ((a->s6_bytes[1] & 0xc0) == 0xc0));
 }
 
@@ -451,13 +451,13 @@ IN6_IS_ADDR_MC_GLOBAL(CONST IN6_ADDR *a) {
                    ((a->s6_bytes[1] & 0xf) == 0xe));
 }
 
-WS2TCPIP_INLINE 
+WS2TCPIP_INLINE
 VOID
 IN6_SET_ADDR_UNSPECIFIED(PIN6_ADDR a) {
   memset(a->s6_bytes, 0, sizeof(IN6_ADDR));
 }
 
-WS2TCPIP_INLINE 
+WS2TCPIP_INLINE
 VOID
 IN6_SET_ADDR_LOOPBACK(PIN6_ADDR a) {
   memset(a->s6_bytes, 0, sizeof(IN6_ADDR));
@@ -520,7 +520,7 @@ IN6ADDR_ISUNSPECIFIED(CONST SOCKADDR_IN6 *a) {
 
 typedef enum _MULTICAST_MODE_TYPE {
   MCAST_INCLUDE = 0,
-  MCAST_EXCLUDE 
+  MCAST_EXCLUDE
 } MULTICAST_MODE_TYPE;
 
 typedef struct ip_mreq {

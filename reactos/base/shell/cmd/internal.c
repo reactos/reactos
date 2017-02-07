@@ -281,7 +281,7 @@ MakeFullPath(TCHAR * DirPath)
 {
     TCHAR path[MAX_PATH];
     TCHAR *p = DirPath;
-    INT  n;
+    INT_PTR  n;
 
     if (CreateDirectory(DirPath, NULL))
         return TRUE;
@@ -321,7 +321,7 @@ INT cmd_mkdir (LPTSTR param)
 		return 0;
 	}
 
-	p = split (param, &argc, FALSE);
+	p = split (param, &argc, FALSE, FALSE);
 	if (argc == 0)
 	{
 		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
@@ -411,7 +411,7 @@ INT cmd_rmdir (LPTSTR param)
 		return 0;
 	}
 
-	arg = split (param, &args, FALSE);
+	arg = split (param, &args, FALSE, FALSE);
 	dirCount = 0;
 
 	/* check for options anywhere in command line */

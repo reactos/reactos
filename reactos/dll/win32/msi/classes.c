@@ -74,12 +74,12 @@ static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
 
 static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
 {
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','A','p','p','I','d','`',' ','W','H','E','R','E',' ',
+        '`','A','p','p','I','d','`',' ','=',' ','\'','%','s','\'',0};
     MSIRECORD *row;
     MSIAPPID *appid;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','A','p','p','I','d','`',' ','W','H','E','R','E',' ',
-         '`','A','p','p','I','d','`',' ','=',' ','\'','%','s','\'',0};
 
     if (!name)
         return NULL;
@@ -94,13 +94,12 @@ static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
         }
     }
     
-    row = MSI_QueryGetRecord(package->db, ExecSeqQuery, name);
+    row = MSI_QueryGetRecord(package->db, query, name);
     if (!row)
         return NULL;
 
     appid = load_appid(package, row);
     msiobj_release(&row->hdr);
-
     return appid;
 }
 
@@ -142,7 +141,7 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
-        FilePath = build_icon_path(package,FileName);
+        FilePath = msi_build_icon_path(package, FileName);
        
         progid->IconPath = msi_alloc( (strlenW(FilePath)+10)* sizeof(WCHAR) );
 
@@ -154,7 +153,7 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
     {
         buffer = MSI_RecordGetString(row,5);
         if (buffer)
-            progid->IconPath = build_icon_path(package,buffer);
+            progid->IconPath = msi_build_icon_path(package, buffer);
     }
 
     progid->CurVer = NULL;
@@ -179,12 +178,12 @@ static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 
 static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
 {
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','P','r','o','g','I','d','`',' ','W','H','E','R','E',' ',
+        '`','P','r','o','g','I','d','`',' ','=',' ','\'','%','s','\'',0};
     MSIPROGID *progid;
     MSIRECORD *row;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','P','r','o','g','I','d','`',' ','W','H','E','R','E',' ',
-         '`','P','r','o','g','I','d','`',' ','=',' ','\'','%','s','\'',0};
 
     if (!name)
         return NULL;
@@ -199,13 +198,12 @@ static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
         }
     }
     
-    row = MSI_QueryGetRecord( package->db, ExecSeqQuery, name );
+    row = MSI_QueryGetRecord( package->db, query, name );
     if (!row)
         return NULL;
 
     progid = load_progid(package, row);
     msiobj_release(&row->hdr);
-
     return progid;
 }
 
@@ -227,7 +225,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
     TRACE("loading class %s\n",debugstr_w(cls->clsid));
     cls->Context = msi_dup_record_field( row, 2 );
     buffer = MSI_RecordGetString(row,3);
-    cls->Component = get_loaded_component(package, buffer);
+    cls->Component = msi_get_loaded_component( package, buffer );
 
     cls->ProgIDText = msi_dup_record_field(row,4);
     cls->ProgID = load_given_progid(package, cls->ProgIDText);
@@ -248,7 +246,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
-        FilePath = build_icon_path(package,FileName);
+        FilePath = msi_build_icon_path(package, FileName);
        
         cls->IconPath = msi_alloc( (strlenW(FilePath)+5)* sizeof(WCHAR) );
 
@@ -260,7 +258,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
     {
         buffer = MSI_RecordGetString(row,8);
         if (buffer)
-            cls->IconPath = build_icon_path(package,buffer);
+            cls->IconPath = msi_build_icon_path(package, buffer);
     }
 
     if (!MSI_RecordIsNull(row,10))
@@ -287,15 +285,15 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         }
         else
         {
-            cls->DefInprocHandler32 = msi_dup_record_field( row, 10);
-            reduce_to_longfilename(cls->DefInprocHandler32);
+            cls->DefInprocHandler32 = msi_dup_record_field( row, 10 );
+            msi_reduce_to_long_filename( cls->DefInprocHandler32 );
         }
     }
     buffer = MSI_RecordGetString(row,11);
     deformat_string(package,buffer,&cls->Argument);
 
     buffer = MSI_RecordGetString(row,12);
-    cls->Feature = get_loaded_feature(package,buffer);
+    cls->Feature = msi_get_loaded_feature(package, buffer);
 
     cls->Attributes = MSI_RecordGetInteger(row,13);
     
@@ -310,12 +308,12 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
  */
 static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
 {
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','C','l','a','s','s','`',' ','W','H','E','R','E',' ',
+        '`','C','L','S','I','D','`',' ','=',' ','\'','%','s','\'',0};
     MSICLASS *cls;
     MSIRECORD *row;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','C','l','a','s','s','`',' ','W','H','E','R','E',' ',
-         '`','C','L','S','I','D','`',' ','=',' ','\'','%','s','\'',0};
 
     if (!classid)
         return NULL;
@@ -330,13 +328,12 @@ static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
         }
     }
 
-    row = MSI_QueryGetRecord(package->db, ExecSeqQuery, classid);
+    row = MSI_QueryGetRecord(package->db, query, classid);
     if (!row)
         return NULL;
 
     cls = load_class(package, row);
     msiobj_release(&row->hdr);
-
     return cls;
 }
 
@@ -370,12 +367,11 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 
 static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
 {
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','M','I','M','E','`',' ','W','H','E','R','E',' ',
+        '`','C','o','n','t','e','n','t','T','y','p','e','`',' ','=',' ','\'','%','s','\'',0};
     MSIRECORD *row;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','M','I','M','E','`',' ','W','H','E','R','E',' ',
-         '`','C','o','n','t','e','n','t','T','y','p','e','`',' ','=',' ',
-         '\'','%','s','\'',0};
     MSIMIME *mt;
 
     if (!mime)
@@ -391,13 +387,12 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
         }
     }
     
-    row = MSI_QueryGetRecord(package->db, ExecSeqQuery, mime);
+    row = MSI_QueryGetRecord(package->db, query, mime);
     if (!row)
         return NULL;
 
     mt = load_mime(package, row);
     msiobj_release(&row->hdr);
-
     return mt;
 }
 
@@ -420,7 +415,7 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
     TRACE("loading extension %s\n", debugstr_w(ext->Extension));
 
     buffer = MSI_RecordGetString( row, 2 );
-    ext->Component = get_loaded_component( package,buffer );
+    ext->Component = msi_get_loaded_component( package, buffer );
 
     ext->ProgIDText = msi_dup_record_field( row, 3 );
     ext->ProgID = load_given_progid( package, ext->ProgIDText );
@@ -429,7 +424,7 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
     ext->Mime = load_given_mime( package, buffer );
 
     buffer = MSI_RecordGetString(row,5);
-    ext->Feature = get_loaded_feature( package, buffer );
+    ext->Feature = msi_get_loaded_feature( package, buffer );
 
     return ext;
 }
@@ -440,14 +435,12 @@ static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
  */
 static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
 {
-    MSIRECORD *row;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','E','x','t','e','n','s','i','o','n','`',' ','W','H','E','R','E',' ',
+        '`','E','x','t','e','n','s','i','o','n','`',' ','=',' ','\'','%','s','\'',0};
     MSIEXTENSION *ext;
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','E','x','t','e','n','s','i','o','n','`',' ',
-         'W','H','E','R','E',' ',
-         '`','E','x','t','e','n','s','i','o','n','`',' ','=',' ',
-         '\'','%','s','\'',0};
+    MSIRECORD *row;
 
     if (!name)
         return NULL;
@@ -465,13 +458,12 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
         }
     }
     
-    row = MSI_QueryGetRecord( package->db, ExecSeqQuery, name );
+    row = MSI_QueryGetRecord( package->db, query, name );
     if (!row)
         return NULL;
 
     ext = load_extension(package, row);
     msiobj_release(&row->hdr);
-
     return ext;
 }
 
@@ -525,7 +517,7 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
     clsid = MSI_RecordGetString(rec,1);
     context = MSI_RecordGetString(rec,2);
     buffer = MSI_RecordGetString(rec,3);
-    comp = get_loaded_component(package,buffer);
+    comp = msi_get_loaded_component(package, buffer);
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
@@ -546,21 +538,20 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static VOID load_all_classes(MSIPACKAGE *package)
+static UINT load_all_classes( MSIPACKAGE *package )
 {
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ', 'F','R','O','M',' ','`','C','l','a','s','s','`',0};
     MSIQUERY *view;
+    UINT rc;
 
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ', 'F','R','O','M',' ',
-         '`','C','l','a','s','s','`',0};
-
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
-        return;
+        return ERROR_SUCCESS;
 
     rc = MSI_IterateRecords(view, NULL, iterate_all_classes, package);
     msiobj_release(&view->hdr);
+    return rc;
 }
 
 static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
@@ -574,7 +565,7 @@ static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
 
     extension = MSI_RecordGetString(rec,1);
     buffer = MSI_RecordGetString(rec,2);
-    comp = get_loaded_component(package,buffer);
+    comp = msi_get_loaded_component(package, buffer);
 
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
@@ -593,21 +584,20 @@ static UINT iterate_all_extensions(MSIRECORD *rec, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static VOID load_all_extensions(MSIPACKAGE *package)
+static UINT load_all_extensions( MSIPACKAGE *package )
 {
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','E','x','t','e','n','s','i','o','n','`',0};
     MSIQUERY *view;
+    UINT rc;
 
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','E','x','t','e','n','s','i','o','n','`',0};
-
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (rc != ERROR_SUCCESS)
-        return;
+        return ERROR_SUCCESS;
 
     rc = MSI_IterateRecords(view, NULL, iterate_all_extensions, package);
     msiobj_release(&view->hdr);
+    return rc;
 }
 
 static UINT iterate_all_progids(MSIRECORD *rec, LPVOID param)
@@ -620,38 +610,37 @@ static UINT iterate_all_progids(MSIRECORD *rec, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static VOID load_all_progids(MSIPACKAGE *package)
+static UINT load_all_progids( MSIPACKAGE *package )
 {
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','`','P','r','o','g','I','d','`',' ','F','R','O','M',' ',
+        '`','P','r','o','g','I','d','`',0};
     MSIQUERY *view;
+    UINT rc;
 
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','`','P','r','o','g','I','d','`',' ',
-         'F','R','O','M',' ', '`','P','r','o','g','I','d','`',0};
-
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
-        return;
+        return ERROR_SUCCESS;
 
     rc = MSI_IterateRecords(view, NULL, iterate_all_progids, package);
     msiobj_release(&view->hdr);
+    return rc;
 }
 
-static VOID load_all_verbs(MSIPACKAGE *package)
+static UINT load_all_verbs( MSIPACKAGE *package )
 {
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','V','e','r','b','`',0};
     MSIQUERY *view;
+    UINT rc;
 
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
-         '`','V','e','r','b','`',0};
-
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
-        return;
+        return ERROR_SUCCESS;
 
     rc = MSI_IterateRecords(view, NULL, iterate_load_verb, package);
     msiobj_release(&view->hdr);
+    return rc;
 }
 
 static UINT iterate_all_mimes(MSIRECORD *rec, LPVOID param)
@@ -664,42 +653,49 @@ static UINT iterate_all_mimes(MSIRECORD *rec, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static VOID load_all_mimes(MSIPACKAGE *package)
+static UINT load_all_mimes( MSIPACKAGE *package )
 {
-    UINT rc = ERROR_SUCCESS;
+    static const WCHAR query[] = {
+        'S','E','L','E','C','T',' ','`','C','o','n','t','e','n','t','T','y','p','e','`',' ',
+        'F','R','O','M',' ','`','M','I','M','E','`',0};
     MSIQUERY *view;
+    UINT rc;
 
-    static const WCHAR ExecSeqQuery[] =
-        {'S','E','L','E','C','T',' ',
-         '`','C','o','n','t','e','n','t','T','y','p','e','`',
-         ' ','F','R','O','M',' ',
-         '`','M','I','M','E','`',0};
-
-    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
-        return;
+        return ERROR_SUCCESS;
 
     rc = MSI_IterateRecords(view, NULL, iterate_all_mimes, package);
     msiobj_release(&view->hdr);
+    return rc;
 }
 
-static void load_classes_and_such(MSIPACKAGE *package)
+static UINT load_classes_and_such( MSIPACKAGE *package )
 {
+    UINT r;
+
     TRACE("Loading all the class info and related tables\n");
 
     /* check if already loaded */
     if (!list_empty( &package->classes ) ||
         !list_empty( &package->mimes ) ||
         !list_empty( &package->extensions ) ||
-        !list_empty( &package->progids ) )
-        return;
+        !list_empty( &package->progids )) return ERROR_SUCCESS;
 
-    load_all_classes(package);
-    load_all_extensions(package);
-    load_all_progids(package);
+    r = load_all_classes( package );
+    if (r != ERROR_SUCCESS) return r;
+
+    r = load_all_extensions( package );
+    if (r != ERROR_SUCCESS) return r;
+
+    r = load_all_progids( package );
+    if (r != ERROR_SUCCESS) return r;
+
     /* these loads must come after the other loads */
-    load_all_verbs(package);
-    load_all_mimes(package);
+    r = load_all_verbs( package );
+    if (r != ERROR_SUCCESS) return r;
+
+    return load_all_mimes( package );
 }
 
 static void mark_progid_for_install( MSIPACKAGE* package, MSIPROGID *progid )
@@ -806,10 +802,13 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
     const WCHAR *keypath;
     MSIRECORD *uirow;
-    HKEY hkey,hkey2,hkey3;
+    HKEY hkey, hkey2, hkey3;
     MSICLASS *cls;
+    UINT r;
 
-    load_classes_and_such(package);
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     if (is_64bit && package->platform == PLATFORM_INTEL)
         keypath = szWow6432NodeCLSID;
@@ -841,21 +840,20 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         if (!feature)
             continue;
 
-        if (feature->ActionRequest != INSTALLSTATE_LOCAL &&
-            feature->ActionRequest != INSTALLSTATE_ADVERTISED )
+        feature->Action = msi_get_feature_action( package, feature );
+        if (feature->Action != INSTALLSTATE_LOCAL &&
+            feature->Action != INSTALLSTATE_ADVERTISED )
         {
-            TRACE("Feature %s not scheduled for installation, skipping registration of class %s\n",
+            TRACE("feature %s not scheduled for installation, skipping registration of class %s\n",
                   debugstr_w(feature->Feature), debugstr_w(cls->clsid));
             continue;
         }
-        feature->Action = feature->ActionRequest;
 
-        if (!comp->KeyPath || !(file = get_loaded_file( package, comp->KeyPath )))
+        if (!comp->KeyPath || !(file = msi_get_loaded_file( package, comp->KeyPath )))
         {
             TRACE("COM server not provided, skipping class %s\n", debugstr_w(cls->clsid));
             continue;
         }
-
         TRACE("Registering class %s (%p)\n", debugstr_w(cls->clsid), cls);
 
         cls->Installed = TRUE;
@@ -958,10 +956,9 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         
         uirow = MSI_CreateRecord(1);
         MSI_RecordSetStringW( uirow, 1, cls->clsid );
-        ui_actiondata(package,szRegisterClassInfo,uirow);
+        msi_ui_actiondata( package, szRegisterClassInfo, uirow );
         msiobj_release(&uirow->hdr);
     }
-
     RegCloseKey(hkey);
     return ERROR_SUCCESS;
 }
@@ -973,8 +970,11 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
     MSIRECORD *uirow;
     MSICLASS *cls;
     HKEY hkey, hkey2;
+    UINT r;
 
-    load_classes_and_such( package );
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     if (is_64bit && package->platform == PLATFORM_INTEL)
         keypath = szWow6432NodeCLSID;
@@ -1005,14 +1005,13 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
         if (!feature)
             continue;
 
-        if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+        feature->Action = msi_get_feature_action( package, feature );
+        if (feature->Action != INSTALLSTATE_ABSENT)
         {
-            TRACE("Feature %s not scheduled for removal, skipping unregistration of class %s\n",
+            TRACE("feature %s not scheduled for removal, skipping unregistration of class %s\n",
                   debugstr_w(feature->Feature), debugstr_w(cls->clsid));
             continue;
         }
-        feature->Action = feature->ActionRequest;
-
         TRACE("Unregistering class %s (%p)\n", debugstr_w(cls->clsid), cls);
 
         cls->Installed = FALSE;
@@ -1050,10 +1049,9 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, cls->clsid );
-        ui_actiondata( package, szUnregisterClassInfo, uirow );
+        msi_ui_actiondata( package, szUnregisterClassInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     RegCloseKey( hkey );
     return ERROR_SUCCESS;
 }
@@ -1109,8 +1107,11 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
 {
     MSIPROGID *progid;
     MSIRECORD *uirow;
+    UINT r;
 
-    load_classes_and_such(package);
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
@@ -1131,10 +1132,9 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
-        ui_actiondata( package, szRegisterProgIdInfo, uirow );
+        msi_ui_actiondata( package, szRegisterProgIdInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     return ERROR_SUCCESS;
 }
 
@@ -1143,8 +1143,11 @@ UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
     MSIPROGID *progid;
     MSIRECORD *uirow;
     LONG res;
+    UINT r;
 
-    load_classes_and_such( package );
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
@@ -1166,10 +1169,9 @@ UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
-        ui_actiondata( package, szUnregisterProgIdInfo, uirow );
+        msi_ui_actiondata( package, szUnregisterProgIdInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     return ERROR_SUCCESS;
 }
 
@@ -1187,7 +1189,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
     DWORD size;
     LPWSTR advertise;
 
-    keyname = build_directory_name(4, progid, szShell, verb->Verb, szCommand);
+    keyname = msi_build_directory_name(4, progid, szShell, verb->Verb, szCommand);
 
     TRACE("Making Key %s\n",debugstr_w(keyname));
     RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key);
@@ -1205,9 +1207,8 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
      msi_reg_set_val_str( key, NULL, command );
      msi_free(command);
 
-     advertise = create_component_advertise_string(package, component, 
-                                                   extension->Feature->Feature);
-
+     advertise = msi_create_component_advertise_string(package, component,
+                                                       extension->Feature->Feature);
      size = strlenW(advertise);
 
      if (verb->Argument)
@@ -1232,7 +1233,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
 
      if (verb->Command)
      {
-        keyname = build_directory_name(3, progid, szShell, verb->Verb);
+        keyname = msi_build_directory_name( 3, progid, szShell, verb->Verb );
         msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Command );
         msi_free(keyname);
      }
@@ -1242,7 +1243,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
         if (*Sequence == MSI_NULL_INTEGER || verb->Sequence < *Sequence)
         {
             *Sequence = verb->Sequence;
-            keyname = build_directory_name(2, progid, szShell);
+            keyname = msi_build_directory_name( 2, progid, szShell );
             msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Verb );
             msi_free(keyname);
         }
@@ -1252,15 +1253,17 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
 
 UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 {
-    static const WCHAR szContentType[] = 
-        {'C','o','n','t','e','n','t',' ','T','y','p','e',0 };
+    static const WCHAR szContentType[] = {'C','o','n','t','e','n','t',' ','T','y','p','e',0};
     HKEY hkey = NULL;
     MSIEXTENSION *ext;
     MSIRECORD *uirow;
     BOOL install_on_demand = TRUE;
     LONG res;
+    UINT r;
 
-    load_classes_and_such(package);
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     /* We need to set install_on_demand based on if the shell handles advertised
      * shortcuts and the like. Because Mike McCormack is working on this i am
@@ -1289,15 +1292,14 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
          * yes. MSDN says that these are based on _Feature_ not on
          * Component.  So verify the feature is to be installed
          */
-        if (feature->ActionRequest != INSTALLSTATE_LOCAL &&
-            !(install_on_demand && feature->ActionRequest == INSTALLSTATE_ADVERTISED))
+        feature->Action = msi_get_feature_action( package, feature );
+        if (feature->Action != INSTALLSTATE_LOCAL &&
+            !(install_on_demand && feature->Action == INSTALLSTATE_ADVERTISED))
         {
-            TRACE("Feature %s not scheduled for installation, skipping registration of extension %s\n",
-                   debugstr_w(feature->Feature), debugstr_w(ext->Extension));
+            TRACE("feature %s not scheduled for installation, skipping registration of extension %s\n",
+                  debugstr_w(feature->Feature), debugstr_w(ext->Extension));
             continue;
         }
-        feature->Action = feature->ActionRequest;
-
         TRACE("Registering extension %s (%p)\n", debugstr_w(ext->Extension), ext);
 
         ext->Installed = TRUE;
@@ -1362,10 +1364,9 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
         uirow = MSI_CreateRecord(1);
         MSI_RecordSetStringW( uirow, 1, ext->Extension );
-        ui_actiondata(package,szRegisterExtensionInfo,uirow);
+        msi_ui_actiondata( package, szRegisterExtensionInfo, uirow );
         msiobj_release(&uirow->hdr);
     }
-
     return ERROR_SUCCESS;
 }
 
@@ -1374,8 +1375,11 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
     MSIEXTENSION *ext;
     MSIRECORD *uirow;
     LONG res;
+    UINT r;
 
-    load_classes_and_such( package );
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
@@ -1395,13 +1399,13 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
         if (!feature)
             continue;
 
-        if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+        feature->Action = msi_get_feature_action( package, feature );
+        if (feature->Action != INSTALLSTATE_ABSENT)
         {
-            TRACE("Feature %s not scheduled for removal, skipping unregistration of extension %s\n",
-                   debugstr_w(feature->Feature), debugstr_w(ext->Extension));
+            TRACE("feature %s not scheduled for removal, skipping unregistration of extension %s\n",
+                  debugstr_w(feature->Feature), debugstr_w(ext->Extension));
             continue;
         }
-
         TRACE("Unregistering extension %s\n", debugstr_w(ext->Extension));
 
         ext->Installed = FALSE;
@@ -1448,26 +1452,26 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, ext->Extension );
-        ui_actiondata( package, szUnregisterExtensionInfo, uirow );
+        msi_ui_actiondata( package, szUnregisterExtensionInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 {
-    static const WCHAR szExten[] = 
-        {'E','x','t','e','n','s','i','o','n',0 };
+    static const WCHAR szExtension[] = {'E','x','t','e','n','s','i','o','n',0};
     MSIRECORD *uirow;
     MSIMIME *mt;
+    UINT r;
 
-    load_classes_and_such(package);
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
-        LPWSTR extension;
-        LPWSTR key;
+        LPWSTR extension, key;
 
         /* 
          * check if the MIME is to be installed. Either as requested by an
@@ -1495,7 +1499,7 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
             strcpyW( key, szMIMEDatabase );
             strcatW( key, mt->ContentType );
-            msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExten, extension );
+            msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExtension, extension );
 
             if (mt->clsid)
                 msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szCLSID, mt->clsid );
@@ -1506,10 +1510,9 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
         uirow = MSI_CreateRecord( 2 );
         MSI_RecordSetStringW( uirow, 1, mt->ContentType );
         MSI_RecordSetStringW( uirow, 2, mt->suffix );
-        ui_actiondata( package, szRegisterMIMEInfo, uirow );
+        msi_ui_actiondata( package, szRegisterMIMEInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     return ERROR_SUCCESS;
 }
 
@@ -1517,8 +1520,11 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
 {
     MSIRECORD *uirow;
     MSIMIME *mime;
+    UINT r;
 
-    load_classes_and_such( package );
+    r = load_classes_and_such( package );
+    if (r != ERROR_SUCCESS)
+        return r;
 
     LIST_FOR_EACH_ENTRY( mime, &package->mimes, MSIMIME, entry )
     {
@@ -1551,9 +1557,8 @@ UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
         uirow = MSI_CreateRecord( 2 );
         MSI_RecordSetStringW( uirow, 1, mime->ContentType );
         MSI_RecordSetStringW( uirow, 2, mime->suffix );
-        ui_actiondata( package, szUnregisterMIMEInfo, uirow );
+        msi_ui_actiondata( package, szUnregisterMIMEInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
-
     return ERROR_SUCCESS;
 }

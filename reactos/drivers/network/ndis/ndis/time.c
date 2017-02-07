@@ -57,10 +57,9 @@ NdisGetCurrentSystemTime (
  * ARGUMENTS:
  *     pSystemTime: pointer to the returned system time
  * NOTES:
- *     - call at IRQL <= DISPATCH_LEVEL
+ *     - call at any IRQL
  */
 {
-  ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(pSystemTime);
 
   KeQuerySystemTime (pSystemTime);

@@ -69,6 +69,7 @@ typedef struct tagMACHVTBL
   ULONG (*GetRelativeTime)(VOID);
 
   PCONFIGURATION_COMPONENT_DATA (*HwDetect)(VOID);
+  VOID (*HwIdle)(VOID);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(const char *CmdLine);
@@ -97,6 +98,7 @@ BOOLEAN MachDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, UL
 BOOLEAN MachDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(UCHAR DriveNumber);
 VOID MachPrepareForReactOS(IN BOOLEAN Setup);
+VOID MachHwIdle(VOID);
 
 #define MachConsPutChar(Ch)			MachVtbl.ConsPutChar(Ch)
 #define MachConsKbHit()				MachVtbl.ConsKbHit()
@@ -121,5 +123,6 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachHwDetect()				MachVtbl.HwDetect()
+#define MachHwIdle()				MachVtbl.HwIdle()
 
 /* EOF */

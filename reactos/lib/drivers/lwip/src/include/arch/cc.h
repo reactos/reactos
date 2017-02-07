@@ -28,7 +28,7 @@ typedef signed short s16_t;
 typedef signed long s32_t;
 
 /* Memory pointer */
-typedef u32_t mem_ptr_t;
+typedef ULONG_PTR mem_ptr_t;
 
 /* Printf/DPRINT formatters */
 #define U16_F "hu"

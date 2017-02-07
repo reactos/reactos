@@ -26,6 +26,7 @@
 #include <basetsd.h>
 #include <excpt.h>
 #include <sdkddkver.h>
+#include <specstrings.h>
 
 // FIXME: Shouldn't be included!
 #include <stdarg.h>
@@ -167,12 +168,19 @@
 #define UNALIGNED64
 #endif
 
+#if defined(_WIN64) || defined(_M_ALPHA)
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 16
+#else
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 8
+#endif
+
 #if defined(_M_MRX000) && !(defined(MIDL_PASS) || defined(RC_INVOKED)) && defined(ENABLE_RESTRICTED)
 #define RESTRICTED_POINTER __restrict
 #else
 #define RESTRICTED_POINTER
 #endif
-
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \
   ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
@@ -195,6 +203,14 @@
 #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
 #define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif
+
+#if defined(_AMD64_) || defined(_X86_)
+#define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
+#elif defined(_IA64_) || defined(_ARM_)
+#define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(ULONG))
+#else
+#error "unknown architecture"
 #endif
 
 /* Calling Conventions */
@@ -221,6 +237,14 @@
 #endif
 #endif /* DECLSPEC_ADDRSAFE */
 
+#ifndef NOP_FUNCTION
+#if (_MSC_VER >= 1210)
+#define NOP_FUNCTION __noop
+#else
+#define NOP_FUNCTION (void)0
+#endif
+#endif
+
 #if !defined(_NTSYSTEM_)
 #define NTSYSAPI     DECLSPEC_IMPORT
 #define NTSYSCALLAPI DECLSPEC_IMPORT
@@ -240,7 +264,11 @@
 #elif defined(_MSC_VER)
 #define FORCEINLINE __inline
 #else /* __GNUC__ */
-#define FORCEINLINE extern __inline__ __attribute__((always_inline))
+# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+# else
+#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+# endif
 #endif
 #endif /* FORCEINLINE */
 
@@ -337,7 +365,7 @@ typedef ULONG *PLOGICAL;
 /* Signed Types */
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
-typedef LONG NTSTATUS;
+typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
 typedef NTSTATUS *PNTSTATUS;
 typedef signed char SCHAR;
 typedef SCHAR *PSCHAR;
@@ -358,27 +386,28 @@ typedef LONGLONG USN;
 /* ANSI (Multi-byte Character) types */
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
-typedef CHAR *NPSTR, *LPSTR, *PSTR;
-typedef PSTR *PZPSTR;
-typedef CONST PSTR *PCZPSTR;
-typedef CONST CHAR *LPCSTR, *PCSTR;
-typedef PCSTR *PZPCSTR;
+typedef _Null_terminated_ CHAR *NPSTR, *LPSTR, *PSTR;
+typedef _Null_terminated_ PSTR *PZPSTR;
+typedef _Null_terminated_ CONST PSTR *PCZPSTR;
+typedef _Null_terminated_ CONST CHAR *LPCSTR, *PCSTR;
+typedef _Null_terminated_ PCSTR *PZPCSTR;
 
 /* Pointer to an Asciiz string */
-typedef CHAR *PSZ;
-typedef CONST char *PCSZ;
+typedef _Null_terminated_ CHAR *PSZ;
+typedef _Null_terminated_ CONST char *PCSZ;
 
 /* UNICODE (Wide Character) types */
 typedef wchar_t WCHAR;
 typedef WCHAR *PWCHAR, *LPWCH, *PWCH;
 typedef CONST WCHAR *LPCWCH, *PCWCH;
-typedef WCHAR *NWPSTR, *LPWSTR, *PWSTR;
-typedef PWSTR *PZPWSTR;
-typedef CONST PWSTR *PCZPWSTR;
-typedef WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
-typedef CONST WCHAR *LPCWSTR, *PCWSTR;
-typedef PCWSTR *PZPCWSTR;
-typedef CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
+typedef _Null_terminated_ WCHAR *NWPSTR, *LPWSTR, *PWSTR;
+typedef _Null_terminated_ PWSTR *PZPWSTR;
+typedef _Null_terminated_ CONST PWSTR *PCZPWSTR;
+typedef _Null_terminated_ WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
+typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
+typedef _Null_terminated_ PCWSTR *PZPCWSTR;
+typedef _Null_terminated_ CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
+typedef _NullNull_terminated_ WCHAR *PZZWSTR;
 
 /* Cardinal Data Types */
 typedef char CCHAR, *PCCHAR;
@@ -389,6 +418,11 @@ typedef ULONG CLONG, *PCLONG;
 typedef ULONG LCID;
 typedef PULONG PLCID;
 typedef USHORT LANGID;
+
+typedef enum {
+  UNSPECIFIED_COMPARTMENT_ID = 0,
+  DEFAULT_COMPARTMENT_ID
+} COMPARTMENT_ID, *PCOMPARTMENT_ID;
 
 /* Used to store a non-float 8 byte aligned structure */
 typedef struct _QUAD
@@ -473,7 +507,10 @@ typedef struct _CSTRING {
 typedef struct _STRING {
   USHORT Length;
   USHORT MaximumLength;
-  PCHAR  Buffer;
+#ifdef MIDL_PASS
+  [size_is(MaximumLength), length_is(Length) ]
+#endif
+  _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;
 } STRING, *PSTRING;
 
 typedef STRING ANSI_STRING;
@@ -488,8 +525,8 @@ typedef struct _STRING32 {
     USHORT   Length;
     USHORT   MaximumLength;
     ULONG  Buffer;
-} STRING32, *PSTRING32, 
-  UNICODE_STRING32, *PUNICODE_STRING32, 
+} STRING32, *PSTRING32,
+  UNICODE_STRING32, *PUNICODE_STRING32,
   ANSI_STRING32, *PANSI_STRING32;
 
 typedef struct _STRING64 {
@@ -497,7 +534,7 @@ typedef struct _STRING64 {
     USHORT   MaximumLength;
     ULONGLONG  Buffer;
 } STRING64, *PSTRING64,
-  UNICODE_STRING64, *PUNICODE_STRING64, 
+  UNICODE_STRING64, *PUNICODE_STRING64,
   ANSI_STRING64, *PANSI_STRING64;
 
 /* LangID and NLS */
@@ -601,12 +638,14 @@ typedef struct _PROCESSOR_NUMBER {
 struct _CONTEXT;
 struct _EXCEPTION_RECORD;
 
+_IRQL_requires_same_
+_Function_class_(EXCEPTION_ROUTINE)
 typedef EXCEPTION_DISPOSITION
 (NTAPI *PEXCEPTION_ROUTINE)(
-  struct _EXCEPTION_RECORD *ExceptionRecord,
-  PVOID EstablisherFrame,
-  struct _CONTEXT *ContextRecord,
-  PVOID DispatcherContext);
+    _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+    _In_ PVOID EstablisherFrame,
+    _Inout_ struct _CONTEXT *ContextRecord,
+    _In_ PVOID DispatcherContext);
 
 typedef struct _GROUP_AFFINITY {
   KAFFINITY Mask;
@@ -615,6 +654,11 @@ typedef struct _GROUP_AFFINITY {
 } GROUP_AFFINITY, *PGROUP_AFFINITY;
 
 /* Helper Macros */
+
+#define RTL_FIELD_TYPE(type, field)    (((type*)0)->field)
+#define RTL_BITS_OF(sizeOfArg)         (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))

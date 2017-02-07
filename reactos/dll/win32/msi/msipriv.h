@@ -47,6 +47,7 @@ static const BOOL is_64bit = sizeof(void *) > sizeof(int);
 #define MSITYPE_NULLABLE 0x1000
 #define MSITYPE_KEY      0x2000
 #define MSITYPE_TEMPORARY 0x4000
+#define MSITYPE_UNKNOWN   0x8000
 
 #define MAX_STREAM_NAME_LEN     62
 #define LONG_STR_BYTES  3
@@ -75,6 +76,9 @@ struct tagMSIOBJECTHDR
     msihandledestructor destructor;
 };
 
+#define MSI_INITIAL_MEDIA_TRANSFORM_OFFSET 10000
+#define MSI_INITIAL_MEDIA_TRANSFORM_DISKID 30000
+
 typedef struct tagMSIDATABASE
 {
     MSIOBJECTHDR hdr;
@@ -83,8 +87,9 @@ typedef struct tagMSIDATABASE
     UINT bytes_per_strref;
     LPWSTR path;
     LPWSTR deletefile;
-    LPWSTR localfile;
     LPCWSTR mode;
+    UINT media_transform_offset;
+    UINT media_transform_disk_id;
     struct list tables;
     struct list transforms;
     struct list streams;
@@ -154,13 +159,24 @@ typedef struct tagMSIMEDIAINFO
     WCHAR sourcedir[MAX_PATH];
 } MSIMEDIAINFO;
 
+typedef struct tagMSICABINETSTREAM
+{
+    struct list entry;
+    UINT disk_id;
+    IStorage *storage;
+    WCHAR *stream;
+} MSICABINETSTREAM;
+
 typedef struct tagMSIPATCHINFO
 {
     struct list entry;
     LPWSTR patchcode;
+    LPWSTR products;
     LPWSTR transforms;
+    LPWSTR filename;
     LPWSTR localfile;
     MSIPATCHSTATE state;
+    BOOL delete_on_close;
 } MSIPATCHINFO;
 
 typedef struct tagMSIBINARY
@@ -248,11 +264,10 @@ typedef struct tagMSIVIEWOPS
     /*
      * get_column_info - returns the name and type of a specific column
      *
-     *  The name and tablename is HeapAlloc'ed by this function and should be
-     *  freed by the caller.
      *  The column information can be queried at any time.
      */
-    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type, BOOL *temporary, LPWSTR *tableName);
+    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPCWSTR *name, UINT *type,
+                             BOOL *temporary, LPCWSTR *table_name );
 
     /*
      * modify - not yet implemented properly
@@ -312,6 +327,8 @@ struct tagMSIVIEW
 {
     MSIOBJECTHDR hdr;
     const MSIVIEWOPS *ops;
+    MSIDBERROR error;
+    const WCHAR *error_column;
 };
 
 struct msi_dialog_tag;
@@ -321,11 +338,13 @@ enum platform
 {
     PLATFORM_INTEL,
     PLATFORM_INTEL64,
-    PLATFORM_X64
+    PLATFORM_X64,
+    PLATFORM_ARM
 };
 
 enum clr_version
 {
+    CLR_VERSION_V10,
     CLR_VERSION_V11,
     CLR_VERSION_V20,
     CLR_VERSION_MAX
@@ -343,9 +362,11 @@ typedef struct tagMSIPACKAGE
     struct list components;
     struct list features;
     struct list files;
+    struct list filepatches;
     struct list tempfiles;
     struct list folders;
     struct list binaries;
+    struct list cabinet_streams;
     LPWSTR ActionFormat;
     LPWSTR LastAction;
     HANDLE log_file;
@@ -365,7 +386,10 @@ typedef struct tagMSIPACKAGE
     LPWSTR BaseURL;
     LPWSTR PackagePath;
     LPWSTR ProductCode;
+    LPWSTR localfile;
+    BOOL delete_on_close;
 
+    INSTALLUILEVEL ui_level;
     UINT CurrentInstallState;
     msi_dialog *dialog;
     LPWSTR next_dialog;
@@ -383,7 +407,9 @@ typedef struct tagMSIPACKAGE
     unsigned char scheduled_action_running : 1;
     unsigned char commit_action_running : 1;
     unsigned char rollback_action_running : 1;
-    unsigned char need_reboot : 1;
+    unsigned char need_reboot_at_end : 1;
+    unsigned char need_reboot_now : 1;
+    unsigned char need_rollback : 1;
 } MSIPACKAGE;
 
 typedef struct tagMSIPREVIEW
@@ -471,26 +497,37 @@ typedef struct tagFeatureList
     MSIFEATURE *feature;
 } FeatureList;
 
+enum folder_state
+{
+    FOLDER_STATE_UNINITIALIZED,
+    FOLDER_STATE_EXISTS,
+    FOLDER_STATE_CREATED,
+    FOLDER_STATE_CREATED_PERSISTENT,
+    FOLDER_STATE_REMOVED
+};
+
 typedef struct tagMSIFOLDER
 {
     struct list entry;
+    struct list children;
     LPWSTR Directory;
     LPWSTR Parent;
     LPWSTR TargetDefault;
     LPWSTR SourceLongPath;
     LPWSTR SourceShortPath;
-
     LPWSTR ResolvedTarget;
     LPWSTR ResolvedSource;
-    LPWSTR Property;   /* initially set property */
-    INT   State;
-        /* 0 = uninitialized */
-        /* 1 = existing */
-        /* 2 = created remove if empty */
-        /* 3 = created persist if empty */
-    INT   Cost;
-    INT   Space;
+    enum folder_state State;
+    BOOL persistent;
+    INT Cost;
+    INT Space;
 } MSIFOLDER;
+
+typedef struct tagFolderList
+{
+    struct list entry;
+    MSIFOLDER *folder;
+} FolderList;
 
 typedef enum _msi_file_state {
     msifs_invalid,
@@ -527,6 +564,16 @@ typedef struct tagMSITEMPFILE
     struct list entry;
     LPWSTR Path;
 } MSITEMPFILE;
+
+typedef struct tagMSIFILEPATCH
+{
+    struct list entry;
+    MSIFILE *File;
+    INT Sequence;
+    INT PatchSize;
+    INT Attributes;
+    BOOL IsApplied;
+} MSIFILEPATCH;
 
 typedef struct tagMSIAPPID
 {
@@ -614,11 +661,13 @@ struct tagMSIMIME
     BOOL InstallMe;
 };
 
-enum SCRIPTS {
-    INSTALL_SCRIPT = 0,
-    COMMIT_SCRIPT = 1,
-    ROLLBACK_SCRIPT = 2,
-    TOTAL_SCRIPTS = 3
+enum SCRIPTS
+{
+    SCRIPT_NONE     = -1,
+    SCRIPT_INSTALL  = 0,
+    SCRIPT_COMMIT   = 1,
+    SCRIPT_ROLLBACK = 2,
+    SCRIPT_MAX      = 3
 };
 
 #define SEQUENCE_UI       0x1
@@ -627,8 +676,8 @@ enum SCRIPTS {
 
 typedef struct tagMSISCRIPT
 {
-    LPWSTR  *Actions[TOTAL_SCRIPTS];
-    UINT    ActionCount[TOTAL_SCRIPTS];
+    LPWSTR  *Actions[SCRIPT_MAX];
+    UINT    ActionCount[SCRIPT_MAX];
     BOOL    ExecuteSequenceRun;
     BOOL    CurrentlyScripting;
     UINT    InWhatSequence;
@@ -653,12 +702,6 @@ typedef struct tagMSISCRIPT
 
 #define MSIHANDLE_MAGIC 0x4d434923
 
-DEFINE_GUID(CLSID_IMsiServer,   0x000C101C,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-DEFINE_GUID(CLSID_IMsiServerX1, 0x000C103E,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-DEFINE_GUID(CLSID_IMsiServerX2, 0x000C1090,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-DEFINE_GUID(CLSID_IMsiServerX3, 0x000C1094,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-
-DEFINE_GUID(CLSID_IMsiServerMessage, 0x000C101D,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 /* handle unicode/ascii output in the Msi* API functions */
 typedef struct {
     BOOL unicode;
@@ -676,28 +719,27 @@ typedef struct {
     } str;
 } awcstring;
 
-UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz );
+UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz ) DECLSPEC_HIDDEN;
 
 /* msi server interface */
-extern ITypeLib *get_msi_typelib( LPWSTR *path );
-extern HRESULT create_msi_custom_remote( IUnknown *pOuter, LPVOID *ppObj );
-extern HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj );
-extern HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj );
-extern IUnknown *msi_get_remote(MSIHANDLE handle);
+extern HRESULT create_msi_custom_remote( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT create_msi_remote_package( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern HRESULT create_msi_remote_database( IUnknown *pOuter, LPVOID *ppObj ) DECLSPEC_HIDDEN;
+extern IUnknown *msi_get_remote(MSIHANDLE handle) DECLSPEC_HIDDEN;
 
 /* handle functions */
-extern void *msihandle2msiinfo(MSIHANDLE handle, UINT type);
-extern MSIHANDLE alloc_msihandle( MSIOBJECTHDR * );
-extern MSIHANDLE alloc_msi_remote_handle( IUnknown *unk );
-extern void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy );
-extern void msiobj_addref(MSIOBJECTHDR *);
-extern int msiobj_release(MSIOBJECTHDR *);
-extern void msiobj_lock(MSIOBJECTHDR *);
-extern void msiobj_unlock(MSIOBJECTHDR *);
-extern void msi_free_handle_table(void);
+extern void *msihandle2msiinfo(MSIHANDLE handle, UINT type) DECLSPEC_HIDDEN;
+extern MSIHANDLE alloc_msihandle( MSIOBJECTHDR * ) DECLSPEC_HIDDEN;
+extern MSIHANDLE alloc_msi_remote_handle( IUnknown *unk ) DECLSPEC_HIDDEN;
+extern void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy ) DECLSPEC_HIDDEN;
+extern void msiobj_addref(MSIOBJECTHDR *) DECLSPEC_HIDDEN;
+extern int msiobj_release(MSIOBJECTHDR *) DECLSPEC_HIDDEN;
+extern void msiobj_lock(MSIOBJECTHDR *) DECLSPEC_HIDDEN;
+extern void msiobj_unlock(MSIOBJECTHDR *) DECLSPEC_HIDDEN;
+extern void msi_free_handle_table(void) DECLSPEC_HIDDEN;
 
-extern void free_cached_tables( MSIDATABASE *db );
-extern UINT MSI_CommitTables( MSIDATABASE *db );
+extern void free_cached_tables( MSIDATABASE *db ) DECLSPEC_HIDDEN;
+extern UINT MSI_CommitTables( MSIDATABASE *db ) DECLSPEC_HIDDEN;
 
 
 /* string table functions */
@@ -707,193 +749,201 @@ enum StringPersistence
     StringNonPersistent = 1
 };
 
-extern BOOL msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcount, enum StringPersistence persistence );
-extern UINT msi_string2idW( const string_table *st, LPCWSTR buffer, UINT *id );
-extern VOID msi_destroy_stringtable( string_table *st );
-extern const WCHAR *msi_string_lookup_id( const string_table *st, UINT id );
-extern HRESULT msi_init_string_table( IStorage *stg );
-extern string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref );
-extern UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *bytes_per_strref );
-extern UINT msi_get_string_table_codepage( const string_table *st );
-extern UINT msi_set_string_table_codepage( string_table *st, UINT codepage );
+extern BOOL msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcount, enum StringPersistence persistence ) DECLSPEC_HIDDEN;
+extern UINT msi_string2idW( const string_table *st, LPCWSTR buffer, UINT *id ) DECLSPEC_HIDDEN;
+extern VOID msi_destroy_stringtable( string_table *st ) DECLSPEC_HIDDEN;
+extern const WCHAR *msi_string_lookup_id( const string_table *st, UINT id ) DECLSPEC_HIDDEN;
+extern HRESULT msi_init_string_table( IStorage *stg ) DECLSPEC_HIDDEN;
+extern string_table *msi_load_string_table( IStorage *stg, UINT *bytes_per_strref ) DECLSPEC_HIDDEN;
+extern UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *bytes_per_strref ) DECLSPEC_HIDDEN;
+extern UINT msi_get_string_table_codepage( const string_table *st ) DECLSPEC_HIDDEN;
+extern UINT msi_set_string_table_codepage( string_table *st, UINT codepage ) DECLSPEC_HIDDEN;
 
-extern BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name );
-extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table );
+extern BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name ) DECLSPEC_HIDDEN;
+extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table ) DECLSPEC_HIDDEN;
 
 extern UINT read_stream_data( IStorage *stg, LPCWSTR stname, BOOL table,
-                              BYTE **pdata, UINT *psz );
+                              BYTE **pdata, UINT *psz ) DECLSPEC_HIDDEN;
 extern UINT write_stream_data( IStorage *stg, LPCWSTR stname,
-                               LPCVOID data, UINT sz, BOOL bTable );
+                               LPCVOID data, UINT sz, BOOL bTable ) DECLSPEC_HIDDEN;
 
 /* transform functions */
-extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg );
+extern UINT msi_table_apply_transform( MSIDATABASE *db, IStorage *stg ) DECLSPEC_HIDDEN;
 extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
-                 LPCWSTR szTransformFile, int iErrorCond );
-extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg );
+                 LPCWSTR szTransformFile, int iErrorCond ) DECLSPEC_HIDDEN;
+extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg ) DECLSPEC_HIDDEN;
+extern UINT msi_apply_transforms( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 
 /* patch functions */
-extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si );
-extern UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch );
-extern UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch );
+extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si ) DECLSPEC_HIDDEN;
+extern UINT msi_apply_patches( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
+extern UINT msi_apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code ) DECLSPEC_HIDDEN;
+extern void msi_free_patchinfo( MSIPATCHINFO *patch ) DECLSPEC_HIDDEN;
 
 /* action internals */
-extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
-extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
-extern UINT ACTION_ForceReboot(MSIPACKAGE *package);
-extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode );
-extern UINT MSI_SetFeatureStates( MSIPACKAGE *package );
-extern UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine,
-                                    BOOL preserve_case );
+extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR) DECLSPEC_HIDDEN;
+extern UINT ACTION_ForceReboot(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable ) DECLSPEC_HIDDEN;
+extern UINT MSI_SetFeatureStates( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
+extern UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine, BOOL preserve_case ) DECLSPEC_HIDDEN;
+extern UINT msi_schedule_action( MSIPACKAGE *package, UINT script, const WCHAR *action ) DECLSPEC_HIDDEN;
+extern INSTALLSTATE msi_get_component_action( MSIPACKAGE *package, MSICOMPONENT *comp ) DECLSPEC_HIDDEN;
+extern INSTALLSTATE msi_get_feature_action( MSIPACKAGE *package, MSIFEATURE *feature ) DECLSPEC_HIDDEN;
+extern UINT msi_load_all_components( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
+extern UINT msi_load_all_features( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
+extern UINT msi_validate_product_id( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
 
 /* record internals */
-extern void MSI_CloseRecord( MSIOBJECTHDR * );
-extern UINT MSI_RecordSetIStream( MSIRECORD *, UINT, IStream *);
-extern UINT MSI_RecordGetIStream( MSIRECORD *, UINT, IStream **);
-extern const WCHAR *MSI_RecordGetString( const MSIRECORD *, UINT );
-extern MSIRECORD *MSI_CreateRecord( UINT );
-extern UINT MSI_RecordSetInteger( MSIRECORD *, UINT, int );
-extern UINT MSI_RecordSetIntPtr( MSIRECORD *, UINT, INT_PTR );
-extern UINT MSI_RecordSetStringW( MSIRECORD *, UINT, LPCWSTR );
-extern BOOL MSI_RecordIsNull( MSIRECORD *, UINT );
-extern UINT MSI_RecordGetStringW( MSIRECORD * , UINT, LPWSTR, LPDWORD);
-extern UINT MSI_RecordGetStringA( MSIRECORD *, UINT, LPSTR, LPDWORD);
-extern int MSI_RecordGetInteger( MSIRECORD *, UINT );
-extern INT_PTR MSI_RecordGetIntPtr( MSIRECORD *, UINT );
-extern UINT MSI_RecordReadStream( MSIRECORD *, UINT, char *, LPDWORD);
-extern UINT MSI_RecordSetStream(MSIRECORD *, UINT, IStream *);
-extern UINT MSI_RecordGetFieldCount( const MSIRECORD *rec );
-extern UINT MSI_RecordStreamToFile( MSIRECORD *, UINT, LPCWSTR );
-extern UINT MSI_RecordSetStreamFromFileW( MSIRECORD *, UINT, LPCWSTR );
-extern UINT MSI_RecordCopyField( MSIRECORD *, UINT, MSIRECORD *, UINT );
-extern MSIRECORD *MSI_CloneRecord( MSIRECORD * );
-extern BOOL MSI_RecordsAreEqual( MSIRECORD *, MSIRECORD * );
+extern void MSI_CloseRecord( MSIOBJECTHDR * ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetIStream( MSIRECORD *, UINT, IStream *) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordGetIStream( MSIRECORD *, UINT, IStream **) DECLSPEC_HIDDEN;
+extern const WCHAR *MSI_RecordGetString( const MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
+extern MSIRECORD *MSI_CreateRecord( UINT ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetInteger( MSIRECORD *, UINT, int ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetIntPtr( MSIRECORD *, UINT, INT_PTR ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetStringW( MSIRECORD *, UINT, LPCWSTR ) DECLSPEC_HIDDEN;
+extern BOOL MSI_RecordIsNull( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordGetStringW( MSIRECORD * , UINT, LPWSTR, LPDWORD) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordGetStringA( MSIRECORD *, UINT, LPSTR, LPDWORD) DECLSPEC_HIDDEN;
+extern int MSI_RecordGetInteger( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
+extern INT_PTR MSI_RecordGetIntPtr( MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordReadStream( MSIRECORD *, UINT, char *, LPDWORD) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetStream(MSIRECORD *, UINT, IStream *) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordGetFieldCount( const MSIRECORD *rec ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordStreamToFile( MSIRECORD *, UINT, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordSetStreamFromFileW( MSIRECORD *, UINT, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT MSI_RecordCopyField( MSIRECORD *, UINT, MSIRECORD *, UINT ) DECLSPEC_HIDDEN;
+extern MSIRECORD *MSI_CloneRecord( MSIRECORD * ) DECLSPEC_HIDDEN;
+extern BOOL MSI_RecordsAreEqual( MSIRECORD *, MSIRECORD * ) DECLSPEC_HIDDEN;
+extern BOOL MSI_RecordsAreFieldsEqual(MSIRECORD *a, MSIRECORD *b, UINT field) DECLSPEC_HIDDEN;
 
 /* stream internals */
-extern void enum_stream_names( IStorage *stg );
-extern LPWSTR encode_streamname(BOOL bTable, LPCWSTR in);
-extern BOOL decode_streamname(LPCWSTR in, LPWSTR out);
+extern void enum_stream_names( IStorage *stg ) DECLSPEC_HIDDEN;
+extern LPWSTR encode_streamname(BOOL bTable, LPCWSTR in) DECLSPEC_HIDDEN;
+extern BOOL decode_streamname(LPCWSTR in, LPWSTR out) DECLSPEC_HIDDEN;
 
 /* database internals */
-extern UINT db_get_raw_stream( MSIDATABASE *, LPCWSTR, IStream ** );
-void db_destroy_stream( MSIDATABASE *, LPCWSTR );
-extern UINT MSI_OpenDatabaseW( LPCWSTR, LPCWSTR, MSIDATABASE ** );
-extern UINT MSI_DatabaseOpenViewW(MSIDATABASE *, LPCWSTR, MSIQUERY ** );
-extern UINT MSI_OpenQuery( MSIDATABASE *, MSIQUERY **, LPCWSTR, ... );
+extern UINT msi_get_raw_stream( MSIDATABASE *, LPCWSTR, IStream ** ) DECLSPEC_HIDDEN;
+extern UINT msi_clone_open_stream( MSIDATABASE *, IStorage *, const WCHAR *, IStream ** ) DECLSPEC_HIDDEN;
+void msi_destroy_stream( MSIDATABASE *, const WCHAR * ) DECLSPEC_HIDDEN;
+extern UINT MSI_OpenDatabaseW( LPCWSTR, LPCWSTR, MSIDATABASE ** ) DECLSPEC_HIDDEN;
+extern UINT MSI_DatabaseOpenViewW(MSIDATABASE *, LPCWSTR, MSIQUERY ** ) DECLSPEC_HIDDEN;
+extern UINT MSI_OpenQuery( MSIDATABASE *, MSIQUERY **, LPCWSTR, ... ) DECLSPEC_HIDDEN;
 typedef UINT (*record_func)( MSIRECORD *, LPVOID );
-extern UINT MSI_IterateRecords( MSIQUERY *, LPDWORD, record_func, LPVOID );
-extern MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR query, ... );
-extern UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *, LPCWSTR, MSIRECORD ** );
+extern UINT MSI_IterateRecords( MSIQUERY *, LPDWORD, record_func, LPVOID ) DECLSPEC_HIDDEN;
+extern MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR query, ... ) DECLSPEC_HIDDEN;
+extern UINT MSI_DatabaseGetPrimaryKeys( MSIDATABASE *, LPCWSTR, MSIRECORD ** ) DECLSPEC_HIDDEN;
 
 /* view internals */
-extern UINT MSI_ViewExecute( MSIQUERY*, MSIRECORD * );
-extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** );
-extern UINT MSI_ViewClose( MSIQUERY* );
-extern UINT MSI_ViewGetColumnInfo(MSIQUERY *, MSICOLINFO, MSIRECORD **);
-extern UINT MSI_ViewModify( MSIQUERY *, MSIMODIFY, MSIRECORD * );
-extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, LPCWSTR, UINT * );
-extern UINT msi_view_get_row(MSIDATABASE *, MSIVIEW *, UINT, MSIRECORD **);
+extern UINT MSI_ViewExecute( MSIQUERY*, MSIRECORD * ) DECLSPEC_HIDDEN;
+extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** ) DECLSPEC_HIDDEN;
+extern UINT MSI_ViewClose( MSIQUERY* ) DECLSPEC_HIDDEN;
+extern UINT MSI_ViewGetColumnInfo(MSIQUERY *, MSICOLINFO, MSIRECORD **) DECLSPEC_HIDDEN;
+extern UINT MSI_ViewModify( MSIQUERY *, MSIMODIFY, MSIRECORD * ) DECLSPEC_HIDDEN;
+extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, LPCWSTR, UINT * ) DECLSPEC_HIDDEN;
+extern UINT msi_view_get_row(MSIDATABASE *, MSIVIEW *, UINT, MSIRECORD **) DECLSPEC_HIDDEN;
 
 /* install internals */
-extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel );
+extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel ) DECLSPEC_HIDDEN;
 
 /* package internals */
-extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *, LPCWSTR );
-extern UINT MSI_OpenPackageW( LPCWSTR szPackage, MSIPACKAGE **pPackage );
-extern UINT MSI_SetTargetPathW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
-extern INT MSI_ProcessMessage( MSIPACKAGE *, INSTALLMESSAGE, MSIRECORD * );
-extern MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *, LPCWSTR );
-extern UINT MSI_GetComponentStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * );
-extern UINT MSI_GetFeatureStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * );
-extern UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE*, LPCWSTR, INSTALLSTATE );
-extern UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename );
-extern UINT msi_package_add_info(MSIPACKAGE *, DWORD, DWORD, LPCWSTR, LPWSTR);
-extern UINT msi_package_add_media_disk(MSIPACKAGE *, DWORD, DWORD, DWORD, LPWSTR, LPWSTR);
-extern UINT msi_clone_properties(MSIPACKAGE *);
-extern UINT msi_set_context(MSIPACKAGE *);
-extern void msi_adjust_privilege_properties(MSIPACKAGE *);
-extern UINT MSI_GetFeatureCost(MSIPACKAGE *, MSIFEATURE *, MSICOSTTREE, INSTALLSTATE, LPINT);
+extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT MSI_OpenPackageW( LPCWSTR szPackage, MSIPACKAGE **pPackage ) DECLSPEC_HIDDEN;
+extern UINT MSI_SetTargetPathW( MSIPACKAGE *, LPCWSTR, LPCWSTR ) DECLSPEC_HIDDEN;
+extern INT MSI_ProcessMessage( MSIPACKAGE *, INSTALLMESSAGE, MSIRECORD * ) DECLSPEC_HIDDEN;
+extern MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT MSI_GetComponentStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * ) DECLSPEC_HIDDEN;
+extern UINT MSI_GetFeatureStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * ) DECLSPEC_HIDDEN;
+extern UINT MSI_SetFeatureStateW(MSIPACKAGE*, LPCWSTR, INSTALLSTATE ) DECLSPEC_HIDDEN;
+extern UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename ) DECLSPEC_HIDDEN;
+extern UINT msi_package_add_info(MSIPACKAGE *, DWORD, DWORD, LPCWSTR, LPWSTR) DECLSPEC_HIDDEN;
+extern UINT msi_package_add_media_disk(MSIPACKAGE *, DWORD, DWORD, DWORD, LPWSTR, LPWSTR) DECLSPEC_HIDDEN;
+extern UINT msi_clone_properties(MSIPACKAGE *) DECLSPEC_HIDDEN;
+extern UINT msi_set_context(MSIPACKAGE *) DECLSPEC_HIDDEN;
+extern void msi_adjust_privilege_properties(MSIPACKAGE *) DECLSPEC_HIDDEN;
+extern UINT MSI_GetFeatureCost(MSIPACKAGE *, MSIFEATURE *, MSICOSTTREE, INSTALLSTATE, LPINT) DECLSPEC_HIDDEN;
 
 /* for deformating */
-extern UINT MSI_FormatRecordW( MSIPACKAGE *, MSIRECORD *, LPWSTR, LPDWORD );
+extern UINT MSI_FormatRecordW( MSIPACKAGE *, MSIRECORD *, LPWSTR, LPDWORD ) DECLSPEC_HIDDEN;
 
 /* registry data encoding/decoding functions */
-extern BOOL unsquash_guid(LPCWSTR in, LPWSTR out);
-extern BOOL squash_guid(LPCWSTR in, LPWSTR out);
-extern BOOL encode_base85_guid(GUID *,LPWSTR);
-extern BOOL decode_base85_guid(LPCWSTR,GUID*);
-extern UINT MSIREG_OpenUninstallKey(MSIPACKAGE *package, HKEY *key, BOOL create);
-extern UINT MSIREG_DeleteUninstallKey(MSIPACKAGE *package);
+extern BOOL unsquash_guid(LPCWSTR in, LPWSTR out) DECLSPEC_HIDDEN;
+extern BOOL squash_guid(LPCWSTR in, LPWSTR out) DECLSPEC_HIDDEN;
+extern BOOL encode_base85_guid(GUID *,LPWSTR) DECLSPEC_HIDDEN;
+extern BOOL decode_base85_guid(LPCWSTR,GUID*) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenUninstallKey(const WCHAR *, enum platform, HKEY *, BOOL) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUninstallKey(const WCHAR *, enum platform) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, LPCWSTR szUserSid,
-                                  MSIINSTALLCONTEXT context, HKEY* key, BOOL create);
+                                  MSIINSTALLCONTEXT context, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
-                                   HKEY *key, BOOL create);
-extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
+                                   HKEY *key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
 UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
-                                    HKEY *key, BOOL create);
-extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
+                                    HKEY *key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid,
-                                            HKEY *key, BOOL create);
-extern UINT MSIREG_OpenPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
+                                            HKEY *key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserDataProductKey(LPCWSTR szProduct, MSIINSTALLCONTEXT dwContext,
-                                          LPCWSTR szUserSid, HKEY *key, BOOL create);
+                                          LPCWSTR szUserSid, HKEY *key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserDataPatchKey(LPCWSTR szPatch, MSIINSTALLCONTEXT dwContext,
-                                        HKEY *key, BOOL create);
+                                        HKEY *key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenUserDataProductPatchesKey(LPCWSTR product, MSIINSTALLCONTEXT context,
-                                                 HKEY *key, BOOL create);
+                                                 HKEY *key, BOOL create) DECLSPEC_HIDDEN;
 extern UINT MSIREG_OpenInstallProps(LPCWSTR szProduct, MSIINSTALLCONTEXT dwContext,
-                                    LPCWSTR szUserSid, HKEY *key, BOOL create);
-extern UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
-extern UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
-extern UINT MSIREG_DeleteProductKey(LPCWSTR szProduct);
-extern UINT MSIREG_DeleteUserProductKey(LPCWSTR szProduct);
-extern UINT MSIREG_DeleteUserDataPatchKey(LPCWSTR patch, MSIINSTALLCONTEXT context);
-extern UINT MSIREG_DeleteUserDataProductKey(LPCWSTR szProduct);
-extern UINT MSIREG_DeleteUserFeaturesKey(LPCWSTR szProduct);
-extern UINT MSIREG_DeleteUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid);
-extern UINT MSIREG_DeleteUserUpgradeCodesKey(LPCWSTR szUpgradeCode);
-extern UINT MSIREG_DeleteClassesUpgradeCodesKey(LPCWSTR szUpgradeCode);
-extern UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL create);
-extern UINT MSIREG_DeleteLocalClassesProductKey(LPCWSTR szProductCode);
-extern UINT MSIREG_DeleteLocalClassesFeaturesKey(LPCWSTR szProductCode);
+                                    LPCWSTR szUserSid, HKEY *key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteProductKey(LPCWSTR szProduct) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserProductKey(LPCWSTR szProduct) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserDataPatchKey(LPCWSTR patch, MSIINSTALLCONTEXT context) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserDataProductKey(LPCWSTR szProduct) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserFeaturesKey(LPCWSTR szProduct) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteUserUpgradeCodesKey(LPCWSTR szUpgradeCode) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteClassesUpgradeCodesKey(LPCWSTR szUpgradeCode) DECLSPEC_HIDDEN;
+extern UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL create) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteLocalClassesProductKey(LPCWSTR szProductCode) DECLSPEC_HIDDEN;
+extern UINT MSIREG_DeleteLocalClassesFeaturesKey(LPCWSTR szProductCode) DECLSPEC_HIDDEN;
+extern UINT msi_locate_product(LPCWSTR szProduct, MSIINSTALLCONTEXT *context) DECLSPEC_HIDDEN;
+extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name ) DECLSPEC_HIDDEN;
+extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val) DECLSPEC_HIDDEN;
 
-extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
-extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
+extern DWORD msi_version_str_to_dword(LPCWSTR p) DECLSPEC_HIDDEN;
+extern void msi_parse_version_string(LPCWSTR, PDWORD, PDWORD) DECLSPEC_HIDDEN;
+extern VS_FIXEDFILEINFO *msi_get_disk_file_version(LPCWSTR) DECLSPEC_HIDDEN;
+extern int msi_compare_file_versions(VS_FIXEDFILEINFO *, const WCHAR *) DECLSPEC_HIDDEN;
+extern int msi_compare_font_versions(const WCHAR *, const WCHAR *) DECLSPEC_HIDDEN;
+extern DWORD msi_get_disk_file_size(LPCWSTR) DECLSPEC_HIDDEN;
+extern BOOL msi_file_hash_matches(MSIFILE *) DECLSPEC_HIDDEN;
 
-extern DWORD msi_version_str_to_dword(LPCWSTR p);
-extern void msi_parse_version_string(LPCWSTR, PDWORD, PDWORD);
-extern VS_FIXEDFILEINFO *msi_get_disk_file_version(LPCWSTR);
-extern int msi_compare_file_versions(VS_FIXEDFILEINFO *, const WCHAR *);
-extern int msi_compare_font_versions(const WCHAR *, const WCHAR *);
-extern DWORD msi_get_disk_file_size(LPCWSTR);
-extern BOOL msi_file_hash_matches(MSIFILE *);
-
-extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
-extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
-extern LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val );
-extern LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val );
+extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value ) DECLSPEC_HIDDEN;
+extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value ) DECLSPEC_HIDDEN;
+extern LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val ) DECLSPEC_HIDDEN;
+extern LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val ) DECLSPEC_HIDDEN;
 
 /* msi dialog interface */
 typedef UINT (*msi_dialog_event_handler)( MSIPACKAGE*, LPCWSTR, LPCWSTR, msi_dialog* );
-extern msi_dialog *msi_dialog_create( MSIPACKAGE*, LPCWSTR, msi_dialog*, msi_dialog_event_handler );
-extern UINT msi_dialog_run_message_loop( msi_dialog* );
-extern void msi_dialog_end_dialog( msi_dialog* );
-extern void msi_dialog_check_messages( HANDLE );
-extern void msi_dialog_do_preview( msi_dialog* );
-extern void msi_dialog_destroy( msi_dialog* );
-extern void msi_dialog_unregister_class( void );
-extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * );
-extern UINT msi_dialog_reset( msi_dialog *dialog );
-extern UINT msi_dialog_directorylist_up( msi_dialog *dialog );
-extern msi_dialog *msi_dialog_get_parent( msi_dialog *dialog );
-extern LPWSTR msi_dialog_get_name( msi_dialog *dialog );
-extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR );
+extern msi_dialog *msi_dialog_create( MSIPACKAGE*, LPCWSTR, msi_dialog*, msi_dialog_event_handler ) DECLSPEC_HIDDEN;
+extern UINT msi_dialog_run_message_loop( msi_dialog* ) DECLSPEC_HIDDEN;
+extern void msi_dialog_end_dialog( msi_dialog* ) DECLSPEC_HIDDEN;
+extern void msi_dialog_check_messages( HANDLE ) DECLSPEC_HIDDEN;
+extern void msi_dialog_destroy( msi_dialog* ) DECLSPEC_HIDDEN;
+extern void msi_dialog_unregister_class( void ) DECLSPEC_HIDDEN;
+extern void msi_dialog_handle_event( msi_dialog*, LPCWSTR, LPCWSTR, MSIRECORD * ) DECLSPEC_HIDDEN;
+extern UINT msi_dialog_reset( msi_dialog *dialog ) DECLSPEC_HIDDEN;
+extern UINT msi_dialog_directorylist_up( msi_dialog *dialog ) DECLSPEC_HIDDEN;
+extern msi_dialog *msi_dialog_get_parent( msi_dialog *dialog ) DECLSPEC_HIDDEN;
+extern LPWSTR msi_dialog_get_name( msi_dialog *dialog ) DECLSPEC_HIDDEN;
+extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR ) DECLSPEC_HIDDEN;
 
 /* summary information */
-extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount );
-extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty );
-extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty );
-extern LPWSTR msi_get_suminfo_product( IStorage *stg );
-extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns );
+extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount ) DECLSPEC_HIDDEN;
+extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
+extern INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty ) DECLSPEC_HIDDEN;
+extern LPWSTR msi_get_suminfo_product( IStorage *stg ) DECLSPEC_HIDDEN;
+extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns ) DECLSPEC_HIDDEN;
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );
@@ -903,79 +953,85 @@ LANGID WINAPI MsiLoadStringW( MSIHANDLE, UINT, LPWSTR, int, LANGID );
 LANGID WINAPI MsiLoadStringA( MSIHANDLE, UINT, LPSTR, int, LANGID );
 
 /* UI globals */
-extern INSTALLUILEVEL gUILevel;
-extern HWND gUIhwnd;
-extern INSTALLUI_HANDLERA gUIHandlerA;
-extern INSTALLUI_HANDLERW gUIHandlerW;
-extern INSTALLUI_HANDLER_RECORD gUIHandlerRecord;
-extern DWORD gUIFilter;
-extern LPVOID gUIContext;
-extern WCHAR *gszLogFile;
-extern HINSTANCE msi_hInstance;
+extern INSTALLUILEVEL gUILevel DECLSPEC_HIDDEN;
+extern HWND gUIhwnd DECLSPEC_HIDDEN;
+extern INSTALLUI_HANDLERA gUIHandlerA DECLSPEC_HIDDEN;
+extern INSTALLUI_HANDLERW gUIHandlerW DECLSPEC_HIDDEN;
+extern INSTALLUI_HANDLER_RECORD gUIHandlerRecord DECLSPEC_HIDDEN;
+extern DWORD gUIFilter DECLSPEC_HIDDEN;
+extern LPVOID gUIContext DECLSPEC_HIDDEN;
+extern WCHAR *gszLogFile DECLSPEC_HIDDEN;
+extern HINSTANCE msi_hInstance DECLSPEC_HIDDEN;
 
 /* action related functions */
-extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
-extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
-extern void ACTION_FinishCustomActions( const MSIPACKAGE* package);
-extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, UINT script, BOOL execute);
+extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script) DECLSPEC_HIDDEN;
+extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT script) DECLSPEC_HIDDEN;
+extern void ACTION_FinishCustomActions( const MSIPACKAGE* package) DECLSPEC_HIDDEN;
+extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, UINT script, BOOL execute) DECLSPEC_HIDDEN;
 
 /* actions in other modules */
-extern UINT ACTION_AppSearch(MSIPACKAGE *package);
-extern UINT ACTION_CCPSearch(MSIPACKAGE *package);
-extern UINT ACTION_FindRelatedProducts(MSIPACKAGE *package);
-extern UINT ACTION_InstallFiles(MSIPACKAGE *package);
-extern UINT ACTION_RemoveFiles(MSIPACKAGE *package);
-extern UINT ACTION_MoveFiles(MSIPACKAGE *package);
-extern UINT ACTION_DuplicateFiles(MSIPACKAGE *package);
-extern UINT ACTION_RemoveDuplicateFiles(MSIPACKAGE *package);
-extern UINT ACTION_RegisterClassInfo(MSIPACKAGE *package);
-extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
-extern UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package);
-extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
-extern UINT ACTION_RegisterFonts(MSIPACKAGE *package);
-extern UINT ACTION_UnregisterClassInfo(MSIPACKAGE *package);
-extern UINT ACTION_UnregisterExtensionInfo(MSIPACKAGE *package);
-extern UINT ACTION_UnregisterFonts(MSIPACKAGE *package);
-extern UINT ACTION_UnregisterMIMEInfo(MSIPACKAGE *package);
-extern UINT ACTION_UnregisterProgIdInfo(MSIPACKAGE *package);
-extern UINT ACTION_MsiPublishAssemblies(MSIPACKAGE *package);
-extern UINT ACTION_MsiUnpublishAssemblies(MSIPACKAGE *package);
+extern UINT ACTION_AppSearch(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_CCPSearch(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_FindRelatedProducts(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_InstallFiles(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_PatchFiles( MSIPACKAGE *package ) DECLSPEC_HIDDEN;
+extern UINT ACTION_RemoveFiles(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_MoveFiles(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_DuplicateFiles(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RemoveDuplicateFiles(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RegisterClassInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_RegisterFonts(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_UnregisterClassInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_UnregisterExtensionInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_UnregisterFonts(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_UnregisterMIMEInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_UnregisterProgIdInfo(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_MsiPublishAssemblies(MSIPACKAGE *package) DECLSPEC_HIDDEN;
+extern UINT ACTION_MsiUnpublishAssemblies(MSIPACKAGE *package) DECLSPEC_HIDDEN;
 
 /* Helpers */
-extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
-extern LPWSTR msi_dup_record_field(MSIRECORD *row, INT index);
-extern LPWSTR msi_dup_property( MSIDATABASE *db, LPCWSTR prop );
-extern UINT msi_set_property( MSIDATABASE *, LPCWSTR, LPCWSTR );
-extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD );
-extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def );
-extern LPWSTR resolve_source_folder(MSIPACKAGE *package, LPCWSTR name, MSIFOLDER **folder);
-extern LPWSTR resolve_target_folder(MSIPACKAGE *package, LPCWSTR name, BOOL set_prop, BOOL load_prop, MSIFOLDER **folder);
-extern LPWSTR resolve_file_source(MSIPACKAGE *package, MSIFILE *file);
-extern void msi_reset_folders( MSIPACKAGE *package, BOOL source );
-extern MSICOMPONENT *get_loaded_component( MSIPACKAGE* package, LPCWSTR Component );
-extern MSIFEATURE *get_loaded_feature( MSIPACKAGE* package, LPCWSTR Feature );
-extern MSIFILE *get_loaded_file( MSIPACKAGE* package, LPCWSTR file );
-extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
-extern int track_tempfile(MSIPACKAGE *package, LPCWSTR path);
-extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
-extern void msi_free_action_script(MSIPACKAGE *package, UINT script);
-extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
-extern LPWSTR build_directory_name(DWORD , ...);
-extern BOOL create_full_pathW(const WCHAR *path);
-extern void reduce_to_longfilename(WCHAR*);
-extern LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
-extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, MSIFEATURE *feature);
-extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
-extern BOOL check_unique_action(const MSIPACKAGE *, LPCWSTR);
-extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
+extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_dup_record_field(MSIRECORD *row, INT index) DECLSPEC_HIDDEN;
+extern LPWSTR msi_dup_property( MSIDATABASE *db, LPCWSTR prop ) DECLSPEC_HIDDEN;
+extern UINT msi_set_property( MSIDATABASE *, LPCWSTR, LPCWSTR ) DECLSPEC_HIDDEN;
+extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD ) DECLSPEC_HIDDEN;
+extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_resolve_source_folder(MSIPACKAGE *package, const WCHAR *name, MSIFOLDER **folder) DECLSPEC_HIDDEN;
+extern void msi_resolve_target_folder(MSIPACKAGE *package, const WCHAR *name, BOOL load_prop) DECLSPEC_HIDDEN;
+extern WCHAR *msi_normalize_path(const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_resolve_file_source(MSIPACKAGE *package, MSIFILE *file) DECLSPEC_HIDDEN;
+extern const WCHAR *msi_get_target_folder(MSIPACKAGE *package, const WCHAR *name) DECLSPEC_HIDDEN;
+extern void msi_reset_folders( MSIPACKAGE *package, BOOL source ) DECLSPEC_HIDDEN;
+extern MSICOMPONENT *msi_get_loaded_component(MSIPACKAGE *package, const WCHAR *Component) DECLSPEC_HIDDEN;
+extern MSIFEATURE *msi_get_loaded_feature(MSIPACKAGE *package, const WCHAR *Feature) DECLSPEC_HIDDEN;
+extern MSIFILE *msi_get_loaded_file(MSIPACKAGE *package, const WCHAR *file) DECLSPEC_HIDDEN;
+extern MSIFILEPATCH *msi_get_loaded_filepatch(MSIPACKAGE* package, const WCHAR *key) DECLSPEC_HIDDEN;
+extern MSIFOLDER *msi_get_loaded_folder(MSIPACKAGE *package, const WCHAR *dir) DECLSPEC_HIDDEN;
+extern int msi_track_tempfile(MSIPACKAGE *package, const WCHAR *path) DECLSPEC_HIDDEN;
+extern void msi_free_action_script(MSIPACKAGE *package, UINT script) DECLSPEC_HIDDEN;
+extern WCHAR *msi_build_icon_path(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_build_directory_name(DWORD , ...) DECLSPEC_HIDDEN;
+extern BOOL msi_create_full_path(const WCHAR *path) DECLSPEC_HIDDEN;
+extern void msi_reduce_to_long_filename(WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_create_component_advertise_string(MSIPACKAGE *, MSICOMPONENT *, const WCHAR *) DECLSPEC_HIDDEN;
+extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, MSIFEATURE *feature) DECLSPEC_HIDDEN;
+extern UINT msi_register_unique_action(MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
+extern BOOL msi_action_is_unique(const MSIPACKAGE *, const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_build_error_string(MSIPACKAGE *, UINT, DWORD, ...) DECLSPEC_HIDDEN;
 extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
-                        MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
-extern UINT msi_get_local_package_name(LPWSTR path, LPCWSTR suffix);
-extern UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace);
-extern MSIASSEMBLY *load_assembly(MSIPACKAGE *, MSICOMPONENT *);
-extern UINT install_assembly(MSIPACKAGE *, MSICOMPONENT *);
-extern WCHAR *font_version_from_file(const WCHAR *);
-extern WCHAR **msi_split_string(const WCHAR *, WCHAR);
+                        MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value) DECLSPEC_HIDDEN;
+extern UINT msi_create_empty_local_file(LPWSTR path, LPCWSTR suffix) DECLSPEC_HIDDEN;
+extern UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace) DECLSPEC_HIDDEN;
+extern MSIASSEMBLY *msi_load_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
+extern UINT msi_install_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
+extern UINT msi_uninstall_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
+extern BOOL msi_init_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
+extern void msi_destroy_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
+extern WCHAR *msi_font_version_from_file(const WCHAR *) DECLSPEC_HIDDEN;
+extern WCHAR **msi_split_string(const WCHAR *, WCHAR) DECLSPEC_HIDDEN;
 
 /* media */
 
@@ -993,36 +1049,39 @@ typedef struct
     PVOID user;
 } MSICABDATA;
 
-extern UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi);
-extern UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi);
-extern void msi_free_media_info(MSIMEDIAINFO *mi);
-extern BOOL msi_cabextract(MSIPACKAGE* package, MSIMEDIAINFO *mi, LPVOID data);
+extern UINT ready_media(MSIPACKAGE *package, BOOL compressed, MSIMEDIAINFO *mi) DECLSPEC_HIDDEN;
+extern UINT msi_load_media_info(MSIPACKAGE *package, UINT Sequence, MSIMEDIAINFO *mi) DECLSPEC_HIDDEN;
+extern void msi_free_media_info(MSIMEDIAINFO *mi) DECLSPEC_HIDDEN;
+extern BOOL msi_cabextract(MSIPACKAGE* package, MSIMEDIAINFO *mi, LPVOID data) DECLSPEC_HIDDEN;
+extern UINT msi_add_cabinet_stream(MSIPACKAGE *, UINT, IStorage *, const WCHAR *) DECLSPEC_HIDDEN;
 
 /* control event stuff */
 extern VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,
-                                      MSIRECORD *data);
-extern VOID ControlEvent_CleanupDialogSubscriptions(MSIPACKAGE *package, LPWSTR dialog);
-extern VOID ControlEvent_CleanupSubscriptions(MSIPACKAGE *package);
+                                      MSIRECORD *data) DECLSPEC_HIDDEN;
+extern VOID ControlEvent_CleanupDialogSubscriptions(MSIPACKAGE *package, LPWSTR dialog) DECLSPEC_HIDDEN;
+extern VOID ControlEvent_CleanupSubscriptions(MSIPACKAGE *package) DECLSPEC_HIDDEN;
 extern VOID ControlEvent_SubscribeToEvent(MSIPACKAGE *package, msi_dialog *dialog,
-                                      LPCWSTR event, LPCWSTR control, LPCWSTR attribute);
+                                      LPCWSTR event, LPCWSTR control, LPCWSTR attribute) DECLSPEC_HIDDEN;
 
 /* OLE automation */
-extern HRESULT create_msiserver(IUnknown *pOuter, LPVOID *ppObj);
-extern HRESULT create_session(MSIHANDLE msiHandle, IDispatch *pInstaller, IDispatch **pDispatch);
-extern HRESULT load_type_info(IDispatch *iface, ITypeInfo **pptinfo, REFIID clsid, LCID lcid);
+extern HRESULT create_msiserver(IUnknown *pOuter, LPVOID *ppObj) DECLSPEC_HIDDEN;
+extern HRESULT create_session(MSIHANDLE msiHandle, IDispatch *pInstaller, IDispatch **pDispatch) DECLSPEC_HIDDEN;
+extern HRESULT load_type_info(IDispatch *iface, ITypeInfo **pptinfo, REFIID clsid, LCID lcid) DECLSPEC_HIDDEN;
 
 /* Scripting */
-extern DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function, LPCWSTR action);
+extern DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function, LPCWSTR action) DECLSPEC_HIDDEN;
 
-/* User Interface messages from the actions */
-extern void ui_progress(MSIPACKAGE *, int, int, int, int);
-extern void ui_actiondata(MSIPACKAGE *, LPCWSTR, MSIRECORD *);
+/* User interface messages from the actions */
+extern void msi_ui_progress(MSIPACKAGE *, int, int, int, int) DECLSPEC_HIDDEN;
+extern void msi_ui_actiondata(MSIPACKAGE *, const WCHAR *, MSIRECORD *) DECLSPEC_HIDDEN;
 
 /* common strings */
-static const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
-static const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
-static const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
+static const WCHAR szSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
+static const WCHAR szSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
+static const WCHAR szRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
+static const WCHAR szTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
+static const WCHAR szAllSid[] = {'S','-','1','-','1','-','0',0};
 static const WCHAR szEmpty[] = {0};
 static const WCHAR szAll[] = {'A','L','L',0};
 static const WCHAR szOne[] = {'1',0};
@@ -1052,6 +1111,7 @@ static const WCHAR szRegisterMIMEInfo[] = {'R','e','g','i','s','t','e','r','M','
 static const WCHAR szDuplicateFiles[] = {'D','u','p','l','i','c','a','t','e','F','i','l','e','s',0};
 static const WCHAR szRemoveDuplicateFiles[] = {'R','e','m','o','v','e','D','u','p','l','i','c','a','t','e','F','i','l','e','s',0};
 static const WCHAR szInstallFiles[] = {'I','n','s','t','a','l','l','F','i','l','e','s',0};
+static const WCHAR szPatchFiles[] = {'P','a','t','c','h','F','i','l','e','s',0};
 static const WCHAR szRemoveFiles[] = {'R','e','m','o','v','e','F','i','l','e','s',0};
 static const WCHAR szFindRelatedProducts[] = {'F','i','n','d','R','e','l','a','t','e','d','P','r','o','d','u','c','t','s',0};
 static const WCHAR szAllUsers[] = {'A','L','L','U','S','E','R','S',0};
@@ -1092,11 +1152,28 @@ static const WCHAR szIntel[] = {'I','n','t','e','l',0};
 static const WCHAR szIntel64[] = {'I','n','t','e','l','6','4',0};
 static const WCHAR szX64[] = {'x','6','4',0};
 static const WCHAR szAMD64[] = {'A','M','D','6','4',0};
+static const WCHAR szARM[] = {'A','r','m',0};
 static const WCHAR szWow6432NodeCLSID[] = {'W','o','w','6','4','3','2','N','o','d','e','\\','C','L','S','I','D',0};
 static const WCHAR szWow6432Node[] = {'W','o','w','6','4','3','2','N','o','d','e',0};
 static const WCHAR szStreams[] = {'_','S','t','r','e','a','m','s',0};
 static const WCHAR szStorages[] = {'_','S','t','o','r','a','g','e','s',0};
 static const WCHAR szMsiPublishAssemblies[] = {'M','s','i','P','u','b','l','i','s','h','A','s','s','e','m','b','l','i','e','s',0};
+static const WCHAR szCostingComplete[] = {'C','o','s','t','i','n','g','C','o','m','p','l','e','t','e',0};
+static const WCHAR szTempFolder[] = {'T','e','m','p','F','o','l','d','e','r',0};
+static const WCHAR szDatabase[] = {'D','A','T','A','B','A','S','E',0};
+static const WCHAR szCRoot[] = {'C',':','\\',0};
+static const WCHAR szProductLanguage[] = {'P','r','o','d','u','c','t','L','a','n','g','u','a','g','e',0};
+static const WCHAR szProductVersion[] = {'P','r','o','d','u','c','t','V','e','r','s','i','o','n',0};
+static const WCHAR szWindowsInstaller[] = {'W','i','n','d','o','w','s','I','n','s','t','a','l','l','e','r',0};
+static const WCHAR szStringData[] = {'_','S','t','r','i','n','g','D','a','t','a',0};
+static const WCHAR szStringPool[] = {'_','S','t','r','i','n','g','P','o','o','l',0};
+static const WCHAR szInstallLevel[] = {'I','N','S','T','A','L','L','L','E','V','E','L',0};
+static const WCHAR szCostInitialize[] = {'C','o','s','t','I','n','i','t','i','a','l','i','z','e',0};
+static const WCHAR szAppDataFolder[] = {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
+static const WCHAR szRollbackDisabled[] = {'R','o','l','l','b','a','c','k','D','i','s','a','b','l','e','d',0};
+static const WCHAR szName[] = {'N','a','m','e',0};
+static const WCHAR szData[] = {'D','a','t','a',0};
+static const WCHAR szLangResource[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

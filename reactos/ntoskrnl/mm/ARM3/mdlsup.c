@@ -593,6 +593,12 @@ MmProbeAndLockPages(IN PMDL Mdl,
     NTSTATUS ProbeStatus;
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPDE PointerPpe;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPDE PointerPxe;
+#endif
     PFN_NUMBER PageFrameIndex;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
@@ -741,8 +747,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PointerPte = MiAddressToPte(StartAddress);
     PointerPde = MiAddressToPde(StartAddress);
 #if (_MI_PAGING_LEVELS >= 3)
-    DPRINT1("PAE/x64 Not Implemented\n");
-    ASSERT(FALSE);
+    PointerPpe = MiAddressToPpe(StartAddress);
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PointerPxe = MiAddressToPxe(StartAddress);
 #endif
 
     //
@@ -776,7 +784,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
     //
     // Check if this came from kernel mode
     //
-    if (Base >= MM_HIGHEST_USER_ADDRESS)
+    if (Base > MM_HIGHEST_USER_ADDRESS)
     {
         //
         // We should not have a process
@@ -834,11 +842,14 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Assume failure and check for non-mapped pages
         //
         *MdlPages = LIST_HEAD;
-#if (_MI_PAGING_LEVELS >= 3)
-        /* Should be checking the PPE and PXE */
-        ASSERT(FALSE);
+        while (
+#if (_MI_PAGING_LEVELS == 4)
+               (PointerPxe->u.Hard.Valid == 0) ||
 #endif
-        while ((PointerPde->u.Hard.Valid == 0) ||
+#if (_MI_PAGING_LEVELS >= 3)
+               (PointerPpe->u.Hard.Valid == 0) ||
+#endif
+               (PointerPde->u.Hard.Valid == 0) ||
                (PointerPte->u.Hard.Valid == 0))
         {
             //
@@ -1042,7 +1053,14 @@ MmProbeAndLockPages(IN PMDL Mdl,
         PointerPte++;
 
         /* Check if we're on a PDE boundary */
-        if (!((ULONG_PTR)PointerPte & (PD_SIZE - 1))) PointerPde++;
+        if (MiIsPteOnPdeBoundary(PointerPte)) PointerPde++;
+#if (_MI_PAGING_LEVELS >= 3)
+        if (MiIsPteOnPpeBoundary(PointerPte)) PointerPpe++;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+        if (MiIsPteOnPxeBoundary(PointerPte)) PointerPxe++;
+#endif
+
     } while (PointerPte <= LastPte);
 
     //

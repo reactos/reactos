@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 DECLARE_HANDLE(HTHUMBNAIL);
+typedef HTHUMBNAIL *PHTHUMBNAIL;
 
 typedef struct _MilMatrix3x2D
 {
@@ -53,12 +54,14 @@ typedef struct _DWM_BLURBEHIND
     BOOL fTransitionOnMaximized;
 } DWM_BLURBEHIND, *PDWM_BLURBEHIND;
 
+DWMAPI DwmDefWindowProc(HWND, UINT, WPARAM, LPARAM, LRESULT*);
 DWMAPI DwmEnableBlurBehindWindow(HWND, const DWM_BLURBEHIND *);
 DWMAPI DwmEnableComposition(UINT);
 DWMAPI DwmEnableMMCSS(BOOL);
 DWMAPI DwmExtendFrameIntoClientArea(HWND,const MARGINS*);
 DWMAPI DwmGetColorizationColor(DWORD*,BOOL);
 DWMAPI DwmIsCompositionEnabled(BOOL*);
+DWMAPI DwmRegisterThumbnail(HWND, HWND, PHTHUMBNAIL);
 DWMAPI DwmSetWindowAttribute(HWND, DWORD, LPCVOID, DWORD);
 DWMAPI DwmUnregisterThumbnail(HTHUMBNAIL);
 

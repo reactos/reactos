@@ -39,12 +39,13 @@ list(APPEND SOURCE
     enummedia.c
     control.c
     avisplit.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
-add_library(quartz SHARED ${SOURCE})
+add_library(quartz SHARED
+    ${SOURCE}
+    version.rc)
 
 set_module_type(quartz win32dll)
 
@@ -74,5 +75,7 @@ add_pch(quartz quartz_private.h)
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)
 
 if(NOT MSVC)
-    allow_warnings(quartz)
+    # FIXME: http://www.cmake.org/Bug/view.php?id=12998
+    #allow_warnings(quartz)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()

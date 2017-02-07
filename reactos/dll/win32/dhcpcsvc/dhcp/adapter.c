@@ -1,6 +1,6 @@
 #include "rosdhcp.h"
 
-static SOCKET DhcpSocket = INVALID_SOCKET;
+SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
 
@@ -200,6 +200,85 @@ InterfaceConnected(const MIB_IFROW* IfEntry)
     return 0;
 }
 
+BOOL
+IsReconnectHackNeeded(PDHCP_ADAPTER Adapter, const MIB_IFROW* IfEntry)
+{
+    struct protocol *proto;
+    PIP_ADAPTER_INFO AdapterInfo, Orig;
+    DWORD Size, Ret;
+    char *ZeroAddress = "0.0.0.0";
+
+    proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+
+    if (Adapter->DhclientInfo.client->state == S_BOUND && !proto)
+        return FALSE;
+
+    if (Adapter->DhclientInfo.client->state != S_BOUND &&
+        Adapter->DhclientInfo.client->state != S_STATIC)
+        return FALSE;
+    
+    ApiUnlock();
+
+    Orig = AdapterInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(IP_ADAPTER_INFO));
+    Size = sizeof(IP_ADAPTER_INFO);
+    if (!AdapterInfo)
+    {
+        ApiLock();
+        return FALSE;
+    }
+
+    Ret = GetAdaptersInfo(AdapterInfo, &Size);
+    if (Ret == ERROR_BUFFER_OVERFLOW)
+    {
+        HeapFree(GetProcessHeap(), 0, AdapterInfo);
+        AdapterInfo = HeapAlloc(GetProcessHeap(), 0, Size);
+        if (!AdapterInfo)
+        {
+            ApiLock();
+            return FALSE;
+        }
+
+        if (GetAdaptersInfo(AdapterInfo, &Size) != NO_ERROR)
+        {
+            ApiLock();
+            return FALSE;
+        }
+
+        Orig = AdapterInfo;
+        for (; AdapterInfo != NULL; AdapterInfo = AdapterInfo->Next)
+        {
+            if (AdapterInfo->Index == IfEntry->dwIndex)
+                break;
+        }
+
+        if (AdapterInfo == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, Orig);
+            ApiLock();
+            return FALSE;
+        }
+    }
+    else if (Ret != NO_ERROR)
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return FALSE;
+    }
+
+    if (!strcmp(AdapterInfo->IpAddressList.IpAddress.String, ZeroAddress))
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return TRUE;
+    }
+    else
+    {
+        HeapFree(GetProcessHeap(), 0, Orig);
+        ApiLock();
+        return FALSE;
+    }
+}
+
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
@@ -209,6 +288,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PDHCP_ADAPTER Adapter = NULL;
     HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
+    struct protocol *proto;
     int i, AdapterCount = 0, Broadcast;
 
     /* FIXME: Kill this thread when the service is stopped */
@@ -240,11 +320,38 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
             if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
             {
+                proto = find_protocol_by_adapter(&Adapter->DhclientInfo);
+
                 /* This is an existing adapter */
                 if (InterfaceConnected(&Table->table[i])) {
                     /* We're still active so we stay in the list */
                     ifi = &Adapter->DhclientInfo;
+
+                    /* This is a hack because IP helper API sucks */
+                    if (IsReconnectHackNeeded(Adapter, &Table->table[i]))
+                    {
+                        /* This handles a disconnect/reconnect */
+
+                        if (proto)
+                            remove_protocol(proto);
+                        Adapter->DhclientInfo.client->state = S_INIT;
+
+                        /* These are already invalid since the media state change */
+                        Adapter->RouterMib.dwForwardNextHop = 0;
+                        Adapter->NteContext = 0;
+
+                        add_protocol(Adapter->DhclientInfo.name,
+                                     Adapter->DhclientInfo.rfdesc,
+                                     got_one, &Adapter->DhclientInfo);
+                        state_init(&Adapter->DhclientInfo);
+
+                        SetEvent(AdapterStateChangedEvent);
+                    }
+
                 } else {
+                    if (proto)
+                        remove_protocol(proto);
+
                     /* We've lost our link so out we go */
                     RemoveEntryList(&Adapter->ListEntry);
                     free(Adapter);
@@ -330,7 +437,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                                      Adapter->DhclientInfo.rfdesc,
                                      got_one, &Adapter->DhclientInfo);
 
-	                state_init(&Adapter->DhclientInfo);
+                        state_init(&Adapter->DhclientInfo);
                     }
 
                     ApiLock();
@@ -345,15 +452,12 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                 DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
                                        Table->table[i].dwIndex));
         }
-        Error = NotifyAddrChange(NULL, NULL);
 #if 0
+        Error = NotifyAddrChange(NULL, NULL);
         if (Error != NO_ERROR)
             break;
 #else
-        if (AdapterCount)
-            break;
-        else
-            Sleep(3000);
+        Sleep(3000);
 #endif
     } while (TRUE);
 
@@ -364,14 +468,13 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 }
 
 HANDLE StartAdapterDiscovery(VOID) {
-    HANDLE /* ThreadHandle, */ EventHandle;
+    HANDLE ThreadHandle, EventHandle;
 
     EventHandle = CreateEvent(NULL,
                               FALSE,
                               FALSE,
                               NULL);
 
-#if 0
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
@@ -383,9 +486,6 @@ HANDLE StartAdapterDiscovery(VOID) {
         return NULL;
 
     CloseHandle(ThreadHandle);
-#else
-    AdapterDiscoveryThread((LPVOID)EventHandle);
-#endif
 
     return EventHandle;
 }

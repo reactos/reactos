@@ -317,14 +317,6 @@ ProgressSetStep (PPROGRESSBAR Bar,
     {
       Bar->Percent = NewPercent;
 
-      /* DO NOT REMOVE THOSE LINES
-       * This might be needed by sysreg
-       */
-      if (NewPercent ==  50)
-      {
-        DPRINT1("CHECKPOINT:HALF_COPIED\n");
-      }
-
       sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
 
       coPos.X = Bar->Left + (Bar->Width - 2) / 2;

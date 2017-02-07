@@ -26,6 +26,8 @@
 #include "winreg.h"
 #include "winerror.h"
 #include "objbase.h"
+#include "initguid.h"
+#include "wia_lh.h"
 #include "sti.h"
 
 #include "wine/debug.h"
@@ -34,18 +36,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(sti);
 
 extern HRESULT WINAPI STI_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 extern BOOL WINAPI STI_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI STI_DllRegisterServer(void) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI STI_DllUnregisterServer(void) DECLSPEC_HIDDEN;
 
 typedef HRESULT (*fnCreateInstance)(REFIID riid, IUnknown *pUnkOuter, LPVOID *ppObj);
 
 typedef struct
 {
-    const struct IClassFactoryVtbl *vtbl;
+    IClassFactory IClassFactory_iface;
     fnCreateInstance pfnCreateInstance;
 } sti_cf;
 
 static inline sti_cf *impl_from_IClassFactory( IClassFactory *iface )
 {
-    return (sti_cf *)((char *)iface - FIELD_OFFSET( sti_cf, vtbl ));
+    return CONTAINING_RECORD(iface, sti_cf, IClassFactory_iface);
 }
 
 static HRESULT sti_create( REFIID riid, IUnknown *pUnkOuter, LPVOID *ppObj )
@@ -127,7 +131,7 @@ static const struct IClassFactoryVtbl sti_cf_vtbl =
     sti_cf_LockServer
 };
 
-static sti_cf the_sti_cf = { &sti_cf_vtbl, sti_create };
+static sti_cf the_sti_cf = { { &sti_cf_vtbl }, sti_create };
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -149,7 +153,7 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 
     if (IsEqualGUID( rclsid, &CLSID_Sti ))
     {
-       cf = (IClassFactory *)&the_sti_cf.vtbl;
+       cf = &the_sti_cf.IClassFactory_iface;
     }
 
     if (cf)
@@ -163,4 +167,20 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 HRESULT WINAPI DllCanUnloadNow( void )
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ *           DllRegisterServer (STI.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return STI_DllRegisterServer();
+}
+
+/***********************************************************************
+ *           DllUnRegisterServer (STI.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return STI_DllUnregisterServer();
 }

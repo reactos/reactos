@@ -13,159 +13,160 @@
 #define NDEBUG
 #include <debug.h>
 
-#define NANOS_TO_100NS(nanos) (((LONGLONG)(nanos)) / 100)
-#define MICROS_TO_100NS(micros) (((LONGLONG)(micros)) * NANOS_TO_100NS(1000))
-#define MILLIS_TO_100NS(milli) (((LONGLONG)(milli)) * MICROS_TO_100NS(1000))
-
 /*
  * @implemented
  */
 HANDLE
 WINAPI
-CreateIoCompletionPort(
-    HANDLE FileHandle,
-    HANDLE ExistingCompletionPort,
-    ULONG_PTR CompletionKey,
-    DWORD NumberOfConcurrentThreads
-    )
+CreateIoCompletionPort(IN HANDLE FileHandle,
+                       IN HANDLE ExistingCompletionPort,
+                       IN ULONG_PTR CompletionKey,
+                       IN DWORD NumberOfConcurrentThreads)
 {
-   HANDLE CompletionPort = NULL;
-   NTSTATUS errCode;
-   FILE_COMPLETION_INFORMATION CompletionInformation;
-   IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    HANDLE NewPort;
+    FILE_COMPLETION_INFORMATION CompletionInformation;
+    IO_STATUS_BLOCK IoStatusBlock;
 
-   if ( FileHandle == INVALID_HANDLE_VALUE && ExistingCompletionPort != NULL )
-   {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
+    /* Check if this is a new port */
+    NewPort = ExistingCompletionPort;
+    if (!ExistingCompletionPort)
+    {
+        /* Create it */
+        Status = NtCreateIoCompletion(&NewPort,
+                                      IO_COMPLETION_ALL_ACCESS,
+                                      NULL,
+                                      NumberOfConcurrentThreads);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Convert error and fail */
+            BaseSetLastNTError(Status);
+            return FALSE;
+        }
+    }
 
-   if ( ExistingCompletionPort != NULL )
-   {
-      CompletionPort = ExistingCompletionPort;
-   }
-   else
-   {
+    /* Check if no actual file is being associated with the completion port */
+    if (FileHandle == INVALID_HANDLE_VALUE)
+    {
+        /* Was there a port already associated? */
+        if (ExistingCompletionPort)
+        {
+            /* You are not allowed using an old port and dropping the handle */
+            NewPort = NULL;
+            BaseSetLastNTError(STATUS_INVALID_PARAMETER);
+        }
+    }
+    else
+    {
+        /* We have a file handle, so associated it with this completion port */
+        CompletionInformation.Port = NewPort;
+        CompletionInformation.Key = (PVOID)CompletionKey;
+        Status = NtSetInformationFile(FileHandle,
+                                      &IoStatusBlock,
+                                      &CompletionInformation,
+                                      sizeof(FILE_COMPLETION_INFORMATION),
+                                      FileCompletionInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Convert the error code and close the newly created port, if any */
+            BaseSetLastNTError(Status);
+            if (!ExistingCompletionPort) NtClose(NewPort);
+            return FALSE;
+        }
+    }
 
-      errCode = NtCreateIoCompletion(&CompletionPort,
-                                     IO_COMPLETION_ALL_ACCESS,
-                                     NULL,//ObjectAttributes
-                                     NumberOfConcurrentThreads);
-
-      if (!NT_SUCCESS(errCode) )
-      {
-         BaseSetLastNTError (errCode);
-         return FALSE;
-      }
-
-   }
-
-   if ( FileHandle != INVALID_HANDLE_VALUE )
-   {
-      CompletionInformation.Port = CompletionPort;
-      CompletionInformation.Key  = (PVOID)CompletionKey;
-
-      errCode = NtSetInformationFile(FileHandle,
-                                     &IoStatusBlock,
-                                     &CompletionInformation,
-                                     sizeof(FILE_COMPLETION_INFORMATION),
-                                     FileCompletionInformation);
-
-      if ( !NT_SUCCESS(errCode) )
-      {
-         if ( ExistingCompletionPort == NULL )
-         {
-            NtClose(CompletionPort);
-         }
-
-         BaseSetLastNTError (errCode);
-         return FALSE;
-      }
-   }
-
-   return CompletionPort;
+    /* Return the newly created port, if any */
+    return NewPort;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-GetQueuedCompletionStatus(
-   HANDLE CompletionHandle,
-   LPDWORD lpNumberOfBytesTransferred,
-   PULONG_PTR lpCompletionKey,
-   LPOVERLAPPED *lpOverlapped,
-   DWORD dwMilliseconds
-   )
+GetQueuedCompletionStatus(IN HANDLE CompletionHandle,
+                          IN LPDWORD lpNumberOfBytesTransferred,
+                          OUT PULONG_PTR lpCompletionKey,
+                          OUT LPOVERLAPPED *lpOverlapped,
+                          IN DWORD dwMilliseconds)
 {
-   NTSTATUS errCode;
-   IO_STATUS_BLOCK IoStatus;
-   ULONG_PTR CompletionKey;
-   LARGE_INTEGER Time;
-   PLARGE_INTEGER TimePtr;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatus;
+    ULONG_PTR CompletionKey;
+    LARGE_INTEGER Time;
+    PLARGE_INTEGER TimePtr;
 
-   if (!lpNumberOfBytesTransferred || !lpCompletionKey || !lpOverlapped)
-   {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return FALSE;
-   }
-   
-   /* Convert the timeout */
-   TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
-
-   errCode = NtRemoveIoCompletion(CompletionHandle,
+    /* Convert the timeout and then call the native API */
+    TimePtr = BaseFormatTimeOut(&Time, dwMilliseconds);
+    Status = NtRemoveIoCompletion(CompletionHandle,
                                   (PVOID*)&CompletionKey,
                                   (PVOID*)lpOverlapped,
                                   &IoStatus,
                                   TimePtr);
+    if (!(NT_SUCCESS(Status)) || (Status == STATUS_TIMEOUT))
+    {
+        /* Clear out the overlapped output */
+        *lpOverlapped = NULL;
 
-   if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
-      *lpOverlapped = NULL;
-      BaseSetLastNTError(errCode);
-      return FALSE;
-   }
+        /* Check what kind of error we got */
+        if (Status == STATUS_TIMEOUT)
+        {
+            /* Timeout error is set directly since there's no conversion */
+            SetLastError(WAIT_TIMEOUT);
+        }
+        else
+        {
+            /* Any other error gets converted */
+            BaseSetLastNTError(Status);
+        }
 
-   *lpCompletionKey = CompletionKey;
-   *lpNumberOfBytesTransferred = IoStatus.Information;
+        /* This is a failure case */
+        return FALSE;
+    }
 
-   if (!NT_SUCCESS(IoStatus.Status)){
-      //failed io operation
-      BaseSetLastNTError(IoStatus.Status);
-      return FALSE;
-   }
+    /* Write back the output parameters */
+    *lpCompletionKey = CompletionKey;
+    *lpNumberOfBytesTransferred = IoStatus.Information;
 
-   return TRUE;
+    /* Check for error */
+    if (!NT_SUCCESS(IoStatus.Status))
+    {
+        /* Convert and fail */
+        BaseSetLastNTError(IoStatus.Status);
+        return FALSE;
+    }
+
+    /* Return success */
+    return TRUE;
 }
-
 
 /*
  * @implemented
  */
 BOOL
 WINAPI
-PostQueuedCompletionStatus(
-   HANDLE CompletionHandle,
-   DWORD dwNumberOfBytesTransferred,
-   ULONG_PTR dwCompletionKey,
-   LPOVERLAPPED lpOverlapped
-   )
+PostQueuedCompletionStatus(IN HANDLE CompletionHandle,
+                           IN DWORD dwNumberOfBytesTransferred,
+                           IN ULONG_PTR dwCompletionKey,
+                           IN LPOVERLAPPED lpOverlapped)
 {
-   NTSTATUS errCode;
+    NTSTATUS Status;
 
-   errCode = NtSetIoCompletion(CompletionHandle,
-                               (PVOID)dwCompletionKey,      // KeyContext
-                               (PVOID)lpOverlapped,         // ApcContext
-                               STATUS_SUCCESS,              // IoStatusBlock->Status
-                               dwNumberOfBytesTransferred); // IoStatusBlock->Information
+    /* Call the native API */
+    Status = NtSetIoCompletion(CompletionHandle,
+                               (PVOID)dwCompletionKey,
+                               (PVOID)lpOverlapped,
+                               STATUS_SUCCESS,
+                               dwNumberOfBytesTransferred);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Convert the error and fail */
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
 
-   if ( !NT_SUCCESS(errCode) )
-   {
-      BaseSetLastNTError (errCode);
-      return FALSE;
-   }
-   return TRUE;
+    /* Success path */
+    return TRUE;
 }
 
 /*
@@ -206,7 +207,7 @@ GetOverlappedResult(IN HANDLE hFile,
         }
 
         /* Fail if we had an error -- the last error is already set */
-        if (WaitStatus != 0) return FALSE;
+        if (WaitStatus) return FALSE;
     }
 
     /* Return bytes transferred */
@@ -229,24 +230,24 @@ GetOverlappedResult(IN HANDLE hFile,
  */
 BOOL
 WINAPI
-BindIoCompletionCallback(HANDLE FileHandle,
-                         LPOVERLAPPED_COMPLETION_ROUTINE Function,
-                         ULONG Flags)
+BindIoCompletionCallback(IN HANDLE FileHandle,
+                         IN LPOVERLAPPED_COMPLETION_ROUTINE Function,
+                         IN ULONG Flags)
 {
-    NTSTATUS Status = 0;
+    NTSTATUS Status;
 
-    DPRINT("(%p, %p, %d)\n", FileHandle, Function, Flags);
-
+    /* Call RTL */
     Status = RtlSetIoCompletionCallback(FileHandle,
                                         (PIO_APC_ROUTINE)Function,
                                         Flags);
-
     if (!NT_SUCCESS(Status))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        /* Set error and fail */
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
+    /* Return success */
     return TRUE;
 }
 

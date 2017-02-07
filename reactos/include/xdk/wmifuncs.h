@@ -4,41 +4,44 @@
 
 #ifdef RUN_WPP
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+_IRQL_requires_max_(HIGH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 __cdecl
 WmiTraceMessage(
-  IN TRACEHANDLE LoggerHandle,
-  IN ULONG MessageFlags,
-  IN LPGUID MessageGuid,
-  IN USHORT MessageNumber,
-  IN ...);
+  _In_ TRACEHANDLE LoggerHandle,
+  _In_ ULONG MessageFlags,
+  _In_ LPGUID MessageGuid,
+  _In_ USHORT MessageNumber,
+  ...);
 #endif
 #endif /* RUN_WPP */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiQueryTraceInformation(
-  IN TRACE_INFORMATION_CLASS TraceInformationClass,
-  OUT PVOID TraceInformation,
-  IN ULONG TraceInformationLength,
-  OUT PULONG RequiredLength OPTIONAL,
-  IN PVOID Buffer OPTIONAL);
+  _In_ TRACE_INFORMATION_CLASS TraceInformationClass,
+  _Out_writes_bytes_(TraceInformationLength) PVOID TraceInformation,
+  _In_ ULONG TraceInformationLength,
+  _Out_opt_ PULONG RequiredLength,
+  _In_opt_ PVOID Buffer);
 
 #if 0
 /* FIXME: Get va_list from where? */
+_IRQL_requires_max_(HIGH_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiTraceMessageVa(
-  IN TRACEHANDLE LoggerHandle,
-  IN ULONG MessageFlags,
-  IN LPGUID MessageGuid,
-  IN USHORT MessageNumber,
-  IN va_list MessageArgList);
+  _In_ TRACEHANDLE LoggerHandle,
+  _In_ ULONG MessageFlags,
+  _In_ LPGUID MessageGuid,
+  _In_ USHORT MessageNumber,
+  _In_ va_list MessageArgList);
 #endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
@@ -46,15 +49,16 @@ WmiTraceMessageVa(
 #ifndef TRACE_INFORMATION_CLASS_DEFINE
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 WmiQueryTraceInformation(
-  IN TRACE_INFORMATION_CLASS TraceInformationClass,
-  OUT PVOID TraceInformation,
-  IN ULONG TraceInformationLength,
-  OUT PULONG RequiredLength OPTIONAL,
-  IN PVOID Buffer OPTIONAL);
+  _In_ TRACE_INFORMATION_CLASS TraceInformationClass,
+  _Out_writes_bytes_(TraceInformationLength) PVOID TraceInformation,
+  _In_ ULONG TraceInformationLength,
+  _Out_opt_ PULONG RequiredLength,
+  _In_opt_ PVOID Buffer);
 #endif
 
 #define TRACE_INFORMATION_CLASS_DEFINE
@@ -63,89 +67,99 @@ WmiQueryTraceInformation(
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwRegister(
-  IN LPCGUID ProviderId,
-  IN PETWENABLECALLBACK EnableCallback OPTIONAL,
-  IN PVOID CallbackContext OPTIONAL,
-  OUT PREGHANDLE RegHandle);
+  _In_ LPCGUID ProviderId,
+  _In_opt_ PETWENABLECALLBACK EnableCallback,
+  _In_opt_ PVOID CallbackContext,
+  _Out_ PREGHANDLE RegHandle);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwUnregister(
-  IN REGHANDLE RegHandle);
+  _In_ REGHANDLE RegHandle);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 BOOLEAN
 NTKERNELAPI
 NTAPI
 EtwEventEnabled(
-  IN REGHANDLE RegHandle,
-  IN PCEVENT_DESCRIPTOR EventDescriptor);
+  _In_ REGHANDLE RegHandle,
+  _In_ PCEVENT_DESCRIPTOR EventDescriptor);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 BOOLEAN
 NTKERNELAPI
 NTAPI
 EtwProviderEnabled(
-  IN REGHANDLE RegHandle,
-  IN UCHAR Level,
-  IN ULONGLONG Keyword);
+  _In_ REGHANDLE RegHandle,
+  _In_ UCHAR Level,
+  _In_ ULONGLONG Keyword);
 
+_When_(ControlCode==EVENT_ACTIVITY_CTRL_CREATE_ID, _IRQL_requires_max_(HIGH_LEVEL))
+_When_(ControlCode!=EVENT_ACTIVITY_CTRL_CREATE_ID, _IRQL_requires_max_(APC_LEVEL))
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwActivityIdControl(
-  IN ULONG ControlCode,
-  IN OUT LPGUID ActivityId);
+  _In_ ULONG ControlCode,
+  _Inout_updates_bytes_(sizeof(GUID)) LPGUID ActivityId);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwWrite(
-  IN REGHANDLE RegHandle,
-  IN PCEVENT_DESCRIPTOR EventDescriptor,
-  IN LPCGUID ActivityId OPTIONAL,
-  IN ULONG UserDataCount,
-  IN PEVENT_DATA_DESCRIPTOR  UserData OPTIONAL);
+  _In_ REGHANDLE RegHandle,
+  _In_ PCEVENT_DESCRIPTOR EventDescriptor,
+  _In_opt_ LPCGUID ActivityId,
+  _In_ ULONG UserDataCount,
+  _In_reads_opt_(UserDataCount) PEVENT_DATA_DESCRIPTOR UserData);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwWriteTransfer(
-  IN REGHANDLE RegHandle,
-  IN PCEVENT_DESCRIPTOR EventDescriptor,
-  IN LPCGUID ActivityId OPTIONAL,
-  IN LPCGUID RelatedActivityId OPTIONAL,
-  IN ULONG UserDataCount,
-  IN PEVENT_DATA_DESCRIPTOR UserData OPTIONAL);
+  _In_ REGHANDLE RegHandle,
+  _In_ PCEVENT_DESCRIPTOR EventDescriptor,
+  _In_opt_ LPCGUID ActivityId,
+  _In_opt_ LPCGUID RelatedActivityId,
+  _In_ ULONG UserDataCount,
+  _In_reads_opt_(UserDataCount) PEVENT_DATA_DESCRIPTOR UserData);
 
+_IRQL_requires_max_(HIGH_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwWriteString(
-  IN REGHANDLE RegHandle,
-  IN UCHAR Level,
-  IN ULONGLONG Keyword,
-  IN LPCGUID ActivityId OPTIONAL,
-  IN PCWSTR String);
+  _In_ REGHANDLE RegHandle,
+  _In_ UCHAR Level,
+  _In_ ULONGLONG Keyword,
+  _In_opt_ LPCGUID ActivityId,
+  _In_ PCWSTR String);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+_IRQL_requires_max_(HIGH_LEVEL)
 NTSTATUS
 NTKERNELAPI
 NTAPI
 EtwWriteEx(
-  IN REGHANDLE RegHandle,
-  IN PCEVENT_DESCRIPTOR EventDescriptor,
-  IN ULONG64 Filter,
-  IN ULONG Flags,
-  IN LPCGUID ActivityId OPTIONAL,
-  IN LPCGUID RelatedActivityId OPTIONAL,
-  IN ULONG UserDataCount,
-  IN PEVENT_DATA_DESCRIPTOR UserData OPTIONAL);
+  _In_ REGHANDLE RegHandle,
+  _In_ PCEVENT_DESCRIPTOR EventDescriptor,
+  _In_ ULONG64 Filter,
+  _In_ ULONG Flags,
+  _In_opt_ LPCGUID ActivityId,
+  _In_opt_ LPCGUID RelatedActivityId,
+  _In_ ULONG UserDataCount,
+  _In_reads_opt_(UserDataCount) PEVENT_DATA_DESCRIPTOR UserData);
 #endif
 
 

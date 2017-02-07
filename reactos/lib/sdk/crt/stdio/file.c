@@ -112,8 +112,8 @@ typedef struct {
     CRITICAL_SECTION crit;
 } file_crit;
 
-FILE _iob[3] = { { 0 } };
-static file_crit* fstream[MAX_FILES/FD_BLOCK_SIZE];
+FILE _iob[_IOB_ENTRIES] = { { 0 } };
+static file_crit* fstream[MAX_FILES/FD_BLOCK_SIZE] = { NULL };
 static int max_streams = 512, stream_idx;
 
 /* INTERNAL: process umask */
@@ -963,10 +963,10 @@ void msvcrt_free_io(void)
     fclose(&_iob[2]);
 
     for(i=0; i<sizeof(__pioinfo)/sizeof(__pioinfo[0]); i++)
-            free(__pioinfo[i]);
+        free(__pioinfo[i]);
 
     for(i=0; i<sizeof(fstream)/sizeof(fstream[0]); i++)
-            free(fstream[i/FD_BLOCK_SIZE]);
+        free(fstream[i]);
 
     file_cs.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&file_cs);

@@ -1,4 +1,4 @@
-/*
+﻿/*
  *         translated by xrogers
  *         xxrogers@users.sourceforge.net
  *         https://sourceforge.net/projects/reactospl
@@ -23,10 +23,12 @@ BEGIN
   END
   POPUP "&Widok"
   BEGIN
-    MENUITEM "Urządzenia w&edług typu",         IDC_DEVBYTYPE, CHECKED
-    MENUITEM "Ur&ządzenia według połączenia",   IDC_STATIC, GRAYED
-    MENUITEM "Zaso&by według typu",       IDC_STATIC, GRAYED
-    MENUITEM "Za&soby według połączenia", IDC_STATIC, GRAYED
+    MENUITEM "Urządzenia w&edług typu",       IDC_DEVBYTYPE
+    MENUITEM "Ur&ządzenia według połączenia", IDC_DEVBYCONN
+    MENUITEM "Zaso&by według typu",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Za&soby według połączenia",     IDC_RESBYCONN, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Show hidden devices",           IDC_SHOWHIDDEN
   END
   POPUP "Pomo&c"
   BEGIN

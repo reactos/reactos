@@ -50,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(olemalloc);
 static const IMallocVtbl VT_IMalloc32;
 
 typedef struct {
-        const IMallocVtbl *lpVtbl;
+        IMalloc IMalloc_iface;
         DWORD dummy;                /* nothing, we are static */
 	IMallocSpy * pSpy;          /* the spy when active */
 	DWORD SpyedAllocationsLeft; /* number of spyed allocations left */
@@ -60,7 +60,7 @@ typedef struct {
 } _Malloc32;
 
 /* this is the static object instance */
-static _Malloc32 Malloc32 = {&VT_IMalloc32, 0, NULL, 0, 0, NULL, 0};
+static _Malloc32 Malloc32 = {{&VT_IMalloc32}, 0, NULL, 0, 0, NULL, 0};
 
 /* with a spy active all calls from pre to post methods are threadsave */
 static CRITICAL_SECTION IMalloc32_SpyCS;
@@ -374,7 +374,7 @@ static const IMallocVtbl VT_IMalloc32 =
  */
 HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
 {
-        *lpMalloc = (LPMALLOC)&Malloc32;
+        *lpMalloc = &Malloc32.IMalloc_iface;
         return S_OK;
 }
 
@@ -392,7 +392,7 @@ HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC *lpMalloc)
  */
 LPVOID WINAPI CoTaskMemAlloc(ULONG size)
 {
-        return IMalloc_Alloc((LPMALLOC)&Malloc32,size);
+        return IMalloc_Alloc(&Malloc32.IMalloc_iface,size);
 }
 
 /***********************************************************************
@@ -408,7 +408,7 @@ LPVOID WINAPI CoTaskMemAlloc(ULONG size)
  */
 VOID WINAPI CoTaskMemFree(LPVOID ptr)
 {
-        IMalloc_Free((LPMALLOC)&Malloc32, ptr);
+        IMalloc_Free(&Malloc32.IMalloc_iface, ptr);
 }
 
 /***********************************************************************
@@ -426,7 +426,7 @@ VOID WINAPI CoTaskMemFree(LPVOID ptr)
  */
 LPVOID WINAPI CoTaskMemRealloc(LPVOID pvOld, ULONG size)
 {
-        return IMalloc_Realloc((LPMALLOC)&Malloc32, pvOld, size);
+        return IMalloc_Realloc(&Malloc32.IMalloc_iface, pvOld, size);
 }
 
 /***********************************************************************

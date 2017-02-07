@@ -192,7 +192,6 @@ extern void __cdecl _SEH2Return(void);
 	if(_SEHTopTryLevel) \
 	{ \
 		_SEH2LeaveFrame(); \
-		__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
 	}
 
 #define __SEH_END_SCOPE_CHAIN \
@@ -219,16 +218,14 @@ extern void __cdecl _SEH2Return(void);
 			static const int _SEH2ScopeKind = 0; \
 			volatile _SEH2TryLevel_t _SEHTryLevel; \
 			volatile _SEH2HandleTryLevel_t _SEHHandleTryLevel; \
-			void * _SEHStackPointer; \
+			_SEH2Frame_t _SEH2Frame[_SEHTopTryLevel ? 1 : 0]; \
 			volatile _SEH2TryLevel_t * _SEH2TryLevelP; \
 			_SEH2Frame_t * const _SEH2FrameP = _SEHTopTryLevel ? \
-				({ __asm__ __volatile__("mov %%esp, %0" : "=g" (_SEHStackPointer)); __builtin_alloca(sizeof(_SEH2Frame_t)); }) : \
-				_SEHCurFrameP; \
+				_SEH2Frame : _SEHCurFrameP; \
  \
 			(void)_SEH2ScopeKind; \
 			(void)_SEHTryLevel; \
 			(void)_SEHHandleTryLevel; \
-			(void)_SEHStackPointer; \
 			(void)_SEH2FrameP; \
 			(void)_SEH2TryLevelP; \
  \

@@ -4,26 +4,26 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_NAME "NÈv"
-    IDS_TYPE "TÌpus"
-    IDS_MANUFACTURER "Gy·rtÛ: %1"
+    IDS_NAME "N√©v"
+    IDS_TYPE "T√≠pus"
+    IDS_MANUFACTURER "Gy√°rt√≥: %1"
     IDS_LOCATION "Hely: %1"
-    IDS_STATUS "Eszkˆz ·llapota: %1"
+    IDS_STATUS "Eszk√∂z √°llapota: %1"
     IDS_UNKNOWN "Ismeretlen"
     IDS_LOCATIONSTR "Hely %1!u! (%2)"
     IDS_DEVCODE " (Code %1!u!)"
     IDS_DEVCODE2 " (Code %2!u!)"
-    IDS_ENABLEDEVICE "Eszkˆz haszn·lata (bekapcsolva)"
-    IDS_DISABLEDEVICE "Ne haszn·lja ezt az eszkˆzt (kikapcsolva)"
-    IDS_UNKNOWNDEVICE "Ismeretlen eszkˆz"
-    IDS_NODRIVERLOADED "Nincsenek meghajtÛ szoftverek telepÌtve ehhez az eszkˆzhˆz."
+    IDS_ENABLEDEVICE "Eszk√∂z haszn√°lata (bekapcsolva)"
+    IDS_DISABLEDEVICE "Ne haszn√°lja ezt az eszk√∂zt (kikapcsolva)"
+    IDS_UNKNOWNDEVICE "Ismeretlen eszk√∂z"
+    IDS_NODRIVERLOADED "Nincsenek meghajt√≥ szoftverek telep√≠tve ehhez az eszk√∂zh√∂z."
     IDS_DEVONPARENT "on %1"
-    IDS_TROUBLESHOOTDEV "&HibakeresÈs..."
-    IDS_ENABLEDEV "Eszkˆz &bekapcsol·sa"
-    IDS_REINSTALLDRV "Illesztıprogramok ˙j&ratelepÌtÈse"
-    IDS_PROPERTIES "&Tulajdons·gok"
-    IDS_UPDATEDRV "Illesztıprogramok &frissÌtÈse..."
-    IDS_REBOOT "Sz·mÌtÛgÈp &˙jraindÌt·sa..."
+    IDS_TROUBLESHOOTDEV "&Hibakeres√©s..."
+    IDS_ENABLEDEV "Eszk√∂z &bekapcsol√°sa"
+    IDS_REINSTALLDRV "Illeszt√µprogramok √∫j&ratelep√≠t√©se"
+    IDS_PROPERTIES "&Tulajdons√°gok"
+    IDS_UPDATEDRV "Illeszt√µprogramok &friss√≠t√©se..."
+    IDS_REBOOT "Sz√°m√≠t√≥g√©p &√∫jraind√≠t√°sa..."
     IDS_NOTAVAILABLE "Not available"
     IDS_NOTDIGITALLYSIGNED "Not digitally signed"
     IDS_NODRIVERS "No driver files are required or have been loaded for this device."
@@ -31,63 +31,63 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DEV_NO_PROBLEM "Ez az eszkˆz megfelelıen m˚kˆdik."
-    IDS_DEV_NOT_CONFIGURED "Ez az eszkˆz rosszul van be·llÌtva."
-    IDS_DEV_DEVLOADER_FAILED "A ReactOS nem tudja betˆlteni a meghajtÛprogramot ehhez az eszkˆzhˆz, mert a sz·mÌtÛgÈp kÈt $1 busz tÌpust l·t."
-    IDS_DEV_DEVLOADER_FAILED2 "A(z) $1 eszkˆzvezÈrlı betˆltı nem tudj·k betˆlteni ennek az eszkˆznek a meghajtÛprogramj·t."
-    IDS_DEV_OUT_OF_MEMORY "Az eszkˆz meghajtÛprogram hib·s lehet, vagy nincs elÈg memÛria a betˆltÈsÈhez."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "Ez az eszkˆz nem tud m˚kˆdni, mert a meghajtÛprogramjai vagy a rendszerleÌrÛ bejegyzÈsei hib·sak."
-    IDS_DEV_LACKED_ARBITRATOR "Az eszkˆz meghajtÛprogramja egy olyan erıforr·st igÈnyel amit nem tud a ReactOS kezelni."
-    IDS_DEV_BOOT_CONFIG_CONFLICT "Egy m·sik eszkˆz haszn·lja azokat az erıforr·sokat amelyeket ez az eszkˆz igÈnyel."
-    IDS_DEV_FAILED_FILTER "Az eszkˆz meghajtÛprogramjait ˙jra kell telepÌteni."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Ez az eszkˆz nem m˚kˆdik, mert a ReactOS nem tudja betˆlteni a meghajtÛprogramjait, mivel a(z) $1 elÈrhetetlen."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ez az eszkˆz nem m˚kˆdik, mert a ReactOS nem tudja betˆlteni a meghajtÛprogramjait, mivel a(z) $1 sÈr¸lt."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Eszkˆz hiba: prÛb·ld meg kicserÈlni a meghajtÛprogramokat, Ès ha ez sem segÌt akkor nÈzd meg a felhaszn·lÛi kˆnyvÈt."
-    IDS_DEV_INVALID_DATA "Ez az eszkˆz lehet, hogy nem fog megfelelıen m˚kˆdni, mert a sz·mÌtÛgÈp BIOS-a rossz erıforr·sokat osztott ki."
-    IDS_DEV_INVALID_DATA2 "Ez az eszkˆz lehet, hogy nem fog megfelelıen m˚kˆdni, mert az eszkˆz BIOS-a rossz erıforr·sokat igÈnyelt."
-    IDS_DEV_FAILED_START "Ez az eszkˆz m·r nincs jelen, elromlott vagy nincs minden meghajtÛprogram feltelepÌtve hozz·."
-    IDS_DEV_LIAR "A ReactOS meg·llt mikˆzben megprÛb·lta elindÌtani ezt az eszkˆzt, ezÈrt nem fogja mÈgegyszer megprÛb·lni."
-    IDS_DEV_NORMAL_CONFLICT "Az eszkˆz nem tud szabad $1 erıforr·st tal·lni."
-    IDS_DEV_NOT_VERIFIED "Az eszkˆz illesztıprogramja nem tal·lja az eszkˆzt."
-    IDS_DEV_NEED_RESTART "Ez az eszkˆz nem tud megfelelıen m˚kˆdni, amÌg nem indÌtod ˙jra a gÈpet."
-    IDS_DEV_REENUMERATION "Az eszkˆz erıforr·s ¸tkˆzÈst okozott elı."
-    IDS_DEV_PARTIAL_LOG_CONF "A ReactOS nem tudja azonosÌtani az eszkˆz ·ltal haszn·lt erıforr·sokat."
-    IDS_DEV_UNKNOWN_RESOURCE "Az illesztıprogram olyan erıforr·s haszn·lat·ra kÈnyszerÌti az eszkˆzt, amelyet nem tud kezelni a sz·mÌtÛgÈp eszkˆzvezÈrlıje."
-    IDS_DEV_REINSTALL "Az eszkˆz illesztıprogramjait ˙jra kell telepÌteni."
-    IDS_DEV_REGISTRY "A rendszerleÌrÛ hib·s lehet."
-    IDS_DEV_WILL_BE_REMOVED "A ReactOS elt·volÌtja ezt az eszkˆzt."
-    IDS_DEV_DISABLED "Az eszkˆz nincs bekapcsolva."
-    IDS_DEV_DISABLED2 "Az eszkˆz nincs bekapcsolva."
-    IDS_DEV_DEVLOADER_NOT_READY "Nem lehet betˆlteni az igÈnyelt eszkˆz illesztıprogramjait."
-    IDS_DEV_DEVLOADER_NOT_READY2 "Ez a megjelenÌtı megfelelıen m˚kˆdik."
-    IDS_DEV_DEVLOADER_NOT_READY3 "Nem lehet betˆlteni az igÈnyelt eszkˆz illesztıprogramjait."
-    IDS_DEV_DEVICE_NOT_THERE "Ez az eszkˆz m·r nincs jelen, elromlott vagy nincs minden illesztıprogram feltelepÌtve hozz·."
-    IDS_DEV_MOVED "A ReactOS Èpp az eszkˆzt telepÌti."
-    IDS_DEV_TOO_EARLY "A ReactOS Èpp az eszkˆzt telepÌti."
-    IDS_DEV_NO_VALID_LOG_CONF "A ReactOS nemtudja meg·llapÌtani, hogy milyen erıforr·sokat igÈnyel az eszkˆz."
-    IDS_DEV_FAILED_INSTALL "Az eszkˆzhoz nincsenek illesztıprogramok telepÌtve."
-    IDS_DEV_HARDWARE_DISABLED "Az eszkˆz levan tiltva, mivel a BIOS-a nem adott neki erıforr·st."
-    IDS_DEV_CANT_SHARE_IRQ "Ez az eszkˆz egy olyan megszakÌt·st (IRQ) igÈnyelt, amit egy m·sik eszkˆz haszn·l Ès nem oszthatja meg. Meg kell v·ltoztatnod az erıforr·s kioszt·st, vagy elt·volÌtanod a real-mode (16 bites) illesztıprogramot."
-    IDS_DEV_FAILED_ADD "Ez az eszkˆz nem tud megfelelıen m˚kˆdni, mivel a(z) $1 sem m˚kˆdik megfelelıen."
-    IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelepÌteni az eszkˆz illesztıprogramjait, mivel a programokat tartalmazÛ hely nem elÈrhetı."
-    IDS_DEV_TRANSLATION_FAILED "Ez az eszkˆz nem v·laszol a illesztıprogramj·nak."
-    IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja kital·lni a be·llÌt·sokat ehhez az eszkˆzhˆz. Haszn·ld a felhaszn·lÛi utasÌt·st, ami ehhez az eszkˆzhˆz j·r, Ès ·llÌtsd be az erıforr·sait."
-    IDS_DEV_BIOS_TABLE "A sz·mÌtÛgÈp nem tud elÈg inform·ciÛt adni, hogy ezt az eszkˆzt megfelelıen haszn·lja. Konzult·lj a gÈp karbantartÛj·val, illetve a cÈggel aki sz·llÌtotta, hogy igÈnyelj egy firmware vagy BIOS frissÌtÈst."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "Ez az eszkˆz egy PCI megszakÌt·st igÈnyelt de ISA megszakÌt·st haszn·l (vagy fordÌtva). Haszn·ld a gÈphez kapott illesztıprogramokat, hogy be·llÌthasd megfelelıen."
-    IDS_DEV_FAILED_DRIVER_ENTRY "A ReactOS nem tudja elindÌtani az eszkˆz illesztıprogramj·t."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "A ReactOS nem tudja elindÌtani az eszkˆz illesztıprogramj·t mivel egy elızı illesztıprogram m·r bevan tˆltve a memÛri·ban."
-    IDS_DEV_DRIVER_FAILED_LOAD "A ReactOS nem tudja elindÌtani az eszkˆz illesztıprogramj·t. Az illesztıprogram sÈr¸lt vagy hi·nyzik."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "A ReactOS nem tudja elÈrni ezt az eszkˆzt, mivel a szervÌz be·llÌt·sai a rendszerleÌrÛban hib·sak vagy hi·nyoznak."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "A ReactOS betudta tˆlteni az eszkˆz illesztıprogramj·t, de nem tal·lja az eszkˆzt."
-    IDS_DEV_DUPLICATE_DEVICE "A ReactOS nem tudja elindÌtani az eszkˆz illesztıprogramj·t mivel m·r fut egy ilyen illesztıprogram."
-    IDS_DEV_FAILED_POST_START "A ReactOS le·llÌtotta ezt az eszkˆzt mert problÈm·k lÈptek fel."
-    IDS_DEV_HALTED "Egy alkalmaz·s vagy szolg·ltat·s le·llÌtotta ezt az eszkˆzt."
-    IDS_DEV_PHANTOM "Jelenleg ez az eszkˆz nincs a sz·mÌtÛgÈphez csatlakoztatva."
-    IDS_DEV_SYSTEM_SHUTDOWN "A ReactOS nem tud hozz·fÈrni ehhez az eszkˆzhˆz, mivel a rendszer a le·llÌt·s folyamat·ban van."
-    IDS_DEV_HELD_FOR_EJECT "A ReactOS nem tudja haszn·lni ezt az eszkˆzt, mivel a ""Biztons·gos elt·volÌt·s"" f·zisba ker¸lt de mÈg nem lett elt·volÌtva."
-    IDS_DEV_DRIVER_BLOCKED "Az eszkˆzhˆz tartozÛ szoftver nem lett elindÌtva mivel nem m˚kˆdik a ReactOS-al. KÈrj egy friss illesztıprogram csomagot a gy·rtÛj·tÛl."
-    IDS_DEV_REGISTRY_TOO_LARGE "A ReactOS nem tudja elindÌtani ezt az eszkˆzt mert a rendszerleÌrÛ elÈrte a maximum mÈretÈt."
-    IDS_DEV_SETPROPERTIES_FAILED "A ReactOS nem tudta megv·ltoztatni az eszkˆz be·llÌt·sait."
+    IDS_DEV_NO_PROBLEM "Ez az eszk√∂z megfelel√µen m√ªk√∂dik."
+    IDS_DEV_NOT_CONFIGURED "Ez az eszk√∂z rosszul van be√°ll√≠tva."
+    IDS_DEV_DEVLOADER_FAILED "A ReactOS nem tudja bet√∂lteni a meghajt√≥programot ehhez az eszk√∂zh√∂z, mert a sz√°m√≠t√≥g√©p k√©t $1 busz t√≠pust l√°t."
+    IDS_DEV_DEVLOADER_FAILED2 "A(z) $1 eszk√∂zvez√©rl√µ bet√∂lt√µ nem tudj√°k bet√∂lteni ennek az eszk√∂znek a meghajt√≥programj√°t."
+    IDS_DEV_OUT_OF_MEMORY "Az eszk√∂z meghajt√≥program hib√°s lehet, vagy nincs el√©g mem√≥ria a bet√∂lt√©s√©hez."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Ez az eszk√∂z nem tud m√ªk√∂dni, mert a meghajt√≥programjai vagy a rendszerle√≠r√≥ bejegyz√©sei hib√°sak."
+    IDS_DEV_LACKED_ARBITRATOR "Az eszk√∂z meghajt√≥programja egy olyan er√µforr√°st ig√©nyel amit nem tud a ReactOS kezelni."
+    IDS_DEV_BOOT_CONFIG_CONFLICT "Egy m√°sik eszk√∂z haszn√°lja azokat az er√µforr√°sokat amelyeket ez az eszk√∂z ig√©nyel."
+    IDS_DEV_FAILED_FILTER "Az eszk√∂z meghajt√≥programjait √∫jra kell telep√≠teni."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Ez az eszk√∂z nem m√ªk√∂dik, mert a ReactOS nem tudja bet√∂lteni a meghajt√≥programjait, mivel a(z) $1 el√©rhetetlen."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ez az eszk√∂z nem m√ªk√∂dik, mert a ReactOS nem tudja bet√∂lteni a meghajt√≥programjait, mivel a(z) $1 s√©r√ºlt."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Eszk√∂z hiba: pr√≥b√°ld meg kicser√©lni a meghajt√≥programokat, √©s ha ez sem seg√≠t akkor n√©zd meg a felhaszn√°l√≥i k√∂nyv√©t."
+    IDS_DEV_INVALID_DATA "Ez az eszk√∂z lehet, hogy nem fog megfelel√µen m√ªk√∂dni, mert a sz√°m√≠t√≥g√©p BIOS-a rossz er√µforr√°sokat osztott ki."
+    IDS_DEV_INVALID_DATA2 "Ez az eszk√∂z lehet, hogy nem fog megfelel√µen m√ªk√∂dni, mert az eszk√∂z BIOS-a rossz er√µforr√°sokat ig√©nyelt."
+    IDS_DEV_FAILED_START "Ez az eszk√∂z m√°r nincs jelen, elromlott vagy nincs minden meghajt√≥program feltelep√≠tve hozz√°."
+    IDS_DEV_LIAR "A ReactOS meg√°llt mik√∂zben megpr√≥b√°lta elind√≠tani ezt az eszk√∂zt, ez√©rt nem fogja m√©gegyszer megpr√≥b√°lni."
+    IDS_DEV_NORMAL_CONFLICT "Az eszk√∂z nem tud szabad $1 er√µforr√°st tal√°lni."
+    IDS_DEV_NOT_VERIFIED "Az eszk√∂z illeszt√µprogramja nem tal√°lja az eszk√∂zt."
+    IDS_DEV_NEED_RESTART "Ez az eszk√∂z nem tud megfelel√µen m√ªk√∂dni, am√≠g nem ind√≠tod √∫jra a g√©pet."
+    IDS_DEV_REENUMERATION "Az eszk√∂z er√µforr√°s √ºtk√∂z√©st okozott el√µ."
+    IDS_DEV_PARTIAL_LOG_CONF "A ReactOS nem tudja azonos√≠tani az eszk√∂z √°ltal haszn√°lt er√µforr√°sokat."
+    IDS_DEV_UNKNOWN_RESOURCE "Az illeszt√µprogram olyan er√µforr√°s haszn√°lat√°ra k√©nyszer√≠ti az eszk√∂zt, amelyet nem tud kezelni a sz√°m√≠t√≥g√©p eszk√∂zvez√©rl√µje."
+    IDS_DEV_REINSTALL "Az eszk√∂z illeszt√µprogramjait √∫jra kell telep√≠teni."
+    IDS_DEV_REGISTRY "A rendszerle√≠r√≥ hib√°s lehet."
+    IDS_DEV_WILL_BE_REMOVED "A ReactOS elt√°vol√≠tja ezt az eszk√∂zt."
+    IDS_DEV_DISABLED "Az eszk√∂z nincs bekapcsolva."
+    IDS_DEV_DISABLED2 "Az eszk√∂z nincs bekapcsolva."
+    IDS_DEV_DEVLOADER_NOT_READY "Nem lehet bet√∂lteni az ig√©nyelt eszk√∂z illeszt√µprogramjait."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Ez a megjelen√≠t√µ megfelel√µen m√ªk√∂dik."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Nem lehet bet√∂lteni az ig√©nyelt eszk√∂z illeszt√µprogramjait."
+    IDS_DEV_DEVICE_NOT_THERE "Ez az eszk√∂z m√°r nincs jelen, elromlott vagy nincs minden illeszt√µprogram feltelep√≠tve hozz√°."
+    IDS_DEV_MOVED "A ReactOS √©pp az eszk√∂zt telep√≠ti."
+    IDS_DEV_TOO_EARLY "A ReactOS √©pp az eszk√∂zt telep√≠ti."
+    IDS_DEV_NO_VALID_LOG_CONF "A ReactOS nemtudja meg√°llap√≠tani, hogy milyen er√µforr√°sokat ig√©nyel az eszk√∂z."
+    IDS_DEV_FAILED_INSTALL "Az eszk√∂zhoz nincsenek illeszt√µprogramok telep√≠tve."
+    IDS_DEV_HARDWARE_DISABLED "Az eszk√∂z levan tiltva, mivel a BIOS-a nem adott neki er√µforr√°st."
+    IDS_DEV_CANT_SHARE_IRQ "Ez az eszk√∂z egy olyan megszak√≠t√°st (IRQ) ig√©nyelt, amit egy m√°sik eszk√∂z haszn√°l √©s nem oszthatja meg. Meg kell v√°ltoztatnod az er√µforr√°s kioszt√°st, vagy elt√°vol√≠tanod a real-mode (16 bites) illeszt√µprogramot."
+    IDS_DEV_FAILED_ADD "Ez az eszk√∂z nem tud megfelel√µen m√ªk√∂dni, mivel a(z) $1 sem m√ªk√∂dik megfelel√µen."
+    IDS_DEV_DISABLED_SERVICE "A ReactOS nem tudja feltelep√≠teni az eszk√∂z illeszt√µprogramjait, mivel a programokat tartalmaz√≥ hely nem el√©rhet√µ."
+    IDS_DEV_TRANSLATION_FAILED "Ez az eszk√∂z nem v√°laszol a illeszt√µprogramj√°nak."
+    IDS_DEV_NO_SOFTCONFIG "A ReactOS nem tudja kital√°lni a be√°ll√≠t√°sokat ehhez az eszk√∂zh√∂z. Haszn√°ld a felhaszn√°l√≥i utas√≠t√°st, ami ehhez az eszk√∂zh√∂z j√°r, √©s √°ll√≠tsd be az er√µforr√°sait."
+    IDS_DEV_BIOS_TABLE "A sz√°m√≠t√≥g√©p nem tud el√©g inform√°ci√≥t adni, hogy ezt az eszk√∂zt megfelel√µen haszn√°lja. Konzult√°lj a g√©p karbantart√≥j√°val, illetve a c√©ggel aki sz√°ll√≠totta, hogy ig√©nyelj egy firmware vagy BIOS friss√≠t√©st."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Ez az eszk√∂z egy PCI megszak√≠t√°st ig√©nyelt de ISA megszak√≠t√°st haszn√°l (vagy ford√≠tva). Haszn√°ld a g√©phez kapott illeszt√µprogramokat, hogy be√°ll√≠thasd megfelel√µen."
+    IDS_DEV_FAILED_DRIVER_ENTRY "A ReactOS nem tudja elind√≠tani az eszk√∂z illeszt√µprogramj√°t."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "A ReactOS nem tudja elind√≠tani az eszk√∂z illeszt√µprogramj√°t mivel egy el√µz√µ illeszt√µprogram m√°r bevan t√∂ltve a mem√≥ri√°ban."
+    IDS_DEV_DRIVER_FAILED_LOAD "A ReactOS nem tudja elind√≠tani az eszk√∂z illeszt√µprogramj√°t. Az illeszt√µprogram s√©r√ºlt vagy hi√°nyzik."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "A ReactOS nem tudja el√©rni ezt az eszk√∂zt, mivel a szerv√≠z be√°ll√≠t√°sai a rendszerle√≠r√≥ban hib√°sak vagy hi√°nyoznak."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "A ReactOS betudta t√∂lteni az eszk√∂z illeszt√µprogramj√°t, de nem tal√°lja az eszk√∂zt."
+    IDS_DEV_DUPLICATE_DEVICE "A ReactOS nem tudja elind√≠tani az eszk√∂z illeszt√µprogramj√°t mivel m√°r fut egy ilyen illeszt√µprogram."
+    IDS_DEV_FAILED_POST_START "A ReactOS le√°ll√≠totta ezt az eszk√∂zt mert probl√©m√°k l√©ptek fel."
+    IDS_DEV_HALTED "Egy alkalmaz√°s vagy szolg√°ltat√°s le√°ll√≠totta ezt az eszk√∂zt."
+    IDS_DEV_PHANTOM "Jelenleg ez az eszk√∂z nincs a sz√°m√≠t√≥g√©phez csatlakoztatva."
+    IDS_DEV_SYSTEM_SHUTDOWN "A ReactOS nem tud hozz√°f√©rni ehhez az eszk√∂zh√∂z, mivel a rendszer a le√°ll√≠t√°s folyamat√°ban van."
+    IDS_DEV_HELD_FOR_EJECT "A ReactOS nem tudja haszn√°lni ezt az eszk√∂zt, mivel a ""Biztons√°gos elt√°vol√≠t√°s"" f√°zisba ker√ºlt de m√©g nem lett elt√°vol√≠tva."
+    IDS_DEV_DRIVER_BLOCKED "Az eszk√∂zh√∂z tartoz√≥ szoftver nem lett elind√≠tva mivel nem m√ªk√∂dik a ReactOS-al. K√©rj egy friss illeszt√µprogram csomagot a gy√°rt√≥j√°t√≥l."
+    IDS_DEV_REGISTRY_TOO_LARGE "A ReactOS nem tudja elind√≠tani ezt az eszk√∂zt mert a rendszerle√≠r√≥ el√©rte a maximum m√©ret√©t."
+    IDS_DEV_SETPROPERTIES_FAILED "A ReactOS nem tudta megv√°ltoztatni az eszk√∂z be√°ll√≠t√°sait."
 END
 
 STRINGTABLE
@@ -122,51 +122,51 @@ IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
 STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION | DS_SHELLFONT
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Eszkˆzˆk:",IDC_DEVICES,7,6,196,10
+    LTEXT           "&Eszk√∂z√∂k:",IDC_DEVICES,7,6,196,10
     CONTROL         "",IDC_LV_DEVICES,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
                     LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,16,196,50
-    GROUPBOX        "Eszkˆz tulajdons·gok",IDC_PROPERTIESGROUP,7,76,196,105
+    GROUPBOX        "Eszk√∂z tulajdons√°gok",IDC_PROPERTIESGROUP,7,76,196,105
     LTEXT           "",IDC_MANUFACTURER,14,88,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_LOCATION,14,100,183,10,SS_ENDELLIPSIS
     LTEXT           "",IDC_STATUS,14,112,183,30
-    PUSHBUTTON      "&Hiba megold·sa...",IDC_TROUBLESHOOT,85,140,54,14,
+    PUSHBUTTON      "&Hiba megold√°sa...",IDC_TROUBLESHOOT,85,140,54,14,
                     BS_PUSHBUTTON | WS_CHILD | WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON      "&Tulajdons·gok",IDC_PROPERTIES,146,140,50,14
+    PUSHBUTTON      "&Tulajdons√°gok",IDC_PROPERTIES,146,140,50,14
 END
 
 IDD_DEVICEGENERAL DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "¡ltal·nos"
+CAPTION "√Åltal√°nos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Eszkˆz tÌpus:", -1, 37, 39, 60, 8, SS_NOPREFIX
+    LTEXT "Eszk√∂z t√≠pus:", -1, 37, 39, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVTYPE, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Gy·rta:", -1, 37, 53, 60, 8, SS_NOPREFIX
+    LTEXT "Gy√°rta:", -1, 37, 53, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVMANUFACTURER, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     LTEXT "Hely:", -1, 37, 67, 60, 8, SS_NOPREFIX
     EDITTEXT IDC_DEVLOCATION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    GROUPBOX "Eszkˆz ·llapot", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
+    GROUPBOX "Eszk√∂z √°llapot", IDC_DEVSTATUSGROUP, 7, 83, 238, 100
     EDITTEXT IDC_DEVSTATUS, 14, 96, 224, 61, NOT WS_TABSTOP | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
-    PUSHBUTTON "&Hiba megold·sa...", IDC_TROUBLESHOOT, 148, 163, 90, 15
-    LTEXT "&Eszkˆz haszn·lat:", -1, 7, 188, 222, 8, WS_DISABLED
+    PUSHBUTTON "&Hiba megold√°sa...", IDC_TROUBLESHOOT, 148, 163, 90, 15
+    LTEXT "&Eszk√∂z haszn√°lat:", -1, 7, 188, 222, 8, WS_DISABLED
     COMBOBOX IDC_DEVUSAGE, 7, 198, 239, 40, CBS_DROPDOWNLIST | WS_VSCROLL | WS_DISABLED
 END
 
 IDD_DEVICEDRIVER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Illesztıprogram"
+CAPTION "Illeszt√µprogram"
 FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Illesztıprogram sz·llÌtÛja:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Illeszt√µprogram sz√°ll√≠t√≥ja:", -1, 37, 39, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Illesztıprogram kiad·sa:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "Illeszt√µprogram kiad√°sa:", -1, 37, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Illesztıprogram verziÛja:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Illeszt√µprogram verzi√≥ja:", -1, 37, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      LTEXT "Digital Signer:", -1, 37, 81, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY

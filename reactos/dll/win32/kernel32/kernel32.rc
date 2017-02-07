@@ -9,12 +9,23 @@
 
 #include "winnls/locale_rc.rc"
 
-#include "winnls/lang/en-US.rc"
-#include "winnls/lang/de-DE.rc"
-#include "winnls/lang/es-ES.rc"
-
 // UTF-8
 #pragma code_page(65001)
-#include "winnls/lang/ro-RO.rc"
-#include "winnls/lang/ru-RU.rc"
-#include "winnls/lang/uk-UA.rc"
+#ifdef LANGUAGE_DE_DE
+    #include "winnls/lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "winnls/lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "winnls/lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "winnls/lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "winnls/lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "winnls/lang/uk-UA.rc"
+#endif

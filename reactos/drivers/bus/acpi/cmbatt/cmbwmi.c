@@ -161,7 +161,7 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
     {
         /* It's too late, fail */
         Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_REMOVED;
     }
     
@@ -192,7 +192,7 @@ CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
         
             /* Complete it here */
             if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Not Completed.\n");
-            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
             break;
             
         case IrpForward:

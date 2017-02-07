@@ -26,11 +26,11 @@
 #include <string.h>
 #include <assert.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/ntndk.h>
-
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
+#include "winerror.h"
+#include "winternl.h"
 #include "wine/unicode.h"
 
 #include "rpc.h"

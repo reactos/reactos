@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "&Экспортировать файл реестра...", ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Загрузить куст...",	ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Выгрузить куст...",	ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Загрузить куст...",   ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Выгрузить куст...",   ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Отключить сетевой реестр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
 
@@ -348,25 +348,27 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		             "Ошибка"
-    IDS_WARNING		             "Предупреждение"
-    IDS_BAD_KEY                  "Не удалось получить ключ '%s'"
-    IDS_BAD_VALUE                "Не удалось получить значение '%s'"
-    IDS_UNSUPPORTED_TYPE         "Невозможно изменить ключи этого типа (%ld)"
-    IDS_TOO_BIG_VALUE            "Значение слишком большое (%ld)"
-    IDS_MULTI_SZ_EMPTY_STRING    "Данные типа REG_MULTI_SZ не могут содержать пустые строки.\nВсе пустые строки будут удалены."
-    IDS_QUERY_DELETE_KEY_ONE     "Вы действительно хотите удалить этот ключ?"
-    IDS_QUERY_DELETE_KEY_MORE    "Вы действительно хотите удалить эти ключи?"
-    IDS_QUERY_DELETE_KEY_CONFIRM "Подтверждение удаления ключа"
-    IDS_QUERY_DELETE_ONE         "Вы действительно хотите удалить это значение?"
-    IDS_QUERY_DELETE_MORE        "Вы действительно хотите удалить эти значения?"
-    IDS_QUERY_DELETE_CONFIRM     "Подтверждение удаления значения"
-    IDS_ERR_DELVAL_CAPTION       "Ошибка удаления значения"
-    IDS_ERR_DELETEVALUE          "Невозможно удалить все указанные значения!"
-    IDS_ERR_RENVAL_CAPTION       "Ошибка переименования значения"
-    IDS_ERR_RENVAL_TOEMPTY       "Невозможно переименовать %s. Указанное значение не пустое. Введите другое значение и повторите попытку."
-    IDS_NEW_KEY                  "Новый ключ #%d"
-    IDS_NEW_VALUE                "Новое значение #%d"
+    IDS_ERROR                     "Ошибка"
+    IDS_WARNING                   "Предупреждение"
+    IDS_BAD_KEY                   "Не удалось получить ключ '%s'"
+    IDS_BAD_VALUE                 "Не удалось получить значение '%s'"
+    IDS_UNSUPPORTED_TYPE          "Невозможно изменить ключи этого типа (%ld)"
+    IDS_TOO_BIG_VALUE             "Значение слишком большое (%ld)"
+    IDS_MULTI_SZ_EMPTY_STRING     "Данные типа REG_MULTI_SZ не могут содержать пустые строки.\nВсе пустые строки будут удалены."
+    IDS_QUERY_DELETE_KEY_ONE      "Вы действительно хотите удалить этот ключ?"
+    IDS_QUERY_DELETE_KEY_MORE     "Вы действительно хотите удалить эти ключи?"
+    IDS_QUERY_DELETE_KEY_CONFIRM  "Подтверждение удаления ключа"
+    IDS_QUERY_DELETE_ONE          "Вы действительно хотите удалить это значение?"
+    IDS_QUERY_DELETE_MORE         "Вы действительно хотите удалить эти значения?"
+    IDS_QUERY_DELETE_CONFIRM      "Подтверждение удаления значения"
+    IDS_ERR_DELVAL_CAPTION        "Ошибка удаления значения"
+    IDS_ERR_DELETEVALUE           "Невозможно удалить все указанные значения!"
+    IDS_ERR_RENVAL_CAPTION        "Ошибка переименования значения"
+    IDS_ERR_RENVAL_TOEMPTY        "Невозможно переименовать %s. Указанное значение не пустое. Введите другое значение и повторите попытку."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_NEW_KEY                   "Новый ключ #%d"
+    IDS_NEW_VALUE                 "Новое значение #%d"
 END
 
 STRINGTABLE DISCARDABLE
@@ -386,9 +388,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Файл реестра"
-    IDS_FLT_REGFILES        "Файлы реестра"
+    IDS_FLT_REGFILES        "Файлы реестра (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Файлы реестра Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Файлы реестра Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Все файлы (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

@@ -21,14 +21,14 @@
 
 typedef struct tagEnumSTATPROPSETSTG_impl enumx_impl;
 
-extern HRESULT WINAPI enumx_QueryInterface(enumx_impl *, REFIID, void**);
-extern ULONG WINAPI enumx_AddRef(enumx_impl *);
-extern ULONG WINAPI enumx_Release(enumx_impl *);
-extern HRESULT WINAPI enumx_Next(enumx_impl *, ULONG, void *, ULONG *);
-extern HRESULT WINAPI enumx_Skip(enumx_impl *, ULONG);
-extern HRESULT WINAPI enumx_Reset(enumx_impl *);
-extern HRESULT WINAPI enumx_Clone(enumx_impl *, enumx_impl **);
-extern enumx_impl *enumx_allocate(REFIID, const void *, ULONG);
-extern void *enumx_add_element(enumx_impl *, const void *);
+extern HRESULT WINAPI enumx_QueryInterface(enumx_impl *, REFIID, void**) DECLSPEC_HIDDEN;
+extern ULONG WINAPI enumx_AddRef(enumx_impl *) DECLSPEC_HIDDEN;
+extern ULONG WINAPI enumx_Release(enumx_impl *) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI enumx_Next(enumx_impl *, ULONG, void *, ULONG *) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI enumx_Skip(enumx_impl *, ULONG) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI enumx_Reset(enumx_impl *) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI enumx_Clone(enumx_impl *, enumx_impl **) DECLSPEC_HIDDEN;
+extern enumx_impl *enumx_allocate(REFIID, const void *, ULONG) DECLSPEC_HIDDEN;
+extern void *enumx_add_element(enumx_impl *, const void *) DECLSPEC_HIDDEN;
 
 #endif

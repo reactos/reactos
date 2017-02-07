@@ -2,13 +2,13 @@
 
 [Section]
 Name = ReactOS Build Environment
-Version = 1.5.1.1
+Version = 2.0
 Licence = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
-Size = 13.8MB
+Size = 17.8MB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment
-URLDownload = http://ovh.dl.sourceforge.net/project/reactos/RosBE-Windows/i386/1.5.1/RosBE-1.5.1.1.exe
+URLDownload = http://heanet.dl.sourceforge.net/project/reactos/RosBE-Windows/i386/2.0/RosBE-2.0.exe
 CDPath = none
 
 [Section.0405]
@@ -28,6 +28,10 @@ Description = Permette di compilare i sorgenti di ReactOS. Per maggiori informaz
 
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej informacji na Wiki ReactOS.
+
+[Section.0418]
+Description = Permite compilarea surselor ReactOS. Pentru instrucțiuni, consultați wiki ReactOS.
+Size = 17.8Mo
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.

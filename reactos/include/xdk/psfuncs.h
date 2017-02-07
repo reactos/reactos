@@ -7,8 +7,8 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsWrapApcWow64Thread(
-  IN OUT PVOID *ApcContext,
-  IN OUT PVOID *ApcRoutine);
+  _Inout_ PVOID *ApcContext,
+  _Inout_ PVOID *ApcRoutine);
 
 /*
  * PEPROCESS
@@ -18,6 +18,7 @@ PsWrapApcWow64Thread(
 
 #if !defined(_PSGETCURRENTTHREAD_)
 #define _PSGETCURRENTTHREAD_
+_IRQL_requires_max_(DISPATCH_LEVEL)
 FORCEINLINE
 PETHREAD
 NTAPI
@@ -30,14 +31,15 @@ PsGetCurrentThread(VOID)
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenProcess(
-  OUT PHANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId OPTIONAL);
+  _Out_ PHANDLE ProcessHandle,
+  _In_ ACCESS_MASK DesiredAccess,
+  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ PCLIENT_ID ClientId);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -51,69 +53,81 @@ NtQueryInformationProcess(
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessByProcessId(
-  IN HANDLE ProcessId,
-  OUT PEPROCESS *Process);
+  _In_ HANDLE ProcessId,
+  _Outptr_ PEPROCESS *Process);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupThreadByThreadId(
-  IN HANDLE UniqueThreadId,
-  OUT PETHREAD *Thread);
+  _In_ HANDLE UniqueThreadId,
+  _Outptr_ PETHREAD *Thread);
 $endif (_NTIFS_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 $if (_WDMDDK_)
+_IRQL_requires_max_(APC_LEVEL)
+_Post_satisfies_(return <= 0)
+_Must_inspect_result_
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsCreateSystemThread(
-  OUT PHANDLE ThreadHandle,
-  IN ULONG DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN HANDLE ProcessHandle OPTIONAL,
-  OUT PCLIENT_ID ClientId OPTIONAL,
-  IN PKSTART_ROUTINE StartRoutine,
-  IN PVOID StartContext OPTIONAL);
+  _Out_ PHANDLE ThreadHandle,
+  _In_ ULONG DesiredAccess,
+  _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+  _In_opt_ HANDLE ProcessHandle,
+  _Out_opt_ PCLIENT_ID ClientId,
+  _In_ PKSTART_ROUTINE StartRoutine,
+  _In_opt_ _When_(return==0, __drv_aliasesMem) PVOID StartContext);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsTerminateSystemThread(
-  IN NTSTATUS ExitStatus);
+  _In_ NTSTATUS ExitStatus);
 
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsSetCreateProcessNotifyRoutine(
-  IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
-  IN BOOLEAN Remove);
+  _In_ PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
+  _In_ BOOLEAN Remove);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsSetCreateThreadNotifyRoutine(
-  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+  _In_ PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsSetLoadImageNotifyRoutine(
-  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+  _In_ PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
 
 NTKERNELAPI
 HANDLE
 NTAPI
 PsGetCurrentProcessId(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
@@ -130,151 +144,171 @@ PsGetVersion(
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 PACCESS_TOKEN
 NTAPI
 PsReferenceImpersonationToken(
-  IN OUT PETHREAD Thread,
-  OUT PBOOLEAN CopyOnOpen,
-  OUT PBOOLEAN EffectiveOnly,
-  OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+  _Inout_ PETHREAD Thread,
+  _Out_ PBOOLEAN CopyOnOpen,
+  _Out_ PBOOLEAN EffectiveOnly,
+  _Out_ PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 PsGetProcessExitTime(VOID);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsIsThreadTerminating(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsImpersonateClient(
-  IN OUT PETHREAD Thread,
-  IN PACCESS_TOKEN Token,
-  IN BOOLEAN CopyOnOpen,
-  IN BOOLEAN EffectiveOnly,
-  IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+  _Inout_ PETHREAD Thread,
+  _In_opt_ PACCESS_TOKEN Token,
+  _In_ BOOLEAN CopyOnOpen,
+  _In_ BOOLEAN EffectiveOnly,
+  _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsDisableImpersonation(
-  IN OUT PETHREAD Thread,
-  IN OUT PSE_IMPERSONATION_STATE ImpersonationState);
+  _Inout_ PETHREAD Thread,
+  _Inout_ PSE_IMPERSONATION_STATE ImpersonationState);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsRestoreImpersonation(
-  IN PETHREAD Thread,
-  IN PSE_IMPERSONATION_STATE ImpersonationState);
+  _Inout_ PETHREAD Thread,
+  _In_ PSE_IMPERSONATION_STATE ImpersonationState);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsRevertToSelf(VOID);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsChargePoolQuota(
-  IN PEPROCESS Process,
-  IN POOL_TYPE PoolType,
-  IN ULONG_PTR Amount);
+  _In_ PEPROCESS Process,
+  _In_ POOL_TYPE PoolType,
+  _In_ ULONG_PTR Amount);
 
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsReturnPoolQuota(
-  IN PEPROCESS Process,
-  IN POOL_TYPE PoolType,
-  IN ULONG_PTR Amount);
+  _In_ PEPROCESS Process,
+  _In_ POOL_TYPE PoolType,
+  _In_ ULONG_PTR Amount);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsAssignImpersonationToken(
-  IN PETHREAD Thread,
-  IN HANDLE Token OPTIONAL);
+  _In_ PETHREAD Thread,
+  _In_opt_ HANDLE Token);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
 PsReferencePrimaryToken(
-  IN OUT PEPROCESS Process);
+  _Inout_ PEPROCESS Process);
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 $if (_NTDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
 PsGetProcessId(
-  IN PEPROCESS Process);
+  _In_ PEPROCESS Process);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 HANDLE
 NTAPI
 PsGetThreadId(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsRemoveCreateThreadNotifyRoutine(
-  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+  _In_ PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsRemoveLoadImageNotifyRoutine(
-  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+  _In_ PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 LONGLONG
 NTAPI
 PsGetProcessCreateTimeQuadPart(
-  IN PEPROCESS Process);
+  _In_ PEPROCESS Process);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsDereferencePrimaryToken(
-  IN PACCESS_TOKEN PrimaryToken);
+  _In_ PACCESS_TOKEN PrimaryToken);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTKERNELAPI
 VOID
 NTAPI
 PsDereferenceImpersonationToken(
-  IN PACCESS_TOKEN ImpersonationToken);
+  _In_ PACCESS_TOKEN ImpersonationToken);
 
+_Must_inspect_result_
+_IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsChargeProcessPoolQuota(
-  IN PEPROCESS Process,
-  IN POOL_TYPE PoolType,
-  IN ULONG_PTR Amount);
+  _In_ PEPROCESS Process,
+  _In_ POOL_TYPE PoolType,
+  _In_ ULONG_PTR Amount);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsIsSystemThread(
-  IN PETHREAD Thread);
+  _In_ PETHREAD Thread);
 $endif (_NTIFS_)
 $if (_NTDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-$endif
+$endif (_NTDDK_ || _NTIFS_)
 
 $if (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)

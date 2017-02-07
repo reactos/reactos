@@ -54,7 +54,7 @@ static LOADED_IMAGE IMAGEHLP_EmptyLoadedImage = {
   148,        /* SizeOfImage; */
 };
 
-extern HANDLE IMAGEHLP_hHeap;
+DECLSPEC_HIDDEN extern HANDLE IMAGEHLP_hHeap;
 
 /***********************************************************************
  *		GetImageConfigInformation (IMAGEHLP.@)
@@ -87,7 +87,7 @@ DWORD WINAPI GetImageUnusedHeaderBytes(
 /***********************************************************************
  *		ImageLoad (IMAGEHLP.@)
  */
-PLOADED_IMAGE IMAGEAPI ImageLoad(LPSTR DllName, LPSTR DllPath)
+PLOADED_IMAGE WINAPI ImageLoad(PCSTR DllName, PCSTR DllPath)
 {
   PLOADED_IMAGE pLoadedImage;
 
@@ -146,7 +146,7 @@ BOOL WINAPI ImageUnload(PLOADED_IMAGE pLoadedImage)
 /***********************************************************************
  *		MapAndLoad (IMAGEHLP.@)
  */
-BOOL IMAGEAPI MapAndLoad(LPSTR pszImageName, LPSTR pszDllPath, PLOADED_IMAGE pLoadedImage,
+BOOL WINAPI MapAndLoad(PCSTR pszImageName, PCSTR pszDllPath, PLOADED_IMAGE pLoadedImage,
                        BOOL bDotDll, BOOL bReadOnly)
 {
     CHAR szFileName[MAX_PATH];

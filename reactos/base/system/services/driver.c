@@ -19,19 +19,26 @@
 DWORD
 ScmLoadDriver(PSERVICE lpService)
 {
-    WCHAR szDriverPath[MAX_PATH];
+    PWSTR pszDriverPath;
     UNICODE_STRING DriverPath;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
     /* Build the driver path */
-    wcscpy(szDriverPath,
+    /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
+    pszDriverPath = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              (52 + wcslen(lpService->lpServiceName) + 1) * sizeof(WCHAR));
+    if (pszDriverPath == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(pszDriverPath,
            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-    wcscat(szDriverPath,
+    wcscat(pszDriverPath,
            lpService->lpServiceName);
 
     RtlInitUnicodeString(&DriverPath,
-                         szDriverPath);
+                         pszDriverPath);
 
     /* FIXME: Acquire privilege */
 
@@ -45,6 +52,8 @@ ScmLoadDriver(PSERVICE lpService)
         dwError = RtlNtStatusToDosError(Status);
     }
 
+    HeapFree(GetProcessHeap(), 0, pszDriverPath);
+
     return dwError;
 }
 
@@ -52,19 +61,26 @@ ScmLoadDriver(PSERVICE lpService)
 DWORD
 ScmUnloadDriver(PSERVICE lpService)
 {
-    WCHAR szDriverPath[MAX_PATH];
+    PWSTR pszDriverPath;
     UNICODE_STRING DriverPath;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
     /* Build the driver path */
-    wcscpy(szDriverPath,
+    /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
+    pszDriverPath = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              (52 + wcslen(lpService->lpServiceName) + 1) * sizeof(WCHAR));
+    if (pszDriverPath == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(pszDriverPath,
            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-    wcscat(szDriverPath,
+    wcscat(pszDriverPath,
            lpService->lpServiceName);
 
     RtlInitUnicodeString(&DriverPath,
-                         szDriverPath);
+                         pszDriverPath);
 
     /* FIXME: Acquire privilege */
 
@@ -76,6 +92,8 @@ ScmUnloadDriver(PSERVICE lpService)
     {
         dwError = RtlNtStatusToDosError(Status);
     }
+
+    HeapFree(GetProcessHeap(), 0, pszDriverPath);
 
     return dwError;
 }

@@ -57,9 +57,9 @@ BEGIN
         MENUITEM "E&xportare…",                     ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Î&ncărcare registru…",            ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Eli&berare registru…",            ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Î&ncărcare registru…",            ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Eli&berare registru…",            ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Conectare la un registru din rețea…",
                                                     ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -349,8 +349,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		              "Eroare"
-    IDS_WARNING		              "Avertisment"
+    IDS_ERROR                     "Eroare"
+    IDS_WARNING                   "Avertisment"
     IDS_BAD_KEY                   "Nu se poate citi cheia „%s”"
     IDS_BAD_VALUE                 "Nu se poate citi valoarea „%s”"
     IDS_UNSUPPORTED_TYPE          "Nu se poate edita acest tip de cheie (%ld)"
@@ -366,6 +366,8 @@ BEGIN
     IDS_ERR_DELETEVALUE           "Nu s-a reușit ștergerea tuturor valorilor specificate!"
     IDS_ERR_RENVAL_CAPTION        "Eroare la redenumirea de valori"
     IDS_ERR_RENVAL_TOEMPTY        "Nu se poate redenumi %s. Numele valorii specificate este gol. Încercați introducerea unui alt nume."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY                   "Cheia nouă #%d"
     IDS_NEW_VALUE                 "Valoarea nouă #%d"
 END
@@ -387,9 +389,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Fișier registru"
-    IDS_FLT_REGFILES        "Fișiere registru"
+    IDS_FLT_REGFILES        "Fișiere registru (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Fișiere registru Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Fișiere registru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Orice fișier (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

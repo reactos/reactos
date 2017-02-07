@@ -19,7 +19,6 @@ HANDLE CsrProcessId;
 HANDLE CsrPortHeap;
 ULONG_PTR CsrPortMemoryDelta;
 BOOLEAN InsideCsrProcess = FALSE;
-BOOLEAN UsingOldCsr = TRUE;
 
 typedef NTSTATUS
 (NTAPI *PCSR_SERVER_API_ROUTINE)(IN PPORT_MESSAGE Request,
@@ -151,7 +150,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     else
     {
         /* This is a server-to-server call. Save our CID and do a direct call */
-        DbgBreakPoint();
+        DPRINT1("Next gen server-to-server call\n");
         ApiMessage->Header.ClientId = NtCurrentTeb()->ClientId;
         Status = CsrServerApiRoutine(&ApiMessage->Header,
                                      &ApiMessage->Header);
@@ -366,10 +365,10 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
     InsideCsrProcess = (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_NATIVE);
 
     /* Now we can check if we are inside or not */
-    if (InsideCsrProcess && !UsingOldCsr)
+    if (InsideCsrProcess)
     {
         /* We're inside, so let's find csrsrv */
-        DbgBreakPoint();
+        DPRINT1("Next-GEN CSRSS support\n");
         RtlInitUnicodeString(&CsrSrvName, L"csrsrv");
         Status = LdrGetDllHandle(NULL,
                                  NULL,
@@ -438,7 +437,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
 #if 0
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
-                                     CSR_MAKE_OPCODE(CsrSrvClientConnect,
+                                     CSR_MAKE_OPCODE(CsrpClientConnect,
                                                      CSR_SRV_DLL),
                                      sizeof(CSR_CLIENT_CONNECT));
 #endif

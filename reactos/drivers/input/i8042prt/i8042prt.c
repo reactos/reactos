@@ -530,8 +530,5 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = i8042InternalDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP]     = i8042Pnp;
 
-	if (IsFirstStageSetup())
-		return i8042AddLegacyKeyboard(DriverObject, RegistryPath);
-
 	return STATUS_SUCCESS;
 }

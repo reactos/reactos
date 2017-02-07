@@ -57,15 +57,19 @@ enum wined3d_sm4_opcode
     WINED3D_SM4_OP_BREAK        = 0x02,
     WINED3D_SM4_OP_BREAKC       = 0x03,
     WINED3D_SM4_OP_CUT          = 0x09,
+    WINED3D_SM4_OP_DERIV_RTX    = 0x0b,
+    WINED3D_SM4_OP_DERIV_RTY    = 0x0c,
     WINED3D_SM4_OP_DIV          = 0x0e,
     WINED3D_SM4_OP_DP3          = 0x10,
     WINED3D_SM4_OP_DP4          = 0x11,
     WINED3D_SM4_OP_EMIT         = 0x13,
     WINED3D_SM4_OP_ENDIF        = 0x15,
     WINED3D_SM4_OP_ENDLOOP      = 0x16,
+    WINED3D_SM4_OP_EQ           = 0x18,
     WINED3D_SM4_OP_EXP          = 0x19,
     WINED3D_SM4_OP_FRC          = 0x1a,
     WINED3D_SM4_OP_FTOI         = 0x1b,
+    WINED3D_SM4_OP_GE           = 0x1d,
     WINED3D_SM4_OP_IADD         = 0x1e,
     WINED3D_SM4_OP_IF           = 0x1f,
     WINED3D_SM4_OP_IEQ          = 0x20,
@@ -83,13 +87,17 @@ enum wined3d_sm4_opcode
     WINED3D_SM4_OP_MOVC         = 0x37,
     WINED3D_SM4_OP_MUL          = 0x38,
     WINED3D_SM4_OP_RET          = 0x3e,
+    WINED3D_SM4_OP_ROUND_NI     = 0x41,
     WINED3D_SM4_OP_RSQ          = 0x44,
     WINED3D_SM4_OP_SAMPLE       = 0x45,
     WINED3D_SM4_OP_SAMPLE_LOD   = 0x48,
     WINED3D_SM4_OP_SAMPLE_GRAD  = 0x49,
     WINED3D_SM4_OP_SQRT         = 0x4b,
     WINED3D_SM4_OP_SINCOS       = 0x4d,
+    WINED3D_SM4_OP_UDIV         = 0x4e,
+    WINED3D_SM4_OP_USHR         = 0x55,
     WINED3D_SM4_OP_UTOF         = 0x56,
+    WINED3D_SM4_OP_XOR          = 0x57,
 };
 
 enum wined3d_sm4_register_type
@@ -127,7 +135,7 @@ struct wined3d_sm4_opcode_info
 struct sysval_map
 {
     enum wined3d_sysval_semantic sysval;
-    WINED3DSHADER_PARAM_REGISTER_TYPE register_type;
+    enum wined3d_shader_register_type register_type;
     UINT register_idx;
 };
 
@@ -138,15 +146,19 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_BREAK,      WINED3DSIH_BREAK,       0,  0},
     {WINED3D_SM4_OP_BREAKC,     WINED3DSIH_BREAKP,      0,  1},
     {WINED3D_SM4_OP_CUT,        WINED3DSIH_CUT,         0,  0},
+    {WINED3D_SM4_OP_DERIV_RTX,  WINED3DSIH_DSX,         1,  1},
+    {WINED3D_SM4_OP_DERIV_RTY,  WINED3DSIH_DSY,         1,  1},
     {WINED3D_SM4_OP_DIV,        WINED3DSIH_DIV,         1,  2},
     {WINED3D_SM4_OP_DP3,        WINED3DSIH_DP3,         1,  2},
     {WINED3D_SM4_OP_DP4,        WINED3DSIH_DP4,         1,  2},
     {WINED3D_SM4_OP_EMIT,       WINED3DSIH_EMIT,        0,  0},
     {WINED3D_SM4_OP_ENDIF,      WINED3DSIH_ENDIF,       0,  0},
     {WINED3D_SM4_OP_ENDLOOP,    WINED3DSIH_ENDLOOP,     0,  0},
+    {WINED3D_SM4_OP_EQ,         WINED3DSIH_EQ,          1,  2},
     {WINED3D_SM4_OP_EXP,        WINED3DSIH_EXP,         1,  1},
     {WINED3D_SM4_OP_FRC,        WINED3DSIH_FRC,         1,  1},
     {WINED3D_SM4_OP_FTOI,       WINED3DSIH_FTOI,        1,  1},
+    {WINED3D_SM4_OP_GE,         WINED3DSIH_GE,          1,  2},
     {WINED3D_SM4_OP_IADD,       WINED3DSIH_IADD,        1,  2},
     {WINED3D_SM4_OP_IF,         WINED3DSIH_IF,          0,  1},
     {WINED3D_SM4_OP_IEQ,        WINED3DSIH_IEQ,         1,  2},
@@ -164,16 +176,20 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_MOVC,       WINED3DSIH_MOVC,        1,  3},
     {WINED3D_SM4_OP_MUL,        WINED3DSIH_MUL,         1,  2},
     {WINED3D_SM4_OP_RET,        WINED3DSIH_RET,         0,  0},
+    {WINED3D_SM4_OP_ROUND_NI,   WINED3DSIH_ROUND_NI,    1,  1},
     {WINED3D_SM4_OP_RSQ,        WINED3DSIH_RSQ,         1,  1},
     {WINED3D_SM4_OP_SAMPLE,     WINED3DSIH_SAMPLE,      1,  3},
     {WINED3D_SM4_OP_SAMPLE_LOD, WINED3DSIH_SAMPLE_LOD,  1,  4},
     {WINED3D_SM4_OP_SAMPLE_GRAD,WINED3DSIH_SAMPLE_GRAD, 1,  5},
     {WINED3D_SM4_OP_SQRT,       WINED3DSIH_SQRT,        1,  1},
     {WINED3D_SM4_OP_SINCOS,     WINED3DSIH_SINCOS,      2,  1},
+    {WINED3D_SM4_OP_UDIV,       WINED3DSIH_UDIV,        2,  2},
+    {WINED3D_SM4_OP_USHR,       WINED3DSIH_USHR,        1,  2},
     {WINED3D_SM4_OP_UTOF,       WINED3DSIH_UTOF,        1,  1},
+    {WINED3D_SM4_OP_XOR,        WINED3DSIH_XOR,         1,  2},
 };
 
-static const WINED3DSHADER_PARAM_REGISTER_TYPE register_type_table[] =
+static const enum wined3d_shader_register_type register_type_table[] =
 {
     /* WINED3D_SM4_RT_TEMP */           WINED3DSPR_TEMP,
     /* WINED3D_SM4_RT_INPUT */          WINED3DSPR_INPUT,
@@ -230,7 +246,7 @@ static void map_sysval(enum wined3d_sysval_semantic sysval, struct wined3d_shade
     }
 }
 
-static void map_register(struct wined3d_sm4_data *priv, struct wined3d_shader_register *reg)
+static void map_register(const struct wined3d_sm4_data *priv, struct wined3d_shader_register *reg)
 {
     switch (priv->shader_version.type)
     {

@@ -156,7 +156,8 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
 
 		if (!Status)
 		{
-			ERR("WinLdrpScanImportAddressTable() failed\n");
+			ERR("WinLdrpScanImportAddressTable() failed: ImportName = '%s', DirectoryPath = '%s'\n",
+				ImportName, DirectoryPath);
 			return Status;
 		}
 	}
@@ -453,7 +454,7 @@ WinLdrpCompareDllName(IN PCH DllName,
 {
 	PWSTR Buffer;
 	UNICODE_STRING UnicodeNamePA;
-	ULONG i, Length;
+	SIZE_T i, Length;
 
 	/* First obvious check: for length of two names */
 	Length = strlen(DllName);
@@ -507,6 +508,8 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 	PUSHORT OrdinalTable;
 	LONG High, Low, Middle, Result;
 	ULONG Hint;
+    PIMAGE_IMPORT_BY_NAME ImportData;
+    PCHAR ExportName;
 
 	//TRACE("WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
 	//	DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
@@ -540,9 +543,12 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 			//TRACE("WinLdrpBindImportName(): ThunkData->u1.AOD became %p\n", ThunkData->u1.AddressOfData);
 		}
 
+		/* Get the import name */
+		ImportData = VaToPa((PVOID)ThunkData->u1.AddressOfData);
+
 		/* Get pointers to Name and Ordinal tables (RVA -> VA) */
-		NameTable = (PULONG)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNames));
-		OrdinalTable = (PUSHORT)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNameOrdinals));
+		NameTable = VaToPa(RVA(DllBase, ExportDirectory->AddressOfNames));
+		OrdinalTable = VaToPa(RVA(DllBase, ExportDirectory->AddressOfNameOrdinals));
 
 		//TRACE("NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
 		//	NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
@@ -551,15 +557,13 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 		Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
 		//TRACE("HintIndex %d\n", Hint);
 
+		/* Get the export name from the hint */
+		ExportName = VaToPa(RVA(DllBase, NameTable[Hint]));
+
 		/* If Hint is less than total number of entries in the export directory,
 		   and import name == export name, then we can just get it from the OrdinalTable */
-		if (
-			(Hint < ExportDirectory->NumberOfNames) &&
-			(
-			strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
-			       (PCHAR)VaToPa( RVA(DllBase, NameTable[Hint])) ) == 0
-			)
-			)
+		if ((Hint < ExportDirectory->NumberOfNames) &&
+			(strcmp(ExportName, (PCHAR)ImportData->Name) == 0))
 		{
 			Ordinal = OrdinalTable[Hint];
 			//TRACE("WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
@@ -579,11 +583,13 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 			while (High >= Low)
 			{
 				/* Divide by 2 by shifting to the right once */
-				Middle = (Low + High) >> 1;
+				Middle = (Low + High) / 2;
+
+				/* Get the name from the name table */
+				ExportName = VaToPa(RVA(DllBase, NameTable[Middle]));
 
 				/* Compare the names */
-				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
-					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
+				Result = strcmp(ExportName, (PCHAR)ImportData->Name);
 
 				/*TRACE("Binary search: comparing Import '__', Export '%s'\n",*/
 					/*VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),*/
@@ -595,12 +601,12 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 
 
 				/* Depending on result of strcmp, perform different actions */
-				if (Result < 0)
+				if (Result > 0)
 				{
 					/* Adjust top boundary */
 					High = Middle - 1;
 				}
-				else if (Result > 0)
+				else if (Result < 0)
 				{
 					/* Adjust bottom boundary */
 					Low = Middle + 1;
@@ -616,7 +622,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 			if (High < Low)
 			{
 				//Print(L"Error in binary search\n");
-				ERR("Error in binary search!\n");
+				ERR("Did not find export '%s'!\n", (PCHAR)ImportData->Name);
 				return FALSE;
 			}
 

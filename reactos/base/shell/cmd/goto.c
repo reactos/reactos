@@ -80,7 +80,7 @@ INT cmd_goto (LPTSTR param)
 	while (BatchGetString (textline, sizeof(textline) / sizeof(textline[0])))
 	{
 		int pos;
-		int size;
+		INT_PTR size;
 
 		/* Strip out any trailing spaces or control chars */
 		tmp = textline + _tcslen (textline) - 1;
@@ -93,7 +93,7 @@ INT cmd_goto (LPTSTR param)
 		tmp = textline;
 		while (_istspace (*tmp))
 			tmp++;
-		
+
 		/* All space after leading space terminate the string */
 		size = _tcslen(tmp) -1;
 		pos=0;

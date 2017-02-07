@@ -6,11 +6,12 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(inseng.dll inseng.spec)
 
 list(APPEND SOURCE
     inseng_main.c
-    regsvr.c
+    inseng.rc
     ${CMAKE_CURRENT_BINARY_DIR}/inseng_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
 

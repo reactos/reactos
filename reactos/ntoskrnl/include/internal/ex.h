@@ -130,6 +130,14 @@ typedef struct _HARDERROR_USER_PARAMETERS
 #define ExpChangePushlock(x, y, z) InterlockedCompareExchangePointer((PVOID*)x, (PVOID)y, (PVOID)z)
 #define ExpSetRundown(x, y) InterlockedExchangePointer(&x->Ptr, (PVOID)y)
 
+NTSTATUS
+NTAPI
+ExGetPoolTagInfo(
+    IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
+    IN ULONG SystemInformationLength,
+    IN OUT PULONG ReturnLength OPTIONAL
+);
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
@@ -200,7 +208,7 @@ ExpInitializeEventImplementation(VOID);
 
 VOID
 NTAPI
-ExpInitializeEventImplementation(VOID);
+ExpInitializeKeyedEventImplementation(VOID);
 
 VOID
 NTAPI

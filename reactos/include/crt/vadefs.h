@@ -62,9 +62,7 @@ extern "C" {
 #if defined(__ia64__)
 #define _VA_ALIGN 8
 #define _SLOTSIZEOF(t) ((sizeof(t) + _VA_ALIGN - 1) & ~(_VA_ALIGN - 1))
-
 #define _VA_STRUCT_ALIGN 16
-
 #define _ALIGNOF(ap) ((((ap)+_VA_STRUCT_ALIGN - 1) & ~(_VA_STRUCT_ALIGN -1)) - (ap))
 #define _APALIGN(t,ap) (__alignof(t) > 8 ? _ALIGNOF((uintptr_t) ap) : 0)
 #else
@@ -95,6 +93,15 @@ extern "C" {
                             (*(t*)(((v) += sizeof(void*)) - sizeof(void*))))
 #define _crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
+#elif defined(_M_ARM)
+#ifdef  __cplusplus
+  extern void __cdecl __va_start(va_list*, ...);
+  #define _crt_va_start(ap,v) __va_start(&ap, _ADDRESSOF(v), _SLOTSIZEOF(v), _ADDRESSOF(v))
+#else
+  #define _crt_va_start(ap,v) (ap = (va_list)_ADDRESSOF(v) + _SLOTSIZEOF(v))
+#endif
+#define _crt_va_arg(ap,t) (*(t*)((ap += _SLOTSIZEOF(t) + _APALIGN(t,ap))  - _SLOTSIZEOF(t)))
+#define _crt_va_end(ap)      ( ap = (va_list)0 )
 #else //if defined(_M_IA64) || defined(_M_CEE)
 #error Please implement me
 #endif

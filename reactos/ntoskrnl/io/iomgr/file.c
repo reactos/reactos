@@ -157,7 +157,7 @@ IopCheckDeviceAndDriver(IN POPEN_PACKET OpenPacket,
     else
     {
         /* Increase reference count */
-        DeviceObject->ReferenceCount++;
+        InterlockedIncrement(&DeviceObject->ReferenceCount);
         return STATUS_SUCCESS;
     }
 }
@@ -1317,6 +1317,7 @@ IopQueryNameFile(IN PVOID ObjectBody,
     if (Length < sizeof(OBJECT_NAME_INFORMATION))
     {
         /* Wrong length, fail */
+        *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 

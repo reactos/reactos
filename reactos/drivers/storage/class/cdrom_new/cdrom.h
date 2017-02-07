@@ -45,7 +45,7 @@ typedef enum {
     CdromDebug          = z,  // set bit 0x00000000 in nt!kd_cdrom_mask
 #endif
     CdromDebugFeatures  = 32  // set bit 0x80000000 in nt!kd_cdrom_mask
-};
+}CdromError;
 
 #define CDROM_GET_CONFIGURATION_TIMEOUT    (0x4)
 
@@ -744,7 +744,8 @@ CdRomIsDeviceMmcDevice(
     OUT PBOOLEAN IsMmc
     );
 
-NTSTATUS
+VOID
+NTAPI
 CdRomMmcErrorHandler(
     IN PDEVICE_OBJECT Fdo,
     IN PSCSI_REQUEST_BLOCK Srb,

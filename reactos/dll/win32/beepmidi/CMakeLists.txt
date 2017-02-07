@@ -10,7 +10,7 @@ add_library(beepmidi SHARED ${SOURCE})
 set_module_type(beepmidi win32dll ENTRYPOINT 0 UNICODE)
 
 add_importlibs(beepmidi winmm kernel32 ntdll msvcrt)
-add_importlib_target(beepmidi.spec)
+
 
 add_dependencies(beepmidi psdk)
 add_cd_file(TARGET beepmidi DESTINATION reactos/system32 FOR all)

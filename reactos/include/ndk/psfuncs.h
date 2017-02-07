@@ -137,6 +137,13 @@ PsReturnProcessNonPagedPoolQuota(
     IN SIZE_T    Amount
 );
 
+NTKERNELAPI
+ULONG
+NTAPI
+PsGetCurrentProcessSessionId(
+    VOID
+);
+
 //
 // Process Impersonation Functions
 //
@@ -192,9 +199,15 @@ PsGetProcessExitStatus(
     PEPROCESS Process
 );
 
+HANDLE
+NTAPI
+PsGetProcessSessionId(
+    IN PEPROCESS Process
+);
+
 NTKERNELAPI
-BOOLEAN 
-NTAPI 
+BOOLEAN
+NTAPI
 PsGetProcessExitProcessCalled(
     PEPROCESS Process
 );
@@ -358,7 +371,20 @@ NtCreateThread(
     IN BOOLEAN CreateSuspended
 );
 
-#include "inline_ntcurrentteb.h"
+#ifndef _M_ARM
+#ifndef NTOS_MODE_USER
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
+{
+#if defined(_M_IX86)
+    return (PTEB)__readfsdword(0x18);
+#elif defined (_M_AMD64)
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
+#endif
+}
+#else
+struct _TEB * NtCurrentTeb(void);
+#endif
+#endif
 
 NTSYSCALLAPI
 NTSTATUS

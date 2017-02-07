@@ -27,4 +27,4 @@ add_importlibs(dplay
 add_dependencies(dplay psdk)
 
 add_cd_file(TARGET dplay DESTINATION reactos/system32 FOR all)
-add_importlib_target(dplay.spec libdplayx)
+

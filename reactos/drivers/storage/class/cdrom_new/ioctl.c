@@ -2086,6 +2086,7 @@ CdRomDeviceControlCompletion(
 
     NTSTATUS            status;
     BOOLEAN             retry;
+    ULONG retryCount;
 
     //
     // Extract the 'real' irp from the irpstack.
@@ -2231,7 +2232,17 @@ CdRomDeviceControlCompletion(
 
         }
 
-        if (retry && realIrpNextStack->Parameters.Others.Argument1--) {
+        //
+        // get current retry count
+        //
+        retryCount = PtrToUlong(realIrpNextStack->Parameters.Others.Argument1);
+
+        if (retry && retryCount) {
+
+            //
+            // update retry count
+            //
+            realIrpNextStack->Parameters.Others.Argument1 = UlongToPtr(retryCount-1);
 
             if (((ULONG)(ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 
@@ -2844,6 +2855,7 @@ CdRomSetVolumeIntermediateCompletion(
     PIRP                realIrp = NULL;
     NTSTATUS            status;
     BOOLEAN             retry;
+    ULONG retryCount;
 
     //
     // Extract the 'real' irp from the irpstack.
@@ -2901,7 +2913,18 @@ CdRomSetVolumeIntermediateCompletion(
             retry = TRUE;
         }
 
-        if (retry && realIrpNextStack->Parameters.Others.Argument1--) {
+        //
+        // get current retry count
+        //
+        retryCount = PtrToUlong(realIrpNextStack->Parameters.Others.Argument1);
+
+        if (retry && retryCount) {
+
+            //
+            // update retry count
+            //
+            realIrpNextStack->Parameters.Others.Argument1 = UlongToPtr(retryCount-1);
+
 
             if (((ULONG)(ULONG_PTR)realIrpNextStack->Parameters.Others.Argument1)) {
 

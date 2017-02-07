@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(hnetcfg);
 
 typedef struct fw_service
 {
-    const INetFwServiceVtbl *vtbl;
+    INetFwService INetFwService_iface;
     LONG refs;
 } fw_service;
 
 static inline fw_service *impl_from_INetFwService( INetFwService *iface )
 {
-    return (fw_service *)((char *)iface - FIELD_OFFSET( fw_service, vtbl ));
+    return CONTAINING_RECORD(iface, fw_service, INetFwService_iface);
 }
 
 static ULONG WINAPI fw_service_AddRef(
@@ -295,10 +295,10 @@ static HRESULT NetFwService_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_service_vtbl;
+    fp->INetFwService_iface.lpVtbl = &fw_service_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwService_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;
@@ -306,13 +306,13 @@ static HRESULT NetFwService_create( IUnknown *pUnkOuter, LPVOID *ppObj )
 
 typedef struct fw_services
 {
-    const INetFwServicesVtbl *vtbl;
+    INetFwServices INetFwServices_iface;
     LONG refs;
 } fw_services;
 
 static inline fw_services *impl_from_INetFwServices( INetFwServices *iface )
 {
-    return (fw_services *)((char *)iface - FIELD_OFFSET( fw_services, vtbl ));
+    return CONTAINING_RECORD(iface, fw_services, INetFwServices_iface);
 }
 
 static ULONG WINAPI fw_services_AddRef(
@@ -469,10 +469,10 @@ HRESULT NetFwServices_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     fp = HeapAlloc( GetProcessHeap(), 0, sizeof(*fp) );
     if (!fp) return E_OUTOFMEMORY;
 
-    fp->vtbl = &fw_services_vtbl;
+    fp->INetFwServices_iface.lpVtbl = &fw_services_vtbl;
     fp->refs = 1;
 
-    *ppObj = &fp->vtbl;
+    *ppObj = &fp->INetFwServices_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

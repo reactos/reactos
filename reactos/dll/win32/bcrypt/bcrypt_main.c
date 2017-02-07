@@ -22,6 +22,9 @@
 #include "wine/debug.h"
 
 #include "winbase.h"
+#include "bcrypt.h"
+
+typedef LONG NTSTATUS;
 
 WINE_DEFAULT_DEBUG_CHANNEL(bcrypt);
 
@@ -37,4 +40,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     }
 
     return TRUE;
+}
+
+NTSTATUS WINAPI BCryptEnumAlgorithms(ULONG dwAlgOperations, ULONG *pAlgCount,
+                                     BCRYPT_ALGORITHM_IDENTIFIER **ppAlgList, ULONG dwFlags)
+{
+    FIXME("%08x, %p, %p, %08x - stub\n", dwAlgOperations, pAlgCount, ppAlgList, dwFlags);
+
+    *ppAlgList=NULL;
+    *pAlgCount=0;
+
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }

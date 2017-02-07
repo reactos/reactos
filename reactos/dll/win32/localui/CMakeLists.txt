@@ -16,6 +16,6 @@ add_library(localui SHARED ${SOURCE})
 set_module_type(localui win32dll)
 target_link_libraries(localui uuid wine)
 
-add_importlib_target(localui.spec)
+
 add_importlibs(localui winspool user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET localui DESTINATION reactos/system32 FOR all)

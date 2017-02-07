@@ -145,8 +145,8 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
             if (NT_SUCCESS(Status))
             {
                 /* Reference the DO and drop the FO */
-                ObfReferenceObject(BatteryData->DeviceObject);
-                ObfDereferenceObject(FileObject);
+                ObReferenceObject(BatteryData->DeviceObject);
+                ObDereferenceObject(FileObject);
                 
                 /* Allocate the battery IRP */            
                 Irp = IoAllocateIrp(BatteryData->DeviceObject->StackSize + 1, 0);
@@ -187,7 +187,7 @@ CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                     if (CompBattDebug & 8)
                         DbgPrint("CompBatt: Couldn't allocate new battery Irp\n");
                     Status = STATUS_INSUFFICIENT_RESOURCES;
-                    ObfDereferenceObject(BatteryData->DeviceObject);
+                    ObDereferenceObject(BatteryData->DeviceObject);
                 }
             }
             else if (CompBattDebug & 8)
@@ -227,7 +227,7 @@ CompBattRemoveBattery(IN PCUNICODE_STRING BatteryName,
     if (BatteryData)
     {
         /* Dereference and free it */
-        ObfDereferenceObject(BatteryData->DeviceObject);
+        ObDereferenceObject(BatteryData->DeviceObject);
         ExFreePool(BatteryData);
         
         /* Notify class driver */

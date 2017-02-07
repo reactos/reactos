@@ -78,40 +78,57 @@ CsrLoadServerDll(IN PCHAR DllString,
 {
     NTSTATUS Status;
     ANSI_STRING DllName;
-    UNICODE_STRING TempString;
+    UNICODE_STRING TempString, ErrorString;
+    ULONG_PTR Parameters[2];
     HANDLE hServerDll = NULL;
     ULONG Size;
     PCSR_SERVER_DLL ServerDll;
     STRING EntryPointString;
     PCSR_SERVER_DLL_INIT_CALLBACK ServerDllInitProcedure;
+    ULONG Response;
 
     /* Check if it's beyond the maximum we support */
-    if (ServerId >= CSR_SERVER_DLL_MAX) return(STATUS_TOO_MANY_NAMES);
+    if (ServerId >= CSR_SERVER_DLL_MAX) return STATUS_TOO_MANY_NAMES;
 
     /* Check if it's already been loaded */
-    if (CsrLoadedServerDll[ServerId]) return(STATUS_INVALID_PARAMETER);
+    if (CsrLoadedServerDll[ServerId]) return STATUS_INVALID_PARAMETER;
 
     /* Convert the name to Unicode */
+    ASSERT(DllString != NULL);
     RtlInitAnsiString(&DllName, DllString);
     Status = RtlAnsiStringToUnicodeString(&TempString, &DllName, TRUE);
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* If we are loading ourselves, don't actually load us */
     if (ServerId != CSR_SRV_SERVER)
     {
         /* Load the DLL */
         Status = LdrLoadDll(NULL, 0, &TempString, &hServerDll);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Setup error parameters */
+            Parameters[0] = (ULONG_PTR)&TempString;
+            Parameters[1] = (ULONG_PTR)&ErrorString;
+            RtlInitUnicodeString(&ErrorString, L"Default Load Path");
+
+            /* Send a hard error */
+            NtRaiseHardError(Status,
+                             2,
+                             3,
+                             Parameters,
+                             OptionOk,
+                             &Response);
+        }
 
         /* Get rid of the string */
         RtlFreeUnicodeString(&TempString);
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Allocate a CSR DLL Object */
     Size = sizeof(CSR_SERVER_DLL) + DllName.MaximumLength;
-    if (!(ServerDll = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Size)))
+    ServerDll = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Size);
+    if (!ServerDll)
     {
         if (hServerDll) LdrUnloadDll(hServerDll);
         return STATUS_NO_MEMORY;
@@ -135,7 +152,7 @@ CsrLoadServerDll(IN PCHAR DllString,
     if (hServerDll)
     {
         /* Initialize a string for the entrypoint, or use the default */
-        RtlInitAnsiString(&EntryPointString, 
+        RtlInitAnsiString(&EntryPointString,
                           !(EntryPoint) ? "ServerDllInitialization" :
                                           EntryPoint);
 
@@ -156,7 +173,7 @@ CsrLoadServerDll(IN PCHAR DllString,
     if (NT_SUCCESS(Status))
     {
         /* Get the result from the Server DLL */
-        Status = (*ServerDllInitProcedure)(ServerDll);
+        Status = ServerDllInitProcedure(ServerDll);
 
         /* Check for Success */
         if (NT_SUCCESS(Status))
@@ -255,6 +272,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     NTSTATUS Status;
     PCSR_CLIENT_CONNECT ClientConnect;
     PCSR_SERVER_DLL ServerDll;
+    PCSR_PROCESS CurrentProcess = ((PCSR_THREAD)NtCurrentTeb()->CsrClientThread)->Process;
 
     /* Load the Message, set default reply */
     ClientConnect = (PCSR_CLIENT_CONNECT)&ApiMessage->CsrClientConnect;
@@ -265,7 +283,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     {
         return STATUS_TOO_MANY_NAMES;
     }
-    else if (!(CsrLoadedServerDll[ClientConnect->ServerId]))
+    else if (!CsrLoadedServerDll[ClientConnect->ServerId])
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -287,9 +305,9 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     if (ServerDll->ConnectCallback)
     {
         /* Call the callback */
-        Status = (ServerDll->ConnectCallback)(((PCSR_THREAD)NtCurrentTeb()->CsrClientThread)->Process,
-                                              ClientConnect->ConnectionInfo,
-                                              &ClientConnect->ConnectionInfoSize);
+        Status = ServerDll->ConnectCallback(CurrentProcess,
+                                            ClientConnect->ConnectionInfo,
+                                            &ClientConnect->ConnectionInfoSize);
     }
     else
     {
@@ -328,12 +346,15 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     ULONG ViewSize = 0;
     PPEB Peb = NtCurrentPeb();
 
+    /* If there's no parameter, fail */
+    if (!ParameterValue) return STATUS_INVALID_PARAMETER;
+
     /* Find the first comma, and null terminate */
     while (*SizeValue)
     {
         if (*SizeValue == ',')
         {
-            *SizeValue++ = '\0';
+            *SizeValue++ = ANSI_NULL;
             break;
         }
         else
@@ -343,12 +364,10 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     }
 
     /* Make sure it's valid */
-    if (!*SizeValue) return(STATUS_INVALID_PARAMETER);
+    if (!*SizeValue) return STATUS_INVALID_PARAMETER;
 
     /* Convert it to an integer */
-    Status = RtlCharToInteger(SizeValue,
-                              0,
-                              &Size);
+    Status = RtlCharToInteger(SizeValue, 0, &Size);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Multiply by 1024 entries and round to page size */
@@ -377,11 +396,11 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
                                 ViewUnmap,
                                 MEM_TOP_DOWN,
                                 PAGE_EXECUTE_READWRITE);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         /* Fail */
         NtClose(CsrSrvSharedSection);
-        return(Status);
+        return Status;
     }
 
     /* FIXME: Write the value to registry */
@@ -390,7 +409,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     CsrSrvSharedSectionHeap = CsrSrvSharedSectionBase;
 
     /* Create the heap */
-    if (!(RtlCreateHeap(HEAP_ZERO_MEMORY,
+    if (!(RtlCreateHeap(HEAP_ZERO_MEMORY | HEAP_CLASS_7,
                         CsrSrvSharedSectionHeap,
                         CsrSrvSharedSectionSize,
                         PAGE_SIZE,
@@ -398,8 +417,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
                         0)))
     {
         /* Failure, unmap section and return */
-        NtUnmapViewOfSection(NtCurrentProcess(),
-                             CsrSrvSharedSectionBase);
+        NtUnmapViewOfSection(NtCurrentProcess(), CsrSrvSharedSectionBase);
         NtClose(CsrSrvSharedSection);
         return STATUS_NO_MEMORY;
     }
@@ -409,6 +427,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
                                                    0,
                                                    CSR_SERVER_DLL_MAX *
                                                    sizeof(PVOID));
+    if (!CsrSrvSharedStaticServerData) return STATUS_NO_MEMORY;
 
     /* Write the values to the PEB */
     Peb->ReadOnlySharedMemoryBase = CsrSrvSharedSectionBase;
@@ -621,7 +640,7 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
         (DebuggerInfo.KernelDebuggerEnabled))
     {
         /* Call the Unhandled Exception Filter */
-        if ((Result = RtlUnhandledExceptionFilter(ExceptionInfo)) != 
+        if ((Result = RtlUnhandledExceptionFilter(ExceptionInfo)) !=
             EXCEPTION_CONTINUE_EXECUTION)
         {
             /* We're going to raise an error. Get Shutdown Privilege first */
@@ -643,10 +662,10 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             RtlInitUnicodeString(&ErrorSource, L"Windows SubSystem");
 
             /* Set the parameters */
-            ErrorParameters[0] = PtrToUlong(&ErrorSource);
+            ErrorParameters[0] = (ULONG_PTR)&ErrorSource;
             ErrorParameters[1] = ExceptionInfo->ExceptionRecord->ExceptionCode;
-            ErrorParameters[2] = PtrToUlong(ExceptionInfo->ExceptionRecord->ExceptionAddress);
-            ErrorParameters[3] = PtrToUlong(ExceptionInfo->ContextRecord);
+            ErrorParameters[2] = (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+            ErrorParameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
 
             /* Bugcheck */
             Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
@@ -656,7 +675,7 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
                                       OptionShutdownSystem,
                                       &Response);
         }
-        
+
         /* Just terminate us */
         NtTerminateProcess(NtCurrentProcess(),
                            ExceptionInfo->ExceptionRecord->ExceptionCode);

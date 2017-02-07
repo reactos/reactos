@@ -184,7 +184,7 @@
 @ fastcall -arch=i386 ExiReleaseFastMutex(ptr) ExReleaseFastMutex
 @ fastcall -arch=i386 ExiTryToAcquireFastMutex(ptr) ExTryToAcquireFastMutex
 @ stdcall FsRtlAcquireFileExclusive(ptr)
-;FsRtlAddBaseMcbEntry
+@ stdcall FsRtlAddBaseMcbEntry(ptr long long long long long long)
 @ stdcall FsRtlAddLargeMcbEntry(ptr long long long long long long)
 @ stdcall FsRtlAddMcbEntry(ptr long long long)
 @ stdcall FsRtlAddToTunnelCache(ptr long long ptr ptr long long ptr)
@@ -218,7 +218,7 @@
 @ stdcall FsRtlFindInTunnelCache(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall FsRtlFreeFileLock(ptr)
 @ stdcall FsRtlGetFileSize(ptr ptr)
-;FsRtlGetNextBaseMcbEntry
+@ stdcall FsRtlGetNextBaseMcbEntry(ptr long ptr ptr ptr)
 @ stdcall FsRtlGetNextFileLock(ptr long)
 @ stdcall FsRtlGetNextLargeMcbEntry(ptr long ptr ptr ptr)
 @ stdcall FsRtlGetNextMcbEntry(ptr long ptr ptr ptr)
@@ -226,7 +226,7 @@
 @ stdcall FsRtlIncrementCcFastReadNotPossible()
 @ stdcall FsRtlIncrementCcFastReadResourceMiss()
 @ stdcall FsRtlIncrementCcFastReadWait()
-;FsRtlInitializeBaseMcb
+@ stdcall FsRtlInitializeBaseMcb(ptr ptr)
 @ stdcall FsRtlInitializeFileLock(ptr ptr ptr)
 @ stdcall FsRtlInitializeLargeMcb(ptr long)
 @ stdcall FsRtlInitializeMcb(ptr long)
@@ -242,10 +242,10 @@
 @ stdcall FsRtlIsPagingFile(ptr)
 @ stdcall FsRtlIsTotalDeviceFailure(ptr)
 @ extern FsRtlLegalAnsiCharacterArray _FsRtlLegalAnsiCharacterArray
-;FsRtlLookupBaseMcbEntry
+@ stdcall FsRtlLookupBaseMcbEntry(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall FsRtlLookupLargeMcbEntry(ptr long long ptr ptr ptr ptr ptr)
-;FsRtlLookupLastBaseMcbEntry
-;FsRtlLookupLastBaseMcbEntryAndIndex
+@ stdcall FsRtlLookupLastBaseMcbEntry(ptr ptr ptr)
+@ stdcall FsRtlLookupLastBaseMcbEntryAndIndex(ptr ptr ptr ptr)
 @ stdcall FsRtlLookupLastLargeMcbEntry(ptr ptr ptr)
 @ stdcall FsRtlLookupLastLargeMcbEntryAndIndex(ptr ptr ptr ptr)
 @ stdcall FsRtlLookupLastMcbEntry(ptr ptr ptr)
@@ -269,7 +269,7 @@
 @ stdcall FsRtlNotifyReportChange(ptr ptr ptr ptr long)
 @ stdcall FsRtlNotifyUninitializeSync(ptr)
 @ stdcall FsRtlNotifyVolumeEvent(ptr long)
-;FsRtlNumberOfRunsInBaseMcb
+@ stdcall FsRtlNumberOfRunsInBaseMcb(ptr)
 @ stdcall FsRtlNumberOfRunsInLargeMcb(ptr)
 @ stdcall FsRtlNumberOfRunsInMcb(ptr)
 @ stdcall FsRtlOplockFsctrl(ptr ptr long)
@@ -283,21 +283,21 @@
 @ stdcall FsRtlRegisterFileSystemFilterCallbacks(ptr ptr)
 @ stdcall FsRtlRegisterUncProvider(ptr ptr long)
 @ stdcall FsRtlReleaseFile(ptr)
-;FsRtlRemoveBaseMcbEntry
+@ stdcall FsRtlRemoveBaseMcbEntry(ptr long long long long)
 @ stdcall FsRtlRemoveLargeMcbEntry(ptr long long long long)
 @ stdcall FsRtlRemoveMcbEntry(ptr long long)
 @ stdcall FsRtlRemovePerFileObjectContext(ptr ptr ptr)
 @ stdcall FsRtlRemovePerStreamContext(ptr ptr ptr)
-;FsRtlResetBaseMcb
+@ stdcall FsRtlResetBaseMcb(ptr)
 @ stdcall FsRtlResetLargeMcb(ptr long)
-;FsRtlSplitBaseMcb
+@ stdcall FsRtlSplitBaseMcb(ptr long long long long)
 @ stdcall FsRtlSplitLargeMcb(ptr long long long long)
 @ stdcall FsRtlSyncVolumes(long long long)
 @ stdcall FsRtlTeardownPerStreamContexts(ptr)
-;FsRtlTruncateBaseMcb
+@ stdcall FsRtlTruncateBaseMcb(ptr long long)
 @ stdcall FsRtlTruncateLargeMcb(ptr long long)
 @ stdcall FsRtlTruncateMcb(ptr long)
-;FsRtlUninitializeBaseMcb
+@ stdcall FsRtlUninitializeBaseMcb(ptr)
 @ stdcall FsRtlUninitializeFileLock(ptr)
 @ stdcall FsRtlUninitializeLargeMcb(ptr)
 @ stdcall FsRtlUninitializeMcb(ptr)
@@ -583,7 +583,7 @@
 @ stdcall KeFindConfigurationNextEntry(ptr long long ptr ptr)
 @ stdcall KeFlushEntireTb(long long)
 @ stdcall KeFlushQueuedDpcs()
-;KeGenericCallDpc
+@ stdcall KeGenericCallDpc(ptr ptr)
 @ stdcall KeGetCurrentThread()
 @ stdcall KeGetPreviousMode()
 @ stdcall KeGetRecommendedSharedDataAlignment()
@@ -696,8 +696,8 @@
 @ stdcall KeSetTimeIncrement(long long)
 @ stdcall KeSetTimer(ptr long long ptr)
 @ stdcall KeSetTimerEx(ptr long long long ptr)
-;KeSignalCallDpcDone
-;KeSignalCallDpcSynchronize
+@ stdcall KeSignalCallDpcDone(ptr)
+@ stdcall KeSignalCallDpcSynchronize(ptr)
 @ stdcall KeStackAttachProcess(ptr ptr)
 @ stdcall KeSynchronizeExecution(ptr ptr ptr)
 @ stdcall KeTerminateThread(long)
@@ -1326,7 +1326,7 @@
 @ stdcall RtlValidSid(ptr)
 @ stdcall RtlVerifyVersionInfo(ptr long long long)
 @ cdecl -arch=x86_64 RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr)
-@ stdcall RtlVolumeDeviceToDosName(ptr ptr)
+@ stdcall RtlVolumeDeviceToDosName(ptr ptr) IoVolumeDeviceToDosName
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWriteRegistryValue(long wstr wstr long ptr long)
 @ stdcall RtlZeroHeap(ptr long)
@@ -1384,6 +1384,7 @@
 @ stdcall SeTokenIsAdmin(ptr)
 @ stdcall SeTokenIsRestricted(ptr)
 @ stdcall SeTokenIsWriteRestricted(ptr)
+@ extern SeTokenObjectType
 @ stdcall SeTokenType(ptr)
 @ stdcall SeUnlockSubjectContext(ptr)
 @ stdcall SeUnregisterLogonSessionTerminatedRoutine(ptr)

@@ -13,7 +13,6 @@
 #include <io.h>
 #include <tchar.h>
 #include <stdlib.h>
-#include <samlib/samlib.h>
 #include <syssetup/syssetup.h>
 #include <userenv.h>
 #include <shlobj.h>
@@ -22,7 +21,10 @@
 #include <string.h>
 #include <pseh/pseh2.h>
 #include <time.h>
+#include <ntlsa.h>
 #include <ntsecapi.h>
+#include <ntsam.h>
+#include <sddl.h>
 
 #include "globals.h"
 #include "resource.h"

@@ -1,5 +1,5 @@
 
-spec2def(kdcom.dll kdcom.spec)
+spec2def(kdcom.dll kdcom.spec ADD_IMPORTLIB)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE i386/kdbg.c)
@@ -20,4 +20,4 @@ add_importlibs(kdcom ntoskrnl hal)
 
 add_dependencies(kdcom psdk bugcodes)
 add_cd_file(TARGET kdcom DESTINATION reactos/system32 NO_CAB FOR all)
-add_importlib_target(kdcom.spec)
+

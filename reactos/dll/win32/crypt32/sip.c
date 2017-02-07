@@ -616,6 +616,7 @@ void crypt_sip_free(void)
         FreeLibrary(prov->info.hSIP);
         CryptMemFree(prov);
     }
+    DeleteCriticalSection(&providers_cs);
 }
 
 /* Loads the SIP for pgSubject into the global cache.  Returns FALSE if the
@@ -715,6 +716,11 @@ BOOL WINAPI CryptSIPCreateIndirectData(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pcb
 
     TRACE("(%p %p %p)\n", pSubjectInfo, pcbIndirectData, pIndirectData);
 
+    if (!pSubjectInfo || !pSubjectInfo->pgSubjectType || !pcbIndirectData)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
     if ((sip = CRYPT_GetCachedSIP(pSubjectInfo->pgSubjectType)))
         ret = sip->info.pfCreate(pSubjectInfo, pcbIndirectData, pIndirectData);
     TRACE("returning %d\n", ret);

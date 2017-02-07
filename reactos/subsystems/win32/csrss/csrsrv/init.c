@@ -17,342 +17,76 @@
 HANDLE CsrHeap = (HANDLE) 0;
 HANDLE CsrObjectDirectory = (HANDLE) 0;
 UNICODE_STRING CsrDirectoryName;
-extern HANDLE CsrssApiHeap;
-static unsigned ServerProcCount;
-static CSRPLUGIN_SERVER_PROCS *ServerProcs = NULL;
+UNICODE_STRING CsrSbApiPortName;
+HANDLE CsrSbApiPort = 0;
+PCSR_THREAD CsrSbApiRequestThreadPtr;
+HANDLE CsrSmApiPort;
 HANDLE hSbApiPort = (HANDLE) 0;
-HANDLE hBootstrapOk = (HANDLE) 0;
-HANDLE hSmApiPort = (HANDLE) 0;
-HANDLE hApiPort = (HANDLE) 0;
+HANDLE CsrApiPort = (HANDLE) 0;
+ULONG CsrDebug = 0;//0xFFFFFFFF;
+ULONG CsrMaxApiRequestThreads;
+ULONG CsrTotalPerProcessDataLength;
+ULONG SessionId;
+HANDLE BNOLinksDirectory;
+HANDLE SessionObjectDirectory;
+HANDLE DosDevicesDirectory;
+HANDLE CsrInitializationEvent;
+SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-ULONG
-InitializeVideoAddressSpace(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
-    NTSTATUS Status;
-    HANDLE PhysMemHandle;
-    PVOID BaseAddress;
-    LARGE_INTEGER Offset;
-    SIZE_T ViewSize;
-    CHAR IVTAndBda[1024+256];
-    
-    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
-    BaseAddress = 0;
-    ViewSize = 1024 * 1024;
-    Status = ZwFreeVirtualMemory(NtCurrentProcess(), 
-                                 &BaseAddress,
-                                 &ViewSize,
-                                 MEM_RELEASE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
-        return 0;
-    }
-    
-    /* Open the physical memory section */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &PhysMemName,
-                               0,
-                               NULL,
-                               NULL);
-    Status = ZwOpenSection(&PhysMemHandle,
-                           SECTION_ALL_ACCESS,
-                           &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
-        return 0;
-    }
-
-    /* Map the BIOS and device registers into the address space */
-    Offset.QuadPart = 0xa0000;
-    ViewSize = 0x100000 - 0xa0000;
-    BaseAddress = (PVOID)0xa0000;
-    Status = ZwMapViewOfSection(PhysMemHandle,
-                                NtCurrentProcess(),
-                                &BaseAddress,
-                                0,
-                                ViewSize,
-                                &Offset,
-                                &ViewSize,
-                                ViewUnmap,
-                                0,
-                                PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Couldn't map physical memory (%x)\n", Status);
-        ZwClose(PhysMemHandle);
-        return 0;
-    }
-
-    /* Close physical memory section handle */
-    ZwClose(PhysMemHandle);
-
-    if (BaseAddress != (PVOID)0xa0000)
-    {
-        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
-                BaseAddress);
-        return 0;
-    }
-
-    /* Allocate some low memory to use for the non-BIOS
-     * parts of the v86 mode address space
-     */
-    BaseAddress = (PVOID)0x1;
-    ViewSize = 0xa0000 - 0x1000;
-    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                     &BaseAddress,
-                                     0,
-                                     &ViewSize,
-                                     MEM_RESERVE | MEM_COMMIT,
-                                     PAGE_EXECUTE_READWRITE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
-        return 0;
-    }
-    if (BaseAddress != (PVOID)0x0)
-    {
-        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
-                BaseAddress);
-        return 0;
-    }
-
-    /* Get the real mode IVT and BDA from the kernel */
-    Status = NtVdmControl(VdmInitialize, IVTAndBda);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtVdmControl failed (status %x)\n", Status);
-        return 0;
-    }
-
-    /* Return success */
-    return 1;
-}
-
-
-static NTSTATUS FASTCALL
-CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
-{
-  CSRPLUGIN_SERVER_PROCS *NewProcs;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
-                             (ServerProcCount + 1)
-                             * sizeof(CSRPLUGIN_SERVER_PROCS));
-  if (NULL == NewProcs)
-    {
-      return STATUS_NO_MEMORY;
-    }
-  if (0 != ServerProcCount)
-    {
-      RtlCopyMemory(NewProcs, ServerProcs,
-                    ServerProcCount * sizeof(CSRPLUGIN_SERVER_PROCS));
-      RtlFreeHeap(CsrssApiHeap, 0, ServerProcs);
-    }
-  NewProcs[ServerProcCount] = *Procs;
-  ServerProcs = NewProcs;
-  ServerProcCount++;
-
-  return STATUS_SUCCESS;
-}
-
-/**********************************************************************
- * CallInitComplete/0
- */
-static BOOL FASTCALL
-CallInitComplete(void)
-{
-  BOOL Ok;
-  unsigned i;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  Ok = TRUE;
-  for (i = 0; i < ServerProcCount && Ok; i++)
-    {
-      Ok = (*ServerProcs[i].InitCompleteProc)();
-    }
-
-  return Ok;
-}
-
-BOOL
-CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+VOID
+CallHardError(IN PCSR_THREAD ThreadData,
               IN PHARDERROR_MSG HardErrorMessage)
 {
-    BOOL Ok;
     unsigned i;
+    PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    Ok = TRUE;
-    for (i = 0; i < ServerProcCount && Ok; i++)
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
-        Ok = (*ServerProcs[i].HardErrorProc)(ProcessData, HardErrorMessage);
-    }
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
 
-    return Ok;
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->HardErrorCallback))
+        {
+            ServerDll->HardErrorCallback(ThreadData, HardErrorMessage);
+        }
+    }
 }
 
 NTSTATUS
-CallProcessInherit(IN PCSRSS_PROCESS_DATA SourceProcessData,
-                   IN PCSRSS_PROCESS_DATA TargetProcessData)
+CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
+                   IN PCSR_PROCESS TargetProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     unsigned i;
+    PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
-        Status = (*ServerProcs[i].ProcessInheritProc)(SourceProcessData, TargetProcessData);
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
+        {
+            Status = ServerDll->NewProcessCallback(SourceProcessData, TargetProcessData);
+        }
+    }
 
     return Status;
-}
-
-NTSTATUS
-CallProcessDeleted(IN PCSRSS_PROCESS_DATA ProcessData)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    unsigned i;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
-        Status = (*ServerProcs[i].ProcessDeletedProc)(ProcessData);
-
-    return Status;
-}
-
-
-ULONG
-InitializeVideoAddressSpace(VOID);
-
-/**********************************************************************
- * CsrpCreateObjectDirectory/3
- */
-static NTSTATUS
-CsrpCreateObjectDirectory (int argc, char ** argv, char ** envp)
-{
-   NTSTATUS Status;
-   OBJECT_ATTRIBUTES Attributes;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-
-	/* create object directory ('\Windows') */
-	RtlCreateUnicodeString (&CsrDirectoryName,
-	                        L"\\Windows");
-
-	InitializeObjectAttributes (&Attributes,
-	                            &CsrDirectoryName,
-	                            OBJ_OPENIF,
-	                            NULL,
-	                            NULL);
-
-	Status = NtOpenDirectoryObject(&CsrObjectDirectory,
-	                               DIRECTORY_ALL_ACCESS,
-	                               &Attributes);
-	return Status;
-}
-
-/**********************************************************************
- * CsrpInitVideo/3
- *
- * TODO: we need a virtual device for sessions other than
- * TODO: the console one
- */
-static NTSTATUS
-CsrpInitVideo (int argc, char ** argv, char ** envp)
-{
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
-  IO_STATUS_BLOCK Iosb;
-  HANDLE VideoHandle = (HANDLE) 0;
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  InitializeVideoAddressSpace();
-
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &DeviceName,
-			     0,
-			     NULL,
-			     NULL);
-  Status = NtOpenFile(&VideoHandle,
-		      FILE_ALL_ACCESS,
-		      &ObjectAttributes,
-		      &Iosb,
-		      0,
-		      0);
-  if (NT_SUCCESS(Status))
-    {
-      NtClose(VideoHandle);
-    }
-  return Status;
-}
-
-/**********************************************************************
- * CsrpInitWin32Csr/3
- *
- * TODO: this function should be turned more general to load an
- * TODO: hosted server DLL as received from the command line;
- * TODO: for instance: ServerDll=winsrv:ConServerDllInitialization,2
- * TODO:               ^method   ^dll   ^api                       ^sid
- * TODO:
- * TODO: CsrpHostServerDll (LPWSTR DllName,
- * TODO:                    LPWSTR ApiName,
- * TODO:                    DWORD  ServerId)
- */
-static NTSTATUS
-CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
-{
-  NTSTATUS Status;
-  UNICODE_STRING DllName;
-  HINSTANCE hInst;
-  ANSI_STRING ProcName;
-  CSRPLUGIN_INITIALIZE_PROC InitProc;
-  CSRSS_EXPORTED_FUNCS Exports;
-  PCSRSS_API_DEFINITION ApiDefinitions;
-  CSRPLUGIN_SERVER_PROCS ServerProcs;
-
-  DPRINT("CSR: %s called\n", __FUNCTION__);
-
-  RtlInitUnicodeString(&DllName, L"win32csr.dll");
-  Status = LdrLoadDll(NULL, 0, &DllName, (PVOID *) &hInst);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  RtlInitAnsiString(&ProcName, "Win32CsrInitialization");
-  Status = LdrGetProcedureAddress(hInst, &ProcName, 0, (PVOID *) &InitProc);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  Exports.CsrEnumProcessesProc = CsrEnumProcesses;
-  if (! (*InitProc)(&ApiDefinitions, &ServerProcs, &Exports, CsrssApiHeap))
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  Status = CsrApiRegisterDefinitions(ApiDefinitions);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  Status = CsrpAddServerProcs(&ServerProcs);
-  return Status;
 }
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
-    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
+    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrSrvCreateProcess),
     CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
@@ -362,439 +96,993 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     { 0, 0, NULL }
   };
 
-static NTSTATUS WINAPI
-CsrpCreateListenPort (IN     LPWSTR  Name,
-		      IN OUT PHANDLE Port,
-		      IN     PTHREAD_START_ROUTINE ListenThread)
-{
-	NTSTATUS           Status = STATUS_SUCCESS;
-	OBJECT_ATTRIBUTES  PortAttributes;
-	UNICODE_STRING     PortName;
-    HANDLE ServerThread;
-    CLIENT_ID ClientId;
-
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	RtlInitUnicodeString (& PortName, Name);
-	InitializeObjectAttributes (& PortAttributes,
-				    & PortName,
-				    0,
-				    NULL,
-				    NULL);
-	Status = NtCreatePort ( Port,
-				& PortAttributes,
-				LPC_MAX_DATA_LENGTH, /* TODO: make caller set it*/
-				LPC_MAX_MESSAGE_LENGTH, /* TODO: make caller set it*/
-				0); /* TODO: make caller set it*/
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT1("CSR: %s: NtCreatePort failed (Status=%08lx)\n",
-			__FUNCTION__, Status);
-		return Status;
-	}
-	Status = RtlCreateUserThread(NtCurrentProcess(),
-                               NULL,
-                               TRUE,
-                               0,
-                               0,
-                               0,
-                               (PTHREAD_START_ROUTINE) ListenThread,
-                               *Port,
-                               &ServerThread,
-                               &ClientId);
-    
-    if (ListenThread == (PVOID)ClientConnectionThread)
-    {
-        CsrAddStaticServerThread(ServerThread, &ClientId, 0);
-    }
-    
-    NtResumeThread(ServerThread, NULL);
-    NtClose(ServerThread);
-	return Status;
-}
-
 /* === INIT ROUTINES === */
-
-/**********************************************************************
- * CsrpCreateBNODirectory/3
- *
- * These used to be part of kernel32 startup, but that clearly wasn't a good
- * idea, as races were definately possible.  These are moved (as in the
- * previous fixmes).
- */
-static NTSTATUS
-CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
-{
-    NTSTATUS Status;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
-    UNICODE_STRING SymName = RTL_CONSTANT_STRING(L"Local");
-    UNICODE_STRING SymName2 = RTL_CONSTANT_STRING(L"Global");
-    HANDLE DirHandle, SymHandle;
-
-    /* Seems like a good place to create these objects which are needed by
-     * win32 processes */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateDirectoryObject(&DirHandle,
-                                     DIRECTORY_ALL_ACCESS,
-                                     &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
-    }
-
-    /* Create the "local" Symbolic Link.
-     * FIXME: CSR should do this -- Fixed */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SymName,
-                               OBJ_CASE_INSENSITIVE,
-                               DirHandle,
-                               NULL);
-    Status = NtCreateSymbolicLinkObject(&SymHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &Name);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
-    }
-
-    /* Create the "global" Symbolic Link. */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &SymName2,
-                               OBJ_CASE_INSENSITIVE,
-                               DirHandle,
-                               NULL);
-    Status = NtCreateSymbolicLinkObject(&SymHandle,
-                                        SYMBOLIC_LINK_ALL_ACCESS,
-                                        &ObjectAttributes,
-                                        &Name);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
-    }
-
-    return Status;
-}
-
 
 VOID
 WINAPI
 BasepFakeStaticServerData(VOID);
 
+/*++
+ * @name CsrSetProcessSecurity
+ *
+ * The CsrSetProcessSecurity routine protects access to the CSRSS process
+ * from unauthorized tampering.
+ *
+ * @param None.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
 NTSTATUS
 NTAPI
-CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
-
-/**********************************************************************
- * CsrpCreateHeap/3
- */
-static NTSTATUS
-CsrpCreateHeap (int argc, char ** argv, char ** envp)
+CsrSetProcessSecurity(VOID)
 {
-    CHAR Value[] = "1024,3072,512";
     NTSTATUS Status;
-	DPRINT("CSR: %s called\n", __FUNCTION__);
+    HANDLE hToken, hProcess = NtCurrentProcess();
+    ULONG Length;
+    PTOKEN_USER TokenInfo = NULL;
+    PSECURITY_DESCRIPTOR ProcSd = NULL;
+    PACL Dacl;
+    PSID UserSid;
 
-	CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
-        	                       NULL,
-                	               65536,
-                        	       65536,
-	                               NULL,
-        	                       NULL);
-	if (CsrssApiHeap == NULL)
-	{
-		return STATUS_UNSUCCESSFUL;
-	}
-    
-    
-    Status = CsrSrvCreateSharedSection(Value);
-    if (Status != STATUS_SUCCESS)
+    /* Open our token */
+    Status = NtOpenProcessToken(hProcess, TOKEN_QUERY, &hToken);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Get the Token User Length */
+    NtQueryInformationToken(hToken, TokenUser, NULL, 0, &Length);
+
+    /* Allocate space for it */
+    TokenInfo = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
+    if (!TokenInfo)
     {
-        DPRINT1("CsrSrvCreateSharedSection failed with status 0x%08lx\n", Status);
-        ASSERT(FALSE);
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
     }
 
-    BasepFakeStaticServerData();
-	return STATUS_SUCCESS;
+    /* Now query the data */
+    Status = NtQueryInformationToken(hToken, TokenUser, TokenInfo, Length, &Length);
+    NtClose(hToken);
+    if (!NT_SUCCESS(Status)) goto Quickie;
+
+    /* Now check the SID Length */
+    UserSid = TokenInfo->User.Sid;
+    Length = RtlLengthSid(UserSid) + sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE);
+
+    /* Allocate a buffer for the Security Descriptor, with SID and DACL */
+    ProcSd = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, SECURITY_DESCRIPTOR_MIN_LENGTH + Length);
+    if (!ProcSd)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Set the pointer to the DACL */
+    Dacl = (PACL)((ULONG_PTR)ProcSd + SECURITY_DESCRIPTOR_MIN_LENGTH);
+
+    /* Now create the SD itself */
+    Status = RtlCreateSecurityDescriptor(ProcSd, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: SD creation failed - status = %lx\n", Status);
+        goto Quickie;
+    }
+
+    /* Create the DACL for it*/
+    Status = RtlCreateAcl(Dacl, Length, ACL_REVISION2);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: DACL creation failed - status = %lx\n", Status);
+        goto Quickie;
+    }
+
+    /* Create the ACE */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    PROCESS_VM_READ | PROCESS_VM_WRITE |
+                                    PROCESS_VM_OPERATION | PROCESS_DUP_HANDLE |
+                                    PROCESS_TERMINATE | PROCESS_SUSPEND_RESUME |
+                                    PROCESS_QUERY_INFORMATION | READ_CONTROL,
+                                    UserSid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: ACE creation failed - status = %lx\n", Status);
+        goto Quickie;
+    }
+
+    /* Clear the DACL in the SD */
+    Status = RtlSetDaclSecurityDescriptor(ProcSd, TRUE, Dacl, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: set DACL failed - status = %lx\n", Status);
+        goto Quickie;
+    }
+
+    /* Write the SD into the Process */
+    Status = NtSetSecurityObject(hProcess, DACL_SECURITY_INFORMATION, ProcSd);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: set process DACL failed - status = %lx\n", Status);
+        goto Quickie;
+    }
+
+    /* Free the memory and return */
+Quickie:
+    if (ProcSd) RtlFreeHeap(CsrHeap, 0, ProcSd);
+    RtlFreeHeap(CsrHeap, 0, TokenInfo);
+    return Status;
 }
 
-/**********************************************************************
- * CsrpCreateCallbackPort/3
- */
-static NTSTATUS
-CsrpCreateCallbackPort (int argc, char ** argv, char ** envp)
-{
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	return CsrpCreateListenPort (L"\\Windows\\SbApiPort",
-				     & hSbApiPort,
-				     ServerSbApiPortThread);
-}
-
-/**********************************************************************
- * CsrpRegisterSubsystem/3
- */
-static NTSTATUS
-CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
-{
-	NTSTATUS           Status = STATUS_SUCCESS;
-	OBJECT_ATTRIBUTES  BootstrapOkAttributes;
-	UNICODE_STRING     Name;
-
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	/*
-	 * Create the event object the callback port
-	 * thread will signal *if* the SM will
-	 * authorize us to bootstrap.
-	 */
-	RtlInitUnicodeString (& Name, L"\\CsrssBooting");
-	InitializeObjectAttributes(& BootstrapOkAttributes,
-				   & Name,
-				   0, NULL, NULL);
-	Status = NtCreateEvent (& hBootstrapOk,
-				EVENT_ALL_ACCESS,
-				& BootstrapOkAttributes,
-				SynchronizationEvent,
-				FALSE);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("CSR: %s: NtCreateEvent failed (Status=0x%08lx)\n",
-			__FUNCTION__, Status);
-		return Status;
-	}
-	/*
-	 * Let's tell the SM a new environment
-	 * subsystem server is in the system.
-	 */
-	RtlInitUnicodeString (& Name, L"\\Windows\\SbApiPort");
-	DPRINT("CSR: %s: registering with SM for\n  IMAGE_SUBSYSTEM_WINDOWS_CUI == 3\n", __FUNCTION__);
-	Status = SmConnectApiPort (& Name,
-				   hSbApiPort,
-				   IMAGE_SUBSYSTEM_WINDOWS_CUI,
-				   & hSmApiPort);
-	if(!NT_SUCCESS(Status))
-	{
-		DPRINT("CSR: %s unable to connect to the SM (Status=0x%08lx)\n",
-			__FUNCTION__, Status);
-		NtClose (hBootstrapOk);
-		return Status;
-	}
-	/*
-	 *  Wait for SM to reply OK... If the SM
-	 *  won't answer, we hang here forever!
-	 */
-	DPRINT("CSR: %s: waiting for SM to OK boot...\n", __FUNCTION__);
-	Status = NtWaitForSingleObject (hBootstrapOk,
-					FALSE,
-					NULL);
-	NtClose (hBootstrapOk);
-	return Status;
-}
-
-/**********************************************************************
- * 	CsrpLoadKernelModeDriver/3
- */
-static NTSTATUS
-CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
-{
-	NTSTATUS        Status = STATUS_SUCCESS;
-	WCHAR           Data [MAX_PATH + 1];
-	ULONG           DataLength = sizeof Data;
-	ULONG           DataType = 0;
-	//UNICODE_STRING  Environment;
-
-
-	DPRINT1("SM: %s called\n", __FUNCTION__);
-
-
-	//EnvpToUnicodeString (envp, & Environment);
-	Status = SmLookupSubsystem (L"Kmode",
-				    Data,
-				    & DataLength,
-				    & DataType,
-				    NULL);
-	//RtlFreeUnicodeString (& Environment);
-	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
-	{
-		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
-		UNICODE_STRING             ModuleName;
-
-		wcscpy (ImagePath, L"\\SYSTEMROOT\\system32\\win32k.sys");
-//		wcscat (ImagePath, Data);
-		RtlInitUnicodeString (& ModuleName, ImagePath);
-		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */
-		                                SystemExtendServiceTableInformation,
-						& ModuleName,
-						sizeof ModuleName);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-		}
-	}
-	return Status;
-}
-
-/**********************************************************************
- * CsrpCreateApiPort/2
- */
-static NTSTATUS
-CsrpCreateApiPort (int argc, char ** argv, char ** envp)
-{
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	CsrInitProcessData();
-
-	return CsrpCreateListenPort(L"\\Windows\\ApiPort", &hApiPort,
-		(PTHREAD_START_ROUTINE)ClientConnectionThread);
-}
-
-/**********************************************************************
- * CsrpApiRegisterDef/0
- */
-static NTSTATUS
-CsrpApiRegisterDef (int argc, char ** argv, char ** envp)
-{
-	return CsrApiRegisterDefinitions(NativeDefinitions);
-}
-
-/**********************************************************************
- * CsrpCCTS/2
- */
-static NTSTATUS
-CsrpCCTS (int argc, char ** argv, char ** envp)
-{
-    ULONG Dummy;
-    ULONG DummyLength = sizeof(Dummy);
-	return CsrClientConnectToServer(L"\\Windows",
-			0, &Dummy, &DummyLength, NULL);
-}
-
-/**********************************************************************
- * CsrpRunWinlogon/0
+/*++
+ * @name CsrSetDirectorySecurity
  *
- * Start the logon process (winlogon.exe).
+ * The CsrSetDirectorySecurity routine sets the security descriptor for the
+ * specified Object Directory.
  *
- * TODO: this should be moved in CsrpCreateSession/x (one per session)
- * TODO: in its own desktop (one logon desktop per winstation).
- */
-static NTSTATUS
-CsrpRunWinlogon (int argc, char ** argv, char ** envp)
+ * @param ObjectDirectory
+ *        Handle fo the Object Directory to protect.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrSetDirectorySecurity(IN HANDLE ObjectDirectory)
 {
-	NTSTATUS                      Status = STATUS_SUCCESS;
-	UNICODE_STRING                ImagePath;
-	UNICODE_STRING                CommandLine;
-	PRTL_USER_PROCESS_PARAMETERS  ProcessParameters = NULL;
-	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
-
-
-	DPRINT("CSR: %s called\n", __FUNCTION__);
-
-	/* initialize the process parameters */
-	RtlInitUnicodeString (& ImagePath, L"\\SystemRoot\\system32\\winlogon.exe");
-	RtlInitUnicodeString (& CommandLine, L"");
-	RtlCreateProcessParameters(& ProcessParameters,
-				   & ImagePath,
-				   NULL,
-				   NULL,
-				   & CommandLine,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL,
-				   NULL);
-	/* Create the winlogon process */
-	Status = RtlCreateUserProcess (& ImagePath,
-				       OBJ_CASE_INSENSITIVE,
-				       ProcessParameters,
-				       NULL,
-				       NULL,
-				       NULL,
-				       FALSE,
-				       NULL,
-				       NULL,
-				       & ProcessInfo);
-	/* Cleanup */
-	RtlDestroyProcessParameters (ProcessParameters);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
-				__FUNCTION__, Status);
-	}
-
-   ZwResumeThread(ProcessInfo.ThreadHandle, NULL);
-	return Status;
+    /* FIXME: Implement */
+    return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-CsrpCreateHardErrorPort (int argc, char ** argv, char ** envp)
+/*++
+ * @name GetDosDevicesProtection
+ *
+ * The GetDosDevicesProtection creates a security descriptor for the DOS Devices
+ * Object Directory.
+ *
+ * @param DosDevicesSd
+ *        Pointer to the Security Descriptor to return.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks Depending on the DOS Devices Protection Mode (set in the registry),
+ *          regular users may or may not have full access to the directory.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+GetDosDevicesProtection(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 {
-    return NtSetDefaultHardErrorPort(hApiPort);
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY CreatorAuthority = {SECURITY_CREATOR_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
+    PSID WorldSid, CreatorSid, AdminSid, SystemSid;
+    UCHAR KeyValueBuffer[0x40];
+    PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+    UNICODE_STRING KeyName;
+    ULONG ProtectionMode = 0;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PACL Dacl;
+    PACCESS_ALLOWED_ACE Ace;
+    HANDLE hKey;
+    NTSTATUS Status;
+    ULONG ResultLength, SidLength, AclLength;
+
+    /* Create the SD */
+    Status = RtlCreateSecurityDescriptor(DosDevicesSd, SECURITY_DESCRIPTOR_REVISION);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Initialize the System SID */
+    Status = RtlAllocateAndInitializeSid(&NtSidAuthority, 1,
+                                         SECURITY_LOCAL_SYSTEM_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &SystemSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Initialize the World SID */
+    Status = RtlAllocateAndInitializeSid(&WorldAuthority, 1,
+                                         SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &WorldSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Initialize the Admin SID */
+    Status = RtlAllocateAndInitializeSid(&NtSidAuthority, 2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &AdminSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Initialize the Creator SID */
+    Status = RtlAllocateAndInitializeSid(&CreatorAuthority, 1,
+                                         SECURITY_CREATOR_OWNER_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &CreatorSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Open the Session Manager Key */
+    RtlInitUnicodeString(&KeyName, SM_REG_KEY);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* Read the key value */
+        RtlInitUnicodeString(&KeyName, L"ProtectionMode");
+        Status = NtQueryValueKey(hKey,
+                                 &KeyName,
+                                 KeyValuePartialInformation,
+                                 KeyValueBuffer,
+                                 sizeof(KeyValueBuffer),
+                                 &ResultLength);
+
+        /* Make sure it's what we expect it to be */
+        KeyValuePartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyValueBuffer;
+        if ((NT_SUCCESS(Status)) && (KeyValuePartialInfo->Type == REG_DWORD) &&
+            (*(PULONG)KeyValuePartialInfo->Data))
+        {
+            /* Save the Protection Mode */
+            ProtectionMode = *(PULONG)KeyValuePartialInfo->Data;
+        }
+
+        /* Close the handle */
+        NtClose(hKey);
+    }
+
+    /* Check the Protection Mode */
+    if (ProtectionMode & 3)
+    {
+        /* Calculate SID Lengths */
+        SidLength = RtlLengthSid(CreatorSid) + RtlLengthSid(SystemSid) +
+                    RtlLengthSid(AdminSid);
+        AclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) + SidLength;
+
+        /* Allocate memory for the DACL */
+        Dacl = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, AclLength);
+        ASSERT(Dacl != NULL);
+
+        /* Build the ACL and add 3 ACEs */
+        Status = RtlCreateAcl(Dacl, AclLength, ACL_REVISION2);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, SystemSid);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, AdminSid);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, CreatorSid);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Edit the ACEs to make them inheritable */
+        Status = RtlGetAce(Dacl, 0, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
+        Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE;
+        Status = RtlGetAce(Dacl, 1, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
+        Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE;
+        Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
+        Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE;
+
+        /* Set this DACL with the SD */
+        Status = RtlSetDaclSecurityDescriptor(DosDevicesSd, TRUE, Dacl, FALSE);
+        ASSERT(NT_SUCCESS(Status));
+        goto Quickie;
+    }
+    else
+    {
+        /* Calculate SID Lengths */
+        SidLength = RtlLengthSid(WorldSid) + RtlLengthSid(SystemSid);
+        AclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) + SidLength;
+
+        /* Allocate memory for the DACL */
+        Dacl = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, AclLength);
+        ASSERT(Dacl != NULL);
+
+        /* Build the ACL and add 3 ACEs */
+        Status = RtlCreateAcl(Dacl, AclLength, ACL_REVISION2);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE, WorldSid);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, SystemSid);
+        ASSERT(NT_SUCCESS(Status));
+        Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, GENERIC_ALL, WorldSid);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Edit the last ACE to make it inheritable */
+        Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
+        ASSERT(NT_SUCCESS(Status));
+        Ace->Header.AceFlags |= OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE;
+
+        /* Set this DACL with the SD */
+        Status = RtlSetDaclSecurityDescriptor(DosDevicesSd, TRUE, Dacl, FALSE);
+        ASSERT(NT_SUCCESS(Status));
+        goto Quickie;
+    }
+
+/* FIXME: failure cases! Fail: */
+    /* Free the memory */
+    RtlFreeHeap(CsrHeap, 0, Dacl);
+
+/* FIXME: semi-failure cases! Quickie: */
+Quickie:
+    /* Free the SIDs */
+    RtlFreeSid(SystemSid);
+    RtlFreeSid(WorldSid);
+    RtlFreeSid(AdminSid);
+    RtlFreeSid(CreatorSid);
+
+    /* Return */
+    return Status;
 }
 
-typedef NTSTATUS (* CSR_INIT_ROUTINE)(int,char**,char**);
+/*++
+ * @name FreeDosDevicesProtection
+ *
+ * The FreeDosDevicesProtection frees the security descriptor that was created
+ * by GetDosDevicesProtection
+ *
+ * @param DosDevicesSd
+ *        Pointer to the security descriptor to free.
 
-struct {
-	BOOL Required;
-	CSR_INIT_ROUTINE EntryPoint;
-	PCHAR ErrorMessage;
-} InitRoutine [] = {
-        {TRUE, CsrpCreateBNODirectory,   "create base named objects directory"},
-	{TRUE, CsrpCreateCallbackPort,   "create the callback port \\Windows\\SbApiPort"},
-	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
-	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
-	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
-    {TRUE, CsrpCreateHardErrorPort,  "create the hard error port"},
-	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
-	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
-	{TRUE, CsrpInitVideo,            "initialize video"},
-	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
-	{TRUE, CsrpCCTS,                 "connect client to server"},
-	{TRUE, CsrpInitWin32Csr,         "load usermode dll"},
-	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
-};
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+FreeDosDevicesProtection(IN PSECURITY_DESCRIPTOR DosDevicesSd)
+{
+    PACL Dacl;
+    BOOLEAN Present, Default;
+    NTSTATUS Status;
+
+    /* Get the DACL corresponding to this SD */
+    Status = RtlGetDaclSecurityDescriptor(DosDevicesSd, &Present, &Dacl, &Default);
+    ASSERT(NT_SUCCESS(Status));
+    ASSERT(Present);
+    ASSERT(Dacl != NULL);
+
+    /* Free it */
+    if ((NT_SUCCESS(Status)) && (Dacl)) RtlFreeHeap(CsrHeap, 0, Dacl);
+}
+
+/*++
+ * @name CsrCreateSessionObjectDirectory
+ *
+ * The CsrCreateSessionObjectDirectory routine creates the BaseNamedObjects,
+ * Session and Dos Devices directories for the specified session.
+ *
+ * @param Session
+ *        Session ID for which to create the directories.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrCreateSessionObjectDirectory(IN ULONG Session)
+{
+    WCHAR SessionBuffer[512], BnoBuffer[512];
+    UNICODE_STRING SessionString, BnoString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE BnoHandle;
+    SECURITY_DESCRIPTOR DosDevicesSd;
+    NTSTATUS Status;
+
+    /* Generate the Session BNOLINKS Directory name */
+    swprintf(SessionBuffer, L"%ws\\BNOLINKS", SESSION_ROOT);
+    RtlInitUnicodeString(&SessionString, SessionBuffer);
+
+    /* Create it */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SessionString,
+                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtCreateDirectoryObject(&BNOLinksDirectory,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: NtCreateDirectoryObject failed in "
+                "CsrCreateSessionObjectDirectory - status = %lx\n", Status);
+        return Status;
+    }
+
+    /* Now add the Session ID */
+    swprintf(SessionBuffer, L"%ld", Session);
+    RtlInitUnicodeString(&SessionString, SessionBuffer);
+
+    /* Check if this is the first Session */
+    if (Session)
+    {
+        /* Not the first, so the name will be slighly more complex */
+        swprintf(BnoBuffer, L"%ws\\%ld\\BaseNamedObjects", SESSION_ROOT, Session);
+        RtlInitUnicodeString(&BnoString, BnoBuffer);
+    }
+    else
+    {
+        /* Use the direct name */
+        RtlInitUnicodeString(&BnoString, L"\\BaseNamedObjects");
+    }
+
+    /* Create the symlink */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SessionString,
+                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               BNOLinksDirectory,
+                               NULL);
+    Status = NtCreateSymbolicLinkObject(&BnoHandle,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &BnoString);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: NtCreateSymbolicLinkObject failed in "
+                "CsrCreateSessionObjectDirectory - status = %lx\n", Status);
+        return Status;
+    }
+
+    /* Create the \DosDevices Security Descriptor */
+    Status = GetDosDevicesProtection(&DosDevicesSd);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Now create a directory for this session */
+    swprintf(SessionBuffer, L"%ws\\%ld", SESSION_ROOT, Session);
+    RtlInitUnicodeString(&SessionString, SessionBuffer);
+
+    /* Create the directory */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SessionString,
+                               OBJ_OPENIF | OBJ_CASE_INSENSITIVE,
+                               0,
+                               &DosDevicesSd);
+    Status = NtCreateDirectoryObject(&SessionObjectDirectory,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: NtCreateDirectoryObject failed in "
+                "CsrCreateSessionObjectDirectory - status = %lx\n", Status);
+        FreeDosDevicesProtection(&DosDevicesSd);
+        return Status;
+    }
+
+    /* Next, create a directory for this session's DOS Devices */
+    RtlInitUnicodeString(&SessionString, L"DosDevices");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SessionString,
+                               OBJ_CASE_INSENSITIVE,
+                               SessionObjectDirectory,
+                               &DosDevicesSd);
+    Status = NtCreateDirectoryObject(&DosDevicesDirectory,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: NtCreateDirectoryObject failed in "
+                "CsrCreateSessionObjectDirectory - status = %lx\n", Status);
+    }
+
+    /* Release the Security Descriptor */
+    FreeDosDevicesProtection(&DosDevicesSd);
+
+    /* Return */
+    return Status;
+}
+
+/*++
+ * @name CsrParseServerCommandLine
+ *
+ * The CsrParseServerCommandLine routine parses the CSRSS command-line in the
+ * registry and performs operations for each entry found.
+ *
+ * @param ArgumentCount
+ *        Number of arguments on the command line.
+ *
+ * @param Arguments
+ *        Array of arguments.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+FASTCALL
+CsrParseServerCommandLine(IN ULONG ArgumentCount,
+                          IN PCHAR Arguments[])
+{
+    NTSTATUS Status;
+    PCHAR ParameterName = NULL, ParameterValue = NULL, EntryPoint, ServerString;
+    ULONG i, DllIndex;
+    ANSI_STRING AnsiString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* Set the Defaults */
+    CsrTotalPerProcessDataLength = 0;
+    CsrObjectDirectory = NULL;
+    CsrMaxApiRequestThreads = 16;
+
+    /* Save our Session ID, and create a Directory for it */
+    SessionId = NtCurrentPeb()->SessionId;
+    Status = CsrCreateSessionObjectDirectory(SessionId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSS: CsrCreateSessionObjectDirectory failed (%lx)\n",
+                Status);
+
+        /* It's not fatal if the session ID isn't zero */
+        if (SessionId) return Status;
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Loop through every argument */
+    for (i = 1; i < ArgumentCount; i++)
+    {
+        /* Split Name and Value */
+        ParameterName = Arguments[i];
+        ParameterValue = NULL;
+        ParameterValue = strchr(ParameterName, '=');
+        if (ParameterValue) *ParameterValue++ = ANSI_NULL;
+
+        /* Check for Object Directory */
+        if (!_stricmp(ParameterName, "ObjectDirectory"))
+        {
+            /* Check if a session ID is specified */
+            if (SessionId)
+            {
+                DPRINT1("Sessions not yet implemented\n");
+                ASSERT(SessionId);
+            }
+
+            /* Initialize the directory name */
+            RtlInitAnsiString(&AnsiString, ParameterValue);
+            Status = RtlAnsiStringToUnicodeString(&CsrDirectoryName,
+                                                  &AnsiString,
+                                                  TRUE);
+            ASSERT(NT_SUCCESS(Status) || SessionId != 0);
+            if (!NT_SUCCESS(Status)) return Status;
+
+            /* Create it */
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &CsrDirectoryName,
+                                       OBJ_OPENIF | OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                                       NULL,
+                                       NULL);
+            Status = NtCreateDirectoryObject(&CsrObjectDirectory,
+                                             DIRECTORY_ALL_ACCESS,
+                                             &ObjectAttributes);
+            if (!NT_SUCCESS(Status)) return Status;
+
+            /* Secure it */
+            Status = CsrSetDirectorySecurity(CsrObjectDirectory);
+            if (!NT_SUCCESS(Status)) return Status;
+        }
+        else if (!_stricmp(ParameterName, "SubSystemType"))
+        {
+            /* Ignored */
+        }
+        else if (!_stricmp(ParameterName, "MaxRequestThreads"))
+        {
+            Status = RtlCharToInteger(ParameterValue,
+                                      0,
+                                      &CsrMaxApiRequestThreads);
+        }
+        else if (!_stricmp(ParameterName, "RequestThreads"))
+        {
+            /* Ignored */
+            Status = STATUS_SUCCESS;
+        }
+        else if (!_stricmp(ParameterName, "ProfileControl"))
+        {
+            /* Ignored */
+        }
+        else if (!_stricmp(ParameterName, "SharedSection"))
+        {
+            /* Create the Section */
+            Status = CsrSrvCreateSharedSection(ParameterValue);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CSRSS: *** Invalid syntax for %s=%s (Status == %X)\n",
+                        ParameterName, ParameterValue, Status);
+                return Status;
+            }
+
+            /* Load us */
+            Status = CsrLoadServerDll("CSRSS", NULL, CSR_SRV_SERVER);
+        }
+        else if (!_stricmp(ParameterName, "ServerDLL"))
+        {
+            /* Loop the command line */
+            EntryPoint = NULL;
+            Status = STATUS_INVALID_PARAMETER;
+            ServerString = ParameterValue;
+            while (*ServerString)
+            {
+                /* Check for the Entry Point */
+                if ((*ServerString == ':') && (!EntryPoint))
+                {
+                    /* Found it. Add a nullchar and save it */
+                    *ServerString++ = ANSI_NULL;
+                    EntryPoint = ServerString;
+                }
+
+                /* Check for the Dll Index */
+                if (*ServerString++ == ',') break;
+            }
+
+            /* Did we find something to load? */
+            if (!*ServerString)
+            {
+                DPRINT1("CSRSS: *** Invalid syntax for ServerDll=%s (Status == %X)\n",
+                        ParameterValue, Status);
+                return Status;
+            }
+
+            /* Convert it to a ULONG */
+            Status = RtlCharToInteger(ServerString, 10, &DllIndex);
+
+            /* Add a null char if it was valid */
+            if (NT_SUCCESS(Status)) ServerString[-1] = ANSI_NULL;
+
+            /* Load it */
+            if (CsrDebug & 1) DPRINT1("CSRSS: Loading ServerDll=%s:%s\n", ParameterValue, EntryPoint);
+
+            /* Hackito ergo sum */
+            Status = STATUS_SUCCESS;
+            if (strstr(ParameterValue, "basesrv"))
+            {
+                DPRINT1("Fake basesrv init\n");
+                BasepFakeStaticServerData();
+            }
+//            else
+//            {
+//                Status = CsrLoadServerDll(ParameterValue, EntryPoint, 2);
+//            }
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CSRSS: *** Failed loading ServerDll=%s (Status == 0x%x)\n",
+                        ParameterValue, Status);
+                return Status;
+            }
+        }
+        else if (!_stricmp(ParameterName, "Windows"))
+        {
+            /* Ignored */
+        }
+        else
+        {
+            /* Invalid parameter on the command line */
+            Status = STATUS_INVALID_PARAMETER;
+        }
+    }
+
+    /* Return status */
+    return Status;
+}
+
+/*++
+ * @name CsrCreateLocalSystemSD
+ *
+ * The CsrCreateLocalSystemSD routine creates a Security Descriptor for
+ * the local account with PORT_ALL_ACCESS.
+ *
+ * @param LocalSystemSd
+ *        Pointer to a pointer to the security descriptor to create.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
+{
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
+    PSID SystemSid;
+    ULONG Length;
+    PSECURITY_DESCRIPTOR SystemSd;
+    PACL Dacl;
+    NTSTATUS Status;
+
+    /* Initialize the System SID */
+    RtlAllocateAndInitializeSid(&NtSidAuthority, 1,
+                                SECURITY_LOCAL_SYSTEM_RID,
+                                0, 0, 0, 0, 0, 0, 0,
+                                &SystemSid);
+
+    /* Get the length of the SID */
+    Length = RtlLengthSid(SystemSid) + sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE);
+
+    /* Allocate a buffer for the Security Descriptor, with SID and DACL */
+    SystemSd = RtlAllocateHeap(CsrHeap, 0, SECURITY_DESCRIPTOR_MIN_LENGTH + Length);
+
+    /* Set the pointer to the DACL */
+    Dacl = (PACL)((ULONG_PTR)SystemSd + SECURITY_DESCRIPTOR_MIN_LENGTH);
+
+    /* Now create the SD itself */
+    Status = RtlCreateSecurityDescriptor(SystemSd, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        RtlFreeHeap(CsrHeap, 0, SystemSd);
+        return Status;
+    }
+
+    /* Create the DACL for it*/
+    RtlCreateAcl(Dacl, Length, ACL_REVISION2);
+
+    /* Create the ACE */
+    Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, PORT_ALL_ACCESS, SystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        RtlFreeHeap(CsrHeap, 0, SystemSd);
+        return Status;
+    }
+
+    /* Clear the DACL in the SD */
+    Status = RtlSetDaclSecurityDescriptor(SystemSd, TRUE, Dacl, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        RtlFreeHeap(CsrHeap, 0, SystemSd);
+        return Status;
+    }
+
+    /* Free the SID and return*/
+    RtlFreeSid(SystemSid);
+    *LocalSystemSd = SystemSd;
+    return Status;
+}
+
+/*++
+ * @name CsrSbApiPortInitialize
+ *
+ * The CsrSbApiPortInitialize routine initializes the LPC Port used for
+ * communications with the Session Manager (SM) and initializes the static
+ * thread that will handle connection requests and APIs.
+ *
+ * @param None
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrSbApiPortInitialize(VOID)
+{
+    ULONG Size;
+    PSECURITY_DESCRIPTOR PortSd;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE hRequestThread;
+    CLIENT_ID ClientId;
+
+    /* Calculate how much space we'll need for the Port Name */
+    Size = CsrDirectoryName.Length + sizeof(SB_PORT_NAME) + sizeof(WCHAR);
+
+    /* Create the buffer for it */
+    CsrSbApiPortName.Buffer = RtlAllocateHeap(CsrHeap, 0, Size);
+    if (!CsrSbApiPortName.Buffer) return STATUS_NO_MEMORY;
+
+    /* Setup the rest of the empty string */
+    CsrSbApiPortName.Length = 0;
+    CsrSbApiPortName.MaximumLength = (USHORT)Size;
+
+    /* Now append the full port name */
+    RtlAppendUnicodeStringToString(&CsrSbApiPortName, &CsrDirectoryName);
+    RtlAppendUnicodeToString(&CsrSbApiPortName, UNICODE_PATH_SEP);
+    RtlAppendUnicodeToString(&CsrSbApiPortName, SB_PORT_NAME);
+    if (CsrDebug & 2) DPRINT1("CSRSS: Creating %wZ port and associated thread\n", &CsrSbApiPortName);
+
+    /* Create Security Descriptor for this Port */
+    Status = CsrCreateLocalSystemSD(&PortSd);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Initialize the Attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &CsrSbApiPortName,
+                               0,
+                               NULL,
+                               PortSd);
+
+    /* Create the Port Object */
+    Status = NtCreatePort(&CsrSbApiPort,
+                          &ObjectAttributes,
+                          sizeof(SB_CONNECTION_INFO),
+                          sizeof(SB_API_MSG),
+                          32 * sizeof(SB_API_MSG));
+    if (PortSd) RtlFreeHeap(CsrHeap, 0, PortSd);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Create the Thread to handle the API Requests */
+        Status = RtlCreateUserThread(NtCurrentProcess(),
+                                     NULL,
+                                     TRUE,
+                                     0,
+                                     0,
+                                     0,
+                                     (PVOID)CsrSbApiRequestThread,
+                                     NULL,
+                                     &hRequestThread,
+                                     &ClientId);
+        if (NT_SUCCESS(Status))
+        {
+            /* Add it as a Static Server Thread */
+            CsrSbApiRequestThreadPtr = CsrAddStaticServerThread(hRequestThread,
+                                                                &ClientId,
+                                                                0);
+
+            /* Activate it */
+            Status = NtResumeThread(hRequestThread, NULL);
+        }
+    }
+
+    return Status;
+}
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS
 NTAPI
-CsrServerInitialization(ULONG ArgumentCount,
-                        PCHAR Arguments[])
+CsrServerInitialization(IN ULONG ArgumentCount,
+                        IN PCHAR Arguments[])
 {
-	UINT       i = 0;
-	NTSTATUS  Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
+    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
 
-	DPRINT("CSR: %s called\n", __FUNCTION__);
+    /* Create the Init Event */
+    Status = NtCreateEvent(&CsrInitializationEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: NtCreateEvent failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
 
-	for (i=0; i < (sizeof InitRoutine / sizeof InitRoutine[0]); i++)
-	{
-		Status = InitRoutine[i].EntryPoint(ArgumentCount,Arguments,NULL);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n",
-				__FUNCTION__,
-				InitRoutine[i].ErrorMessage,
-				Status);
-			if (InitRoutine[i].Required)
-			{
-				return FALSE;
-			}
-		}
-	}
-	if (CallInitComplete())
-	{
-		Status = SmCompleteSession (hSmApiPort,hSbApiPort,hApiPort);
-		return STATUS_SUCCESS;
-	}
-    
-	return STATUS_UNSUCCESSFUL;
+    /* Cache System Basic Information so we don't always request it */
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &CsrNtSysInfo,
+                                      sizeof(SYSTEM_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: NtQuerySystemInformation failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Save our Heap */
+    CsrHeap = RtlGetProcessHeap();
+
+    /* Set our Security Descriptor to protect the process */
+    Status = CsrSetProcessSecurity();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrSetProcessSecurity failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Set up Session Support */
+    Status = CsrInitializeNtSessionList();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrInitializeSessions failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Set up Process Support */
+    Status = CsrInitializeProcessStructure();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrInitializeProcessStructure failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Parse the command line */
+    Status = CsrParseServerCommandLine(ArgumentCount, Arguments);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    Status = CsrApiRegisterDefinitions(NativeDefinitions);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrApiRegisterDefinitions", Status);
+    }
+
+    /* Now initialize our API Port */
+    Status = CsrApiPortInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrApiPortInitialize failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Initialize Win32csr */
+    Status = CsrLoadServerDll("win32csr", "Win32CsrInitialization", 2);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrLoadServerDll", Status);
+    }
+
+    /* Initialize the API Port for SM communication */
+    Status = CsrSbApiPortInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrSbApiPortInitialize failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* We're all set! Connect to SM! */
+    Status = SmConnectToSm(&CsrSbApiPortName,
+                           CsrSbApiPort,
+                           IMAGE_SUBSYSTEM_WINDOWS_GUI,
+                           &CsrSmApiPort);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: SmConnectToSm failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Finito! Signal the event */
+    Status = NtSetEvent(CsrInitializationEvent, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: NtSetEvent failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Close the event handle now */
+    NtClose(CsrInitializationEvent);
+
+    /* Have us handle Hard Errors */
+    Status = NtSetDefaultHardErrorPort(CsrApiPort);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: NtSetDefaultHardErrorPort failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 BOOL

@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
 
 typedef struct _update_session
 {
-    const struct IUpdateSessionVtbl *vtbl;
+    IUpdateSession IUpdateSession_iface;
     LONG refs;
 } update_session;
 
 static inline update_session *impl_from_IUpdateSession( IUpdateSession *iface )
 {
-    return (update_session *)((char *)iface - FIELD_OFFSET( update_session, vtbl ));
+    return CONTAINING_RECORD(iface, update_session, IUpdateSession_iface);
 }
 
 static ULONG WINAPI update_session_AddRef(
@@ -226,10 +226,10 @@ HRESULT UpdateSession_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     session = HeapAlloc( GetProcessHeap(), 0, sizeof(*session) );
     if (!session) return E_OUTOFMEMORY;
 
-    session->vtbl = &update_session_vtbl;
+    session->IUpdateSession_iface.lpVtbl = &update_session_vtbl;
     session->refs = 1;
 
-    *ppObj = &session->vtbl;
+    *ppObj = &session->IUpdateSession_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

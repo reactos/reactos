@@ -57,7 +57,7 @@ typedef struct _CM_VIEW_OF_FILE
     LIST_ENTRY PinViewList;
     ULONG FileOffset;
     ULONG Size;
-    PULONG ViewAddress;
+    PULONG_PTR ViewAddress;
     PVOID Bcb;
     ULONG UseCount;
 } CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;

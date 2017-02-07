@@ -207,7 +207,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     {
         /* Create the PDO */
         Status = PnpRootCreateDevice(&ServiceName,
-                                     DriverObject,
+                                     NULL,
                                      &Pdo,
                                      NULL);
         if (!NT_SUCCESS(Status))
@@ -229,6 +229,9 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
+    /* We're enumerated already */
+    IopDeviceNodeSetFlag(DeviceNode, DNF_ENUMERATED);
+    
     /* We don't call AddDevice for devices reported this way */
     IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
@@ -334,6 +337,10 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
 
     /* Close the instance key handle */
     ZwClose(InstanceKey);
+
+    /* Register the given DO with PnP root if required */
+    if (DeviceObject && *DeviceObject)
+        PnpRootRegisterDevice(*DeviceObject);
 
     /* Report the device's enumeration to umpnpmgr */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,

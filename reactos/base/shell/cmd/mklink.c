@@ -81,22 +81,22 @@ static BOOL CreateJunction(LPCTSTR LinkName, LPCTSTR TargetName)
 	if (hJunction != INVALID_HANDLE_VALUE)
 	{
 		/* Allocate a buffer large enough to hold both strings, including trailing NULs */
-		DWORD TargetLen = wcslen(TargetFullPathW) * sizeof(WCHAR);
-		DWORD DataSize = FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer.PathBuffer)
-		                 + TargetNTPath.Length + sizeof(WCHAR)
-		                 + TargetLen           + sizeof(WCHAR);
+		SIZE_T TargetLen = wcslen(TargetFullPathW) * sizeof(WCHAR);
+		DWORD DataSize = (DWORD)(FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer.PathBuffer)
+		                  + TargetNTPath.Length + sizeof(WCHAR)
+		                  + TargetLen           + sizeof(WCHAR));
 		PREPARSE_DATA_BUFFER Data = _alloca(DataSize);
 
 		/* Fill it out and use it to turn the directory into a reparse point */
 		Data->ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
-		Data->ReparseDataLength = DataSize - FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer);
+		Data->ReparseDataLength = (WORD)(DataSize - FIELD_OFFSET(REPARSE_DATA_BUFFER, MountPointReparseBuffer));
 		Data->Reserved = 0;
 		Data->MountPointReparseBuffer.SubstituteNameOffset = 0;
 		Data->MountPointReparseBuffer.SubstituteNameLength = TargetNTPath.Length;
 		wcscpy(Data->MountPointReparseBuffer.PathBuffer,
 		       TargetNTPath.Buffer);
 		Data->MountPointReparseBuffer.PrintNameOffset = TargetNTPath.Length + sizeof(WCHAR);
-		Data->MountPointReparseBuffer.PrintNameLength = TargetLen;
+		Data->MountPointReparseBuffer.PrintNameLength = (USHORT)TargetLen;
 		wcscpy((WCHAR *)((BYTE *)Data->MountPointReparseBuffer.PathBuffer
 		                 + Data->MountPointReparseBuffer.PrintNameOffset),
 		       TargetFullPathW);
@@ -132,7 +132,7 @@ cmd_mklink(LPTSTR param)
 		return 0;
 	}
 
-	arg = split(param, &argc, FALSE);
+	arg = split(param, &argc, FALSE, FALSE);
 	for (i = 0; i < argc; i++)
 	{
 		if (arg[i][0] == _T('/'))

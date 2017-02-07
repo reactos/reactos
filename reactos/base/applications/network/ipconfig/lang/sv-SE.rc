@@ -68,5 +68,5 @@ BEGIN
                                          börjar med EL\n \
         > ipconfig /release *Ans*    ... frigör alla matchande anslutningar,\n \
                                          t.ex.  ""Anslutning till lokalt nätverk 1"" eller\n \
-												""Anslutning till lokalt nätverk 2""\n \ "
+												""Anslutning till lokalt nätverk 2""\n"
 END

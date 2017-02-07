@@ -958,4 +958,60 @@ KeSetTargetProcessorDpc(IN PKDPC Dpc,
     Dpc->Number = Number + MAXIMUM_PROCESSORS;
 }
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeGenericCallDpc(IN PKDEFERRED_ROUTINE Routine,
+                 IN PVOID Context)
+{
+    ULONG Barrier = KeNumberProcessors;
+    KIRQL OldIrql;
+    DEFERRED_REVERSE_BARRIER ReverseBarrier;
+    ASSERT(KeGetCurrentIrql () < DISPATCH_LEVEL);
+
+    //
+    // The barrier is the number of processors, each processor will decrement it
+    // by one, so when all processors have run the DPC, the barrier reaches zero
+    //
+    ReverseBarrier.Barrier = Barrier;
+    ReverseBarrier.TotalProcessors = Barrier;
+
+    //
+    // But we don't need the barrier on UP, since we can simply call the routine
+    // directly while at DISPATCH_LEVEL and not worry about anything else
+    //
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    Routine(&KeGetCurrentPrcb()->CallDpc, Context, &Barrier, &ReverseBarrier);
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KeSignalCallDpcDone(IN PVOID SystemArgument1)
+{
+    //
+    // Decrement the barrier, which is actually the processor count
+    //
+    InterlockedDecrement((PLONG)SystemArgument1);
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSignalCallDpcSynchronize(IN PVOID SystemArgument2)
+{
+    //
+    // There is nothing to do on UP systems -- the processor calling this wins
+    //
+    UNREFERENCED_PARAMETER(SystemArgument2);
+    return TRUE;
+}
+
 /* EOF */

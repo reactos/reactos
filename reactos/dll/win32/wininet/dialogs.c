@@ -170,6 +170,10 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz, BO
     return TRUE;
 }
 
+/* These two are not defined in the public headers */
+extern DWORD WINAPI WNetCachePassword(LPSTR,WORD,LPSTR,WORD,BYTE,WORD);
+extern DWORD WINAPI WNetGetCachedPassword(LPSTR,WORD,LPSTR,LPWORD,BYTE);
+
 /***********************************************************************
  *         WININET_GetSetPassword
  */
@@ -264,7 +268,7 @@ static BOOL WININET_SetAuthorization( HINTERNET hRequest, LPWSTR username,
     q = heap_strdupW(password);
     if( !q )
     {
-        HeapFree(GetProcessHeap(), 0, username);
+        heap_free(username);
         goto done;
     }
 
@@ -272,18 +276,18 @@ static BOOL WININET_SetAuthorization( HINTERNET hRequest, LPWSTR username,
     {
         appinfo_t *hIC = session->appInfo;
 
-        HeapFree(GetProcessHeap(), 0, hIC->proxyUsername);
+        heap_free(hIC->proxyUsername);
         hIC->proxyUsername = p;
 
-        HeapFree(GetProcessHeap(), 0, hIC->proxyPassword);
+        heap_free(hIC->proxyPassword);
         hIC->proxyPassword = q;
     }
     else
     {
-        HeapFree(GetProcessHeap(), 0, session->userName);
+        heap_free(session->userName);
         session->userName = p;
 
-        HeapFree(GetProcessHeap(), 0, session->password);
+        heap_free(session->password);
         session->password = q;
     }
 

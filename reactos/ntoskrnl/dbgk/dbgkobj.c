@@ -1504,6 +1504,46 @@ DbgkInitialize(VOID)
                        &DbgkDebugObjectType);
 }
 
+NTSTATUS
+NTAPI
+DbgkOpenProcessDebugPort(IN PEPROCESS Process,
+                         IN KPROCESSOR_MODE PreviousMode,
+                         OUT HANDLE *DebugHandle)
+{
+    PDEBUG_OBJECT DebugObject;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* If there's no debug port, just exit */
+    if (!Process->DebugPort) return STATUS_PORT_NOT_SET;
+
+    /* Otherwise, acquire the lock while we grab the port */
+    ExAcquireFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Grab it and reference it if it exists */
+    DebugObject = Process->DebugPort;
+    if (DebugObject) ObReferenceObject(DebugObject);
+
+    /* Release the lock now */
+    ExReleaseFastMutex(&DbgkpProcessDebugPortMutex);
+
+    /* Bail out if it doesn't exist */
+    if (!DebugObject) return STATUS_PORT_NOT_SET;
+
+    /* Now get a handle to it */
+    Status = ObOpenObjectByPointer(DebugObject,
+                                   0,
+                                   NULL,
+                                   MAXIMUM_ALLOWED,
+                                   DbgkDebugObjectType,
+                                   PreviousMode,
+                                   DebugHandle);
+    if (!NT_SUCCESS(Status)) ObDereferenceObject(DebugObject);
+
+    /* Return status */
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

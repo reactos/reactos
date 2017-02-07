@@ -12,4 +12,4 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllRegisterServer()
 @ stdcall -private DllUnregisterServer()
-@ stdcall GetGlobalFontLinkObject()
+@ stdcall GetGlobalFontLinkObject(ptr)

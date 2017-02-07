@@ -88,10 +88,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     DISPID dispid;
     CLSID clsid;
     VARIANT var;
-
-    /* Return success by default (if Windows Script not installed) - not native behavior. This
-     * should be here until we implement wine scripting. */
-    DWORD ret = ERROR_SUCCESS;
+    DWORD ret = ERROR_INSTALL_FAILURE;
 
     CoInitialize(NULL);
 
@@ -126,9 +123,6 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
         goto done;
     }
 
-    /* If we got this far, Windows Script is installed, so don't return success by default anymore */
-    ret = ERROR_INSTALL_FAILURE;
-
     /* Get the IActiveScriptParse engine interface */
     hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse, (void **)&pActiveScriptParse);
     if (FAILED(hr)) goto done;
@@ -142,7 +136,7 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
     if (FAILED(hr)) goto done;
 
     /* Add the session object */
-    hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_ISVISIBLE);
+    hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS);
     if (FAILED(hr)) goto done;
 
     /* Pass the script to the engine */

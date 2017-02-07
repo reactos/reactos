@@ -1,7 +1,7 @@
 
 set_rc_compiler()
 
-spec2def(dplayx.dll dplayx.spec)
+spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     dpclassfactory.c
@@ -37,4 +37,4 @@ add_importlibs(dplayx
     ntdll)
 
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
-add_importlib_target(dplayx.spec)
+

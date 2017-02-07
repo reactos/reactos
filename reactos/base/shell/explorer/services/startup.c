@@ -243,6 +243,9 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
     DWORD exit_code=0;
+    WCHAR szCmdLineExp[MAX_PATH+1]= L"\0";
+
+    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, sizeof(szCmdLineExp) / sizeof(WCHAR));
 
     memset(&si, 0, sizeof(si));
     si.cb=sizeof(si);
@@ -253,7 +256,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     }
     memset(&info, 0, sizeof(info));
 
-    if (!CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
+    if (!CreateProcessW(NULL, szCmdLineExp, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
     {
         printf("Failed to run command (%ld)\n", GetLastError());
 
@@ -261,7 +264,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     }
 
     printf("Successfully ran command\n"); //%s - Created process handle %p\n",
-               //wine_dbgstr_w(cmdline), info.hProcess);
+               //wine_dbgstr_w(szCmdLineExp), info.hProcess);
 
     if (wait)
     {   /* wait for the process to exit */
@@ -507,6 +510,8 @@ int startup(int argc, const char *argv[])
          res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
     if (res && ops.postlogin && ops.startup)
          res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
+    if (res && ops.postlogin && ops.startup)
+         res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUNONCE], TRUE, FALSE);
 
     printf("Operation done\n");
 

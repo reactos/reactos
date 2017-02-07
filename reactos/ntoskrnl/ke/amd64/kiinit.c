@@ -33,6 +33,10 @@ UCHAR DECLSPEC_ALIGN(16) KiDoubleFaultStackData[KERNEL_STACK_SIZE] = {0};
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
+void KiInitializeSegments();
+void KiSystemCallEntry64();
+void KiSystemCallEntry32();
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -91,7 +95,7 @@ KiInitializePcr(IN PKIPCR Pcr,
     USHORT Tr = 0;
 
     /* Zero out the PCR */
-    RtlZeroMemory(Pcr, PAGE_SIZE);
+    RtlZeroMemory(Pcr, sizeof(KIPCR));
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
@@ -110,7 +114,7 @@ KiInitializePcr(IN PKIPCR Pcr,
 #ifndef CONFIG_SMP
     Pcr->Prcb.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
-#ifdef DBG
+#if DBG
     Pcr->Prcb.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 
@@ -152,17 +156,20 @@ KiInitializePcr(IN PKIPCR Pcr,
     /* Start us out at PASSIVE_LEVEL */
     Pcr->Irql = PASSIVE_LEVEL;
     KeSetCurrentIrql(PASSIVE_LEVEL);
-
-    /* Set GS base */
-    __writemsr(X86_MSR_GSBASE, (ULONG64)Pcr);
-    __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
 }
 
 VOID
 NTAPI
-KiInitializeCpu(PKPRCB Prcb)
+KiInitializeCpu(PKIPCR Pcr)
 {
     ULONG FeatureBits;
+
+    /* Initialize gs */
+    KiInitializeSegments();
+
+    /* Set GS base */
+    __writemsr(MSR_GS_BASE, (ULONG64)Pcr);
+    __writemsr(MSR_GS_SWAP, (ULONG64)Pcr);
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -184,7 +191,7 @@ KiInitializeCpu(PKPRCB Prcb)
     FeatureBits |= KF_NX_ENABLED;
 
     /* Save feature bits */
-    Prcb->FeatureBits = FeatureBits;
+    Pcr->Prcb.FeatureBits = FeatureBits;
 
     /* Enable fx save restore support */
     __writecr4(__readcr4() | CR4_FXSR);
@@ -203,6 +210,19 @@ KiInitializeCpu(PKPRCB Prcb)
 
     /* LDT is unused */
     __lldt(0);
+
+    /* Set the systemcall entry points */
+    __writemsr(MSR_LSTAR, (ULONG64)KiSystemCallEntry64);
+    __writemsr(MSR_CSTAR, (ULONG64)KiSystemCallEntry32);
+
+   __writemsr(MSR_STAR, ((ULONG64)KGDT64_R0_CODE << 32) |
+                        ((ULONG64)(KGDT64_R3_CMCODE|RPL_MASK) << 48));
+
+    /* Set the flags to be cleared when doing a syscall */
+    __writemsr(MSR_SYSCALL_MASK, EFLAGS_IF_MASK | EFLAGS_TF | EFLAGS_DF);
+
+    /* Enable syscall instruction */
+    __writemsr(MSR_EFER, __readmsr(MSR_EFER) | MSR_SCE);
 }
 
 VOID
@@ -339,7 +359,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* HACK */
     FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
-    FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
+    //FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
 
     /* Save the loader block */
     KeLoaderBlock = LoaderBlock;
@@ -350,7 +370,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* LoaderBlock initialization for Cpu 0 */
     if (Cpu == 0)
     {
-        FrLdrDbgPrint("LoaderBlock->Prcb=%p\n", LoaderBlock->Prcb);
         /* Set the initial stack, idle thread and process */
         LoaderBlock->KernelStack = (ULONG_PTR)P0BootStack;
         LoaderBlock->Thread = (ULONG_PTR)&KiInitialThread;
@@ -378,7 +397,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KiInitializePcr(Pcr, Cpu, InitialThread, (PVOID)KiDoubleFaultStack);
 
     /* Initialize the CPU features */
-    KiInitializeCpu(&Pcr->Prcb);
+    KiInitializeCpu(Pcr);
 
     /* Initial setup for the boot CPU */
     if (Cpu == 0)

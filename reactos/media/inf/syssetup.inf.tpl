@@ -15,6 +15,7 @@ ClassGUID={00000000-0000-0000-0000-000000000000}
 ; MS uses netnovel.inf as class-installer INF for NICs
 ; we use a separate one to keep things clean
 battery.inf
+bth.inf
 cdrom.inf
 cpu.inf
 disk.inf
@@ -22,8 +23,11 @@ display.inf
 fdc.inf
 hal.inf
 hdc.inf
+input.inf
 keyboard.inf
+legcydrv.inf
 machine.inf
+monitor.inf
 msmouse.inf
 NET_NIC.inf
 ports.inf

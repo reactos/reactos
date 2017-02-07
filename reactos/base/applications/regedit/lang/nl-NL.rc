@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "Registerbestand &exporteren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Load Hive...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Unload Hive...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Load Hive...",        ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Unload Hive...",      ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "Verbinding &maken met netwerkregister...", ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
 
 
@@ -351,8 +351,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Error"
-    IDS_WARNING		    "Warning"
+    IDS_ERROR               "Error"
+    IDS_WARNING             "Warning"
     IDS_BAD_KEY             "Can't query key '%s'"
     IDS_BAD_VALUE           "Can't query value '%s'"
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
     IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
     IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "New Key #%d"
     IDS_NEW_VALUE           "New Value #%d"
 END
@@ -389,9 +391,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Registration File"
-    IDS_FLT_REGFILES        "Registration Files"
+    IDS_FLT_REGFILES        "Registration Files (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 Registration Files (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registration Files (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "All Files (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

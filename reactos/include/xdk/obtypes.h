@@ -2,6 +2,7 @@
  *                            Object Manager Types                            *
  ******************************************************************************/
 
+$if (_WDMDDK_)
 #define MAXIMUM_FILENAME_LENGTH           256
 #define OBJ_NAME_PATH_SEPARATOR           ((WCHAR)L'\\')
 
@@ -30,64 +31,64 @@ typedef ULONG OB_OPERATION;
 #define OB_OPERATION_HANDLE_DUPLICATE     0x00000002
 
 typedef struct _OB_PRE_CREATE_HANDLE_INFORMATION {
-  IN OUT ACCESS_MASK DesiredAccess;
-  IN ACCESS_MASK OriginalDesiredAccess;
+  _Inout_ ACCESS_MASK DesiredAccess;
+  _In_ ACCESS_MASK OriginalDesiredAccess;
 } OB_PRE_CREATE_HANDLE_INFORMATION, *POB_PRE_CREATE_HANDLE_INFORMATION;
 
 typedef struct _OB_PRE_DUPLICATE_HANDLE_INFORMATION {
-  IN OUT ACCESS_MASK DesiredAccess;
-  IN ACCESS_MASK OriginalDesiredAccess;
-  IN PVOID SourceProcess;
-  IN PVOID TargetProcess;
+  _Inout_ ACCESS_MASK DesiredAccess;
+  _In_ ACCESS_MASK OriginalDesiredAccess;
+  _In_ PVOID SourceProcess;
+  _In_ PVOID TargetProcess;
 } OB_PRE_DUPLICATE_HANDLE_INFORMATION, *POB_PRE_DUPLICATE_HANDLE_INFORMATION;
 
 typedef union _OB_PRE_OPERATION_PARAMETERS {
-  IN OUT OB_PRE_CREATE_HANDLE_INFORMATION CreateHandleInformation;
-  IN OUT OB_PRE_DUPLICATE_HANDLE_INFORMATION DuplicateHandleInformation;
+  _Inout_ OB_PRE_CREATE_HANDLE_INFORMATION CreateHandleInformation;
+  _Inout_ OB_PRE_DUPLICATE_HANDLE_INFORMATION DuplicateHandleInformation;
 } OB_PRE_OPERATION_PARAMETERS, *POB_PRE_OPERATION_PARAMETERS;
 
 typedef struct _OB_PRE_OPERATION_INFORMATION {
-  IN OB_OPERATION Operation;
+  _In_ OB_OPERATION Operation;
   _ANONYMOUS_UNION union {
-    IN ULONG Flags;
+    _In_ ULONG Flags;
     _ANONYMOUS_STRUCT struct {
-      IN ULONG KernelHandle:1;
-      IN ULONG Reserved:31;
+      _In_ ULONG KernelHandle:1;
+      _In_ ULONG Reserved:31;
     } DUMMYSTRUCTNAME;
   } DUMMYUNIONNAME;
-  IN PVOID Object;
-  IN POBJECT_TYPE ObjectType;
-  OUT PVOID CallContext;
-  IN POB_PRE_OPERATION_PARAMETERS Parameters;
+  _In_ PVOID Object;
+  _In_ POBJECT_TYPE ObjectType;
+  _Out_ PVOID CallContext;
+  _In_ POB_PRE_OPERATION_PARAMETERS Parameters;
 } OB_PRE_OPERATION_INFORMATION, *POB_PRE_OPERATION_INFORMATION;
 
 typedef struct _OB_POST_CREATE_HANDLE_INFORMATION {
-  IN ACCESS_MASK GrantedAccess;
+  _In_ ACCESS_MASK GrantedAccess;
 } OB_POST_CREATE_HANDLE_INFORMATION, *POB_POST_CREATE_HANDLE_INFORMATION;
 
 typedef struct _OB_POST_DUPLICATE_HANDLE_INFORMATION {
-  IN ACCESS_MASK GrantedAccess;
+  _In_ ACCESS_MASK GrantedAccess;
 } OB_POST_DUPLICATE_HANDLE_INFORMATION, *POB_POST_DUPLICATE_HANDLE_INFORMATION;
 
 typedef union _OB_POST_OPERATION_PARAMETERS {
-  IN OB_POST_CREATE_HANDLE_INFORMATION CreateHandleInformation;
-  IN OB_POST_DUPLICATE_HANDLE_INFORMATION DuplicateHandleInformation;
+  _In_ OB_POST_CREATE_HANDLE_INFORMATION CreateHandleInformation;
+  _In_ OB_POST_DUPLICATE_HANDLE_INFORMATION DuplicateHandleInformation;
 } OB_POST_OPERATION_PARAMETERS, *POB_POST_OPERATION_PARAMETERS;
 
 typedef struct _OB_POST_OPERATION_INFORMATION {
-  IN OB_OPERATION Operation;
+  _In_ OB_OPERATION Operation;
   _ANONYMOUS_UNION union {
-    IN ULONG Flags;
+    _In_ ULONG Flags;
     _ANONYMOUS_STRUCT struct {
-      IN ULONG KernelHandle:1;
-      IN ULONG Reserved:31;
+      _In_ ULONG KernelHandle:1;
+      _In_ ULONG Reserved:31;
     } DUMMYSTRUCTNAME;
   } DUMMYUNIONNAME;
-  IN PVOID Object;
-  IN POBJECT_TYPE ObjectType;
-  IN PVOID CallContext;
-  IN NTSTATUS ReturnStatus;
-  IN POB_POST_OPERATION_PARAMETERS Parameters;
+  _In_ PVOID Object;
+  _In_ POBJECT_TYPE ObjectType;
+  _In_ PVOID CallContext;
+  _In_ NTSTATUS ReturnStatus;
+  _In_ POB_POST_OPERATION_PARAMETERS Parameters;
 } OB_POST_OPERATION_INFORMATION,*POB_POST_OPERATION_INFORMATION;
 
 typedef enum _OB_PREOP_CALLBACK_STATUS {
@@ -96,27 +97,27 @@ typedef enum _OB_PREOP_CALLBACK_STATUS {
 
 typedef OB_PREOP_CALLBACK_STATUS
 (NTAPI *POB_PRE_OPERATION_CALLBACK)(
-  IN PVOID RegistrationContext,
-  IN OUT POB_PRE_OPERATION_INFORMATION OperationInformation);
+  _In_ PVOID RegistrationContext,
+  _Inout_ POB_PRE_OPERATION_INFORMATION OperationInformation);
 
 typedef VOID
 (NTAPI *POB_POST_OPERATION_CALLBACK)(
-  IN PVOID RegistrationContext,
-  IN POB_POST_OPERATION_INFORMATION OperationInformation);
+  _In_ PVOID RegistrationContext,
+  _In_ POB_POST_OPERATION_INFORMATION OperationInformation);
 
 typedef struct _OB_OPERATION_REGISTRATION {
-  IN POBJECT_TYPE *ObjectType;
-  IN OB_OPERATION Operations;
-  IN POB_PRE_OPERATION_CALLBACK PreOperation;
-  IN POB_POST_OPERATION_CALLBACK PostOperation;
+  _In_ POBJECT_TYPE *ObjectType;
+  _In_ OB_OPERATION Operations;
+  _In_ POB_PRE_OPERATION_CALLBACK PreOperation;
+  _In_ POB_POST_OPERATION_CALLBACK PostOperation;
 } OB_OPERATION_REGISTRATION, *POB_OPERATION_REGISTRATION;
 
 typedef struct _OB_CALLBACK_REGISTRATION {
-  IN USHORT Version;
-  IN USHORT OperationRegistrationCount;
-  IN UNICODE_STRING Altitude;
-  IN PVOID RegistrationContext;
-  IN OB_OPERATION_REGISTRATION *OperationRegistration;
+  _In_ USHORT Version;
+  _In_ USHORT OperationRegistrationCount;
+  _In_ UNICODE_STRING Altitude;
+  _In_ PVOID RegistrationContext;
+  _In_ OB_OPERATION_REGISTRATION *OperationRegistration;
 } OB_CALLBACK_REGISTRATION, *POB_CALLBACK_REGISTRATION;
 
 typedef struct _OBJECT_NAME_INFORMATION {
@@ -131,4 +132,23 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
+
+$endif (_WDMDDK_)
+$if (_NTIFS_)
+typedef enum _OBJECT_INFORMATION_CLASS {
+  ObjectBasicInformation = 0,
+  ObjectTypeInformation = 2,
+$endif (_NTIFS_)
+$if (_NTIFS_) // we should remove these, but the kernel needs them :-/
+  /* Not for public use */
+  ObjectNameInformation = 1,
+  ObjectTypesInformation = 3,
+  ObjectHandleFlagInformation = 4,
+  ObjectSessionInformation = 5,
+  MaxObjectInfoClass
+$endif (_NTIFS_)
+$if (_NTIFS_)
+} OBJECT_INFORMATION_CLASS;
+
+$endif (_NTIFS_)
 

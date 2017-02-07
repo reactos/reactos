@@ -46,7 +46,7 @@ CopyLoop (
    *KeepDest = FALSE;
    errCode = NtAllocateVirtualMemory(NtCurrentProcess(),
 				     (PVOID *)&lpBuffer,
-				     2,
+				     0,
 				     &RegionSize,
 				     MEM_RESERVE | MEM_COMMIT,
 				     PAGE_READWRITE);

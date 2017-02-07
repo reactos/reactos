@@ -17,17 +17,20 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static
 VOID
-NpfsDeleteFcb(PNPFS_FCB Fcb)
+NpfsDereferenceFcb(PNPFS_FCB Fcb)
 {
     PNPFS_VCB Vcb = Fcb->Vcb;
 
     KeLockMutex(&Vcb->PipeListLock);
-    RemoveEntryList(&Fcb->PipeListEntry);
+    if (InterlockedDecrement(&Fcb->RefCount) == 0)
+    {
+        DPRINT("NpfsDereferenceFcb. Deleting %p\n", Fcb);
+        RemoveEntryList(&Fcb->PipeListEntry);
+        RtlFreeUnicodeString(&Fcb->PipeName);
+        ExFreePoolWithTag(Fcb, TAG_NPFS_FCB);
+    }
     KeUnlockMutex(&Vcb->PipeListLock);
-    RtlFreeUnicodeString(&Fcb->PipeName);
-    ExFreePoolWithTag(Fcb, TAG_NPFS_FCB);
 }
 
 static
@@ -103,6 +106,7 @@ NpfsFindPipe(PNPFS_VCB Vcb,
             TRUE) == 0)
         {
             DPRINT("<%wZ> = <%wZ>\n", PipeName, &Fcb->PipeName);
+            (VOID)InterlockedIncrement(&Fcb->RefCount);
             return Fcb;
         }
 
@@ -337,6 +341,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     {
         DPRINT("No memory!\n");
         KeUnlockMutex(&Fcb->CcbListLock);
+        NpfsDereferenceFcb(Fcb);
         Irp->IoStatus.Status = STATUS_NO_MEMORY;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NO_MEMORY;
@@ -365,6 +370,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
             DPRINT("No memory!\n");
             NpfsDereferenceCcb(ClientCcb);
             KeUnlockMutex(&Fcb->CcbListLock);
+            NpfsDereferenceFcb(Fcb);
             Irp->IoStatus.Status = STATUS_NO_MEMORY;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_NO_MEMORY;
@@ -437,6 +443,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 
                 NpfsDereferenceCcb(ClientCcb);
                 KeUnlockMutex(&Fcb->CcbListLock);
+                NpfsDereferenceFcb(Fcb);
                 Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_OBJECT_PATH_NOT_FOUND;
@@ -460,8 +467,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         }
 
         NpfsDereferenceCcb(ClientCcb);
-
         KeUnlockMutex(&Fcb->CcbListLock);
+        NpfsDereferenceFcb(Fcb);
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_UNSUCCESSFUL;
@@ -510,7 +517,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     PNAMED_PIPE_CREATE_PARAMETERS Buffer;
-    BOOLEAN NewPipe = FALSE;
 
     DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -549,6 +555,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         if (Fcb->CurrentInstances >= Fcb->MaximumInstances)
         {
             DPRINT("Out of instances.\n");
+            NpfsDereferenceFcb(Fcb);
             Irp->IoStatus.Status = STATUS_INSTANCE_NOT_AVAILABLE;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_INSTANCE_NOT_AVAILABLE;
@@ -559,6 +566,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
             Fcb->PipeType != Buffer->NamedPipeType)
         {
             DPRINT("Asked for invalid pipe mode.\n");
+            NpfsDereferenceFcb(Fcb);
             Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_ACCESS_DENIED;
@@ -566,7 +574,6 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        NewPipe = TRUE;
         Fcb = ExAllocatePoolWithTag(NonPagedPool, sizeof(NPFS_FCB), TAG_NPFS_FCB);
         if (Fcb == NULL)
         {
@@ -579,6 +586,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
         Fcb->Type = FCB_PIPE;
         Fcb->Vcb = Vcb;
+        Fcb->RefCount = 1;
         Fcb->PipeName.Length = FileObject->FileName.Length;
         Fcb->PipeName.MaximumLength = Fcb->PipeName.Length + sizeof(UNICODE_NULL);
         Fcb->PipeName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -678,11 +686,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     Ccb = NpfsAllocateCcb(CCB_PIPE, Fcb);
     if (Ccb == NULL)
     {
-        if (NewPipe)
-        {
-            NpfsDeleteFcb(Fcb);
-        }
-
+        NpfsDereferenceFcb(Fcb);
         Irp->IoStatus.Status = STATUS_NO_MEMORY;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_NO_MEMORY;
@@ -698,11 +702,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         if (Ccb->Data == NULL)
         {
             NpfsDereferenceCcb(Ccb);
-
-            if (NewPipe)
-            {
-                NpfsDeleteFcb(Fcb);
-            }
+            NpfsDereferenceFcb(Fcb);
 
             Irp->IoStatus.Status = STATUS_NO_MEMORY;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1004,12 +1004,8 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
 
     KeUnlockMutex(&Fcb->CcbListLock);
 
-    if (IsListEmpty(&Fcb->ServerCcbListHead) &&
-        IsListEmpty(&Fcb->ClientCcbListHead))
-    {
-        NpfsDeleteFcb(Fcb);
-        FileObject->FsContext = NULL;
-    }
+    NpfsDereferenceFcb(Fcb);
+    FileObject->FsContext = NULL;
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

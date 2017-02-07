@@ -4012,10 +4012,16 @@ typedef struct {
 #define MonthCal_SetMonthDelta(hmc,n) (int)SNDMSG(hmc,MCM_SETMONTHDELTA,n,0)
 #define MCM_GETMAXTODAYWIDTH (MCM_FIRST+21)
 #define MonthCal_GetMaxTodayWidth(hmc) (DWORD)SNDMSG(hmc,MCM_GETMAXTODAYWIDTH,0,0)
+#define MCM_GETCURRENTVIEW (MCM_FIRST + 22)
+#define MonthCal_GetCurrentView(hmc) (DWORD)SNDMSG(hmc, MCM_GETCURRENTVIEW, 0, 0)
+#define MCM_GETCALENDARCOUNT (MCM_FIRST + 23)
+#define MonthCal_GetCalendarCount(hmc) (DWORD)SNDMSG(hmc, MCM_GETCALENDARCOUNT, 0, 0)
 #define MCM_SETUNICODEFORMAT CCM_SETUNICODEFORMAT
 #define MonthCal_SetUnicodeFormat(hwnd,fUnicode) (WINBOOL)SNDMSG((hwnd),MCM_SETUNICODEFORMAT,(WPARAM)(fUnicode),0)
 #define MCM_GETUNICODEFORMAT CCM_GETUNICODEFORMAT
 #define MonthCal_GetUnicodeFormat(hwnd) (WINBOOL)SNDMSG((hwnd),MCM_GETUNICODEFORMAT,0,0)
+#define MCM_SIZERECTTOMIN (MCM_FIRST + 29)
+#define MonthCal_SizeRectToMin(hmc, prc) SNDMSG(hmc, MCM_SIZERECTTOMIN, 0, (LPARAM)(prc))
 #define MCM_SETCALENDARBORDER (MCM_FIRST + 30)
 #define MCM_GETCALENDARBORDER (MCM_FIRST + 31)
 

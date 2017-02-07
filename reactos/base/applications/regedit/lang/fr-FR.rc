@@ -53,19 +53,13 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Importer...",    ID_REGISTRY_IMPORTREGISTRYFILE
-
         MENUITEM "&Exporter...",    ID_REGISTRY_EXPORTREGISTRYFILE
-
         MENUITEM SEPARATOR
-        MENUITEM "Charger un fichier registre...",				ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Décharger un fichier registre...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Charger la ruche...",        ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Décharger la ruche...",      ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-
-
         MENUITEM SEPARATOR
         MENUITEM "Im&primer\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -165,12 +159,12 @@ BEGIN
   END
   POPUP ""
   BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "C&ouper", ID_HEXEDIT_CUT
+        MENUITEM "&Copier", ID_HEXEDIT_COPY
+        MENUITEM "Co&ller", ID_HEXEDIT_PASTE
+        MENUITEM "&Supprimer", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "Sélectionner &tout", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -243,46 +237,46 @@ END
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Liste des ressources"
 FONT 8, "MS Shell Dlg"
 {
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "Afficher...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 }
 
 
 IDD_EDIT_RESOURCE DIALOGEX  6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Ressources"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
+    LTEXT "DMA :", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Interruption :", IDC_STATIC, 10, 48, 44, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Mémoire :", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
-    LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
+    LTEXT "Port :", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Données spécifiques au périphérique :", IDC_STATIC, 10, 177, 122, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
-    LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
-    LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
-    LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
-    LTEXT "", IDC_REVISION, 205, 250, 66, 8
+    GROUPBOX "Disposition de partage", IDC_STATIC, 10, 219, 136, 39
+    LTEXT "Indéterminé", IDC_UNDETERMINED, 16, 230, 46, 8, WS_DISABLED
+    LTEXT "Partagé", IDC_SHARED, 16, 240, 48, 8, WS_DISABLED
+    LTEXT "Exclusif à un périphérique", IDC_DEVICE_EXCLUSIVE, 60, 230, 82, 8, WS_DISABLED
+    LTEXT "Exclusif à un pilote", IDC_DRIVER_EXCLUSIVE, 60, 240, 65, 8, WS_DISABLED
+    RTEXT "Type d'interface :", IDC_STATIC, 150, 220, 58, 8
+    LTEXT "", IDC_INTERFACETYPE, 211, 220, 66, 8
+    RTEXT "Numéro de bus :", IDC_STATIC, 154, 230, 54, 8
+    LTEXT "", IDC_BUSNUMBER, 211, 230, 66, 8
+    RTEXT "Version :", IDC_STATIC, 158, 240, 50, 8
+    LTEXT "", IDC_VERSION, 211, 240, 66, 8
+    RTEXT "Révision :", IDC_STATIC, 158, 250, 50, 8
+    LTEXT "", IDC_REVISION, 211, 250, 66, 8
     DEFPUSHBUTTON "OK",IDOK, 92, 263, 40, 14
-    PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
+    PUSHBUTTON "&Données...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
 }
 
 
@@ -321,13 +315,12 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Ajoute une nouvelle valeur chaîne"
     ID_EDIT_NEW_BINARYVALUE "Ajoute une nouvelle valeur binaire"
     ID_EDIT_NEW_DWORDVALUE  "Ajoute une nouvelle valeur mot double"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importe un fichier texte dans les registres"
+    ID_REGISTRY_IMPORTREGISTRYFILE
+                            "Importe un fichier texte dans les registres"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporte tout ou une partie des registres dans un fichier texte"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
+    ID_REGISTRY_LOADHIVE    "Charge un fichier ruche dans le Registre"
+    ID_REGISTRY_UNLOADHIVE  "Décharge une ruche à partir du Registre"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Connecte aux registres d'un ordinateur distant"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -354,47 +347,51 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Erreur"
-    IDS_WARNING		    "Attention"
+    IDS_ERROR               "Erreur"
+    IDS_WARNING             "Attention"
     IDS_BAD_KEY             "Impossible de récupérer la clé '%s'"
     IDS_BAD_VALUE           "Impossible de récupérer la valeur '%s'"
     IDS_UNSUPPORTED_TYPE    "Impossible d'éditer les clés de ce type (%ld)"
     IDS_TOO_BIG_VALUE       "La valeur est trop importante (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Les données de type REG_MULTI_SZ ne peuvent contenir des chaînes vides.\nLes chaînes vides ont été supprimées de la liste."
-    IDS_QUERY_DELETE_KEY_ONE    "Êtes-vous sûr de vouloir supprimer cette clé?"
-    IDS_QUERY_DELETE_KEY_MORE   "Êtes-vous sûr de vouloir supprimer ces clés?"
+    IDS_QUERY_DELETE_KEY_ONE    "Êtes-vous sûr de vouloir supprimer cette clé ?"
+    IDS_QUERY_DELETE_KEY_MORE   "Êtes-vous sûr de vouloir supprimer ces clés ?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirmation de la suppression de la clé"
-    IDS_QUERY_DELETE_ONE    "Êtes-vous sûr de vouloir supprimer cette valeur?"
-    IDS_QUERY_DELETE_MORE   "Êtes-vous sûr de vouloir supprimer ces valeurs?"
+    IDS_QUERY_DELETE_ONE    "Êtes-vous sûr de vouloir supprimer cette valeur ?"
+    IDS_QUERY_DELETE_MORE   "Êtes-vous sûr de vouloir supprimer ces valeurs ?"
     IDS_QUERY_DELETE_CONFIRM "Confirmation de la suppression de la valeur"
-    IDS_ERR_DELVAL_CAPTION  "Erreur lors de la suppression des valeurs"
-    IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs seléctionnées!"
-    IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur"
+    IDS_ERR_DELVAL_CAPTION  "Erreur lors de la suppression des valeurs."
+    IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs sélectionnées !"
+    IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur."
     IDS_ERR_RENVAL_TOEMPTY  "Impossible de renommer %s. Le nom de valeur spécifié est vide. Essayez à nouveau avec un autre nom."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirmation de la restauration de la clé"
+    IDS_QUERY_IMPORT_HIVE_MSG     "Une clé sera restaurée en remplacement de la clé sélectionnée.\nToutes les valeurs et les sous-clés contenues dans cette clé seront supprimées.\nVoulez-vous continuer l'opération ?"
     IDS_NEW_KEY             "Nouvelle clé #%d"
     IDS_NEW_VALUE           "Nouvelle valeur #%d"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(valeur binaire de longueur nulle)"
+    IDS_BINARY_EMPTY        "(valeur binaire de longueur nulle)"
     IDS_DEFAULT_VALUE_NAME  "(Défaut)"
     IDS_VALUE_NOT_SET       "(valeur non définie)"
-    IDS_UNKNOWN_TYPE        "Type inconnu: (0x%lx)"
+    IDS_UNKNOWN_TYPE        "Type inconnu : (0x%lx)"
     IDS_MY_COMPUTER         "Mon ordinateur"
     IDS_IMPORT_REG_FILE     "Importer un fichier registre"
     IDS_EXPORT_REG_FILE     "Exporter un fichier registre"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
+    IDS_LOAD_HIVE           "Charger la ruche"
+    IDS_UNLOAD_HIVE         "Décharger la ruche"
     IDS_INVALID_DWORD       "(valeur mot double invalide)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILE         "Fichier registre"
-    IDS_FLT_REGFILES        "Fichiers registre"
+    IDS_FLT_REGFILE         "Fichier d'enregistrement"
+    IDS_FLT_REGFILES        "Fichiers d'enregistrement (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Fichiers registres de Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_HIVFILES        "Fichiers ruche du Registre (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
+    IDS_FLT_REGEDIT4        "Fichiers d'enregistrement Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tous les fichiers (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
@@ -433,46 +430,46 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "Voulez-vous ajouter des informations dans le Registre ?"
+  IDS_IMPORTED_OK               "Les informations ont bien été ajoutées dans le Registre."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BUSNUMBER                 "Bus Number"
+    IDS_BUSNUMBER                 "Numéro de bus"
     IDS_INTERFACE                 "Interface"
-    IDS_DMA_CHANNEL               "Channel"
+    IDS_DMA_CHANNEL               "Canal"
     IDS_DMA_PORT                  "Port"
-    IDS_INTERRUPT_VECTOR          "Vector"
-    IDS_INTERRUPT_LEVEL           "Level"
-    IDS_INTERRUPT_AFFINITY        "Affinity"
+    IDS_INTERRUPT_VECTOR          "Vecteur"
+    IDS_INTERRUPT_LEVEL           "Niveau"
+    IDS_INTERRUPT_AFFINITY        "Affinité"
     IDS_INTERRUPT_TYPE            "Type"
-    IDS_MEMORY_ADDRESS            "Physical Address"
-    IDS_MEMORY_LENGTH             "Length"
-    IDS_MEMORY_ACCESS             "Access"
-    IDS_PORT_ADDRESS              "Physical Address"
-    IDS_PORT_LENGTH               "Length"
-    IDS_PORT_ACCESS               "Access"
-    IDS_SPECIFIC_RESERVED1        "Reserved 1"
-    IDS_SPECIFIC_RESERVED2        "Reserved 2"
-    IDS_SPECIFIC_DATASIZE         "Data Size"
+    IDS_MEMORY_ADDRESS            "Adresse physique"
+    IDS_MEMORY_LENGTH             "Longueur"
+    IDS_MEMORY_ACCESS             "Accès"
+    IDS_PORT_ADDRESS              "Adresse physique"
+    IDS_PORT_LENGTH               "Longueur"
+    IDS_PORT_ACCESS               "Accès" // <== In fact it is IDS_PORT_TYPE "Type"
+    IDS_SPECIFIC_RESERVED1        "Réservé 1"
+    IDS_SPECIFIC_RESERVED2        "Réservé 2"
+    IDS_SPECIFIC_DATASIZE         "Taille des données"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PORT_PORT_IO              "Port"
-    IDS_PORT_MEMORY_IO            "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE  "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY          "Read Only"
-    IDS_MEMORY_WRITE_ONLY         "Write Only"
-    IDS_MEMORY_READ_WRITE         "Read / Write"
+    IDS_PORT_MEMORY_IO            "Mémoire"
+    IDS_INTERRUPT_EDGE_SENSITIVE  "Déclenchement"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Niveau"
+    IDS_MEMORY_READ_ONLY          "Lecture seule"
+    IDS_MEMORY_WRITE_ONLY         "Écriture seule"
+    IDS_MEMORY_READ_WRITE         "Lecture / Écriture"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BUS_UNDEFINED             "Undefined"
-    IDS_BUS_INTERNAL              "Internal"
+    IDS_BUS_UNDEFINED             "Indéfini"
+    IDS_BUS_INTERNAL              "Interne"
     IDS_BUS_ISA                   "ISA"
     IDS_BUS_EISA                  "EISA"
     IDS_BUS_MICROCHANNEL          "MicroChannel"
@@ -502,18 +499,18 @@ IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
-   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   GROUPBOX "Étendue de l'exportation",IDC_STATIC,2,0,366,48
+   CONTROL "T&out",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "&Branche sélectionnée",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "Charger une ruche"
 FONT 8, "Ms Shell Dlg"
 {
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT           "&Clé :", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
@@ -539,7 +536,7 @@ BEGIN
     PUSHBUTTON      "Annuler",IDCANCEL,7,114,50,14
     CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
-    LTEXT           "Seléctionnez le(s) favori(s):",IDC_STATIC,7,7,99,12
+    LTEXT           "Sélectionnez le(s) favori(s) :",IDC_STATIC,7,7,99,12
 END
 
 IDD_FIND DIALOGEX DISCARDABLE  0, 0, 254, 82

@@ -49,18 +49,18 @@ typedef struct
 
 typedef struct
 {
-    const IMimeInternationalVtbl *lpVtbl;
+    IMimeInternational IMimeInternational_iface;
     LONG refs;
     CRITICAL_SECTION cs;
 
     struct list charsets;
     LONG next_charset_handle;
     HCHARSET default_charset;
-} internat;
+} internat_impl;
 
-static inline internat *impl_from_IMimeInternational( IMimeInternational *iface )
+static inline internat_impl *impl_from_IMimeInternational(IMimeInternational *iface)
 {
-    return (internat *)((char*)iface - FIELD_OFFSET(internat, lpVtbl));
+    return CONTAINING_RECORD(iface, internat_impl, IMimeInternational_iface);
 }
 
 static inline HRESULT get_mlang(IMultiLanguage **ml)
@@ -85,13 +85,13 @@ static HRESULT WINAPI MimeInternat_QueryInterface( IMimeInternational *iface, RE
 
 static ULONG WINAPI MimeInternat_AddRef( IMimeInternational *iface )
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
     return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI MimeInternat_Release( IMimeInternational *iface )
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
     ULONG refs;
 
     refs = InterlockedDecrement(&This->refs);
@@ -104,6 +104,8 @@ static ULONG WINAPI MimeInternat_Release( IMimeInternational *iface )
             list_remove(&charset->entry);
             HeapFree(GetProcessHeap(), 0, charset);
         }
+        This->cs.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->cs);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -112,7 +114,7 @@ static ULONG WINAPI MimeInternat_Release( IMimeInternational *iface )
 
 static HRESULT WINAPI MimeInternat_SetDefaultCharset(IMimeInternational *iface, HCHARSET hCharset)
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
 
     TRACE("(%p)->(%p)\n", iface, hCharset);
 
@@ -126,7 +128,7 @@ static HRESULT WINAPI MimeInternat_SetDefaultCharset(IMimeInternational *iface, 
 
 static HRESULT WINAPI MimeInternat_GetDefaultCharset(IMimeInternational *iface, LPHCHARSET phCharset)
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
     HRESULT hr = S_OK;
 
     TRACE("(%p)->(%p)\n", iface, phCharset);
@@ -238,7 +240,7 @@ static HCHARSET add_charset(struct list *list, MIMECSETINFO *mlang_info, HCHARSE
 static HRESULT WINAPI MimeInternat_FindCharset(IMimeInternational *iface, LPCSTR pszCharset,
                                                LPHCHARSET phCharset)
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
     HRESULT hr = MIME_E_NOT_FOUND;
     charset_entry *charset;
 
@@ -278,7 +280,7 @@ static HRESULT WINAPI MimeInternat_FindCharset(IMimeInternational *iface, LPCSTR
 static HRESULT WINAPI MimeInternat_GetCharsetInfo(IMimeInternational *iface, HCHARSET hCharset,
                                                   LPINETCSETINFO pCsetInfo)
 {
-    internat *This = impl_from_IMimeInternational( iface );
+    internat_impl *This = impl_from_IMimeInternational( iface );
     HRESULT hr = MIME_E_INVALID_HANDLE;
     charset_entry *charset;
 
@@ -519,20 +521,21 @@ static IMimeInternationalVtbl mime_internat_vtbl =
     MimeInternat_Rfc1522Encode
 };
 
-static internat *global_internat;
+static internat_impl *global_internat;
 
 HRESULT MimeInternational_Construct(IMimeInternational **internat)
 {
     global_internat = HeapAlloc(GetProcessHeap(), 0, sizeof(*global_internat));
-    global_internat->lpVtbl = &mime_internat_vtbl;
+    global_internat->IMimeInternational_iface.lpVtbl = &mime_internat_vtbl;
     global_internat->refs = 0;
     InitializeCriticalSection(&global_internat->cs);
+    global_internat->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": global_internat.cs");
 
     list_init(&global_internat->charsets);
     global_internat->next_charset_handle = 0;
     global_internat->default_charset = NULL;
 
-    *internat = (IMimeInternational*)&global_internat->lpVtbl;
+    *internat = &global_internat->IMimeInternational_iface;
 
     IMimeInternational_AddRef(*internat);
     return S_OK;
@@ -542,7 +545,7 @@ HRESULT WINAPI MimeOleGetInternat(IMimeInternational **internat)
 {
     TRACE("(%p)\n", internat);
 
-    *internat = (IMimeInternational *)&global_internat->lpVtbl;
+    *internat = &global_internat->IMimeInternational_iface;
     IMimeInternational_AddRef(*internat);
     return S_OK;
 }

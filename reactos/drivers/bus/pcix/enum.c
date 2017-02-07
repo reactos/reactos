@@ -1196,71 +1196,79 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
             CapPtr = PciData->u.type0.CapabilitiesPtr;
         }
 
-        /* Make sure the pointer is spec-aligned and located, and save it */
-        DPRINT1("Device has capabilities at: %lx\n", CapPtr);
-        ASSERT(((CapPtr & 0x3) == 0) && (CapPtr >= PCI_COMMON_HDR_LENGTH));
-        PdoExtension->CapabilitiesPtr = CapPtr;
-
-        /* Check for PCI-to-PCI Bridges and AGP bridges */
-        if ((PdoExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
-            ((PdoExtension->SubClass == PCI_SUBCLASS_BR_HOST) ||
-             (PdoExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI)))
+        /* Skip garbage capabilities pointer */
+        if (((CapPtr & 0x3) != 0) || (CapPtr < PCI_COMMON_HDR_LENGTH))
         {
-            /* Query either the raw AGP capabilitity, or the Target AGP one */
-            TargetAgpCapabilityId = (PdoExtension->SubClass ==
-                                     PCI_SUBCLASS_BR_PCI_TO_PCI) ?
-                                     PCI_CAPABILITY_ID_AGP_TARGET :
-                                     PCI_CAPABILITY_ID_AGP;
-            if (PciReadDeviceCapability(PdoExtension,
-                                        PdoExtension->CapabilitiesPtr,
-                                        TargetAgpCapabilityId,
-                                        &AgpCapability,
-                                        sizeof(PCI_CAPABILITIES_HEADER)))
-            {
-                /* AGP target ID was found, store it */
-                DPRINT1("AGP ID: %lx\n", TargetAgpCapabilityId);
-                PdoExtension->TargetAgpCapabilityId = TargetAgpCapabilityId;
-            }
+            /* Report no extended capabilities */
+            PdoExtension->CapabilitiesPtr = 0;
+            PdoExtension->HackFlags |= PCI_HACK_NO_PM_CAPS;
         }
-
-        /* Check for devices that are known not to have proper power management */
-        if (!(PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS))
+        else
         {
-            /* Query if this device supports power management */
-            if (!PciReadDeviceCapability(PdoExtension,
-                                         PdoExtension->CapabilitiesPtr,
-                                         PCI_CAPABILITY_ID_POWER_MANAGEMENT,
-                                         &PowerCapabilities.Header,
-                                         sizeof(PCI_PM_CAPABILITY)))
-            {
-                /* No power management, so act as if it had the hackflag set */
-                DPRINT1("No PM caps, disabling PM\n");
-                PdoExtension->HackFlags |= PCI_HACK_NO_PM_CAPS;
-            }
-            else
-            {
-                /* Otherwise, pick the highest wake level that is supported */
-                WakeLevel = PowerDeviceUnspecified;
-                if (PowerCapabilities.PMC.Capabilities.Support.PMED0)
-                    WakeLevel = PowerDeviceD0;
-                if (PowerCapabilities.PMC.Capabilities.Support.PMED1)
-                    WakeLevel = PowerDeviceD1;
-                if (PowerCapabilities.PMC.Capabilities.Support.PMED2)
-                    WakeLevel = PowerDeviceD2;
-                if (PowerCapabilities.PMC.Capabilities.Support.PMED3Hot)
-                    WakeLevel = PowerDeviceD3;
-                if (PowerCapabilities.PMC.Capabilities.Support.PMED3Cold)
-                    WakeLevel = PowerDeviceD3;
-                PdoExtension->PowerState.DeviceWakeLevel = WakeLevel;
+            DPRINT1("Device has capabilities at: %lx\n", CapPtr);
+            PdoExtension->CapabilitiesPtr = CapPtr;
 
-                /* Convert the PCI power state to the NT power state */
-                PdoExtension->PowerState.CurrentDeviceState =
+            /* Check for PCI-to-PCI Bridges and AGP bridges */
+            if ((PdoExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+                ((PdoExtension->SubClass == PCI_SUBCLASS_BR_HOST) ||
+                 (PdoExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI)))
+            {
+                /* Query either the raw AGP capabilitity, or the Target AGP one */
+                TargetAgpCapabilityId = (PdoExtension->SubClass ==
+                                         PCI_SUBCLASS_BR_PCI_TO_PCI) ?
+                PCI_CAPABILITY_ID_AGP_TARGET :
+                PCI_CAPABILITY_ID_AGP;
+                if (PciReadDeviceCapability(PdoExtension,
+                                            PdoExtension->CapabilitiesPtr,
+                                            TargetAgpCapabilityId,
+                                            &AgpCapability,
+                                            sizeof(PCI_CAPABILITIES_HEADER)))
+                {
+                    /* AGP target ID was found, store it */
+                    DPRINT1("AGP ID: %lx\n", TargetAgpCapabilityId);
+                    PdoExtension->TargetAgpCapabilityId = TargetAgpCapabilityId;
+                }
+            }
+
+            /* Check for devices that are known not to have proper power management */
+            if (!(PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS))
+            {
+                /* Query if this device supports power management */
+                if (!PciReadDeviceCapability(PdoExtension,
+                                             PdoExtension->CapabilitiesPtr,
+                                             PCI_CAPABILITY_ID_POWER_MANAGEMENT,
+                                             &PowerCapabilities.Header,
+                                             sizeof(PCI_PM_CAPABILITY)))
+                {
+                    /* No power management, so act as if it had the hackflag set */
+                    DPRINT1("No PM caps, disabling PM\n");
+                    PdoExtension->HackFlags |= PCI_HACK_NO_PM_CAPS;
+                }
+                else
+                {
+                    /* Otherwise, pick the highest wake level that is supported */
+                    WakeLevel = PowerDeviceUnspecified;
+                    if (PowerCapabilities.PMC.Capabilities.Support.PMED0)
+                        WakeLevel = PowerDeviceD0;
+                    if (PowerCapabilities.PMC.Capabilities.Support.PMED1)
+                        WakeLevel = PowerDeviceD1;
+                    if (PowerCapabilities.PMC.Capabilities.Support.PMED2)
+                        WakeLevel = PowerDeviceD2;
+                    if (PowerCapabilities.PMC.Capabilities.Support.PMED3Hot)
+                        WakeLevel = PowerDeviceD3;
+                    if (PowerCapabilities.PMC.Capabilities.Support.PMED3Cold)
+                        WakeLevel = PowerDeviceD3;
+                    PdoExtension->PowerState.DeviceWakeLevel = WakeLevel;
+
+                    /* Convert the PCI power state to the NT power state */
+                    PdoExtension->PowerState.CurrentDeviceState =
                     PowerCapabilities.PMCSR.ControlStatus.PowerState + 1;
 
-                /* Save all the power capabilities */
-                PdoExtension->PowerCapabilities = PowerCapabilities.PMC.Capabilities;
-                DPRINT1("PM Caps Found! Wake Level: %d Power State: %d\n",
-                        WakeLevel, PdoExtension->PowerState.CurrentDeviceState);
+                    /* Save all the power capabilities */
+                    PdoExtension->PowerCapabilities = PowerCapabilities.PMC.Capabilities;
+                    DPRINT1("PM Caps Found! Wake Level: %d Power State: %d\n",
+                            WakeLevel, PdoExtension->PowerState.CurrentDeviceState);
+                }
             }
         }
     }
@@ -2122,7 +2130,7 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
         {
             /* Reference it and add it to the array */
             DeviceObject = PdoExtension->PhysicalDeviceObject;
-            ObfReferenceObject(DeviceObject);
+            ObReferenceObject(DeviceObject);
             *ObjectArray++ = DeviceObject;
         }
 

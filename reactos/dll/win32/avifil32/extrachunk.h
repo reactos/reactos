@@ -35,18 +35,18 @@ typedef struct _EXTRACHUNKS {
 } EXTRACHUNKS, *LPEXTRACHUNKS;
 
 /* reads a chunk outof the extrachunk-structure */
-HRESULT ReadExtraChunk(const EXTRACHUNKS *extra,FOURCC ckid,LPVOID lp,LPLONG size);
+HRESULT ReadExtraChunk(const EXTRACHUNKS *extra,FOURCC ckid,LPVOID lp,LPLONG size) DECLSPEC_HIDDEN;
 
 /* writes a chunk into the extrachunk-structure */
-HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lp,LONG size);
+HRESULT WriteExtraChunk(LPEXTRACHUNKS extra,FOURCC ckid,LPCVOID lp,LONG size) DECLSPEC_HIDDEN;
 
 /* reads a chunk fomr the HMMIO into the extrachunk-structure */
-HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,const MMCKINFO *lpck);
+HRESULT ReadChunkIntoExtra(LPEXTRACHUNKS extra,HMMIO hmmio,const MMCKINFO *lpck) DECLSPEC_HIDDEN;
 
 /* reads all non-junk chunks into the extrachunk-structure until it finds
  * the given chunk or the optional parent-chunk is at the end */
 HRESULT FindChunkAndKeepExtras(LPEXTRACHUNKS extra,HMMIO hmmio,
-			       MMCKINFO *lpck,MMCKINFO *lpckParent,UINT flags);
+			       MMCKINFO *lpck,MMCKINFO *lpckParent,UINT flags) DECLSPEC_HIDDEN;
 
 #ifdef __cplusplus
 }
