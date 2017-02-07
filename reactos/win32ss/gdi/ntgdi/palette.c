@@ -745,7 +745,12 @@ IntGdiRealizePalette(HDC hDC)
 
     if (pdc->dctype == DCTYPE_DIRECT)
     {
-        UNIMPLEMENTED;
+        static BOOL g_WarnedOnce = FALSE;
+        if (!g_WarnedOnce)
+        {
+            g_WarnedOnce = TRUE;
+            UNIMPLEMENTED;
+        }
         goto cleanup;
     }
 
