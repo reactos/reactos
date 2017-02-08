@@ -62,10 +62,10 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 getaddrinfo(
-  _In_opt_ PCSTR pNodeName,
-  _In_opt_ PCSTR pServiceName,
-  _In_opt_ const ADDRINFOA *pHints,
-  _Outptr_ PADDRINFOA *ppResult);
+  IN PCSTR pNodeName OPTIONAL,
+  IN PCSTR pServiceName OPTIONAL,
+  IN const ADDRINFOA *pHints OPTIONAL,
+  OUT PADDRINFOA *ppResult);
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2) || (_WIN32_WINNT >= 0x0502)
 
@@ -73,10 +73,10 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 GetAddrInfoW(
-  _In_opt_ PCWSTR pNodeName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_opt_ const ADDRINFOW *pHints,
-  _Outptr_ PADDRINFOW *ppResult);
+  IN PCWSTR pNodeName OPTIONAL,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN const ADDRINFOW *pHints OPTIONAL,
+  OUT PADDRINFOW *ppResult);
 
 #define GetAddrInfoA getaddrinfo
 
@@ -92,17 +92,17 @@ GetAddrInfoW(
 
 typedef INT
 (WSAAPI *LPFN_GETADDRINFO)(
-  _In_opt_ PCSTR pNodeName,
-  _In_opt_ PCSTR pServiceName,
-  _In_opt_ const ADDRINFOA *pHints,
-  _Outptr_ PADDRINFOA *ppResult);
+  IN PCSTR pNodeName OPTIONAL,
+  IN PCSTR pServiceName OPTIONAL,
+  IN const ADDRINFOA *pHints OPTIONAL,
+  OUT PADDRINFOA *ppResult);
 
 typedef INT
 (WSAAPI *LPFN_GETADDRINFOW)(
-  _In_opt_ PCWSTR pNodeName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_opt_ const ADDRINFOW *pHints,
-  _Outptr_ PADDRINFOW *ppResult);
+  IN PCWSTR pNodeName OPTIONAL,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN const ADDRINFOW *pHints OPTIONAL,
+  OUT PADDRINFOW *ppResult);
 
 #define LPFN_GETADDRINFOA LPFN_GETADDRINFO
 
@@ -118,39 +118,39 @@ typedef INT
 
 typedef void
 (CALLBACK *LPLOOKUPSERVICE_COMPLETION_ROUTINE)(
-  _In_ DWORD dwError,
-  _In_ DWORD dwBytes,
-  _In_ LPWSAOVERLAPPED lpOverlapped);
+  IN DWORD dwError,
+  IN DWORD dwBytes,
+  IN LPWSAOVERLAPPED lpOverlapped);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 GetAddrInfoExA(
-  _In_opt_ PCSTR pName,
-  _In_opt_ PCSTR pServiceName,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ const ADDRINFOEXA *hints,
-  _Outptr_ PADDRINFOEXA *ppResult,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCSTR pName OPTIONAL,
+  IN PCSTR pServiceName OPTIONAL,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN const ADDRINFOEXA *hints,
+  OUT PADDRINFOEXA *ppResult,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 GetAddrInfoExW(
-  _In_opt_ PCWSTR pName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ const ADDRINFOEXW *hints,
-  _Outptr_ PADDRINFOEXW *ppResult,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpHandle);
+  IN PCWSTR pName OPTIONAL,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN const ADDRINFOEXW *hints OPTIONAL,
+  OUT PADDRINFOEXW *ppResult,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpHandle OPTIONAL);
 
 #ifdef UNICODE
 #define GetAddrInfoEx GetAddrInfoExW
@@ -162,29 +162,29 @@ GetAddrInfoExW(
 
 typedef INT
 (WSAAPI *LPFN_GETADDRINFOEXA)(
-  _In_ PCSTR pName,
-  _In_opt_ PCSTR pServiceName,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ const ADDRINFOEXA *hints,
-  _Outptr_ PADDRINFOEXA *ppResult,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCSTR pName,
+  IN PCSTR pServiceName OPTIONAL,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN const ADDRINFOEXA *hints OPTIONAL,
+  OUT PADDRINFOEXA *ppResult,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 typedef INT
 (WSAAPI *LPFN_GETADDRINFOEXW)(
-  _In_ PCWSTR pName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ const ADDRINFOEXW *hints,
-  _Outptr_ PADDRINFOEXW *ppResult,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpHandle);
+  IN PCWSTR pName,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN const ADDRINFOEXW *hints OPTIONAL,
+  OUT PADDRINFOEXW *ppResult,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpHandle OPTIONAL);
 
 #ifdef UNICODE
 #define LPFN_GETADDRINFOEX LPFN_GETADDRINFOEXW
@@ -201,35 +201,35 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 SetAddrInfoExA(
-  _In_ PCSTR pName,
-  _In_opt_ PCSTR pServiceName,
-  _In_opt_ SOCKET_ADDRESS *pAddresses,
-  _In_ DWORD dwAddressCount,
-  _In_opt_ LPBLOB lpBlob,
-  _In_ DWORD dwFlags,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCSTR pName,
+  IN PCSTR pServiceName OPTIONAL,
+  IN SOCKET_ADDRESS *pAddresses OPTIONAL,
+  IN DWORD dwAddressCount,
+  IN LPBLOB lpBlob OPTIONAL,
+  IN DWORD dwFlags,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 SetAddrInfoExW(
-  _In_ PCWSTR pName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_opt_ SOCKET_ADDRESS *pAddresses,
-  _In_ DWORD dwAddressCount,
-  _In_opt_ LPBLOB lpBlob,
-  _In_ DWORD dwFlags,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCWSTR pName,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN SOCKET_ADDRESS *pAddresses OPTIONAL,
+  IN DWORD dwAddressCount,
+  IN LPBLOB lpBlob OPTIONAL,
+  IN DWORD dwFlags,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 #ifdef UNICODE
 #define SetAddrInfoEx SetAddrInfoExW
@@ -241,33 +241,33 @@ SetAddrInfoExW(
 
 typedef INT
 (WSAAPI *LPFN_SETADDRINFOEXA)(
-  _In_ PCSTR pName,
-  _In_opt_ PCSTR pServiceName,
-  _In_opt_ SOCKET_ADDRESS *pAddresses,
-  _In_ DWORD dwAddressCount,
-  _In_opt_ LPBLOB lpBlob,
-  _In_ DWORD dwFlags,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCSTR pName,
+  IN PCSTR pServiceName OPTIONAL,
+  IN SOCKET_ADDRESS *pAddresses OPTIONAL,
+  IN DWORD dwAddressCount,
+  IN LPBLOB lpBlob OPTIONAL,
+  IN DWORD dwFlags,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 typedef INT
 (WSAAPI *LPFN_SETADDRINFOEXW)(
-  _In_ PCWSTR pName,
-  _In_opt_ PCWSTR pServiceName,
-  _In_opt_ SOCKET_ADDRESS *pAddresses,
-  _In_ DWORD dwAddressCount,
-  _In_opt_ LPBLOB lpBlob,
-  _In_ DWORD dwFlags,
-  _In_ DWORD dwNameSpace,
-  _In_opt_ LPGUID lpNspId,
-  _In_opt_ struct timeval *timeout,
-  _In_opt_ LPOVERLAPPED lpOverlapped,
-  _In_opt_ LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine,
-  _Out_opt_ LPHANDLE lpNameHandle);
+  IN PCWSTR pName,
+  IN PCWSTR pServiceName OPTIONAL,
+  IN SOCKET_ADDRESS *pAddresses OPTIONAL,
+  IN DWORD dwAddressCount,
+  IN LPBLOB lpBlob OPTIONAL,
+  IN DWORD dwFlags,
+  IN DWORD dwNameSpace,
+  IN LPGUID lpNspId OPTIONAL,
+  IN struct timeval *timeout OPTIONAL,
+  IN LPOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPLOOKUPSERVICE_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL,
+  OUT LPHANDLE lpNameHandle OPTIONAL);
 
 #ifdef UNICODE
 #define LPFN_SETADDRINFOEX LPFN_SETADDRINFOEXW
@@ -282,7 +282,7 @@ WINSOCK_API_LINKAGE
 VOID
 WSAAPI
 freeaddrinfo(
-  _In_opt_ PADDRINFOA pAddrInfo);
+  IN PADDRINFOA pAddrInfo OPTIONAL);
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2) || (_WIN32_WINNT >= 0x0502)
 
@@ -290,7 +290,7 @@ WINSOCK_API_LINKAGE
 VOID
 WSAAPI
 FreeAddrInfoW(
-  _In_opt_ PADDRINFOW pAddrInfo);
+  IN PADDRINFOW pAddrInfo OPTIONAL);
 
 #define FreeAddrInfoA freeaddrinfo
 
@@ -305,11 +305,11 @@ FreeAddrInfoW(
 
 typedef VOID
 (WSAAPI *LPFN_FREEADDRINFO)(
-  _In_opt_ PADDRINFOA pAddrInfo);
+  IN PADDRINFOA pAddrInfo OPTIONAL);
 
 typedef VOID
 (WSAAPI *LPFN_FREEADDRINFOW)(
-  _In_opt_ PADDRINFOW pAddrInfo);
+  IN PADDRINFOW pAddrInfo OPTIONAL);
 
 #define LPFN_FREEADDRINFOA LPFN_FREEADDRINFO
 
@@ -327,13 +327,13 @@ WINSOCK_API_LINKAGE
 void
 WSAAPI
 FreeAddrInfoEx(
-  _In_opt_ PADDRINFOEXA pAddrInfoEx);
+  IN PADDRINFOEXA pAddrInfoEx OPTIONAL);
 
 WINSOCK_API_LINKAGE
 void
 WSAAPI
 FreeAddrInfoExW(
-  _In_opt_ PADDRINFOEXW pAddrInfoEx);
+  IN PADDRINFOEXW pAddrInfoEx OPTIONAL);
 
 #define FreeAddrInfoExA FreeAddrInfoEx
 
@@ -345,11 +345,11 @@ FreeAddrInfoExW(
 
 typedef void
 (WSAAPI *LPFN_FREEADDRINFOEXA)(
-  _In_ PADDRINFOEXA pAddrInfoEx);
+  IN PADDRINFOEXA pAddrInfoEx);
 
 typedef void
 (WSAAPI *LPFN_FREEADDRINFOEXW)(
-  _In_ PADDRINFOEXW pAddrInfoEx);
+  IN PADDRINFOEXW pAddrInfoEx);
 
 
 #ifdef UNICODE
@@ -367,13 +367,13 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 getnameinfo(
-  _In_reads_bytes_(SockaddrLength) const SOCKADDR *pSockaddr,
-  _In_ socklen_t SockaddrLength,
-  _Out_writes_opt_(NodeBufferSize) PCHAR pNodeBuffer,
-  _In_ DWORD NodeBufferSize,
-  _Out_writes_opt_(ServiceBufferSize) PCHAR pServiceBuffer,
-  _In_ DWORD ServiceBufferSize,
-  _In_ INT Flags);
+  IN const SOCKADDR *pSockaddr,
+  IN socklen_t SockaddrLength,
+  OUT PCHAR pNodeBuffer OPTIONAL,
+  IN socklen_t NodeBufferSize,
+  OUT PCHAR pServiceBuffer,
+  IN socklen_t ServiceBufferSize,
+  IN INT Flags);
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2) || (_WIN32_WINNT >= 0x0502)
 
@@ -381,13 +381,13 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 GetNameInfoW(
-  _In_reads_bytes_(SockaddrLength) const SOCKADDR *pSockaddr,
-  _In_ socklen_t SockaddrLength,
-  _Out_writes_opt_(NodeBufferSize) PWCHAR pNodeBuffer,
-  _In_ DWORD NodeBufferSize,
-  _Out_writes_opt_(ServiceBufferSize) PWCHAR pServiceBuffer,
-  _In_ DWORD ServiceBufferSize,
-  _In_ INT Flags);
+  IN const SOCKADDR *pSockaddr,
+  IN socklen_t SockaddrLength,
+  OUT PWCHAR pNodeBuffer,
+  IN DWORD NodeBufferSize,
+  OUT PWCHAR pServiceBuffer OPTIONAL,
+  IN DWORD ServiceBufferSize,
+  IN INT Flags);
 
 #define GetNameInfoA getnameinfo
 
@@ -403,23 +403,23 @@ GetNameInfoW(
 
 typedef int
 (WSAAPI *LPFN_GETNAMEINFO)(
-  _In_reads_bytes_(SockaddrLength) const SOCKADDR *pSockaddr,
-  _In_ socklen_t SockaddrLength,
-  _Out_writes_opt_(NodeBufferSize) PCHAR pNodeBuffer,
-  _In_ DWORD NodeBufferSize,
-  _Out_writes_opt_(ServiceBufferSize) PCHAR pServiceBuffer,
-  _In_ DWORD ServiceBufferSize,
-  _In_ INT Flags);
+  IN const SOCKADDR *pSockaddr,
+  IN socklen_t SockaddrLength,
+  OUT PCHAR pNodeBuffer,
+  IN DWORD NodeBufferSize,
+  OUT PCHAR pServiceBuffer OPTIONAL,
+  IN DWORD ServiceBufferSize,
+  IN INT Flags);
 
 typedef INT
 (WSAAPI *LPFN_GETNAMEINFOW)(
-  _In_reads_bytes_(SockaddrLength) const SOCKADDR *pSockaddr,
-  _In_ socklen_t SockaddrLength,
-  _Out_writes_opt_(NodeBufferSize) PWCHAR pNodeBuffer,
-  _In_ DWORD NodeBufferSize,
-  _Out_writes_opt_(ServiceBufferSize) PWCHAR pServiceBuffer,
-  _In_ DWORD ServiceBufferSize,
-  _In_ INT Flags);
+  IN const SOCKADDR *pSockaddr,
+  IN socklen_t SockaddrLength,
+  OUT PWCHAR pNodeBuffer,
+  IN DWORD NodeBufferSize,
+  OUT PWCHAR pServiceBuffer OPTIONAL,
+  IN DWORD ServiceBufferSize,
+  IN INT Flags);
 
 #define LPFN_GETNAMEINFOA LPFN_GETNAMEINFO
 
@@ -436,32 +436,32 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 inet_pton(
-  _In_ INT Family,
-  _In_ PCSTR pszAddrString,
-  _Out_writes_bytes_(sizeof(IN6_ADDR)) PVOID pAddrBuf);
+  IN INT Family,
+  IN PCSTR pszAddrString,
+  OUT PVOID pAddrBuf);
 
 INT
 WSAAPI
 InetPtonW(
-  _In_ INT Family,
-  _In_ PCWSTR pszAddrString,
-  _Out_writes_bytes_(sizeof(IN6_ADDR)) PVOID pAddrBuf);
+  IN INT Family,
+  IN PCWSTR pszAddrString,
+  OUT PVOID pAddrBuf);
 
 PCSTR
 WSAAPI
 inet_ntop(
-  _In_ INT Family,
-  _In_ PVOID pAddr,
-  _Out_writes_(StringBufSize) PSTR pStringBuf,
-  _In_ size_t StringBufSize);
+  IN INT Family,
+  IN PVOID pAddr,
+  OUT PSTR pStringBuf,
+  IN size_t StringBufSize);
 
 PCWSTR
 WSAAPI
 InetNtopW(
-  _In_ INT Family,
-  _In_ PVOID pAddr,
-  _Out_writes_(StringBufSize) PWSTR pStringBuf,
-  _In_ size_t StringBufSize);
+  IN INT Family,
+  IN PVOID pAddr,
+  OUT PWSTR pStringBuf,
+  IN size_t StringBufSize);
 
 #define InetPtonA inet_pton
 #define InetNtopA inet_ntop
@@ -478,29 +478,29 @@ InetNtopW(
 
 typedef INT
 (WSAAPI *LPFN_INET_PTONA)(
-  _In_ INT Family,
-  _In_ PCSTR pszAddrString,
-  _Out_writes_bytes_(sizeof(IN6_ADDR)) PVOID pAddrBuf);
+  IN INT Family,
+  IN PCSTR pszAddrString,
+  OUT PVOID pAddrBuf);
 
 typedef INT
 (WSAAPI *LPFN_INET_PTONW)(
-  _In_ INT Family,
-  _In_ PCWSTR pszAddrString,
-  _Out_writes_bytes_(sizeof(IN6_ADDR)) PVOID pAddrBuf);
+  IN INT Family,
+  IN PCWSTR pszAddrString,
+  OUT PVOID pAddrBuf);
 
 typedef PCSTR
 (WSAAPI *LPFN_INET_NTOPA)(
-  _In_ INT Family,
-  _In_ PVOID pAddr,
-  _Out_writes_(StringBufSize) PSTR pStringBuf,
-  _In_ size_t StringBufSize);
+  IN INT Family,
+  IN PVOID pAddr,
+  OUT PSTR pStringBuf,
+  IN size_t StringBufSize);
 
 typedef PCWSTR
 (WSAAPI *LPFN_INET_NTOPW)(
-  _In_ INT Family,
-  _In_ PVOID pAddr,
-  _Out_writes_(StringBufSize) PWSTR pStringBuf,
-  _In_ size_t StringBufSize);
+  IN INT Family,
+  IN PVOID pAddr,
+  OUT PWSTR pStringBuf,
+  IN size_t StringBufSize);
 
 #ifdef UNICODE
 #define LPFN_INET_PTON LPFN_INET_PTONW
@@ -526,7 +526,7 @@ typedef PCWSTR
 static __inline
 char *
 gai_strerrorA(
-  _In_ int ecode)
+  IN int ecode)
 {
   static char buff[GAI_STRERROR_BUFFER_SIZE + 1];
 
@@ -546,7 +546,7 @@ gai_strerrorA(
 static __inline
 WCHAR *
 gai_strerrorW(
-  _In_ int ecode)
+  IN int ecode)
 {
   static WCHAR buff[GAI_STRERROR_BUFFER_SIZE + 1];
 
@@ -568,12 +568,12 @@ gai_strerrorW(
 WS2TCPIP_INLINE
 int
 setipv4sourcefilter(
-  _In_ SOCKET Socket,
-  _In_ IN_ADDR Interface,
-  _In_ IN_ADDR Group,
-  _In_ MULTICAST_MODE_TYPE FilterMode,
-  _In_ ULONG SourceCount,
-  _In_reads_(SourceCount) CONST IN_ADDR *SourceList)
+  IN SOCKET Socket,
+  IN IN_ADDR Interface,
+  IN IN_ADDR Group,
+  IN MULTICAST_MODE_TYPE FilterMode,
+  IN ULONG SourceCount,
+  IN CONST IN_ADDR *SourceList)
 {
   int Error;
   DWORD Size, Returned;
@@ -609,16 +609,15 @@ setipv4sourcefilter(
   return Error;
 }
 
-_Success_(return == 0)
 WS2TCPIP_INLINE
 int
 getipv4sourcefilter(
-  _In_ SOCKET Socket,
-  _In_ IN_ADDR Interface,
-  _In_ IN_ADDR Group,
-  _Out_ MULTICAST_MODE_TYPE *FilterMode,
-  _Inout_ ULONG *SourceCount,
-  _Out_writes_(*SourceCount) IN_ADDR *SourceList)
+  IN SOCKET Socket,
+  IN IN_ADDR Interface,
+  IN IN_ADDR Group,
+  OUT MULTICAST_MODE_TYPE *FilterMode,
+  IN OUT ULONG *SourceCount,
+  OUT IN_ADDR *SourceList)
 {
   int Error;
   DWORD Size, Returned;
@@ -663,13 +662,13 @@ getipv4sourcefilter(
 WS2TCPIP_INLINE
 int
 setsourcefilter(
-  _In_ SOCKET Socket,
-  _In_ ULONG Interface,
-  _In_ CONST SOCKADDR *Group,
-  _In_ int GroupLength,
-  _In_ MULTICAST_MODE_TYPE FilterMode,
-  _In_ ULONG SourceCount,
-  _In_reads_(SourceCount) CONST SOCKADDR_STORAGE *SourceList)
+  IN SOCKET Socket,
+  IN ULONG Interface,
+  IN CONST SOCKADDR *Group,
+  IN int GroupLength,
+  IN MULTICAST_MODE_TYPE FilterMode,
+  IN ULONG SourceCount,
+  IN CONST SOCKADDR_STORAGE *SourceList)
 {
   int Error;
   DWORD Size, Returned;
@@ -702,17 +701,16 @@ setsourcefilter(
   return Error;
 }
 
-_Success_(return == 0)
 WS2TCPIP_INLINE
 int
 getsourcefilter(
-  _In_ SOCKET Socket,
-  _In_ ULONG Interface,
-  _In_ CONST SOCKADDR *Group,
-  _In_ int GroupLength,
-  _Out_ MULTICAST_MODE_TYPE *FilterMode,
-  _Inout_ ULONG *SourceCount,
-  _Out_writes_(*SourceCount) SOCKADDR_STORAGE *SourceList)
+  IN SOCKET Socket,
+  IN ULONG Interface,
+  IN CONST SOCKADDR *Group,
+  IN int GroupLength,
+  OUT MULTICAST_MODE_TYPE *FilterMode,
+  IN OUT ULONG *SourceCount,
+  OUT SOCKADDR_STORAGE *SourceList)
 {
   int Error;
   DWORD Size, Returned;
@@ -755,26 +753,26 @@ getsourcefilter(
 WS2TCPIP_INLINE
 int
 idealsendbacklogquery(
-  _In_ SOCKET s,
-  _Out_ ULONG *pISB)
+  IN SOCKET s,
+  OUT ULONG *pISB)
 {
   DWORD bytes;
 
-  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_QUERY,
+  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_QUERY, 
                   NULL, 0, pISB, sizeof(*pISB), &bytes, NULL, NULL);
 }
 
 WS2TCPIP_INLINE
 int
 idealsendbacklognotify(
-  _In_ SOCKET s,
-  _In_opt_ LPWSAOVERLAPPED lpOverlapped,
-  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
+  IN SOCKET s,
+  IN LPWSAOVERLAPPED lpOverlapped OPTIONAL,
+  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine OPTIONAL)
 {
   DWORD bytes;
 
-  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_CHANGE,
-                  NULL, 0, NULL, 0, &bytes,
+  return WSAIoctl(s, SIO_IDEAL_SEND_BACKLOG_CHANGE, 
+                  NULL, 0, NULL, 0, &bytes, 
                   lpOverlapped, lpCompletionRoutine);
 }
 
@@ -788,51 +786,51 @@ WINSOCK_API_LINKAGE
 INT
 WSAAPI
 WSASetSocketSecurity(
-  _In_ SOCKET Socket,
-  _In_reads_bytes_opt_(SecuritySettingsLen) const SOCKET_SECURITY_SETTINGS *SecuritySettings,
-  _In_ ULONG SecuritySettingsLen,
-  _In_opt_ LPWSAOVERLAPPED Overlapped,
-  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+  IN SOCKET Socket,
+  IN const SOCKET_SECURITY_SETTINGS *SecuritySettings OPTIONAL,
+  IN ULONG SecuritySettingsLen,
+  IN LPWSAOVERLAPPED Overlapped OPTIONAL,
+  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 WSAQuerySocketSecurity(
-  _In_ SOCKET Socket,
-  _In_reads_bytes_opt_(SecurityQueryTemplateLen) const SOCKET_SECURITY_QUERY_TEMPLATE *SecurityQueryTemplate,
-  _In_ ULONG SecurityQueryTemplateLen,
-  _Out_writes_bytes_to_opt_(*SecurityQueryInfoLen, *SecurityQueryInfoLen) SOCKET_SECURITY_QUERY_INFO* SecurityQueryInfo,
-  _Inout_ ULONG *SecurityQueryInfoLen,
-  _In_opt_ LPWSAOVERLAPPED Overlapped,
-  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+  IN SOCKET Socket,
+  IN const SOCKET_SECURITY_QUERY_TEMPLATE *SecurityQueryTemplate OPTIONAL,
+  IN ULONG SecurityQueryTemplateLen,
+  OUT SOCKET_SECURITY_QUERY_INFO* SecurityQueryInfo OPTIONAL,
+  IN OUT ULONG *SecurityQueryInfoLen,
+  IN LPWSAOVERLAPPED Overlapped OPTIONAL,
+  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 WSASetSocketPeerTargetName(
-  _In_ SOCKET Socket,
-  _In_reads_bytes_(PeerTargetNameLen) const SOCKET_PEER_TARGET_NAME *PeerTargetName,
-  _In_ ULONG PeerTargetNameLen,
-  _In_opt_ LPWSAOVERLAPPED Overlapped,
-  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+  IN SOCKET Socket,
+  IN const SOCKET_PEER_TARGET_NAME *PeerTargetName,
+  IN ULONG PeerTargetNameLen,
+  IN LPWSAOVERLAPPED Overlapped OPTIONAL,
+  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 WSADeleteSocketPeerTargetName(
-  _In_ SOCKET Socket,
-  _In_reads_bytes_(PeerAddrLen) const struct sockaddr *PeerAddr,
-  _In_ ULONG PeerAddrLen,
-  _In_opt_ LPWSAOVERLAPPED Overlapped,
-  _In_opt_ LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+  IN SOCKET Socket,
+  IN const struct sockaddr *PeerAddr,
+  IN ULONG PeerAddrLen,
+  IN LPWSAOVERLAPPED Overlapped OPTIONAL,
+  IN LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL);
 
 WINSOCK_API_LINKAGE
 INT
 WSAAPI
 WSAImpersonateSocketPeer(
-  _In_ SOCKET Socket,
-  _In_reads_bytes_opt_(PeerAddrLen) const struct sockaddr *PeerAddr,
-  _In_ ULONG PeerAddrLen);
+  IN SOCKET Socket,
+  IN const struct sockaddr *PeerAddr OPTIONAL,
+  IN ULONG PeerAddrLen);
 
 WINSOCK_API_LINKAGE
 INT
