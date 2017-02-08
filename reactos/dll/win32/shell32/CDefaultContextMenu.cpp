@@ -675,7 +675,9 @@ CDefaultContextMenu::QueryContextMenu(
 
     /* Add static context menu handlers */
     IndexMenu = AddStaticContextMenusToMenu(hMenu, IndexMenu, idCmdNext, idCmdLast);
-    if (m_iIdSCMLast && m_iIdSCMFirst != m_iIdSCMLast) 
+    if (m_iIdSCMLast && m_iIdSCMFirst > m_iIdSCMLast)
+        m_iIdSCMLast = m_iIdSCMFirst = 0;
+    else if (m_iIdSCMLast)
         idCmdNext = m_iIdSCMLast + 1;
 
     /* Add dynamic context menu handlers */
