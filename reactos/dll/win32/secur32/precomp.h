@@ -6,26 +6,32 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-#ifndef _SECUR32_PCH_
-#define _SECUR32_PCH_
-
-#include <stdarg.h>
+/* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-#include <windef.h>
-#include <winbase.h>
-#include <winnls.h>
-#include <winreg.h>
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
 
+#include <assert.h>
+#include <stdarg.h>
+
+#include <ntstatus.h>
+#define WIN32_NO_STATUS
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ntndk.h>
+#include <lsass/lsass.h>
+#define SECURITY_WIN32
+#define _NO_KSECDD_IMPORT_
+#include <ntsecapi.h>
 #include <secext.h>
 #include <security.h>
+#include <ntsecpkg.h>
+#include <sspi.h>
 
+#include "lmcons.h"
 #include "secur32_priv.h"
 #include "thunks.h"
 
-#endif /* _SECUR32_PCH_ */
+
+extern SecurityFunctionTableA securityFunctionTableA;
+extern SecurityFunctionTableW securityFunctionTableW;
+
