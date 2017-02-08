@@ -170,12 +170,12 @@ NTAPI
 RtlTimeFieldsToTime(IN PTIME_FIELDS TimeFields,
                     OUT PLARGE_INTEGER Time)
 {
-    int CurMonth;
+    ULONG CurMonth;
     TIME_FIELDS IntTimeFields;
 
-    memcpy(&IntTimeFields,
-           TimeFields,
-           sizeof(TIME_FIELDS));
+    RtlCopyMemory(&IntTimeFields,
+                  TimeFields,
+                  sizeof(TIME_FIELDS));
 
     if (TimeFields->Milliseconds < 0 || TimeFields->Milliseconds > 999 ||
         TimeFields->Second < 0 || TimeFields->Second > 59 ||
@@ -260,27 +260,27 @@ RtlTimeToTimeFields(IN PLARGE_INTEGER Time,
     ULONGLONG IntTime = Time->QuadPart;
 
     /* Extract millisecond from time and convert time into seconds */
-    TimeFields->Milliseconds = (CSHORT) ((IntTime % TICKSPERSEC) / TICKSPERMSEC);
+    TimeFields->Milliseconds = (CSHORT)((IntTime % TICKSPERSEC) / TICKSPERMSEC);
     IntTime = IntTime / TICKSPERSEC;
 
     /* Split the time into days and seconds within the day */
     Days = (ULONG)(IntTime / SECSPERDAY);
     SecondsInDay = IntTime % SECSPERDAY;
 
-    /* compute time of day */
-    TimeFields->Hour = (CSHORT) (SecondsInDay / SECSPERHOUR);
+    /* Compute time of day */
+    TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
     SecondsInDay = SecondsInDay % SECSPERHOUR;
-    TimeFields->Minute = (CSHORT) (SecondsInDay / SECSPERMIN);
-    TimeFields->Second = (CSHORT) (SecondsInDay % SECSPERMIN);
+    TimeFields->Minute = (CSHORT)(SecondsInDay / SECSPERMIN);
+    TimeFields->Second = (CSHORT)(SecondsInDay % SECSPERMIN);
 
-    /* compute day of week */
-    TimeFields->Weekday = (CSHORT) ((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
+    /* Compute day of week */
+    TimeFields->Weekday = (CSHORT)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
 
-    /* compute year */
+    /* Compute year */
     CurYear = EPOCHYEAR;
     CurYear += Days / DAYSPERLEAPYEAR;
     Days -= DaysSinceEpoch(CurYear);
-    while (1)
+    while (TRUE)
     {
         LeapYear = IsLeapYear(CurYear);
         if (Days < YearLengths[LeapYear])
@@ -290,15 +290,17 @@ RtlTimeToTimeFields(IN PLARGE_INTEGER Time,
         CurYear++;
         Days = Days - YearLengths[LeapYear];
     }
-    TimeFields->Year = (CSHORT) CurYear;
+    TimeFields->Year = (CSHORT)CurYear;
 
     /* Compute month of year */
     LeapYear = IsLeapYear(CurYear);
     Months = MonthLengths[LeapYear];
     for (CurMonth = 0; Days >= Months[CurMonth]; CurMonth++)
+    {
         Days = Days - Months[CurMonth];
-    TimeFields->Month = (CSHORT) (CurMonth + 1);
-    TimeFields->Day = (CSHORT) (Days + 1);
+    }
+    TimeFields->Month = (CSHORT)(CurMonth + 1);
+    TimeFields->Day = (CSHORT)(Days + 1);
 }
 
 
@@ -359,7 +361,7 @@ RtlLocalTimeToSystemTime(IN PLARGE_INTEGER LocalTime,
 
     Status = ZwQuerySystemInformation(SystemTimeOfDayInformation,
                                       &TimeInformation,
-                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
+                                      sizeof(TimeInformation),
                                       NULL);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -384,7 +386,7 @@ RtlSystemTimeToLocalTime(IN PLARGE_INTEGER SystemTime,
 
     Status = ZwQuerySystemInformation(SystemTimeOfDayInformation,
                                       &TimeInformation,
-                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
+                                      sizeof(TimeInformation),
                                       NULL);
     if (!NT_SUCCESS(Status))
         return Status;

@@ -259,7 +259,7 @@ static BOOL WINAPI winsock_startup(INIT_ONCE *once, void *param, void **context)
     WSADATA wsa_data;
     DWORD res;
 
-    res = WSAStartup(MAKEWORD(1,1), &wsa_data);
+    res = WSAStartup(MAKEWORD(2,2), &wsa_data);
     if(res == ERROR_SUCCESS)
         winsock_loaded = TRUE;
     else
@@ -389,6 +389,7 @@ void free_netconn(netconn_t *netconn)
             DeleteSecurityContext(&netconn->ssl_ctx);
     }
 
+    close_netconn(netconn);
     heap_free(netconn);
 }
 

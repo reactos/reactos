@@ -24,30 +24,29 @@ typedef struct
 
 /* This const assigns the color and metric numbers to the elements from the elements list */
 
-/* Size 1 (width)          Size 2 (height)     Color 1                  Color 2                         Font             Fontcolor */
+/*   Size 1 (width)          Size 2 (height)     Color 1                  Color 2                         Font             Fontcolor */
 const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
-{ {-1,                     -1,                 COLOR_DESKTOP,           -1,                             -1,              -1},                /* -Desktop */
-  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_INACTIVECAPTION,   COLOR_GRADIENTINACTIVECAPTION,  FONT_CAPTION,    -1},                /* inactive window caption */
-  {SIZE_BORDER_WIDTH,      -1,                 COLOR_INACTIVEBORDER,    -1,                             -1,              -1},                  /* inactive window border */
-  {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_ACTIVECAPTION,     COLOR_GRADIENTACTIVECAPTION,    FONT_CAPTION,    COLOR_CAPTIONTEXT},    /* -active window caption */
-  {SIZE_BORDER_WIDTH,      -1,                 COLOR_ACTIVEBORDER,      -1,                             -1,              -1},                /* active window border */
-  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_MENU,              -1,                             FONT_MENU,       COLOR_MENUTEXT},    /* menu */
-  {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_HIGHLIGHT,         -1,                             -1,              COLOR_HIGHLIGHTTEXT},/* marked element */
-  {-1,                     -1,                 COLOR_WINDOW,            -1 /*COLOR_WINDOWFRAME*/,       -1,              COLOR_WINDOWTEXT},    /* window */
-  {SIZE_SCROLL_WIDTH,      SIZE_SCROLL_HEIGHT, COLOR_SCROLLBAR,         -1,                             -1,              -1},                /* scroll bar */
-  {-1,                     -1,                 COLOR_3DFACE,            -1,                             -1,              COLOR_BTNTEXT},        /* 3d objects */
-  {SIZE_SM_CAPTION_HEIGHT, -1,                 -1,                      -1,                             FONT_SMCAPTION,  -1},                /* palette window caption */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* symbol caption FIXME: Access? */
-  {SIZE_CAPTION_HEIGHT,    -1,                 -1,                      -1,                             -1,              -1},                /* caption bar */
-  {-1,                     -1,                 -1,                      -1,                             -1,              COLOR_GRAYTEXT},    /* inactive menu item FIXME: Access? */
-  {-1,                     -1,                 -1,                      -1,                             FONT_MESSAGE,    COLOR_WINDOWTEXT},    /* dialog */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* scrollbar controls FIXME: Access? */
-  {-1,                     -1,                 COLOR_APPWORKSPACE,      -1,                             -1,              -1},                /* application background */
-  {-1,                     -1,                 -1,                      -1,                             -1,              -1},                /* small caption bar FIXME: Access? */
-  {SIZE_ICON_SPACE_X,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance horiz. */
-  {SIZE_ICON_SPACE_Y,      -1,                 -1,                      -1,                             -1,              -1},                /* symbol distance vert. */
-  {-1,                     -1,                 COLOR_INFOBK,            -1,                             FONT_STATUS,     COLOR_INFOTEXT},    /* quickinfo */
-  {SIZE_ICON,              -1,                 -1,                      -1,                             FONT_ICON,       -1}};                /* symbol */
+{
+    {-1,                     -1,                 COLOR_DESKTOP,           -1,                             -1,              -1},                 /* Desktop */
+    {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_INACTIVECAPTION,   COLOR_GRADIENTINACTIVECAPTION,  FONT_CAPTION,    COLOR_INACTIVECAPTIONTEXT},/* inactive window caption */
+    {SIZE_BORDER_WIDTH,      -1,                 COLOR_INACTIVEBORDER,    -1,                             -1,              -1},                 /* inactive window border */
+    {SIZE_CAPTION_HEIGHT,    -1,                 COLOR_ACTIVECAPTION,     COLOR_GRADIENTACTIVECAPTION,    FONT_CAPTION,    COLOR_CAPTIONTEXT},  /* active window caption */
+    {SIZE_BORDER_WIDTH,      -1,                 COLOR_ACTIVEBORDER,      -1,                             -1,              -1},                 /* active window border */
+    {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_MENU,              COLOR_MENUHILIGHT,              FONT_MENU,       COLOR_MENUTEXT},     /* menu */
+    {SIZE_MENU_HEIGHT,       SIZE_MENU_WIDTH,    COLOR_HIGHLIGHT,         -1,                             -1,              COLOR_HIGHLIGHTTEXT},/* marked element */
+    {-1,                     -1,                 COLOR_WINDOW,            -1 /*COLOR_WINDOWFRAME*/,       -1,              COLOR_WINDOWTEXT},   /* window */
+    {SIZE_SCROLL_WIDTH,      SIZE_SCROLL_HEIGHT, COLOR_SCROLLBAR,         -1,                             -1,              -1},                 /* scroll bar */
+    {-1,                     -1,                 COLOR_3DFACE,            -1,                             -1,              COLOR_BTNTEXT},      /* 3d objects */
+    {SIZE_SM_CAPTION_HEIGHT, -1,                 -1,                      -1,                             FONT_SMCAPTION,  -1},                 /* palette (small) window caption */
+    {SIZE_CAPTION_HEIGHT,    -1,                 -1,                      -1,                             -1,              -1},                 /* caption bar buttons */
+    {-1,                     -1,                 -1,                      -1,                             FONT_MESSAGE,    COLOR_WINDOWTEXT},   /* dialog */
+    {-1,                     -1,                 COLOR_APPWORKSPACE,      -1,                             -1,              -1},                 /* application background */
+    {SIZE_ICON_SPACE_X,      -1,                 -1,                      -1,                             -1,              -1},                 /* icon distance horiz. */
+    {SIZE_ICON_SPACE_Y,      -1,                 -1,                      -1,                             -1,              -1},                 /* icon distance vert. */
+    {-1,                     -1,                 COLOR_INFOBK,            -1,                             FONT_STATUS,     COLOR_INFOTEXT},     /* quickinfo */
+    {SIZE_ICON,              -1,                 -1,                      -1,                             FONT_ICON,       -1},                 /* icon */
+//  {-1,                     -1,                 -1,                      -1,                             -1,              COLOR_GRAYTEXT},     /* inactive menu item -- FIXME: Access? */
+};
 
 /******************************************************************************/
 
@@ -241,7 +240,7 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
         PLOGFONTW plfFont = SchemeGetFont(&g->SchemeAdv, g_Assignment[iElement].Font);
 
         SetDlgItemText(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, plfFont->lfFaceName);
-        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, -MulDiv(plfFont->lfHeight, 72, GetDeviceCaps(hdcDlg, LOGPIXELSY)),FALSE);
+        SetDlgItemInt(hwndDlg, IDC_ADVAPPEARANCE_FONTSIZE_E, -MulDiv(plfFont->lfHeight, 72, GetDeviceCaps(hdcDlg, LOGPIXELSY)), FALSE);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONT_C, CB_FINDSTRINGEXACT, -1, (WPARAM)plfFont->lfFaceName);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTBOLD, BM_SETCHECK, plfFont->lfWeight == FW_BOLD?1:0, 0);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_FONTITALIC, BM_SETCHECK, plfFont->lfItalic, 0);
@@ -357,11 +356,10 @@ AdvAppearanceDlg_Init(HWND hwndDlg, GLOBALS *g)
 
     SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->SchemeAdv);
 
-
     /* Add the elements to the combo */
     for (iElement = 0; iElement < NUM_ELEMENTS; iElement++)
     {
-        LoadString(hApplet, IDS_ELEMENT_1 + iElement, (LPTSTR)&tstrText, 79);
+        LoadString(hApplet, IDS_ELEMENT_0 + iElement, (LPTSTR)&tstrText, 79);
         iListIndex = SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_ADDSTRING, 0, (LPARAM)&tstrText);
         SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_ELEMENT, CB_SETITEMDATA, (WPARAM)iListIndex, (LPARAM)iElement);
     }
@@ -524,7 +522,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-            if(g == NULL)
+            if (g == NULL)
                 return TRUE;
 
             switch(LOWORD(wParam))
@@ -560,7 +558,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Size;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         iSelection = LOWORD(SendDlgItemMessage(hwndDlg, IDC_ADVAPPEARANCE_SIZE_UD, UDM_GETPOS,0,0L));
@@ -568,7 +566,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_SETSIZE, iProperty, iSelection);
 
                         iProperty = g_Assignment[g->CurrentElement].Size2;
-                        if(iProperty != -1)
+                        if (iProperty != -1)
                             SchemeSetMetric(&g->SchemeAdv, iProperty, iSelection);
                     }
                     break;
@@ -577,7 +575,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
@@ -592,7 +590,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         HDC hdcDlg;
 
                         iProperty =  g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         hdcDlg = GetDC(hwndDlg);
@@ -610,7 +608,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);
@@ -624,7 +622,7 @@ AdvAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         iProperty = g_Assignment[g->CurrentElement].Font;
-                        if(iProperty == -1)
+                        if (iProperty == -1)
                             return TRUE;
 
                         plfFont = SchemeGetFont(&g->SchemeAdv, iProperty);

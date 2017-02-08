@@ -175,9 +175,86 @@ static HRESULT osx_to_win32_hresult(HRESULT in)
     return in;
 }
 
-static void CFSetApplierFunctionCopyToCFArray(const void *value, void *context)
+static long get_device_property_long(IOHIDDeviceRef device, CFStringRef key)
 {
-    CFArrayAppendValue( ( CFMutableArrayRef ) context, value );
+    CFTypeRef ref;
+    long result = 0;
+
+    if (device)
+    {
+        assert(IOHIDDeviceGetTypeID() == CFGetTypeID(device));
+
+        ref = IOHIDDeviceGetProperty(device, key);
+
+        if (ref && CFNumberGetTypeID() == CFGetTypeID(ref))
+            CFNumberGetValue((CFNumberRef)ref, kCFNumberLongType, &result);
+    }
+
+    return result;
+}
+
+static CFStringRef copy_device_name(IOHIDDeviceRef device)
+{
+    CFStringRef name;
+
+    if (device)
+    {
+        CFTypeRef ref_name;
+
+        assert(IOHIDDeviceGetTypeID() == CFGetTypeID(device));
+
+        ref_name = IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey));
+
+        if (ref_name && CFStringGetTypeID() == CFGetTypeID(ref_name))
+            name = CFStringCreateCopy(kCFAllocatorDefault, ref_name);
+        else
+        {
+            long vendID, prodID;
+
+            vendID = get_device_property_long(device, CFSTR(kIOHIDVendorIDKey));
+            prodID = get_device_property_long(device, CFSTR(kIOHIDProductIDKey));
+            name = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("0x%04lx 0x%04lx"), vendID, prodID);
+        }
+    }
+    else
+    {
+        ERR("NULL device\n");
+        name = CFStringCreateCopy(kCFAllocatorDefault, CFSTR(""));
+    }
+
+    return name;
+}
+
+static long get_device_location_ID(IOHIDDeviceRef device)
+{
+    return get_device_property_long(device, CFSTR(kIOHIDLocationIDKey));
+}
+
+static void copy_set_to_array(const void *value, void *context)
+{
+    CFArrayAppendValue(context, value);
+}
+
+static CFComparisonResult device_name_comparator(IOHIDDeviceRef device1, IOHIDDeviceRef device2)
+{
+    CFStringRef name1 = copy_device_name(device1), name2 = copy_device_name(device2);
+    CFComparisonResult result = CFStringCompare(name1, name2, (kCFCompareForcedOrdering | kCFCompareNumerically));
+    CFRelease(name1);
+    CFRelease(name2);
+    return  result;
+}
+
+static CFComparisonResult device_location_name_comparator(const void *val1, const void *val2, void *context)
+{
+    IOHIDDeviceRef device1 = (IOHIDDeviceRef)val1, device2 = (IOHIDDeviceRef)val2;
+    long loc1 = get_device_location_ID(device1), loc2 = get_device_location_ID(device2);
+
+    if (loc1 < loc2)
+        return kCFCompareLessThan;
+    else if (loc1 > loc2)
+        return kCFCompareGreaterThan;
+    /* virtual joysticks may not have a kIOHIDLocationIDKey and will default to location ID of 0, this orders virtual joysticks by their name */
+    return device_name_comparator(device1, device2);
 }
 
 static const char* debugstr_cf(CFTypeRef t)
@@ -212,8 +289,9 @@ static const char* debugstr_cf(CFTypeRef t)
 
 static const char* debugstr_device(IOHIDDeviceRef device)
 {
-    return wine_dbg_sprintf("<IOHIDDevice %p product %s>", device,
-                            debugstr_cf(IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey))));
+    return wine_dbg_sprintf("<IOHIDDevice %p product %s IOHIDLocationID %lu>", device,
+                            debugstr_cf(IOHIDDeviceGetProperty(device, CFSTR(kIOHIDProductKey))),
+                            get_device_location_ID(device));
 }
 
 static const char* debugstr_element(IOHIDElementRef element)
@@ -449,10 +527,13 @@ static int find_osx_devices(void)
     if (devset)
     {
         CFIndex num_devices, num_main_elements, idx;
-        CFMutableArrayRef devices = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
-        CFSetApplyFunction(devset, CFSetApplierFunctionCopyToCFArray, devices);
-        CFRelease( devset);
-        num_devices = CFArrayGetCount(devices);
+        CFMutableArrayRef devices;
+
+        num_devices = CFSetGetCount(devset);
+        devices = CFArrayCreateMutable(kCFAllocatorDefault, num_devices, &kCFTypeArrayCallBacks);
+        CFSetApplyFunction(devset, copy_set_to_array, devices);
+        CFRelease(devset);
+        CFArraySortValues(devices, CFRangeMake(0, num_devices), device_location_name_comparator, NULL);
 
         device_main_elements = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
         if (!device_main_elements)
@@ -1317,7 +1398,7 @@ static HRESULT WINAPI JoystickWImpl_CreateEffect(IDirectInputDevice8W *iface,
     if(!This->ff){
         TRACE("No force feedback support\n");
         *out = NULL;
-        return S_OK;
+        return DIERR_UNSUPPORTED;
     }
 
     if(outer)
@@ -1474,7 +1555,7 @@ static HRESULT WINAPI effect_QueryInterface(IDirectInputEffect *iface,
 
     TRACE("%p %s %p\n", This, debugstr_guid(guid), out);
 
-    if(IsEqualIID(guid, &IID_IDirectInputEffect)){
+    if(IsEqualIID(guid, &IID_IUnknown) || IsEqualIID(guid, &IID_IDirectInputEffect)){
         *out = iface;
         IDirectInputEffect_AddRef(iface);
         return S_OK;

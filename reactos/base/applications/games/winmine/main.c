@@ -312,10 +312,8 @@ static void CreateBoard( BOARD *p_board )
     p_board->face_bmp = SMILE_BMP;
     p_board->time = 0;
 
-    wnd_rect.left   = p_board->pos.x;
-    wnd_rect.right  = p_board->pos.x + p_board->width;
-    wnd_rect.top    = p_board->pos.y;
-    wnd_rect.bottom = p_board->pos.y + p_board->height;
+    SetRect(&wnd_rect, p_board->pos.x, p_board->pos.y, p_board->pos.x + p_board->width,
+            p_board->pos.y + p_board->height);
     AdjustWindowRect(&wnd_rect, wnd_style, TRUE);
 
     /* Make sure the window is completely on the screen */

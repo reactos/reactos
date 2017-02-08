@@ -93,6 +93,26 @@ extern void GDI_hdc_not_using_object(HGDIOBJ obj, HDC hdc) DECLSPEC_HIDDEN;
 extern HMETAFILE MF_Create_HMETAFILE(METAHEADER *mh) DECLSPEC_HIDDEN;
 extern METAHEADER *MF_CreateMetaHeaderDisk(METAHEADER *mr, LPCVOID filename, BOOL unicode ) DECLSPEC_HIDDEN;
 
+/* Format of comment record added by GetWinMetaFileBits */
+#include <pshpack2.h>
+typedef struct
+{
+    DWORD magic;   /* WMFC */
+    WORD unk04;    /* 1 */
+    WORD unk06;    /* 0 */
+    WORD unk08;    /* 0 */
+    WORD unk0a;    /* 1 */
+    WORD checksum;
+    DWORD unk0e;   /* 0 */
+    DWORD num_chunks;
+    DWORD chunk_size;
+    DWORD remaining_size;
+    DWORD emf_size;
+    BYTE emf_data[1];
+} emf_in_wmf_comment;
+#include <poppack.h>
+
+#define WMFC_MAGIC 0x43464d57
 /* palette.c */
 extern HPALETTE WINAPI GDISelectPalette( HDC hdc, HPALETTE hpal, WORD wBkg) DECLSPEC_HIDDEN;
 extern UINT WINAPI GDIRealizePalette( HDC hdc ) DECLSPEC_HIDDEN;

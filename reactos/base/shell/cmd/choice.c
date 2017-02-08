@@ -47,7 +47,7 @@ GetCharacterTimeout (LPTCH ch, DWORD dwMilliseconds)
 
     hInput = GetStdHandle (STD_INPUT_HANDLE);
 
-    //if the timeout experied return GC_TIMEOUT
+    //if the timeout expired return GC_TIMEOUT
     if (WaitForSingleObject (hInput, dwMilliseconds) == WAIT_TIMEOUT)
         return GC_TIMEOUT;
 

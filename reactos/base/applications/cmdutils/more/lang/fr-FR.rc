@@ -9,6 +9,7 @@ BEGIN
   [Lecteur:][Chemin]Nom du fichier    Un fichier, dont le contenu sera affiché.\n\
   Commande\t\t     Une commande, dont la sortie sera affichée.\n\n\
   À l'invite ""-- Continuer --"" Vous pouvez appuyer sur n'importe quelle touche pour afficher la page suivante.\n"
-    IDS_CONTINUE " -- Continuer (100%) -- "
-    IDS_FILE_ACCESS "Impossible d'accéder au fichier %s."
+    IDS_CONTINUE "-- Continuer --"
+    IDS_CONTINUE_PROGRESS "-- Continuer (%d %%) --"
+    IDS_FILE_ACCESS "Impossible d'accéder au fichier %s.\n"
 END

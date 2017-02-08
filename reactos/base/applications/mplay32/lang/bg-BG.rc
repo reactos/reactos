@@ -33,7 +33,7 @@ BEGIN
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&За...", IDM_ABOUT
+        MENUITEM "&За", IDM_ABOUT
     END
 END
 

@@ -48,6 +48,7 @@ list(APPEND LIBCNTPR_SOURCE
     string/itoa.c
     string/itow.c
     string/mbstowcs_nt.c
+    string/strtoi64.c
     string/strtol.c
     string/strtoul.c
     string/strtoull.c
@@ -71,8 +72,6 @@ list(APPEND LIBCNTPR_SOURCE
 if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_ASM_SOURCE
         except/i386/chkstk_asm.s
-        except/i386/seh.s
-        except/i386/seh_prolog.s
         setjmp/i386/setjmp.s
         math/i386/alldiv_asm.s
         math/i386/alldvrm_asm.s

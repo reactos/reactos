@@ -1,0 +1,123 @@
+/*
+ * Japanese resources for oleacc
+ *
+ * Copyright 2016 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "タイトル バー"
+    ROLE_SYSTEM_MENUBAR     "メニュー バー"
+    ROLE_SYSTEM_SCROLLBAR   "スクロール バー"
+    ROLE_SYSTEM_GRIP        "グリップ"
+    ROLE_SYSTEM_SOUND       "サウンド"
+    ROLE_SYSTEM_CURSOR      "カーソル"
+    ROLE_SYSTEM_CARET       "キャレット"
+    ROLE_SYSTEM_ALERT       "アラーム"
+    ROLE_SYSTEM_WINDOW      "ウィンドウ"
+    ROLE_SYSTEM_CLIENT      "クライアント"
+    ROLE_SYSTEM_MENUPOPUP   "ポップアップ メニュー"
+    ROLE_SYSTEM_MENUITEM    "メニュー項目"
+    ROLE_SYSTEM_TOOLTIP     "ツールチップ"
+    ROLE_SYSTEM_APPLICATION "アプリケーション"
+    ROLE_SYSTEM_DOCUMENT    "文書"
+    ROLE_SYSTEM_PANE        "ペイン"
+    ROLE_SYSTEM_CHART       "チャート"
+    ROLE_SYSTEM_DIALOG      "ダイアログ"
+    ROLE_SYSTEM_BORDER      "境界線"
+    ROLE_SYSTEM_GROUPING    "グループ化"
+    ROLE_SYSTEM_SEPARATOR   "区分線"
+    ROLE_SYSTEM_TOOLBAR     "ツール バー"
+    ROLE_SYSTEM_STATUSBAR   "ステータス バー"
+    ROLE_SYSTEM_TABLE        "表"
+    ROLE_SYSTEM_COLUMNHEADER "列ヘッダー"
+    ROLE_SYSTEM_ROWHEADER    "行ヘッダー"
+    ROLE_SYSTEM_COLUMN       "列"
+    ROLE_SYSTEM_ROW          "行"
+    ROLE_SYSTEM_CELL         "セル"
+    ROLE_SYSTEM_LINK         "リンク"
+    ROLE_SYSTEM_HELPBALLOON  "ヘルプ バルーン"
+    ROLE_SYSTEM_CHARACTER    "文字"
+    ROLE_SYSTEM_LIST         "リスト"
+    ROLE_SYSTEM_LISTITEM     "リスト項目"
+    ROLE_SYSTEM_OUTLINE      "アウトライン"
+    ROLE_SYSTEM_OUTLINEITEM  "アウトライン項目"
+    ROLE_SYSTEM_PAGETAB      "ページ タブ"
+    ROLE_SYSTEM_PROPERTYPAGE "プロパティ ページ"
+    ROLE_SYSTEM_INDICATOR    "インジケーター"
+    ROLE_SYSTEM_GRAPHIC      "グラフィック"
+    ROLE_SYSTEM_STATICTEXT   "スタティック テキスト"
+    ROLE_SYSTEM_TEXT         "テキスト"
+    ROLE_SYSTEM_PUSHBUTTON   "プッシュボタン"
+    ROLE_SYSTEM_CHECKBUTTON  "チェックボタン"
+    ROLE_SYSTEM_RADIOBUTTON  "ラジオボタン"
+    ROLE_SYSTEM_COMBOBOX     "コンボボックス"
+    ROLE_SYSTEM_DROPLIST     "ドロップダウン"
+    ROLE_SYSTEM_PROGRESSBAR  "プログレス バー"
+    ROLE_SYSTEM_DIAL         "ダイヤル"
+    ROLE_SYSTEM_HOTKEYFIELD  "ホットキー フィールド"
+    ROLE_SYSTEM_SLIDER       "スライダー"
+    ROLE_SYSTEM_SPINBUTTON   "スピンボックス"
+    ROLE_SYSTEM_DIAGRAM      "図"
+    ROLE_SYSTEM_ANIMATION    "アニメーション"
+    ROLE_SYSTEM_EQUATION     "数式"
+    ROLE_SYSTEM_BUTTONDROPDOWN "ドロップダウン ボタン"
+    ROLE_SYSTEM_BUTTONMENU   "メニュー ボタン"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "グリッド ドロップダウン ボタン"
+    ROLE_SYSTEM_WHITESPACE   "空白"
+    ROLE_SYSTEM_PAGETABLIST  "ページ タブ リスト"
+    ROLE_SYSTEM_CLOCK        "時計"
+    ROLE_SYSTEM_SPLITBUTTON  "スプリット ボタン"
+    ROLE_SYSTEM_IPADDRESS    "IPアドレス"
+    ROLE_SYSTEM_OUTLINEBUTTON "アウトライン ボタン"
+
+    IDS_STATE_NORMAL            "通常"
+    IDS_STATE_UNAVAILABLE       "利用不可"
+    IDS_STATE_SELECTED          "選択済み"
+    IDS_STATE_FOCUSED           "フォーカスされた"
+    IDS_STATE_PRESSED           "押された"
+    IDS_STATE_CHECKED           "チェックされた"
+    IDS_STATE_MIXED             "混合"
+    IDS_STATE_READONLY          "読み込み専用"
+    IDS_STATE_HOTTRACKED        "ホットトラックされた"
+    IDS_STATE_DEFAULT           "既定"
+    IDS_STATE_EXPANDED          "展開された"
+    IDS_STATE_COLLAPSED         "つぶれた"
+    IDS_STATE_BUSY              "ビジー"
+    IDS_STATE_FLOATING          "フローティング"
+    IDS_STATE_MARQUEED          "マーキー"
+    IDS_STATE_ANIMATED          "アニメーション"
+    IDS_STATE_INVISIBLE         "非表示"
+    IDS_STATE_OFFSCREEN         "オフスクリーン"
+    IDS_STATE_SIZEABLE          "サイズ変更可"
+    IDS_STATE_MOVEABLE          "移動可能"
+    IDS_STATE_SELFVOICING       "声を出す"
+    IDS_STATE_FOCUSABLE         "フォーカス可"
+    IDS_STATE_SELECTABLE        "選択可"
+    IDS_STATE_LINKED            "リンクされた"
+    IDS_STATE_TRAVERSED         "横切った"
+    IDS_STATE_MULTISELECTABLE   "複数選択"
+    IDS_STATE_EXTSELECTABLE     "拡張選択可"
+    IDS_STATE_ALERT_LOW         "低いを警告"
+    IDS_STATE_ALERT_MEDIUM      "中間を警告"
+    IDS_STATE_ALERT_HIGH        "高いを警告"
+    IDS_STATE_PROTECTED         "保護された"
+    IDS_STATE_HASPOPUP          "ポップアップのある"
+}

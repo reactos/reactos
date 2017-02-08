@@ -114,8 +114,8 @@ STATUSBAR_ComputeHeight(STATUS_INFO *infoPtr)
          * textHeight pixels large */
         HDC hdc = GetDC(infoPtr->Self);
         RECT r;
-        memset (&r, 0, sizeof (r));
-        r.bottom = max(infoPtr->minHeight, tm.tmHeight);
+
+        SetRect(&r, 0, 0, 0, max(infoPtr->minHeight, tm.tmHeight));
         if (SUCCEEDED(GetThemeBackgroundExtent(theme, hdc, SP_PANE, 0, &r, &r)))
         {
             height = r.bottom - r.top;
@@ -130,60 +130,26 @@ STATUSBAR_ComputeHeight(STATUS_INFO *infoPtr)
 static void
 STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
 {
-    HPEN hPenFace, hPenShadow, hPenHighlight, hOldPen;
-    POINT pt;
-    INT i;
+    RECT rc = *lpRect;
 
     TRACE("draw size grip %s\n", wine_dbgstr_rect(lpRect));
 
     if (theme)
     {
-        RECT gripperRect;
         SIZE gripperSize;
-        gripperRect = *lpRect;
         if (SUCCEEDED (GetThemePartSize (theme, hdc, SP_GRIPPER, 0, lpRect, 
             TS_DRAW, &gripperSize)))
         {
-            gripperRect.left = gripperRect.right - gripperSize.cx;
-            gripperRect.top = gripperRect.bottom - gripperSize.cy;
-            if (SUCCEEDED (DrawThemeBackground(theme, hdc, SP_GRIPPER, 0, &gripperRect, NULL)))
+            rc.left = rc.right - gripperSize.cx;
+            rc.top = rc.bottom - gripperSize.cy;
+            if (SUCCEEDED (DrawThemeBackground(theme, hdc, SP_GRIPPER, 0, &rc, NULL)))
                 return;
         }
     }
 
-    pt.x = lpRect->right - 1;
-    pt.y = lpRect->bottom - 1;
-
-    hPenFace = CreatePen( PS_SOLID, 1, comctl32_color.clr3dFace);
-    hOldPen = SelectObject( hdc, hPenFace );
-    MoveToEx (hdc, pt.x - 12, pt.y, NULL);
-    LineTo (hdc, pt.x, pt.y);
-    LineTo (hdc, pt.x, pt.y - 13);
-
-    pt.x--;
-    pt.y--;
-
-    hPenShadow = CreatePen( PS_SOLID, 1, comctl32_color.clr3dShadow);
-    SelectObject( hdc, hPenShadow );
-    for (i = 1; i < 11; i += 4) {
-	MoveToEx (hdc, pt.x - i, pt.y, NULL);
-	LineTo (hdc, pt.x + 1, pt.y - i - 1);
-
-	MoveToEx (hdc, pt.x - i - 1, pt.y, NULL);
-	LineTo (hdc, pt.x + 1, pt.y - i - 2);
-    }
-
-    hPenHighlight = CreatePen( PS_SOLID, 1, comctl32_color.clr3dHilight);
-    SelectObject( hdc, hPenHighlight );
-    for (i = 3; i < 13; i += 4) {
-	MoveToEx (hdc, pt.x - i, pt.y, NULL);
-	LineTo (hdc, pt.x + 1, pt.y - i - 1);
-    }
-
-    SelectObject (hdc, hOldPen);
-    DeleteObject( hPenFace );
-    DeleteObject( hPenShadow );
-    DeleteObject( hPenHighlight );
+    rc.left = max( rc.left, rc.right - GetSystemMetrics(SM_CXVSCROLL) - 1 );
+    rc.top  = max( rc.top, rc.bottom - GetSystemMetrics(SM_CYHSCROLL) - 1 );
+    DrawFrameControl( hdc, &rc, DFC_SCROLL, DFCS_SCROLLSIZEGRIP );
 }
 
 

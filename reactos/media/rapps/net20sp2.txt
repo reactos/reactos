@@ -37,6 +37,12 @@ License = Nespecificată
 Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 23,8 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Компоненты, необходимые для запуска некоторых Windows приложений.
+URLSite = https://www.microsoft.com/ru-RU/download/details.aspx?id=1639
+Size = 23,8 МиБ
+
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Hizmet Paketi 2
 License = Bilinmiyor

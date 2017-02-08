@@ -2500,7 +2500,7 @@ static HRESULT internal_parseBuffer(saxreader *This, const char *buffer, int siz
     if (encoding == XML_CHAR_ENCODING_NONE)
     {
         const WCHAR *ptr = (WCHAR*)buffer;
-        /* xml declaration with possibly specfied encoding will be still handled by parser */
+        /* an xml declaration with optional encoding will still be handled by the parser */
         if ((size >= 2) && *ptr == '<' && ptr[1] != '?')
         {
             enc_name = (xmlChar*)xmlGetCharEncodingName(XML_CHAR_ENCODING_UTF16LE);

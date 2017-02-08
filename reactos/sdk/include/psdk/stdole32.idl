@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2003 Robert Shearman
+ *               2005 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#if 0
+#pragma makedep install
+#pragma makedep typelib
+#endif
+
+[
+  uuid(00020430-0000-0000-C000-000000000046),
+  restricted,
+  version(1.0),
+  helpstring("OLE Automation")
+]
+library stdole
+{
+	/* typedefs aren't stored in the type library.
+           These type names are known by the type compiler so it
+           doesn't really matter what we define them as. */
+
+    typedef void *VARIANT;
+    typedef wchar_t *BSTR;
+    typedef unsigned long SCODE;
+    typedef unsigned long HRESULT;
+
+    typedef struct GUID {
+        unsigned long  Data1;
+        unsigned short Data2;
+        unsigned short Data3;
+        unsigned char  Data4[ 8 ];
+    } GUID;
+
+    typedef struct DISPPARAMS {
+        VARIANT *rgvarg;
+        long *rgdispidNamedArgs;
+        unsigned int cArgs;
+        unsigned int cNamedArgs;
+    } DISPPARAMS;
+
+    typedef struct EXCEPINFO {
+        unsigned short wCode;
+        unsigned short wReserved;
+        BSTR  bstrSource;
+        BSTR  bstrDescription;
+        BSTR  bstrHelpFile;
+        unsigned long dwHelpContext;
+        void *pvReserved;
+        void *pfnDeferredFillIn;
+        SCODE scode;
+    } EXCEPINFO;
+
+    [
+        odl,
+        uuid(00000000-0000-0000-C000-000000000046)
+    ]
+    interface IUnknown
+    {
+        [restricted]
+        HRESULT QueryInterface(
+                               [in] GUID *riid,
+                               [out] void **ppvObj);
+
+        [restricted]
+        unsigned long AddRef();
+
+        [restricted]
+        unsigned long Release();
+    }
+
+    [
+        odl,
+        uuid(00020400-0000-0000-C000-000000000046)
+    ]
+    interface IDispatch : IUnknown
+    {
+        [restricted]
+        HRESULT GetTypeInfoCount(
+                                 [out] unsigned int *pctinfo);
+
+        [restricted]
+        HRESULT GetTypeInfo(
+                            [in] unsigned int itinfo,
+                            [in] unsigned long lcid,
+                            [out] void **pptinfo);
+
+        [restricted]
+        HRESULT GetIDsOfNames(
+                              [in] GUID *riid,
+                              [in] char **rgszNames,
+                              [in] unsigned int cNames,
+                              [in] unsigned long lcid,
+                              [out] long *rgdispid);
+
+        [restricted]
+        HRESULT Invoke(
+                       [in] long dispidMember,
+                       [in] GUID *riid,
+                       [in] unsigned long lcid,
+                       [in] unsigned short wFlags,
+                       [in] DISPPARAMS *pdispparams,
+                       [out] VARIANT *pvarResult,
+                       [out] EXCEPINFO *pexcepinfo,
+                       [out] unsigned int *puArgErr);
+
+    }
+
+    [
+        odl,
+        uuid(00020404-0000-0000-C000-000000000046)
+    ]
+    interface IEnumVARIANT : IUnknown
+    {
+        HRESULT Next(
+                     [in] unsigned long celt,
+                     [in] VARIANT *rgvar,
+                     [out] unsigned long *pceltFetched);
+
+        HRESULT Skip(
+                     [in] unsigned long celt);
+
+        HRESULT Reset();
+
+        HRESULT Clone(
+                      [out] IEnumVARIANT **ppenum);
+    }
+};

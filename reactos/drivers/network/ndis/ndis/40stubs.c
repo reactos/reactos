@@ -25,7 +25,7 @@ NdisCompleteCloseAdapter(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -45,7 +45,7 @@ NdisCompleteOpenAdapter(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -63,7 +63,7 @@ NdisDeregisterAdapter(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -84,7 +84,7 @@ NdisDeregisterMac(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -104,7 +104,7 @@ NdisIMQueueMiniportCallback(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -125,7 +125,7 @@ NdisIMRevertBack(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -144,7 +144,7 @@ NdisIMSwitchToMiniport(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 	return FALSE;
 }
@@ -170,7 +170,7 @@ NdisQueryReceiveInformation(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 	return NDIS_STATUS_FAILURE;
 }
@@ -193,7 +193,7 @@ NdisReadMcaPosInformation(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -216,7 +216,7 @@ NdisRegisterAdapter(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -236,7 +236,7 @@ NdisReleaseAdapterResources(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -272,7 +272,7 @@ NdisImmediateReadSharedMemory(
     OUT PUCHAR      Buffer,
     IN  ULONG       Length)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -286,7 +286,7 @@ NdisImmediateWriteSharedMemory(
     IN  PUCHAR      Buffer,
     IN  ULONG       Length)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -302,7 +302,7 @@ NdisReadEisaSlotInformationEx(
     OUT PNDIS_EISA_FUNCTION_INFORMATION *EisaData,
     OUT PUINT                           NumberOfFunctions)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /* EOF */

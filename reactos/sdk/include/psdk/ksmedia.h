@@ -5,16 +5,124 @@
     Please see COPYING in the top level directory for license information.
 */
 
+#ifndef _KS_
+#error ks.h needs to be included before ksmedia.h
+#endif /* _KS_ */
+
 #ifndef KSMEDIA_H
 #define KSMEDIA_H
-
-#include <ks.h>
 
 /*
     KS CATEGORIES
 */
 
 typedef LONGLONG REFERENCE_TIME;
+
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#if !defined(INIT_USBAUDIO_MID)
+#define INIT_USBAUDIO_MID(guid, id)\
+{\
+    (guid)->Data1 = 0x4e1cecd2 + (USHORT)(id);\
+    (guid)->Data2 = 0x1679;\
+    (guid)->Data3 = 0x463b;\
+    (guid)->Data4[0] = 0xa7;\
+    (guid)->Data4[1] = 0x2f;\
+    (guid)->Data4[2] = 0xa5;\
+    (guid)->Data4[3] = 0xbf;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xc8;\
+    (guid)->Data4[6] = 0x6e;\
+    (guid)->Data4[7] = 0xba;\
+}
+#define EXTRACT_USBAUDIO_MID(guid)\
+    (USHORT)((guid)->Data1 - 0x4e1cecd2)
+#define DEFINE_USBAUDIO_MID_GUID(id)\
+    0x4e1cecd2+(USHORT)(id), 0x1679, 0x463b, 0xa7, 0x2f, 0xa5, 0xbf, 0x64, 0xc8, 0x6e, 0xba
+
+#define INIT_EXBUS_MANUFACTURER_ID INIT_USBAUDIO_MID
+
+#define IS_COMPATIBLE_USBAUDIO_MID(guid)\
+    (((guid)->Data1 >= 0x4e1cecd2) &&\
+    ((guid)->Data1 < 0x4e1cecd2 + 0xffff) &&\
+    ((guid)->Data2 == 0x1679) &&\
+    ((guid)->Data3 == 0x463b) &&\
+    ((guid)->Data4[0] == 0xa7) &&\
+    ((guid)->Data4[1] == 0x2f) &&\
+    ((guid)->Data4[2] == 0xa5) &&\
+    ((guid)->Data4[3] == 0xbf) &&\
+    ((guid)->Data4[4] == 0x64) &&\
+    ((guid)->Data4[5] == 0xc8) &&\
+    ((guid)->Data4[6] == 0x6e) &&\
+    ((guid)->Data4[7] == 0xba))
+#endif // !defined(INIT_USBAUDIO_MID)
+
+#if !defined(INIT_USBAUDIO_PID)
+#define INIT_USBAUDIO_PID(guid, id)\
+{\
+    (guid)->Data1 = 0xabcc5a5e + (USHORT)(id);\
+    (guid)->Data2 = 0xc263;\
+    (guid)->Data3 = 0x463b;\
+    (guid)->Data4[0] = 0xa7;\
+    (guid)->Data4[1] = 0x2f;\
+    (guid)->Data4[2] = 0xa5;\
+    (guid)->Data4[3] = 0xbf;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xc8;\
+    (guid)->Data4[6] = 0x6e;\
+    (guid)->Data4[7] = 0xba;\
+}
+#define EXTRACT_USBAUDIO_PID(guid)\
+    (USHORT)((guid)->Data1 - 0xabcc5a5e)
+#define DEFINE_USBAUDIO_PID_GUID(id)\
+    0xabcc5a5e+(USHORT)(id), 0xc263, 0x463b, 0xa7, 0x2f, 0xa5, 0xbf, 0x64, 0xc8, 0x6e, 0xba
+
+#define INIT_EXBUS_PRODUCT_ID INIT_USBAUDIO_PID
+
+#define IS_COMPATIBLE_USBAUDIO_PID(guid)\
+    (((guid)->Data1 >= 0xabcc5a5e) &&\
+    ((guid)->Data1 < 0xabcc5a5e + 0xffff) &&\
+    ((guid)->Data2 == 0xc263) &&\
+    ((guid)->Data3 == 0x463b) &&\
+    ((guid)->Data4[0] == 0xa7) &&\
+    ((guid)->Data4[1] == 0x2f) &&\
+    ((guid)->Data4[2] == 0xa5) &&\
+    ((guid)->Data4[3] == 0xbf) &&\
+    ((guid)->Data4[4] == 0x64) &&\
+    ((guid)->Data4[5] == 0xc8) &&\
+    ((guid)->Data4[6] == 0x6e) &&\
+    ((guid)->Data4[7] == 0xba))
+#endif // !defined(INIT_USBAUDIO_PID)
+
+#if !defined(INIT_USBAUDIO_PRODUCT_NAME)
+#define INIT_USBAUDIO_PRODUCT_NAME(guid, vid, pid, strIndex)\
+{\
+    (guid)->Data1 = 0XFC575048 + (USHORT)(vid);\
+    (guid)->Data2 = 0x2E08     + (USHORT)(pid);\
+    (guid)->Data3 = 0x463B     + (USHORT)(strIndex);\
+    (guid)->Data4[0] = 0xA7;\
+    (guid)->Data4[1] = 0x2F;\
+    (guid)->Data4[2] = 0xA5;\
+    (guid)->Data4[3] = 0xBF;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xC8;\
+    (guid)->Data4[6] = 0x6E;\
+    (guid)->Data4[7] = 0xBA;\
+}
+#define DEFINE_USBAUDIO_PRODUCT_NAME(vid, pid, strIndex)\
+    0xFC575048+(USHORT)(vid), 0x2E08+(USHORT)(pid), 0x463B+(USHORT)(strIndex), 0xA7, 0x2F, 0xA5, 0xBF, 0x64, 0xC8, 0x6E, 0xBA
+#endif
+
+#define INIT_EXBUS_PRODUCT_NAME INIT_USBAUDIO_PRODUCT_NAME
+
+// USB Component ID
+#define STATIC_KSCOMPONENTID_USBAUDIO \
+    0x8F1275F0, 0x26E9, 0x4264, {0xBA, 0x4D, 0x39, 0xFF, 0xF0, 0x1D, 0x94, 0xAA}
+DEFINE_GUIDSTRUCT("8F1275F0-26E9-4264-BA4D-39FFF01D94AA", KSCOMPONENTID_USBAUDIO);
+#define KSCOMPONENTID_USBAUDIO DEFINE_GUIDNAMED(KSCOMPONENTID_USBAUDIO)
+
+#endif // (NTDDI_VERSION >= NTDDI_WINXP)
 
 #define EXTRACT_WAVEFORMATEX_ID(Guid)\
     (USHORT)((Guid)->Data1)
@@ -128,6 +236,21 @@ DEFINE_GUIDSTRUCT("9EA331FA-B91B-45F8-9285-BD2BC77AFCDE", KSCATEGORY_AUDIO_SPLIT
 
 #define STATIC_KSCATEGORY_DRM_DESCRAMBLE STATIC_KSNODETYPE_DRM_DESCRAMBLE
 #define KSCATEGORY_DRM_DESCRAMBLE KSNODETYPE_DRM_DESCRAMBLE
+
+#define STATIC_KSDATAFORMAT_SPECIFIER_ANALOGVIDEO \
+    0x0482DDE0L, 0x7817, 0x11CF, {0x8A, 0x03, 0x00, 0xAA, 0x00, 0x6E, 0xCB, 0x65}
+DEFINE_GUIDSTRUCT("0482DDE0-7817-11CF-8A03-00AA006ECB65", KSDATAFORMAT_SPECIFIER_ANALOGVIDEO);
+#define KSDATAFORMAT_SPECIFIER_ANALOGVIDEO DEFINE_GUIDNAMED(KSDATAFORMAT_SPECIFIER_ANALOGVIDEO)
+
+#define STATIC_KSDATAFORMAT_TYPE_ANALOGVIDEO \
+    0x0482DDE1L, 0x7817, 0x11CF, {0x8A, 0x03, 0x00, 0xAA, 0x00, 0x6E, 0xCB, 0x65}
+DEFINE_GUIDSTRUCT("0482DDE1-7817-11CF-8A03-00AA006ECB65", KSDATAFORMAT_TYPE_ANALOGVIDEO);
+#define KSDATAFORMAT_TYPE_ANALOGVIDEO DEFINE_GUIDNAMED(KSDATAFORMAT_TYPE_ANALOGVIDEO)
+
+#define STATIC_PINNAME_VIDEO_ANALOGVIDEOIN \
+    0xFB6C4283L, 0x0353, 0x11D1, {0x90, 0x5F, 0x00, 0x00, 0xC0, 0xCC, 0x16, 0xBA}
+DEFINE_GUIDSTRUCT("FB6C4283-0353-11D1-905F-0000C0CC16BA", PINNAME_VIDEO_ANALOGVIDEOIN);
+#define PINNAME_VIDEO_ANALOGVIDEOIN DEFINE_GUIDNAMED(PINNAME_VIDEO_ANALOGVIDEOIN)
 
 /*
     Nodes
@@ -445,6 +568,13 @@ typedef struct {
 
 //#endif
 
+typedef enum {
+    KSPROPERTY_ALLOCATOR_CONTROL_HONOR_COUNT,
+    KSPROPERTY_ALLOCATOR_CONTROL_SURFACE_SIZE,
+    KSPROPERTY_ALLOCATOR_CONTROL_CAPTURE_CAPS,
+    KSPROPERTY_ALLOCATOR_CONTROL_CAPTURE_INTERLEAVE
+} KSPROPERTY_ALLOCATOR_CONTROL;
+
 typedef struct {
    KSDATARANGE              DataRange;
    ULONG                    MaximumChannels;
@@ -453,6 +583,276 @@ typedef struct {
    ULONG                    MinimumSampleFrequency;
    ULONG                    MaximumSampleFrequency;
 } KSDATARANGE_AUDIO, *PKSDATARANGE_AUDIO;
+
+typedef struct tagKS_AnalogVideoInfo {
+    RECT rcSource;
+    RECT rcTarget;
+    DWORD dwActiveWidth;
+    DWORD dwActiveHeight;
+    REFERENCE_TIME AvgTimePerFrame;
+} KS_ANALOGVIDEOINFO, *PKS_ANALOGVIDEOINFO;
+
+typedef struct tagKS_DATARANGE_ANALOGVIDEO {
+    KSDATARANGE DataRange;
+    KS_ANALOGVIDEOINFO AnalogVideoInfo;
+} KS_DATARANGE_ANALOGVIDEO, *PKS_DATARANGE_ANALOGVIDEO;
+
+typedef enum {
+    KS_TUNER_TUNING_EXACT = 1,
+    KS_TUNER_TUNING_FINE,
+    KS_TUNER_TUNING_COARSE,
+} KS_TUNER_TUNING_FLAGS;
+
+typedef enum {
+    KS_TUNER_STRATEGY_PLL = 0x01,
+    KS_TUNER_STRATEGY_SIGNAL_STRENGTH = 0x02,
+    KS_TUNER_STRATEGY_DRIVER_TUNES = 0x04,
+} KS_TUNER_STRATEGY;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG ModesSupported;
+    KSPIN_MEDIUM VideoMedium;
+    KSPIN_MEDIUM TVAudioMedium;
+    KSPIN_MEDIUM RadioAudioMedium;
+} KSPROPERTY_TUNER_CAPS_S, *PKSPROPERTY_TUNER_CAPS_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    KSPIN_MEDIUM IFMedium;
+} KSPROPERTY_TUNER_IF_MEDIUM_S, *PKSPROPERTY_TUNER_IF_MEDIUM_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG Mode;
+} KSPROPERTY_TUNER_MODE_S, *PKSPROPERTY_TUNER_MODE_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG Frequency;
+    ULONG LastFrequency;
+    ULONG TuningFlags;
+    ULONG VideoSubChannel;
+    ULONG AudioSubChannel;
+    ULONG Channel;
+    ULONG Country;
+} KSPROPERTY_TUNER_FREQUENCY_S, *PKSPROPERTY_TUNER_FREQUENCY_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG Standard;
+} KSPROPERTY_TUNER_STANDARD_S, *PKSPROPERTY_TUNER_STANDARD_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG InputIndex;
+} KSPROPERTY_TUNER_INPUT_S, *PKSPROPERTY_TUNER_INPUT_S;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG CurrentFrequency;
+    ULONG PLLOffset;
+    ULONG SignalStrength;
+    ULONG Busy;
+} KSPROPERTY_TUNER_STATUS_S, *PKSPROPERTY_TUNER_STATUS_S;
+
+typedef enum {
+    KSEVENT_TUNER_CHANGED,
+    KSEVENT_TUNER_INITIATE_SCAN
+} KSEVENT_TUNER;
+
+typedef enum {
+    KS_AnalogVideo_None        = 0x00000000,
+    KS_AnalogVideo_NTSC_M      = 0x00000001,
+    KS_AnalogVideo_NTSC_M_J    = 0x00000002,
+    KS_AnalogVideo_NTSC_433    = 0x00000004,
+    KS_AnalogVideo_PAL_B       = 0x00000010,
+    KS_AnalogVideo_PAL_D       = 0x00000020,
+    KS_AnalogVideo_PAL_G       = 0x00000040,
+    KS_AnalogVideo_PAL_H       = 0x00000080,
+    KS_AnalogVideo_PAL_I       = 0x00000100,
+    KS_AnalogVideo_PAL_M       = 0x00000200,
+    KS_AnalogVideo_PAL_N       = 0x00000400,
+    KS_AnalogVideo_PAL_60      = 0x00000800,
+    KS_AnalogVideo_SECAM_B     = 0x00001000,
+    KS_AnalogVideo_SECAM_D     = 0x00002000,
+    KS_AnalogVideo_SECAM_G     = 0x00004000,
+    KS_AnalogVideo_SECAM_H     = 0x00008000,
+    KS_AnalogVideo_SECAM_K     = 0x00010000,
+    KS_AnalogVideo_SECAM_K1    = 0x00020000,
+    KS_AnalogVideo_SECAM_L     = 0x00040000,
+    KS_AnalogVideo_SECAM_L1    = 0x00080000,
+    KS_AnalogVideo_PAL_N_COMBO = 0x00100000
+} KS_AnalogVideoStandard;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG Mode;
+    ULONG StandardsSupported;
+    ULONG MinFrequency;
+    ULONG MaxFrequency;
+    ULONG TuningGranularity;
+    ULONG NumberOfInputs;
+    ULONG SettlingTime;
+    ULONG Strategy;
+} KSPROPERTY_TUNER_MODE_CAPS_S, *PKSPROPERTY_TUNER_MODE_CAPS_S;
+
+typedef struct tagKS_BITMAPINFOHEADER {
+    DWORD biSize;
+    LONG biWidth;
+    LONG biHeight;
+    WORD biPlanes;
+    WORD biBitCount;
+    DWORD biCompression;
+    DWORD biSizeImage;
+    LONG biXPelsPerMeter;
+    LONG biYPelsPerMeter;
+    DWORD biClrUsed;
+    DWORD biClrImportant;
+} KS_BITMAPINFOHEADER, *PKS_BITMAPINFOHEADER;
+
+typedef struct _KS_VIDEO_STREAM_CONFIG_CAPS {
+    GUID guid;
+    ULONG VideoStandard;
+    SIZE InputSize;
+    SIZE MinCroppingSize;
+    SIZE MaxCroppingSize;
+    int CropGranularityX;
+    int CropGranularityY;
+    int CropAlignX;
+    int CropAlignY;
+    SIZE MinOutputSize;
+    SIZE MaxOutputSize;
+    int OutputGranularityX;
+    int OutputGranularityY;
+    int StretchTapsX;
+    int StretchTapsY;
+    int ShrinkTapsX;
+    int ShrinkTapsY;
+    LONGLONG MinFrameInterval;
+    LONGLONG MaxFrameInterval;
+    LONG MinBitsPerSecond;
+    LONG MaxBitsPerSecond;
+} KS_VIDEO_STREAM_CONFIG_CAPS, *PKS_VIDEO_STREAM_CONFIG_CAPS;
+
+typedef struct tagKS_FRAME_INFO {
+    ULONG ExtendedHeaderSize;
+    DWORD dwFrameFlags;
+    LONGLONG PictureNumber;
+    LONGLONG DropCount;
+    HANDLE hDirectDraw;
+    HANDLE hSurfaceHandle;
+    RECT DirectDrawRect;
+    union {
+        LONG lSurfacePitch;
+        DWORD Reserved1;
+    };
+    DWORD Reserved2;
+    union {
+        struct {
+            DWORD Reserved3;
+            DWORD Reserved4;
+        };
+        ULONGLONG FrameCompletionNumber;
+    };
+} KS_FRAME_INFO, *PKS_FRAME_INFO;
+
+typedef struct tagKS_VIDEOINFOHEADER {
+    RECT rcSource;
+    RECT rcTarget;
+    DWORD dwBitRate;
+    DWORD dwBitErrorRate;
+    REFERENCE_TIME AvgTimePerFrame;
+    KS_BITMAPINFOHEADER bmiHeader;
+} KS_VIDEOINFOHEADER, *PKS_VIDEOINFOHEADER;
+
+typedef struct tagKS_VIDEOINFOHEADER2 {
+    RECT rcSource;
+    RECT rcTarget;
+    DWORD dwBitRate;
+    DWORD dwBitErrorRate;
+    REFERENCE_TIME AvgTimePerFrame;
+    DWORD dwInterlaceFlags;
+    DWORD dwCopyProtectFlags;
+    DWORD dwPictAspectRatioX;
+    DWORD dwPictAspectRatioY;
+    union {
+        DWORD dwControlFlags;
+        DWORD dwReserved1;
+    };
+    DWORD dwReserved2;
+    KS_BITMAPINFOHEADER bmiHeader;
+} KS_VIDEOINFOHEADER2, *PKS_VIDEOINFOHEADER2;
+
+typedef struct tagKS_DATARANGE_VIDEO {
+    KSDATARANGE DataRange;
+    BOOL bFixedSizeSamples;
+    BOOL bTemporalCompression;
+    DWORD StreamDescriptionFlags;
+    DWORD MemoryAllocationFlags;
+    KS_VIDEO_STREAM_CONFIG_CAPS ConfigCaps;
+    KS_VIDEOINFOHEADER VideoInfoHeader;
+} KS_DATARANGE_VIDEO, *PKS_DATARANGE_VIDEO;
+
+typedef struct tagKS_DATARANGE_VIDEO2 {
+    KSDATARANGE DataRange;
+    BOOL bFixedSizeSamples;
+    BOOL bTemporalCompression;
+    DWORD StreamDescriptionFlags;
+    DWORD MemoryAllocationFlags;
+    KS_VIDEO_STREAM_CONFIG_CAPS ConfigCaps;
+    KS_VIDEOINFOHEADER2 VideoInfoHeader;
+} KS_DATARANGE_VIDEO2, *PKS_DATARANGE_VIDEO2;
+
+typedef struct tagKS_VBIINFOHEADER {
+    ULONG StartLine;
+    ULONG EndLine; 
+    ULONG SamplingFrequency;
+    ULONG MinLineStartTime;
+    ULONG MaxLineStartTime;
+    ULONG ActualLineStartTime;
+    ULONG ActualLineEndTime;
+    ULONG VideoStandard;
+    ULONG SamplesPerLine;
+    ULONG StrideInBytes;
+    ULONG BufferSize;
+} KS_VBIINFOHEADER, *PKS_VBIINFOHEADER;
+
+typedef struct tagKS_DATARANGE_VIDEO_VBI {
+    KSDATARANGE DataRange;
+    BOOL bFixedSizeSamples;
+    BOOL bTemporalCompression;
+    DWORD StreamDescriptionFlags;
+    DWORD MemoryAllocationFlags;
+    KS_VIDEO_STREAM_CONFIG_CAPS ConfigCaps;
+    KS_VBIINFOHEADER VBIInfoHeader;
+} KS_DATARANGE_VIDEO_VBI, *PKS_DATARANGE_VIDEO_VBI;
+
+typedef struct tagKS_TVTUNER_CHANGE_INFO {
+    DWORD dwFlags;
+    DWORD dwCountryCode;
+    DWORD dwAnalogVideoStandard;
+    DWORD dwChannel;
+} KS_TVTUNER_CHANGE_INFO, *PKS_TVTUNER_CHANGE_INFO;
+
+typedef struct {
+    KSPROPERTY Property;
+    ULONG IndexInputPin;
+    ULONG IndexOutputPin;
+    ULONG CanRoute;
+} KSPROPERTY_CROSSBAR_ROUTE_S, *PKSPROPERTY_CROSSBAR_ROUTE_S;
+
+typedef struct tagKS_VBI_FRAME_INFO {
+    ULONG ExtendedHeaderSize;
+    DWORD dwFrameFlags;
+    LONGLONG PictureNumber;
+    LONGLONG DropCount;
+    DWORD dwSamplingFrequency;
+    KS_TVTUNER_CHANGE_INFO TvTunerChangeInfo;
+    KS_VBIINFOHEADER VBIInfoHeader;
+} KS_VBI_FRAME_INFO, *PKS_VBI_FRAME_INFO;
+
+#define KS_SIZE_PREHEADER (FIELD_OFFSET(KS_VIDEOINFOHEADER,bmiHeader))
 
 #if !defined( DEFINE_WAVEFORMATEX_GUID )
 #define DEFINE_WAVEFORMATEX_GUID(x) (USHORT)(x), 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}

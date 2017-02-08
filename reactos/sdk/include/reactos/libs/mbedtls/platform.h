@@ -3,7 +3,7 @@
  *
  * \brief mbed TLS Platform abstraction layer
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -44,6 +44,7 @@ extern "C" {
 #if !defined(MBEDTLS_PLATFORM_NO_STD_FUNCTIONS)
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #if !defined(MBEDTLS_PLATFORM_STD_SNPRINTF)
 #if defined(_WIN32)
 #define MBEDTLS_PLATFORM_STD_SNPRINTF   mbedtls_platform_win32_snprintf /**< Default snprintf to use  */
@@ -64,13 +65,34 @@ extern "C" {
 #define MBEDTLS_PLATFORM_STD_FREE       free /**< Default free to use */
 #endif
 #if !defined(MBEDTLS_PLATFORM_STD_EXIT)
-#define MBEDTLS_PLATFORM_STD_EXIT      exit /**< Default free to use */
+#define MBEDTLS_PLATFORM_STD_EXIT      exit /**< Default exit to use */
 #endif
+#if !defined(MBEDTLS_PLATFORM_STD_TIME)
+#define MBEDTLS_PLATFORM_STD_TIME       time    /**< Default time to use */
+#endif
+#if !defined(MBEDTLS_PLATFORM_STD_EXIT_SUCCESS)
+#define MBEDTLS_PLATFORM_STD_EXIT_SUCCESS  EXIT_SUCCESS /**< Default exit value to use */
+#endif
+#if !defined(MBEDTLS_PLATFORM_STD_EXIT_FAILURE)
+#define MBEDTLS_PLATFORM_STD_EXIT_FAILURE  EXIT_FAILURE /**< Default exit value to use */
+#endif
+#if defined(MBEDTLS_FS_IO)
+#if !defined(MBEDTLS_PLATFORM_STD_NV_SEED_READ)
+#define MBEDTLS_PLATFORM_STD_NV_SEED_READ   mbedtls_platform_std_nv_seed_read
+#endif
+#if !defined(MBEDTLS_PLATFORM_STD_NV_SEED_WRITE)
+#define MBEDTLS_PLATFORM_STD_NV_SEED_WRITE  mbedtls_platform_std_nv_seed_write
+#endif
+#if !defined(MBEDTLS_PLATFORM_STD_NV_SEED_FILE)
+#define MBEDTLS_PLATFORM_STD_NV_SEED_FILE   "seedfile"
+#endif
+#endif /* MBEDTLS_FS_IO */
 #else /* MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
 #if defined(MBEDTLS_PLATFORM_STD_MEM_HDR)
 #include MBEDTLS_PLATFORM_STD_MEM_HDR
 #endif
 #endif /* MBEDTLS_PLATFORM_NO_STD_FUNCTIONS */
+
 
 /* \} name SECTION: Module settings */
 
@@ -206,6 +228,94 @@ int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #define mbedtls_exit   exit
 #endif /* MBEDTLS_PLATFORM_EXIT_MACRO */
 #endif /* MBEDTLS_PLATFORM_EXIT_ALT */
+
+/*
+ * The default exit values
+ */
+#if defined(MBEDTLS_PLATFORM_STD_EXIT_SUCCESS)
+#define MBEDTLS_EXIT_SUCCESS MBEDTLS_PLATFORM_STD_EXIT_SUCCESS
+#else
+#define MBEDTLS_EXIT_SUCCESS 0
+#endif
+#if defined(MBEDTLS_PLATFORM_STD_EXIT_FAILURE)
+#define MBEDTLS_EXIT_FAILURE MBEDTLS_PLATFORM_STD_EXIT_FAILURE
+#else
+#define MBEDTLS_EXIT_FAILURE 1
+#endif
+
+/*
+ * The time_t datatype
+ */
+#if defined(MBEDTLS_PLATFORM_TIME_TYPE_MACRO)
+typedef MBEDTLS_PLATFORM_TIME_TYPE_MACRO mbedtls_time_t;
+#else
+/* For time_t */
+#include <time.h>
+typedef time_t mbedtls_time_t;
+#endif /* MBEDTLS_PLATFORM_TIME_TYPE_MACRO */
+
+/*
+ * The function pointers for time
+ */
+#if defined(MBEDTLS_PLATFORM_TIME_ALT)
+extern mbedtls_time_t (*mbedtls_time)( mbedtls_time_t* time );
+
+/**
+ * \brief   Set your own time function pointer
+ *
+ * \param   time_func   the time function implementation
+ *
+ * \return              0
+ */
+int mbedtls_platform_set_time( mbedtls_time_t (*time_func)( mbedtls_time_t* time ) );
+#else
+#if defined(MBEDTLS_PLATFORM_TIME_MACRO)
+#define mbedtls_time    MBEDTLS_PLATFORM_TIME_MACRO
+#else
+#define mbedtls_time   time
+#endif /* MBEDTLS_PLATFORM_TIME_MACRO */
+#endif /* MBEDTLS_PLATFORM_TIME_ALT */
+
+/*
+ * The function pointers for reading from and writing a seed file to
+ * Non-Volatile storage (NV) in a platform-independent way
+ *
+ * Only enabled when the NV seed entropy source is enabled
+ */
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+#if !defined(MBEDTLS_PLATFORM_NO_STD_FUNCTIONS) && defined(MBEDTLS_FS_IO)
+/* Internal standard platform definitions */
+int mbedtls_platform_std_nv_seed_read( unsigned char *buf, size_t buf_len );
+int mbedtls_platform_std_nv_seed_write( unsigned char *buf, size_t buf_len );
+#endif
+
+#if defined(MBEDTLS_PLATFORM_NV_SEED_ALT)
+extern int (*mbedtls_nv_seed_read)( unsigned char *buf, size_t buf_len );
+extern int (*mbedtls_nv_seed_write)( unsigned char *buf, size_t buf_len );
+
+/**
+ * \brief   Set your own seed file writing/reading functions
+ *
+ * \param   nv_seed_read_func   the seed reading function implementation
+ * \param   nv_seed_write_func  the seed writing function implementation
+ *
+ * \return              0
+ */
+int mbedtls_platform_set_nv_seed(
+            int (*nv_seed_read_func)( unsigned char *buf, size_t buf_len ),
+            int (*nv_seed_write_func)( unsigned char *buf, size_t buf_len )
+            );
+#else
+#if defined(MBEDTLS_PLATFORM_NV_SEED_READ_MACRO) && \
+    defined(MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO)
+#define mbedtls_nv_seed_read    MBEDTLS_PLATFORM_NV_SEED_READ_MACRO
+#define mbedtls_nv_seed_write   MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO
+#else
+#define mbedtls_nv_seed_read    mbedtls_platform_std_nv_seed_read
+#define mbedtls_nv_seed_write   mbedtls_platform_std_nv_seed_write
+#endif
+#endif /* MBEDTLS_PLATFORM_NV_SEED_ALT */
+#endif /* MBEDTLS_ENTROPY_NV_SEED */
 
 #ifdef __cplusplus
 }

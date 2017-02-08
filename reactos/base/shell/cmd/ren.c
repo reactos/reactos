@@ -21,7 +21,7 @@
  *        Remove all hardcoded strings in En.rc
  *
  *    25-Nov-2008 (Victor Martinez <vicmarcal@hotmail.com>)
- *        Patch dedicated to Myrjala because her comprenhension and love :D
+ *        Patch dedicated to Myrjala because her comprehension and love :D
  *        Fixing following Bugs:
  *             -Wrong behavior with wildcards when Source and Destiny are Paths(FIXED).
  *             -Wrong general behavior (MSDN:"Rename cant move files between subdirectories")(FIXED)
@@ -55,9 +55,9 @@ INT cmd_rename (LPTSTR param)
     LPTSTR *arg = NULL;
     INT args = 0;
     INT nSlash = 0;
-    INT nEvalArgs = 0; /* nunber of evaluated arguments */
+    INT nEvalArgs = 0; /* number of evaluated arguments */
     DWORD dwFlags = 0;
-    DWORD dwFiles = 0; /* number of renamedd files */
+    DWORD dwFiles = 0; /* number of renamed files */
     INT i;
 
     LPTSTR srcPattern = NULL; /* Source Argument*/
@@ -69,7 +69,7 @@ INT cmd_rename (LPTSTR param)
     TCHAR dstPath[MAX_PATH]; /*Source Path Directories*/
     LPTSTR dstFILE = NULL; /*Contains the files name(s)*/
 
-    TCHAR dstLast[MAX_PATH]; /*It saves the File name after unmasked with wildcarts*/
+    TCHAR dstLast[MAX_PATH]; /*It saves the File name after unmasked with wildcards*/
     TCHAR dstFinal[MAX_PATH]; /*It saves the Final destiny Path*/
 
     BOOL bDstWildcard = FALSE;
@@ -102,7 +102,7 @@ INT cmd_rename (LPTSTR param)
     /* Read options */
     for (i = 0; i < args; i++)
     {
-        /* Lets check if we have a special option choosen and set the flag(s)*/
+        /* Lets check if we have a special option chosen and set the flag(s)*/
         if (*arg[i] == _T('/'))
         {
             if (_tcslen(arg[i]) >= 2)

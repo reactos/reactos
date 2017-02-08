@@ -175,6 +175,7 @@ StdMfg = "(port standard)"
 *PNP0401.DeviceDesc = "Port de imprimantă ECP"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 PortsClassName = "Порты (COM и LPT)"
 
 StdMfg = "(Стандартные порты)"

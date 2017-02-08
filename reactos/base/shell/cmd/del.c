@@ -354,12 +354,12 @@ INT CommandDelete (LPTSTR param)
     LPTSTR *arg = NULL;
     INT args;
     INT i;
-    INT   nEvalArgs = 0; /* nunber of evaluated arguments */
+    INT   nEvalArgs = 0; /* number of evaluated arguments */
     DWORD dwFlags = 0;
     DWORD dwAttrFlags = 0;
     DWORD dwFiles = 0;
     LONG ch;
-    TCHAR szOrginalArg[MAX_PATH];
+    TCHAR szOriginalArg[MAX_PATH];
 
     /*checks the first two chars of param to see if it is /?
     this however allows the following command to not show help
@@ -511,13 +511,13 @@ INT CommandDelete (LPTSTR param)
         if (_tcslen(arg[i]) == 2 && arg[i][1] == _T(':'))
         {
             /* Check for C: D: ... */
-            GetRootPath(arg[i], szOrginalArg, MAX_PATH);
+            GetRootPath(arg[i], szOriginalArg, MAX_PATH);
         }
         else
         {
-            _tcscpy(szOrginalArg,arg[i]);
+            _tcscpy(szOriginalArg,arg[i]);
         }
-        dwFiles += ProcessDirectory(szOrginalArg, &dwFlags, dwAttrFlags);
+        dwFiles += ProcessDirectory(szOriginalArg, &dwFlags, dwAttrFlags);
     }
 
     freep (arg);

@@ -178,10 +178,10 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-    NMHDR nmhdr;
-    ZeroMemory(&nmhdr, sizeof(NMHDR));
-    nmhdr.code = TVN_SELCHANGED;
-    SendMessageW(g_pChildWnd->hWnd, WM_NOTIFY, (WPARAM)TREE_WINDOW, (LPARAM)&nmhdr);
+    HKEY hKeyRoot;
+    LPCWSTR pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+
+    SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszKeyPath);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
@@ -774,7 +774,7 @@ static void ChooseFavorite(LPCWSTR pszFavorite)
     if (RegOpenKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
         goto done;
 
-    cbData = (sizeof(szFavoritePath) / sizeof(szFavoritePath[0])) - 1;
+    cbData = sizeof(szFavoritePath);
     memset(szFavoritePath, 0, sizeof(szFavoritePath));
     if (RegQueryValueExW(hKey, pszFavorite, NULL, &dwType, (LPBYTE) szFavoritePath, &cbData) != ERROR_SUCCESS)
         goto done;
@@ -1316,7 +1316,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProcW(hWnd, message, wParam, lParam);
         break;
     case WM_ACTIVATE:
-        if (LOWORD(hWnd))
+        if (LOWORD(hWnd) && g_pChildWnd)
             SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:

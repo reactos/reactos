@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Wyjście", IDM_EXIT
         MENUITEM "&Opcje", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "O p&rogramie ...", IDM_ABOUT
+        MENUITEM "O p&rogramie", IDM_ABOUT
     END
 END
 
@@ -42,22 +42,22 @@ CAPTION "Ustawienia"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Wyjście", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Pomoc", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Stopień powiększenia:", IDC_STATIC, 6, 8, 68, 8
+    PUSHBUTTON "&Pomoc", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Stopień powięks&zenia:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Śledzenie", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Prezentacja", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Podążaj za kursorem myszki", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Podążaj za kursore&m myszki", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "Podążaj za aktywnym oknem", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Podążaj za a&ktywnym oknem", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "Podążaj za tekstem", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "Podążaj za &tekstem", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "Odwróć kolory", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "Odwróć kolor&y", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "Uruchom zminimalizowaną", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "&Uruchom zminimalizowaną", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "Pokaż Lupę", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "P&okaż Lupę", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 

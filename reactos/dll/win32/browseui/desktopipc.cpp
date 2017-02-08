@@ -5,6 +5,7 @@
 #define PROXY_DESKTOP_CLASS L"Proxy Desktop"
 
 BOOL g_SeparateFolders = FALSE;
+HWND g_hwndProxyDesktop = NULL;
 
 // fields indented more are unknown ;P
 struct HNFBlock
@@ -27,8 +28,6 @@ struct HNFBlock
     UINT                pidlSize80;
     UINT                pathLength;
 };
-
-extern DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter);
 
 class CProxyDesktop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -72,13 +71,13 @@ public:
     END_MSG_MAP()
 };
 
-static CProxyDesktop * CreateProxyDesktop(IEThreadParamBlock * parameters)
-{
-    return new CProxyDesktop(parameters);
-}
-
 HWND FindShellProxy(LPITEMIDLIST pidl)
 {
+    /* If there is a proxy desktop in the current process use it */
+    if (g_hwndProxyDesktop)
+        return g_hwndProxyDesktop;
+
+    /* Try to find the desktop of the main explorer process */
     if (!g_SeparateFolders)
     {
         HWND shell = GetShellWindow();
@@ -94,6 +93,7 @@ HWND FindShellProxy(LPITEMIDLIST pidl)
         TRACE("Separate folders setting enabled. Ignoring main desktop.\n");
     }
 
+    /* The main desktop can't be find so try to see if another process has a proxy desktop */
     HWND proxy = FindWindow(PROXY_DESKTOP_CLASS, NULL);
     if (proxy)
     {
@@ -345,6 +345,104 @@ cleanup0:
     return params;
 }
 
+
+static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
+{
+    CComPtr<IBrowserService2> browser;
+    HRESULT                   hResult;
+    MSG Msg;
+    BOOL Ret;
+
+    // Tell the thread ref we are using it.
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->AddRef();
+
+    /* Handle /e parameter */
+     UINT wFlags = 0;
+     if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_E))
+        wFlags |= SBSP_EXPLOREMODE;
+
+    /* Handle /select parameter */
+    PUITEMID_CHILD pidlSelect = NULL;
+    if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_SELECT) && 
+        (ILGetNext(parameters->directoryPIDL) != NULL))
+    {
+        pidlSelect = ILClone(ILFindLastID(parameters->directoryPIDL));
+        ILRemoveLastID(parameters->directoryPIDL);
+    }
+
+    hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, wFlags, IID_PPV_ARG(IBrowserService2, &browser));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    if (pidlSelect != NULL)
+    {
+        CComPtr<IShellBrowser> pisb;
+        hResult = browser->QueryInterface(IID_PPV_ARG(IShellBrowser, &pisb));
+        if (SUCCEEDED(hResult))
+        {
+            CComPtr<IShellView> shellView;
+            hResult = pisb->QueryActiveShellView(&shellView);
+            if (SUCCEEDED(hResult))
+            {
+                shellView->SelectItem(pidlSelect, SVSI_SELECT|SVSI_ENSUREVISIBLE);
+            }
+        }
+        ILFree(pidlSelect);
+    }
+
+    while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
+    {
+        if (Ret == -1)
+        {
+            // Error: continue or exit?
+            break;
+        }
+
+        if (Msg.message == WM_QUIT)
+            break;
+
+        if (browser->v_MayTranslateAccelerator(&Msg) != S_OK)
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
+    }
+
+    int nrc = browser->Release();
+    if (nrc > 0)
+    {
+        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
+    }
+
+    browser.Detach();
+
+    // Tell the thread ref we are not using it anymore.
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->Release();
+
+    return hResult;
+}
+
+static DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
+{
+    IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
+
+    OleInitialize(NULL);
+    ExplorerMessageLoop(parameters);
+
+    /* Destroying the parameters releases the thread reference */
+    SHDestroyIETHREADPARAM(parameters);
+
+    /* Wake up the proxy desktop thread so it can check whether the last browser thread exited */
+    /* Use PostMessage in order to force GetMessage to return and check if all browser windows have exited */
+    PostMessageW(FindShellProxy(NULL), WM_EXPLORER_1037, 0, 0);
+
+    OleUninitialize();
+
+    return 0;
+}
+
 /*************************************************************************
 * SHCreateIETHREADPARAM		[BROWSEUI.123]
 */
@@ -535,6 +633,12 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
         }
     }
 
+    // HACK! This shouldn't happen! SHExplorerParseCmdLine needs fixing.
+    if (!pidl)
+    {
+        SHGetFolderLocation(NULL, CSIDL_PERSONAL, NULL, NULL, &pidl);
+    }
+
     parameters->directoryPIDL = pidl;
 
     // Try to find the owner of the idlist, if we aren't running /SEPARATE
@@ -568,9 +672,11 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
 
     // Else, start our own message loop!
     HRESULT hr = CoInitialize(NULL);
-    CProxyDesktop * proxy = CreateProxyDesktop(parameters);
+    CProxyDesktop * proxy = new CProxyDesktop(parameters);
     if (proxy)
     {
+        g_hwndProxyDesktop = proxy->Create(0);
+
         LONG refCount;
         CComPtr<IUnknown> thread;
         if (SHCreateThreadRef(&refCount, &thread) >= 0)
@@ -589,6 +695,8 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
             TranslateMessage(&Msg);
             DispatchMessageW(&Msg);
         }
+
+        DestroyWindow(g_hwndProxyDesktop);
 
         delete proxy;
     }

@@ -1,0 +1,24 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Compară conținuturile a două fișiere sau grupuri de fișiere.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Calea și numele primului fișier de comparat.\n\
+  data2      Calea și numele celui de-al doilea fișier de comparat.\n\
+  /A         Afișează diferențele în caractere ASCII (implicit: hexazecimal).\n\
+  /L         Afișează numărul liniei pentru diferențe.\n"
+    IDS_INVALIDSWITCH "Parametru nevalid - /%c\n"
+    IDS_BADSYNTAX "Sintaxă eronată\n"
+    IDS_FILEERROR "Nu poate fi găsit/deschis fișierul: %s\n"
+    IDS_COMPARING "%s este comparat cu %s...\n"
+    IDS_FILESIZEERROR "Eroare la determinarea dimensiunii fișierului: %s\n"
+    IDS_SIZEDIFFERS "Fișierele au dimensiuni diferite.\n"
+    IDS_READERROR "Eroare la citirea fișierelor.\n"
+    IDS_MISMATCHLINE "Diferență identificată la linia %d\n"
+    IDS_MISMATCHOFFSET "Diferență identificată la poziția 0x%X\n"
+    IDS_ASCIIDIFF "fișier%d = %c\n"
+    IDS_HEXADECIMALDIFF "fișier%d = %X\n"
+    IDS_MATCH "Fișierele sunt identice\n"
+END

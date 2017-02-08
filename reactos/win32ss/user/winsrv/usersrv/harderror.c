@@ -104,7 +104,7 @@ UserpGetClientFileName(
         return Status;
     }
 
-    ClientFileNameU->Length = wcslen(ClientFileNameU->Buffer)*sizeof(wchar_t);
+    ClientFileNameU->Length = wcslen(ClientFileNameU->Buffer) * sizeof(WCHAR);
     DPRINT("ClientFileNameU=\'%wZ\'\n", &ClientFileNameU);
 
     return STATUS_SUCCESS;
@@ -160,7 +160,6 @@ UserpCaptureStringParameters(
                                          &ParamStringU,
                                          sizeof(ParamStringU),
                                          NULL);
-
             if (!NT_SUCCESS(Status))
                 break;
 
@@ -271,7 +270,6 @@ UserpFormatMessages(
                             LANG_NEUTRAL,
                             Message->Status,
                             &MessageResource);
-
     if (NT_SUCCESS(Status))
     {
         if (MessageResource->Flags)
@@ -347,8 +345,10 @@ UserpFormatMessages(
         {
             Parameters[0] = Parameters[1];
             Parameters[1] = Parameters[3];
-            if (Parameters[2]) Parameters[2] = (ULONG_PTR)L"written";
-            else Parameters[2] = (ULONG_PTR)L"read";
+            if (Parameters[2])
+                Parameters[2] = (ULONG_PTR)L"written";
+            else
+                Parameters[2] = (ULONG_PTR)L"read";
             MessageResource = NULL;
         }
         else if (ExceptionCode == STATUS_IN_PAGE_ERROR)
@@ -373,7 +373,6 @@ UserpFormatMessages(
                                     LANG_NEUTRAL,
                                     ExceptionCode,
                                     &MessageResource);
-
             if (NT_SUCCESS(Status))
             {
                 if (FormatA.Buffer) RtlFreeUnicodeString(&FormatU);
@@ -453,30 +452,44 @@ UserpMessageBox(
     /* Set the message box type */
     switch (ValidResponseOptions)
     {
-    case OptionAbortRetryIgnore:
-        Type = MB_ABORTRETRYIGNORE;
-        break;
-    case OptionOk:
-        Type = MB_OK;
-        break;
-    case OptionOkCancel:
-        Type = MB_OKCANCEL;
-        break;
-    case OptionRetryCancel:
-        Type = MB_RETRYCANCEL;
-        break;
-    case OptionYesNo:
-        Type = MB_YESNO;
-        break;
-    case OptionYesNoCancel:
-        Type = MB_YESNOCANCEL;
-        break;
-    case OptionShutdownSystem:
-        Type = MB_RETRYCANCEL; // FIXME???
-        break;
+        case OptionAbortRetryIgnore:
+            Type = MB_ABORTRETRYIGNORE;
+            break;
+        case OptionOk:
+            Type = MB_OK;
+            break;
+        case OptionOkCancel:
+            Type = MB_OKCANCEL;
+            break;
+        case OptionRetryCancel:
+            Type = MB_RETRYCANCEL;
+            break;
+        case OptionYesNo:
+            Type = MB_YESNO;
+            break;
+        case OptionYesNoCancel:
+            Type = MB_YESNOCANCEL;
+            break;
+        case OptionShutdownSystem:
+            Type = MB_RETRYCANCEL; // FIXME???
+            break;
+        case OptionOkNoWait:
+            /*
+             * This gives a balloon notification.
+             * See rostests/kmtests/ntos_ex/ExHardError.c
+             */
+            Type = MB_YESNO; // FIXME!
+            break;
+        case OptionCancelTryContinue:
+            Type = MB_CANCELTRYCONTINUE;
+            break;
+
         /* Anything else is invalid */
-    default:
-        return ResponseNotHandled;
+        default:
+        {
+            DPRINT1("Unknown ValidResponseOptions = %d\n", ValidResponseOptions);
+            return ResponseNotHandled;
+        }
     }
 
     /* Set severity */
@@ -515,9 +528,6 @@ UserServerHardError(
     IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message)
 {
-#if DBG
-    PCSR_PROCESS ProcessData = ThreadData->Process;
-#endif
     ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING TextU, CaptionU;
@@ -525,8 +535,9 @@ UserServerHardError(
     HANDLE hProcess;
     ULONG Size;
 
+    ASSERT(ThreadData->Process != NULL);
+
     /* Default to not handled */
-    ASSERT(ProcessData != NULL);
     Message->Response = ResponseNotHandled;
 
     /* Make sure we don't have too many parameters */
@@ -541,7 +552,6 @@ UserServerHardError(
                            PROCESS_VM_READ | PROCESS_QUERY_INFORMATION,
                            &ObjectAttributes,
                            &Message->h.ClientId);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenProcess failed with code: %lx\n", Status);

@@ -78,6 +78,7 @@
 @ stdcall CertRDNValueToStrA(long ptr ptr long)
 @ stdcall CertRDNValueToStrW(long ptr ptr long)
 @ stdcall CertRegisterPhysicalStore(ptr long wstr ptr ptr)
+@ stdcall CertRegisterSystemStore(ptr long ptr ptr)
 @ stdcall CertRemoveEnhancedKeyUsageIdentifier(ptr str)
 @ stdcall CertRemoveStoreFromCollection(ptr ptr)
 @ stdcall CertSaveStore(ptr long long long ptr long)
@@ -160,7 +161,7 @@
 @ stdcall CryptMsgOpenToEncode(long long long ptr str ptr)
 @ stdcall CryptMsgSignCTL(long ptr long ptr long ptr ptr)
 @ stdcall CryptMsgUpdate(ptr ptr long long)
-@ stub CryptMsgVerifyCountersignatureEncoded
+@ stdcall CryptMsgVerifyCountersignatureEncoded(ptr long ptr long ptr long ptr)
 @ stdcall CryptMsgVerifyCountersignatureEncodedEx(ptr long ptr long ptr long long ptr long ptr)
 @ stdcall CryptProtectData(ptr wstr ptr ptr ptr long ptr)
 @ stdcall CryptProtectMemory(ptr long long)
@@ -190,6 +191,7 @@
 @ stdcall CryptUnprotectMemory(ptr long long)
 @ stdcall CryptUnregisterDefaultOIDFunction(long str wstr)
 @ stdcall CryptUnregisterOIDFunction(long str str)
+@ stdcall CertUnregisterSystemStore(ptr long)
 @ stub CryptUnregisterOIDInfo
 @ stdcall CryptVerifyCertificateSignature(long long ptr long ptr)
 @ stdcall CryptVerifyCertificateSignatureEx(long long long ptr long ptr long ptr)

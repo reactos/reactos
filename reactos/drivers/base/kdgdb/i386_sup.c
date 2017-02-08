@@ -83,16 +83,17 @@ static
 void*
 thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
 {
-    /* See if the guy got a stack */
-    if (Thread->Tcb.InitialStack == NULL)
+    static const void* NullValue = NULL;
+
+    if (!Thread->Tcb.InitialStack)
     {
-        static const void* NullValue = NULL;
         /* Terminated thread ? */
         switch (reg_name)
         {
             case ESP:
             case EBP:
             case EIP:
+                KDDBGPRINT("Returning NULL for register %d.\n", reg_name);
                 *size = 4;
                 return &NullValue;
             default:
@@ -129,32 +130,33 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
     }
     else
     {
-        /* The thread was not yet scheduled */
+        static PULONG Esp;
+        Esp = Thread->Tcb.KernelStack;
         *size = 4;
         switch(reg_name)
         {
-            case ESP: return &Thread->Tcb.KernelStack;
-            case EBP: return &((ULONG*)Thread->Tcb.KernelStack)[4];
-            case EIP: return &Thread->StartAddress;
+            case EBP: return &Esp[3];
+            case ESP: return &Esp;
+            case EIP: return &NullValue;
             default:
                 return NULL;
         }
     }
+
     return NULL;
 }
 
 KDSTATUS
-gdb_send_registers(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
+gdb_send_registers(void)
 {
-    CHAR Registers[16*8 + 1];
+    CHAR RegisterStr[9];
     UCHAR* RegisterPtr;
     unsigned i;
     unsigned short size;
-    CHAR* ptr = Registers;
+
+    RegisterStr[8] = '\0';
+
+    start_gdb_packet();
 
     KDDBGPRINT("Sending registers of thread %" PRIxPTR ".\n", gdb_dbg_tid);
     KDDBGPRINT("Current thread_id: %p.\n", PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread));
@@ -164,14 +166,16 @@ gdb_send_registers(
         for(i=0; i < 16; i++)
         {
             RegisterPtr = ctx_to_reg(&CurrentContext, i, &size);
-            *ptr++ = hex_chars[RegisterPtr[0] >> 4];
-            *ptr++ = hex_chars[RegisterPtr[0] & 0xF];
-            *ptr++ = hex_chars[RegisterPtr[1] >> 4];
-            *ptr++ = hex_chars[RegisterPtr[1] & 0xF];
-            *ptr++ = hex_chars[RegisterPtr[2] >> 4];
-            *ptr++ = hex_chars[RegisterPtr[2] & 0xF];
-            *ptr++ = hex_chars[RegisterPtr[3] >> 4];
-            *ptr++ = hex_chars[RegisterPtr[3] & 0xF];
+            RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
+            RegisterStr[1] = hex_chars[RegisterPtr[0] & 0xF];
+            RegisterStr[2] = hex_chars[RegisterPtr[1] >> 4];
+            RegisterStr[3] = hex_chars[RegisterPtr[1] & 0xF];
+            RegisterStr[4] = hex_chars[RegisterPtr[2] >> 4];
+            RegisterStr[5] = hex_chars[RegisterPtr[2] & 0xF];
+            RegisterStr[6] = hex_chars[RegisterPtr[3] >> 4];
+            RegisterStr[7] = hex_chars[RegisterPtr[3] & 0xF];
+
+            send_gdb_partial_packet(RegisterStr);
         }
     }
     else
@@ -183,8 +187,8 @@ gdb_send_registers(
         if (DbgThread == NULL)
         {
             /* Thread is dead */
-            send_gdb_packet("E03");
-            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            send_gdb_partial_packet("E03");
+            return finish_gdb_packet();
         }
 
         for(i=0; i < 16; i++)
@@ -192,32 +196,29 @@ gdb_send_registers(
             RegisterPtr = thread_to_reg(DbgThread, i, &size);
             if (RegisterPtr)
             {
-                *ptr++ = hex_chars[RegisterPtr[0] >> 4];
-                *ptr++ = hex_chars[RegisterPtr[0] & 0xF];
-                *ptr++ = hex_chars[RegisterPtr[1] >> 4];
-                *ptr++ = hex_chars[RegisterPtr[1] & 0xF];
-                *ptr++ = hex_chars[RegisterPtr[2] >> 4];
-                *ptr++ = hex_chars[RegisterPtr[2] & 0xF];
-                *ptr++ = hex_chars[RegisterPtr[3] >> 4];
-                *ptr++ = hex_chars[RegisterPtr[3] & 0xF];
+                RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
+                RegisterStr[1] = hex_chars[RegisterPtr[0] & 0xF];
+                RegisterStr[2] = hex_chars[RegisterPtr[1] >> 4];
+                RegisterStr[3] = hex_chars[RegisterPtr[1] & 0xF];
+                RegisterStr[4] = hex_chars[RegisterPtr[2] >> 4];
+                RegisterStr[5] = hex_chars[RegisterPtr[2] & 0xF];
+                RegisterStr[6] = hex_chars[RegisterPtr[3] >> 4];
+                RegisterStr[7] = hex_chars[RegisterPtr[3] & 0xF];
+
+                send_gdb_partial_packet(RegisterStr);
             }
             else
             {
-                ptr += sprintf(ptr, "xxxxxxxx");
+                send_gdb_partial_packet("xxxxxxxx");
             }
         }
     }
-    *ptr = '\0';
-    send_gdb_packet(Registers);
-    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+    
+    return finish_gdb_packet();
 }
 
 KDSTATUS
-gdb_send_register(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
+gdb_send_register(void)
 {
     enum reg_name reg_name;
     void *ptr;
@@ -241,8 +242,7 @@ gdb_send_register(
         if (DbgThread == NULL)
         {
             /* Thread is dead */
-            send_gdb_packet("E03");
-            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            return send_gdb_packet("E03");
         }
 
         ptr = thread_to_reg(DbgThread, reg_name, &size);
@@ -251,12 +251,13 @@ gdb_send_register(
     if (!ptr)
     {
         /* Undefined. Let's assume 32 bit register */
-        send_gdb_packet("xxxxxxxx");
+        return send_gdb_packet("xxxxxxxx");
     }
     else
     {
-        send_gdb_memory(ptr, size);
+        KDDBGPRINT("KDDBG : Sending registers as memory.\n");
+        return send_gdb_memory(ptr, size);
     }
-
-    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
+
+

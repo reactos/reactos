@@ -55,6 +55,9 @@ IDB_BANNER BITMAP "res/banner.bmp"
 #ifdef LANGUAGE_IT_IT
     #include "lang/credui_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/credui_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/credui_Ko.rc"
 #endif

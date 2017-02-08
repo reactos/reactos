@@ -116,6 +116,7 @@ GenericMfg = "(dispozitiv standard de control SCSI și RAID)"
 PCI\VEN_104B&CC_0100.DeviceDesc = "Dispozitiv de control SCSI BusLogic"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 SCSIClassName = "SCSI и RAID контроллеры"
 
 GenericMfg = "(Стандартные SCSI и RAID контроллеры)"

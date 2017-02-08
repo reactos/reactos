@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature="$ReactOS$"
 
 [AddReg]
@@ -119,6 +119,233 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls","Console",0x
 ; Cursors Schemes
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cursors\Schemes","ReactOS Default",0x00020000,""",,,,,,,,,,,,,"""
 
+; Advanced
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder","Type",0x00000000,"group"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder","Text",0x00000000,"@shell32.dll,-30498"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder","Bitmap",0x00020000,"%SystemRoot%\system32\SHELL32.dll,4"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder","HelpID",0x00000000,"shell.hlp#51140"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder","Ordinal",0x00010001,0
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","Text",0x00000000,"@shell32.dll,-30506"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","ValueName",0x00000000,"ClassicViewState"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","CheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","UncheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","HelpID",0x00000000,"shell.hlp#51076"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ClassicViewState","Ordinal",0x00010001,14
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\HideMyComputerIcons"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","Text",0x00000000,"@shell32.dll,-30497"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","ValueName",0x00000000,"{21EC2020-3AEA-1069-A2DD-08002B30309D}"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","CheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","UncheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","HelpID",0x00000000,"shell.hlp#51150"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ControlPanelInMyComputer","Ordinal",0x00010001,16
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","Text",0x00000000,"@shell32.dll,-30507"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","ValueName",0x00000000,"SeparateProcess"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","HelpID",0x00000000,"shell.hlp#51079"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess","Ordinal",0x00010001,13
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess\Policy",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DesktopProcess\Policy\SeparateProcess",,0x00000012
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","Text",0x00000000,"@shell32.dll,-30517"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","ValueName",0x00000000,"DisableThumbnailCache"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","HelpID",0x00000000,"shell.hlp#51155"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\DisableThumbCache","Ordinal",0x00010001,7
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","Text",0x00000000,"@shell32.dll,-30514"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","ValueName",0x00000000,"FolderContentsInfoTip"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FolderSizeTip","Ordinal",0x00010001,2
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","Text",0x00000000,"@shell32.dll,-30511"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","ValueName",0x00000000,"FriendlyTree"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","HelpID",0x00000000,"shell.hlp#51149"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\FriendlyTree","Ordinal",0x00010001,3
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","Text",0x00000000,"@shell32.dll,-30499"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","Type",0x00000000,"group"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","Bitmap",0x00020000,"%SystemRoot%\system32\SHELL32.dll,4"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","HelpID",0x00000000,"shell.hlp#51131"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden","Ordinal",0x00010001,8
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Text",0x00000000,"@shell32.dll,-30501"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Type",0x00000000,"radio"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","CheckedValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","ValueName",0x00000000,"Hidden"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HelpID",0x00000000,"shell.hlp#51104"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Ordinal",0x00010001,9
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Text",0x00000000,"@shell32.dll,-30500"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Type",0x00000000,"radio"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","ValueName",0x00000000,"Hidden"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000002
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HelpID",0x00000000,"shell.hlp#51105"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Ordinal",0x00010001,10
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","Text",0x00000000,"@shell32.dll,-30503"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","ValueName",0x00000000,"HideFileExt"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","HelpID",0x00000000,""
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\HideFileExt","Ordinal",0x00010001,11
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","Text",0x00000000,"@shell32.dll,-30509"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","ValueName",0x00000000,"NoNetCrawling"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","CheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","UncheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","HelpID",0x00000000,"shell.hlp#51147"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler","Ordinal",0x00010001,1
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\NetCrawler\Policy\NoNetCrawling",,0x00000012
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","Text",0x00000000,"@shell32.dll,-30513"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","ValueName",0x00000000,"PersistBrowsers"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","HelpID",0x00000000,"shell.hlp#51152"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\PersistBrowsers","Ordinal",0x00010001,15
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","Text",0x00000000,"@shell32.dll,-30512"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","ValueName",0x00000000,"ShowCompColor"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","HelpID",0x00000000,"shell.hlp#51130"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowCompColor","Ordinal",0x00010001,17
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","Text",0x00000000,"@shell32.dll,-30504"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","ValueName",0x00000000,"FullPath"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","HelpID",0x00000000,"shell.hlp#51100"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPath","Ordinal",0x00010001,6
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","Text",0x00000000,"@shell32.dll,-30505"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","ValueName",0x00000000,"FullPathAddress"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","HelpID",0x00000000,"shell.hlp#51107"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowFullPathAddress","Ordinal",0x00010001,5
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","Text",0x00000000,"@shell32.dll,-30502"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","ValueName",0x00000000,"ShowInfoTip"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","DefaultValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","HelpID",0x00000000,"shell.hlp#51102"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\ShowInfoTip","Ordinal",0x00010001,18
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","Text",0x00000000,"@shell32.dll,-30508"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","WarningIfNotDefault",0x00000000,"@shell32.dll,-28964"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","ValueName",0x00000000,"ShowSuperHidden"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","CheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","UncheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","HelpID",0x00000000,"shell.hlp#51103"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden","Ordinal",0x00010001,12
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden\Policy",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\SuperHidden\Policy\DontShowSuperHidden",,0x00000012
+
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","Type",0x00000000,"checkbox"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","Text",0x00000000,"@shell32.dll,-30510"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","HKeyRoot",0x00010001,0x80000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","RegPath",0x00000000,"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","ValueName",0x00000000,"WebViewBarricade"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","CheckedValue",0x00010001,0x00000001
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","UncheckedValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","HelpID",0x00000000,"shell.hlp#51148"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","DefaultValue",0x00010001,0x00000000
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\WebViewBarricade","Ordinal",0x00010001,4
+
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
@@ -160,6 +387,11 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegDone",0x00000002,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOrganization",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOwner",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","SoftwareType",2,"System"
+
+; Auto-Execute (AE) Debugger
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","Auto",2,"0"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","Debugger",2,"drwtsn32 -p %ld -e %ld -g"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","UserDebuggerHotKey",0x00010001,0x00000000
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Accessibility",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Compatibility",,0x00000012
@@ -559,6 +791,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Pacific SA Standar
 0xb4,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x03,0x00,0x06,0x00,0x02,0x00,0x17,0x00,0x3b,0x00,0x3b,0x00,0xe7,0x03,\
 0x00,0x00,0x0a,0x00,0x06,0x00,0x02,0x00,0x17,0x00,0x3b,0x00,0x3b,0x00,0xe7,0x03
+
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Newfoundland Standard Time","Display",0x00000000,"(GMT-03:30) Newfoundland"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Newfoundland Standard Time","Dlt",0x00000000,"Newfoundland Daylight Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Newfoundland Standard Time","Std",0x00000000,"Newfoundland Standard Time"
@@ -730,21 +963,30 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\South Africa Stand
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Display",0x00000000,"(GMT+03:00) Kaliningrad"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Dlt",0x00000000,"Kaliningrad Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Std",0x00000000,"Kaliningrad Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Display",0x00000000,"(GMT+02:00) Kaliningrad"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Dlt",0x00000000,"RTZ 1 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Std",0x00000000,"RTZ 1 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","Index",0x00010001,143
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Kaliningrad Standard Time","TZI",0x00000001,\
+0x88,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Belarus Standard Time","Display",0x00000000,"(GMT+03:00) Minsk"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Belarus Standard Time","Dlt",0x00000000,"Belarus Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Belarus Standard Time","Std",0x00000000,"Belarus Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Belarus Standard Time","Index",0x00010001,142
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Belarus Standard Time","TZI",0x00000001,\
 0x4c,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Display",0x00000000,"(GMT+04:00) Moscow, St. Petersburg, Volgograd"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Dlt",0x00000000,"Russian Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Std",0x00000000,"Russian Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Display",0x00000000,"(GMT+03:00) Moscow, St. Petersburg, Volgograd"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Dlt",0x00000000,"RTZ 2 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Std",0x00000000,"RTZ 2 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","Index",0x00010001,145
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russian Standard Time","TZI",0x00000001,\
-0x10,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x4c,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -793,11 +1035,20 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Arabian Standard T
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","Display",0x00000000,"(GMT+04:00) Caucasus Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","Display",0x00000000,"(UTC+04:00) Yerevan"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","Dlt",0x00000000,"Caucasus Daylight Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","Std",0x00000000,"Caucasus Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","Index",0x00010001,170
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Caucasus Standard Time","TZI",0x00000001,\
+0x10,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 3","Display",0x00000000,"(GMT+04:00) Izhevsk, Samara"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 3","Dlt",0x00000000,"RTZ 3 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 3","Std",0x00000000,"RTZ 3 Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 3","Index",0x00010001,172
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 3","TZI",0x00000001,\
 0x10,0xff,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -811,12 +1062,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Afghanistan Standa
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Display",0x00000000,"(GMT+06:00) Ekaterinburg"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Dlt",0x00000000,"Ekaterinburg Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Std",0x00000000,"Ekaterinburg Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Display",0x00000000,"(GMT+05:00) Ekaterinburg"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Dlt",0x00000000,"RTZ 4 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Std",0x00000000,"RTZ 4 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","Index",0x00010001,180
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ekaterinburg Standard Time","TZI",0x00000001,\
-0x98,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0xd4,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -865,12 +1116,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Asia Stand
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Display",0x00000000,"(GMT+07:00) Novosibirsk, Omsk"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Dlt",0x00000000,"N. Central Asia Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Std",0x00000000,"N. Central Asia Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Display",0x00000000,"(GMT+06:00) Novosibirsk"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Dlt",0x00000000,"RTZ 5 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Std",0x00000000,"RTZ 5 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","Index",0x00010001,201
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\N. Central Asia Standard Time","TZI",0x00000001,\
-0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x98,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -892,12 +1143,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\SE Asia Standard T
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Display",0x00000000,"(GMT+08:00) Krasnoyarsk"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Dlt",0x00000000,"North Asia Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Std",0x00000000,"North Asia Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Display",0x00000000,"(GMT+07:00) Krasnoyarsk"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Dlt",0x00000000,"RTZ 6 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Std",0x00000000,"RTZ 6 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","Index",0x00010001,207
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia Standard Time","TZI",0x00000001,\
-0x20,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x5c,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -946,12 +1197,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Ulaanbaatar Standa
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Display",0x00000000,"(GMT+09:00) Irkutsk"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Dlt",0x00000000,"North Asia East Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Std",0x00000000,"North Asia East Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Display",0x00000000,"(GMT+08:00) Irkutsk"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Dlt",0x00000000,"RTZ 7 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Std",0x00000000,"RTZ 7 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","Index",0x00010001,227
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\North Asia East Standard Time","TZI",0x00000001,\
-0xe4,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x20,0xfe,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -973,12 +1224,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tokyo Standard Tim
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Display",0x00000000,"(GMT+10:00) Yakutsk"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Dlt",0x00000000,"Yakutsk Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Std",0x00000000,"Yakutsk Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Display",0x00000000,"(GMT+09:00) Yakutsk"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Dlt",0x00000000,"RTZ 8 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Std",0x00000000,"RTZ 8 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","Index",0x00010001,240
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Yakutsk Standard Time","TZI",0x00000001,\
-0xa8,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0xe4,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -1027,12 +1278,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Tasmania Standard 
 0x00,0x00,0x03,0x00,0x00,0x00,0x05,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x0a,0x00,0x00,0x00,0x05,0x00,0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Display",0x00000000,"(GMT+11:00) Vladivostok"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Dlt",0x00000000,"Vladivostok Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Std",0x00000000,"Vladivostok Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Display",0x00000000,"(GMT+10:00) Vladivostok"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Dlt",0x00000000,"RTZ 9 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Std",0x00000000,"RTZ 9 Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","Index",0x00010001,270
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Vladivostok Standard Time","TZI",0x00000001,\
-0x6c,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0xa8,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -1041,6 +1292,15 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\West Pacific Stand
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\West Pacific Standard Time","Std",0x00000000,"West Pacific Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\West Pacific Standard Time","Index",0x00010001,275
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\West Pacific Standard Time","TZI",0x00000001,\
+0xa8,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Display",0x00000000,"(GMT+10:00) Magadan"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Dlt",0x00000000,"Magadan Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Std",0x00000000,"Magadan Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Index",0x00010001,278
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","TZI",0x00000001,\
 0xa8,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -1054,12 +1314,12 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Central Pacific St
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Display",0x00000000,"(GMT+12:00) Magadan"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Dlt",0x00000000,"Magadan Daylight Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Std",0x00000000,"Magadan Standard Time"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","Index",0x00010001,283
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Magadan Standard Time","TZI",0x00000001,\
-0x30,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Display",0x00000000,"(GMT+11:00) Chokurdakh"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Dlt",0x00000000,"RTZ 10 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Std",0x00000000,"RTZ 10 Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","Index",0x00010001,282
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 10","TZI",0x00000001,\
+0x6c,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 
@@ -1068,6 +1328,15 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Fiji Standard Time
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Fiji Standard Time","Std",0x00000000,"Fiji Standard Time"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Fiji Standard Time","Index",0x00010001,285
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Fiji Standard Time","TZI",0x00000001,\
+0x30,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 11","Display",0x00000000,"(GMT+12:00) Anadyr, Petropavlovsk-Kamchatsky"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 11","Dlt",0x00000000,"RTZ 11 Daylight Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 11","Std",0x00000000,"RTZ 11 Standard Time"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 11","Index",0x00010001,288
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Russia Time Zone 11","TZI",0x00000001,\
 0x30,0xfd,0xff,0xff,0x00,0x00,0x00,0x00,0xc4,0xff,0xff,0xff,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,\
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
@@ -1095,6 +1364,7 @@ HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FAT",0x00000000,"ufat.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FAT32",0x00000000,"ufat.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FATX",0x00000000,"ufatx.dll"
 HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","EXT2",0x00000000,"uext2.dll"
+HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","BtrFS",0x00000000,"ubtrfs.dll"
 
 ; Winlogon settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00020000,"%SystemRoot%\system32\cmd.exe"
@@ -1386,13 +1656,14 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000
 ; Win32 config
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","AppInit_DLLs",0x00000000,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DesktopHeapLogging",0x00010001,0x1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DeviceNotSelectedTimeout",0x00000000,"15"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DisplayVersion",0x00010001,0x1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","GDIProcessHandleQuota",0x00010001,0x2710
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Spooler",0x00000000,"yes"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","swapdisk",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","TransmissionRetryTimeout",0x00000000,"90"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","USERProcessHandleQuota",0x00010001,0x2710
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DesktopHeapLogging",0x00010001,0x1
 
 ;-------------------------------- STRINGS -------------------------------
 

@@ -5,6 +5,7 @@
 * PURPOSE:         Internal header for the I/O Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
+
 #include "ntdddisk.h"
 
 //
@@ -84,6 +85,21 @@
 // Max traversal of reparse points for a single open in IoParseDevice
 //
 #define IOP_MAX_REPARSE_TRAVERSAL 0x20
+
+//
+// Private flags for IoCreateFile / IoParseDevice
+//
+#define IOP_USE_TOP_LEVEL_DEVICE_HINT       0x01
+#define IOP_CREATE_FILE_OBJECT_EXTENSION    0x02
+
+
+typedef struct _FILE_OBJECT_EXTENSION
+{
+    PDEVICE_OBJECT TopDeviceObjectHint;
+
+} FILE_OBJECT_EXTENSION, *PFILE_OBJECT_EXTENSION;
+
+
 
 //
 // We can call the Ob Inlined API, it's the same thing
@@ -316,16 +332,6 @@ typedef struct _ERROR_LOG_ENTRY
     PDRIVER_OBJECT DriverObject;
     LARGE_INTEGER TimeStamp;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
-
-//
-// Event Log LPC Message
-//
-typedef struct _ELF_API_MSG
-{
-    PORT_MESSAGE h;
-    ULONG Unknown[2];
-    IO_ERROR_LOG_MESSAGE IoErrorMessage;
-} ELF_API_MSG, *PELF_API_MSG;
 
 //
 // To simplify matters, the kernel is made to support both the checked and free

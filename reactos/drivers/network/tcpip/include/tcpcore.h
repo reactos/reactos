@@ -1324,7 +1324,7 @@ struct tcp_opt {
 
 /* RTT measurement */
 	__u8	backoff;	/* backoff				*/
-	__u32	srtt;		/* smothed round trip time << 3		*/
+	__u32	srtt;		/* smoothed round trip time << 3		*/
 	__u32	mdev;		/* medium deviation			*/
 	__u32	mdev_max;	/* maximal mdev for the last rtt period	*/
 	__u32	rttvar;		/* smoothed mdev_max			*/
@@ -2109,10 +2109,10 @@ static __inline int tcp_sk_listen_hashfn(struct sock *sk)
 				 */
 
 #define TCP_SYN_RETRIES	 5	/* number of times to retry active opening a
-				 * connection: ~180sec is RFC minumum	*/
+				 * connection: ~180sec is RFC minimum	*/
 
 #define TCP_SYNACK_RETRIES 5	/* number of times to retry passive opening a
-				 * connection: ~180sec is RFC minumum	*/
+				 * connection: ~180sec is RFC minimum	*/
 
 
 #define TCP_ORPHAN_RETRIES 7	/* number of times to retry on an orphaned
@@ -2808,7 +2808,7 @@ extern u32	__tcp_select_window(struct sock *sk);
 
 /* TCP timestamps are only 32-bits, this causes a slight
  * complication on 64-bit systems since we store a snapshot
- * of jiffies in the buffer control blocks below.  We decidely
+ * of jiffies in the buffer control blocks below.  We decidedly
  * only use of the low 32-bits of jiffies and hide the ugly
  * casts with the following macro.
  */
@@ -2984,7 +2984,7 @@ static __inline void tcp_cwnd_validate(struct sock *sk, struct tcp_opt *tp)
 #endif
 }
 
-/* Set slow start threshould and cwnd not falling to slow start */
+/* Set slow start threshold and cwnd not falling to slow start */
 static __inline void __tcp_enter_cwr(struct tcp_opt *tp)
 {
 #if 0

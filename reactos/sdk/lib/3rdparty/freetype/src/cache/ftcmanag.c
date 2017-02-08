@@ -314,7 +314,7 @@
     FTC_MruNode  mrunode;
 
 
-    if ( !aface || !face_id )
+    if ( !aface )
       return FT_THROW( Invalid_Argument );
 
     *aface = NULL;
@@ -672,7 +672,7 @@
     FT_UInt  nn;
 
 
-    if ( !manager || !face_id )
+    if ( !manager )
       return;
 
     /* this will remove all FTC_SizeNode that correspond to

@@ -9,6 +9,7 @@ BEGIN
   [Drive:][Path]File    Il file da visualizzare.\n\
   Comando\t\t     Il comando di cui l'output dev'essere visualizzato.\n\n\
   Alla richiesta ""-- Continua --"" premere un tasto qualsiasi per visualizzare la pagina successiva.\n"
-    IDS_CONTINUE " -- Continua (100%) -- "
-    IDS_FILE_ACCESS "Impossibile accedere al file %s."
+    IDS_CONTINUE "-- Continua --"
+    IDS_CONTINUE_PROGRESS "-- Continua (%d%%) --"
+    IDS_FILE_ACCESS "Impossibile accedere al file %s.\n"
 END

@@ -127,7 +127,7 @@ KsCreateAllocator(HANDLE ConnectionHandle,
 * Handle to use to create the clock 
 *
 * @param PKSCLOCK_CREATE ClockCreate
-* paramenter to use to create the clock
+* parameter to use to create the clock
 *
 * @param PHANDLE  ClockHandle
 * The new handle
@@ -169,7 +169,7 @@ KsCreateClock(HANDLE ConnectionHandle,
 * requested for the connection. 
 
 * @param ACCESS_MASK  DesiredAccess
-* Desrided access
+* Desired access
 *
 * @param PHANDLE ConnectionHandle
 * connection handle passed
@@ -179,7 +179,7 @@ KsCreateClock(HANDLE ConnectionHandle,
 *
 * @remarks.
 * The flag in PKSDATAFORMAT is not really document, 
-* to find it u need api mointor allot api and figout
+* to find it u need api monitor allot api and figout
 * how it works, only flag I have found is the 
 * KSDATAFORMAT_ATTRIBUTES flag, it doing a Align
 * of LONLONG size, it also round up it.
@@ -222,7 +222,7 @@ KsCreatePin(HANDLE FilterHandle,
 * topology node parameters to use when it is create
 *
 * @param ACCESS_MASK  DesiredAccess
-* Desrided access
+* Desired access
 *
 * @param PHANDLE  NodeHandle
 * Location for the topology node handle

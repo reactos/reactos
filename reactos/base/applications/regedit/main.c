@@ -196,26 +196,25 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
+    /* Initialize global strings */
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+    LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, COUNT_OF(szFrameClass));
+    LoadStringW(hInstance, IDC_REGEDIT, szChildClass, COUNT_OF(szChildClass));
+
     if (ProcessCmdLine(lpCmdLine))
     {
         return 0;
     }
 
-    /* Initialize global strings */
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_REGEDIT_FRAME, szFrameClass, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_REGEDIT, szChildClass, MAX_LOADSTRING);
-
-   
     switch (GetUserDefaultUILanguage())
-  {
-    case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
-      SetProcessDefaultLayout(LAYOUT_RTL);
-      break;
+    {
+        case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
+            SetProcessDefaultLayout(LAYOUT_RTL);
+            break;
 
-    default:
-      break;
-  }
+        default:
+            break;
+    }
     /* Store instance handle in our global variable */
     hInst = hInstance;
 

@@ -76,7 +76,8 @@ typedef void (__cdecl typeof(png_write_info))(struct png_struct_def *, struct pn
 typedef void (__cdecl typeof(png_write_rows))(struct png_struct_def *, unsigned char **row, unsigned int);
 typedef unsigned int (__cdecl typeof(png_get_iCCP))(struct png_struct_def *, struct png_info_def *, char **, int *, char **, unsigned int *);
 typedef void (__cdecl typeof(png_set_crc_action))(struct png_struct_def *, int, int);
-
+typedef void (__stdcall typeof(png_set_PLTE))(struct png_struct_def *, struct png_info_def *, const struct png_color_struct *, int);
+typedef void (__stdcall typeof(png_set_tRNS))(struct png_struct_def *, struct png_info_def *, const unsigned char *, int, const struct png_color_16_struct *);
 typedef void *thandle_t_1;
 typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, long);
 typedef unsigned int (*TIFFSeekProc_1)(void *, unsigned int, int);

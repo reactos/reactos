@@ -57,7 +57,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "Inf&o...", ID_ABOUT
+        MENUITEM "Inf&o", ID_ABOUT
     END
 END
 

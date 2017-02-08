@@ -1,0 +1,28 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "Formatul %1 RunEx sau RunOnceEx a fost nevalid. După numele funcției este necesar caracterul bară-verticală („|”) iar funcția trebuie să accepte parametri WinMain()."
+    IDS_LOADERROR "A survenit o eroare la încărcarea %1. Este posibil ca fișierul să nu fi fost instalat sau să fie corupt."
+    IDS_CALLERROR "A survenit o eroare sau excepție în apelul funcției %1 în %2."
+    IDS_INCORRECTFORMAT "Formatul comenzii RunEx sau RunOnceEx nu este corect: %1. Comanda de execuție trebuie să înceapă cu „||”."
+    IDS_NOEXPORT "Funcția %1 din fișierul %2 nu poate fi apelată deoarece fie funcția nu există fie nu este exportată."
+    IDS_EXECUTEERROR "A survenit o eroare sau excepție în execuția %1."
+    IDS_NOFUNCTION "Funcția %1 nu poate fi găsită în fișierul %2."
+    IDS_NODEPENDENCY "Fișierul dependență %1 nu poate fi încărcat."
+    IDS_SETUPERROR "A survenit o eroare la configurarea %1. Această eroare a fost înregistrată, instalarea va continua"
+    IDS_INCOMPLETE "Instalarea precedentă a aplicației nu a fost completă.\n\nAutentificați-vă cu un cont de Administrator pentru a completa instalarea."
+    IDS_SETUP "Instalare ReactOS"
+    IDS_SERVICEERROR "Unele servicii nu au fost pornite. Instalarea necesită repornirea sistemului pentru a porni serviciile."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Instalare ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Elemente în curs de instalare:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

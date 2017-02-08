@@ -7,14 +7,16 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Număr eronat de parametri - %s\n"
     IDS_INVALID_PARAMETER "Număr eronat de parametri - %s\n"
     IDS_INVALID_PARAMETER2 "Parametru eronat - %s\n"
+    IDS_PATH_NOT_FOUND "Cale inexistentă - %s\n"
+    IDS_ACCESS_DENIED "Acces respins - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Unitatea este deja SUBSTituită\n"
     IDS_FAILED_WITH_ERRORCODE "Operația a eșuat. Codul de eroare 0x%x: %s\n"
     IDS_USAGE "Substituie un director cu o unitate de stocare.\n\n\
 SUBST [unitate1: [unitate2:]cale]\n\
 SUBST unitate1: /D\n\n\
-  unitate1:        Unitatea virtuală ce va fi asociată directorului.\n\
-  [unitate:]cale   Unitatea fizică și calea directorului substituit\n\
-                   cu unitatea virtuală.\n\
-  /D               șterge o unitate (virtuală) de substituție.\n\n\
+  unitate1:       Unitatea virtuală ce va fi asociată directorului.\n\
+  [unitate:]cale  Unitatea fizică și calea directorului substituit\n\
+                  cu unitatea virtuală.\n\
+  /D              șterge o unitate (virtuală) de substituție.\n\n\
 Tastați SUBST fără argumente pentru a enumera unitățile virtuale curente.\n"
 END

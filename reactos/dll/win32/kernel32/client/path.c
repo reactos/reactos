@@ -350,7 +350,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
             }
             break;
 
-        /* Add the current dierctory */
+        /* Add the current directory */
         case BaseSearchPathCurrent:
 
             /* Copy it in the buffer, ASSERT there's enough space */
@@ -572,7 +572,7 @@ IsShortName_U(IN PWCHAR Name,
     /* What do you think 8.3 means? */
     if (Length > 12) return FALSE;
 
-    /* Sure, any emtpy name is a short name */
+    /* Sure, any empty name is a short name */
     if (!Length) return TRUE;
 
     /* This could be . or .. or something else */
@@ -1119,12 +1119,12 @@ GetFullPathNameW(IN LPCWSTR lpFileName,
  */
 DWORD
 WINAPI
-SearchPathA(IN LPCSTR lpPath,
+SearchPathA(IN LPCSTR lpPath OPTIONAL,
             IN LPCSTR lpFileName,
-            IN LPCSTR lpExtension,
+            IN LPCSTR lpExtension OPTIONAL,
             IN DWORD nBufferLength,
-            IN LPSTR lpBuffer,
-            OUT LPSTR *lpFilePart)
+            OUT LPSTR lpBuffer,
+            OUT LPSTR *lpFilePart OPTIONAL)
 {
     PUNICODE_STRING FileNameString;
     UNICODE_STRING PathString, ExtensionString;
@@ -1193,7 +1193,7 @@ SearchPathA(IN LPCSTR lpPath,
             goto Quickie;
         }
 
-        /* If the correct ANSI size is too big, return requird length plus a NULL */
+        /* If the correct ANSI size is too big, return required length plus a NULL */
         if (AnsiLength >= nBufferLength)
         {
             PathSize = AnsiLength + 1;
@@ -1294,12 +1294,12 @@ Quickie:
  */
 DWORD
 WINAPI
-SearchPathW(IN LPCWSTR lpPath,
+SearchPathW(IN LPCWSTR lpPath OPTIONAL,
             IN LPCWSTR lpFileName,
-            IN LPCWSTR lpExtension,
+            IN LPCWSTR lpExtension OPTIONAL,
             IN DWORD nBufferLength,
-            IN LPWSTR lpBuffer,
-            OUT LPWSTR *lpFilePart)
+            OUT LPWSTR lpBuffer,
+            OUT LPWSTR *lpFilePart OPTIONAL)
 {
     UNICODE_STRING FileNameString, ExtensionString, PathString, CallerBuffer;
     ULONG Flags, LengthNeeded, FilePartSize;
@@ -1452,7 +1452,7 @@ Quickie:
 DWORD
 WINAPI
 GetLongPathNameW(IN LPCWSTR lpszShortPath,
-                 IN LPWSTR lpszLongPath,
+                 OUT LPWSTR lpszLongPath,
                  IN DWORD cchBuffer)
 {
     PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
@@ -1668,7 +1668,7 @@ Quickie:
 DWORD
 WINAPI
 GetLongPathNameA(IN LPCSTR lpszShortPath,
-                 IN LPSTR lpszLongPath,
+                 OUT LPSTR lpszLongPath,
                  IN DWORD cchBuffer)
 {
     ULONG Result, PathLength;
@@ -1749,7 +1749,7 @@ Quickie:
 DWORD
 WINAPI
 GetShortPathNameA(IN LPCSTR lpszLongPath,
-                  IN LPSTR lpszShortPath,
+                  OUT LPSTR lpszShortPath,
                   IN DWORD cchBuffer)
 {
     ULONG Result, PathLength;
@@ -1830,7 +1830,7 @@ Quickie:
 DWORD
 WINAPI
 GetShortPathNameW(IN LPCWSTR lpszLongPath,
-                  IN LPWSTR lpszShortPath,
+                  OUT LPWSTR lpszShortPath,
                   IN DWORD cchBuffer)
 {
     PWCHAR Path, Original, First, Last, Buffer, Src, Dst;
@@ -2052,7 +2052,7 @@ Quickie:
 DWORD
 WINAPI
 GetTempPathA(IN DWORD nBufferLength,
-             IN LPSTR lpBuffer)
+             OUT LPSTR lpBuffer)
 {
    WCHAR BufferW[MAX_PATH];
    DWORD ret;
@@ -2078,7 +2078,7 @@ GetTempPathA(IN DWORD nBufferLength,
 DWORD
 WINAPI
 GetTempPathW(IN DWORD count,
-             IN LPWSTR path)
+             OUT LPWSTR path)
 {
     static const WCHAR tmp[]  = { 'T', 'M', 'P', 0 };
     static const WCHAR temp[] = { 'T', 'E', 'M', 'P', 0 };
@@ -2144,7 +2144,7 @@ GetTempPathW(IN DWORD count,
 DWORD
 WINAPI
 GetCurrentDirectoryA(IN DWORD nBufferLength,
-                     IN LPSTR lpBuffer)
+                     OUT LPSTR lpBuffer)
 {
     ANSI_STRING AnsiString;
     NTSTATUS Status;
@@ -2193,7 +2193,7 @@ GetCurrentDirectoryA(IN DWORD nBufferLength,
 DWORD
 WINAPI
 GetCurrentDirectoryW(IN DWORD nBufferLength,
-                     IN LPWSTR lpBuffer)
+                     OUT LPWSTR lpBuffer)
 {
     return RtlGetCurrentDirectory_U(nBufferLength * sizeof(WCHAR), lpBuffer) / sizeof(WCHAR);
 }
@@ -2280,7 +2280,7 @@ SetCurrentDirectoryW(IN LPCWSTR lpPathName)
  */
 UINT
 WINAPI
-GetSystemDirectoryA(IN LPSTR lpBuffer,
+GetSystemDirectoryA(OUT LPSTR lpBuffer,
                     IN UINT uSize)
 {
     ANSI_STRING AnsiString;
@@ -2310,7 +2310,7 @@ GetSystemDirectoryA(IN LPSTR lpBuffer,
  */
 UINT
 WINAPI
-GetSystemDirectoryW(IN LPWSTR lpBuffer,
+GetSystemDirectoryW(OUT LPWSTR lpBuffer,
                     IN UINT uSize)
 {
     ULONG ReturnLength;
@@ -2334,7 +2334,7 @@ GetSystemDirectoryW(IN LPWSTR lpBuffer,
  */
 UINT
 WINAPI
-GetWindowsDirectoryA(IN LPSTR lpBuffer,
+GetWindowsDirectoryA(OUT LPSTR lpBuffer,
                      IN UINT uSize)
 {
     /* Is this a TS installation? */
@@ -2349,7 +2349,7 @@ GetWindowsDirectoryA(IN LPSTR lpBuffer,
  */
 UINT
 WINAPI
-GetWindowsDirectoryW(IN LPWSTR lpBuffer,
+GetWindowsDirectoryW(OUT LPWSTR lpBuffer,
                      IN UINT uSize)
 {
     /* Is this a TS installation? */
@@ -2364,7 +2364,7 @@ GetWindowsDirectoryW(IN LPWSTR lpBuffer,
  */
 UINT
 WINAPI
-GetSystemWindowsDirectoryA(IN LPSTR lpBuffer,
+GetSystemWindowsDirectoryA(OUT LPSTR lpBuffer,
                            IN UINT uSize)
 {
     ANSI_STRING AnsiString;
@@ -2394,7 +2394,7 @@ GetSystemWindowsDirectoryA(IN LPSTR lpBuffer,
  */
 UINT
 WINAPI
-GetSystemWindowsDirectoryW(IN LPWSTR lpBuffer,
+GetSystemWindowsDirectoryW(OUT LPWSTR lpBuffer,
                            IN UINT uSize)
 {
     ULONG ReturnLength;
@@ -2418,7 +2418,7 @@ GetSystemWindowsDirectoryW(IN LPWSTR lpBuffer,
  */
 UINT
 WINAPI
-GetSystemWow64DirectoryW(IN LPWSTR lpBuffer,
+GetSystemWow64DirectoryW(OUT LPWSTR lpBuffer,
                          IN UINT uSize)
 {
 #ifdef _WIN64
@@ -2435,7 +2435,7 @@ GetSystemWow64DirectoryW(IN LPWSTR lpBuffer,
  */
 UINT
 WINAPI
-GetSystemWow64DirectoryA(IN LPSTR lpBuffer,
+GetSystemWow64DirectoryA(OUT LPSTR lpBuffer,
                          IN UINT uSize)
 {
 #ifdef _WIN64

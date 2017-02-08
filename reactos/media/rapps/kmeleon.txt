@@ -22,6 +22,10 @@ Size = 25,3 MiB
 Description = Navigator web extrem de rapid, particularizabil, și totuși ușor, bazat pe motorul de afișare Gecko.
 Size = 25,3 Mio
 
+[Section.0419]
+Description = Быстрый, настраиваемый, легкий веб-браузер, основанный на движке Gecko.
+Size = 25,3 МиБ
+
 [Section.0804]
 Description = 基于 Gecko 布局引擎,速度极快、 可自定义和仍然轻量级网络浏览器。
 

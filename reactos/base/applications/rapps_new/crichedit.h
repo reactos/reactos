@@ -10,9 +10,9 @@ public:
 
         SendMessageW(EM_SETSEL, Start, End);
 
-        ZeroMemory(&CharFormat, sizeof(CHARFORMAT2));
+        ZeroMemory(&CharFormat, sizeof(CharFormat));
 
-        CharFormat.cbSize = sizeof(CHARFORMAT2);
+        CharFormat.cbSize = sizeof(CharFormat);
         CharFormat.dwMask = dwEffects;
         CharFormat.dwEffects = dwEffects;
 

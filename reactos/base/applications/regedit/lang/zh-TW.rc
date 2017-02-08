@@ -22,7 +22,7 @@ BEGIN
     END
     POPUP "幫助(&H)"
     BEGIN
-        MENUITEM "關於註冊表編輯器(&A)...", ID_HELP_ABOUT
+        MENUITEM "關於註冊表編輯器(&A)", ID_HELP_ABOUT
     END
 END
 
@@ -85,7 +85,7 @@ BEGIN
     BEGIN
         MENUITEM "幫助主題(&H)\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "關於註冊表編輯器(&A)...", ID_HELP_ABOUT
+        MENUITEM "關於註冊表編輯器(&A)", ID_HELP_ABOUT
     END
 END
 
@@ -125,7 +125,7 @@ BEGIN
             MENUITEM "多字元串值(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "可擴充字元串值(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "查找(&F)", ID_EDIT_FIND
+        MENUITEM "查找(&F)...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "刪除(&D)", ID_TREE_DELETE
         MENUITEM "重新命名(&R)", ID_TREE_RENAME

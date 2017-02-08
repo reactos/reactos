@@ -981,15 +981,12 @@
 
       if ( seg2 )
       {
-        seg2->num_linked++;
         if ( seg2->link != seg1 )
         {
           seg1->link = NULL;
 
           if ( seg2->score < dist_threshold || seg1->score < seg2->score * 4 )
             seg1->serif = seg2->link;
-          else
-            seg2->num_linked--;
         }
       }
     }
@@ -1543,7 +1540,7 @@
       }
 
       if ( dist < 54 )
-        dist += ( 54 - dist ) / 2 ;
+        dist += ( 54 - dist ) / 2;
       else if ( dist < 3 * 64 )
       {
         FT_Pos  delta;

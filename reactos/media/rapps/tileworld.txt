@@ -34,6 +34,10 @@ Description = Udany klon gry Chip's Challenge z Atari Lynx. Zawiera darmowy zest
 Description = Clonă a jocului „Chip's Challenge”, creată inițial pentru Atari Lynx. Este inclus și pachetul gratuit CCLP2 Graphics, deci nu este necesar jocul original cu drepturi de autor.
 Size = 1,1 Mio
 
+[Section.0419]
+Description = Головоломка. GPL Клон Chip's Challenge
+Size = 1,1 МиБ
+
 [Section.041f]
 Description = Başlangıçta Atari Lynx için yapılan Chip's Challenge oyununun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni kapsar, bu yüzden telifli özgününe gereksinim duymazsınız.
 Size = 1,1 MiB

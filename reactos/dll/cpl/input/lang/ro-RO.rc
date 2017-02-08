@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -8,7 +8,7 @@ CAPTION "Configurare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Restabilește opțiunile implicite", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "A&dăugare…", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 101, 142, 70, 14
@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configurație de sistem", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Dezactivează serviciile avansate de text", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu se recomandă pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
+    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu este recomandată pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

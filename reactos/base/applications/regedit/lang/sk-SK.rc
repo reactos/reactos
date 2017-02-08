@@ -25,7 +25,7 @@ BEGIN
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "Č&o je ...", ID_HELP_ABOUT
+        MENUITEM "Č&o je", ID_HELP_ABOUT
     END
 END
 
@@ -42,7 +42,7 @@ BEGIN
         MENUITEM "&Pripojiť registre v sieti...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odpojiť registre v sieti...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Tlačiť\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Tlačiť...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "S&končiť", ID_REGISTRY_EXIT
     END
@@ -68,7 +68,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopírovať názov kľúča", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Hľadať\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Hľadať...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Hľa&dať ďalej\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Zobraziť"
@@ -128,7 +128,7 @@ BEGIN
             MENUITEM "&Viacreťazcová hodnota", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Rozšírit&eľná reťazcová hodnota", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Find", ID_EDIT_FIND
+        MENUITEM "&Hľadať...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Vymazať", ID_TREE_DELETE
         MENUITEM "&Premenovať", ID_TREE_RENAME

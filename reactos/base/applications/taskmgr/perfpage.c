@@ -99,7 +99,7 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     InvalidateRect(hCntrl, NULL, TRUE);
 }
 
-static void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+static void AdjustControlPosition(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
 {
     AdjustFrameSize(hCntrl, hDlg, nXDifference, nYDifference, 0);
 }
@@ -256,18 +256,18 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, 0, nYDifference);
         AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, 0, nYDifference);
 
-        AdjustControlPostion(hPerformancePageCommitChargeTotalEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargeLimitEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageCommitChargePeakEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryTotalEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryPagedEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsHandleCountEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, 0, nYDifference);
-        AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageCommitChargeTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageCommitChargeLimitEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageCommitChargePeakEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageKernelMemoryTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageKernelMemoryPagedEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageKernelMemoryNonPagedEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePagePhysicalMemoryTotalEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePagePhysicalMemoryAvailableEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePagePhysicalMemorySystemCacheEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageTotalsHandleCountEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageTotalsProcessCountEdit, hDlg, 0, nYDifference);
+        AdjustControlPosition(hPerformancePageTotalsThreadCountEdit, hDlg, 0, nYDifference);
 
         nXDifference += lastX;
         nYDifference += lastY;

@@ -51,7 +51,7 @@
 
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
+    volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
 }
 
 static int supported_init = 0;
@@ -252,6 +252,7 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
                    size_t ilen, unsigned char *output, size_t *olen )
 {
     int ret;
+    size_t block_size = 0;
 
     if( NULL == ctx || NULL == ctx->cipher_info || NULL == olen )
     {
@@ -259,10 +260,11 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     }
 
     *olen = 0;
+    block_size = mbedtls_cipher_get_block_size( ctx );
 
     if( ctx->cipher_info->mode == MBEDTLS_MODE_ECB )
     {
-        if( ilen != mbedtls_cipher_get_block_size( ctx ) )
+        if( ilen != block_size )
             return( MBEDTLS_ERR_CIPHER_FULL_BLOCK_EXPECTED );
 
         *olen = ilen;
@@ -285,8 +287,13 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
     }
 #endif
 
+    if ( 0 == block_size )
+    {
+        return MBEDTLS_ERR_CIPHER_INVALID_CONTEXT;
+    }
+
     if( input == output &&
-       ( ctx->unprocessed_len != 0 || ilen % mbedtls_cipher_get_block_size( ctx ) ) )
+       ( ctx->unprocessed_len != 0 || ilen % block_size ) )
     {
         return( MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA );
     }
@@ -300,9 +307,9 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          * If there is not enough data for a full block, cache it.
          */
         if( ( ctx->operation == MBEDTLS_DECRYPT &&
-                ilen + ctx->unprocessed_len <= mbedtls_cipher_get_block_size( ctx ) ) ||
+                ilen + ctx->unprocessed_len <= block_size ) ||
              ( ctx->operation == MBEDTLS_ENCRYPT &&
-                ilen + ctx->unprocessed_len < mbedtls_cipher_get_block_size( ctx ) ) )
+                ilen + ctx->unprocessed_len < block_size ) )
         {
             memcpy( &( ctx->unprocessed_data[ctx->unprocessed_len] ), input,
                     ilen );
@@ -314,22 +321,22 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
         /*
          * Process cached data first
          */
-        if( ctx->unprocessed_len != 0 )
+        if( 0 != ctx->unprocessed_len )
         {
-            copy_len = mbedtls_cipher_get_block_size( ctx ) - ctx->unprocessed_len;
+            copy_len = block_size - ctx->unprocessed_len;
 
             memcpy( &( ctx->unprocessed_data[ctx->unprocessed_len] ), input,
                     copy_len );
 
             if( 0 != ( ret = ctx->cipher_info->base->cbc_func( ctx->cipher_ctx,
-                    ctx->operation, mbedtls_cipher_get_block_size( ctx ), ctx->iv,
+                    ctx->operation, block_size, ctx->iv,
                     ctx->unprocessed_data, output ) ) )
             {
                 return( ret );
             }
 
-            *olen += mbedtls_cipher_get_block_size( ctx );
-            output += mbedtls_cipher_get_block_size( ctx );
+            *olen += block_size;
+            output += block_size;
             ctx->unprocessed_len = 0;
 
             input += copy_len;
@@ -341,9 +348,14 @@ int mbedtls_cipher_update( mbedtls_cipher_context_t *ctx, const unsigned char *i
          */
         if( 0 != ilen )
         {
-            copy_len = ilen % mbedtls_cipher_get_block_size( ctx );
+            if( 0 == block_size )
+            {
+                return MBEDTLS_ERR_CIPHER_INVALID_CONTEXT;
+            }
+
+            copy_len = ilen % block_size;
             if( copy_len == 0 && ctx->operation == MBEDTLS_DECRYPT )
-                copy_len = mbedtls_cipher_get_block_size( ctx );
+                copy_len = block_size;
 
             memcpy( ctx->unprocessed_data, &( input[ilen - copy_len] ),
                     copy_len );

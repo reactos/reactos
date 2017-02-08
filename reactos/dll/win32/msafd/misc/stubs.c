@@ -15,58 +15,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 INT
 WSPAPI
-WSPAddressToString(
-    IN      LPSOCKADDR lpsaAddress,
-    IN      DWORD dwAddressLength,
-    IN      LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT     LPWSTR lpszAddressString,
-    IN OUT  LPDWORD lpdwAddressStringLength,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
-}
-
-
-INT
-WSPAPI
 WSPCancelBlockingCall(
     OUT LPINT lpErrno)
 {
     UNIMPLEMENTED;
 
     return 0;
-}
-
-
-INT
-WSPAPI
-WSPDuplicateSocket(
-    IN  SOCKET s,
-    IN  DWORD dwProcessId,
-    OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
-}
-
-
-BOOL
-WSPAPI
-WSPGetOverlappedResult(
-    IN  SOCKET s,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    OUT LPDWORD lpcbTransfer,
-    IN  BOOL fWait,
-    OUT LPDWORD lpdwFlags,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return FALSE;
 }
 
 
@@ -100,21 +54,6 @@ WSPJoinLeaf(
     UNIMPLEMENTED;
 
     return (SOCKET)0;
-}
-
-INT
-WSPAPI
-WSPStringToAddress(
-    IN      LPWSTR AddressString,
-    IN      INT AddressFamily,
-    IN      LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT     LPSOCKADDR lpAddress,
-    IN OUT  LPINT lpAddressLength,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
 }
 
 /* EOF */

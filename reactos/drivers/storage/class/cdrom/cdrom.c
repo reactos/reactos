@@ -757,7 +757,7 @@ Arguments:
     PortDeviceObject - to connect to SCSI port driver.
     DeviceCount - Number of previously installed CDROMs.
     PortCapabilities - Pointer to structure returned by SCSI port
-        driver describing adapter capabilites (and limitations).
+        driver describing adapter capabilities (and limitations).
     LunInfo - Pointer to configuration information for this device.
 
 Return Value:
@@ -1289,7 +1289,7 @@ Return Value:
             if (NT_SUCCESS(status) || (status == STATUS_NO_MEDIA_IN_DEVICE)) {
 
                 //
-                // Using Read CD precludes issueing a mode select to
+                // Using Read CD precludes issuing a mode select to
                 // set the user data size. So, no buffer copy is
                 // necessary.
                 //
@@ -1408,7 +1408,7 @@ ScsiCdRomStartIo(
 
             Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
 
-            DebugPrint((2, "ScsiCdRomStartIo: [%lx] Calling UpdateCapcity - "
+            DebugPrint((2, "ScsiCdRomStartIo: [%lx] Calling UpdateCapacity - "
                            "ioctl event = %lx\n",
                         Irp,
                         nextIrpStack->Parameters.Others.Argument1
@@ -2466,7 +2466,7 @@ ScsiCdRomStartIo(
             cdb->SUBCHANNEL.SubQ = CDB_SUBCHANNEL_BLOCK;
 
             //
-            // Specify format of informatin to return
+            // Specify format of information to return
             //
 
             cdb->SUBCHANNEL.Format = inputBuffer->Format;

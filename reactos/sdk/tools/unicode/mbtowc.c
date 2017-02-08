@@ -131,7 +131,7 @@ static inline int get_length_dbcs( const struct dbcs_table *table,
 
     for (len = 0; srclen; srclen--, src++, len++)
     {
-        if (cp2uni_lb[*src] && srclen > 1)
+        if (cp2uni_lb[*src] && srclen > 1 && src[1])
         {
             src++;
             srclen--;
@@ -183,7 +183,7 @@ static inline int mbstowcs_dbcs( const struct dbcs_table *table,
     for (len = dstlen; srclen && len; len--, srclen--, src++, dst++)
     {
         unsigned char off = cp2uni_lb[*src];
-        if (off && srclen > 1)
+        if (off && srclen > 1 && src[1])
         {
             src++;
             srclen--;
@@ -212,7 +212,7 @@ static int mbstowcs_dbcs_decompose( const struct dbcs_table *table,
         for (len = 0; srclen; srclen--, src++)
         {
             unsigned char off = cp2uni_lb[*src];
-            if (off && srclen > 1)
+            if (off && srclen > 1 && src[1])
             {
                 src++;
                 srclen--;
@@ -227,7 +227,7 @@ static int mbstowcs_dbcs_decompose( const struct dbcs_table *table,
     for (len = dstlen; srclen && len; srclen--, src++)
     {
         unsigned char off = cp2uni_lb[*src];
-        if (off && srclen > 1)
+        if (off && srclen > 1 && src[1])
         {
             src++;
             srclen--;

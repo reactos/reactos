@@ -30,9 +30,14 @@ static const WCHAR lboundW[] = {'l','b','o','u','n','d',0};
 static const WCHAR toArrayW[] = {'t','o','A','r','r','a','y',0};
 static const WCHAR uboundW[] = {'u','b','o','u','n','d',0};
 
+static inline VBArrayInstance *vbarray_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, VBArrayInstance, dispex);
+}
+
 static inline VBArrayInstance *vbarray_from_vdisp(vdisp_t *vdisp)
 {
-    return (VBArrayInstance*)vdisp->u.jsdisp;
+    return vbarray_from_jsdisp(vdisp->u.jsdisp);
 }
 
 static inline VBArrayInstance *vbarray_this(vdisp_t *jsthis)
@@ -232,7 +237,7 @@ static HRESULT VBArray_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
 
 static void VBArray_destructor(jsdisp_t *dispex)
 {
-    VBArrayInstance *vbarray = (VBArrayInstance*)dispex;
+    VBArrayInstance *vbarray = vbarray_from_jsdisp(dispex);
 
     SafeArrayDestroy(vbarray->safearray);
     heap_free(vbarray);

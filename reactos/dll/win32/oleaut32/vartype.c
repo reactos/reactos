@@ -7658,11 +7658,13 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
   /* Parse the string into our structure */
   while (*strIn)
   {
-    if (dp.dwCount >= 6)
-      break;
-
     if (isdigitW(*strIn))
     {
+      if (dp.dwCount >= 6)
+      {
+        hRet = DISP_E_TYPEMISMATCH;
+        break;
+      }
       dp.dwValues[dp.dwCount] = strtoulW(strIn, &strIn, 10);
       dp.dwCount++;
       strIn--;
@@ -7678,9 +7680,14 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
         {
           if (i <= 25)
           {
-            dp.dwValues[dp.dwCount] = ParseDateMonths[i];
-            dp.dwFlags[dp.dwCount] |= (DP_MONTH|DP_DATESEP);
-            dp.dwCount++;
+            if (dp.dwCount >= 6)
+              hRet = DISP_E_TYPEMISMATCH;
+            else
+            {
+              dp.dwValues[dp.dwCount] = ParseDateMonths[i];
+              dp.dwFlags[dp.dwCount] |= (DP_MONTH|DP_DATESEP);
+              dp.dwCount++;
+            }
           }
           else if (i > 39 && i < 42)
           {

@@ -97,7 +97,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   psh.nStartPage = 0;
   psh.phpage = hpsp;
 
-  InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSHEMES, (DLGPROC)PowerSchemesDlgProc);
+  InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSCHEMES, (DLGPROC)PowerSchemesDlgProc);
   if (GetPwrCapabilities(&spc))
   {
     if (spc.SystemBatteriesPresent)

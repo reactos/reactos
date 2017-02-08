@@ -166,7 +166,7 @@ CODE facilitynames[] =
 extern "C" {
 #endif
 
-/* Close desriptor used to write to system logger.  */
+/* Close descriptor used to write to system logger.  */
 extern void closelog (void);
 
 /* Open connection to system logger.  */

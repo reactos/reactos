@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "?"
     BEGIN
-        MENUITEM "Про програму...", ID_ABOUT
+        MENUITEM "Про програму", ID_ABOUT
     END
 END
 

@@ -192,7 +192,7 @@
 
 
     GXV_NAME_ENTER( "validating contents of substitutionTable" );
-    for ( i = 0; i < num_gids ; i ++ )
+    for ( i = 0; i < num_gids; i++ )
     {
       FT_UShort  dst_gid;
 

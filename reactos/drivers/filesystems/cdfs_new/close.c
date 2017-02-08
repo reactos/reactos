@@ -439,7 +439,7 @@ Return Value:
         //
         //  Since we now must make volumes go away as soon as reasonable after
         //  the last user handles closes, key off of the cleanup count.  It is
-        //  OK to do this more than neccesary.  Since this Fcb could be holding
+        //  OK to do this more than necessary.  Since this Fcb could be holding
         //  a number of other Fcbs (and thus their references), a simple check
         //  on reference count is not appropriate.
         //

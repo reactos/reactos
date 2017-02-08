@@ -57,7 +57,7 @@ Routine Description:
 
     This routine will return the current layout information for the disk.
     If the cached information is still valid then it will be returned, 
-    otherwise the layout will be retreived from the kernel and cached for 
+    otherwise the layout will be retrieved from the kernel and cached for 
     future use.
     
     This routine must be called with the partitioning lock held.  The 

@@ -55,11 +55,11 @@ static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 
 #if !WIN7_DEBUG_MODE
 static BOOL
-SetShellReadyEvent(IN LPCTSTR lpEventName)
+SetShellReadyEvent(IN LPCWSTR lpEventName)
 {
     HANDLE hEvent;
 
-    hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, lpEventName);
+    hEvent = OpenEventW(EVENT_MODIFY_STATE, FALSE, lpEventName);
     if (hEvent != NULL)
     {
         SetEvent(hEvent);
@@ -77,17 +77,17 @@ HideMinimizedWindows(IN BOOL bHide)
     MINIMIZEDMETRICS mm;
 
     mm.cbSize = sizeof(mm);
-    if (!SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+    if (!SystemParametersInfoW(SPI_GETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
     {
-        ERR("SystemParametersInfo failed with %lu\n", GetLastError());
+        ERR("SystemParametersInfoW failed with %lu\n", GetLastError());
         return;
     }
     if (bHide)
         mm.iArrange |= ARW_HIDE;
     else
         mm.iArrange &= ~ARW_HIDE;
-    if (!SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
-        ERR("SystemParametersInfo failed with %lu\n", GetLastError());
+    if (!SystemParametersInfoW(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+        ERR("SystemParametersInfoW failed with %lu\n", GetLastError());
 }
 #endif
 
@@ -119,12 +119,12 @@ StartWithDesktop(IN HINSTANCE hInstance)
 {
     InitializeAtlModule(hInstance, TRUE);
 
-    if (RegOpenKey(HKEY_CURRENT_USER,
+    if (RegOpenKeyW(HKEY_CURRENT_USER,
         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
         &hkExplorer) != ERROR_SUCCESS)
     {
         WCHAR Message[256];
-        LoadString(hInstance, IDS_STARTUP_ERROR, Message, 256);
+        LoadStringW(hInstance, IDS_STARTUP_ERROR, Message, _countof(Message));
         MessageBox(NULL, Message, NULL, MB_ICONERROR);
         return 1;
     }
@@ -166,8 +166,8 @@ StartWithDesktop(IN HINSTANCE hInstance)
         hShellDesktop = DesktopCreateWindow(Tray);
 
     /* WinXP: Notify msgina to hide the welcome screen */
-    if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
-        SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+    if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
+        SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
 #endif
 
     if (Tray != NULL)

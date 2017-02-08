@@ -1,9 +1,7 @@
 /*
  * FILE:        base/system/format/lang/ro-RO.rc
  *              ReactOS Project (http://www.reactos.org)
- * TRANSLATOR:  Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG:  2011-08-29  initial translation
- *              2011-11-05  UTF-8 encoding (with diacritics conversion)
+ * TRANSLATOR:  Ștefan Fulea (stefan dot fulea at mail dot md)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -23,30 +21,30 @@ BEGIN
                          Valorile valide pentru NTFS sunt 512, 1024, 2048,\n\
                          4096, 8192, 16K, 32K, 64K.  Pentru FAT sunt 8192,\n\
                          16K, 32K, 64K, 128K, 256K.\n\
-                         Compresia NTFS nu se poate realiza pentru unități\n\
+                         Compresia NTFS nu poate fi realizată pentru unități\n\
                          de alocare mai mari de 4096.\n\
   -C                     Indică operația implicită de comprimare pentru toate\n\
                          fișierele ce vor fi create pe noul volum.\n\n"
     STRING_COMPLETE "%lu %%.\r"
     STRING_FORMAT_FAIL "FormatEx nu a fost realizată cu succes.\n\n"
     STRING_NO_SUPPORT "Operația nu este admisă"
-    STRING_FMIFS_FAIL "Nu se pot găsi punctele de intrare FMIFS.\n\n"
+    STRING_FMIFS_FAIL "Punctele de intrare FMIFS nu au putut fi depistate.\n\n"
     STRING_UNKNOW_ARG "Argument necunoscut: %s\n"
     STRING_DRIVE_PARM "Lipsește argumentul (obligatoriu) ce indică unitatea de stocare.\n\n"
-    STRING_ERROR_DRIVE_TYPE "Nu se poate determina tipul unității"
+    STRING_ERROR_DRIVE_TYPE "Tipul unității nu a putut fi determinat"
     STRING_INSERT_DISK "Introduceți un disc flexibil în unitatea %C:\napoi apăsați Enter pentru a continua..."
-    STRING_NO_VOLUME "Nu se poate accesa volumul"
-    STRING_NO_VOLUME_SIZE "Nu se poate accesa dimensiunea volumului"
+    STRING_NO_VOLUME "Volumul nu poate fi accesat"
+    STRING_NO_VOLUME_SIZE "Dimensiunea volumului nu poate fi determinată"
     STRING_FILESYSTEM "Tipul sistemului de fișiere este «%s».\n"
     STRING_LABEL_NAME_EDIT "Introduceți eticheta curentă a volumului pentru unitatea %C: "
     STRING_ERROR_LABEL "Ați introdus o etichetă eronată pentru volumul acestei unități.\n"
-    STRING_YN_FORMAT "\nATENȚIE, TOATE DATELE DE PE DISCUL FIX %C: SE VOR PIERDE!\nContinuați formatarea? (D|N) "
+    STRING_YN_FORMAT "\nATENȚIE, TOATE DATELE DE PE DISCUL FIX %C: VOR FI PIERDUTE!\nContinuați formatarea (D|N)? "
     STRING_YES_NO_FAQ "DN"
-    STRING_VERIFYING "Verificare"
+    STRING_VERIFYING "Este efectuată verificarea"
     STRING_FAST_FMT "FormatareRapidă"
     STRING_CREATE_FSYS "Crearea structurii sistemului de fișiere.\n"
     STRING_FMT_COMPLETE "Formatare completă.\n"
-    STRING_VOL_COMPRESS "Nu se admite comprimarea pentru acest volum.\n"
+    STRING_VOL_COMPRESS "Compresia pentru acest volum nu este disponibilă.\n"
     STRING_ENTER_LABEL "Eticheta volumului (de 11 caractere): "
     STRING_NO_LABEL "Volumul nu a putut fi etichetat"
     STRING_FREE_SPACE "\n%I64d octeți pe disc în total.\n%I64d octeți disponibili.\n"

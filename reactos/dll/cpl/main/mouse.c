@@ -1113,7 +1113,7 @@ LoadInitialCursorScheme(HWND hwndDlg)
         _tcsncat(szSchemeName, szSystemScheme, MAX_PATH - _tcslen(szSchemeName) - 1);
     }
 
-    /* Search and select the curent scheme name from the scheme list */
+    /* Search and select the current scheme name from the scheme list */
     nSel = SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_FINDSTRINGEXACT, -1, (LPARAM)szSchemeName);
     if (nSel != CB_ERR)
         SendDlgItemMessage(hwndDlg, IDC_COMBO_CURSOR_SCHEME, CB_SETCURSEL, (WPARAM)nSel, (LPARAM)0);

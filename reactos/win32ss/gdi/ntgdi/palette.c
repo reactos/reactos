@@ -545,7 +545,7 @@ NtGdiCreateHalftonePalette(HDC  hDC)
     if (ppal && (ppal->flFlags & PAL_INDEXED))
     {
         /* FIXME: optimize the palette for the current palette */
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
     }
     else
     {
@@ -745,7 +745,12 @@ IntGdiRealizePalette(HDC hDC)
 
     if (pdc->dctype == DCTYPE_DIRECT)
     {
-        UNIMPLEMENTED;
+        static BOOL g_WarnedOnce = FALSE;
+        if (!g_WarnedOnce)
+        {
+            g_WarnedOnce = TRUE;
+            UNIMPLEMENTED;
+        }
         goto cleanup;
     }
 

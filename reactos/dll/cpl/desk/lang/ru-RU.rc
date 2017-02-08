@@ -95,16 +95,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Применять следующий переходный эффект для меню и подсказок",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "Пр&именять следующий метод сглаживания для экранных шрифтов", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Применять &крупные значки", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Отображать &тени, отбрасываемые меню", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "&Отображать содержимое окна при перетаскивании", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>",
@@ -178,7 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Обычный"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -226,28 +226,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Рабочий стол"
-    IDS_ELEMENT_2 "Заголовок неактивных окон"
-    IDS_ELEMENT_3 "Граница неактивных окон"
-    IDS_ELEMENT_4 "Заголовок активных окон"
-    IDS_ELEMENT_5 "Граница активных окон"
-    IDS_ELEMENT_6 "Меню"
-    IDS_ELEMENT_7 "Выделенные элементы"
-    IDS_ELEMENT_8 "Окна"
-    IDS_ELEMENT_9 "Полоса прокрутки"
-    IDS_ELEMENT_10 "Рельефные объекты"
-    IDS_ELEMENT_11 "Цвет заголовка"
-    IDS_ELEMENT_12 "Иконка заголовка"
-    IDS_ELEMENT_13 "Строка заголовка"
-    IDS_ELEMENT_14 "Неактивные пункты меню"
-    IDS_ELEMENT_15 "Диалог"
-    IDS_ELEMENT_16 "Полосы прокрутки"
-    IDS_ELEMENT_17 "Рабочая область приложения"
-    IDS_ELEMENT_18 "Название панели"
-    IDS_ELEMENT_19 "Интервал между значками (гор.)"
-    IDS_ELEMENT_20 "Интервал между значками (верт.)"
-    IDS_ELEMENT_21 "Всплывающая подсказка"
-    IDS_ELEMENT_22 "Значок"
+    IDS_ELEMENT_0 "Рабочий стол"
+    IDS_ELEMENT_1 "Заголовок неактивных окон"
+    IDS_ELEMENT_2 "Граница неактивных окон"
+    IDS_ELEMENT_3 "Заголовок активных окон"
+    IDS_ELEMENT_4 "Граница активных окон"
+    IDS_ELEMENT_5 "Меню"
+    IDS_ELEMENT_6 "Выделенные элементы"
+    IDS_ELEMENT_7 "Окна"
+    IDS_ELEMENT_8 "Полоса прокрутки"
+    IDS_ELEMENT_9 "Рельефные объекты"
+    IDS_ELEMENT_10 "Цвет заголовка"
+    IDS_ELEMENT_11 "Строка заголовка"
+    IDS_ELEMENT_12 "Диалог"
+    IDS_ELEMENT_13 "Рабочая область приложения"
+    IDS_ELEMENT_14 "Интервал между значками (гор.)"
+    IDS_ELEMENT_15 "Интервал между значками (верт.)"
+    IDS_ELEMENT_16 "Всплывающая подсказка"
+    IDS_ELEMENT_17 "Значок"
+//  IDS_ELEMENT_18 "Неактивные пункты меню"
 END
 
 STRINGTABLE

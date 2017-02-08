@@ -144,11 +144,18 @@ GetICMProfileA(
     DWORD buflen = MAX_PATH;
     BOOL ret = FALSE;
 
-    if (!hdc || !pBufSize || !pszFilename) return FALSE;
+    if (!hdc || !pBufSize) return FALSE;
 
     if (GetICMProfileW(hdc, &buflen, filenameW))
     {
         ULONG len = WideCharToMultiByte(CP_ACP, 0, filenameW, -1, NULL, 0, NULL, NULL);
+
+        if (!pszFilename)
+        {
+            *pBufSize = len;
+            return FALSE;
+        }
+
         if (*pBufSize >= len)
         {
             WideCharToMultiByte(CP_ACP, 0, filenameW, -1, pszFilename, *pBufSize, NULL, NULL);

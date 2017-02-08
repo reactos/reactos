@@ -242,7 +242,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Ky test do të përdorë DirectDraw për të nxjerrë në një buffer të paangazhuar. Lëvizja e drejtkëndëshit të bardhë duhet të vizatohet. Vazhdo?"
     IDS_DDFULLSCREEN_RESULT "A e shihni ju drejtkëndësh të bardhë të lëvizshem në ekran të plotë?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "No"
     IDS_D3DTEST_DESCRIPTION "Kjo do të fillojë ndërfaqes etestit Direct3D. Vazhdo?"
     IDS_D3DTEST_D3Dx "Ky test do të përdore pjesë elektronike të përshpejtuara për Direct3D %u ndërfaqe."

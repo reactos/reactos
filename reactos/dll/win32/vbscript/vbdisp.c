@@ -549,7 +549,7 @@ static IDispatchExVtbl DispatchExVtbl = {
 static inline vbdisp_t *unsafe_impl_from_IDispatch(IDispatch *iface)
 {
     return iface->lpVtbl == (IDispatchVtbl*)&DispatchExVtbl
-        ? CONTAINING_RECORD(iface, vbdisp_t, IDispatchEx_iface)
+        ? CONTAINING_RECORD((IDispatchEx *)iface, vbdisp_t, IDispatchEx_iface)
         : NULL;
 }
 

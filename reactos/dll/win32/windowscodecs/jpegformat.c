@@ -121,6 +121,7 @@ static void emit_message_fn(j_common_ptr cinfo, int msg_level)
 typedef struct {
     IWICBitmapDecoder IWICBitmapDecoder_iface;
     IWICBitmapFrameDecode IWICBitmapFrameDecode_iface;
+    IWICMetadataBlockReader IWICMetadataBlockReader_iface;
     LONG ref;
     BOOL initialized;
     BOOL cinfo_initialized;
@@ -146,6 +147,11 @@ static inline JpegDecoder *impl_from_IWICBitmapFrameDecode(IWICBitmapFrameDecode
 static inline JpegDecoder *decoder_from_decompress(j_decompress_ptr decompress)
 {
     return CONTAINING_RECORD(decompress, JpegDecoder, cinfo);
+}
+
+static inline JpegDecoder *impl_from_IWICMetadataBlockReader(IWICMetadataBlockReader *iface)
+{
+    return CONTAINING_RECORD(iface, JpegDecoder, IWICMetadataBlockReader_iface);
 }
 
 static HRESULT WINAPI JpegDecoder_QueryInterface(IWICBitmapDecoder *iface, REFIID iid,
@@ -392,10 +398,14 @@ static HRESULT WINAPI JpegDecoder_CopyPalette(IWICBitmapDecoder *iface,
 }
 
 static HRESULT WINAPI JpegDecoder_GetMetadataQueryReader(IWICBitmapDecoder *iface,
-    IWICMetadataQueryReader **ppIMetadataQueryReader)
+    IWICMetadataQueryReader **reader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return E_NOTIMPL;
+    FIXME("(%p,%p): stub\n", iface, reader);
+
+    if (!reader) return E_INVALIDARG;
+
+    *reader = NULL;
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
 }
 
 static HRESULT WINAPI JpegDecoder_GetPreview(IWICBitmapDecoder *iface,
@@ -664,8 +674,14 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
 static HRESULT WINAPI JpegDecoder_Frame_GetMetadataQueryReader(IWICBitmapFrameDecode *iface,
     IWICMetadataQueryReader **ppIMetadataQueryReader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+    JpegDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
+
+    TRACE("(%p,%p)\n", iface, ppIMetadataQueryReader);
+
+    if (!ppIMetadataQueryReader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(&This->IWICMetadataBlockReader_iface, ppIMetadataQueryReader);
 }
 
 static HRESULT WINAPI JpegDecoder_Frame_GetColorContexts(IWICBitmapFrameDecode *iface,
@@ -696,6 +712,73 @@ static const IWICBitmapFrameDecodeVtbl JpegDecoder_Frame_Vtbl = {
     JpegDecoder_Frame_GetThumbnail
 };
 
+static HRESULT WINAPI JpegDecoder_Block_QueryInterface(IWICMetadataBlockReader *iface, REFIID iid,
+    void **ppv)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapFrameDecode_QueryInterface(&This->IWICBitmapFrameDecode_iface, iid, ppv);
+}
+
+static ULONG WINAPI JpegDecoder_Block_AddRef(IWICMetadataBlockReader *iface)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapDecoder_AddRef(&This->IWICBitmapDecoder_iface);
+}
+
+static ULONG WINAPI JpegDecoder_Block_Release(IWICMetadataBlockReader *iface)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapDecoder_Release(&This->IWICBitmapDecoder_iface);
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetContainerFormat(IWICMetadataBlockReader *iface,
+    GUID *pguidContainerFormat)
+{
+    TRACE("%p,%p\n", iface, pguidContainerFormat);
+
+    if (!pguidContainerFormat) return E_INVALIDARG;
+
+    memcpy(pguidContainerFormat, &GUID_ContainerFormatJpeg, sizeof(GUID));
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetCount(IWICMetadataBlockReader *iface,
+    UINT *pcCount)
+{
+    FIXME("%p,%p\n", iface, pcCount);
+
+    if (!pcCount) return E_INVALIDARG;
+
+    *pcCount = 0;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetReaderByIndex(IWICMetadataBlockReader *iface,
+    UINT nIndex, IWICMetadataReader **ppIMetadataReader)
+{
+    FIXME("%p,%d,%p\n", iface, nIndex, ppIMetadataReader);
+    return E_INVALIDARG;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetEnumerator(IWICMetadataBlockReader *iface,
+    IEnumUnknown **ppIEnumMetadata)
+{
+    FIXME("%p,%p\n", iface, ppIEnumMetadata);
+    return E_NOTIMPL;
+}
+
+static const IWICMetadataBlockReaderVtbl JpegDecoder_Block_Vtbl = {
+    JpegDecoder_Block_QueryInterface,
+    JpegDecoder_Block_AddRef,
+    JpegDecoder_Block_Release,
+    JpegDecoder_Block_GetContainerFormat,
+    JpegDecoder_Block_GetCount,
+    JpegDecoder_Block_GetReaderByIndex,
+    JpegDecoder_Block_GetEnumerator,
+};
+
 HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     JpegDecoder *This;
@@ -716,6 +799,7 @@ HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv)
 
     This->IWICBitmapDecoder_iface.lpVtbl = &JpegDecoder_Vtbl;
     This->IWICBitmapFrameDecode_iface.lpVtbl = &JpegDecoder_Frame_Vtbl;
+    This->IWICMetadataBlockReader_iface.lpVtbl = &JpegDecoder_Block_Vtbl;
     This->ref = 1;
     This->initialized = FALSE;
     This->cinfo_initialized = FALSE;
@@ -763,6 +847,8 @@ typedef struct JpegEncoder {
     double xres, yres;
     const jpeg_compress_format *format;
     IStream *stream;
+    WICColor palette[256];
+    UINT colors;
     CRITICAL_SECTION lock;
     BYTE dest_buffer[1024];
 } JpegEncoder;
@@ -965,10 +1051,24 @@ static HRESULT WINAPI JpegEncoder_Frame_SetColorContexts(IWICBitmapFrameEncode *
 }
 
 static HRESULT WINAPI JpegEncoder_Frame_SetPalette(IWICBitmapFrameEncode *iface,
-    IWICPalette *pIPalette)
+    IWICPalette *palette)
 {
-    FIXME("(%p,%p): stub\n", iface, pIPalette);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+    JpegEncoder *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("(%p,%p)\n", iface, palette);
+
+    if (!palette) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->lock);
+
+    if (This->initialized)
+        hr = IWICPalette_GetColors(palette, 256, This->palette, &This->colors);
+    else
+        hr = WINCODEC_ERR_NOTINITIALIZED;
+
+    LeaveCriticalSection(&This->lock);
+    return hr;
 }
 
 static HRESULT WINAPI JpegEncoder_Frame_SetThumbnail(IWICBitmapFrameEncode *iface,
@@ -1272,11 +1372,22 @@ static HRESULT WINAPI JpegEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI JpegEncoder_GetEncoderInfo(IWICBitmapEncoder *iface,
-    IWICBitmapEncoderInfo **ppIEncoderInfo)
+static HRESULT WINAPI JpegEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIEncoderInfo);
-    return E_NOTIMPL;
+    IWICComponentInfo *comp_info;
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, info);
+
+    if (!info) return E_INVALIDARG;
+
+    hr = CreateComponentInfo(&CLSID_WICJpegEncoder, &comp_info);
+    if (hr == S_OK)
+    {
+        hr = IWICComponentInfo_QueryInterface(comp_info, &IID_IWICBitmapEncoderInfo, (void **)info);
+        IWICComponentInfo_Release(comp_info);
+    }
+    return hr;
 }
 
 static HRESULT WINAPI JpegEncoder_SetColorContexts(IWICBitmapEncoder *iface,
@@ -1326,11 +1437,14 @@ static HRESULT WINAPI JpegEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
         return WINCODEC_ERR_NOTINITIALIZED;
     }
 
-    hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
-    if (FAILED(hr))
+    if (ppIEncoderOptions)
     {
-        LeaveCriticalSection(&This->lock);
-        return hr;
+        hr = CreatePropertyBag2(NULL, 0, ppIEncoderOptions);
+        if (FAILED(hr))
+        {
+            LeaveCriticalSection(&This->lock);
+            return hr;
+        }
     }
 
     This->frame_count = 1;
@@ -1418,6 +1532,7 @@ HRESULT JpegEncoder_CreateInstance(REFIID iid, void** ppv)
     This->xres = This->yres = 0.0;
     This->format = NULL;
     This->stream = NULL;
+    This->colors = 0;
     InitializeCriticalSection(&This->lock);
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": JpegEncoder.lock");
 

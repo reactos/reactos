@@ -120,6 +120,7 @@ static ULONG WINAPI xmlnodemap_Release(
     TRACE("(%p)->(%d)\n", This, ref);
     if ( ref == 0 )
     {
+        xmlnode_release( This->node );
         xmldoc_release( This->node->doc );
         if (This->enumvariant) IEnumVARIANT_Release(This->enumvariant);
         heap_free( This );
@@ -430,6 +431,7 @@ IXMLDOMNamedNodeMap *create_nodemap(xmlNodePtr node, const struct nodemap_funcs 
 
     init_dispex(&This->dispex, (IUnknown*)&This->IXMLDOMNamedNodeMap_iface, &xmlnodemap_dispex);
 
+    xmlnode_add_ref(node);
     xmldoc_add_ref(node->doc);
 
     return &This->IXMLDOMNamedNodeMap_iface;

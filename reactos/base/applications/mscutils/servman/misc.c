@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/misc.c
- * PURPOSE:     miscallanous functions
+ * PURPOSE:     miscellaneous functions
  * COPYRIGHT:   Copyright 2005 Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *
@@ -275,3 +275,24 @@ InitImageList(UINT StartResource,
 
     return himl;
 }
+
+
+#define BUFFERSIZE 512
+
+VOID
+ResourceMessageBox(
+    HINSTANCE hInstance,
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId)
+{
+    WCHAR szErrorText[BUFFERSIZE];
+    WCHAR szErrorCaption[BUFFERSIZE];
+
+    LoadStringW(hInstance, uMessageId, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+    LoadStringW(hInstance, uCaptionId, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
+
+    MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
+}
+

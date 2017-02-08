@@ -163,6 +163,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{114F5598-0B22-40A0-86A1-C83EA495ADBD}' = s 'WIC GIF Encoder'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
         '{C61BFCDF-2E0F-4AAD-A8D7-E06BAFEBCDFE}' = s 'WIC ICO Decoder'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
@@ -200,6 +204,10 @@ HKCR
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
         '{8F914656-9D0A-4EB2-9019-0BF96D8A9EE6}' = s 'WIC Ifd Metadata Reader'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
+        '{F90B5F36-367B-402A-9DD1-BC0FD59D8F62}' = s 'WIC Png cHRM Metadata Reader'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }

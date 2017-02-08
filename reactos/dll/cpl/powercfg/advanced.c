@@ -185,7 +185,7 @@ ShowCurrentPowerActionPolicies(HWND hwndDlg)
     if (!IsBatteryUsed())
     {
 #if 0
-        /* expiremental code */
+        /* experimental code */
 //      ShowCurrentPowerButtonAcAction(hList2,
         ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_POWERBUTTON),
                                        g_SystemBatteries,
@@ -206,7 +206,7 @@ ShowCurrentPowerActionPolicies(HWND hwndDlg)
                                        &gGPP.user.PowerButtonAc);
 
 #if 0
-            /* expiremental code */
+            /* experimental code */
         ShowCurrentPowerActionPolicy(GetDlgItem(hwndDlg, IDC_SLEEPBUTTON),
                                        g_SleepButton,
                                        sizeof(g_SleepButton) / sizeof(POWER_ACTION),

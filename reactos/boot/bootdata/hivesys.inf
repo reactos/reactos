@@ -817,6 +817,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00020408",2,
 
 ; Lsa
 HKLM,"SYSTEM\CurrentControlSet\Control\Lsa","Authentication Packages",0x00010000,"msv1_0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy","Enabled",0x00010001,0
 
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
@@ -834,6 +835,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","37",0x00000000,"c_037.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","424",0x00000000,"c_424.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","437",0x00000000,"c_437.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","500",0x00000000,"c_500.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","708",0x00000000,"c_708.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","720",0x00000000,"c_720.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","737",0x00000000,"c_737.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","775",0x00000000,"c_775.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","850",0x00000000,"c_850.nls"
@@ -841,6 +844,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","852",0x00000000,"c_852.nls
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","855",0x00000000,"c_855.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","856",0x00000000,"c_856.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","857",0x00000000,"c_857.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","858",0x00000000,"c_858.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","860",0x00000000,"c_860.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","861",0x00000000,"c_861.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","862",0x00000000,"c_862.nls"
@@ -849,6 +853,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","864",0x00000000,"c_864.nls
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","865",0x00000000,"c_865.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","866",0x00000000,"c_866.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","869",0x00000000,"c_869.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","870",0x00000000,"c_870.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","874",0x00000000,"c_874.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","875",0x00000000,"c_875.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","878",0x00000000,"c_878.nls"
@@ -858,6 +863,17 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","949",0x00000000,"c_949.nls
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","950",0x00000000,"c_950.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1006",0x00000000,"c_1006.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1026",0x00000000,"c_1026.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1047",0x00000000,"c_1047.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1140",0x00000000,"c_1140.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1141",0x00000000,"c_1141.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1142",0x00000000,"c_1142.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1143",0x00000000,"c_1143.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1144",0x00000000,"c_1144.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1145",0x00000000,"c_1145.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1146",0x00000000,"c_1146.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1147",0x00000000,"c_1147.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1148",0x00000000,"c_1148.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1149",0x00000000,"c_1149.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1250",0x00000000,"c_1250.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1251",0x00000000,"c_1251.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1252",0x00000000,"c_1252.nls"
@@ -868,13 +884,43 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1256",0x00000000,"c_1256.n
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1257",0x00000000,"c_1257.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","1258",0x00000000,"c_1258.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10000",0x00000000,"c_10000.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10004",0x00000000,"c_10004.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10005",0x00000000,"c_10005.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10006",0x00000000,"c_10006.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10007",0x00000000,"c_10007.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10010",0x00000000,"c_10010.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10017",0x00000000,"c_10017.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10021",0x00000000,"c_10021.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10029",0x00000000,"c_10029.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10079",0x00000000,"c_10079.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10081",0x00000000,"c_10081.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","10082",0x00000000,"c_10082.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20105",0x00000000,"c_20105.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20106",0x00000000,"c_20106.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20107",0x00000000,"c_20107.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20108",0x00000000,"c_20108.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20127",0x00000000,"c_20127.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20269",0x00000000,"c_20269.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20273",0x00000000,"c_20273.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20277",0x00000000,"c_20277.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20278",0x00000000,"c_20278.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20280",0x00000000,"c_20280.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20284",0x00000000,"c_20284.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20285",0x00000000,"c_20285.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20290",0x00000000,"c_20290.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20297",0x00000000,"c_20297.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20420",0x00000000,"c_20420.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20423",0x00000000,"c_20423.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20424",0x00000000,"c_20424.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20833",0x00000000,"c_20833.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20838",0x00000000,"c_20838.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20866",0x00000000,"c_20866.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20871",0x00000000,"c_20871.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20880",0x00000000,"c_20880.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20905",0x00000000,"c_20905.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","20924",0x00000000,"c_20924.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","21025",0x00000000,"c_21025.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","21027",0x00000000,"c_21027.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","21866",0x00000000,"c_21866.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","28591",0x00000000,"c_28591.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","28592",0x00000000,"c_28592.nls"
@@ -1207,13 +1253,37 @@ HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Toshiba",0x00030003,\
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
 01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
 
+
+; Printing
 HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
-HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010003,0
-HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010003,0
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000012
-HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",2,"localspl.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010001,0
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86","Directory",,"W32X86"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print Processors",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments\Windows NT x86\Print Processors\winprint","Driver",,"winprint.dll"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",,"localmon.dll"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Attributes",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Datatype",,"RAW"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Description",,""
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Default DevMode",1,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,dc,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Port",,"LPT1:"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Print Processor",,"winprint"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Printer Driver",,"Dummy Printer Driver"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers\Dummy Printer On LPT1","Status",0x00010001,0
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Providers",,0x00000010
+
 
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"ServerNT"
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,"Terminal Server"
@@ -1300,6 +1370,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\UseNewKey",,0x00000012
 
 ; Group order, the first DWORD is the count of entries,
 ; the following dwords are the tag entries for the load order.
+HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Base", 0x00000001, \
+  0x02, 0x00, 0x00, 0x00, \
+  0x01, 0x00, 0x00, 0x00, \
+  0x02, 0x00, 0x00, 0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\GroupOrderList","Video Save", 0x00000001, \
   0x02, 0x00, 0x00, 0x00, \
   0x01, 0x00, 0x00, 0x00, \
@@ -1422,17 +1496,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\DebugOut","Type",0x00010001,0x00000001
 
-; DHCP client service
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Attempts to obtain network settings automatically from an available DHCP server"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"TDI"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ObjectName",0x00000000,"LocalSystem"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
-
 ; EMS Serial Administration Console Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\sacdrv","Group",0x00000000,"EMS"
@@ -1489,7 +1552,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 
 ; Workstation service
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"Workstation service"
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"Responsible for creating and maintaning network connections to servers"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"Responsible for creating and maintaining network connections to servers"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
@@ -1499,18 +1562,16 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Type",0x00010001,0x0
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\wkssvc.dll"
 
 ; MPU-401 MIDI driver
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ServiceType",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","ImagePath",0x00020000,"system32\drivers\mpu401.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Type",0x00010001,0x00000001
 
 ; Multiple UNC provider driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Description",0x00000000,"Multiple UNC Provider (MUP)"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Group",0x00000000,"File System"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","ImagePath",0x00020000,"system32\drivers\mup.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Mup","Type",0x00010001,0x00000002
@@ -1542,6 +1603,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","ErrorControl",0x00010001,0x000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","ImagePath",0x00020000,"system32\drivers\null.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Null","Tag",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
 ; NMI device driver
@@ -1630,7 +1692,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbccgp","Type",0x00010001,0x00000001
 
 ; MountMgr driver
 HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"Boot Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Group",0x00000000,"System Bus Extender"
 HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","ImagePath",0x00020000,"system32\drivers\mountmgr.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\MountMgr","Tag",0x00010001,0x00000008
@@ -1641,6 +1703,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ErrorControl",0x00010001,0x000000
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Group",0x00000000,"Boot Bus Extender"
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","ImagePath",0x00020000,"system32\drivers\acpi.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Tag",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\acpi","Type",0x00010001,0x00000001
 
 ; PCI Bus driver
@@ -1648,6 +1711,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x0000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C621",0x00030003,04,00,00,00,00,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950640",0x00030003,04,00,00,00,00,00,00,00
@@ -1986,12 +2050,28 @@ HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
 
+; REISER Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ImagePath",0x00020000,"system32\drivers\reiserfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","CodePage",0x00000000,"default"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","WritingSupport",0x00010001,0x00000001
+
+; FFS Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\drivers\ffs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
+
 ; Filesystem Filter Manager driver
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ErrorControl",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Group",0x00000000,"Boot File System"
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ImagePath",0x00020000,"system32\drivers\rosfltmgr.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Group",0x00000000,"FSFilter Infrastructure"
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ImagePath",0x00020000,"system32\drivers\fltmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Type",0x00010001,0x00000002
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001

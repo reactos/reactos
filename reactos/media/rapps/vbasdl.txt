@@ -19,6 +19,11 @@ Name = VisualBoyAdvance (versiune SDL)
 Description = Un emulator pentru sistemele Gameboy și GameboyAdvance. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 438,9 Kio
 
+[Section.0419]
+Name = VisualBoyAdvance (SDL версия)
+Description = Эмулятор Gameboy и систем GameboyAdvance. Вам потребуется программа распаковки zip, чтобы запустить его.
+Size = 438,9 КиБ
+
 [Section.041f]
 Name = VisualBoyAdvance (SDL sürümü)
 Description = Gameboy ve GameboyAdvance dizgeleri için bir öykünücü. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.

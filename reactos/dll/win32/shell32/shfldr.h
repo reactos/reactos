@@ -49,36 +49,23 @@ HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
 
 LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path);
 
-HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
-                               PCUIDLIST_RELATIVE pidl,
-                               LPBC pbcReserved,
-                               REFIID riid,
-                               LPVOID *ppvOut);
-
-HRESULT SHELL32_GetGuidItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
-
 HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes);
-
-HRESULT SHELL32_GetDisplayNameOfGUIDItem(IShellFolder2* psf, LPCWSTR pszFolderPath, PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet);
-
-HRESULT SHELL32_SetNameOfGuidItem(PCUITEMID_CHILD pidl, LPCOLESTR lpName, DWORD dwFlags, PITEMID_CHILD *pPidlOut);
-
-HRESULT SHELL32_GetDetailsOfGuidItem(IShellFolder2* psf, PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd);
-
-HRESULT SH_ParseGuidDisplayName(IShellFolder2 * pFolder,
-                                HWND hwndOwner,
-                                LPBC pbc,
-                                LPOLESTR lpszDisplayName,
-                                DWORD *pchEaten,
-                                PIDLIST_RELATIVE *ppidl,
-                                DWORD *pdwAttributes);
 
 HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
-HRESULT SHELL32_CompareGuidItems(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
+HRESULT SHELL32_CompareChildren(IShellFolder2* psf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
+                LPCITEMIDLIST pidlChild, const GUID* clsid, int csidl, REFIID riid, LPVOID *ppvOut);
+                
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
+
+void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys);
+
+HRESULT CDefViewBckgrndMenu_CreateInstance(IShellFolder* psf, REFIID riid, void **ppv);
+
+HRESULT SH_GetApidlFromDataObject(IDataObject *pDataObject, PIDLIST_ABSOLUTE* ppidlfolder, PUITEMID_CHILD **apidlItems, UINT *pcidl);
 
 static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)
 {
@@ -103,5 +90,16 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
+
+void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys);
+
+#ifdef __cplusplus
+
+HRESULT inline SHSetStrRet(LPSTRRET pStrRet, DWORD resId)
+{
+    return SHSetStrRet(pStrRet, shell32_hInstance, resId);
+}
+
+#endif
 
 #endif /* _SHFLDR_H_ */

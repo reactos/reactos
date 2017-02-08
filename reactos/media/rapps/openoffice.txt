@@ -57,6 +57,13 @@ Description = Suită de aplicații de birotică cu surse deschise.
 URLSite = http://www.openoffice.org/ro/
 Size = 134,3 Mio
 
+[Section.0419]
+Description = Офисный пакет с открытым исходным кодом.
+URLSite = http://www.openoffice.org/ru/
+URLDownload = http://download.sourceforge.net/project/openofficeorg.mirror/4.1.2/binaries/ru/Apache_OpenOffice_4.1.2_Win_x86_install_ru.exe
+Size = 130,2 МиБ
+SHA1 = 55d13c6e3a8fe53f9daad30c82e0d8d04699a5df
+
 [Section.041f]
 Description = Bir açık kaynak ofis paketi.
 Size = 122,2 MiB

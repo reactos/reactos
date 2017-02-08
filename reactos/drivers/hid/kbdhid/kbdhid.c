@@ -1027,7 +1027,7 @@ NTAPI
 KbdHid_Unload(
     IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 

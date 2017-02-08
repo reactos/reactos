@@ -62,7 +62,7 @@ struct _xmlSchemaValDate {
     long		year;
     unsigned int	mon	:4;	/* 1 <=  mon    <= 12   */
     unsigned int	day	:5;	/* 1 <=  day    <= 31   */
-    unsigned int	hour	:5;	/* 0 <=  hour   <= 23   */
+    unsigned int	hour	:5;	/* 0 <=  hour   <= 24   */
     unsigned int	min	:6;	/* 0 <=  min    <= 59	*/
     double		sec;
     unsigned int	tz_flag	:1;	/* is tzo explicitely set? */
@@ -1139,9 +1139,13 @@ static const unsigned int daysInMonthLeap[12] =
 #define VALID_DATE(dt)						\
 	(VALID_YEAR(dt->year) && VALID_MONTH(dt->mon) && VALID_MDAY(dt))
 
+#define VALID_END_OF_DAY(dt)					\
+	((dt)->hour == 24 && (dt)->min == 0 && (dt)->sec == 0)
+
 #define VALID_TIME(dt)						\
-	(VALID_HOUR(dt->hour) && VALID_MIN(dt->min) &&		\
-	 VALID_SEC(dt->sec) && VALID_TZO(dt->tzo))
+	(((VALID_HOUR(dt->hour) && VALID_MIN(dt->min) &&	\
+	  VALID_SEC(dt->sec)) || VALID_END_OF_DAY(dt)) &&	\
+	 VALID_TZO(dt->tzo))
 
 #define VALID_DATETIME(dt)					\
 	(VALID_DATE(dt) && VALID_TIME(dt))
@@ -1355,7 +1359,7 @@ _xmlSchemaParseTime (xmlSchemaValDatePtr dt, const xmlChar **str) {
 	return ret;
     if (*cur != ':')
 	return 1;
-    if (!VALID_HOUR(value))
+    if (!VALID_HOUR(value) && value != 24 /* Allow end-of-day hour */)
 	return 2;
     cur++;
 
@@ -1377,7 +1381,7 @@ _xmlSchemaParseTime (xmlSchemaValDatePtr dt, const xmlChar **str) {
     if (ret != 0)
 	return ret;
 
-    if ((!VALID_SEC(dt->sec)) || (!VALID_TZO(dt->tzo)))
+    if (!VALID_TIME(dt))
 	return 2;
 
     *str = cur;
@@ -5303,6 +5307,7 @@ xmlSchemaValidateFacetInternal(xmlSchemaFacetPtr facet,
 			       xmlSchemaWhitespaceValueType ws)
 {
     int ret;
+    int stringType;
 
     if (facet == NULL)
 	return(-1);
@@ -5315,7 +5320,15 @@ xmlSchemaValidateFacetInternal(xmlSchemaFacetPtr facet,
 	    */
 	    if (value == NULL)
 		return(-1);
-	    ret = xmlRegexpExec(facet->regexp, value);
+	    /*
+	    * If string-derived type, regexp must be tested on the value space of
+	    * the datatype.
+	    * See https://www.w3.org/TR/xmlschema-2/#rf-pattern
+	    */
+	    stringType = val && ((val->type >= XML_SCHEMAS_STRING && val->type <= XML_SCHEMAS_NORMSTRING)
+			      || (val->type >= XML_SCHEMAS_TOKEN && val->type <= XML_SCHEMAS_NCNAME));
+	    ret = xmlRegexpExec(facet->regexp,
+	                        (stringType && val->value.str) ? val->value.str : value);
 	    if (ret == 1)
 		return(0);
 	    if (ret == 0)

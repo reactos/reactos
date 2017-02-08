@@ -155,7 +155,6 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
 {
     if (m_bMoving)
     {
-        TCHAR sizeStr[100];
         imageModel.ResetToPrevious();
         m_ptFrac.x += GET_X_LPARAM(lParam) - m_ptPos.x;
         m_ptFrac.y += GET_Y_LPARAM(lParam) - m_ptPos.y;
@@ -173,8 +172,9 @@ LRESULT CSelectionWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, B
         }
         selectionModel.ModifyDestRect(m_ptDelta, m_iAction);
 
-        _stprintf(sizeStr, _T("%d x %d"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+        CString strSize;
+        strSize.Format(_T("%d x %d"), selectionModel.GetDestRectWidth(), selectionModel.GetDestRectHeight());
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
 
         if (toolsModel.GetActiveTool() == TOOL_TEXT)
         {

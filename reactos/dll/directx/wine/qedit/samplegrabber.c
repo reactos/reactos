@@ -77,10 +77,8 @@ static ULONG WINAPI Single_IEnumMediaTypes_Release(IEnumMediaTypes *iface)
     TRACE("(%p) new ref = %u\n", This, refCount);
     if (refCount == 0)
     {
-        if (This->mtype.pbFormat)
-            CoTaskMemFree(This->mtype.pbFormat);
+        CoTaskMemFree(This->mtype.pbFormat);
         CoTaskMemFree(This);
-        return 0;
     }
     return refCount;
 }
@@ -265,10 +263,8 @@ static void SampleGrabber_cleanup(SG_Impl *This)
         IMemInputPin_Release(This->memOutput);
     if (This->grabberIface)
         ISampleGrabberCB_Release(This->grabberIface);
-    if (This->mtype.pbFormat)
-        CoTaskMemFree(This->mtype.pbFormat);
-    if (This->bufferData)
-        CoTaskMemFree(This->bufferData);
+    CoTaskMemFree(This->mtype.pbFormat);
+    CoTaskMemFree(This->bufferData);
     if(This->seekthru_unk)
         IUnknown_Release(This->seekthru_unk);
 }
@@ -323,7 +319,6 @@ static ULONG WINAPI SampleGrabber_Release(IUnknown *iface)
     {
         SampleGrabber_cleanup(This);
         CoTaskMemFree(This);
-        return 0;
     }
     return ref;
 }
@@ -374,8 +369,7 @@ static void SampleGrabber_callback(SG_Impl *This, IMediaSample *sample)
                 size = 0;
             EnterCriticalSection(&This->filter.csFilter);
             if (This->bufferLen != size) {
-                if (This->bufferData)
-                    CoTaskMemFree(This->bufferData);
+                CoTaskMemFree(This->bufferData);
                 This->bufferData = size ? CoTaskMemAlloc(size) : NULL;
                 This->bufferLen = size;
             }
@@ -576,8 +570,7 @@ SampleGrabber_ISampleGrabber_SetMediaType(ISampleGrabber *iface, const AM_MEDIA_
 	debugstr_guid(&type->majortype), debugstr_guid(&type->subtype),
 	type->lSampleSize,
 	debugstr_guid(&type->formattype), type->cbFormat);
-    if (This->mtype.pbFormat)
-        CoTaskMemFree(This->mtype.pbFormat);
+    CoTaskMemFree(This->mtype.pbFormat);
     This->mtype = *type;
     This->mtype.pUnk = NULL;
     if (type->cbFormat) {
@@ -755,7 +748,7 @@ SampleGrabber_IMemInputPin_Receive(IMemInputPin *iface, IMediaSample *sample)
     TRACE("(%p)->(%p) output = %p, grabber = %p\n", This, sample, This->memOutput, This->grabberIface);
     if (!sample)
         return E_POINTER;
-    if ((This->filter.state != State_Running) || (This->oneShot == OneShot_Past))
+    if (This->oneShot == OneShot_Past)
         return S_FALSE;
     SampleGrabber_callback(This, sample);
     hr = This->memOutput ? IMemInputPin_Receive(This->memOutput, sample) : S_OK;
@@ -926,8 +919,7 @@ SampleGrabber_In_IPin_ReceiveConnection(IPin *iface, IPin *connector, const AM_M
 	    !IsEqualGUID(&This->sg->mtype.formattype,&FORMAT_None) &&
 	    !IsEqualGUID(&This->sg->mtype.formattype,&type->formattype))
 	    return VFW_E_TYPE_NOT_ACCEPTED;
-        if (This->sg->mtype.pbFormat)
-            CoTaskMemFree(This->sg->mtype.pbFormat);
+        CoTaskMemFree(This->sg->mtype.pbFormat);
         This->sg->mtype = *type;
         This->sg->mtype.pUnk = NULL;
         if (type->cbFormat) {
@@ -1250,7 +1242,7 @@ HRESULT SampleGrabber_create(IUnknown *pUnkOuter, LPVOID *ppv)
     ISeekingPassThru *passthru;
     HRESULT hr;
 
-    TRACE("(%p,%p)\n", ppv, pUnkOuter);
+    TRACE("(%p,%p)\n", pUnkOuter, ppv);
 
     obj = CoTaskMemAlloc(sizeof(SG_Impl));
     if (NULL == obj) {
@@ -1290,7 +1282,8 @@ HRESULT SampleGrabber_create(IUnknown *pUnkOuter, LPVOID *ppv)
     else
         obj->outer_unk = &obj->IUnknown_inner;
 
-    hr = CoCreateInstance(&CLSID_SeekingPassThru, (IUnknown*)obj, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void**)&obj->seekthru_unk);
+    hr = CoCreateInstance(&CLSID_SeekingPassThru, &obj->IUnknown_inner, CLSCTX_INPROC_SERVER,
+                          &IID_IUnknown, (void**)&obj->seekthru_unk);
     if(hr)
         return hr;
     IUnknown_QueryInterface(obj->seekthru_unk, &IID_ISeekingPassThru, (void**)&passthru);

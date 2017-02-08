@@ -57,7 +57,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе...", ID_ABOUT
+        MENUITEM "&О программе", ID_ABOUT
     END
 END
 

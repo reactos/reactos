@@ -102,7 +102,6 @@ static ULONG WINAPI MediaDet_inner_Release(IUnknown *iface)
     {
         MD_cleanup(This);
         CoTaskMemFree(This);
-        return 0;
     }
 
     return ref;
@@ -630,7 +629,7 @@ static const IMediaDetVtbl IMediaDet_VTable =
 HRESULT MediaDet_create(IUnknown * pUnkOuter, LPVOID * ppv) {
     MediaDetImpl* obj = NULL;
 
-    TRACE("(%p,%p)\n", ppv, pUnkOuter);
+    TRACE("(%p,%p)\n", pUnkOuter, ppv);
 
     obj = CoTaskMemAlloc(sizeof(MediaDetImpl));
     if (NULL == obj) {

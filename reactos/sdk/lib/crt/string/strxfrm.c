@@ -1,33 +1,55 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/string/strxfrm.c
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
- */
-
 #include <precomp.h>
 
-#if 1
-/*
- * @implemented
+#include <locale.h>
+#include <internal/wine/msvcrt.h>
+
+size_t CDECL _strxfrm_l( char *dest, const char *src,
+        size_t len, _locale_t locale )
+{
+    MSVCRT_pthreadlocinfo locinfo;
+    int ret;
+
+    if(!MSVCRT_CHECK_PMT(src)) return INT_MAX;
+    if(!MSVCRT_CHECK_PMT(dest || !len)) return INT_MAX;
+
+    if(len > INT_MAX) {
+        FIXME("len > INT_MAX not supported\n");
+        len = INT_MAX;
+    }
+
+    if(!locale)
+        locinfo = get_locinfo();
+    else
+        locinfo = ((MSVCRT__locale_t)locale)->locinfo;
+
+    if(!locinfo->lc_handle[MSVCRT_LC_COLLATE]) {
+        strncpy(dest, src, len);
+        return strlen(src);
+    }
+
+    ret = LCMapStringA(locinfo->lc_handle[MSVCRT_LC_COLLATE],
+            LCMAP_SORTKEY, src, -1, NULL, 0);
+    if(!ret) {
+        if(len) dest[0] = 0;
+        *_errno() = EILSEQ;
+        return INT_MAX;
+    }
+    if(!len) return ret-1;
+
+    if(ret > len) {
+        dest[0] = 0;
+        *_errno() = ERANGE;
+        return ret-1;
+    }
+
+    return LCMapStringA(locinfo->lc_handle[MSVCRT_LC_COLLATE],
+            LCMAP_SORTKEY, src, -1, dest, len) - 1;
+}
+
+/*********************************************************************
+ *		strxfrm (MSVCRT.@)
  */
-size_t strxfrm( char *dest, const char *src, size_t n )
+size_t CDECL strxfrm( char *dest, const char *src, size_t len )
 {
-   strncpy(dest, src, n);
-   return strnlen(src, n);
+    return _strxfrm_l(dest, src, len, NULL);
 }
-#else
-size_t strxfrm( char *dest, const char *src, size_t n )
-{
-	int ret = LCMapStringA(LOCALE_USER_DEFAULT,LCMAP_LOWERCASE,
-                           src, strlen(src), dest, strlen(dest));
-
-	if ( ret == 0 )
-		return -1;
-	return ret;
-
-}
-#endif

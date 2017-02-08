@@ -13,10 +13,15 @@
 
 #include <fstream>
 #include <iostream>
+#include <string.h>
 
 //#define DISPLAY_DETECTED_UNICODE
 
 using namespace std;
+
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
 
 class utf_converter
 {
@@ -25,14 +30,16 @@ public:
     // due to ambiguous BOM
     enum enc_types { detect, utf8, utf16le, utf16be, utf32le, utf32be };
     enum err_types { none, iopen, oopen, eof, read, write, decode };
+    enum bom_types { bom, nobom };
 protected:
     err_types error;
     enc_types encoding;
+    bom_types bom_type;
     unsigned char buffer[4], fill, index; // need 4 char buffer for optional BOM handling
     fstream inputfile,outputfile;
     static const unsigned char utf8table[64];
 public:
-    utf_converter(string ifname, string ofname, enc_types enc = detect) : error(none), encoding(enc), fill(0), index(0)
+    utf_converter(string ifname, string ofname, bom_types ofbom = bom, enc_types enc = detect) : error(none), bom_type(ofbom), encoding(enc), fill(0), index(0)
     {
         enc_types tmp_enc;
         inputfile.open(ifname.c_str(), ios::in | ios::binary);
@@ -230,10 +237,15 @@ public:
     }
     void convert2utf16le()
     {
-        wchar_t c;
-        unsigned char buffer[2] = {0xff, 0xfe};
-        outputfile.write(reinterpret_cast<char*>(&buffer),2); // write BOM
-        c = get_wchar_t();
+        unsigned char buffer[2] = { 0xff, 0xfe };
+
+        if (bom_type == bom)
+        {
+            outputfile.write(reinterpret_cast<char*>(&buffer), 2); // write BOM
+        }
+
+        wchar_t c = get_wchar_t();
+
         while (!inputfile.eof())
         {
             buffer[0] = c & 0xff;
@@ -262,12 +274,22 @@ const unsigned char utf_converter::utf8table[64] = {
 int main(int argc, char* argv[])
 {
     utf_converter::err_types err;
+
     if (argc < 3)
     {
         cout << "usage: " << argv[0] << " inputfile outputfile" << endl;
         return -1;
     }
-    utf_converter conv(argv[1],argv[2]);
+
+    utf_converter::bom_types bom_type = utf_converter::bom;
+
+    if (argc == 4 && strcasecmp(argv[3], "nobom") == 0)
+    {
+        bom_type = utf_converter::nobom;
+    }
+
+    utf_converter conv(argv[1], argv[2], bom_type);
+
     if ((err = conv.getError())!=utf_converter::none)
     {
         switch (err)
@@ -282,7 +304,11 @@ int main(int argc, char* argv[])
                 cerr << "Unknown error." << endl;
         }
         return -1;
-    } else
-    conv.convert2utf16le();
+    }
+    else
+    {
+        conv.convert2utf16le();
+    }
+
     return 0;
 }

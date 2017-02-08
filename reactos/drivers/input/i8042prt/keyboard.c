@@ -218,7 +218,7 @@ i8042PowerWorkItem(
 
 		if (DeviceExtension->PowerInterfaceName.MaximumLength == 0)
 		{
-			/* We have never registred this interface ; do it */
+			/* We have never registered this interface ; do it */
 			Status = IoRegisterDeviceInterface(
 				DeviceExtension->Common.Pdo,
 				&GUID_DEVICE_SYS_BUTTON,
@@ -247,7 +247,7 @@ i8042PowerWorkItem(
 				return;
 			}
 		}
-		/* Enable the interface. This leads to receving a IOCTL_GET_SYS_BUTTON_CAPS,
+		/* Enable the interface. This leads to receiving a IOCTL_GET_SYS_BUTTON_CAPS,
 		 * so we can report new capability */
 		Status = IoSetDeviceInterfaceState(
 				&DeviceExtension->PowerInterfaceName,
@@ -467,11 +467,11 @@ i8042KbdDeviceControl(
 		}
 	}
 
-	Irp->IoStatus.Status = Status;
-	if (Status == STATUS_PENDING)
-		IoMarkIrpPending(Irp);
-	else
+	if (Status != STATUS_PENDING)
+	{
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
 
 	return Status;
 }
@@ -738,9 +738,11 @@ cleanup:
 		}
 	}
 
-	Irp->IoStatus.Status = Status;
 	if (Status != STATUS_PENDING)
+	{
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
 	return Status;
 }
 

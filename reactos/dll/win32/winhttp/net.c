@@ -276,6 +276,28 @@ static BOOL ensure_cred_handle(void)
     return ret;
 }
 
+#ifdef __REACTOS__
+static BOOL winsock_initialized = FALSE;
+BOOL netconn_init_winsock()
+{
+    WSADATA wsaData;
+    int error;
+    if (!winsock_initialized)
+    {
+        error = WSAStartup(MAKEWORD(1, 1), &wsaData);
+        if (error)
+        {
+            ERR("WSAStartup failed: %d\n", error);
+            return FALSE;
+        }
+        else
+            winsock_initialized = TRUE;
+    }
+    return winsock_initialized;
+}
+
+#endif
+
 BOOL netconn_init( netconn_t *conn )
 {
     memset(conn, 0, sizeof(*conn));
@@ -290,6 +312,10 @@ void netconn_unload( void )
     DeleteCriticalSection(&init_sechandle_cs);
 #ifndef HAVE_GETADDRINFO
     DeleteCriticalSection(&cs_gethostbyname);
+#endif
+#ifdef __REACTOS__
+    if(winsock_initialized)
+        WSACleanup();
 #endif
 }
 

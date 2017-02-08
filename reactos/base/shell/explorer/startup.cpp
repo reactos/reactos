@@ -60,7 +60,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     DWORD exit_code = 0;
     WCHAR szCmdLineExp[MAX_PATH+1] = L"\0";
 
-    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, sizeof(szCmdLineExp) / sizeof(WCHAR));
+    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, _countof(szCmdLineExp));
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
@@ -123,7 +123,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                         &hkWin);
     if (res != ERROR_SUCCESS)
     {
-        TRACE("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n", res);
+        TRACE("RegOpenKeyW failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n", res);
 
         goto end;
     }
@@ -142,7 +142,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             res = ERROR_SUCCESS;
         }
         else
-            TRACE("RegOpenKeyEx failed on run key (%ld)\n", res);
+            TRACE("RegOpenKeyExW failed on run key (%ld)\n", res);
 
         goto end;
     }
@@ -271,7 +271,7 @@ ProcessStartupItems(VOID)
     HKEY hSessionKey, hKey;
     HRESULT hr;
 
-    res = GetWindowsDirectoryW(gen_path, sizeof(gen_path) / sizeof(gen_path[0]));
+    res = GetWindowsDirectoryW(gen_path, _countof(gen_path));
     if (res == 0)
     {
         TRACE("Couldn't get the windows directory - error %lu\n", GetLastError());

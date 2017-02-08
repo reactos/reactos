@@ -14,16 +14,10 @@
 
 #include "services.h"
 
-#include <winuser.h>
+#include <userenv.h>
 
 #define NDEBUG
 #include <debug.h>
-
-/*
- * Uncomment the line below to start services
- * using the SERVICE_START_PENDING state.
- */
-#define USE_SERVICE_START_PENDING
 
 /*
  * Uncomment the line below to use asynchronous IO operations
@@ -140,9 +134,9 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
         CurrentImage = CONTAINING_RECORD(ImageEntry,
                                          SERVICE_IMAGE,
                                          ImageListEntry);
-        if (_wcsicmp(CurrentImage->szImagePath, lpImagePath) == 0)
+        if (_wcsicmp(CurrentImage->pszImagePath, lpImagePath) == 0)
         {
-            DPRINT("Found image: '%S'\n", CurrentImage->szImagePath);
+            DPRINT("Found image: '%S'\n", CurrentImage->pszImagePath);
             return CurrentImage;
         }
 
@@ -156,18 +150,162 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 }
 
 
+static
+BOOL
+ScmIsSameServiceAccount(
+    _In_ PCWSTR pszAccountName1,
+    _In_ PCWSTR pszAccountName2)
+{
+    if (pszAccountName1 == NULL && pszAccountName2 == NULL)
+        return TRUE;
+
+    if (pszAccountName1 == NULL && pszAccountName2 && wcscmp(pszAccountName2, L"LocalSystem") == 0)
+        return TRUE;
+
+    if (pszAccountName2 == NULL && pszAccountName1 && wcscmp(pszAccountName1, L"LocalSystem") == 0)
+        return TRUE;
+
+    if (pszAccountName1 && pszAccountName2 && wcscmp(pszAccountName1, pszAccountName2) == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+BOOL
+ScmIsLocalSystemAccount(
+    _In_ PCWSTR pszAccountName)
+{
+    if (pszAccountName == NULL ||
+        wcscmp(pszAccountName, L"LocalSystem") == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+
+static
+DWORD
+ScmLogonService(
+    IN PSERVICE pService,
+    IN PSERVICE_IMAGE pImage)
+{
+#if 0
+    PROFILEINFOW ProfileInfo;
+    PWSTR pszUserName = NULL;
+    PWSTR pszDomainName = NULL;
+    PWSTR pszPassword = NULL;
+    PWSTR ptr;
+    DWORD dwError = ERROR_SUCCESS;
+#endif
+
+    DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
+
+    DPRINT("Service %S\n", pService->lpServiceName);
+
+    if (ScmIsLocalSystemAccount(pImage->pszAccountName))
+        return ERROR_SUCCESS;
+
+    // FIXME: Always assume LocalSystem
+    return ERROR_SUCCESS;
+
+#if 0
+    /* Get the user and domain names */
+    ptr = wcschr(pImage->pszAccountName, L'\\');
+    if (ptr != NULL)
+    {
+        *ptr = L'\0';
+
+        pszUserName = ptr + 1;
+        pszDomainName = pImage->pszAccountName;
+    }
+    else
+    {
+        pszUserName = pImage->pszAccountName;
+        pszDomainName = NULL;
+    }
+
+    /* Build the service 'password' */
+    pszPassword = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            (wcslen(pService->lpServiceName) + 5) * sizeof(WCHAR));
+    if (pszPassword == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    wcscpy(pszPassword, L"_SC_");
+    wcscat(pszPassword, pService->lpServiceName);
+
+    DPRINT("Domain: %S  User: %S  Password: %S\n", pszDomainName, pszUserName, pszPassword);
+
+    /* Service logon */
+    if (!LogonUserW(pszUserName,
+                    pszDomainName,
+                    pszPassword,
+                    LOGON32_LOGON_SERVICE,
+                    LOGON32_PROVIDER_DEFAULT,
+                    &pImage->hToken))
+    {
+        dwError = GetLastError();
+        DPRINT1("LogonUserW() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    // FIXME: Call LoadUserProfileW to be able to initialize a per-user
+    // environment block, with user-specific environment variables as
+    // %USERNAME%, %USERPROFILE%, and %ALLUSERSPROFILE% correctly initialized!!
+
+    /* Load the user profile, so that the per-user environment variables can be initialized */
+    ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+    ProfileInfo.dwSize = sizeof(ProfileInfo);
+    ProfileInfo.dwFlags = PI_NOUI;
+    ProfileInfo.lpUserName = pszUserName;
+    // ProfileInfo.lpProfilePath = NULL;
+    // ProfileInfo.lpDefaultPath = NULL;
+    // ProfileInfo.lpServerName = NULL;
+    // ProfileInfo.lpPolicyPath = NULL;
+    // ProfileInfo.hProfile = NULL;
+
+    if (!LoadUserProfileW(pImage->hToken, &ProfileInfo))
+    {
+        dwError = GetLastError();
+        DPRINT1("LoadUserProfileW() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    pImage->hProfile = ProfileInfo.hProfile;
+
+done:
+    if (pszPassword != NULL)
+        HeapFree(GetProcessHeap(), 0, pszPassword);
+
+    if (ptr != NULL)
+        *ptr = L'\\';
+
+    return dwError;
+#endif
+}
+
+
 static DWORD
 ScmCreateOrReferenceServiceImage(PSERVICE pService)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     UNICODE_STRING ImagePath;
+    UNICODE_STRING ObjectName;
     PSERVICE_IMAGE pServiceImage = NULL;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
+    DWORD dwRecordSize;
+    LPWSTR pString;
 
     DPRINT("ScmCreateOrReferenceServiceImage(%p)\n", pService);
 
     RtlInitUnicodeString(&ImagePath, NULL);
+    RtlInitUnicodeString(&ObjectName, NULL);
 
     /* Get service data */
     RtlZeroMemory(&QueryTable,
@@ -176,6 +314,9 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     QueryTable[0].Name = L"ImagePath";
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
     QueryTable[0].EntryContext = &ImagePath;
+    QueryTable[1].Name = L"ObjectName";
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[1].EntryContext = &ObjectName;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
                                     pService->lpServiceName,
@@ -189,14 +330,19 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     }
 
     DPRINT("ImagePath: '%wZ'\n", &ImagePath);
+    DPRINT("ObjectName: '%wZ'\n", &ObjectName);
 
     pServiceImage = ScmGetServiceImageByImagePath(ImagePath.Buffer);
     if (pServiceImage == NULL)
     {
+        dwRecordSize = sizeof(SERVICE_IMAGE) +
+                       ImagePath.Length + sizeof(WCHAR) +
+                       ((ObjectName.Length != 0) ? (ObjectName.Length + sizeof(WCHAR)) : 0);
+
         /* Create a new service image */
         pServiceImage = HeapAlloc(GetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
-                                  FIELD_OFFSET(SERVICE_IMAGE, szImagePath[ImagePath.Length / sizeof(WCHAR) + 1]));
+                                  dwRecordSize);
         if (pServiceImage == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -205,18 +351,54 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
         pServiceImage->dwImageRunCount = 1;
         pServiceImage->hControlPipe = INVALID_HANDLE_VALUE;
+        pServiceImage->hProcess = INVALID_HANDLE_VALUE;
+
+        pString = (PWSTR)((INT_PTR)pServiceImage + sizeof(SERVICE_IMAGE));
 
         /* Set the image path */
-        wcscpy(pServiceImage->szImagePath,
+        pServiceImage->pszImagePath = pString;
+        wcscpy(pServiceImage->pszImagePath,
                ImagePath.Buffer);
 
-        RtlFreeUnicodeString(&ImagePath);
+        /* Set the account name */
+        if (ObjectName.Length > 0)
+        {
+            pString = pString + wcslen(pString) + 1;
+
+            pServiceImage->pszAccountName = pString;
+            wcscpy(pServiceImage->pszAccountName,
+                   ObjectName.Buffer);
+        }
+
+        /* Service logon */
+        dwError = ScmLogonService(pService, pServiceImage);
+        if (dwError != ERROR_SUCCESS)
+        {
+            DPRINT1("ScmLogonService() failed (Error %lu)\n", dwError);
+
+            /* Release the service image */
+            HeapFree(GetProcessHeap(), 0, pServiceImage);
+
+            goto done;
+        }
 
         /* Create the control pipe */
         dwError = ScmCreateNewControlPipe(pServiceImage);
         if (dwError != ERROR_SUCCESS)
         {
+            DPRINT1("ScmCreateNewControlPipe() failed (Error %lu)\n", dwError);
+
+            /* Unload the user profile */
+            if (pServiceImage->hProfile != NULL)
+                UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+
+            /* Close the logon token */
+            if (pServiceImage->hToken != NULL)
+                CloseHandle(pServiceImage->hToken);
+
+            /* Release the service image */
             HeapFree(GetProcessHeap(), 0, pServiceImage);
+
             goto done;
         }
 
@@ -229,16 +411,28 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
     }
     else
     {
+//        if ((lpService->Status.dwServiceType & SERVICE_WIN32_SHARE_PROCESS) == 0)
+
+        /* Fail if services in an image use different accounts */
+        if (!ScmIsSameServiceAccount(pServiceImage->pszAccountName, ObjectName.Buffer))
+        {
+            dwError = ERROR_DIFFERENT_SERVICE_ACCOUNT;
+            goto done;
+        }
+
         /* Increment the run counter */
         pServiceImage->dwImageRunCount++;
     }
 
+    DPRINT("pServiceImage->pszImagePath: %S\n", pServiceImage->pszImagePath);
+    DPRINT("pServiceImage->pszAccountName: %S\n", pServiceImage->pszAccountName);
     DPRINT("pServiceImage->dwImageRunCount: %lu\n", pServiceImage->dwImageRunCount);
 
     /* Link the service image to the service */
     pService->lpImage = pServiceImage;
 
-done:;
+done:
+    RtlFreeUnicodeString(&ObjectName);
     RtlFreeUnicodeString(&ImagePath);
 
     DPRINT("ScmCreateOrReferenceServiceImage() done (Error: %lu)\n", dwError);
@@ -263,9 +457,21 @@ ScmDereferenceServiceImage(PSERVICE_IMAGE pServiceImage)
         /* Remove the service image from the list */
         RemoveEntryList(&pServiceImage->ImageListEntry);
 
+        /* Close the process handle */
+        if (pServiceImage->hProcess != INVALID_HANDLE_VALUE)
+            CloseHandle(pServiceImage->hProcess);
+
         /* Close the control pipe */
         if (pServiceImage->hControlPipe != INVALID_HANDLE_VALUE)
             CloseHandle(pServiceImage->hControlPipe);
+
+        /* Unload the user profile */
+        if (pServiceImage->hProfile != NULL)
+            UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+
+        /* Close the logon token */
+        if (pServiceImage->hToken != NULL)
+            CloseHandle(pServiceImage->hToken);
 
         /* Release the service image */
         HeapFree(GetProcessHeap(), 0, pServiceImage);
@@ -418,8 +624,9 @@ ScmDeleteServiceRecord(PSERVICE lpService)
     /* Decrement the group reference counter */
     ScmSetServiceGroup(lpService, NULL);
 
-    /* FIXME: SecurityDescriptor */
-
+    /* Release the SecurityDescriptor */
+    if (lpService->pSecurityDescriptor != NULL)
+        HeapFree(GetProcessHeap(), 0, lpService->pSecurityDescriptor);
 
     /* Remove the Service from the List */
     RemoveEntryList(&lpService->ServiceListEntry);
@@ -557,7 +764,29 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     if (ScmIsDeleteFlagSet(hServiceKey))
         lpService->bDeleted = TRUE;
 
-done:;
+    if (lpService->Status.dwServiceType & SERVICE_WIN32)
+    {
+        dwError = ScmReadSecurityDescriptor(hServiceKey,
+                                            &lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+
+        /* Assing the default security descriptor if the security descriptor cannot be read */
+        if (lpService->pSecurityDescriptor == NULL)
+        {
+            DPRINT("No security descriptor found! Assign default security descriptor!\n");
+            dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+
+            dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                                 lpService->pSecurityDescriptor);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+
+done:
     if (lpGroup != NULL)
         HeapFree(GetProcessHeap(), 0, lpGroup);
 
@@ -566,60 +795,10 @@ done:;
 
     if (lpService != NULL)
     {
-        if (lpService->lpImage != NULL)
-            ScmDereferenceServiceImage(lpService->lpImage);
+        ASSERT(lpService->lpImage == NULL);
     }
 
     return dwError;
-}
-
-
-DWORD
-ScmDeleteRegKey(HKEY hKey, LPCWSTR lpszSubKey)
-{
-    DWORD dwRet, dwMaxSubkeyLen = 0, dwSize;
-    WCHAR szNameBuf[MAX_PATH], *lpszName = szNameBuf;
-    HKEY hSubKey = 0;
-
-    dwRet = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_READ, &hSubKey);
-    if (!dwRet)
-    {
-        /* Find the maximum subkey length so that we can allocate a buffer */
-        dwRet = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
-                                 &dwMaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL);
-        if (!dwRet)
-        {
-            dwMaxSubkeyLen++;
-            if (dwMaxSubkeyLen > sizeof(szNameBuf) / sizeof(WCHAR))
-            {
-                /* Name too big: alloc a buffer for it */
-                lpszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwMaxSubkeyLen * sizeof(WCHAR));
-            }
-
-            if (!lpszName)
-                dwRet = ERROR_NOT_ENOUGH_MEMORY;
-            else
-            {
-                while (dwRet == ERROR_SUCCESS)
-                {
-                    dwSize = dwMaxSubkeyLen;
-                    dwRet = RegEnumKeyExW(hSubKey, 0, lpszName, &dwSize, NULL, NULL, NULL, NULL);
-                    if (dwRet == ERROR_SUCCESS || dwRet == ERROR_MORE_DATA)
-                        dwRet = ScmDeleteRegKey(hSubKey, lpszName);
-                }
-                if (dwRet == ERROR_NO_MORE_ITEMS)
-                    dwRet = ERROR_SUCCESS;
-
-                if (lpszName != szNameBuf)
-                    HeapFree(GetProcessHeap(), 0, lpszName); /* Free buffer if allocated */
-            }
-        }
-
-        RegCloseKey(hSubKey);
-        if (!dwRet)
-            dwRet = RegDeleteKeyW(hKey, lpszSubKey);
-    }
-    return dwRet;
 }
 
 
@@ -1071,7 +1250,7 @@ ScmControlService(PSERVICE Service,
 #endif
 
 Done:
-    /* Release the contol packet */
+    /* Release the control packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
@@ -1085,6 +1264,7 @@ Done:
         dwControl == SERVICE_CONTROL_STOP)
     {
         ScmDereferenceServiceImage(Service->lpImage);
+        Service->lpImage = NULL;
     }
 
     LeaveCriticalSection(&ControlServiceCriticalSection);
@@ -1100,17 +1280,17 @@ ScmSendStartCommand(PSERVICE Service,
                     DWORD argc,
                     LPWSTR* argv)
 {
+    DWORD dwError = ERROR_SUCCESS;
     PSCM_CONTROL_PACKET ControlPacket;
     SCM_REPLY_PACKET ReplyPacket;
     DWORD PacketSize;
-    PWSTR Ptr;
-    DWORD dwWriteCount = 0;
-    DWORD dwReadCount = 0;
-    DWORD dwError = ERROR_SUCCESS;
     DWORD i;
+    PWSTR Ptr;
     PWSTR *pOffPtr;
     PWSTR pArgPtr;
     BOOL bResult;
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
 #ifdef USE_ASYNCHRONOUS_IO
     OVERLAPPED Overlapped = {0};
 #endif
@@ -1118,26 +1298,32 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    PacketSize = sizeof(SCM_CONTROL_PACKET) +
-                 (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
 
-    /* Calculate the required packet size for the start arguments */
+    /*
+     * Calculate the required packet size for the start argument vector 'argv',
+     * composed of the list of pointer offsets, followed by UNICODE strings.
+     * The strings are stored continuously after the vector of offsets, with
+     * the offsets being relative to the beginning of the vector, as in the
+     * following layout (with N == argc):
+     *     [argOff(0)]...[argOff(N-1)][str(0)]...[str(N-1)] .
+     */
     if (argc > 0 && argv != NULL)
     {
-        PacketSize = ALIGN_UP(PacketSize, LPWSTR);
+        PacketSize = ALIGN_UP(PacketSize, PWSTR);
+        PacketSize += (argc * sizeof(PWSTR));
 
         DPRINT("Argc: %lu\n", argc);
         for (i = 0; i < argc; i++)
         {
             DPRINT("Argv[%lu]: %S\n", i, argv[i]);
-            PacketSize += (DWORD)((wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR));
+            PacketSize += (DWORD)((wcslen(argv[i]) + 1) * sizeof(WCHAR));
         }
     }
 
     /* Allocate a control packet */
-    ControlPacket = HeapAlloc(GetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              PacketSize);
+    ControlPacket = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, PacketSize);
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -1146,22 +1332,23 @@ ScmSendStartCommand(PSERVICE Service,
                                ? SERVICE_CONTROL_START_OWN
                                : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
 
-    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+    /* Copy the start command line */
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+    Ptr = (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset);
     wcscpy(Ptr, Service->lpServiceName);
 
-    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsCount  = 0;
     ControlPacket->dwArgumentsOffset = 0;
 
-    /* Copy argument list */
+    /* Copy the argument vector */
     if (argc > 0 && argv != NULL)
     {
         Ptr += wcslen(Service->lpServiceName) + 1;
         pOffPtr = (PWSTR*)ALIGN_UP_POINTER(Ptr, PWSTR);
         pArgPtr = (PWSTR)((ULONG_PTR)pOffPtr + argc * sizeof(PWSTR));
 
-        ControlPacket->dwArgumentsCount = argc;
+        ControlPacket->dwArgumentsCount  = argc;
         ControlPacket->dwArgumentsOffset = (DWORD)((ULONG_PTR)pOffPtr - (ULONG_PTR)ControlPacket);
 
         DPRINT("dwArgumentsCount: %lu\n", ControlPacket->dwArgumentsCount);
@@ -1169,12 +1356,10 @@ ScmSendStartCommand(PSERVICE Service,
 
         for (i = 0; i < argc; i++)
         {
-             wcscpy(pArgPtr, argv[i]);
-             *pOffPtr = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
-             DPRINT("offset: %p\n", *pOffPtr);
-
-             pArgPtr += wcslen(argv[i]) + 1;
-             pOffPtr++;
+            wcscpy(pArgPtr, argv[i]);
+            pOffPtr[i] = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
+            DPRINT("offset[%lu]: %p\n", i, pOffPtr[i]);
+            pArgPtr += wcslen(argv[i]) + 1;
         }
     }
 
@@ -1312,7 +1497,7 @@ ScmSendStartCommand(PSERVICE Service,
 #endif
 
 Done:
-    /* Release the contol packet */
+    /* Release the control packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
@@ -1549,6 +1734,7 @@ ScmStartUserModeService(PSERVICE Service,
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
+    LPVOID lpEnvironment;
     BOOL Result;
     DWORD dwError = ERROR_SUCCESS;
 
@@ -1566,20 +1752,86 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cb = sizeof(StartupInfo);
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
-    Result = CreateProcessW(NULL,
-                            Service->lpImage->szImagePath,
-                            NULL,
-                            NULL,
-                            FALSE,
-                            DETACHED_PROCESS | CREATE_SUSPENDED,
-                            NULL,
-                            NULL,
-                            &StartupInfo,
-                            &ProcessInformation);
+    /* Use the interactive desktop if the service is interactive */
+    // TODO: We should also check the value "NoInteractiveServices ":
+    // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms683502(v=vs.85).aspx
+    // for more details.
+    if (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS)
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+
+    if (Service->lpImage->hToken)
+    {
+        /* User token: Run the service under the user account */
+
+        if (!CreateEnvironmentBlock(&lpEnvironment, Service->lpImage->hToken, FALSE))
+        {
+            /* We failed, run the service with the current environment */
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+                    GetLastError(), Service->lpServiceName);
+            lpEnvironment = NULL;
+        }
+
+        /* Impersonate the new user */
+        Result = ImpersonateLoggedOnUser(Service->lpImage->hToken);
+        if (Result)
+        {
+            /* Launch the process in the user's logon session */
+            Result = CreateProcessAsUserW(Service->lpImage->hToken,
+                                          NULL,
+                                          Service->lpImage->pszImagePath,
+                                          NULL,
+                                          NULL,
+                                          FALSE,
+                                          CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                          lpEnvironment,
+                                          NULL,
+                                          &StartupInfo,
+                                          &ProcessInformation);
+            if (!Result)
+                dwError = GetLastError();
+
+            /* Revert the impersonation */
+            RevertToSelf();
+        }
+        else
+        {
+            dwError = GetLastError();
+            DPRINT1("ImpersonateLoggedOnUser() failed with error %d\n", dwError);
+        }
+    }
+    else
+    {
+        /* No user token: Run the service under the LocalSystem account */
+
+        if (!CreateEnvironmentBlock(&lpEnvironment, NULL, TRUE))
+        {
+            /* We failed, run the service with the current environment */
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+                    GetLastError(), Service->lpServiceName);
+            lpEnvironment = NULL;
+        }
+
+        Result = CreateProcessW(NULL,
+                                Service->lpImage->pszImagePath,
+                                NULL,
+                                NULL,
+                                FALSE,
+                                CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                lpEnvironment,
+                                NULL,
+                                &StartupInfo,
+                                &ProcessInformation);
+        if (!Result)
+            dwError = GetLastError();
+    }
+
+    if (lpEnvironment)
+        DestroyEnvironmentBlock(lpEnvironment);
+
     if (!Result)
     {
-        dwError = GetLastError();
-        DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
+        DPRINT1("Starting '%S' failed with error %d\n",
+                Service->lpServiceName, dwError);
         return dwError;
     }
 
@@ -1590,30 +1842,25 @@ ScmStartUserModeService(PSERVICE Service,
            ProcessInformation.dwThreadId,
            ProcessInformation.hThread);
 
-    /* Get process handle and id */
+    /* Get the process handle and ID */
+    Service->lpImage->hProcess = ProcessInformation.hProcess;
     Service->lpImage->dwProcessId = ProcessInformation.dwProcessId;
 
-    /* Resume Thread */
+    /* Resume the main thread and close its handle */
     ResumeThread(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hThread);
 
     /* Connect control pipe */
     dwError = ScmWaitForServiceConnect(Service);
-    if (dwError == ERROR_SUCCESS)
-    {
-        /* Send start command */
-        dwError = ScmSendStartCommand(Service, argc, argv);
-    }
-    else
+    if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
         Service->lpImage->dwProcessId = 0;
+        return dwError;
     }
 
-    /* Close thread and process handle */
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-
-    return dwError;
+    /* Send the start command */
+    return ScmSendStartCommand(Service, argc, argv);
 }
 
 
@@ -1644,8 +1891,8 @@ ScmLoadService(PSERVICE Service,
         dwError = ScmLoadDriver(Service);
         if (dwError == ERROR_SUCCESS)
         {
-            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
             Service->Status.dwCurrentState = SERVICE_RUNNING;
+            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
         }
     }
     else // if (Service->Status.dwServiceType & (SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS))
@@ -1657,11 +1904,8 @@ ScmLoadService(PSERVICE Service,
             dwError = ScmStartUserModeService(Service, argc, argv);
             if (dwError == ERROR_SUCCESS)
             {
-#ifdef USE_SERVICE_START_PENDING
                 Service->Status.dwCurrentState = SERVICE_START_PENDING;
-#else
-                Service->Status.dwCurrentState = SERVICE_RUNNING;
-#endif
+                Service->Status.dwControlsAccepted = 0;
             }
             else
             {

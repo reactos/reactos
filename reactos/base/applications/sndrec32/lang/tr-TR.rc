@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...", ID_ABOUT
+        MENUITEM "&Üzerine", ID_ABOUT
     END
 END
 

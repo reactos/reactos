@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps/available.c
- * PURPOSE:         Functions for working with availabled applications
+ * PURPOSE:         Functions for working with available applications
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */

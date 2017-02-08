@@ -153,6 +153,17 @@ extern "C" {
 #endif
 
 /**
+ * LIBXSLT_ATTR_FORMAT:
+ *
+ * This macro is used to indicate to GCC the parameters are printf-like
+ */
+#ifdef __GNUC__
+#define LIBXSLT_ATTR_FORMAT(fmt,args) __attribute__((__format__(__printf__,fmt,args)))
+#else
+#define LIBXSLT_ATTR_FORMAT(fmt,args)
+#endif
+
+/**
  * LIBXSLT_PUBLIC:
  *
  * This macro is used to declare PUBLIC variables for Cygwin and for MSC on Windows

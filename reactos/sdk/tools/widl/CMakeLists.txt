@@ -26,6 +26,7 @@ list(APPEND SOURCE
     utils.c
     widl.c
     write_msft.c
+    write_sltg.c
     parser.yy.c
     parser.tab.c
     port/mkstemps.c)

@@ -148,7 +148,7 @@ BOOL CheckCtrlBreak (INT mode)
             if (!bCtrlBreak)
                 return FALSE;
 
-            LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, options, 4);
+            LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, options, ARRAYSIZE(options));
 
             /* we need to be sure the string arrives on the screen! */
             do
@@ -269,7 +269,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 }
 
 /*
- * split - splits a line up into separate arguments, deliminators
+ * split - splits a line up into separate arguments, delimiters
  *         are spaces and slashes ('/').
  */
 LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards, BOOL handle_plus)
@@ -363,7 +363,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards, BOOL handle_plus)
 }
 
 /*
- * splitspace() is a function which uses JUST spaces as delimeters. split() uses "/" AND spaces.
+ * splitspace() is a function which uses JUST spaces as delimiters. split() uses "/" AND spaces.
  * The way it works is real similar to split(), search the difference ;)
  * splitspace is needed for commands such as "move" where paths as C:\this/is\allowed/ are allowed
  */
@@ -536,6 +536,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 
 INT PagePrompt(VOID)
 {
+    SHORT iScreenWidth, iCursorY;
     INPUT_RECORD ir;
 
     ConOutResPuts(STRING_MISC_HELP1);
@@ -554,10 +555,24 @@ INT PagePrompt(VOID)
     AddBreakHandler();
     ConInEnable();
 
+    /*
+     * Get the screen width, erase the full line where the cursor is,
+     * and move the cursor back to the beginning of the line.
+     */
+    GetScreenSize(&iScreenWidth, NULL);
+    iCursorY = GetCursorY();
+    SetCursorXY(0, iCursorY);
+    while (iScreenWidth-- > 0) // Or call FillConsoleOutputCharacter ?
+        ConOutChar(_T(' '));
+    SetCursorXY(0, iCursorY);
+
     if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
         ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&
          (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
     {
+        /* We break, output a newline */
+        ConOutChar(_T('\n'));
+
         bCtrlBreak = TRUE;
         return PROMPT_BREAK;
     }

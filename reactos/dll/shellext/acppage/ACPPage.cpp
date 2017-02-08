@@ -18,6 +18,8 @@
 
 #include "precomp.h"
 
+#include <shellutils.h>
+
 HMODULE g_hModule = NULL;
 LONG g_ModuleRefCnt = 0;
 

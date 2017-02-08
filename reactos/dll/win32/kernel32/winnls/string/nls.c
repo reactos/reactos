@@ -95,7 +95,7 @@ NlsInit(VOID)
     RtlInitCodePageTable((PUSHORT)AnsiCodePage.SectionMapping,
                          &AnsiCodePage.CodePageTable);
     AnsiCodePage.CodePage = AnsiCodePage.CodePageTable.CodePage;
-    
+
     InsertTailList(&CodePageListHead, &AnsiCodePage.Entry);
 
     /* Setup OEM code page. */
@@ -436,8 +436,10 @@ IntMultiByteToWideCharCP(UINT CodePage,
 {
     PCODEPAGE_ENTRY CodePageEntry;
     PCPTABLEINFO CodePageTable;
+    PUSHORT MultiByteTable;
     LPCSTR TempString;
     INT TempLength;
+    USHORT WideChar;
 
     /* Get code page table. */
     CodePageEntry = IntGetCodePageEntry(CodePage);
@@ -446,10 +448,22 @@ IntMultiByteToWideCharCP(UINT CodePage,
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
+
     CodePageTable = &CodePageEntry->CodePageTable;
 
+    /* If MB_USEGLYPHCHARS flag present and glyph table present */
+    if ((Flags & MB_USEGLYPHCHARS) && CodePageTable->MultiByteTable[256])
+    {
+        /* Use glyph table */
+        MultiByteTable = CodePageTable->MultiByteTable + 256 + 1;
+    }
+    else
+    {
+        MultiByteTable = CodePageTable->MultiByteTable;
+    }
+
     /* Different handling for DBCS code pages. */
-    if (CodePageTable->MaximumCharacterSize > 1)
+    if (CodePageTable->DBCSCodePage)
     {
         UCHAR Char;
         USHORT DBCSOffset;
@@ -458,19 +472,56 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
         if (Flags & MB_ERR_INVALID_CHARS)
         {
-            /* FIXME */
-            DPRINT1("IntMultiByteToWideCharCP: MB_ERR_INVALID_CHARS case not implemented!\n");
+            TempString = MultiByteString;
+
+            while (TempString < MbsEnd)
+            {
+                DBCSOffset = CodePageTable->DBCSOffsets[(UCHAR)*TempString];
+
+                if (DBCSOffset)
+                {
+                    /* If lead byte is presented, but behind it there is no symbol */
+                    if (((TempString + 1) == MbsEnd) || (*(TempString + 1) == 0))
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+
+                    WideChar = CodePageTable->DBCSOffsets[DBCSOffset + *(TempString + 1)];
+
+                    if (WideChar == CodePageTable->UniDefaultChar &&
+                        MAKEWORD(*(TempString + 1), *TempString) != CodePageTable->TransUniDefaultChar)
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+
+                    TempString++;
+                }
+                else
+                {
+                    WideChar = MultiByteTable[(UCHAR)*TempString];
+
+                    if ((WideChar == CodePageTable->UniDefaultChar &&
+                        *TempString != CodePageTable->TransUniDefaultChar) ||
+                        /* "Private Use" characters */
+                        (WideChar >= 0xE000 && WideChar <= 0xF8FF))
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+                }
+
+                TempString++;
+            }
         }
-        
+
         /* Does caller query for output buffer size? */
         if (WideCharCount == 0)
         {
             for (; MultiByteString < MbsEnd; WideCharCount++)
             {
                 Char = *MultiByteString++;
-
-                if (Char < 0x80)
-                    continue;
 
                 DBCSOffset = CodePageTable->DBCSOffsets[Char];
 
@@ -488,22 +539,27 @@ IntMultiByteToWideCharCP(UINT CodePage,
         {
             Char = *MultiByteString++;
 
-            if (Char < 0x80)
-            {
-                *WideCharString++ = Char;
-                continue;
-            }
-
             DBCSOffset = CodePageTable->DBCSOffsets[Char];
 
             if (!DBCSOffset)
             {
-                *WideCharString++ = CodePageTable->MultiByteTable[Char];
+                *WideCharString++ = MultiByteTable[Char];
                 continue;
             }
 
-            if (MultiByteString < MbsEnd)
-                *WideCharString++ = CodePageTable->DBCSOffsets[DBCSOffset + *(PUCHAR)MultiByteString++];
+            if (MultiByteString == MbsEnd)
+            {
+                *WideCharString++ = UNICODE_NULL;
+            }
+            else if (*MultiByteString == 0)
+            {
+                *WideCharString++ = UNICODE_NULL;
+                MultiByteString++;
+            }
+            else
+            {
+                *WideCharString++ = CodePageTable->DBCSOffsets[DBCSOffset + (UCHAR)*MultiByteString++];
+            }
         }
 
         if (MultiByteString < MbsEnd)
@@ -514,7 +570,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
         return Count;
     }
-    else /* Not DBCS code page */
+    else /* SBCS code page */
     {
         /* Check for invalid characters. */
         if (Flags & MB_ERR_INVALID_CHARS)
@@ -523,9 +579,12 @@ IntMultiByteToWideCharCP(UINT CodePage,
                  TempLength > 0;
                  TempString++, TempLength--)
             {
-                if (CodePageTable->MultiByteTable[(UCHAR)*TempString] ==
-                    CodePageTable->UniDefaultChar &&
-                    *TempString != CodePageEntry->CodePageTable.DefaultChar)
+                WideChar = MultiByteTable[(UCHAR)*TempString];
+
+                if ((WideChar == CodePageTable->UniDefaultChar &&
+                    *TempString != CodePageTable->TransUniDefaultChar) ||
+                    /* "Private Use" characters */
+                    (WideChar >= 0xE000 && WideChar <= 0xF8FF))
                 {
                     SetLastError(ERROR_NO_UNICODE_TRANSLATION);
                     return 0;
@@ -542,7 +601,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
             TempLength > 0;
             MultiByteString++, TempLength--)
         {
-            *WideCharString++ = CodePageTable->MultiByteTable[(UCHAR)*MultiByteString];
+            *WideCharString++ = MultiByteTable[(UCHAR)*MultiByteString];
         }
 
         /* Adjust buffer size. Wine trick ;-) */
@@ -552,7 +611,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return 0;
         }
-	    return MultiByteCount;
+        return MultiByteCount;
     }
 }
 
@@ -694,7 +753,13 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
                            LPBOOL UsedDefaultChar)
 {
     INT TempLength;
-    WCHAR Char;
+    DWORD Char;
+
+    if (Flags)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
 
     /* Does caller query for output buffer size? */
     if (MultiByteCount == 0)
@@ -707,7 +772,17 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
             {
                 TempLength++;
                 if (*WideCharString >= 0x800)
+                {
                     TempLength++;
+                    if (*WideCharString >= 0xd800 && *WideCharString < 0xdc00 &&
+                        WideCharCount >= 1 &&
+                        WideCharString[1] >= 0xdc00 && WideCharString[1] <= 0xe000)
+                    {
+                        WideCharCount--;
+                        WideCharString++;
+                        TempLength++;
+                    }
+                }
             }
         }
         return TempLength;
@@ -739,6 +814,35 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
             MultiByteString[0] = 0xc0 | Char;
             MultiByteString += 2;
             TempLength -= 2;
+            continue;
+        }
+
+        /* surrogate pair 0x10000-0x10ffff: 4 bytes */
+        if (Char >= 0xd800 && Char < 0xdc00 &&
+            WideCharCount >= 1 &&
+            WideCharString[1] >= 0xdc00 && WideCharString[1] < 0xe000)
+        {
+            WideCharCount--;
+            WideCharString++;
+
+            if (TempLength < 4)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                break;
+            }
+
+            Char = (Char - 0xd800) << 10;
+            Char |= *WideCharString - 0xdc00;
+            ASSERT(Char <= 0xfffff);
+            Char += 0x10000;
+            ASSERT(Char <= 0x10ffff);
+
+            MultiByteString[3] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[2] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[1] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[0] = 0xf0 | Char;
+            MultiByteString += 4;
+            TempLength -= 4;
             continue;
         }
 
@@ -845,41 +949,43 @@ IntWideCharToMultiByteCP(UINT CodePage,
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
+
     CodePageTable = &CodePageEntry->CodePageTable;
 
 
     /* Different handling for DBCS code pages. */
-    if (CodePageTable->MaximumCharacterSize > 1)
+    if (CodePageTable->DBCSCodePage)
     {
         /* If Flags, DefaultChar or UsedDefaultChar were given, we have to do some more work */
-        if(Flags || DefaultChar || UsedDefaultChar)
+        if (Flags || DefaultChar || UsedDefaultChar)
         {
             BOOL TempUsedDefaultChar;
             USHORT DefChar;
 
             /* If UsedDefaultChar is not set, set it to a temporary value, so we don't have
                to check on every character */
-            if(!UsedDefaultChar)
+            if (!UsedDefaultChar)
                 UsedDefaultChar = &TempUsedDefaultChar;
 
             *UsedDefaultChar = FALSE;
 
             /* Use the CodePage's TransDefaultChar if none was given. Don't modify the DefaultChar pointer here. */
-            if(DefaultChar)
+            if (DefaultChar)
                 DefChar = DefaultChar[1] ? ((DefaultChar[0] << 8) | DefaultChar[1]) : DefaultChar[0];
             else
                 DefChar = CodePageTable->TransDefaultChar;
 
             /* Does caller query for output buffer size? */
-            if(!MultiByteCount)
+            if (!MultiByteCount)
             {
-                for(TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
+                for (TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
                 {
                     USHORT uChar;
 
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
+                        DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     uChar = ((PUSHORT) CodePageTable->WideCharTable)[*WideCharString];
@@ -900,15 +1006,16 @@ IntWideCharToMultiByteCP(UINT CodePage,
             }
 
             /* Convert the WideCharString to the MultiByteString and verify if the mapping is valid */
-            for(TempLength = MultiByteCount;
-                WideCharCount && TempLength;
-                TempLength--, WideCharString++, WideCharCount--)
+            for (TempLength = MultiByteCount;
+                 WideCharCount && TempLength;
+                 TempLength--, WideCharString++, WideCharCount--)
             {
                 USHORT uChar;
 
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
+                    DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
@@ -987,7 +1094,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
 
         return MultiByteCount - TempLength;
     }
-    else /* Not DBCS code page */
+    else /* SBCS code page */
     {
         INT nReturn;
 
@@ -1013,6 +1120,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
+                        DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     if (!*UsedDefaultChar)
@@ -1039,6 +1147,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
+                    DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 *MultiByteString = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
@@ -1434,9 +1543,9 @@ MultiByteToWideChar(UINT CodePage,
 {
     /* Check the parameters. */
     if (MultiByteString == NULL ||
-        MultiByteCount == 0 ||
-        (WideCharString == NULL && WideCharCount > 0) ||
-        (PVOID)MultiByteString == (PVOID)WideCharString)
+        MultiByteCount == 0 || WideCharCount < 0 ||
+        (WideCharCount && (WideCharString == NULL ||
+        (PVOID)MultiByteString == (PVOID)WideCharString)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;

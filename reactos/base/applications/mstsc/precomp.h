@@ -25,7 +25,7 @@
 #define RDP_INFO_AUTOLOGON            0x00000008
 #define RDP_INFO_UNICODE              0x00000010
 #define RDP_INFO_MAXIMIZESHELL        0x00000020
-#define RDP_INFO_COMPRESSION          0x00000080 /* mppc compression with 8kB histroy buffer */
+#define RDP_INFO_COMPRESSION          0x00000080 /* mppc compression with 8kB history buffer */
 #define RDP_INFO_ENABLEWINDOWSKEY     0x00000100
 #define RDP_INFO_COMPRESSION2         0x00000200 /* rdp5 mppc compression with 64kB history buffer */
 #define RDP_INFO_REMOTE_CONSOLE_AUDIO 0x00002000

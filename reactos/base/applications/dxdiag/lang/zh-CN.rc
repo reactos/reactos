@@ -246,7 +246,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "此测试将使用 DirectDraw 在全萤幕模式绘图。你应会看见在移动的白色矩形。要继续？"
     IDS_DDFULLSCREEN_RESULT "你在全萤幕模式中看见在移动的白色矩形吗？"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "否"
     IDS_D3DTEST_DESCRIPTION "这将启动 Direct3D 界面测试。要继续？"
     IDS_D3DTEST_D3Dx "此测试将使用硬体加速的 Direct3D %u 界面。"

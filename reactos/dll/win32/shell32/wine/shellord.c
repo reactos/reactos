@@ -34,7 +34,7 @@
 #include <shlwapi.h>
 #include <commdlg.h>
 #include <commoncontrols.h>
-#include <recyclebin.h>
+#include "../shellrecyclebin/recyclebin.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
@@ -800,7 +800,11 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-        SHGetPathFromIDListA(pv, doc_name);
+        if (!SHGetPathFromIDListA(pv, doc_name))
+        {
+            WARN("can't get path from PIDL\n");
+            return;
+        }
         break;
 
     case SHARD_PATHA:
@@ -823,8 +827,13 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     ext = strrchr(doc_name, '.');
     if (!lstrcmpiA(ext, ".lnk"))
     {
+        WCHAR doc_nameW[MAX_PATH];
         IShellLinkA* ShellLink;
-        IShellLink_ConstructFromFile(NULL, &IID_IShellLinkA, (LPCITEMIDLIST)SHSimpleIDListFromPathA(doc_name), (LPVOID*)&ShellLink);
+        int nLength = MultiByteToWideChar(CP_ACP, 0, doc_name, -1, doc_nameW, MAX_PATH);
+        if (nLength == 0)
+            return;
+
+        IShellLink_ConstructFromPath(doc_nameW, &IID_IShellLinkA, (LPVOID*)&ShellLink);
         IShellLinkA_GetPath(ShellLink, doc_name, MAX_PATH, NULL, 0);
         IShellLinkA_Release(ShellLink);
     }
@@ -891,7 +900,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 		/* buffer size looks good */
 		ptr += 12; /* get to string */
 		len = bufused - (ptr-buffer);  /* get length of buf remaining */
-		if ((lstrlenA(ptr) > 0) && (lstrlenA(ptr) <= len-1)) {
+                if (ptr[0] && (lstrlenA(ptr) <= len-1)) {
 		    /* appears to be good string */
 		    lstrcpyA(old_lnk_name, link_dir);
 		    PathAppendA(old_lnk_name, ptr);
@@ -1283,8 +1292,8 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
  *
  */
 BOOL WINAPI FileIconInit(BOOL bFullInit)
-{	FIXME("(%s)\n", bFullInit ? "true" : "false");
-	return FALSE;
+{
+    return SIC_Initialize();
 }
 
 /*************************************************************************

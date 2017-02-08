@@ -291,7 +291,7 @@ USBSTOR_ScanConfigurationDescriptor(
                  //
                  // interrupt endpoint type
                  //
-                 UNIMPLEMENTED
+                 UNIMPLEMENTED;
             }
         }
 
@@ -458,7 +458,7 @@ USBSTOR_SelectConfigurationAndInterface(
     Status = USBSTOR_SyncUrbRequest(DeviceExtension->LowerDeviceObject, Urb);
 
     //
-    // did it succeeed
+    // did it succeed
     //
     if (NT_SUCCESS(Status))
     {

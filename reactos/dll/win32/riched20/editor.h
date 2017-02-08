@@ -111,7 +111,7 @@ ME_Style *ME_ApplyStyle(ME_TextEditor *ed, ME_Style *sSrc, CHARFORMAT2W *style) 
 HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s) DECLSPEC_HIDDEN;
 void ME_UnselectStyleFont(ME_Context *c, ME_Style *s, HFONT hOldFont) DECLSPEC_HIDDEN;
 void ME_InitCharFormat2W(CHARFORMAT2W *pFmt) DECLSPEC_HIDDEN;
-void ME_SaveTempStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style) DECLSPEC_HIDDEN;
 void ME_ClearTempStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048]) DECLSPEC_HIDDEN;
 void ME_DumpStyle(ME_Style *s) DECLSPEC_HIDDEN;
@@ -123,8 +123,8 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt) DE
 /* list.c */
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat) DECLSPEC_HIDDEN;
 void ME_Remove(ME_DisplayItem *diWhere) DECLSPEC_HIDDEN;
-BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
-BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
+BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
+BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
@@ -135,6 +135,8 @@ void ME_DumpDocument(ME_TextBuffer *buffer) DECLSPEC_HIDDEN;
 /* string.c */
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars) DECLSPEC_HIDDEN;
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars) DECLSPEC_HIDDEN;
+ME_String *ME_MakeStringConst(const WCHAR *str, int len) DECLSPEC_HIDDEN;
+ME_String *ME_MakeStringEmpty(int len) DECLSPEC_HIDDEN;
 void ME_DestroyString(ME_String *s) DECLSPEC_HIDDEN;
 BOOL ME_AppendString(ME_String *s, const WCHAR *append, int len) DECLSPEC_HIDDEN;
 ME_String *ME_VSplitString(ME_String *orig, int nVPos) DECLSPEC_HIDDEN;
@@ -213,7 +215,7 @@ BOOL ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars) DECLS
 void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
                              const WCHAR *str, int len, ME_Style *style) DECLSPEC_HIDDEN;
 void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor) DECLSPEC_HIDDEN;
-int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs) DECLSPEC_HIDDEN;
+int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs, BOOL final_eop) DECLSPEC_HIDDEN;
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl) DECLSPEC_HIDDEN;
 
 int ME_GetCursorOfs(const ME_Cursor *cursor) DECLSPEC_HIDDEN;
@@ -227,6 +229,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, 
 int ME_GetTextLength(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how) DECLSPEC_HIDDEN;
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor, int *x, int *y, int *height) DECLSPEC_HIDDEN;
 
 /* context.c */
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC) DECLSPEC_HIDDEN;
@@ -250,6 +253,8 @@ BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt) D
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
 void ME_MarkAllForWrapping(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 void ME_SetDefaultParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt) DECLSPEC_HIDDEN;
+void para_num_init( ME_Context *c, ME_Paragraph *para ) DECLSPEC_HIDDEN;
+void para_num_clear( struct para_num *pn ) DECLSPEC_HIDDEN;
 
 /* paint.c */
 void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate) DECLSPEC_HIDDEN;

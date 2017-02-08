@@ -587,7 +587,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_SFNT_HHEA :: To access the font's @TT_HoriHeader structure.     */
   /*                                                                       */
-  /*    FT_SFNT_VHEA :: To access the font's @TT_VertHeader struture.      */
+  /*    FT_SFNT_VHEA :: To access the font's @TT_VertHeader structure.     */
   /*                                                                       */
   /*    FT_SFNT_POST :: To access the font's @TT_Postscript structure.     */
   /*                                                                       */

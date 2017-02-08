@@ -214,6 +214,16 @@ public:
 
         SendMessage(LVM_GETITEMTEXT, iItem, (LPARAM) &itemInfo);
     }
+
+    BOOL GetItemPosition(int nItem, POINT* pPoint)
+    {
+        return (BOOL)SendMessage(LVM_GETITEMPOSITION, nItem, (LPARAM)pPoint);
+    }
+
+    BOOL SetItemPosition(int nItem, POINT* pPoint)
+    {
+        return (BOOL)SendMessage(LVM_SETITEMPOSITION, nItem, MAKELPARAM(pPoint->x, pPoint->y));
+    }
 };
 
 template<typename TItemData = DWORD_PTR>

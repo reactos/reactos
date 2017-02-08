@@ -1,0 +1,38 @@
+/*
+ * PROJECT:     ReactOS Local Port Monitor
+ * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
+ * PURPOSE:     Resource file
+ * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ */
+
+#include <windef.h>
+#include "resource.h"
+
+/* Version Information */
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Local Port Monitor"
+#define REACTOS_STR_INTERNAL_NAME     "localmon"
+#define REACTOS_STR_ORIGINAL_FILENAME "localmon.dll"
+#include <reactos/version.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DE_DE
+    #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif

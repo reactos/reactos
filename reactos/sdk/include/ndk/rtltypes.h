@@ -63,6 +63,19 @@ extern "C" {
 #define EXCEPTION_CHAIN_END                                 ((PEXCEPTION_REGISTRATION_RECORD)-1)
 
 //
+// Thread Error Mode Flags
+//
+/* Also defined in psdk/winbase.h */
+#define SEM_FAILCRITICALERRORS          0x0001
+#define SEM_NOGPFAULTERRORBOX           0x0002
+#define SEM_NOALIGNMENTFAULTEXCEPT      0x0004
+#define SEM_NOOPENFILEERRORBOX          0x8000
+
+#define RTL_SEM_FAILCRITICALERRORS      (SEM_FAILCRITICALERRORS     << 4)
+#define RTL_SEM_NOGPFAULTERRORBOX       (SEM_NOGPFAULTERRORBOX      << 4)
+#define RTL_SEM_NOALIGNMENTFAULTEXCEPT  (SEM_NOALIGNMENTFAULTEXCEPT << 4)
+
+//
 // Range and Range List Flags
 //
 #define RTL_RANGE_LIST_ADD_IF_CONFLICT                      0x00000001
@@ -1089,7 +1102,7 @@ typedef struct _RTL_HEAP_INFORMATION
     ULONG NumberOfEntries;
     ULONG NumberOfPseudoTags;
     ULONG PseudoTagGranularity;
-    ULONG Reserved[4];
+    ULONG Reserved[5];
     PRTL_HEAP_TAG Tags;
     PRTL_HEAP_ENTRY Entries;
 } RTL_HEAP_INFORMATION, *PRTL_HEAP_INFORMATION;

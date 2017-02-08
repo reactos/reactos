@@ -1,0 +1,29 @@
+[Section]
+Name = Tiny C Compiler
+Version = 0.9.26
+License = LGPL
+Description = A small but hyper fast C compiler.
+Size = 385.7 KiB
+Category = 7
+URLSite = http://bellard.org/tcc/
+URLDownload = http://download.savannah.gnu.org/releases/tinycc/tcc-0.9.26-win32-bin.zip
+SHA1 = 99e0e4afa5f1c07f5e950b4ed8d8a0a09f4e3e9c
+CDPath = none
+
+[Section.0407]
+Description = Ein kleiner, aber sehr schneller C-Compiler.
+Size = 385,7 KiB
+
+[Section.0418]
+Description = Compilator mic și foarte rapid de C.
+Size = 385,7 Kio
+
+[Section.0419]
+Description = Небольшой, но быстрый C компилятор.
+Size = 385,7 КиБ
+
+[Section.041f]
+Name = Minik C Derleyicisi
+Description = Küçük ancak aşırı hızlı bir C derleyicisi.
+Size = 385,7 KiB
+

@@ -395,10 +395,10 @@ static BOOL AttachToConsoleInternal(PCOORD Resolution)
             CurrentAddr = LOWORD((Address + j) * AddressSize);
 
             /* Store the character in plane 0 */
-            VgaMemory[CurrentAddr] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
+            VgaMemory[CurrentAddr * VGA_NUM_BANKS] = CharBuff[i * TextResolution.X + j].Char.AsciiChar;
 
             /* Store the attribute in plane 1 */
-            VgaMemory[CurrentAddr + VGA_BANK_SIZE] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
+            VgaMemory[CurrentAddr * VGA_NUM_BANKS + 1] = (BYTE)CharBuff[i * TextResolution.X + j].Attributes;
         }
 
         /* Move to the next scanline */
@@ -806,7 +806,10 @@ VOID VgaConsoleRepaintScreen(PSMALL_RECT Rect)
 
 BOOLEAN VgaConsoleInitialize(HANDLE TextHandle)
 {
-    /* Save the default text-mode console output handle */
+    /*
+     * Initialize the console video by saving the default
+     * text-mode console output handle, if it is valid.
+     */
     if (!IsConsoleHandle(TextHandle)) return FALSE;
     TextConsoleBuffer = TextHandle;
 
@@ -814,6 +817,7 @@ BOOLEAN VgaConsoleInitialize(HANDLE TextHandle)
     if (!GetConsoleCursorInfo(TextConsoleBuffer, &OrgConsoleCursorInfo) ||
         !GetConsoleScreenBufferInfo(TextConsoleBuffer, &OrgConsoleBufferInfo))
     {
+        TextConsoleBuffer = NULL;
         return FALSE;
     }
     ConsoleInfo = OrgConsoleBufferInfo;
@@ -826,8 +830,13 @@ BOOLEAN VgaConsoleInitialize(HANDLE TextHandle)
 
 VOID VgaConsoleCleanup(VOID)
 {
+    /* If the console video was not initialized, just return */
+    if (!TextConsoleBuffer)
+        return;
+
     VgaDetachFromConsole();
 
+    // TODO: We need to initialize those events before using them!
     CloseHandle(AnotherEvent);
     CloseHandle(EndEvent);
     CloseHandle(StartEvent);

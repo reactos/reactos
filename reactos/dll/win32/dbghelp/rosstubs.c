@@ -38,17 +38,6 @@ EnumerateLoadedModulesEx(
     return FALSE;
 }
 
-BOOL
-IMAGEAPI
-EnumerateLoadedModulesExW(
-    IN HANDLE hProcess,
-    IN PENUMLOADED_MODULES_CALLBACKW64 EnumLoadedModulesCallback,
-    IN PVOID UserContext OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 BOOL WINAPI
 DbgHelpCreateUserDump(LPSTR pszFileName,
                       PDBGHELP_CREATE_USER_DUMP_CALLBACK Callback,

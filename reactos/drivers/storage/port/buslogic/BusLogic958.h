@@ -23,7 +23,7 @@
 //_________________________________________________________________________________________
 //
 // File description :The header file the driver for BusLogic-958 SCSI Host adapter card.
-// The technical refernece for this driver is at :
+// The technical reference for this driver is at :
 //
 // Author: Namita Lal, Sirish Raghuram ( Calsoft Pvt Ltd)
 // Date: 10th June 2002
@@ -333,7 +333,7 @@ typedef struct BusLogic_SetupInformation
   UCHAR WideTransfersActiveID8to15;                      /* Byte 33 */
 }BusLogic_SetupInformation_T;
 
-// Something has to be done about the packing machanism of these structures - Namita
+// Something has to be done about the packing mechanism of these structures - Namita
 // Define the Inquire Extended Setup Information reply structure.
 typedef struct BusLogic_ExtendedSetupInformation
 {
@@ -812,7 +812,7 @@ typedef struct BusLogic_WmiExtendedSetupInformation
 #pragma pack ()
 
 //_________________________________________________________________________________________
-// function declaractions
+// function declarations
 //_________________________________________________________________________________________
 ULONG
 NTAPI
@@ -940,7 +940,7 @@ WriteBusLogicPort(UCHAR data,
 }
 
 //_________________________________________________________________________________________
-// Declarations for the device registers and rewading and writing to them
+// Declarations for the device registers and reading and writing to them
 //_________________________________________________________________________________________
 
 //  Define the BusLogic SCSI Host Adapter I/O Register Offsets.

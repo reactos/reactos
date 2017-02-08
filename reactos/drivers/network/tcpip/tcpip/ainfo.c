@@ -69,7 +69,7 @@ TDI_STATUS GetAddressFileInfo(TDIObjectID *ID,
                               PVOID Buffer,
                               PUINT BufferSize)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return TDI_INVALID_REQUEST;
 }

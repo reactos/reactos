@@ -146,7 +146,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
          */
         Entry = MmGetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment,
                                              (PLARGE_INTEGER)&Offset);
-        if (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
+        if (Entry && MM_IS_WAIT_PTE(Entry))
         {
             MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
             MmUnlockAddressSpace(AddressSpace);

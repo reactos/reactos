@@ -10,6 +10,7 @@ list(APPEND SOURCE
     profile.c
     registry.c
     setup.c
+    sid.c
     userenv.c
     precomp.h)
 

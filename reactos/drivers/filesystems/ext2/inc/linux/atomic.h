@@ -8,7 +8,7 @@
 //
 
 typedef struct {
-    volatile int counter;
+    volatile LONG  counter;
 } atomic_t;
 
 #define ATOMIC_INIT(i)	(i)

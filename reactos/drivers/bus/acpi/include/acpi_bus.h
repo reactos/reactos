@@ -154,7 +154,7 @@ struct acpi_device_flags {
 	UINT32			removable:1;
 	UINT32			ejectable:1;
 	UINT32			lockable:1;
-	UINT32			suprise_removal_ok:1;
+	UINT32			surprise_removal_ok:1;
 	UINT32			power_manageable:1;
 	UINT32			performance_manageable:1;
 	UINT32			wake_capable:1;

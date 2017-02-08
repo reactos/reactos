@@ -167,8 +167,8 @@ typedef struct _EXT2_VOLUME_PROPERTY {
     BOOLEAN             bExt3Writable;
     BOOLEAN             bExt2;
     BOOLEAN             bExt3;
-    UCHAR               Codepage[CODEPAGE_MAXLEN];
-} EXT2_VOLUME_PROPERTY;
+    CHAR                Codepage[CODEPAGE_MAXLEN];
+} EXT2_VOLUME_PROPERTY, *PEXT2_VOLUME_PROPERTY;
 
 #ifdef __cplusplus
 typedef struct _EXT2_VOLUME_PROPERTY2:EXT2_VOLUME_PROPERTY {
@@ -196,14 +196,24 @@ typedef struct _EXT2_VOLUME_PROPERTY2 {
 
 } EXT2_VOLUME_PROPERTY2, *PEXT2_VOLUME_PROPERTY2;
 
-#define EXT2_VPROP3_AUTOMOUNT 0x0000000000000001
+#define EXT2_VPROP3_AUTOMOUNT (1ULL << 0)
+#define EXT2_VPROP3_USERIDS   (1ULL << 1)
 
+#ifdef __cplusplus
+typedef struct _EXT2_VOLUME_PROPERTY3:EXT2_VOLUME_PROPERTY2 {
+#else   // __cplusplus
 typedef struct _EXT2_VOLUME_PROPERTY3 {
-    EXT2_VOLUME_PROPERTY2  Prop2;
-    unsigned __int64       Flags;
-    int                    AutoMount:1;
-    int                    Reserved1:31;
-    int                    Reserved2[31];
+    EXT2_VOLUME_PROPERTY2 ;
+#endif  // __cplusplus
+    unsigned __int64       Flags2;
+    ULONG                  AutoMount:1;
+    ULONG                  EIDS:1;
+    ULONG                  Reserved1:30;
+    USHORT                 uid;
+    USHORT                 gid;
+    USHORT                 euid;
+    USHORT                 egid;
+    ULONG                  Reserved2[29];
 } EXT2_VOLUME_PROPERTY3, *PEXT2_VOLUME_PROPERTY3;
 
 /* Ext2Fsd driver version and built time */

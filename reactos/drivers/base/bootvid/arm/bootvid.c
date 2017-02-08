@@ -447,7 +447,7 @@ VidDisplayString(IN PUCHAR String)
             /* Update current X */
             VidpCurrentX = VidpScrollRegion[0];
 
-            /* Preseve the current row */
+            /* Preserve the current row */
             PreserveRow(VidpCurrentY, TopDelta, FALSE);
         }
         else if (*String == '\r')

@@ -123,8 +123,7 @@ public:
 
         TRACE("ITrayPriv::AppendMenu\n");
 
-        hMenu = LoadPopupMenu(hExplorerInstance,
-                              MAKEINTRESOURCE(IDM_STARTMENU));
+        hMenu = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_STARTMENU));
         *phMenu = hMenu;
         if (hMenu == NULL)
             return E_FAIL;
@@ -135,13 +134,13 @@ public:
         bWantLogoff = (dwLogoff == 2 ||
                        SHRestricted(REST_FORCESTARTMENULOGOFF) ||
                        GetExplorerRegValueSet(HKEY_CURRENT_USER,
-                       TEXT("Advanced"),
-                       TEXT("StartMenuLogoff")));
+                                              L"Advanced",
+                                              L"StartMenuLogoff"));
 
         /* Favorites */
         if (!GetExplorerRegValueSet(HKEY_CURRENT_USER,
-            TEXT("Advanced"),
-            TEXT("StartMenuFavorites")))
+                                    L"Advanced",
+                                    L"StartMenuFavorites"))
         {
             DeleteMenu(hMenu,
                        IDM_FAVORITES,
@@ -243,8 +242,7 @@ public:
                       or hide it, it might be hidden in too many cases!!! */
 
             /* Update Log Off menu item */
-            if (!GetCurrentLoggedOnUserName(szUser,
-                sizeof(szUser) / sizeof(szUser[0])))
+            if (!GetCurrentLoggedOnUserName(szUser, _countof(szUser)))
             {
                 szUser[0] = _T('\0');
             }

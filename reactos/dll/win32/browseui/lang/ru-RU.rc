@@ -36,8 +36,8 @@ BEGIN
       BEGIN
           MENUITEM "", -1, MFT_SEPARATOR
       END
-      MENUITEM "Строка &состояния", IDM_VIEW_STATUSBAR
-      POPUP "&Панели обозревателя", IDM_VIEW_EXPLORERBAR
+      MENUITEM "&Строка состояния", IDM_VIEW_STATUSBAR
+      POPUP "Па&нели обозревателя", IDM_VIEW_EXPLORERBAR
       BEGIN
           MENUITEM "&Поиск\tCtrl+E", IDM_EXPLORERBAR_SEARCH
           MENUITEM "&Избранное\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
@@ -47,34 +47,33 @@ BEGIN
           MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
       END
       MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-      POPUP "П&ереход", FCIDM_MENU_EXPLORE
+      POPUP "Пере&ход", FCIDM_MENU_EXPLORE
       BEGIN
           MENUITEM "&Назад\tAlt+Стрелка влево", IDM_GOTO_BACK
           MENUITEM "&Вперед\tAlt+Стрелка вправо", IDM_GOTO_FORWARD
-          MENUITEM "&Вверх", IDM_GOTO_UPONELEVEL
+          MENUITEM "На один уровен&ь вверх", IDM_GOTO_UPONELEVEL
           MENUITEM "", -1, MFT_SEPARATOR
-          MENUITEM "&Домой\tAlt+Home", IDM_GOTO_HOMEPAGE
+          MENUITEM "Дома&шняя страница\tAlt+Home", IDM_GOTO_HOMEPAGE
       END
-      MENUITEM "&Обновить", IDM_VIEW_REFRESH
+      MENUITEM "О&бновить", IDM_VIEW_REFRESH
   END
-  POPUP "И&збранное", FCIDM_MENU_FAVORITES
+  POPUP "&Избранное", FCIDM_MENU_FAVORITES
   BEGIN
       MENUITEM "&Добавить в избранное...", IDM_FAVORITES_ADDTOFAVORITES
       MENUITEM "&Упорядочить избранное...", IDM_FAVORITES_ORGANIZEFAVORITES
       MENUITEM "", -1, MFT_SEPARATOR
       MENUITEM "(пусто)", IDM_FAVORITES_EMPTY
   END
-  POPUP "&Сервис", FCIDM_MENU_TOOLS
+  POPUP "С&ервис", FCIDM_MENU_TOOLS
   BEGIN
-      MENUITEM "Подключить &сетевой диск...", IDM_TOOLS_MAPNETWORKDRIVE
-      MENUITEM "&Отключить сетевой диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
-      MENUITEM "&Синхронизировать...", IDM_TOOLS_SYNCHRONIZE
+      MENUITEM "Подклю&чить сетевой диск...", IDM_TOOLS_MAPNETWORKDRIVE
+      MENUITEM "Отк&лючить сетевой диск...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+      MENUITEM "Син&хронизировать...", IDM_TOOLS_SYNCHRONIZE
       MENUITEM "", -1, MFT_SEPARATOR
-      MENUITEM "&Свойства папки ...", IDM_TOOLS_FOLDEROPTIONS
+      MENUITEM "Свойства п&апки ...", IDM_TOOLS_FOLDEROPTIONS
   END
   POPUP "&Справка", FCIDM_MENU_HELP
   BEGIN
-      MENUITEM "&Лицензионное соглашение", IDM_HELP_ISTHISCOPYLEGAL
       MENUITEM "&О ReactOS", IDM_HELP_ABOUT
   END
 END

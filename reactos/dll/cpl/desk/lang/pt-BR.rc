@@ -95,16 +95,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Usar este efeito de transição para menus e dicas de ferramenta:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "U&sar este método para suavizar as bordas das fontes de tela:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Usar íco&nes grandes", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "Mostr&ar sombras sob menus", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "&Mostrar conteúdo da janela ao arrastar", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Ocultar sublinhados para navegação do teclado até eu pressionar a tecla Alt",
@@ -178,7 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Padrão"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -226,28 +226,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Área de trabalho"
-    IDS_ELEMENT_2 "Barra de título inativa"
-    IDS_ELEMENT_3 "Borda de janela inativa"
-    IDS_ELEMENT_4 "Barra de título ativa"
-    IDS_ELEMENT_5 "Borda de janela ativa"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Itens selecionados"
-    IDS_ELEMENT_8 "Janela"
-    IDS_ELEMENT_9 "Barra de rolagem"
-    IDS_ELEMENT_10 "Objetos 3D"
-    IDS_ELEMENT_11 "Título da paleta"
-    IDS_ELEMENT_12 "Rótulo do ícone"
-    IDS_ELEMENT_13 "Barra de título"
-    IDS_ELEMENT_14 "Item de menu desativado"
-    IDS_ELEMENT_15 "Caixa de mensagem"
-    IDS_ELEMENT_16 "Controle da barra de rolagem"
-    IDS_ELEMENT_17 "Fundo da aplicação"
-    IDS_ELEMENT_18 "Barra de título pequena"
-    IDS_ELEMENT_19 "Espaçamento de ícone (horizontal)"
-    IDS_ELEMENT_20 "Espaçamento de ícone (vertical)"
-    IDS_ELEMENT_21 "Dica de ferramenta"
-    IDS_ELEMENT_22 "Ícone"
+    IDS_ELEMENT_0 "Área de trabalho"
+    IDS_ELEMENT_1 "Barra de título inativa"
+    IDS_ELEMENT_2 "Borda de janela inativa"
+    IDS_ELEMENT_3 "Barra de título ativa"
+    IDS_ELEMENT_4 "Borda de janela ativa"
+    IDS_ELEMENT_5 "Menu"
+    IDS_ELEMENT_6 "Itens selecionados"
+    IDS_ELEMENT_7 "Janela"
+    IDS_ELEMENT_8 "Barra de rolagem"
+    IDS_ELEMENT_9 "Objetos 3D"
+    IDS_ELEMENT_10 "Título da paleta"
+    IDS_ELEMENT_11 "Barra de título"
+    IDS_ELEMENT_12 "Caixa de mensagem"
+    IDS_ELEMENT_13 "Fundo da aplicação"
+    IDS_ELEMENT_14 "Espaçamento de ícone (horizontal)"
+    IDS_ELEMENT_15 "Espaçamento de ícone (vertical)"
+    IDS_ELEMENT_16 "Dica de ferramenta"
+    IDS_ELEMENT_17 "Ícone"
+//  IDS_ELEMENT_18 "Item de menu desativado"
 END
 
 STRINGTABLE

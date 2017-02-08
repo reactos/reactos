@@ -25,9 +25,9 @@ CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Instalează ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Instalarea unei noi copii a ReactOS. FiÈ™ierele, configuraÈ›iile È™i programele existente nu vor fi pÄƒstrate. Se pot face ajustÄƒri asupra discurilor È™i partiÈ›iilor.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Instalarea unei noi copii a ReactOS. Fișierele, configurațiile și programele existente nu vor fi păstrate. Sunt posibile ajustări asupra discurilor și partițiilor.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Repară sau actualizează ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Repararea sau actualizarea ReactOS. AceastÄƒ opÈ›iune menÈ›ine fiÈ™ierele, configuraÈ›iile È™i programele existente. OpÈ›iune validÄƒ doar dacÄƒ ReactOS e deja instalat Ã®n calculator.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Repararea sau actualizarea ReactOS. Această opțiune menține fișierele, configurațiile și programele existente. Opțiune validă doar dacă ReactOS e deja instalat în calculator.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Apăsați pe „Înainte” pentru configurarea de dispozitive.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -102,7 +102,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Se instalează fișierele…", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "Fișiere în copiere…", IDC_ACTIVITY, 20, 50, 277, 10
     LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
     CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
 END
@@ -134,7 +134,7 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista cu opțiuni de instalare ce necesită verificare înainte de a continua instalarea."
     IDS_ABORTSETUP "ReactOS încă nu este complet instalat în calculator. Daca întrerupeți procesul de instalare, pentru a instala va fi necesară repetarea pașilor parcurși până acum. Sigur doriți asta?"
     IDS_ABORTSETUP2 "Abandonați instalarea?"
-    IDS_NO_TXTSETUP_SIF "Nu se poate găsi „txtsetup.sif”\nInstalarea nu se poate continua."
+    IDS_NO_TXTSETUP_SIF "Fișierulu „txtsetup.sif” nu poate fi găsit!\nInstalarea nu poate continua."
     IDS_CAPTION "Asistentul de instalare ReactOS"
 END
 

@@ -378,7 +378,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
 
     /* Free the node from ReactOS view as well */
     Vad = (PMMVAD_LONG)Node;
-    if (Vad->u.VadFlags.Spare == 0)
+    if ((Table != &MmSectionBasedRoot) && (Vad->u.VadFlags.Spare == 0))
     {
         PMEMORY_AREA MemoryArea;
         PEPROCESS Process;

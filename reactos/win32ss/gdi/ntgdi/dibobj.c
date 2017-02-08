@@ -48,7 +48,7 @@ static const RGBQUAD DefLogPaletteQuads[20] =   /* Copy of Default Logical Palet
     { 0xf0, 0xfb, 0xff, 0x00 },
     { 0xa4, 0xa0, 0xa0, 0x00 },
     { 0x80, 0x80, 0x80, 0x00 },
-    { 0x00, 0x00, 0xf0, 0x00 },
+    { 0x00, 0x00, 0xff, 0x00 },
     { 0x00, 0xff, 0x00, 0x00 },
     { 0x00, 0xff, 0xff, 0x00 },
     { 0xff, 0x00, 0x00, 0x00 },
@@ -559,6 +559,11 @@ NtGdiSetDIBitsToDeviceInternal(
     rcDest.bottom = rcDest.top + Height;
     rcDest.top += StartScan;
 
+    if (pDC->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pDC, &rcDest);
+    }
+
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 
@@ -794,8 +799,8 @@ GreGetDIBitsInternal(
     case 8:
         Info->bmiHeader.biClrUsed = 0;
 
-        /* If the bitmap if a DIB section and has the same format than what
-         * we're asked, go ahead! */
+        /* If the bitmap is a DIB section and has the same format as what
+         * is requested, go ahead! */
         if((psurf->hSecure) &&
                 (BitsPerFormat(psurf->SurfObj.iBitmapFormat) == bpp))
         {
@@ -863,26 +868,17 @@ GreGetDIBitsInternal(
 
                 case 8:
                 {
-                    INT r, g, b;
-                    RGBQUAD *color;
-                    memcpy(rgbQuads, DefLogPaletteQuads,
-                           10 * sizeof(RGBQUAD));
-                    memcpy(rgbQuads + 246, DefLogPaletteQuads + 10,
-                           10 * sizeof(RGBQUAD));
-                    color = rgbQuads + 10;
-                    for(r = 0; r <= 5; r++) /* FIXME */
+                    INT i;
+
+                    memcpy(rgbQuads, DefLogPaletteQuads, 10 * sizeof(RGBQUAD));
+                    memcpy(rgbQuads + 246, DefLogPaletteQuads + 10, 10 * sizeof(RGBQUAD));
+
+                    for (i = 10; i < 246; i++)
                     {
-                        for(g = 0; g <= 5; g++)
-                        {
-                            for(b = 0; b <= 5; b++)
-                            {
-                                color->rgbRed =   (r * 0xff) / 5;
-                                color->rgbGreen = (g * 0xff) / 5;
-                                color->rgbBlue =  (b * 0xff) / 5;
-                                color->rgbReserved = 0;
-                                color++;
-                            }
-                        }
+                        rgbQuads[i].rgbRed = (i & 0x07) << 5;
+                        rgbQuads[i].rgbGreen = (i & 0x38) << 2;
+                        rgbQuads[i].rgbBlue = i & 0xc0;
+                        rgbQuads[i].rgbReserved = 0;
                     }
                 }
                 }
@@ -1264,6 +1260,11 @@ NtGdiStretchDIBitsInternal(
     rcDst.bottom = rcDst.top + cyDst;
     IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pdc, &rcDst);
+    }
 
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
                                abs(pbmi->bmiHeader.biHeight),

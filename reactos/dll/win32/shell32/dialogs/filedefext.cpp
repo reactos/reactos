@@ -189,7 +189,7 @@ SH_FormatByteSize(LONGLONG cbSize, LPWSTR pwszResult, UINT cchResultMax)
     /* Copy " bytes" to buffer */
     LPWSTR pwszEnd = pwszResult + cchWritten;
     size_t cchRemaining = cchResultMax - cchWritten;
-    StringCchCopyExW(pwszEnd, cchRemaining, L" ", &pwszEnd, &cchRemaining, NULL);
+    StringCchCopyExW(pwszEnd, cchRemaining, L" ", &pwszEnd, &cchRemaining, 0);
     cchWritten = LoadStringW(shell32_hInstance, IDS_BYTES_FORMAT, pwszEnd, cchRemaining);
     cchRemaining -= cchWritten;
 
@@ -219,7 +219,7 @@ SH_FormatFileSizeWithBytes(const PULARGE_INTEGER lpQwSize, LPWSTR pwszResult, UI
     if (lpQwSize->QuadPart < 1024)
         return pwszResult;
 
-    /* Concate " (" */
+    /* Concatenate " (" */
     UINT cchWritten = wcslen(pwszResult);
     LPWSTR pwszEnd = pwszResult + cchWritten;
     size_t cchRemaining = cchResultMax - cchWritten;
@@ -362,7 +362,7 @@ CFileDefExt::InitFileType(HWND hwndDlg)
         return FALSE;
 
     /* Get file information */
-    SHFILEINFO fi;
+    SHFILEINFOW fi;
     if (!SHGetFileInfoW(m_wszPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME|SHGFI_ICON))
     {
         ERR("SHGetFileInfoW failed for %ls (%lu)\n", m_wszPath, GetLastError());
@@ -481,12 +481,50 @@ CFileDefExt::GetFileTimeString(LPFILETIME lpFileTime, LPWSTR pwszResult, UINT cc
 BOOL
 CFileDefExt::InitFileAttr(HWND hwndDlg)
 {
+    BOOL Success;
+    WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA
     WCHAR wszBuf[MAX_PATH];
 
     TRACE("InitFileAttr %ls\n", m_wszPath);
 
-    WIN32_FILE_ATTRIBUTE_DATA FileInfo;
-    if (GetFileAttributesExW(m_wszPath, GetFileExInfoStandard, &FileInfo))
+    /*
+     * There are situations where GetFileAttributes(Ex) can fail even if the
+     * specified path represents a file. This happens when e.g. the file is a
+     * locked system file, such as C:\pagefile.sys . In this case, the function
+     * returns INVALID_FILE_ATTRIBUTES and GetLastError returns ERROR_SHARING_VIOLATION.
+     * (this would allow us to distinguish between this failure and a failure
+     * due to the fact that the path actually refers to a directory).
+     *
+     * Because we really want to retrieve the file attributes/size/date&time,
+     * we do the following trick:
+     * - First we call GetFileAttributesEx. If it succeeds we know we have
+     *   a file or a directory, and we have retrieved its attributes.
+     * - If GetFileAttributesEx fails, we call FindFirstFile on the full path.
+     *   While we could have called FindFirstFile at first and skip GetFileAttributesEx
+     *   altogether, we do it after GetFileAttributesEx because it performs more
+     *   work to retrieve the file attributes. However it actually works even
+     *   for locked system files.
+     * - If FindFirstFile succeeds we have retrieved its attributes.
+     * - Otherwise (FindFirstFile has failed), we do not retrieve anything.
+     *
+     * The following code also relies on the fact that the first 6 members
+     * of WIN32_FIND_DATA are *exactly* the same as the WIN32_FILE_ATTRIBUTE_DATA
+     * structure. Therefore it is safe to use a single WIN32_FIND_DATA
+     * structure for both the GetFileAttributesEx and FindFirstFile calls.
+     */
+
+    Success = GetFileAttributesExW(m_wszPath,
+                                   GetFileExInfoStandard,
+                                   (LPWIN32_FILE_ATTRIBUTE_DATA)&FileInfo);
+    if (!Success)
+    {
+        HANDLE hFind = FindFirstFileW(m_wszPath, &FileInfo);
+        Success = (hFind != INVALID_HANDLE_VALUE);
+        if (Success)
+            FindClose(hFind);
+    }
+
+    if (Success)
     {
         /* Update attribute checkboxes */
         if (FileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)

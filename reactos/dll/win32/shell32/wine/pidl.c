@@ -32,6 +32,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <strsafe.h>
 #include <shlobj.h>
 #include <undocshell.h>
 #include <shlwapi.h>
@@ -2491,15 +2492,13 @@ void _ILGetFileType(LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
                     return;
             }
             /* display Ext-file as description */
-            strcpy(pOut, sType);
-            _strupr(pOut);
+            _strupr(sType);
             /* load localized file string */
             sTemp[0] = '\0';
-            if(LoadStringA(shell32_hInstance, IDS_SHV_COLUMN1, sTemp, 64))
+            if(LoadStringA(shell32_hInstance, IDS_ANY_FILE, sTemp, 64))
             {
                 sTemp[63] = '\0';
-                strcat(pOut, "-");
-                strcat(pOut, sTemp);
+                StringCchPrintfA(pOut, uOutSize, sTemp, sType);
             }
         }
 #else

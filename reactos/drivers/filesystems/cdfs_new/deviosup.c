@@ -925,7 +925,7 @@ Return Value:
                 if (TryingYellowbookMode2) {
 
                     //
-                    //  We succesfully got data when we tried switching the trackmode,
+                    //  We successfully got data when we tried switching the trackmode,
                     //  so change the state of the FCB to remember that.
                     //
 
@@ -1552,7 +1552,7 @@ Return Value:
                 ScratchUserBufferOffset += ThisIoRun->DiskByteCount;
 
             //
-            //  Otherwise we need to allocate an auxilary buffer for the next sector.
+            //  Otherwise we need to allocate an auxiliary buffer for the next sector.
             //
 
             } else {
@@ -2451,7 +2451,7 @@ Return Value:
     MasterIrp = IrpContext->Irp;
 
     //
-    //  Itterate through the runs, doing everything that can fail.
+    //  Iterate through the runs, doing everything that can fail.
     //  We let the cleanup in CdFinishBuffers clean up on error.
     //
 
@@ -2656,7 +2656,7 @@ Return Value:
     MasterIrp = IrpContext->Irp;
 
     //
-    //  Itterate through the runs, doing everything that can fail.
+    //  Iterate through the runs, doing everything that can fail.
     //  We let the cleanup in CdFinishBuffers clean up on error.
     //
 

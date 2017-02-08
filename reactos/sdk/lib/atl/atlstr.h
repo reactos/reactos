@@ -124,6 +124,21 @@ public:
 
 
 typedef CStringT< wchar_t, StrTraitATL< wchar_t, ChTraitsCRT<wchar_t> > > CAtlStringW;
+typedef CStringT< char, StrTraitATL< char, ChTraitsCRT<char> > > CAtlStringA;
+
+
+typedef CAtlStringW CStringW;
+typedef CAtlStringA CStringA;
+
+
+#ifdef UNICODE
+typedef CAtlStringW CAtlString;
+typedef CStringW CString;
+#else
+typedef CAtlStringA CAtlString;
+typedef CStringA CString;
+#endif
+
 
 }
 

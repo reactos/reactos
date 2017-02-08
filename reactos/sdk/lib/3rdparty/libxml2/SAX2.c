@@ -55,7 +55,7 @@
  * @ctxt:  an XML validation parser context
  * @msg:   a string to accompany the error message
  */
-static void
+static void LIBXML_ATTR_FORMAT(2,0)
 xmlSAX2ErrMemory(xmlParserCtxtPtr ctxt, const char *msg) {
     xmlStructuredErrorFunc schannel = NULL;
     const char *str1 = "out of memory\n";
@@ -93,7 +93,7 @@ xmlSAX2ErrMemory(xmlParserCtxtPtr ctxt, const char *msg) {
  *
  * Handle a validation error
  */
-static void
+static void LIBXML_ATTR_FORMAT(3,0)
 xmlErrValid(xmlParserCtxtPtr ctxt, xmlParserErrors error,
             const char *msg, const char *str1, const char *str2)
 {
@@ -133,7 +133,7 @@ xmlErrValid(xmlParserCtxtPtr ctxt, xmlParserErrors error,
  *
  * Handle a fatal parser error, i.e. violating Well-Formedness constraints
  */
-static void
+static void LIBXML_ATTR_FORMAT(3,0)
 xmlFatalErrMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
                const char *msg, const xmlChar *str1, const xmlChar *str2)
 {
@@ -164,7 +164,7 @@ xmlFatalErrMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
  *
  * Handle a parser warning
  */
-static void
+static void LIBXML_ATTR_FORMAT(3,0)
 xmlWarnMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
                const char *msg, const xmlChar *str1)
 {
@@ -189,7 +189,7 @@ xmlWarnMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
  *
  * Handle a namespace error
  */
-static void
+static void LIBXML_ATTR_FORMAT(3,0)
 xmlNsErrMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
             const char *msg, const xmlChar *str1, const xmlChar *str2)
 {
@@ -213,7 +213,7 @@ xmlNsErrMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
  *
  * Handle a namespace warning
  */
-static void
+static void LIBXML_ATTR_FORMAT(3,0)
 xmlNsWarnMsg(xmlParserCtxtPtr ctxt, xmlParserErrors error,
              const char *msg, const xmlChar *str1, const xmlChar *str2)
 {

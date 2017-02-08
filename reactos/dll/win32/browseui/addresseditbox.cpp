@@ -26,17 +26,10 @@ This class handles the combo box of the address band.
 
 /*
 TODO:
-    Add auto completion support
-    Subclass windows in Init method
-    Connect to browser connection point
-    Handle navigation complete messages to set edit box text
     Handle listbox dropdown message and fill contents
     Add drag and drop of icon in edit box
-    Handle enter in edit box to browse to typed path
     Handle change notifies to update appropriately
-    Add handling of enter in edit box
     Fix so selection in combo listbox navigates
-    Fix so editing text and typing enter navigates
 */
 
 CAddressEditBox::CAddressEditBox() :
@@ -50,8 +43,16 @@ CAddressEditBox::~CAddressEditBox()
 {
 }
 
-HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *)
+HRESULT STDMETHODCALLTYPE CAddressEditBox::SetOwner(IUnknown *pOwner)
 {
+    if (!pOwner)
+    {
+        CComPtr<IBrowserService> browserService;
+        HRESULT hResult = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
+        if (SUCCEEDED(hResult))
+            AtlUnadvise(browserService, DIID_DWebBrowserEvents, fAdviseCookie);
+        fSite = NULL; 
+    }
     // connect to browser connection point
     return 0;
 }
@@ -97,16 +98,20 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     ULONG attributes;
     HRESULT hr;
     HWND topLevelWindow;
+    PIDLIST_ABSOLUTE pidlCurrent= NULL;
+    PIDLIST_RELATIVE pidlRelative = NULL;
+    CComPtr<IShellFolder> psfCurrent;
 
-    CComPtr<IShellBrowser> pisb;
-    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    CComPtr<IBrowserService> pbs;
+    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &pbs));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    hr = IUnknown_GetWindow(pbs, &topLevelWindow);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    /* Get the path to browse and expand it if needed */
     LPWSTR input;
     int inputLength = fCombobox.GetWindowTextLength() + 2;
 
@@ -131,13 +136,34 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         }
     }
 
+    /* Try to parse a relative path and if it fails, try to browse an absolute path */
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = pbs->GetPidl(&pidlCurrent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
     {
-        hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+        pidlLastParsed = ILCombine(pidlCurrent, pidlRelative);
+        ILFree(pidlRelative);
+        goto cleanup;
     }
 
+    /* We couldn't parse a relative path, attempt to parse an absolute path */
+    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+
+cleanup:
+    if (pidlCurrent)
+        ILFree(pidlCurrent);
     if (address != input)
         delete [] address;
     delete [] input;
@@ -291,6 +317,18 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
+    CComPtr<IBrowserService> isb;
+    CComPtr<IShellFolder> sf;
+    HRESULT hr;
+    INT indexClosed, indexOpen, itemExists, oldIndex;
+    DWORD result;
+    COMBOBOXEXITEMW item;
+    PIDLIST_ABSOLUTE absolutePIDL;
+    LPCITEMIDLIST pidlChild;
+    LPITEMIDLIST pidlPrevious;
+    STRRET ret;
+    WCHAR buf[4096];
+
     if (pDispParams == NULL)
         return E_INVALIDARG;
 
@@ -299,6 +337,73 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
         pidlLastParsed = NULL;
+
+        oldIndex = fCombobox.SendMessage(CB_GETCURSEL, 0, 0);
+
+        itemExists = FALSE;
+        pidlPrevious = NULL;
+
+        ZeroMemory(&item, sizeof(item));
+        item.mask = CBEIF_LPARAM;
+        item.iItem = 0;
+        if (fCombobox.SendMessage(CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item)))
+        {
+            pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
+            if (pidlPrevious)
+                itemExists = TRUE;
+        }
+
+        hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = isb->GetPidl(&absolutePIDL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = StrRetToBufW(&ret, pidlChild, buf, 4095);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+
+        item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+        item.iItem = 0;
+        item.iImage = indexClosed;
+        item.iSelectedImage = indexOpen;
+        item.pszText = buf;
+        item.lParam = reinterpret_cast<LPARAM>(absolutePIDL);
+
+        if (itemExists)
+        {
+            result = fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+            oldIndex = 0;
+
+            if (result)
+            {
+                ILFree(pidlPrevious);
+            }
+        }
+        else
+        {
+            oldIndex = fCombobox.SendMessage(CBEM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item));
+
+            if (oldIndex < 0)
+                DbgPrint("ERROR %d\n", GetLastError());
+        }
+
+        fCombobox.SendMessage(CB_SETCURSEL, -1, 0);
+        fCombobox.SendMessage(CB_SETCURSEL, oldIndex, 0);
+
+        //fAddressEditBox->SetCurrentDir(index);
     }
     return S_OK;
 }
@@ -329,9 +434,4 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Save(IStream *pStm, BOOL fClearDirty)
 HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     return E_NOTIMPL;
-}
-
-HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CAddressEditBox>(riid, ppv);
 }

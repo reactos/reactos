@@ -16,17 +16,187 @@
 
 NTSTATUS
 NTAPI
-RtlpSetSecurityObject(IN PVOID Object,
+RtlpSetSecurityObject(IN PVOID Object OPTIONAL,
                       IN SECURITY_INFORMATION SecurityInformation,
                       IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-                      OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+                      IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
                       IN ULONG AutoInheritFlags,
                       IN ULONG PoolType,
                       IN PGENERIC_MAPPING GenericMapping,
                       IN HANDLE Token OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PISECURITY_DESCRIPTOR_RELATIVE pNewSd = NULL;
+    PSID pOwnerSid = NULL;
+    PSID pGroupSid = NULL;
+    PACL pDacl = NULL;
+    PACL pSacl = NULL;
+    BOOLEAN Defaulted;
+    BOOLEAN Present;
+    ULONG ulOwnerSidSize = 0, ulGroupSidSize = 0;
+    ULONG ulDaclSize = 0, ulSaclSize = 0;
+    ULONG ulNewSdSize;
+    SECURITY_DESCRIPTOR_CONTROL Control = SE_SELF_RELATIVE;
+    PUCHAR pDest;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("RtlpSetSecurityObject()\n");
+
+    /* Change the Owner SID */
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Status = RtlGetOwnerSecurityDescriptor(ModificationDescriptor, &pOwnerSid, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+    else
+    {
+        Status = RtlGetOwnerSecurityDescriptor(*ObjectsSecurityDescriptor, &pOwnerSid, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    if (pOwnerSid == NULL || !RtlValidSid(pOwnerSid))
+        return STATUS_INVALID_OWNER;
+
+    ulOwnerSidSize = RtlLengthSid(pOwnerSid);
+
+    /* Change the Group SID */
+    if (SecurityInformation & GROUP_SECURITY_INFORMATION)
+    {
+        Status = RtlGetGroupSecurityDescriptor(ModificationDescriptor, &pGroupSid, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+    else
+    {
+        Status = RtlGetGroupSecurityDescriptor(*ObjectsSecurityDescriptor, &pGroupSid, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    if (pGroupSid == NULL || !RtlValidSid(pGroupSid))
+        return STATUS_INVALID_PRIMARY_GROUP;
+
+    ulGroupSidSize = ROUND_UP(RtlLengthSid(pGroupSid), sizeof(ULONG));
+
+    /* Change the DACL */
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetDaclSecurityDescriptor(ModificationDescriptor, &Present, &pDacl, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Control |= SE_DACL_PRESENT;
+    }
+    else
+    {
+        Status = RtlGetDaclSecurityDescriptor(*ObjectsSecurityDescriptor, &Present, &pDacl, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (Present)
+            Control |= SE_DACL_PRESENT;
+
+        if (Defaulted)
+            Control |= SE_DACL_DEFAULTED;
+    }
+
+    if (pDacl != NULL)
+        ulDaclSize = pDacl->AclSize;
+
+    /* Change the SACL */
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+        Status = RtlGetSaclSecurityDescriptor(ModificationDescriptor, &Present, &pSacl, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        Control |= SE_SACL_PRESENT;
+    }
+    else
+    {
+        Status = RtlGetSaclSecurityDescriptor(*ObjectsSecurityDescriptor, &Present, &pSacl, &Defaulted);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        if (Present)
+            Control |= SE_SACL_PRESENT;
+
+        if (Defaulted)
+            Control |= SE_SACL_DEFAULTED;
+    }
+
+    if (pSacl != NULL)
+        ulSaclSize = pSacl->AclSize;
+
+    /* Calculate the size of the new security descriptor */
+    ulNewSdSize = sizeof(SECURITY_DESCRIPTOR_RELATIVE) +
+                  ROUND_UP(ulOwnerSidSize, sizeof(ULONG)) +
+                  ROUND_UP(ulGroupSidSize, sizeof(ULONG)) +
+                  ROUND_UP(ulDaclSize, sizeof(ULONG)) +
+                  ROUND_UP(ulSaclSize, sizeof(ULONG));
+
+    /* Allocate the new security descriptor */
+    pNewSd = RtlAllocateHeap(RtlGetProcessHeap(), 0, ulNewSdSize);
+    if (pNewSd == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        DPRINT1("New security descriptor allocation failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Initialize the new security descriptor */
+    Status = RtlCreateSecurityDescriptorRelative(pNewSd, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("New security descriptor creation failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the security descriptor control flags */
+    pNewSd->Control = Control;
+
+    pDest = (PUCHAR)((ULONG_PTR)pNewSd + sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+
+    /* Copy the SACL */
+    if (pSacl != NULL)
+    {
+        RtlCopyMemory(pDest, pSacl, ulSaclSize);
+        pNewSd->Sacl = (ULONG_PTR)pDest - (ULONG_PTR)pNewSd;
+        pDest = pDest + ROUND_UP(ulSaclSize, sizeof(ULONG));
+    }
+
+    /* Copy the DACL */
+    if (pDacl != NULL)
+    {
+        RtlCopyMemory(pDest, pDacl, ulDaclSize);
+        pNewSd->Dacl = (ULONG_PTR)pDest - (ULONG_PTR)pNewSd;
+        pDest = pDest + ROUND_UP(ulDaclSize, sizeof(ULONG));
+    }
+
+    /* Copy the Owner SID */
+    RtlCopyMemory(pDest, pOwnerSid, ulOwnerSidSize);
+    pNewSd->Owner = (ULONG_PTR)pDest - (ULONG_PTR)pNewSd;
+    pDest = pDest + ROUND_UP(ulOwnerSidSize, sizeof(ULONG));
+
+    /* Copy the Group SID */
+    RtlCopyMemory(pDest, pGroupSid, ulGroupSidSize);
+    pNewSd->Group = (ULONG_PTR)pDest - (ULONG_PTR)pNewSd;
+
+    /* Free the old security descriptor */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, (PVOID)*ObjectsSecurityDescriptor);
+
+    /* Return the new security descriptor */
+    *ObjectsSecurityDescriptor = (PSECURITY_DESCRIPTOR)pNewSd;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (pNewSd != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pNewSd);
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -581,9 +751,9 @@ NTSTATUS
 NTAPI
 RtlSetSecurityObject(IN SECURITY_INFORMATION SecurityInformation,
                      IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-                     OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+                     IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
                      IN PGENERIC_MAPPING GenericMapping,
-                     IN HANDLE Token)
+                     IN HANDLE Token OPTIONAL)
 {
     /* Call the internal API */
     return RtlpSetSecurityObject(NULL,
@@ -603,10 +773,10 @@ NTSTATUS
 NTAPI
 RtlSetSecurityObjectEx(IN SECURITY_INFORMATION SecurityInformation,
                        IN PSECURITY_DESCRIPTOR ModificationDescriptor,
-                       OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+                       IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
                        IN ULONG AutoInheritFlags,
                        IN PGENERIC_MAPPING GenericMapping,
-                       IN HANDLE Token)
+                       IN HANDLE Token OPTIONAL)
 {
     /* Call the internal API */
     return RtlpSetSecurityObject(NULL,

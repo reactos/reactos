@@ -471,7 +471,7 @@ HRESULT STDMETHODCALLTYPE CRegistryFolder::EnumObjects(
     SHCONTF grfFlags,
     IEnumIDList **ppenumIDList)
 {
-    if (wcslen(m_NtPath) == 0 && m_hRoot == NULL)
+    if (m_NtPath[0] == 0 && m_hRoot == NULL)
     {
         return GetEnumRegistryRoot(ppenumIDList);
     }

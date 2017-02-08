@@ -44,7 +44,7 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
      * Pressing the Shift key while copying text, allows us to copy
      * text without newline characters (inline-text copy mode).
      */
-    BOOL InlineCopyMode = !!(GetKeyState(VK_SHIFT) & 0x8000);
+    BOOL InlineCopyMode = !!(GetKeyState(VK_SHIFT) & KEY_PRESSED);
 
     HANDLE hData;
     PCHAR_INFO ptr;
@@ -80,7 +80,7 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
         DPRINT1("This case must never happen, because selHeight is at least == 1\n");
     }
 
-    size += 1; /* Null-termination */
+    size++; /* Null-termination */
     size *= sizeof(WCHAR);
 
     /* Allocate some memory area to be given to the clipboard, so it will not be freed here */
@@ -304,8 +304,14 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         VkKey = VkKeyScanW(CurChar);
         if (VkKey == 0xFFFF)
         {
-            DPRINT1("VkKeyScanW failed - Should simulate the key...\n");
-            continue;
+            DPRINT1("FIXME: TODO: VkKeyScanW failed - Should simulate the key!\n");
+            /*
+             * We don't really need the scan/key code because we actually only
+             * use the UnicodeChar for output purposes. It may pose few problems
+             * later on but it's not of big importance. One trick would be to
+             * convert the character to OEM / multibyte and use MapVirtualKey
+             * on each byte (simulating an Alt-0xxx OEM keyboard press).
+             */
         }
 
         /* Pressing some control keys */
@@ -313,7 +319,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         /* Pressing the character key, with the control keys maintained pressed */
         er.Event.KeyEvent.bKeyDown = TRUE;
         er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
-        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_CHAR);
+        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
         er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
         er.Event.KeyEvent.dwControlKeyState = 0;
         if (HIBYTE(VkKey) & 1)

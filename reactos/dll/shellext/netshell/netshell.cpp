@@ -70,4 +70,37 @@ NcFreeNetconProperties(NETCON_PROPERTIES *pProps)
     CoTaskMemFree(pProps);
 }
 
+BOOL
+WINAPI
+NcIsValidConnectionName(_In_ PCWSTR pszwName)
+{
+    if (!pszwName)
+        return FALSE;
+
+    BOOL nonSpace = FALSE;
+    while (*pszwName)
+    {
+        switch(*(pszwName++))
+        {
+        case L'\\':
+        case L'/':
+        case L':':
+        case L'*':
+        case L'\t':
+        case L'?':
+        case L'<':
+        case L'>':
+        case L'|':
+        case L'\"':
+            return FALSE;
+        case L' ':
+            break;
+        default:
+            nonSpace = TRUE;
+            break;
+        }
+    }
+    return nonSpace;
+}
+
 } // extern "C"

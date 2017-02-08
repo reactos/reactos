@@ -155,8 +155,8 @@ ClassSystemControl(
     }
 
     //
-    // If the irp is not a WMI irp or it is not targetted at this device
-    // or this device has not regstered with WMI then just forward it on.
+    // If the irp is not a WMI irp or it is not targeted at this device
+    // or this device has not registered with WMI then just forward it on.
     minorFunction = irpStack->MinorFunction;
     if ((minorFunction > IRP_MN_EXECUTE_METHOD) ||
         (irpStack->Parameters.WMI.ProviderId != (ULONG_PTR)DeviceObject) ||

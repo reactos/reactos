@@ -260,7 +260,7 @@ struct _xmlParserCtxt {
     void              *catalogs;      /* document's own catalog */
     int                recovery;      /* run in recovery mode */
     int                progressive;   /* is this a progressive parsing */
-    xmlDictPtr         dict;          /* dictionnary for the parser */
+    xmlDictPtr         dict;          /* dictionary for the parser */
     const xmlChar *   *atts;          /* array for the attributes callbacks */
     int                maxatts;       /* the size of the array */
     int                docdict;       /* use strings from dict to build tree */
@@ -1099,7 +1099,7 @@ typedef enum {
     XML_PARSE_SAX1	= 1<<9,	/* use the SAX1 interface internally */
     XML_PARSE_XINCLUDE	= 1<<10,/* Implement XInclude substitition  */
     XML_PARSE_NONET	= 1<<11,/* Forbid network access */
-    XML_PARSE_NODICT	= 1<<12,/* Do not reuse the context dictionnary */
+    XML_PARSE_NODICT	= 1<<12,/* Do not reuse the context dictionary */
     XML_PARSE_NSCLEAN	= 1<<13,/* remove redundant namespaces declarations */
     XML_PARSE_NOCDATA	= 1<<14,/* merge CDATA as text nodes */
     XML_PARSE_NOXINCNODE= 1<<15,/* do not generate XINCLUDE START/END nodes */

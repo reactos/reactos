@@ -76,6 +76,48 @@ BEGIN
     PUSHBUTTON "Fermer", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Faut-il utiliser des paramètres par défaut ou des spécifiques :", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Paramètres par défaut", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Paramètres spécifiques", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "Crée les connexions réseau en utilisant le client pour les réseaux ReactOS, le partage des fichiers et des imprimantes pour les réseaux ReactOS, et le protocole de transport TCP/IP avec adressage automatique.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Cela vous autorise à configurer manuellement les composants réseau.", IDC_STATIC, 65, 90, 243, 20
+END
+
+IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Pour le périphérique :", IDC_STATIC, 33, 2, 100, 50
+    LTEXT "n/a", IDC_NETWORK_DEVICE, 105, 2, 253, 20
+    LTEXT "Les composants sélectionnés sont utilisés par cette connexion :", IDC_STATIC, 33, 12, 253, 20
+    CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
+    PUSHBUTTON "&Installer...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Dé-installer", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Propriétés", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "Description", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+END
+
+IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Installation de ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Voulez-vous que cet ordinateur soit membre d'un domaine ?\n\
+(Vous pouvez obtenir cette information de votre administrateur réseau).", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Non, cet ordinateur fera partie d'un groupe de travail.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Oui, cet ordinateur fera partie d'un domaine.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Nom du groupe de travail ou du domaine :", IDC_STATIC, 33, 72, 150, 14
+    EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "NOTE : Si cet ordinateur ne fera pas partie d'un réseau, si vous n'avez pas assez de droits pour rejoindre un réseau, ou si vous ne savez pas quoi entrer, choisissez groupe de travail pour l'instant. Ces options peuvent être changées ultérieurement.", IDC_STATIC, 33, 107, 263, 50
+END
+
 STRINGTABLE
 BEGIN
     IDS_PHYSICAL_ADDRESS "Adresse physique"
@@ -119,4 +161,16 @@ BEGIN
     IDS_DURATION_DAYS "%d Jours %s"
     IDS_ASSIGNED_DHCP "Assignée par DHCP"
     IDS_ASSIGNED_MANUAL "Configurée manuellement"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORKSETTINGSTITLE "Paramètres réseau"
+    IDS_NETWORKSETTINGSSUBTITLE "Installe les logiciels réseau utilisés pour se connecter à d'autres réseaux, ordinateurs et à l'Internet."
+    IDS_NETWORKCOMPONENTTITLE "Composants réseau"
+    IDS_NETWORKCOMPONENTSUBTITLE "Détermine quels composants réseaux sont utilisés sur votre ordinateur. Pour ajouter de nouveaux composants, cliquez sur Installer."
+    IDS_NETWORKDOMAINTITLE "Groupe de travail ou domaine"
+    IDS_NETWORKDOMAINSUBTITLE "Un domaine est un groupe d'ordinateurs défini par un administrateur réseau. Un groupe de travail est un groupe d'ordinateurs partageant le même nom de groupe de travail."
+    IDS_REACTOS_SETUP "Installation de ReactOS"
+    IDS_WZD_DOMAIN_NAME "L'installation ne peut pas continuer tant que\nvous n'entrez pas le nom du domaine\nou celui du groupe de travail."
 END

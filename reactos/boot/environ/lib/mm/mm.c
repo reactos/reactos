@@ -13,7 +13,9 @@
 
 /* DATA VARIABLES ************************************************************/
 
-BL_TRANSLATION_TYPE MmTranslationType, MmOriginalTranslationType;
+/* This is a bug in Windows, but is required for MmTrInitialize to load */
+BL_TRANSLATION_TYPE MmTranslationType = BlMax;
+BL_TRANSLATION_TYPE MmOriginalTranslationType;
 ULONG MmDescriptorCallTreeCount;
 
 /* FUNCTIONS *****************************************************************/
@@ -23,15 +25,70 @@ MmTrInitialize (
     VOID
     )
 {
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+
     /* Nothing to track if we're using physical memory */
     if (MmTranslationType == BlNone)
     {
         return STATUS_SUCCESS;
     }
 
-    /* TODO */
-    EfiPrintf(L"Required for protected mode\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Initialize all the virtual lists */
+    MmMdInitializeListHead(&MmMdlMappingTrackers);
+    MmMdlMappingTrackers.Type = BlMdTracker;
+    MmMdInitializeListHead(&MmMdlFreeVirtual);
+    MmMdlFreeVirtual.Type = BlMdVirtual;
+
+    /* Initialize a 4GB free descriptor */
+    Descriptor = MmMdInitByteGranularDescriptor(0,
+                                                BlConventionalMemory,
+                                                0,
+                                                0,
+                                                ((ULONGLONG)4 * 1024 * 1024 * 1024) >>
+                                                PAGE_SHIFT);
+    if (!Descriptor)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Add this 4GB region to the free virtual address space list */
+    Status = MmMdAddDescriptorToList(&MmMdlFreeVirtual,
+                                     Descriptor,
+                                     BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+        goto Quickie;
+    }
+
+    /* Remove any reserved regions of virtual address space */
+    NextEntry = MmMdlReservedAllocated.First->Flink;
+    while (NextEntry != MmMdlReservedAllocated.First)
+    {
+        /* Grab the descriptor and see if it's mapped */
+        Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+        if (Descriptor->VirtualPage)
+        {
+            EfiPrintf(L"Need to handle reserved allocation: %llx %llx\r\n",
+                      Descriptor->VirtualPage, Descriptor->PageCount);
+            EfiStall(100000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Quickie;
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Set success if we made it */
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* Return back to caller */
+    return Status;
 }
 
 NTSTATUS
@@ -69,67 +126,6 @@ BlMmRemoveBadMemory (
 
     /* All done here */
     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-MmSelectMappingAddress (
-    _Out_ PVOID* MappingAddress,
-    _In_ ULONGLONG Size,
-    _In_ ULONG AllocationAttributes,
-    _In_ ULONG Flags,
-    _In_ PHYSICAL_ADDRESS PhysicalAddress
-    )
-{
-    /* Are we in physical mode? */
-    if (MmTranslationType == BlNone)
-    {
-        /* Just return the physical address as the mapping address */
-        *MappingAddress = (PVOID)PhysicalAddress.LowPart;
-        return STATUS_SUCCESS;
-    }
-
-    /* Have to allocate physical pages */
-    EfiPrintf(L"VM Todo\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-MmMapPhysicalAddress (
-    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _Out_ PVOID VirtualAddress,
-    _Inout_ PULONGLONG Size,
-    _In_ ULONG CacheAttributes
-    )
-{
-    ULONGLONG MappingSize;
-
-    /* Fail if any parameters are missing */
-    if (!(PhysicalAddress) || !(VirtualAddress) || !(Size))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Fail if the size is over 32-bits */
-    MappingSize = *Size;
-    if (MappingSize > 0xFFFFFFFF)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Nothing to do if we're in physical mode */
-    if (MmTranslationType == BlNone)
-    {
-        return STATUS_SUCCESS;
-    }
-
-    /* Can't use virtual memory in real mode */
-    if (CurrentExecutionContext->Mode == BlRealMode)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    EfiPrintf(L"VM todo\r\n");
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -208,7 +204,7 @@ BlMmMapPhysicalAddressEx (
         goto Quickie;
     }
 
-    /* Compute the final adress where the mapping was made */
+    /* Compute the final address where the mapping was made */
     MappedBase = (PVOID)((ULONG_PTR)MappingAddress +
                          PhysicalAddress.LowPart -
                          MappedAddress.LowPart);
@@ -216,8 +212,9 @@ BlMmMapPhysicalAddressEx (
     /* Check if we're in physical or virtual mode */
     if (MmTranslationType != BlNone)
     {
-        /* For virtual memory, there's more to do */
-        EfiPrintf(L"VM not supported for mapping\r\n");
+        /* We don't support virtual memory yet @TODO */
+        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+        EfiStall(1000000);
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -249,9 +246,13 @@ MmUnmapVirtualAddress (
         {
             Status = STATUS_SUCCESS;
         }
-
-        /* TODO */
-        Status = STATUS_NOT_IMPLEMENTED;
+        else
+        {
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
     }
     else
     {
@@ -274,7 +275,7 @@ BlMmUnmapVirtualAddressEx (
     /* Increment call depth */
     ++MmDescriptorCallTreeCount;
 
-    /* Make sure all parameters are tehre */
+    /* Make sure all parameters are there */
     if ((VirtualAddress) && (Size))
     {
         /* Unmap the virtual address */
@@ -283,7 +284,9 @@ BlMmUnmapVirtualAddressEx (
         /* Check if we actually had a virtual mapping active */
         if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
         {
-            /* TODO */
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }
@@ -297,6 +300,22 @@ BlMmUnmapVirtualAddressEx (
     MmMdFreeGlobalDescriptors();
     --MmDescriptorCallTreeCount;
     return Status;
+}
+
+BOOLEAN
+BlMmTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    /* Make sure arguments are present */
+    if (!(VirtualAddress) || !(PhysicalAddress))
+    {
+        return FALSE;
+    }
+
+    /* Do the architecture-specific translation */
+    return MmArchTranslateVirtualAddress(VirtualAddress, PhysicalAddress, NULL);
 }
 
 NTSTATUS
@@ -338,6 +357,7 @@ BlpMmInitialize (
     Status = MmTrInitialize();
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"TR Mm init failed: %lx\r\n", Status);
         //MmArchDestroy();
         //MmPaDestroy(1);
         goto Quickie;
@@ -362,6 +382,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Kill everything set setup so far */
+        EfiPrintf(L"Phase 1 Mm init failed: %lx\r\n", Status);
         //MmPaDestroy(0);
         //MmTrDestroy();
         //MmArchDestroy();
@@ -397,6 +418,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Go back to static descriptors and kill the heap */
+        EfiPrintf(L"Phase 2 Mm init failed: %lx\r\n", Status);
         //MmMdpSwitchToStaticDescriptors();
         //HapInitializationStatus = 0;
         //++MmDescriptorCallTreeCount;

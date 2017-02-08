@@ -38,11 +38,11 @@ EnumerateLocalGroups(VOID)
     if (Status != NERR_Success)
         return Status;
 
-    PrintToConsole(L"\n");
-    PrintResourceString(IDS_LOCALGROUP_ALIASES, pServer->sv100_name);
-    PrintToConsole(L"\n\n");
+    ConPuts(StdOut, L"\n");
+    ConResPrintf(StdOut, IDS_LOCALGROUP_ALIASES, pServer->sv100_name);
+    ConPuts(StdOut, L"\n\n");
     PrintPadding(L'-', 79);
-    PrintToConsole(L"\n");
+    ConPuts(StdOut, L"\n");
 
     NetApiBufferFree(pServer);
 
@@ -64,7 +64,7 @@ EnumerateLocalGroups(VOID)
     for (i = 0; i < dwRead; i++)
     {
         if (pBuffer[i].lgrpi0_name)
-            PrintToConsole(L"*%s\n", pBuffer[i].lgrpi0_name);
+            ConPrintf(StdOut, L"*%s\n", pBuffer[i].lgrpi0_name);
     }
 
     NetApiBufferFree(pBuffer);
@@ -132,23 +132,23 @@ DisplayLocalGroup(LPWSTR lpGroupName)
     }
 
     PrintPaddedResourceString(IDS_LOCALGROUP_ALIAS_NAME, nPaddedLength);
-    PrintToConsole(L"%s\n", pGroupInfo->lgrpi1_name);
+    ConPrintf(StdOut, L"%s\n", pGroupInfo->lgrpi1_name);
 
     PrintPaddedResourceString(IDS_LOCALGROUP_COMMENT, nPaddedLength);
-    PrintToConsole(L"%s\n", pGroupInfo->lgrpi1_comment);
+    ConPrintf(StdOut, L"%s\n", pGroupInfo->lgrpi1_comment);
 
-    PrintToConsole(L"\n");
+    ConPuts(StdOut, L"\n");
 
-    PrintResourceString(IDS_LOCALGROUP_MEMBERS);
-    PrintToConsole(L"\n\n");
+    ConResPuts(StdOut, IDS_LOCALGROUP_MEMBERS);
+    ConPuts(StdOut, L"\n\n");
 
     PrintPadding(L'-', 79);
-    PrintToConsole(L"\n");
+    ConPuts(StdOut, L"\n");
 
     for (i = 0; i < dwRead; i++)
     {
         if (pNames[i])
-            PrintToConsole(L"%s\n", pNames[i]);
+            ConPrintf(StdOut, L"%s\n", pNames[i]);
     }
 
 done:
@@ -192,13 +192,13 @@ cmdLocalGroup(
     if (argc == 2)
     {
         Status = EnumerateLocalGroups();
-        printf("Status: %lu\n", Status);
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
         return 0;
     }
     else if (argc == 3)
     {
         Status = DisplayLocalGroup(argv[2]);
-        printf("Status: %lu\n", Status);
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
         return 0;
     }
 
@@ -217,7 +217,7 @@ cmdLocalGroup(
         dwMemberCount++;
     }
 
-    printf("Member count: %lu\n", dwMemberCount);
+    ConPrintf(StdOut, L"Member count: %lu\n", dwMemberCount);
 
     if (dwMemberCount > 0)
     {
@@ -242,7 +242,7 @@ cmdLocalGroup(
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            PrintResourceString(IDS_LOCALGROUP_HELP);
+            ConResPuts(StdOut, IDS_LOCALGROUP_HELP);
             return 0;
         }
         else if (_wcsicmp(argv[i], L"/add") == 0)
@@ -259,7 +259,7 @@ cmdLocalGroup(
         }
         else if (_wcsicmp(argv[i], L"/domain") == 0)
         {
-            PrintResourceString(IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
+            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/DOMAIN");
 #if 0
             bDomain = TRUE;
 #endif
@@ -284,18 +284,18 @@ cmdLocalGroup(
     }
 
 #if 0
-    printf("Group:\n  %S\n", lpGroupName);
+    ConPrintf(StdOut, L"Group:\n  %s\n", lpGroupName);
 
     if (lpMembers != NULL)
     {
-        printf("\nMembers:\n");
+        ConPuts(StdOut, L"\nMembers:\n");
         for (i = 0; i < dwMemberCount; i++)
-            printf("  %S\n", lpMembers[i].lgrmi3_domainandname);
+            ConPrintf(StdOut, L"  %s\n", lpMembers[i].lgrmi3_domainandname);
     }
 
     if (lpComment != NULL)
     {
-        printf("\nComment:\n  %S\n", lpComment);
+        ConPrintf(StdOut, L"\nComment:\n  %s\n", lpComment);
     }
 #endif
 
@@ -310,7 +310,7 @@ cmdLocalGroup(
                                           1002,
                                           (LPBYTE)&Info1002,
                                           NULL);
-            printf("Status: %lu\n", Status);
+            ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else if (bAdd && !bDelete)
         {
@@ -329,14 +329,14 @@ cmdLocalGroup(
                              (lpComment == NULL) ? 0 : 1,
                              (lpComment == NULL) ? (LPBYTE)&Info0 : (LPBYTE)&Info1,
                              NULL);
-            printf("Status: %lu\n", Status);
+            ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else if (!bAdd && bDelete && lpComment == NULL)
         {
             /* Delete the group */
             Status = NetLocalGroupDel(NULL,
                                       lpGroupName);
-            printf("Status: %lu\n", Status);
+            ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else
         {
@@ -353,7 +353,7 @@ cmdLocalGroup(
                                     3,
                                     (LPBYTE)lpMembers,
                                     dwMemberCount);
-            printf("Status: %lu\n", Status);
+            ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else if (!bAdd && bDelete && lpComment == NULL)
         {
@@ -363,7 +363,7 @@ cmdLocalGroup(
                                     3,
                                     (LPBYTE)lpMembers,
                                     dwMemberCount);
-            printf("Status: %lu\n", Status);
+            ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else
         {
@@ -376,7 +376,7 @@ done:
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpMembers);
 
     if (result != 0)
-        PrintResourceString(IDS_LOCALGROUP_SYNTAX);
+        ConResPuts(StdOut, IDS_LOCALGROUP_SYNTAX);
 
     return result;
 }

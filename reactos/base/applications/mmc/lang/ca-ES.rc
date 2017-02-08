@@ -5,13 +5,13 @@ BEGIN
     POPUP "&Fitxer"
     BEGIN
         MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Open...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Sortida\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&En quant a Consola d'administracio de ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&En quant a Consola d'administracio de ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -20,7 +20,7 @@ BEGIN
     POPUP "&Fitxer"
     BEGIN
         MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Open...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "Save", IDM_FILE_SAVE
         MENUITEM "Save as...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
@@ -32,7 +32,7 @@ BEGIN
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&En quant a Consola d'administracio de ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&En quant a Consola d'administracio de ReactOS", IDM_HELP_ABOUT
     END
 END
 

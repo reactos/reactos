@@ -1,0 +1,28 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "ReactOS画像とFAXビュアー"
+    IDS_SETASDESKBG "デスクトップの背景に設定する"
+    IDS_PREVIEW "プレビュー"
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC "次の画像"
+    IDS_TOOLTIP_PREV_PIC "前の画像"
+    IDS_TOOLTIP_ZOOM_IN "ズームイン (+)"
+    IDS_TOOLTIP_ZOOM_OUT "ズームアウト (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "時計回りに回転 (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "反時計回りに回転 (Ctrl+L)"
+    IDS_TOOLTIP_PRINT "印刷 (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS "名前を付けて保存... (Ctrl+S)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_EMF_FILE    "EMF画像"
+    IDS_GIF_FILE    "GIF画像"
+    IDS_JPG_FILE    "JPEG画像"
+    IDS_BMP_FILE    "Bitmap画像"
+    IDS_PNG_FILE    "PNG画像"
+    IDS_TIF_FILE    "TIF画像"
+    IDS_WMF_FILE    "WMF画像"
+END

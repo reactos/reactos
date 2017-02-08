@@ -891,7 +891,7 @@ HidInternalDeviceControl(
         }
         default:
         {
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             ASSERT(FALSE);
             Status = Irp->IoStatus.Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -1673,7 +1673,7 @@ Hid_PnpStart(
         // set idle
         // and get protocol
         //
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         ASSERT(FALSE);
     }
     return Status;
@@ -1911,7 +1911,7 @@ NTAPI
 Hid_Unload(
     IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 

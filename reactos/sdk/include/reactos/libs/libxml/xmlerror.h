@@ -937,7 +937,7 @@ XMLPUBFUN void XMLCALL
 				 int code,
 				 xmlNodePtr node,
 				 const char *msg,
-				 const char *extra);
+				 const char *extra) LIBXML_ATTR_FORMAT(4,0);
 #endif
 #ifdef __cplusplus
 }

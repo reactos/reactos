@@ -36,7 +36,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "Визначте мітку диску %C: "
     STRING_ERROR_LABEL "Було вказано некорректну мітку.\n"
     STRING_YN_FORMAT "\nУВАГА! ВСІ ДАНІ НА ФІКСОВАНОМУ ДИСКУ %C:\n\
-  БУДЕ ВТРАЧЕНО! \nРозпочати форматування(Y/N)? "
+  БУДЕ ВТРАЧЕНО! \nРозпочати форматування (Y-Так|N-Ні)? "
     STRING_YES_NO_FAQ "YN"
     STRING_VERIFYING "Перевірка"
     STRING_FAST_FMT "Швидке форматування"

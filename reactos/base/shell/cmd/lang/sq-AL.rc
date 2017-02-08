@@ -68,7 +68,7 @@ ERRORLEVEL është vendosur për të kompensuar e shtyn përdoruesit kryesorë n
     STRING_CMD_HELP2 "\nTiparet në dispozicion:"
     STRING_CMD_HELP3 "  [pseudonimet]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [Përfundimi i dokumentave të sistemit unix]"
+    STRING_CMD_HELP5 "  [Përfundimi i dokumentave të sistemit Bash]"
     STRING_CMD_HELP6 "  [raftet e skedave]"
     STRING_CMD_HELP7 "  [drejtimi i ri dhe udherrefyesi]"
     STRING_CMD_HELP8 "Fillon një shembull të ri të përkthyesit së Komandave të ReactOS.\n\n\
@@ -258,15 +258,15 @@ MKLINK [/D | /H | /J] objektivi i lidhjes së emrit\n\n\
   /H  Krijon një lidhjë të fortë.\n\
   /J  Krijo një kryqëzim në skedë.\n\n\
 Nëse anjëra nga /H ose /J nuk speficikohet, një lidhje simboli do të krijohet."
-    STRING_MEMMORY_HELP1 "Paraqet sasinë e memories së sistemit.\n\nMEMORIA"
-    STRING_MEMMORY_HELP2 "\n  %12s%% ngarkimi i memories.\n\n\
+    STRING_MEMORY_HELP1 "Paraqet sasinë e memories së sistemit.\n\nMEMORIA"
+    STRING_MEMORY_HELP2 "\n  %12s%% ngarkimi i memories.\n\n\
   %13s bytes totali i RAM'it fizik.\n\
   %13s bytes RAM'i fizik ne dispozicion.\n\n\
   %13s bytes totali i faqeve i dokumentave.\n\
   %13s bytes dokumentat dhe faqet ne dispozicion.\n\n\
   %13s bytes memoria totale virtuale.\n\
   %13s bytes memoria virtuale ne dispozicion.\n"
-    STRING_MISC_HELP1 "Shtypni një buton për të vazhduar...\n"
+    STRING_MISC_HELP1 "Shtypni një buton për të vazhduar..."
     STRING_MOVE_HELP1 "Mbishkruaj %s (Po/Jo/Të Gjith)? "
     STRING_MOVE_HELP2 "Lëviz dokumentet dhe emero ato dhe skedat.\n\n\
 Për të lëvizur një ose më shumë dokumenta:\n\
@@ -526,7 +526,7 @@ title         titull i ri\n"
     STRING_REPLACE_ERROR6 "Nuk u gjet dokumenti - %s\n"
     STRING_REPLACE_ERROR7 "Error i zgjatur 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "Sistemi Operativ ReactOS [Versioni %s-%s]\n"
+    STRING_REACTOS_VERSION "Sistemi Operativ ReactOS [Versioni %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Interpretuesi i komandave\nVersioni %s %s"
     STRING_VERSION_RUNNING_ON "Funksionon në: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

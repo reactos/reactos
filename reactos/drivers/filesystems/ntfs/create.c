@@ -271,7 +271,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
         }
     }
 
-    //FIXME: Get cannonical path name (remove .'s, ..'s and extra separators)
+    //FIXME: Get canonical path name (remove .'s, ..'s and extra separators)
 
     DPRINT("PathName to open: %S\n", FileName);
 
@@ -358,13 +358,6 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
     }
 
     FileObject = Stack->FileObject;
-
-    if (RequestedDisposition == FILE_CREATE ||
-        RequestedDisposition == FILE_OVERWRITE_IF ||
-        RequestedDisposition == FILE_SUPERSEDE)
-    {
-        return STATUS_ACCESS_DENIED;
-    }
 
     if ((RequestedOptions & FILE_OPEN_BY_FILE_ID) == FILE_OPEN_BY_FILE_ID)
     {

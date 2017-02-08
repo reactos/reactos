@@ -122,6 +122,12 @@ LDEVOBJ_pdmiGetModes(
 
     TRACE("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
 
+    /* Mirror drivers may omit this function */
+    if (!pldev->pfn.GetModes)
+    {
+        return NULL;
+    }
+
     /* Call the driver to get the required size */
     cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
     if (!cbSize)

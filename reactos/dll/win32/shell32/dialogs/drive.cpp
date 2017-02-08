@@ -96,6 +96,11 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         // auto block size calculation
         ClusterSize = 0;
     }
+    else if (!wcsicmp(szFs, L"BtrFS"))
+    {
+        // auto block size calculation
+        ClusterSize = 0;
+    }
     else
         return FALSE;
 
@@ -123,7 +128,7 @@ typedef struct _DRIVE_PROP_PAGE
 } DRIVE_PROP_PAGE;
 
 BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
+SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];
@@ -229,6 +234,9 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 28675), FALSE);
     }
     else if (!wcsicmp(wszBuf, L"FAT32"))
     {
@@ -248,6 +256,9 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 28675), FALSE);
     }
     else if (!wcsicmp(wszBuf, L"NTFS"))
     {
@@ -279,6 +290,8 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             }
             ClusterSize *= 2;
         }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
     }
     else if (!wcsicmp(wszBuf, L"EXT2"))
     {
@@ -298,6 +311,29 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
+    }
+    else if (!wcsicmp(wszBuf, L"BtrFS"))
+    {
+        if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
+        {
+            TRACE("BtrFS is not supported on hdd larger than 16E current %lu\n", TotalNumberOfBytes.QuadPart);
+            SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
+            return;
+        }
+
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
+        {
+            hDlgCtrl = GetDlgItem(hwndDlg, 28680);
+            SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
+            lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)wszBuf);
+            if (lIndex != CB_ERR)
+                SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
+        }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
     }
     else
     {

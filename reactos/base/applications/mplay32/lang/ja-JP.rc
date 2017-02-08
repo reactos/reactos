@@ -29,7 +29,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "バージョン情報(&A)...", IDM_ABOUT
+        MENUITEM "バージョン情報(&A)", IDM_ABOUT
     END
 END
 

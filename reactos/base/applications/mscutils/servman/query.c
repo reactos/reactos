@@ -35,12 +35,12 @@ GetServiceConfig(LPWSTR lpServiceName)
 
     hSCManager = OpenSCManagerW(NULL,
                                 NULL,
-                                SC_MANAGER_ALL_ACCESS);
+                                SC_MANAGER_CONNECT);
     if (hSCManager)
     {
         hService = OpenServiceW(hSCManager,
                                 lpServiceName,
-                                SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
+                                SERVICE_QUERY_CONFIG);
         if (hService)
         {
             if (!QueryServiceConfigW(hService,

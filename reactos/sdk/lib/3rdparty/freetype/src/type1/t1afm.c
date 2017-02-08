@@ -197,7 +197,7 @@
     /*   encoding of first glyph (1 byte)     */
     /*   encoding of second glyph (1 byte)    */
     /*   offset (little-endian short)         */
-    for ( ; p < limit ; p += 4 )
+    for ( ; p < limit; p += 4 )
     {
       kp->index1 = FT_Get_Char_Index( t1_face, p[0] );
       kp->index2 = FT_Get_Char_Index( t1_face, p[1] );

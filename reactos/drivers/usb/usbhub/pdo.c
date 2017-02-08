@@ -60,7 +60,7 @@ UrbCompletion(
 }
 
 NTSTATUS
-FowardUrbToRootHub(
+ForwardUrbToRootHub(
     PDEVICE_OBJECT RootHubDeviceObject,
     IN ULONG IoControlCode,
     PIRP Irp,
@@ -146,16 +146,25 @@ IsValidPDO(
 
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
+
+    // This can happen when parent device was surprise removed.
+    if (ChildDeviceExtension->ParentDeviceObject == NULL)
+        return FALSE;
+
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
 
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
     for(Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
         {
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
             /* PDO exists */
             return TRUE;
         }
     }
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     /* invalid pdo */
     return FALSE;
@@ -190,17 +199,30 @@ USBHUB_PdoHandleInternalDeviceControl(
 
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
-    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
-    RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
-    if(!IsValidPDO(DeviceObject))
+    Status = IoAcquireRemoveLock(&ChildDeviceExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
     {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    if (ChildDeviceExtension->Common.PnPState == SurpriseRemovePending ||
+        ChildDeviceExtension->Common.PnPState == RemovePending ||
+        ChildDeviceExtension->ParentDeviceObject == NULL)
+    {
+        // Parent or child device was surprise removed.
         DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
         Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoReleaseRemoveLock(&ChildDeviceExtension->Common.RemoveLock, Irp);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
+
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
+    RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
     switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -300,7 +322,8 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             // Send the request to RootHub
             //
-            Status = FowardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
+            Status = ForwardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
+            IoReleaseRemoveLock(&ChildDeviceExtension->Common.RemoveLock, Irp);
             return Status;
         }
         //
@@ -397,6 +420,7 @@ USBHUB_PdoHandleInternalDeviceControl(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+    IoReleaseRemoveLock(&ChildDeviceExtension->Common.RemoveLock, Irp);
     return Status;
 }
 
@@ -421,7 +445,9 @@ USBHUB_PdoStartDevice(
     IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_DEVICE, NULL, &ChildDeviceExtension->SymbolicLinkName);
     IoSetDeviceInterfaceState(&ChildDeviceExtension->SymbolicLinkName, TRUE);
 
-    UNIMPLEMENTED
+    SET_NEW_PNP_STATE(ChildDeviceExtension->Common, Started);
+
+    UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
@@ -563,14 +589,19 @@ USBHUB_PdoHandlePnp(
     PIO_STACK_LOCATION Stack;
     ULONG_PTR Information = 0;
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
-    ULONG Index;
-    ULONG bFound;
     PDEVICE_RELATIONS DeviceRelation;
-    PDEVICE_OBJECT ParentDevice;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
     MinorFunction = Stack->MinorFunction;
+
+    Status = IoAcquireRemoveLock(&UsbChildExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     switch (MinorFunction)
     {
@@ -628,17 +659,20 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_QUERY_DEVICE_TEXT:
         {
+            DPRINT("IRP_MN_QUERY_DEVICE_TEXT\n");
             Status = USBHUB_PdoQueryDeviceText(DeviceObject, Irp, &Information);
             break;
         }
         case IRP_MN_QUERY_ID:
         {
+            DPRINT("IRP_MN_QUERY_ID\n");
             Status = USBHUB_PdoQueryId(DeviceObject, Irp, &Information);
             break;
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
             PPNP_BUS_INFORMATION BusInfo;
+            DPRINT("IRP_MN_QUERY_BUS_INFORMATION\n");
             BusInfo = (PPNP_BUS_INFORMATION)ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
             RtlCopyMemory(&BusInfo->BusTypeGuid,
                           &GUID_BUS_TYPE_USB,
@@ -654,41 +688,57 @@ USBHUB_PdoHandlePnp(
         {
             PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbChildExtension->ParentDeviceObject->DeviceExtension;
             PUSB_BUS_INTERFACE_HUB_V5 HubInterface = &HubDeviceExtension->HubInterface;
-            ParentDevice = UsbChildExtension->ParentDeviceObject;
 
             DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
-            /* remove us from pdo list */
-            bFound = FALSE;
-            for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+            ASSERT((UsbChildExtension->Common.PnPState == RemovePending) ||
+                   (UsbChildExtension->Common.PnPState == SurpriseRemovePending));
+
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, NotStarted);
+
+            if (!IsValidPDO(DeviceObject))
             {
-                if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
+                // Parent or child device was surprise removed, freeing resources allocated for child device.
+                SET_NEW_PNP_STATE(UsbChildExtension->Common, Deleted);
+
+                IoReleaseRemoveLockAndWait(&UsbChildExtension->Common.RemoveLock, Irp);
+
+                // Remove the usb device
+                if (UsbChildExtension->UsbDeviceHandle)
                 {
-                     /* Remove the device */
-                     Status = HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
-
-                     /* FIXME handle error */
-                     ASSERT(Status == STATUS_SUCCESS);
-
-                    /* remove us */
-                    HubDeviceExtension->ChildDeviceObject[Index] = NULL;
-                    bFound = TRUE;
-                    break;
+                    Status = HubInterface->RemoveUsbDevice(HubInterface->BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+                    ASSERT(Status == STATUS_SUCCESS);
                 }
+                // Free full configuration descriptor
+                if (UsbChildExtension->FullConfigDesc)
+                    ExFreePool(UsbChildExtension->FullConfigDesc);
+
+                // Free ID buffers
+                if (UsbChildExtension->usCompatibleIds.Buffer)
+                    ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+
+                if (UsbChildExtension->usDeviceId.Buffer)
+                    ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+
+                if (UsbChildExtension->usHardwareIds.Buffer)
+                    ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+
+                if (UsbChildExtension->usInstanceId.Buffer)
+                    ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+                DPRINT("Deleting child PDO\n");
+                IoDeleteDevice(DeviceObject);
             }
+            else
+            {
+                IoReleaseRemoveLock(&UsbChildExtension->Common.RemoveLock, Irp);
+            }
+
+            // If device is physically presented, we leave its PDO undeleted.
 
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            /* delete device */
-            IoDeleteDevice(DeviceObject);
-
-            if (bFound)
-            {
-                /* invalidate device relations */
-                IoInvalidateDeviceRelations(ParentDevice, BusRelations);
-            }
 
             return STATUS_SUCCESS;
         }
@@ -699,11 +749,12 @@ USBHUB_PdoHandlePnp(
             {
                 /* not supported */
                 Status = Irp->IoStatus.Status;
+                Information = Irp->IoStatus.Information;
                 break;
             }
 
             /* allocate device relations */
-            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS));
+            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
             if (!DeviceRelation)
             {
                 /* no memory */
@@ -717,16 +768,49 @@ USBHUB_PdoHandlePnp(
             ObReferenceObject(DeviceRelation->Objects[0]);
 
             /* store result */
-            Irp->IoStatus.Information = (ULONG_PTR)DeviceRelation;
+            Information = (ULONG_PTR)DeviceRelation;
             Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // We should fail this request, because we're not handling IRP_MN_STOP_DEVICE for now.
+            // We'll receive this IRP ONLY when the PnP manager rebalances resources.
+            //
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        }
         case IRP_MN_QUERY_REMOVE_DEVICE:
         {
+            //
+            // Free interface obtained from bottom, according MSDN we should
+            // check interfaces provided to top, but here we are not checking.
+            // All checking will be performed in roothub driver's
+            // IRP_MN_QUERY_REMOVE_DEVICE handler. This will make problems when
+            // buggy driver is loaded on top of us. But we decided to keep source
+            // simpler, because in any case buggy driver will prevent removing of
+            // whole stack.
+            //
+            UsbChildExtension->DeviceInterface.InterfaceDereference(UsbChildExtension->DeviceInterface.BusContext);
+
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, RemovePending);
+
             /* Sure, no problem */
             Status = STATUS_SUCCESS;
             Information = 0;
+            break;
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            // Check to see have we received query-remove before
+            if (UsbChildExtension->Common.PnPState == RemovePending)
+            {
+                RESTORE_PREVIOUS_PNP_STATE(UsbChildExtension->Common);
+                UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
+            }
+
+            Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_QUERY_INTERFACE:
@@ -736,17 +820,28 @@ USBHUB_PdoHandlePnp(
             {
                 DPRINT1("USB_BUS_INTERFACE_USBDI_GUID\n");
                 RtlCopyMemory(Stack->Parameters.QueryInterface.Interface, &UsbChildExtension->DeviceInterface, Stack->Parameters.QueryInterface.Size);
+                UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
                 Status = STATUS_SUCCESS;
                 break;
             }
 
             // pass irp down
             IoSkipCurrentIrpStackLocation(Irp);
-            return IoCallDriver(UsbChildExtension->ParentDeviceObject, Irp);
+            Status = IoCallDriver(UsbChildExtension->ParentDeviceObject, Irp);
+            IoReleaseRemoveLock(&UsbChildExtension->Common.RemoveLock, Irp);
+            return Status;
         }
         case IRP_MN_SURPRISE_REMOVAL:
         {
             DPRINT("[USBHUB] HandlePnp IRP_MN_SURPRISE_REMOVAL\n");
+
+            //
+            // Here we should free all resources and stop all access, lets just set
+            // the flag and do further clean-up in subsequent IRP_MN_REMOVE_DEVICE
+            // We can receive this IRP when device is physically connected (on stop/start fail).
+            //
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, SurpriseRemovePending);
+
             Status = STATUS_SUCCESS;
             break;
         }
@@ -757,6 +852,8 @@ USBHUB_PdoHandlePnp(
             Status = Irp->IoStatus.Status;
         }
     }
+
+    IoReleaseRemoveLock(&UsbChildExtension->Common.RemoveLock, Irp);
 
     Irp->IoStatus.Information = Information;
     Irp->IoStatus.Status = Status;

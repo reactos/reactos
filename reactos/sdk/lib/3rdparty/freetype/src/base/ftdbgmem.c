@@ -842,7 +842,7 @@
         p = getenv( "FT2_ALLOC_TOTAL_MAX" );
         if ( p != NULL )
         {
-          FT_Long   total_max = ft_atol( p );
+          FT_Long  total_max = ft_strtol( p, NULL, 10 );
 
 
           if ( total_max > 0 )
@@ -855,7 +855,7 @@
         p = getenv( "FT2_ALLOC_COUNT_MAX" );
         if ( p != NULL )
         {
-          FT_Long  total_count = ft_atol( p );
+          FT_Long  total_count = ft_strtol( p, NULL, 10 );
 
 
           if ( total_count > 0 )
@@ -868,7 +868,7 @@
         p = getenv( "FT2_KEEP_ALIVE" );
         if ( p != NULL )
         {
-          FT_Long  keep_alive = ft_atol( p );
+          FT_Long  keep_alive = ft_strtol( p, NULL, 10 );
 
 
           if ( keep_alive > 0 )

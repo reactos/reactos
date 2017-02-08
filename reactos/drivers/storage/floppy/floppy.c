@@ -104,7 +104,7 @@ StartMotor(PDRIVE_INFO DriveInfo)
  *       You wouldn't want to turn on the motor and then cancel the timer, because the
  *       cancel dpc might fire in the meantime, and that'd un-do what you just did.  If you
  *       cancel the timer first, but KeCancelTimer returns false, the dpc is already running,
- *       so you have to wait until the dpc is completly done running, or else you'll race
+ *       so you have to wait until the dpc is completely done running, or else you'll race
  *       with the turner-offer
  *     - PAGED_CODE because we wait
  */
@@ -564,7 +564,7 @@ ConfigCallback(PVOID Context,
         DriveInfo->FloppyDeviceData.MaximumTrackValue = FloppyDeviceData->MaximumTrackValue;
         DriveInfo->FloppyDeviceData.DataTransferLength = FloppyDeviceData->DataTransferLength;
 
-        /* Once it's all set up, acknowledge its existance in the controller info object */
+        /* Once it's all set up, acknowledge its existence in the controller info object */
         gControllerInfo[gNumberOfControllers].NumberOfDrives++;
     }
 
@@ -595,7 +595,7 @@ Isr(PKINTERRUPT Interrupt, PVOID ServiceContext)
  *       triggered, this is safe to not do here, as we can just wait for the DPC.
  *     - Either way, we don't want to do this here.  The controller shouldn't interrupt again, so we'll
  *       schedule a DPC to take care of it.
- *     - This driver really cannot shrare interrupts, as I don't know how to conclusively say
+ *     - This driver really cannot share interrupts, as I don't know how to conclusively say
  *       whether it was our controller that interrupted or not.  I just have to assume that any time
  *       my ISR gets called, it was my board that called it.  Dumb design, yes, but it goes back to
  *       the semantics of ISA buses.  That, and I don't know much about ISA drivers. :-)
@@ -637,7 +637,7 @@ DpcForIsr(PKDPC UnusedDpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArg
  *     - This function just kicks off whatever the SynchEvent is and returns.  We depend on
  *       the thing that caused the drive to interrupt to handle the work of clearing the interrupt.
  *       This enables us to get back to PASSIVE_LEVEL and not hog system time on a really stupid,
- *       slow, screwed-up piece of hardare.
+ *       slow, screwed-up piece of hardware.
  *     - If nothing is waiting for us to set the event, the interrupt is effectively lost and will
  *       never be dismissed.  I wonder if this will become a problem.
  *     - Called at DISPATCH_LEVEL
@@ -901,7 +901,7 @@ AddControllers(PDRIVER_OBJECT DriverObject)
             continue;
         }
 
-        /* 2c: Set the controller's initlized flag so we know to release stuff in Unload */
+        /* 2c: Set the controller's initialized flag so we know to release stuff in Unload */
         gControllerInfo[i].Initialized = TRUE;
 
         /* 3: per-drive setup */
@@ -1199,7 +1199,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     ZwClose(ThreadHandle);
 
     /*
-     * Start the device discovery proces.  Returns STATUS_SUCCESS if
+     * Start the device discovery process.  Returns STATUS_SUCCESS if
      * it finds even one drive attached to one controller.
      */
     if(!AddControllers(DriverObject))

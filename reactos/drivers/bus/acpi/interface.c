@@ -7,14 +7,14 @@ VOID
 NTAPI
 AcpiInterfaceReference(PVOID Context)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 VOID
 NTAPI
 AcpiInterfaceDereference(PVOID Context)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -27,7 +27,7 @@ AcpiInterfaceConnectVector(PDEVICE_OBJECT Context,
                            PVOID ServiceContext,
                            PVOID ObjectContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -36,7 +36,7 @@ NTSTATUS
 NTAPI
 AcpiInterfaceDisconnectVector(PVOID ObjectContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -46,7 +46,7 @@ NTAPI
 AcpiInterfaceEnableEvent(PDEVICE_OBJECT Context,
                          PVOID ObjectContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -56,7 +56,7 @@ NTAPI
 AcpiInterfaceDisableEvent(PDEVICE_OBJECT Context,
                           PVOID ObjectContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -66,7 +66,7 @@ NTAPI
 AcpiInterfaceClearStatus(PDEVICE_OBJECT Context,
                          PVOID ObjectContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -77,7 +77,7 @@ AcpiInterfaceNotificationsRegister(PDEVICE_OBJECT Context,
                                    PDEVICE_NOTIFY_CALLBACK NotificationHandler,
                                    PVOID NotificationContext)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -87,7 +87,7 @@ NTAPI
 AcpiInterfaceNotificationsUnregister(PDEVICE_OBJECT Context,
                                      PDEVICE_NOTIFY_CALLBACK NotificationHandler)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 }
 
 NTSTATUS

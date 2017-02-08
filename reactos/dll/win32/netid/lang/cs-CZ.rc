@@ -11,7 +11,7 @@ CAPTION "Název počítače"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
-    LTEXT "ReactOS použije následující informace k identifikování tohoto počítače na síti.", IDC_STATIC, 40, 5, 204, 20
+    LTEXT "ReactOS použije následující informace k identifikování tohoto počítače v síti.", IDC_STATIC, 40, 5, 204, 20
     LTEXT "Popis počítače:", IDC_STATIC, 6, 40, 90, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Úplný název počítače:", IDC_STATIC, 6, 68, 85, 9

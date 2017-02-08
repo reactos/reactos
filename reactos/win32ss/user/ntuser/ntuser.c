@@ -14,6 +14,7 @@ BOOL FASTCALL RegisterControlAtoms(VOID);
 
 PTHREADINFO gptiCurrent = NULL;
 PPROCESSINFO gppiInputProvider = NULL;
+BOOL g_AlwaysDisplayVersion = FALSE;
 ERESOURCE UserLock;
 ATOM AtomMessage;       // Window Message atom.
 ATOM AtomWndObj;        // Window Object atom.
@@ -76,6 +77,7 @@ NTAPI
 InitUserImpl(VOID)
 {
     NTSTATUS Status;
+    HKEY hKey;
 
     ExInitializeResourceLite(&UserLock);
 
@@ -93,6 +95,16 @@ InitUserImpl(VOID)
     }
 
     InitUserAtoms();
+
+    Status = RegOpenKey(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows",
+                        &hKey);
+    if (NT_SUCCESS(Status))
+    {
+        DWORD dwValue = 0;
+        RegReadDWORD(hKey, L"DisplayVersion", &dwValue);
+        g_AlwaysDisplayVersion = !!dwValue;
+        ZwClose(hKey);
+    }
 
     InitSysParams();
 

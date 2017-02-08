@@ -26,7 +26,7 @@ IDI_ICON5 ICON "resources/5.ico"
 
 STRINGTABLE
 BEGIN
-    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://winext2fsd.sourceforge.net/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/"
+    IDS_ACKPROJECTS "Wine - http://www.winehq.org\nFreeType - http://www.freetype.org\nSYSLINUX - http://syslinux.zytor.com\nMinGW - http://www.mingw.org\nBochs - http://bochs.sourceforge.net\nQEMU - http://fabrice.bellard.free.fr/qemu\nMesa3D - http://www.mesa3d.org\nadns - http://www.gnu.org/software/adns\nICU - http://www.icu-project.org/\nGraphApp - http://enchantia.com/software/graphapp/\nExt2 - http://www.ext2fsd.com/\nGNU FreeFont - http://savannah.gnu.org/projects/freefont/\nDejaVu Fonts - http://dejavu.sourceforge.net\nLiberation(tm) Fonts - https://fedorahosted.org/liberation-fonts/\nBtrfs - https://github.com/maharmstone/btrfs"
 END
 
 IDR_GPL RT_TEXT "COPYING"
@@ -46,6 +46,9 @@ IDR_GPL RT_TEXT "COPYING"
 #ifdef LANGUAGE_CS_CZ
     #include "lang/cs-CZ.rc"
 #endif
+#ifdef LANGUAGE_DA_DK
+    #include "lang/da-DK.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -60,6 +63,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_ET_EE
     #include "lang/et-EE.rc"
+#endif
+#ifdef LANGUAGE_FI_FI
+    #include "lang/fi-FI.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
@@ -78,6 +84,9 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/lt-LT.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"
@@ -102,6 +111,12 @@ IDR_GPL RT_TEXT "COPYING"
 #endif
 #ifdef LANGUAGE_SQ_AL
     #include "lang/sq-AL.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/sv-SE.rc"
+#endif
+#ifdef LANGUAGE_TH_TH
+    #include "lang/th-TH.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
     #include "lang/tr-TR.rc"

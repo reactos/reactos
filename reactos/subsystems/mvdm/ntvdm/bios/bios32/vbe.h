@@ -90,19 +90,25 @@ typedef struct _VBE_MODE_INFO
 
 C_ASSERT(sizeof(VBE_MODE_INFO) % sizeof(WORD) == 0);
 
+typedef const struct _VBE_MODE_INFO *PCVBE_MODE_INFO;
+
 #pragma pack(pop)
 
 typedef struct _VBE_MODE
 {
     BYTE Number;
     WORD VesaNumber;
-    PVBE_MODE_INFO Info;
-    PSVGA_REGISTERS Registers; // NULL means "forward to VGABIOS"
+    PCVBE_MODE_INFO Info;
+    PSVGA_REGISTERS Registers;
 } VBE_MODE, *PVBE_MODE;
+
+typedef const struct _VBE_MODE *PCVBE_MODE;
 
 /* FUNCTIONS ******************************************************************/
 
 VOID WINAPI VbeService(LPWORD Stack);
+VOID WINAPI VbeResetExtendedRegisters(VOID);
+BOOLEAN WINAPI VbeSetExtendedVideoMode(BYTE ModeNumber);
 BOOLEAN VbeInitialize(VOID);
 
 #endif // _VBE_H_

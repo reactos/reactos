@@ -104,16 +104,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Użyj następującego efektu przejścia dla menu i etykiet narzędzi:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "Użyj n&astępującej metody wygładzania krawędzi czcionek ekranowych:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Użyj &dużych ikon", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Pokaż cienie pod menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Pokaż &zawartość okna podczas przeciągania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Ukryj podkreślenie liter do nawigacji &klawiaturą, dopóki nie nacisnę klawisza Alt",
@@ -187,7 +187,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Standardowe"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -235,28 +235,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Pulpit"
-    IDS_ELEMENT_2 "Nieaktywny pasek tytułu"
-    IDS_ELEMENT_3 "Obramowanie nieaktywnego okna"
-    IDS_ELEMENT_4 "Aktywny pasek tytułu"
-    IDS_ELEMENT_5 "Obramowanie aktywnego okna"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Wybrane elementy"
-    IDS_ELEMENT_8 "Okno"
-    IDS_ELEMENT_9 "Pasek przewijania"
-    IDS_ELEMENT_10 "Obiekty 3D"
-    IDS_ELEMENT_11 "Nazwa palety "
-    IDS_ELEMENT_12 "Etykieta ikony"
-    IDS_ELEMENT_13 "Belka tytułowa"
-    IDS_ELEMENT_14 "Nieaktywne elementy menu"
-    IDS_ELEMENT_15 "Okno komunikatu"
-    IDS_ELEMENT_16 "Przyciski na pasku przewijania"
-    IDS_ELEMENT_17 "Tło aplikacji"
-    IDS_ELEMENT_18 "Mała belka tytułowa"
-    IDS_ELEMENT_19 "Rozmieszczenie ikon (poziome)"
-    IDS_ELEMENT_20 "Rozmieszczenie ikon (pionowe)"
-    IDS_ELEMENT_21 "Etykieta narzędzia"
-    IDS_ELEMENT_22 "Ikona"
+    IDS_ELEMENT_0 "Pulpit"
+    IDS_ELEMENT_1 "Nieaktywny pasek tytułu"
+    IDS_ELEMENT_2 "Obramowanie nieaktywnego okna"
+    IDS_ELEMENT_3 "Aktywny pasek tytułu"
+    IDS_ELEMENT_4 "Obramowanie aktywnego okna"
+    IDS_ELEMENT_5 "Menu"
+    IDS_ELEMENT_6 "Wybrane elementy"
+    IDS_ELEMENT_7 "Okno"
+    IDS_ELEMENT_8 "Pasek przewijania"
+    IDS_ELEMENT_9 "Obiekty 3D"
+    IDS_ELEMENT_10 "Nazwa palety "
+    IDS_ELEMENT_11 "Belka tytułowa"
+    IDS_ELEMENT_12 "Okno komunikatu"
+    IDS_ELEMENT_13 "Tło aplikacji"
+    IDS_ELEMENT_14 "Rozmieszczenie ikon (poziome)"
+    IDS_ELEMENT_15 "Rozmieszczenie ikon (pionowe)"
+    IDS_ELEMENT_16 "Etykieta narzędzia"
+    IDS_ELEMENT_17 "Ikona"
+//  IDS_ELEMENT_18 "Nieaktywne elementy menu"
 END
 
 STRINGTABLE

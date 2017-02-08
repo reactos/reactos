@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "另存新檔(&A)...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "版面設定(&T)...", CMD_PAGE_SETUP
-        MENUITEM "列印(&P)\tCtrl+P", CMD_PRINT
+        MENUITEM "列印(&P)...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "搜尋(&F)...\tCtrl+F", CMD_SEARCH
         MENUITEM "找下一個(&N)\tF3", CMD_SEARCH_NEXT
-        MENUITEM "取代(&R)\tCtrl+H", CMD_REPLACE
+        MENUITEM "取代(&R)...\tCtrl+H", CMD_REPLACE
         MENUITEM "跳到(&G)...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "全選(&A)\tCtrl+A", CMD_SELECT_ALL

@@ -15,8 +15,12 @@ Description = Freies, quelloffenes, Plattformunabhängiges Werkzeug zum spiltten
 Size = 15,8 MiB
 
 [Section.0418]
-Description = Un instrument gratuit, cu surse deschise, multiplatformă, pentru împărțirea, unirea, și manipularea documentelor PDF. Este necesară Java Runtime!
+Description = Instrument gratuit, cu surse deschise, multiplatformă, pentru împărțirea, unirea, și manipularea documentelor PDF. Este necesară Java Runtime!
 Size = 15,8 Mio
+
+[Section.0419]
+Description = Инструмент, предназначенный для выполнения разделения, слияния и других операций с документами PDF.
+Size = 15,8 МиБ
 
 [Section.041f]
 License = GPL sürüm 2

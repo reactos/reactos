@@ -131,7 +131,7 @@ PciQueryInterface(IN PPCI_FDO_EXTENSION DeviceExtension,
             if (!NT_SUCCESS(Status))
             {
                 /* This interface was not initialized correctly, skip it */
-                DPRINT1("PCI - PciQueryInterface - Contructor %p = %08lx\n",
+                DPRINT1("PCI - PciQueryInterface - Constructor %p = %08lx\n",
                         PciInterface->Constructor, Status);
                 continue;
             }

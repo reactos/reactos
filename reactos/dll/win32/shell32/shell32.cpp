@@ -25,6 +25,45 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/*
+ * Implemented
+ */
+EXTERN_C LPWSTR
+WINAPI
+AddCommasW(DWORD lValue, LPWSTR lpNumber)
+{
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1];
+    NUMBERFMTW numFormat;
+
+    GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                   LOCALE_STHOUSAND,
+                   szSeparator,
+                   _countof(szSeparator));
+
+    numFormat.NumDigits     = 0;
+    numFormat.LeadingZero   = 0;
+    numFormat.Grouping      = 0; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
+    numFormat.lpDecimalSep  = szSeparator;
+    numFormat.lpThousandSep = szSeparator;
+    numFormat.NegativeOrder = 0;
+
+    swprintf(szValue, L"%llu", lValue);
+    //_ultow(lValue, szValue, 10);
+
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT,
+                         0,
+                         szValue,
+                         &numFormat,
+                         lpNumber,
+                         wcslen(lpNumber)) != 0)
+    {
+        return lpNumber;
+    }
+
+    wcscpy(lpNumber, szValue);
+    return lpNumber;
+}
+
 /**************************************************************************
  * Default ClassFactory types
  */
@@ -196,7 +235,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_ShellDesktop, CDesktopFolder)
     OBJECT_ENTRY(CLSID_ShellItem, CShellItem)
     OBJECT_ENTRY(CLSID_ShellLink, CShellLink)
-    OBJECT_ENTRY(CLSID_Shell, CShell)
+    OBJECT_ENTRY(CLSID_Shell, CShellDispatch)
     OBJECT_ENTRY(CLSID_DragDropHelper, CDropTargetHelper)
     OBJECT_ENTRY(CLSID_ControlPanel, CControlPanelFolder)
     OBJECT_ENTRY(CLSID_MyDocuments, CMyDocsFolder)
@@ -204,6 +243,7 @@ BEGIN_OBJECT_MAP(ObjectMap)
     OBJECT_ENTRY(CLSID_FontsFolderShortcut, CFontsFolder)
     OBJECT_ENTRY(CLSID_Printers, CPrinterFolder)
     OBJECT_ENTRY(CLSID_AdminFolderShortcut, CAdminToolsFolder)
+    OBJECT_ENTRY(CLSID_ShellFldSetExt, CFolderOptions)
     OBJECT_ENTRY(CLSID_RecycleBin, CRecycleBin)
     OBJECT_ENTRY(CLSID_OpenWithMenu, COpenWithMenu)
     OBJECT_ENTRY(CLSID_NewMenu, CNewMenu)
@@ -306,9 +346,8 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         InitCtrls.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES;
         InitCommonControlsEx(&InitCtrls);
 
-        SIC_Initialize();
+        /* Bad idea, initialization in DllMain! */
         InitChangeNotifications();
-        InitIconOverlays();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {

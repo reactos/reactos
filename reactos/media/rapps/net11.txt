@@ -51,6 +51,14 @@ License = Nespecificată
 Description = Componente necesare pentru execuția în Windows aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 23,1 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Компоненты, необходимые для запуска некоторых Windows приложений.
+Size = 23,2 МиБ
+URLSite = http://www.microsoft.com/ru-RU/download/details.aspx?id=26
+URLDownload = http://download.microsoft.com/download/0/8/6/086e7824-ddad-45c0-b765-721e5e28e4c5/dotnetfx.exe
+SHA1 = 1c4f247c1c0e914ac4553cac394fc8f174f650a2
+
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 1.1 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor

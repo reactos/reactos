@@ -215,6 +215,15 @@ PlugIn_BdaDevice="Extensie control dispozitiv BDA"
 PlugIn_BdaCA="Extensie BDA pentru acces condițional"
 Pin.Name.AtscTS="Transport MPEG2"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+Category_BdaTuner="Фильтр источника BDA"
+Category_BdaComponent="Компонент BDA-приемник"
+Category_BdaRenderer="Фильтр воспроизводителя BDA"
+PlugIn_BdaDevice="Модуль управления устройством BDA"
+PlugIn_BdaCA="BDA-плагин условного доступа"
+Pin.Name.AtscTS="Транспорт MPEG2"
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 Category_BdaTuner="BDA-Kaynak Süzgeci"

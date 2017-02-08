@@ -788,7 +788,10 @@ _tWinMain(HINSTANCE hInst,
     if (!pSetupData->bUnattend)
     {
         if (!LoadSetupData(pSetupData))
+        {
+            HeapFree(GetProcessHeap(), 0, pSetupData);
             return 0;
+        }
 
         /* Create the Start page, until setup is working */
         psp.dwSize = sizeof(PROPSHEETPAGE);
@@ -881,8 +884,7 @@ _tWinMain(HINSTANCE hInst,
     if (pSetupData->hTitleFont)
         DeleteObject(pSetupData->hTitleFont);
 
-    if (pSetupData != NULL)
-        HeapFree(GetProcessHeap(), 0, pSetupData);
+    HeapFree(GetProcessHeap(), 0, pSetupData);
 
 #if 0
     EnableShutdownPrivilege();

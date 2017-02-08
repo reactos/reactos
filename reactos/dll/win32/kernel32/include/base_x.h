@@ -25,7 +25,7 @@
 // Note that Basep8BitStringToStaticUnicodeString looks deceptively similar.
 // However, that function was designed for File APIs, which can be switched into
 // a special "OEM" mode, that uses different NLS files/encoding, and thus calls
-// RtlOemStringToAnsiString (see SetFileApisToOEM). Thererefore, this macro and
+// RtlOemStringToAnsiString (see SetFileApisToOEM). Therefore, this macro and
 // that function are not interchangeable. As a separate note, that function uses
 // the *Ex version of the Rtl conversion APIs, which does stricter checking that
 // is not done when this macro is used.

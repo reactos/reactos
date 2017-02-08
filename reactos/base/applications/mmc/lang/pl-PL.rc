@@ -11,14 +11,14 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "&Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otwórz...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
+        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END
 END
 
@@ -26,10 +26,10 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "Pl&ik"
     BEGIN
-        MENUITEM "Nowa\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "&Nowa\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otwórz...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Zapisz", IDM_FILE_SAVE
+        MENUITEM "Z&apisz jako...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ\tAlt+F4", IDM_FILE_EXIT
     END
@@ -39,7 +39,7 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje...", IDM_HELP_ABOUT
+        MENUITEM "Konsola Zarządzania ReactOS - i&nformacje", IDM_HELP_ABOUT
     END
 END
 

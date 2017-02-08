@@ -27,35 +27,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
-/***********************************************************************
- *   Printers_IExtractIconW implementation
- */
-class CPrintersExtractIconW :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IExtractIconW,
-    public IExtractIconA
-{
-    private:
-        LPITEMIDLIST                        pidl;
-    public:
-        CPrintersExtractIconW();
-        ~CPrintersExtractIconW();
-        HRESULT WINAPI Initialize(LPCITEMIDLIST pidl);
-
-        // IExtractIconW
-        virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-        virtual HRESULT STDMETHODCALLTYPE Extract(LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-
-        // IExtractIconA
-        virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, LPSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
-        virtual HRESULT STDMETHODCALLTYPE Extract(LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
-
-        BEGIN_COM_MAP(CPrintersExtractIconW)
-        COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
-        COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
-        END_COM_MAP()
-};
-
 static shvheader PrinterSFHeader[] = {
     {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
     {IDS_SHV_COLUMN_DOCUMENTS , SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_LEFT, 15},
@@ -72,123 +43,24 @@ static shvheader PrinterSFHeader[] = {
 #define COLUMN_LOCATION      4
 #define COLUMN_MODEL         5
 
-
 #define PrinterSHELLVIEWCOLUMNS (6)
 
-CPrintersExtractIconW::CPrintersExtractIconW()
-{
-    pidl = NULL;
-}
-
-CPrintersExtractIconW::~CPrintersExtractIconW()
-{
-    TRACE(" destroying IExtractIcon(%p)\n", this);
-    SHFree(pidl);
-}
-
-HRESULT WINAPI CPrintersExtractIconW::Initialize(LPCITEMIDLIST pidl)
-{
-    pidl = ILClone(pidl);
-
-    pdump(pidl);
-    return S_OK;
-}
-
 /**************************************************************************
- *  CPrintersExtractIconW::GetIconLocation
+ *  CPrintersExtractIconW_CreateInstane
  *
- * mapping filetype to icon
+ *  There is no CPrintersExtractIconW. We just initialize CExtractIcon properly to do our job.
  */
-HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,        /* GIL_ flags */
-        LPWSTR szIconFile,
-        UINT cchMax,
-        int *piIndex,
-        UINT *pwFlags)        /* returned GIL_ flags */
+HRESULT WINAPI CPrintersExtractIconW_CreateInstane(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv)
 {
-    TRACE("(%p) (flags=%u %p %u %p %p)\n", this, uFlags, szIconFile, cchMax, piIndex, pwFlags);
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    if (pwFlags)
-        *pwFlags = 0;
+    /* FIXME: other icons for default, network, print to file */
+    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTER);
 
-    lstrcpynW(szIconFile, swShell32Name, cchMax);
-    *piIndex = -IDI_SHELL_PRINTERS_FOLDER; /* FIXME: other icons for default, network, print to file */
-
-    TRACE("-- %s %x\n", debugstr_w(szIconFile), *piIndex);
-    return S_OK;
-}
-
-/**************************************************************************
- *  CPrintersExtractIconW::Extract
- */
-HRESULT WINAPI CPrintersExtractIconW::Extract(LPCWSTR pszFile,
-        UINT nIconIndex, HICON *phiconLarge,
-        HICON *phiconSmall, UINT nIconSize)
-{
-    int index;
-    HIMAGELIST big_icons, small_icons;
-
-    FIXME("(%p) (file=%p index=%d %p %p size=%x) semi-stub\n", this, debugstr_w(pszFile),
-          (signed)nIconIndex, phiconLarge, phiconSmall, nIconSize);
-
-    index = SIC_GetIconIndex(pszFile, nIconIndex, 0);
-
-    Shell_GetImageLists(&big_icons, &small_icons);
-
-    if (phiconLarge)
-        *phiconLarge = ImageList_GetIcon(big_icons, index, ILD_TRANSPARENT);
-
-    if (phiconSmall)
-        *phiconSmall = ImageList_GetIcon(small_icons, index, ILD_TRANSPARENT);
-
-    return S_OK;
-}
-
-/**************************************************************************
- *  CPrintersExtractIconW::GetIconLocation
- */
-HRESULT WINAPI CPrintersExtractIconW::GetIconLocation(UINT uFlags,
-        LPSTR szIconFile,
-        UINT cchMax,
-        int * piIndex,
-        UINT * pwFlags)
-{
-    HRESULT ret;
-    LPWSTR lpwstrFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, cchMax * sizeof(WCHAR));
-
-    TRACE("(%p) (flags=%u %p %u %p %p)\n", this, uFlags, szIconFile, cchMax, piIndex, pwFlags);
-
-    ret = GetIconLocation(uFlags, lpwstrFile, cchMax, piIndex, pwFlags);
-    WideCharToMultiByte(CP_ACP, 0, lpwstrFile, -1, szIconFile, cchMax, NULL, NULL);
-    HeapFree(GetProcessHeap(), 0, lpwstrFile);
-
-    TRACE("-- %s %x\n", szIconFile, *piIndex);
-    return ret;
-}
-/**************************************************************************
- *  CPrintersExtractIconW::Extract
- */
-HRESULT WINAPI CPrintersExtractIconW::Extract(LPCSTR pszFile,
-        UINT nIconIndex, HICON *phiconLarge,
-        HICON *phiconSmall, UINT nIconSize)
-{
-    HRESULT ret;
-    INT len = MultiByteToWideChar(CP_ACP, 0, pszFile, -1, NULL, 0);
-    LPWSTR lpwstrFile = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-
-    TRACE("(%p) (file=%p index=%u %p %p size=%u)\n", this, pszFile, nIconIndex, phiconLarge, phiconSmall, nIconSize);
-
-    MultiByteToWideChar(CP_ACP, 0, pszFile, -1, lpwstrFile, len);
-    ret = Extract(lpwstrFile, nIconIndex, phiconLarge, phiconSmall, nIconSize);
-    HeapFree(GetProcessHeap(), 0, lpwstrFile);
-    return ret;
-}
-
-/**************************************************************************
- *  IExtractIcon_Constructor
- */
-static HRESULT WINAPI IEI_Printers_Constructor(LPCITEMIDLIST pidl, REFIID riid, IUnknown **ppv)
-{
-    return ShellObjectCreatorInit<CPrintersExtractIconW>(pidl, riid, ppv);
+    return initIcon->QueryInterface(riid,ppv);
 }
 
 /***********************************************************************
@@ -318,14 +190,6 @@ CPrinterFolder::~CPrinterFolder()
     TRACE("-- destroying IShellFolder(%p)\n", this);
     if (pidlRoot)
         SHFree(pidlRoot);
-}
-
-HRESULT WINAPI CPrinterFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreatePrinters();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
 }
 
 /**************************************************************************
@@ -462,7 +326,7 @@ HRESULT WINAPI CPrinterFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY 
 HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl,
         REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
@@ -474,7 +338,7 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMI
     *ppvOut = NULL;
 
     if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && cidl == 1)
-        hr = IEI_Printers_Constructor(apidl[0], riid, &pObj);
+        hr = CPrintersExtractIconW_CreateInstane(apidl[0], riid, &pObj);
     else
         hr = E_NOINTERFACE;
 
@@ -492,7 +356,6 @@ HRESULT WINAPI CPrinterFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMI
  */
 HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    LPWSTR pszName;
     PIDLPrinterStruct * p;
 
     TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", this, pidl, dwFlags, strRet);
@@ -504,37 +367,14 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         return E_INVALIDARG;
     }
 
-    if (!pidl->mkid.cb)
-    {
-        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
-        if (!pszName)
-            return E_OUTOFMEMORY;
-
-        if (LoadStringW(shell32_hInstance, IDS_PRINTERS, pszName, MAX_PATH))
-        {
-            pszName[MAX_PATH-1] = L'\0';
-            strRet->uType = STRRET_WSTR;
-            strRet->pOleStr = pszName;
-            return S_OK;
-        }
-        CoTaskMemFree(pszName);
-        return E_FAIL;
-    }
-
     p = _ILGetPrinterStruct(pidl);
     if (!p)
     {
-        WARN("no printer struct\n");
+        ERR("no printer struct\n");
         return E_INVALIDARG;
     }
-    strRet->pOleStr = (LPWSTR)SHAlloc(p->offsServer * sizeof(WCHAR));
-    if (!strRet->pOleStr)
-        return E_OUTOFMEMORY;
 
-    memcpy((LPVOID)strRet->pOleStr, (LPVOID)p->szName, p->offsServer * sizeof(WCHAR));
-    TRACE("ret %s\n", debugstr_w(strRet->pOleStr));
-
-    return S_OK;
+    return SHSetStrRet(strRet, p->szName);
 }
 
 /**************************************************************************
@@ -598,9 +438,6 @@ HRESULT WINAPI CPrinterFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMN
 
 HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-    HRESULT hr = E_FAIL;
-
     TRACE("(%p)->(%p %i %p): stub\n", this, pidl, iColumn, psd);
 
     if (iColumn >= PrinterSHELLVIEWCOLUMNS)
@@ -609,19 +446,10 @@ HRESULT WINAPI CPrinterFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, 
     psd->fmt = PrinterSFHeader[iColumn].fmt;
     psd->cxChar = PrinterSFHeader[iColumn].cxChar;
     if (pidl == NULL)
-    {
-        psd->str.uType = STRRET_WSTR;
-        if (LoadStringW(shell32_hInstance, PrinterSFHeader[iColumn].colnameid, buffer, MAX_PATH))
-            hr = SHStrDupW(buffer, &psd->str.pOleStr);
-
-        return hr;
-    }
+        return SHSetStrRet(&psd->str, PrinterSFHeader[iColumn].colnameid);
 
     if (iColumn == COLUMN_NAME)
-    {
-        psd->str.uType = STRRET_WSTR;
         return GetDisplayNameOf(pidl, SHGDN_NORMAL, &psd->str);
-    }
 
     psd->str.uType = STRRET_CSTR;
     psd->str.cStr[0] = '\0';

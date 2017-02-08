@@ -238,11 +238,19 @@ IKsFilterFactory_fnInitialize(
     /* initialize filterfactory */
     This->SleepCallback = SleepCallback;
     This->WakeCallback = WakeCallback;
-    This->FilterFactory.FilterDescriptor = Descriptor;
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Type = KsObjectTypeFilterFactory;
     This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* copy descriptor */
+    This->FilterFactory.FilterDescriptor = AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
+    if (!This->FilterFactory.FilterDescriptor)
+    {
+        DPRINT("out of memory");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    RtlMoveMemory((PVOID)This->FilterFactory.FilterDescriptor, (PVOID)Descriptor, sizeof(KSFILTER_DESCRIPTOR));
 
     /* initialize filter factory control mutex */
     This->Header.ControlMutex = &This->ControlMutex;
@@ -313,19 +321,19 @@ IKsFilterFactory_fnInitialize(
         RtlFreeUnicodeString(&ReferenceString);
     }
 
+    /* create a object bag for the filter factory */
+    This->FilterFactory.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+    if (This->FilterFactory.Bag)
+    {
+        /* initialize object bag */
+        KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->BasicHeader.OuterUnknown;
+        KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->FilterFactory.Bag, NULL);
+    }
+
     if (FilterFactory)
     {
         /* return filterfactory */
         *FilterFactory = &This->FilterFactory;
-
-        /* create a object bag for the filter factory */
-        This->FilterFactory.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
-        if (This->FilterFactory.Bag)
-        {
-            /* initialize object bag */
-            KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->BasicHeader.OuterUnknown;
-            KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->FilterFactory.Bag, NULL);
-        }
     }
 
     /* attach filterfactory to device header */

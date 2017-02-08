@@ -1,0 +1,137 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "ReactOS セットアップウィザードへようこそ。", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "このCDからまだ直接ReactOSをインストールできません。ReactOSをインストールするために、このCDからコンピュータを再起動して下さい。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "完了をクリックしてセットアップを終了して下さい。", IDC_STATIC, 115, 169, 195, 17
+END
+
+IDD_TYPEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    AUTORADIOBUTTON "ReactOSをインストールする", IDC_INSTALL, 7, 7, 277, 10
+    LTEXT "ReactOSを新しくインストールします。このオプションは、あなたのファイル、設定、プログラムを維持しません。あなたはディスクとパーティションに変更を加えることができます。", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "ReactOSを更新または修正する", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "インストールされたReactOSを更新または修正します。このオプションはあなたのファイル、設定、プログラムを保持します。このオプションは、このコンピュータですでにReactOSがインストール済みのときのみ利用できます。", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "次へをクリックすると続行します", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "コンピュータ:", IDC_STATIC, 20, 15, 80, 10
+    CONTROL "", IDC_COMPUTER, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 15, 180, 80
+    LTEXT "ディスプレイ:", IDC_STATIC, 20, 35, 80, 10
+    CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 35, 180, 80
+    LTEXT "キーボード:", IDC_STATIC, 20, 55, 80, 10
+    CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 100, 55, 180, 80
+    LTEXT "デバイスをセットアップするために、次へをクリック", IDC_STATIC, 7, 128, 297, 8
+END
+
+IDD_DRIVEPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL "", IDC_PARTITION, "SysListView32", WS_BORDER | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL, 7, 7, 303, 112
+    PUSHBUTTON "作成(&C)", IDC_PARTCREATE, 7, 122, 50, 14
+    PUSHBUTTON "削除(&D)", IDC_PARTDELETE, 63, 122, 50, 14
+    PUSHBUTTON "ドライバ(&R)", IDC_DEVICEDRIVER, 174, 122, 50, 14, WS_DISABLED
+    PUSHBUTTON "上級者向け(&A)...", IDC_PARTMOREOPTS, 230, 122, 80, 14
+/*    LTEXT "次へをクリックすれば、要約をチェックできます。", IDC_STATIC, 7, 128, 277, 8 */
+END
+
+IDD_PARTITION DIALOGEX 0, 0, 145, 90
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "パーティションの作成"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL "", IDC_UPDOWN1, "msctls_updown32", WS_VISIBLE, 104, 22, 9, 13
+    CONTROL "パーティションを作成し、フォーマットします", IDC_STATIC, "Button", BS_GROUPBOX, 7, 5, 129, 57
+    LTEXT "サイズ:", IDC_STATIC, 13, 24, 27, 9
+    EDITTEXT IDC_PARTSIZE, 58, 22, 47, 13, WS_VISIBLE | WS_TABSTOP
+    LTEXT "GB", IDC_UNIT, 117, 24, 14, 9
+    LTEXT "ファイルシステム:", IDC_STATIC, 13, 46, 42, 9
+    CONTROL "", IDC_FSTYPE, "ComboBox", WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 42, 73, 50
+    PUSHBUTTON "&OK", IDOK, 35, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "キャンセル(&C)", IDCANCEL, 87, 68, 47, 15, WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_BOOTOPTIONS DIALOGEX 0, 0, 305, 116
+STYLE DS_SHELLFONT | WS_VISIBLE | WS_CAPTION
+CAPTION "上級者向けパーティション設定"
+FONT 9, "MS UI Gothic"
+BEGIN
+    CONTROL "インストール先フォルダ", IDC_STATIC, "Button", BS_GROUPBOX, 4, 1, 298, 30
+    EDITTEXT IDC_PATH, 10, 11, 278, 13, WS_VISIBLE
+    CONTROL "ブートローダのインストール", IDC_STATIC, "Button", BS_GROUPBOX, 4, 36, 298, 52
+    CONTROL "ハードディスクにブートローダをインストールする (MBRとVBR)", IDC_INSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 46, 278, 11
+    CONTROL "ハードディスクにブートローダをインストールする (VBRのみ)", IDC_INSTVBRONLY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 10, 57, 278, 11
+    CONTROL "ブートローダをインストールしない", IDC_NOINSTFREELDR, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_DISABLED, 10, 68, 278, 11
+    PUSHBUTTON "&OK", IDOK, 180, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "キャンセル(&C)", IDCANCEL, 240, 94, 50, 15, WS_TABSTOP | WS_VISIBLE
+END
+
+IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "次へをクリックすると、インストールの処理を開始します。", IDC_STATIC, 7, 128, 303, 8
+END
+
+IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップ"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "ファイルをインストール中...", IDC_ACTIVITY, 20, 50, 277, 10
+    LTEXT "test.txt", IDC_ITEM, 30, 80, 257, 10
+    CONTROL "", IDC_PROCESSPROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 7, 120, 303, 8
+END
+
+IDD_RESTARTPAGE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS セットアップの完了"
+FONT 9, "MS UI Gothic"
+BEGIN
+    LTEXT "ReactOS セットアップの最初の段階が正しく完了しました。", IDC_STATIC, 115, 50, 195, 10
+    LTEXT "完了をクリックすると、あなたのコンピュータは再起動されます。", IDC_STATIC, 115, 80, 195, 10
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 110, 195, 8
+    LTEXT "もしCDがドライブにあれば、取り除いて下さい。その後、あなたのコンピュータを再起動するには、完了をクリックして下さい。", IDC_STATIC, 115, 169, 195, 17
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TYPETITLE "ReactOS セットアップにようこそ"
+    IDS_TYPESUBTITLE "セットアップの種類を選んで下さい"
+    IDS_DEVICETITLE "基本デバイスをセットアップします"
+    IDS_DEVICESUBTITLE "ディスプレイとキーボードの設定をします"
+    IDS_DRIVETITLE "インストール先パーティションとシステムフォルダをセットアップします"
+    IDS_DRIVESUBTITLE "インストール先のパーティション、システムフォルダ、ブートローダを準備します"
+    IDS_PROCESSTITLE "パーティションをセットアップし、ファイルをコピーし、システムをセットアップします"
+    IDS_PROCESSSUBTITLE "パーティションを作成・フォーマットし、ファイルをコピーし、ブートローダをインストール・セットアップします"
+    IDS_RESTARTTITLE "最初の段階は完了しました"
+    IDS_RESTARTSUBTITLE "セットアップの最初の段階が完了しました。第二の段階に進むために再起動します"
+    IDS_SUMMARYTITLE "インストールの要約"
+    IDS_SUMMARYSUBTITLE "インストールするデバイスを適用する前にチェックするインストール プロパティをリストアップします"
+    IDS_ABORTSETUP "ReactOSはあなたのコンピュータへのインストールが完了していません。もしセットアップをここで中断すれば、ReactOSをインストールするために、セットアップを再起動する必要があります。本当に中断しますか?"
+    IDS_ABORTSETUP2 "インストールを中断しますか?"
+    IDS_NO_TXTSETUP_SIF "'txtsetup.sif'が見つかりません。\nセットアップは続行できません"
+    IDS_CAPTION "ReactOS セットアップ"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PARTITION_NAME "名前"
+    IDS_PARTITION_SIZE "サイズ"
+    IDS_PARTITION_TYPE "種類"
+END

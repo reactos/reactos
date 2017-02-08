@@ -1582,8 +1582,6 @@ InstallFat16BootCodeToDisk(
            FIELD_OFFSET(FAT_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT_BOOTSECTOR, OemName));
 
-    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
-
     /* Free the original boot sector */
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
 
@@ -1739,8 +1737,6 @@ InstallFat32BootCodeToDisk(
            &OrigBootSector->OemName,
            FIELD_OFFSET(FAT32_BOOTSECTOR, BootCodeAndData) -
            FIELD_OFFSET(FAT32_BOOTSECTOR, OemName));
-
-    NewBootSector->HiddenSectors = PartitionList->CurrentDisk->SectorsPerTrack;
 
     /* Get the location of the backup boot sector */
     BackupBootSector = OrigBootSector->BackupBootSector;

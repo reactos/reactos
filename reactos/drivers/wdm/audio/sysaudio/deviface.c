@@ -161,7 +161,7 @@ DeviceInterfaceChangeCallback(
     else
     {
         DPRINT("Remove interface to audio device!\n");
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         return STATUS_SUCCESS;
     }
 

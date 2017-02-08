@@ -576,7 +576,15 @@ static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
     wcscpy(buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
     wcscat(buffer, szName);
     res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, buffer, 0, KEY_READ, &hkApp);
-    if (res) goto end;
+    if (res) 
+    {
+        // Add ".exe" extension, if extension does not exists
+        if (PathAddExtensionW(buffer, wszExe))
+        {
+            res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, buffer, 0, KEY_READ, &hkApp);
+        }        
+        if (res) goto end;
+    }
 
     len = MAX_PATH * sizeof(WCHAR);
     res = RegQueryValueW(hkApp, NULL, lpResult, &len);

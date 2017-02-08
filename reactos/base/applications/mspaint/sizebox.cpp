@@ -42,7 +42,7 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 {
     if (resizing)
     {
-        TCHAR sizeStr[100];
+        CString strSize;
         short xRel;
         short yRel;
         int imgXRes = imageModel.GetWidth();
@@ -50,22 +50,22 @@ LRESULT CSizeboxWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
         xRel = (GET_X_LPARAM(lParam) - xOrig) * 1000 / toolsModel.GetZoom();
         yRel = (GET_Y_LPARAM(lParam) - yOrig) * 1000 / toolsModel.GetZoom();
         if (m_hWnd == sizeboxLeftTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxCenterTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes, imgYRes - yRel);
         if (m_hWnd == sizeboxRightTop.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes - yRel);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes - yRel);
         if (m_hWnd == sizeboxLeftCenter.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes);
         if (m_hWnd == sizeboxRightCenter.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes);
         if (m_hWnd == sizeboxLeftBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes - xRel, imgYRes + yRel);
+            strSize.Format(_T("%d x %d"), imgXRes - xRel, imgYRes + yRel);
         if (m_hWnd == sizeboxCenterBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes + yRel);
+            strSize.Format(_T("%d x %d"), imgXRes, imgYRes + yRel);
         if (m_hWnd == sizeboxRightBottom.m_hWnd)
-            _stprintf(sizeStr, _T("%d x %d"), imgXRes + xRel, imgYRes + yRel);
-        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+            strSize.Format(_T("%d x %d"), imgXRes + xRel, imgYRes + yRel);
+        SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
     }
     return 0;
 }

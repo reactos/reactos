@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS DiskPart
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/list.c
- * PURPOSE:         Manages all the partitions of the OS in an interactive way
+ * PURPOSE:         Manages all the partitions of the OS in an interactive way.
  * PROGRAMMERS:     Lee Schroeder
  */
 
@@ -35,8 +35,8 @@ ListDisk(VOID)
     LPWSTR lpFreeUnit;
 
     /* Header labels */
-    PrintResourceString(IDS_LIST_DISK_HEAD);
-    PrintResourceString(IDS_LIST_DISK_LINE);
+    ConResPuts(StdOut, IDS_LIST_DISK_HEAD);
+    ConResPuts(StdOut, IDS_LIST_DISK_LINE);
 
     Entry = DiskListHead.Flink;
     while (Entry != &DiskListHead)
@@ -63,21 +63,21 @@ ListDisk(VOID)
         FreeSize = 0;
         lpFreeUnit = L"B";
 
-        PrintResourceString(IDS_LIST_DISK_FORMAT,
-                            (CurrentDisk == DiskEntry) ? L'*': ' ',
-                            DiskEntry->DiskNumber,
-                            L"Online",
-                            DiskSize,
-                            lpSizeUnit,
-                            FreeSize,
-                            lpFreeUnit,
-                            L" ",
-                            L" ");
+        ConResPrintf(StdOut, IDS_LIST_DISK_FORMAT,
+                     (CurrentDisk == DiskEntry) ? L'*': ' ',
+                     DiskEntry->DiskNumber,
+                     L"Online",
+                     DiskSize,
+                     lpSizeUnit,
+                     FreeSize,
+                     lpFreeUnit,
+                     L" ",
+                     L" ");
 
         Entry = Entry->Flink;
     }
 
-    wprintf(L"\n\n");
+    ConPuts(StdOut, L"\n\n");
 }
 
 static
@@ -94,13 +94,13 @@ ListPartition(VOID)
 
     if (CurrentDisk == NULL)
     {
-        PrintResourceString(IDS_LIST_PARTITION_NO_DISK);
+        ConResPuts(StdOut, IDS_LIST_PARTITION_NO_DISK);
         return;
     }
 
     /* Header labels */
-    PrintResourceString(IDS_LIST_PARTITION_HEAD);
-    PrintResourceString(IDS_LIST_PARTITION_LINE);
+    ConResPuts(StdOut, IDS_LIST_PARTITION_HEAD);
+    ConResPuts(StdOut, IDS_LIST_PARTITION_LINE);
 
     Entry = CurrentDisk->PrimaryPartListHead.Flink;
     while (Entry != &CurrentDisk->PrimaryPartListHead)
@@ -145,14 +145,14 @@ ListPartition(VOID)
                 lpOffsetUnit = L"KB";
             }
 
-            PrintResourceString(IDS_LIST_PARTITION_FORMAT,
-                                (CurrentPartition == PartEntry) ? L'*': ' ',
-                                PartNumber++,
-                                IsContainerPartition(PartEntry->PartitionType) ? L"Extended" : L"Primary",
-                                PartSize,
-                                lpSizeUnit,
-                                PartOffset,
-                                lpOffsetUnit);
+            ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
+                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         PartNumber++,
+                         IsContainerPartition(PartEntry->PartitionType) ? L"Extended" : L"Primary",
+                         PartSize,
+                         lpSizeUnit,
+                         PartOffset,
+                         lpOffsetUnit);
         }
 
         Entry = Entry->Flink;
@@ -201,34 +201,34 @@ ListPartition(VOID)
                 lpOffsetUnit = L"KB";
             }
 
-            PrintResourceString(IDS_LIST_PARTITION_FORMAT,
-                                (CurrentPartition == PartEntry) ? L'*': ' ',
-                                PartNumber++,
-                                L"Logical",
-                                PartSize,
-                                lpSizeUnit,
-                                PartOffset,
-                                lpOffsetUnit);
+            ConResPrintf(StdOut, IDS_LIST_PARTITION_FORMAT,
+                         (CurrentPartition == PartEntry) ? L'*': ' ',
+                         PartNumber++,
+                         L"Logical",
+                         PartSize,
+                         lpSizeUnit,
+                         PartOffset,
+                         lpOffsetUnit);
         }
 
         Entry = Entry->Flink;
     }
 
-    wprintf(L"\n");
+    ConPuts(StdOut, L"\n");
 }
 
 static
 VOID
 ListVolume(VOID)
 {
-    PrintResourceString(IDS_LIST_VOLUME_HEAD);
+    ConResPuts(StdOut, IDS_LIST_VOLUME_HEAD);
 }
 
 static
 VOID
 ListVdisk(VOID)
 {
-    printf("List VDisk!!\n");
+    ConPuts(StdOut, L"List VDisk!!\n");
 }
 
 BOOL
@@ -239,7 +239,7 @@ list_main(
     /* gets the first word from the string */
     if (argc == 1)
     {
-        PrintResourceString(IDS_HELP_CMD_LIST);
+        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
         return TRUE;
     }
 
@@ -253,7 +253,7 @@ list_main(
     else if (!wcsicmp(argv[1], L"vdisk"))
         ListVdisk();
     else
-        PrintResourceString(IDS_HELP_CMD_LIST);
+        ConResPuts(StdOut, IDS_HELP_CMD_LIST);
 
     return TRUE;
 }

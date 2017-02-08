@@ -182,11 +182,21 @@ enum
 
 /* CRTC max scanline register bits */
 #define VGA_CRTC_MAXSCANLINE_DOUBLE (1 << 7)
+#define VGA_CRTC_MAXSCANLINE_LC9    (1 << 6)
 
 /* CRTC mode control register bits */
 #define VGA_CRTC_MODE_CONTROL_WRAP  (1 << 5)
 #define VGA_CRTC_MODE_CONTROL_BYTE  (1 << 6)
 #define VGA_CRTC_MODE_CONTROL_SYNC  (1 << 7)
+
+/* CRTC extended display register bits */
+#define SVGA_CRTC_EXT_ADDR_BIT16    (1 << 0)
+#define SVGA_CRTC_EXT_ADDR_WRAP     (1 << 1)
+#define SVGA_CRTC_EXT_ADDR_BITS1718 ((1 << 2) | (1 << 3))
+#define SVGA_CRTC_EXT_OFFSET_BIT8   (1 << 4)
+
+/* CRTC extended overlay register bits */
+#define SVGA_CRTC_EXT_ADDR_BIT19    (1 << 7)
 
 enum
 {
@@ -206,8 +216,8 @@ enum
     VGA_CRTC_START_ADDR_LOW_REG,
     VGA_CRTC_CURSOR_LOC_HIGH_REG,
     VGA_CRTC_CURSOR_LOC_LOW_REG,
-    VGA_CRTC_VERT_RETRACE_START_REG,
-    VGA_CRTC_VERT_RETRACE_END_REG,
+    VGA_CRTC_START_VERT_RETRACE_REG,
+    VGA_CRTC_END_VERT_RETRACE_REG,
     VGA_CRTC_VERT_DISP_END_REG,
     VGA_CRTC_OFFSET_REG,
     VGA_CRTC_UNDERLINE_REG,
@@ -248,6 +258,10 @@ enum
 /* Graphics controller miscellaneous register bits */
 #define VGA_GC_MISC_NOALPHA     (1 << 0)
 #define VGA_GC_MISC_OE          (1 << 1)
+
+/* Graphics controller extended mode register bits */
+#define SVGA_GC_EXT_MODE_WND_B  (1 << 0)
+#define SVGA_GC_EXT_MODE_GRAN   (1 << 5)
 
 enum
 {

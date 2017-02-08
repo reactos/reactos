@@ -41,6 +41,11 @@ License = Nespecificată
 Description = Pachet necesar pentru aplicațiile compilate cu Visual Studio 2013. Conține: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
 Size = 6,2 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Необходим для приложений, написанных в Visual Studio 2013. Содержит: atl120.dll, mfc120.dll, mfc90u.dll, mfcm120.dll, mfcm90u.dll, msdia120.dll, msvcm120.dll, msvcp120.dll, msvcr120.dll, vcomp120.dll.
+Size = 6,2 МиБ
+
 [Section.041f]
 Name = Microsoft Visual C++ 2013 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor

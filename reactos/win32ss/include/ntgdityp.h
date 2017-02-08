@@ -231,6 +231,8 @@ typedef DWORD LFTYPE;
 /* New color use parameter. See support.microsoft.com/kb/kbview/108497 */
 #define DIB_PAL_INDICES 2
 
+/* Get/SetBounds/Rect support. */
+#define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
 
 /* TYPES *********************************************************************/
 

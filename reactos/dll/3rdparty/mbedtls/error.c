@@ -34,6 +34,7 @@
 #include "mbedtls/platform.h"
 #else
 #define mbedtls_snprintf snprintf
+#define mbedtls_time_t   time_t
 #endif
 
 #if defined(MBEDTLS_ERROR_C)
@@ -182,6 +183,8 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
             mbedtls_snprintf( buf, buflen, "CIPHER - Decryption of block requires a full block" );
         if( use_ret == -(MBEDTLS_ERR_CIPHER_AUTH_FAILED) )
             mbedtls_snprintf( buf, buflen, "CIPHER - Authentication failed (for AEAD modes)" );
+        if( use_ret == -(MBEDTLS_ERR_CIPHER_INVALID_CONTEXT) )
+            mbedtls_snprintf( buf, buflen, "CIPHER - The context is invalid, eg because it was free()ed" );
 #endif /* MBEDTLS_CIPHER_C */
 
 #if defined(MBEDTLS_DHM_C)

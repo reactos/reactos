@@ -839,7 +839,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
     NextEntry = NextEntry->Flink;
     while (NextEntry != ListHead)
     {
-        /* Get the Data Entrry */
+        /* Get the Data Entry */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InInitializationOrderLinks);
 
         /* FIXME: Verify NX Compat */
@@ -1338,7 +1338,7 @@ LdrpInitializeExecutionOptions(PUNICODE_STRING ImagePathName, PPEB Peb, PHANDLE 
     /* Return error if we were not provided a pointer where to save the options key handle */
     if (!OptionsKey) return STATUS_INVALID_HANDLE;
 
-    /* Zero initialize the optinos key pointer */
+    /* Zero initialize the options key pointer */
     *OptionsKey = NULL;
 
     /* Open the options key */
@@ -1523,7 +1523,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                                      IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR,
                                      &ComSectionSize))
     {
-        /* Remeber this for later */
+        /* Remember this for later */
         IsDotNetImage = TRUE;
     }
 

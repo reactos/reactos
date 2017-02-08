@@ -21,7 +21,7 @@ NdisCoGetTapiCallId(
     IN NDIS_HANDLE  NdisVcHandle,
     IN OUT PVAR_STRING  TapiCallId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -36,7 +36,7 @@ NdisCoAssignInstanceName(
     IN PNDIS_STRING  BaseInstanceName,
     OUT PNDIS_STRING  VcInstanceName)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -58,7 +58,7 @@ NdisCoCreateVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -78,7 +78,7 @@ NdisCoDeleteVc(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -102,7 +102,7 @@ NdisCoRequest(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -126,7 +126,7 @@ NdisCoRequestComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -146,7 +146,7 @@ NdisCoSendPackets(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -166,7 +166,7 @@ NdisMCoActivateVcComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -185,7 +185,7 @@ NdisMCoDeactivateVcComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -205,7 +205,7 @@ NdisMCoIndicateReceivePacket(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -227,7 +227,7 @@ NdisMCoIndicateStatus(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -245,7 +245,7 @@ NdisMCoReceiveComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -265,7 +265,7 @@ NdisMCoRequestComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -285,7 +285,7 @@ NdisMCoSendComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /* EOF */

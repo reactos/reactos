@@ -1567,8 +1567,16 @@ static LRESULT DecompressGetFormat(CodecInfo *pi, LPCBITMAPINFOHEADER lpbiIn,
 
   size = lpbiIn->biSize;
 
-  if (lpbiIn->biBitCount <= 8)
-    size += lpbiIn->biClrUsed * sizeof(RGBQUAD);
+  if (lpbiIn->biBitCount <= 8) {
+    int colors;
+
+    if (lpbiIn->biClrUsed == 0)
+      colors = 1 << lpbiIn->biBitCount;
+    else
+      colors = lpbiIn->biClrUsed;
+
+    size += colors * sizeof(RGBQUAD);
+  }
 
   if (lpbiOut != NULL) {
     memcpy(lpbiOut, lpbiIn, size);
@@ -1647,27 +1655,33 @@ static LRESULT DecompressBegin(CodecInfo *pi, LPCBITMAPINFOHEADER lpbiIn,
 
   if (lpbiIn->biCompression != BI_RGB)
   {
+    int colors;
+
+    if (lpbiIn->biBitCount <= 8 && lpbiIn->biClrUsed == 0)
+      colors = 1 << lpbiIn->biBitCount;
+    else
+      colors = lpbiIn->biClrUsed;
+
     rgbIn  = (const RGBQUAD*)((const BYTE*)lpbiIn  + lpbiIn->biSize);
     rgbOut = (const RGBQUAD*)((const BYTE*)lpbiOut + lpbiOut->biSize);
 
     switch (lpbiOut->biBitCount) {
     case 4:
     case 8:
-      pi->palette_map = LocalAlloc(LPTR, lpbiIn->biClrUsed);
+      pi->palette_map = LocalAlloc(LPTR, colors);
       if (pi->palette_map == NULL)
         return ICERR_MEMORY;
 
-      for (i = 0; i < lpbiIn->biClrUsed; i++) {
-        pi->palette_map[i] = MSRLE32_GetNearestPaletteIndex(lpbiOut->biClrUsed, rgbOut, rgbIn[i]);
-      }
+      for (i = 0; i < colors; i++)
+        pi->palette_map[i] = MSRLE32_GetNearestPaletteIndex(colors, rgbOut, rgbIn[i]);
       break;
     case 15:
     case 16:
-      pi->palette_map = LocalAlloc(LPTR, lpbiIn->biClrUsed * 2);
+      pi->palette_map = LocalAlloc(LPTR, colors * 2);
       if (pi->palette_map == NULL)
         return ICERR_MEMORY;
 
-      for (i = 0; i < lpbiIn->biClrUsed; i++) {
+      for (i = 0; i < colors; i++) {
         WORD color;
 
         if (lpbiOut->biBitCount == 15)
@@ -1683,10 +1697,10 @@ static LRESULT DecompressBegin(CodecInfo *pi, LPCBITMAPINFOHEADER lpbiIn,
       break;
     case 24:
     case 32:
-      pi->palette_map = LocalAlloc(LPTR, lpbiIn->biClrUsed * sizeof(RGBQUAD));
+      pi->palette_map = LocalAlloc(LPTR, colors * sizeof(RGBQUAD));
       if (pi->palette_map == NULL)
         return ICERR_MEMORY;
-      memcpy(pi->palette_map, rgbIn, lpbiIn->biClrUsed * sizeof(RGBQUAD));
+      memcpy(pi->palette_map, rgbIn, colors * sizeof(RGBQUAD));
       break;
     };
   }

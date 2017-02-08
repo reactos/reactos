@@ -10,7 +10,7 @@
 #include "rosdraw.h"
 
 /*
- * Status: Implentation removed due to rewrite
+ * Status: Implementation removed due to rewrite
  */
 HRESULT
 WINAPI
@@ -58,7 +58,7 @@ Main_DirectDraw_EnumSurfaces7(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 }
 
 /*
- * Status: Implentation removed due to rewrite
+ * Status: Implementation removed due to rewrite
  */
 HRESULT WINAPI
 Main_DirectDraw_FlipToGDISurface(LPDDRAWI_DIRECTDRAW_INT This)
@@ -91,7 +91,7 @@ Main_DirectDraw_GetVerticalBlankStatus(LPDDRAWI_DIRECTDRAW_INT This, LPBOOL lpbI
 }
 
 /*
- * Status: Implentation removed due to rewrite
+ * Status: Implementation removed due to rewrite
  */
 HRESULT WINAPI
 Main_DirectDraw_WaitForVerticalBlank(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,

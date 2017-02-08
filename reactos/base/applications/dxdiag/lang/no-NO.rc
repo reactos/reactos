@@ -238,7 +238,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Denne testen vil bruke DirectDraw to draw in a fullscreen mode. Moving white rectangle should be drawn. Fortsette?"
     IDS_DDFULLSCREEN_RESULT "Så du de hvite bevegende rektangeler i fullskjermmodus?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "Nei"
     IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
     IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."

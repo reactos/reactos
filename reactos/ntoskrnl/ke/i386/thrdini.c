@@ -345,8 +345,17 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         /* Check if there is a different LDT */
         if (*(PULONGLONG)&OldProcess->LdtDescriptor != *(PULONGLONG)&NewProcess->LdtDescriptor)
         {
-            DPRINT1("LDT switch not implemented\n");
-            ASSERT(FALSE);
+            if (NewProcess->LdtDescriptor.LimitLow)
+            {
+                KeSetGdtSelector(KGDT_LDT,
+                                 ((PULONG)&NewProcess->LdtDescriptor)[0],
+                                 ((PULONG)&NewProcess->LdtDescriptor)[1]);
+                Ke386SetLocalDescriptorTable(KGDT_LDT);
+            }
+            else
+            {
+                Ke386SetLocalDescriptorTable(0);
+            }
         }
 
         /* Switch address space and flush TLB */

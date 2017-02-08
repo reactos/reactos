@@ -81,16 +81,16 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
     RBInnerI = RBInnerNormal[uType & (BDR_INNER|BDR_OUTER)];
     RBOuterI = RBOuterNormal[uType & (BDR_INNER|BDR_OUTER)];
 
-    if((uFlags & BF_BOTTOMLEFT) == BF_BOTTOMLEFT)
+    if ((uFlags & BF_BOTTOMLEFT) == BF_BOTTOMLEFT)
         LBpenplus = 1;
-    if((uFlags & BF_TOPRIGHT) == BF_TOPRIGHT)
+    if ((uFlags & BF_TOPRIGHT) == BF_TOPRIGHT)
         RTpenplus = 1;
-    if((uFlags & BF_BOTTOMRIGHT) == BF_BOTTOMRIGHT)
+    if ((uFlags & BF_BOTTOMRIGHT) == BF_BOTTOMRIGHT)
         RBpenplus = 1;
-    if((uFlags & BF_TOPLEFT) == BF_TOPLEFT)
+    if ((uFlags & BF_TOPLEFT) == BF_TOPLEFT)
         LTpenplus = 1;
 
-    if((uFlags & MY_BF_ACTIVEBORDER))
+    if ((uFlags & MY_BF_ACTIVEBORDER))
         hbr = CreateSolidBrush(scheme->crColor[COLOR_ACTIVEBORDER]);
     else
         hbr = CreateSolidBrush(scheme->crColor[COLOR_BTNFACE]);
@@ -101,34 +101,34 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
     MoveToEx(hdc, 0, 0, &SavePoint);
 
     /* Draw the outer edge */
-    if(LTOuterI != -1)
+    if (LTOuterI != -1)
     {
         LTOuterPen = GetStockObject(DC_PEN);
         SelectObject(hdc, LTOuterPen);
         SetDCPenColor(hdc, scheme->crColor[LTOuterI]);
-        if(uFlags & BF_TOP)
+        if (uFlags & BF_TOP)
         {
             MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
             LineTo(hdc, InnerRect.right, InnerRect.top);
         }
-        if(uFlags & BF_LEFT)
+        if (uFlags & BF_LEFT)
         {
             MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
             LineTo(hdc, InnerRect.left, InnerRect.bottom);
         }
     }
 
-    if(RBOuterI != -1)
+    if (RBOuterI != -1)
     {
         RBOuterPen = GetStockObject(DC_PEN);
         SelectObject(hdc, RBOuterPen);
         SetDCPenColor(hdc, scheme->crColor[RBOuterI]);
-        if(uFlags & BF_BOTTOM)
+        if (uFlags & BF_BOTTOM)
         {
             MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
             LineTo(hdc, InnerRect.right, InnerRect.bottom-1);
         }
-        if(uFlags & BF_RIGHT)
+        if (uFlags & BF_RIGHT)
         {
             MoveToEx(hdc, InnerRect.right-1, InnerRect.top, NULL);
             LineTo(hdc, InnerRect.right-1, InnerRect.bottom);
@@ -136,34 +136,34 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
     }
 
     /* Draw the inner edge */
-    if(LTInnerI != -1)
+    if (LTInnerI != -1)
     {
         LTInnerPen = GetStockObject(DC_PEN);
         SelectObject(hdc, LTInnerPen);
         SetDCPenColor(hdc, scheme->crColor[LTInnerI]);
-        if(uFlags & BF_TOP)
+        if (uFlags & BF_TOP)
         {
             MoveToEx(hdc, InnerRect.left+LTpenplus, InnerRect.top+1, NULL);
             LineTo(hdc, InnerRect.right-RTpenplus, InnerRect.top+1);
         }
-        if(uFlags & BF_LEFT)
+        if (uFlags & BF_LEFT)
         {
             MoveToEx(hdc, InnerRect.left+1, InnerRect.top+LTpenplus, NULL);
             LineTo(hdc, InnerRect.left+1, InnerRect.bottom-LBpenplus);
         }
     }
 
-    if(RBInnerI != -1)
+    if (RBInnerI != -1)
     {
         RBInnerPen = GetStockObject(DC_PEN);
         SelectObject(hdc, RBInnerPen);
         SetDCPenColor(hdc, scheme->crColor[RBInnerI]);
-        if(uFlags & BF_BOTTOM)
+        if (uFlags & BF_BOTTOM)
         {
             MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
             LineTo(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2);
         }
-        if(uFlags & BF_RIGHT)
+        if (uFlags & BF_RIGHT)
         {
             MoveToEx(hdc, InnerRect.right-2, InnerRect.top+RTpenplus, NULL);
             LineTo(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus);
@@ -175,16 +175,16 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, COLOR_SCHEME *sch
         int add = (LTRBInnerMono[uType & (BDR_INNER|BDR_OUTER)] != -1 ? 1 : 0)
                       + (LTRBOuterMono[uType & (BDR_INNER|BDR_OUTER)] != -1 ? 1 : 0);
 
-        if(uFlags & BF_LEFT)
+        if (uFlags & BF_LEFT)
             InnerRect.left += add;
-        if(uFlags & BF_RIGHT)
+        if (uFlags & BF_RIGHT)
             InnerRect.right -= add;
-        if(uFlags & BF_TOP)
+        if (uFlags & BF_TOP)
             InnerRect.top += add;
-        if(uFlags & BF_BOTTOM)
+        if (uFlags & BF_BOTTOM)
             InnerRect.bottom -= add;
 
-        if(uFlags & BF_ADJUST)
+        if (uFlags & BF_ADJUST)
             *rc = InnerRect;
     }
 
@@ -198,7 +198,7 @@ static BOOL
 MyDrawFrameButton(HDC hdc, LPRECT rc, UINT uState, COLOR_SCHEME *scheme)
 {
     UINT edge;
-    if(uState & (DFCS_PUSHED | DFCS_CHECKED | DFCS_FLAT))
+    if (uState & (DFCS_PUSHED | DFCS_CHECKED | DFCS_FLAT))
         edge = EDGE_SUNKEN;
     else
         edge = EDGE_RAISED;
@@ -220,7 +220,7 @@ MyMakeSquareRect(LPRECT src, LPRECT dst)
         dst->top += (Height-Width)/2;
         dst->bottom = dst->top + SmallDiam;
     }
-    else if(Width > Height) /* SmallDiam == Height */
+    else if (Width > Height) /* SmallDiam == Height */
     {
         dst->left += (Width-Height)/2;
         dst->right = dst->left + SmallDiam;
@@ -259,13 +259,13 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
         return FALSE;
     }
     MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT, scheme);
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(lf));
     MyMakeSquareRect(r, &myr);
     myr.left += 1;
     myr.top += 1;
     myr.right -= 1;
     myr.bottom -= 1;
-    if(uFlags & DFCS_PUSHED)
+    if (uFlags & DFCS_PUSHED)
        OffsetRect(&myr,1,1);
     lf.lfHeight = myr.bottom - myr.top;
     lf.lfWidth = 0;
@@ -279,7 +279,7 @@ MyDrawFrameCaption(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
     bkmode = GetBkMode(dc);
     /* Set color and drawing mode */
     SetBkMode(dc, TRANSPARENT);
-    if(uFlags & DFCS_INACTIVE)
+    if (uFlags & DFCS_INACTIVE)
     {
         /* Draw shadow */
         SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
@@ -330,13 +330,13 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
         return FALSE;
     }
     MyIntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT, scheme);
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(lf));
     MyMakeSquareRect(r, &myr);
     myr.left += 1;
     myr.top += 1;
     myr.right -= 1;
     myr.bottom -= 1;
-    if(uFlags & DFCS_PUSHED)
+    if (uFlags & DFCS_PUSHED)
        OffsetRect(&myr,1,1);
     lf.lfHeight = myr.bottom - myr.top;
     lf.lfWidth = 0;
@@ -350,7 +350,7 @@ MyDrawFrameScroll(HDC dc, LPRECT r, UINT uFlags, COLOR_SCHEME *scheme)
     bkmode = GetBkMode(dc);
     /* Set color and drawing mode */
     SetBkMode(dc, TRANSPARENT);
-    if(uFlags & DFCS_INACTIVE)
+    if (uFlags & DFCS_INACTIVE)
     {
         /* Draw shadow */
         SetTextColor(dc, scheme->crColor[COLOR_BTNHIGHLIGHT]);
@@ -554,7 +554,7 @@ MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, COLOR_S
     bkgnd = (flat_menu ? COLOR_MENUBAR : COLOR_MENU);
     x = Rect->left;
     hFontOld = SelectObject(DC, Font);
-    for(i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++)
     {
         GetMenuStringW(Menu, i, Text, 128, MF_BYPOSITION);
 

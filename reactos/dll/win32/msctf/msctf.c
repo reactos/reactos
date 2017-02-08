@@ -266,6 +266,54 @@ DWORD enumerate_Cookie(DWORD magic, DWORD *index)
     return 0x0;
 }
 
+HRESULT advise_sink(struct list *sink_list, REFIID riid, DWORD cookie_magic, IUnknown *unk, DWORD *cookie)
+{
+    Sink *sink;
+
+    sink = HeapAlloc(GetProcessHeap(), 0, sizeof(*sink));
+    if (!sink)
+        return E_OUTOFMEMORY;
+
+    if (FAILED(IUnknown_QueryInterface(unk, riid, (void**)&sink->interfaces.pIUnknown)))
+    {
+        HeapFree(GetProcessHeap(), 0, sink);
+        return CONNECT_E_CANNOTCONNECT;
+    }
+
+    list_add_head(sink_list, &sink->entry);
+    *cookie = generate_Cookie(cookie_magic, sink);
+    TRACE("cookie %x\n", *cookie);
+    return S_OK;
+}
+
+static void free_sink(Sink *sink)
+{
+    list_remove(&sink->entry);
+    IUnknown_Release(sink->interfaces.pIUnknown);
+    HeapFree(GetProcessHeap(), 0, sink);
+}
+
+HRESULT unadvise_sink(DWORD cookie)
+{
+    Sink *sink;
+
+    sink = remove_Cookie(cookie);
+    if (!sink)
+        return CONNECT_E_NOCONNECTION;
+
+    free_sink(sink);
+    return S_OK;
+}
+
+void free_sinks(struct list *sink_list)
+{
+    while(!list_empty(sink_list))
+    {
+        Sink* sink = LIST_ENTRY(sink_list->next, Sink, entry);
+        free_sink(sink);
+    }
+}
+
 /*****************************************************************************
  * Active Text Service Management
  *****************************************************************************/
@@ -322,7 +370,7 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
             list_remove(&ats->entry);
             HeapFree(GetProcessHeap(),0,ats->ats);
             HeapFree(GetProcessHeap(),0,ats);
-            /* we are guarenteeing there is only 1 */
+            /* we are guaranteeing there is only 1 */
             break;
         }
     }

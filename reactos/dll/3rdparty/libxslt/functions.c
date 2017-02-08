@@ -152,7 +152,6 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
     resObj = xmlXPtrEval(fragment, xptrctxt);
     xmlXPathFreeContext(xptrctxt);
 #endif
-    xmlFree(fragment);
 
     if (resObj == NULL)
 	goto out_fragment;
@@ -176,6 +175,7 @@ xsltDocumentFunctionLoadDocument(xmlXPathParserContextPtr ctxt, xmlChar* URI)
     }
 
     valuePush(ctxt, resObj);
+    xmlFree(fragment);
     return;
 
 out_object:
@@ -183,6 +183,7 @@ out_object:
 
 out_fragment:
     valuePush(ctxt, xmlXPathNewNodeSet(NULL));
+    xmlFree(fragment);
 }
 
 /**
@@ -637,7 +638,6 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
     xmlXPathObjectPtr obj = NULL;
     long val;
     xmlChar str[30];
-    xmlDocPtr doc;
 
     if (nargs == 0) {
 	cur = ctxt->context->node;
@@ -670,30 +670,15 @@ xsltGenerateIdFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	ctxt->error = XPATH_INVALID_ARITY;
 	return;
     }
-    /*
-     * Okay this is ugly but should work, use the NodePtr address
-     * to forge the ID
-     */
-    if (cur->type != XML_NAMESPACE_DECL)
-        doc = cur->doc;
-    else {
-        xmlNsPtr ns = (xmlNsPtr) cur;
-
-        if (ns->context != NULL)
-            doc = ns->context;
-        else
-            doc = ctxt->context->doc;
-
-    }
 
     if (obj)
         xmlXPathFreeObject(obj);
 
     val = (long)((char *)cur - (char *)&base_address);
     if (val >= 0) {
-      sprintf((char *)str, "idp%ld", val);
+      snprintf((char *)str, sizeof(str), "idp%ld", val);
     } else {
-      sprintf((char *)str, "idm%ld", -val);
+      snprintf((char *)str, sizeof(str), "idm%ld", -val);
     }
     valuePush(ctxt, xmlXPathNewString(str));
 }

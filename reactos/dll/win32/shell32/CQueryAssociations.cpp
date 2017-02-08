@@ -96,6 +96,9 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
     this->hkeySource = this->hkeyProgID = NULL;
     if (pszAssoc != NULL)
     {
+        WCHAR *progId;
+        HRESULT hr;
+        
         LONG ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
                             pszAssoc,
                             0,
@@ -105,29 +108,58 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::Init(
         {
             return S_OK;
         }
-        /* if this is not a prog id */
-        if ((*pszAssoc == '.') || (*pszAssoc == '{'))
-        {
-            RegOpenKeyExW(this->hkeySource,
-                          szProgID,
-                          0,
-                          KEY_READ,
-                          &this->hkeyProgID);
-        }
-        else
+        
+        /* if this is a progid */
+        if (*pszAssoc != '.' && *pszAssoc != '{')
         {
             this->hkeyProgID = this->hkeySource;
+            return S_OK;
         }
-        
+
+        /* if it's not a progid, it's a file extension or clsid */
+        if (*pszAssoc == '.')
+        {
+            /* for a file extension, the progid is the default value */
+            hr = this->GetValue(this->hkeySource, NULL, (void**)&progId, NULL);
+            if (FAILED(hr))
+                return S_OK;
+        }
+        else /* if (*pszAssoc == '{') */
+        {
+            HKEY progIdKey;
+            /* for a clsid, the progid is the default value of the ProgID subkey */
+            ret = RegOpenKeyExW(this->hkeySource,
+                                szProgID,
+                                0,
+                                KEY_READ,
+                                &progIdKey);
+            if (ret != ERROR_SUCCESS)
+                return S_OK;
+            hr = this->GetValue(progIdKey, NULL, (void**)&progId, NULL);
+            if (FAILED(hr))
+                return S_OK;
+            RegCloseKey(progIdKey);
+        }
+
+        /* open the actual progid key, the one with the shell subkey */
+        ret = RegOpenKeyExW(HKEY_CLASSES_ROOT,
+                            progId,
+                            0,
+                            KEY_READ,
+                            &this->hkeyProgID);
+        HeapFree(GetProcessHeap(), 0, progId);
+
         return S_OK;
     }
     else if (hkeyProgid != NULL)
     {
-        this->hkeyProgID = hkeyProgid;
+        /* reopen the key so we don't end up closing a key owned by the caller */
+        RegOpenKeyExW(hkeyProgid, NULL, 0, KEY_READ, &this->hkeyProgID);
+        this->hkeySource = this->hkeyProgID;
         return S_OK;
     }
-
-    return E_INVALIDARG;
+    else
+        return E_INVALIDARG;
 }
 
 /**************************************************************************
@@ -324,51 +356,34 @@ HRESULT STDMETHODCALLTYPE CQueryAssociations::GetString(
         case ASSOCSTR_DEFAULTICON:
         {
             static const WCHAR DefaultIconW[] = L"DefaultIcon";
-            WCHAR *pszFileType;
-            HKEY hkeyFile;
-
-            hr = this->GetValue(this->hkeySource, NULL, (void**)&pszFileType, NULL);
-            if (FAILED(hr))
-            {
-                return hr;
-            }
-            DWORD ret = RegOpenKeyExW(HKEY_CLASSES_ROOT, pszFileType, 0, KEY_READ, &hkeyFile);
+            DWORD ret;
+            DWORD size = 0;
+            ret = RegGetValueW(this->hkeyProgID, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
             if (ret == ERROR_SUCCESS)
             {
-                DWORD size = 0;
-                ret = RegGetValueW(hkeyFile, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, NULL, &size);
-                if (ret == ERROR_SUCCESS)
+                WCHAR *icon = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
+                if (icon)
                 {
-                    WCHAR *icon = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, size));
-                    if (icon)
+                    ret = RegGetValueW(this->hkeyProgID, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, icon, &size);
+                    if (ret == ERROR_SUCCESS)
                     {
-                        ret = RegGetValueW(hkeyFile, DefaultIconW, NULL, RRF_RT_REG_SZ, NULL, icon, &size);
-                        if (ret == ERROR_SUCCESS)
-                        {
-                            hr = this->ReturnString(flags, pszOut, pcchOut, icon, strlenW(icon) + 1);
-                        }
-                        else
-                        {
-                            hr = HRESULT_FROM_WIN32(ret);
-                        }
-                        HeapFree(GetProcessHeap(), 0, icon);
+                        hr = this->ReturnString(flags, pszOut, pcchOut, icon, strlenW(icon) + 1);
                     }
                     else
                     {
-                        hr = E_OUTOFMEMORY;
+                        hr = HRESULT_FROM_WIN32(ret);
                     }
+                    HeapFree(GetProcessHeap(), 0, icon);
                 }
                 else
                 {
                     hr = HRESULT_FROM_WIN32(ret);
                 }
-                RegCloseKey(hkeyFile);
             }
             else
             {
                 hr = HRESULT_FROM_WIN32(ret);
             }
-            HeapFree(GetProcessHeap(), 0, pszFileType);
             return hr;
         }
         case ASSOCSTR_SHELLEXTENSION:

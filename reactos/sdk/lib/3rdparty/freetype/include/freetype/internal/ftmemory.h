@@ -65,13 +65,15 @@ FT_BEGIN_HEADER
 
 #ifdef __cplusplus
 
-  extern "C++"
+extern "C++"
+{
   template <typename T> inline T*
   cplusplus_typeof(        T*,
                     void  *v )
   {
     return static_cast <T*> ( v );
   }
+}
 
 #define FT_ASSIGNP( p, val )  (p) = cplusplus_typeof( (p), (val) )
 
@@ -106,9 +108,11 @@ FT_BEGIN_HEADER
 
   /*
    *  The allocation functions return a pointer, and the error code
-   *  is written to through the `p_error' parameter.  See below for
-   *  for documentation.
+   *  is written to through the `p_error' parameter.
    */
+
+  /* The `q' variants of the functions below (`q' for `quick') don't fill */
+  /* the allocated or reallocated memory with zero bytes.                 */
 
   FT_BASE( FT_Pointer )
   ft_mem_alloc( FT_Memory  memory,
@@ -140,6 +144,9 @@ FT_BEGIN_HEADER
   ft_mem_free( FT_Memory    memory,
                const void*  P );
 
+
+  /* The `Q' variants of the macros below (`Q' for `quick') don't fill */
+  /* the allocated or reallocated memory with zero bytes.              */
 
 #define FT_MEM_ALLOC( ptr, size )                               \
           FT_ASSIGNP_INNER( ptr, ft_mem_alloc( memory,          \

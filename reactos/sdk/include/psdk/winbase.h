@@ -29,7 +29,7 @@ extern "C" {
 #define FILE_SYSTEM_NOT_SUPPORT  6
 #define FILE_USER_DISALLOWED     7
 #define FILE_READ_ONLY           8
-#define FILE_DIR_DISALOWED       9
+#define FILE_DIR_DISALLOWED      9
 
 #define COMMPROP_INITIALIZED 0xE73CF52E
 #define SP_SERIALCOMM 1
@@ -387,16 +387,7 @@ extern "C" {
 #define PURGE_RXABORT 2
 #define PURGE_TXCLEAR 4
 #define PURGE_RXCLEAR 8
-#define EVENTLOG_SUCCESS 0
-#define EVENTLOG_FORWARDS_READ 4
-#define EVENTLOG_BACKWARDS_READ 8
-#define EVENTLOG_SEEK_READ 2
-#define EVENTLOG_SEQUENTIAL_READ 1
-#define EVENTLOG_ERROR_TYPE 1
-#define EVENTLOG_WARNING_TYPE 2
-#define EVENTLOG_INFORMATION_TYPE 4
-#define EVENTLOG_AUDIT_SUCCESS 8
-#define EVENTLOG_AUDIT_FAILURE 16
+
 #define FORMAT_MESSAGE_ALLOCATE_BUFFER 256
 #define FORMAT_MESSAGE_IGNORE_INSERTS 512
 #define FORMAT_MESSAGE_FROM_STRING 1024
@@ -1350,6 +1341,12 @@ typedef enum _COMPUTER_NAME_FORMAT {
 typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 typedef RTL_CONDITION_VARIABLE CONDITION_VARIABLE, *PCONDITION_VARIABLE;
 #endif
+
+typedef DWORD
+(WINAPI *PFE_EXPORT_FUNC)(
+  _In_reads_bytes_(ulLength) PBYTE pbData,
+  _In_opt_ PVOID pvCallbackContext,
+  _In_ ULONG ulLength);
 
 typedef DWORD(WINAPI *LPPROGRESS_ROUTINE)(_In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ LARGE_INTEGER, _In_ DWORD, _In_ DWORD, _In_ HANDLE, _In_ HANDLE, _In_opt_ LPVOID);
 
@@ -2569,6 +2566,36 @@ BOOL WINAPI LogonUserW(_In_ LPWSTR, _In_opt_ LPWSTR, _In_opt_ LPWSTR, _In_ DWORD
 _Success_(return != FALSE)
 BOOL
 WINAPI
+LogonUserExA(
+  _In_ LPSTR lpszUsername,
+  _In_opt_ LPSTR lpszDomain,
+  _In_opt_ LPSTR lpszPassword,
+  _In_ DWORD dwLogonType,
+  _In_ DWORD dwLogonProvider,
+  _Out_opt_ PHANDLE phToken,
+  _Out_opt_ PSID *ppLogonSid,
+  _Out_opt_ PVOID *ppProfileBuffer,
+  _Out_opt_ LPDWORD pdwProfileLength,
+  _Out_opt_ PQUOTA_LIMITS pQuotaLimits);
+
+_Success_(return != FALSE)
+BOOL
+WINAPI
+LogonUserExW(
+  _In_ LPWSTR lpszUsername,
+  _In_opt_ LPWSTR lpszDomain,
+  _In_opt_ LPWSTR lpszPassword,
+  _In_ DWORD dwLogonType,
+  _In_ DWORD dwLogonProvider,
+  _Out_opt_ PHANDLE phToken,
+  _Out_opt_ PSID *ppLogonSid,
+  _Out_opt_ PVOID *ppProfileBuffer,
+  _Out_opt_ LPDWORD pdwProfileLength,
+  _Out_opt_ PQUOTA_LIMITS pQuotaLimits);
+
+_Success_(return != FALSE)
+BOOL
+WINAPI
 LookupAccountNameA(
   _In_opt_ LPCSTR lpSystemName,
   _In_ LPCSTR lpAccountName,
@@ -3359,6 +3386,7 @@ typedef PCACTCTXW PCACTCTX;
 #define LoadLibrary LoadLibraryW
 #define LoadLibraryEx LoadLibraryExW
 #define LogonUser LogonUserW
+#define LogonUserEx LogonUserExW
 #define LookupAccountName LookupAccountNameW
 #define LookupAccountSid LookupAccountSidW
 #define LookupPrivilegeDisplayName LookupPrivilegeDisplayNameW
@@ -3567,6 +3595,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define LoadLibrary LoadLibraryA
 #define LoadLibraryEx LoadLibraryExA
 #define LogonUser LogonUserA
+#define LogonUserEx LogonUserExA
 #define LookupAccountName LookupAccountNameA
 #define LookupAccountSid LookupAccountSidA
 #define LookupPrivilegeDisplayName LookupPrivilegeDisplayNameA

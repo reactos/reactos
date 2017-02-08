@@ -874,13 +874,16 @@ interface pnp
     DWORD
     __stdcall
     PNP_RegisterNotification(
-        [in] handle_t hBinding);
+        [in] handle_t hBinding,
+        [in] DWORD ulFlags,
+        [out] DWORD *pulNotifyData);
 
     /* Function 60 */
     DWORD
     __stdcall
     PNP_UnregisterNotification(
-        [in] handle_t hBinding);
+        [in] handle_t hBinding,
+        [in] DWORD ulNotifyData);
 
 cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
@@ -922,6 +925,6 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [out] DWORD *pulSSDIFlags,
         [in] DWORD ulFlags);
 
-cpp_quote("#endif /* WIN32_WINNT >= 0x0501 */")
+cpp_quote("#endif /* _WIN32_WINNT >= 0x0501 */")
 
 }

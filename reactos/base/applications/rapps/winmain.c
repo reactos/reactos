@@ -61,7 +61,7 @@ LoadSettings(VOID)
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        dwSize = sizeof(SETTINGS_INFO);
+        dwSize = sizeof(SettingsInfo);
         if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
@@ -82,7 +82,7 @@ SaveSettings(HWND hwnd)
 
     if (SettingsInfo.bSaveWndPos)
     {
-        wp.length = sizeof(WINDOWPLACEMENT);
+        wp.length = sizeof(wp);
         GetWindowPlacement(hwnd, &wp);
 
         SettingsInfo.Left = wp.rcNormalPosition.left;
@@ -95,7 +95,7 @@ SaveSettings(HWND hwnd)
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
+        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SettingsInfo));
         RegCloseKey(hKey);
     }
 }
@@ -221,7 +221,7 @@ UpdateApplicationsList(INT EnumType)
     }
     else if (IS_AVAILABLE_ENUM(EnumType))
     {
-        /* Enum availabled applications */
+        /* Enum available applications */
         EnumAvailableApplications(EnumType, EnumAvailableAppProc);
     }
 
@@ -517,24 +517,26 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
      */
 
     /* Size vertical splitter bar */
-    DeferWindowPos(hdwp,
-                   hVSplitter,
-                   0,
-                   (VSplitterPos = GetWindowWidth(hTreeView)),
-                   GetWindowHeight(hToolBar),
-                   SPLIT_WIDTH,
-                   HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hVSplitter,
+                              0,
+                              (VSplitterPos = GetWindowWidth(hTreeView)),
+                              GetWindowHeight(hToolBar),
+                              SPLIT_WIDTH,
+                              HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size TreeView */
-    DeferWindowPos(hdwp,
-                   hTreeView,
-                   0,
-                   0,
-                   GetWindowHeight(hToolBar),
-                   VSplitterPos,
-                   HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hTreeView,
+                              0,
+                              0,
+                              GetWindowHeight(hToolBar),
+                              VSplitterPos,
+                              HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     if(wParam != SIZE_MINIMIZED)
     {
@@ -548,36 +550,40 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     SetHSplitterPos(NewPos);
 
     /* Size ListView */
-    DeferWindowPos(hdwp,
-                   hListView,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetWindowHeight(hToolBar),
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   GetHSplitterPos() - GetWindowHeight(hToolBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hListView,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetWindowHeight(hToolBar),
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              GetHSplitterPos() - GetWindowHeight(hToolBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size RichEdit */
-    DeferWindowPos(hdwp,
-                   hRichEdit,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetHSplitterPos() + SPLIT_WIDTH,
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   RichPos,
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hRichEdit,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetHSplitterPos() + SPLIT_WIDTH,
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              RichPos,
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size horizontal splitter bar */
-    DeferWindowPos(hdwp,
-                   hHSplitter,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetHSplitterPos(),
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   SPLIT_WIDTH,
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hHSplitter,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetHSplitterPos(),
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              SPLIT_WIDTH,
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
-    EndDeferWindowPos(hdwp);
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
 }
 
 BOOL IsSelectedNodeInstalled(void)
@@ -937,7 +943,7 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     InitCommonControls();
 
     /* Create the window */
-    WndClass.cbSize        = sizeof(WNDCLASSEXW);
+    WndClass.cbSize        = sizeof(WndClass);
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = MainWindowProc;
     WndClass.hInstance     = hInstance;

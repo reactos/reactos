@@ -22,8 +22,7 @@
 @ stub GenerateName
 @ stdcall HdcClassInstaller(long ptr ptr)
 @ stdcall InitializeSetupActionLog(long)
-@ stdcall InstallLiveCD(ptr)
-@ stdcall InstallReactOS(ptr)
+@ stdcall InstallWindowsNt(long ptr)
 @ stub InvokeExternalApplicationEx
 @ stdcall KeyboardClassInstaller(long ptr ptr)
 @ stub LegacyDriverPropPageProvider
@@ -38,7 +37,7 @@
 @ stub ReportError
 @ stub RunOEMExtraTasks
 @ stdcall ScsiClassInstaller(long ptr ptr)
-@ stub SetAccountDomainSid
+@ stdcall SetAccountsDomainSid(ptr wstr)
 @ stub SetupAddOrRemoveTestCertificate
 @ stdcall SetupChangeFontSize(ptr wstr)
 @ stdcall SetupChangeLocale(ptr long)

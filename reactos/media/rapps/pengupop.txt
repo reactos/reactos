@@ -26,6 +26,10 @@ Description = Celem tej gry jest strzelanie kolorowymi kulkami tak, aby utworzy�
 Description = Scopul acestui joc este de a arunca globuri colorate în propriul teren pentru a forma grupuri de câte trei sau mai multe.
 Size = 1,7 Mio
 
+[Section.0419]
+Description = Цель данной игры - стрелять цветными шариками в игровое поле, чтобы они образовывали группы из трех или более шариков.
+Size = 1,7 МиБ
+
 [Section.041f]
 Description = Bu oyunun amacı, oyun alanınızda üç ya da daha çok takımdan oluşan renkli küreleri vurmaktır.
 Size = 1,7 MiB

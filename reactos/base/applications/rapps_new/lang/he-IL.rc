@@ -199,6 +199,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
     IDS_INFORMATION "מידע"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."

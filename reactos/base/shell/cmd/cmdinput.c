@@ -41,7 +41,7 @@
  *        printf(str). Don't ask how I find em just be glad I do :)
  *
  *    7/12/97 (Tim Norman)
- *        Note: above changes pre-empted Steffan's ctrl-break checking.
+ *        Note: above changes preempted Steffan's ctrl-break checking.
  *
  *    7/7/97 (Marc Desrochers)
  *        rewrote a new findxy() because the new dir() used it.  This
@@ -76,7 +76,7 @@
  *        to type something else in insert mode, it crashed.
  *
  *    07-Aug-1998 (John P Price <linux-guru@gcfl.net>)
- *        Fixed carrage return output to better match MSDOS with echo
+ *        Fixed carriage return output to better match MSDOS with echo
  *        on or off.(marked with "JPP 19980708")
  *
  *    13-Dec-1998 (Eric Kohl)

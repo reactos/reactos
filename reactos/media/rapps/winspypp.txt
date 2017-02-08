@@ -19,6 +19,11 @@ License = Gratuită
 Description = Un utilitar pentru programatori care poate fi utilizat pentru a selecta și a inspecta proprietățile unei ferestre din sistem. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 58,3 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Утилита для просмотра свойств любого окна в системе. Для распаковки нужен 7-zip.
+Size = 58,3 КиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Dizgedeki bir pencerenin husûsiyetlerini görüntülemek ve seçmek için kullanılabilecek bir usta izlencecinin aracı. Onu çıkartmak için 7-Zip gibi bir araç gereklidir.

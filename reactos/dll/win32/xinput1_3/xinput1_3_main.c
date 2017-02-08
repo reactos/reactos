@@ -29,14 +29,20 @@
 
 #include <xinput.h>
 
+/* Not defined in the headers, used only by XInputGetStateEx */
+#define XINPUT_GAMEPAD_GUIDE 0x0400
+
 WINE_DEFAULT_DEBUG_CHANNEL(xinput);
+
+struct
+{
+    BOOL connected;
+} controllers[XUSER_MAX_COUNT];
 
 BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
 {
     switch(reason)
     {
-    case DLL_WINE_PREATTACH:
-        return FALSE; /* prefer native version */
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(inst);
         break;
@@ -50,83 +56,107 @@ void WINAPI XInputEnable(BOOL enable)
     to the controllers. Setting to true will send the last vibration
     value (sent to XInputSetState) to the controller and allow messages to
     be sent */
-    FIXME("(%d) Stub!\n", enable);
+    FIXME("(enable %d) Stub!\n", enable);
 }
 
-DWORD WINAPI XInputSetState(DWORD dwUserIndex, XINPUT_VIBRATION* pVibration)
+DWORD WINAPI XInputSetState(DWORD index, XINPUT_VIBRATION* vibration)
 {
-    FIXME("(%d %p) Stub!\n", dwUserIndex, pVibration);
+    FIXME("(index %u, vibration %p) Stub!\n", index, vibration);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }
 
-DWORD WINAPI DECLSPEC_HOTPATCH XInputGetState(DWORD dwUserIndex, XINPUT_STATE* pState)
+DWORD WINAPI DECLSPEC_HOTPATCH XInputGetState(DWORD index, XINPUT_STATE* state)
+{
+    union
+    {
+        XINPUT_STATE state;
+        XINPUT_STATE_EX state_ex;
+    } xinput;
+    DWORD ret;
+    static int warn_once;
+
+    if (!warn_once++)
+        FIXME("(index %u, state %p) Stub!\n", index, state);
+
+    ret = XInputGetStateEx(index, &xinput.state_ex);
+    if (ret != ERROR_SUCCESS)
+        return ret;
+
+    /* The main difference between this and the Ex version is the media guide button */
+    xinput.state.Gamepad.wButtons &= ~XINPUT_GAMEPAD_GUIDE;
+    *state = xinput.state;
+
+    return ERROR_SUCCESS;
+}
+
+DWORD WINAPI DECLSPEC_HOTPATCH XInputGetStateEx(DWORD index, XINPUT_STATE_EX* state_ex)
 {
     static int warn_once;
 
     if (!warn_once++)
-        FIXME("(%u %p)\n", dwUserIndex, pState);
+        FIXME("(index %u, state %p) Stub!\n", index, state_ex);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }
 
-DWORD WINAPI XInputGetKeystroke(DWORD dwUserIndex, DWORD dwReserve, PXINPUT_KEYSTROKE pKeystroke)
+DWORD WINAPI XInputGetKeystroke(DWORD index, DWORD reserved, PXINPUT_KEYSTROKE keystroke)
 {
-    FIXME("(%d %d %p) Stub!\n", dwUserIndex, dwReserve, pKeystroke);
+    FIXME("(index %u, reserved %u, keystroke %p) Stub!\n", index, reserved, keystroke);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }
 
-DWORD WINAPI XInputGetCapabilities(DWORD dwUserIndex, DWORD dwFlags, XINPUT_CAPABILITIES* pCapabilities)
+DWORD WINAPI XInputGetCapabilities(DWORD index, DWORD flags, XINPUT_CAPABILITIES* capabilities)
 {
     static int warn_once;
 
     if (!warn_once++)
-        FIXME("(%d %d %p)\n", dwUserIndex, dwFlags, pCapabilities);
+        FIXME("(index %u, flags 0x%x, capabilities %p) Stub!\n", index, flags, capabilities);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }
 
-DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD dwUserIndex, GUID* pDSoundRenderGuid, GUID* pDSoundCaptureGuid)
+DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD index, GUID* render_guid, GUID* capture_guid)
 {
-    FIXME("(%d %p %p) Stub!\n", dwUserIndex, pDSoundRenderGuid, pDSoundCaptureGuid);
+    FIXME("(index %u, render guid %p, capture guid %p) Stub!\n", index, render_guid, capture_guid);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }
 
-DWORD WINAPI XInputGetBatteryInformation(DWORD dwUserIndex, BYTE deviceType, XINPUT_BATTERY_INFORMATION* pBatteryInfo)
+DWORD WINAPI XInputGetBatteryInformation(DWORD index, BYTE type, XINPUT_BATTERY_INFORMATION* battery)
 {
-    FIXME("(%d %u %p) Stub!\n", dwUserIndex, deviceType, pBatteryInfo);
+    FIXME("(index %u, type %u, battery %p) Stub!\n", index, type, battery);
 
-    if (dwUserIndex < XUSER_MAX_COUNT)
-    {
+    if (index >= XUSER_MAX_COUNT)
+        return ERROR_BAD_ARGUMENTS;
+    if (!controllers[index].connected)
         return ERROR_DEVICE_NOT_CONNECTED;
-        /* If controller exists then return ERROR_SUCCESS */
-    }
-    return ERROR_BAD_ARGUMENTS;
+
+    return ERROR_NOT_SUPPORTED;
 }

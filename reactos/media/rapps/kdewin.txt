@@ -34,6 +34,10 @@ Description = KDE dla Windows.
 Description = KDE pentru Windows.
 Size = 2,2 Mio
 
+[Section.0419]
+Description = KDE для Windows.
+Size = 2,2 МиБ
+
 [Section.041f]
 Name = K Masaüstü Ortamı
 Description = Windows için KDE.

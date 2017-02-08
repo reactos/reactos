@@ -1,0 +1,71 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Ukončit", IDM_EXIT
+        MENUITEM "&Možnosti", IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&O programu", IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?", IDM_ABOUT, ASCII, ALT
+    "/", IDM_ABOUT, ASCII, ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "O programu"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON IDI_ICON, IDC_MYICON, 14, 9, 20, 20
+    LTEXT "Lupa verze 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
+    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 48, 24, 125, 22
+    PUSHBUTTON "OK", IDOK, 162, 48, 50, 14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Nastavení Lupy"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "&Nápověda", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Úrověň &zvětšení:", IDC_STATIC, 6, 8, 68, 8
+    COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX "Sledování", IDC_STATIC, 7, 25, 139, 59
+    GROUPBOX "Zobrazení", IDC_STATIC, 7, 87, 139, 57
+    CONTROL "Sledovat &myš", IDC_FOLLOWMOUSECHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
+    CONTROL "Sledovat &klávesnici", IDC_FOLLOWKEYBOARDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
+    CONTROL "Sledovat ú&pravu textu", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
+    CONTROL "&Invertovat barvy", IDC_INVERTCOLORSCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
+    CONTROL "&Spustit minimalizované", IDC_STARTMINIMIZEDCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
+    CONTROL "&Zobrazit lupu", IDC_SHOWMAGNIFIERCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "ReactOS Lupa"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    ICON IDI_ICON, IDC_STATIC, 7, 17, 20, 20
+    LTEXT "Program Lupa poskytuje základní funkčnost pro lehce zrakově postižené. Většina uživatelů s poškozeným zrakem bude pro každodenní použití potřebovat program s více funkcemi.", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "Tuto zprávu již nezobrazovat", IDC_SHOWWARNINGCHECK, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Lupa"
+END

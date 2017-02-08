@@ -1,0 +1,27 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nДопустимые команды :\n\
+               load        Загрузить драйвер фильтра\n\
+               unload      Выгрузить драйвер фильтра\n\
+               filters     Список фильтров, зарегистрированных в системе\n\n"
+
+    IDS_USAGE_LOAD      "Загружает драйвер фильтра\n"
+    IDS_USAGE_UNLOAD    "Выгружает драйвер фильтра\n"
+    IDS_USAGE_FILTERS   "Выводит список всех зарегистрированных фильтров\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAY_FILTERS1    "Filter Name                     Num Instances    Altitude    Frame\n"
+    IDS_DISPLAY_FILTERS2    "Filter Name                     Num Instances   Frame\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_PRIV      "Не удалось установить привилегии загрузки фильтра (0x%X)\n"
+    IDS_ERROR_FILTERS   "Не удалось получить список фильтров (0x%X)\n"
+    IDS_ERROR_LOAD      "Не удалось загрузить фильтр (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Не удалось выгрузить фильтр (0x%X)\n"
+END

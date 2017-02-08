@@ -27,6 +27,10 @@ Description = Bochs to przenośny (portable) emulator platformy IA-32 (x86) napi
 Description = Emulator de PC (x86) cu surse deschise și portabilitate înaltă, scris în C++, compatibil cu majoritatea platformelor.
 Size = 4,8 Mio
 
+[Section.0419]
+Description = Программа эмуляции аппаратного обеспечения IBM PC (IA-32). Эмулирует x86-совместимые процессоры, поддерживает MMX, SSE, SSE2, 3DNow!, SSE3, SSE4, x86-64, VMX, AES.
+Size = 4,8 МиБ
+
 [Section.041f]
 License = LGPL sürüm 2
 Description = Çok taşınabilir, C++ ile yazılmış, en yaygın platformlarda çalışan, açık kaynak bir IA-32 (x86) PC öykünücüsüdür.

@@ -115,7 +115,7 @@ STRINGTABLE
     88 "Anulat de utilizator"
     89 "Eroare de parametri"
     90 "Memorie insuficientă"
-    91 "Nu se poate conecta la serverul LDAP"
+    91 "Conectarea la serverul LDAP nu a putut fi realizată"
     92 "Operațiune nesuportată de această versiune a protocolului LDAP"
     93 "Controlul specificat nu a fost găsit în mesaj"
     94 "Nici un rezultat în mesaj"

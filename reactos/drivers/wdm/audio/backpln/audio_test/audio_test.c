@@ -8,6 +8,7 @@
 #include <math.h>
 #include <setupapi.h>
 #include <ndk/umtypes.h>
+#include <ks.h>
 #include <ksmedia.h>
 #include "interface.h"
 
@@ -306,7 +307,7 @@ main(int argc, char* argv[])
            printf("Failed to get iocaps %lx\n", GetLastError());
         }
     }
-    printf("WDMAUD: Capabilites NumChannels %x dwFormats %lx\n", DeviceInfo.u.WaveOutCaps.wChannels, DeviceInfo.u.WaveOutCaps.dwFormats);
+    printf("WDMAUD: Capabilities NumChannels %x dwFormats %lx\n", DeviceInfo.u.WaveOutCaps.wChannels, DeviceInfo.u.WaveOutCaps.dwFormats);
 
     DeviceInfo.u.WaveFormatEx.cbSize = sizeof(WAVEFORMATEX);
     DeviceInfo.u.WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;

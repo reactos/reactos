@@ -85,4 +85,5 @@ enum VARENUM {
 extern unsigned short get_type_vt(type_t *t);
 
 extern int create_msft_typelib(typelib_t *typelib);
+extern int create_sltg_typelib(typelib_t *typelib);
 #endif

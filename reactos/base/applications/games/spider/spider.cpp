@@ -163,7 +163,10 @@ CardImageWndProc(HWND hwnd,
                                                       GWL_USERDATA);
     static WNDPROC hOldProc = NULL;
 
-    if (!hOldProc && pCardBack)
+    if(!pCardBack)
+        return FALSE;
+
+    if (!hOldProc)
         hOldProc = pCardBack->hOldProc;
 
     switch (msg)
@@ -246,9 +249,10 @@ INT_PTR CALLBACK CardBackDlgProc(HWND hDlg,
         INT i, c;
         SIZE_T size = sizeof(CARDBACK) * NUM_CARDBACKS;
 
-        pCardBacks = (PCARDBACK)HeapAlloc(GetProcessHeap(),
-                                          0,
-                                          size);
+        pCardBacks = (PCARDBACK)HeapAlloc(GetProcessHeap(), 0, size);
+
+        if(!pCardBacks)
+            return FALSE;
 
         for (i = 0, c = CARDBACK_START; c <= CARDBACK_END; i++, c++)
         {
@@ -332,7 +336,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
         {
-            SpiderWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
+            SpiderWnd.Create(hwnd, 0, WS_CHILD | WS_VISIBLE, 0, 0, 100, 100);
             dwDifficulty = IDC_DIF_ONECOLOR;
             CreateSpider();
 

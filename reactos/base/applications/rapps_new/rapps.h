@@ -24,7 +24,7 @@
 #include <strsafe.h>
 #include <ndk/rtlfuncs.h>
 
-#include <rappsmsg.h>
+#include <rappsmsg_new.h>
 
 #include "resource.h"
 

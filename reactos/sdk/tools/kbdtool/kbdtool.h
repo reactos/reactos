@@ -8,6 +8,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include <ctype.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -66,10 +67,29 @@ typedef struct tagLAYOUT
     LAYOUTENTRY Entry[110];
 } LAYOUT, *PLAYOUT;
 
+ULONG
+DoOutput(
+    IN ULONG StateCount,
+    IN PULONG ShiftStates,
+    IN PKEYNAME DescriptionData,
+    IN PKEYNAME LanguageData,
+    IN PVOID AttributeData,
+    IN PVOID DeadKeyData,
+    IN PVOID LigatureData,
+    IN PKEYNAME KeyNameData,
+    IN PKEYNAME KeyNameExtData,
+    IN PKEYNAME KeyNameDeadData
+);
+
 PCHAR
 getVKName(
     IN ULONG VirtualKey,
     IN BOOLEAN Prefix
+);
+
+ULONG
+DoParsing(
+    VOID
 );
 
 extern BOOLEAN Verbose, UnicodeFile, SanityCheck, FallbackDriver;

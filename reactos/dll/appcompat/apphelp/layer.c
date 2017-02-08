@@ -213,7 +213,7 @@ NTSTATUS SdbpOpenKey(PUNICODE_STRING FullPath, BOOL bMachine, ACCESS_MASK Access
         Status = RtlFormatCurrentUserKeyPath(&BasePath);
         if (!NT_SUCCESS(Status))
         {
-            SHIM_ERR("Unable to aquire user registry key, Error: 0x%lx\n", Status);
+            SHIM_ERR("Unable to acquire user registry key, Error: 0x%lx\n", Status);
             return Status;
         }
     }

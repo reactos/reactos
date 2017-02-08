@@ -259,9 +259,11 @@ xsltParseStylesheetAttributeSet(xsltStylesheetPtr style, xmlNodePtr cur) {
 	return;
 
     value = xmlGetNsProp(cur, (const xmlChar *)"name", NULL);
-    if (value == NULL) {
+    if ((value == NULL) || (*value == 0)) {
 	xsltGenericError(xsltGenericErrorContext,
 	     "xsl:attribute-set : name is missing\n");
+        if (value)
+	    xmlFree(value);
 	return;
     }
 
@@ -444,19 +446,27 @@ xsltGetSAS(xsltStylesheetPtr style, const xmlChar *name, const xmlChar *ns) {
 }
 
 /**
- * xsltResolveSASCallback,:
+ * xsltResolveSASCallbackInt:
  * @style:  the XSLT stylesheet
  *
  * resolve the references in an attribute set.
  */
 static void
-xsltResolveSASCallback(xsltAttrElemPtr values, xsltStylesheetPtr style,
+xsltResolveSASCallbackInt(xsltAttrElemPtr values, xsltStylesheetPtr style,
 	               const xmlChar *name, const xmlChar *ns,
-		       ATTRIBUTE_UNUSED const xmlChar *ignored) {
+		       int depth) {
     xsltAttrElemPtr tmp;
     xsltAttrElemPtr refs;
 
     tmp = values;
+    if ((name == NULL) || (name[0] == 0))
+        return;
+    if (depth > 100) {
+	xsltGenericError(xsltGenericErrorContext,
+	"xsl:attribute-set : use-attribute-sets recursion detected on %s\n",
+			 name);
+	return;
+    }
     while (tmp != NULL) {
 	if (tmp->set != NULL) {
 	    /*
@@ -481,7 +491,7 @@ xsltResolveSASCallback(xsltAttrElemPtr values, xsltStylesheetPtr style,
 		    /*
 		     * recurse first for cleanup
 		     */
-		    xsltResolveSASCallback(refs, style, name, ns, NULL);
+		    xsltResolveSASCallbackInt(refs, style, name, ns, depth + 1);
 		    /*
 		     * Then merge
 		     */
@@ -496,6 +506,19 @@ xsltResolveSASCallback(xsltAttrElemPtr values, xsltStylesheetPtr style,
 	}
 	tmp = tmp->next;
     }
+}
+
+/**
+ * xsltResolveSASCallback,:
+ * @style:  the XSLT stylesheet
+ *
+ * resolve the references in an attribute set.
+ */
+static void
+xsltResolveSASCallback(xsltAttrElemPtr values, xsltStylesheetPtr style,
+	               const xmlChar *name, const xmlChar *ns,
+		       ATTRIBUTE_UNUSED const xmlChar *ignored) {
+    xsltResolveSASCallbackInt(values, style, name, ns, 1);
 }
 
 /**

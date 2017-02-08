@@ -143,6 +143,7 @@ HRESULT Volume_IsMute()
 HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
 {
     HRESULT hr;
+    WCHAR strTooltip[128];
 
     TRACE("Volume_Init\n");
 
@@ -166,7 +167,8 @@ HRESULT STDMETHODCALLTYPE Volume_Init(_In_ CSysTray * pSysTray)
     else
         icon = g_hIconVolume;
 
-    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, L"Volume Control");
+    LoadStringW(g_hInstance, IDS_VOL_VOLUME, strTooltip, _countof(strTooltip));
+    return pSysTray->NotifyIcon(NIM_ADD, ID_ICON_VOLUME, icon, strTooltip);
 }
 
 HRESULT STDMETHODCALLTYPE Volume_Update(_In_ CSysTray * pSysTray)

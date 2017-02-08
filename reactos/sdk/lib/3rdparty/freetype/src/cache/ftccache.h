@@ -325,7 +325,7 @@ FT_BEGIN_HEADER
         break;                                                    \
                                                                   \
       _try_done = FTC_Manager_FlushN( _try_manager, _try_count ); \
-      if ( _try_done > 0 && ( list_changed ) )                    \
+      if ( _try_done > 0 && ( list_changed != NULL ) )            \
         *(FT_Bool*)( list_changed ) = TRUE;                       \
                                                                   \
       if ( _try_done == 0 )                                       \

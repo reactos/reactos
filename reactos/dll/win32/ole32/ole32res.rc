@@ -23,6 +23,8 @@
 //#include "winuser.h"
 //#include "winnls.h"
 
+#include "olestd.h"
+
 #define WINE_FILENAME_STR "ole32.dll"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
@@ -37,15 +39,15 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: nodrop.cur */
-1 CURSOR nodrop.cur
+CURSOR_NODROP CURSOR nodrop.cur
 
 /* @makedep: drag_move.cur */
-2 CURSOR drag_move.cur
+CURSOR_MOVE CURSOR drag_move.cur
 
 /* @makedep: drag_copy.cur */
-3 CURSOR drag_copy.cur
+CURSOR_COPY CURSOR drag_copy.cur
 
 /* @makedep: drag_link.cur */
-4 CURSOR drag_link.cur
+CURSOR_LINK CURSOR drag_link.cur
 
 1 WINE_REGISTRY "ole32.rgs"

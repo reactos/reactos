@@ -387,7 +387,7 @@ static HRESULT WINAPI DSoundRender_DoRenderSample(BaseRenderer *iface, IMediaSam
         else if (jitter < 0)
             jitter = 0;
         q.Type = (jitter > 0 ? Famine : Flood);
-        q.Proportion = 1.;
+        q.Proportion = 1000;
         q.Late = jitter;
         q.TimeStamp = tStart;
         IQualityControl_Notify((IQualityControl *)This->renderer.qcimpl, (IBaseFilter*)This, q);
@@ -649,7 +649,7 @@ HRESULT DSoundRender_create(IUnknown * pUnkOuter, LPVOID * ppv)
 
         if (!pDSoundRender->blocked || FAILED(hr))
         {
-            IUnknown_Release((IUnknown *)pDSoundRender);
+            IBaseFilter_Release(&pDSoundRender->renderer.filter.IBaseFilter_iface);
             return HRESULT_FROM_WIN32(GetLastError());
         }
 
@@ -788,7 +788,7 @@ static HRESULT WINAPI Basicaudio_QueryInterface(IBasicAudio *iface,
 						LPVOID*ppvObj) {
     DSoundRenderImpl *This = impl_from_IBasicAudio(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return DSoundRender_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -982,7 +982,7 @@ static HRESULT WINAPI ReferenceClock_QueryInterface(IReferenceClock *iface,
 {
     DSoundRenderImpl *This = impl_from_IReferenceClock(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return DSoundRender_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -1027,7 +1027,7 @@ static HRESULT WINAPI ReferenceClock_GetTime(IReferenceClock *iface,
         }
         else
         {
-            ERR("pInputPin Disconncted\n");
+            ERR("pInputPin Disconnected\n");
             hr = E_FAIL;
         }
         LeaveCriticalSection(&This->renderer.filter.csFilter);
@@ -1150,7 +1150,7 @@ static HRESULT WINAPI AMDirectSound_QueryInterface(IAMDirectSound *iface,
 {
     DSoundRenderImpl *This = impl_from_IAMDirectSound(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return DSoundRender_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -1263,17 +1263,17 @@ static const IAMDirectSoundVtbl IAMDirectSound_Vtbl =
 
 static HRESULT WINAPI AMFilterMiscFlags_QueryInterface(IAMFilterMiscFlags *iface, REFIID riid, void **ppv) {
     DSoundRenderImpl *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_QueryInterface((IUnknown*)This, riid, ppv);
+    return IBaseFilter_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppv);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_AddRef(IAMFilterMiscFlags *iface) {
     DSoundRenderImpl *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_AddRef((IUnknown*)This);
+    return IBaseFilter_AddRef(&This->renderer.filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_Release(IAMFilterMiscFlags *iface) {
     DSoundRenderImpl *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_Release((IUnknown*)This);
+    return IBaseFilter_Release(&This->renderer.filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_GetMiscFlags(IAMFilterMiscFlags *iface) {

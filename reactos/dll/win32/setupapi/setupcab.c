@@ -29,10 +29,10 @@
 #include <share.h>
 #include <fdi.h>
 
-HINSTANCE hInstance = 0;
-OSVERSIONINFOW OsVersionInfo;
+HINSTANCE hInstance = NULL;
+OSVERSIONINFOEXW OsVersionInfo;
 
-static HINSTANCE CABINET_hInstance = 0;
+static HINSTANCE CABINET_hInstance = NULL;
 
 static HFDI (__cdecl *sc_FDICreate)(PFNALLOC, PFNFREE, PFNOPEN,
                 PFNREAD, PFNWRITE, PFNCLOSE, PFNSEEK, int, PERF);
@@ -652,8 +652,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
-        OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-        if (!GetVersionExW(&OsVersionInfo))
+        OsVersionInfo.dwOSVersionInfoSize = sizeof(OsVersionInfo);
+        if (!GetVersionExW((POSVERSIONINFOW)&OsVersionInfo))
             return FALSE;
         hInstance = (HINSTANCE)hinstDLL;
         break;

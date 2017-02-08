@@ -76,10 +76,10 @@ HRESULT WINAPI CoGetCallerTID(LPDWORD lpdwTID)
 }
 
 /***********************************************************************
- *              CoGetCurrentLogicalThreadId        [OLE32.@]
+ *              OleGetIconOfFile        [OLE32.@]
  */
-HRESULT WINAPI CoGetCurrentLogicalThreadId(GUID *pguid)
+HGLOBAL WINAPI OleGetIconOfFile(LPOLESTR path, BOOL use_file_as_label)
 {
-  FIXME(": stub\n");
-  return E_NOTIMPL;
+    FIXME("(%p, %d), stub!\n", path, use_file_as_label);
+    return NULL;
 }

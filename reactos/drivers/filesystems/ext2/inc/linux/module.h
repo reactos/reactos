@@ -546,9 +546,11 @@ struct block_device {
     PFILE_OBJECT            bd_volume;  /* streaming object file */
     LARGE_MCB               bd_extents; /* dirty extents */
 
-    spinlock_t              bd_bh_lock;    /**/
-    kmem_cache_t *          bd_bh_cache;   /* memory cache for buffer_head */
-    struct rb_root          bd_bh_root;    /* buffer_head red-black tree root */
+    kmem_cache_t *          bd_bh_cache;/* memory cache for buffer_head */
+    ERESOURCE               bd_bh_lock; /* lock for bh tree and reaper list */
+    struct rb_root          bd_bh_root; /* buffer_head red-black tree root */
+    LIST_ENTRY              bd_bh_free; /* reaper list */
+    KEVENT                  bd_bh_notify; /* notification event for cleanup */
 };
 
 //
@@ -709,6 +711,7 @@ typedef void (bh_end_io_t)(struct buffer_head *bh, int uptodate);
  * for backward compatibility reasons (e.g. submit_bh).
  */
 struct buffer_head {
+    LIST_ENTRY    b_link;                   /* to be added to reaper list */
     unsigned long b_state;		            /* buffer state bitmap (see above) */
     struct page *b_page;                    /* the page this bh is mapped to */
     PMDL         b_mdl;                     /* MDL of the locked buffer */
@@ -725,7 +728,10 @@ struct buffer_head {
     // struct list_head b_assoc_buffers;    /* associated with another mapping */
     // struct address_space *b_assoc_map;   /* mapping this buffer is associated with */
     atomic_t b_count;		                /* users using this buffer_head */
-    struct rb_node b_rb_node;                /* Red-black tree node entry */
+    struct rb_node b_rb_node;               /* Red-black tree node entry */
+
+    LARGE_INTEGER  b_ts_creat;              /* creation time*/
+    LARGE_INTEGER  b_ts_drop;               /* drop time (to be released) */
 };
 
 

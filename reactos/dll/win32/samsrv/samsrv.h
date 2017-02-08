@@ -22,6 +22,7 @@
 #include <winreg.h>
 #define NTOS_MODE_USER
 #include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ddk/ntsam.h>
 #include <sddl.h>
@@ -390,12 +391,12 @@ SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
                     IN BOOLEAN LmPasswordPresent);
 
 NTSTATUS
-SampGetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
-                          IN OUT PSAMPR_LOGON_HOURS LogonHours);
+SampGetLogonHoursAttribute(IN PSAM_DB_OBJECT UserObject,
+                           IN OUT PSAMPR_LOGON_HOURS LogonHours);
 
 NTSTATUS
-SampSetLogonHoursAttrbute(IN PSAM_DB_OBJECT UserObject,
-                          IN PSAMPR_LOGON_HOURS LogonHours);
+SampSetLogonHoursAttribute(IN PSAM_DB_OBJECT UserObject,
+                           IN PSAMPR_LOGON_HOURS LogonHours);
 
 
 /* utils.c */

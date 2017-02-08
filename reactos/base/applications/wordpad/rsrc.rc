@@ -70,6 +70,11 @@ IDC_ZOOM CURSOR "res/zoom.cur"
 #include <reactos/manifest_exe.rc>
 
 /* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DA_DK
     #include "lang/da-DK.rc"
 #endif

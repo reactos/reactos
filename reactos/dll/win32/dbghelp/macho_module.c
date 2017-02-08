@@ -894,7 +894,7 @@ static void macho_finish_stabs(struct module* module, struct hash_table* ht_symt
         hash_table_iter_init(&module->ht_symbols, &hti_modules, ste->ht_elt.name);
         while ((ptr = hash_table_iter_up(&hti_modules)))
         {
-            sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+            sym = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
 
             if (strcmp(sym->hash_elt.name, ste->ht_elt.name))
                 continue;

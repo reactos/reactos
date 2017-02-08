@@ -18,6 +18,10 @@ Size = 405,5 MiB
 Description = Joc FPS de tip duel în grup, produs de comunitate, bazat pe tehnologia GPL idTech3. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 405,5 Mio
 
+[Section.0419]
+Description = Свободный трёхмерный шутер от первого лица, созданный на базе движка Quake III Arena. Вам потребуется программа распаковки zip, чтобы запустить его.
+Size = 405,5 МиБ
+
 [Section.041f]
 Description = GPL idTech3 uygulayım bilimi tabanlı, topluluk üretimi, ölüm karşılaşmalı bir FPS oyunudur. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 405,5 MiB

@@ -8,7 +8,7 @@
 
 #include <precomp.h>
 
-void __cdecl alloc_buffer(FILE *stream);
+BOOL __cdecl msvcrt_alloc_buffer(FILE *stream);
 
 int __cdecl
 _flsbuf(int ch, FILE *stream)
@@ -47,7 +47,7 @@ _flsbuf(int ch, FILE *stream)
     if (!(stream->_flag & _IONBF) && stream != stdout && stream != stderr)
     {
         /* If we have no buffer, try to allocate one */
-        if (!stream->_base) alloc_buffer(stream);
+        if (!stream->_base) msvcrt_alloc_buffer(stream);
     }
 
     /* Check if we can use a buffer now */

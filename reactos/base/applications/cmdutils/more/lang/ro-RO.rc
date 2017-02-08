@@ -18,6 +18,7 @@ BEGIN
   Comandă                        Comanda a cărei ieșire va fi afișată.\n\n\
   La vederea sugestiei ""-- Continuă --"" veți apăsa o tastă pentru afișarea\n\
   următoarei pagini.\n"
-    IDS_CONTINUE " -- Continuă (100%) -- "
-    IDS_FILE_ACCESS "Fișierul «%s» nu poate fi accesat!"
+    IDS_CONTINUE "-- Continuă --"
+    IDS_CONTINUE_PROGRESS "-- Continuă (%d%%) --"
+    IDS_FILE_ACCESS "Fișierul «%s» nu poate fi accesat!\n"
 END

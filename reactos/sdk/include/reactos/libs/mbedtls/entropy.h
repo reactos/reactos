@@ -3,7 +3,7 @@
  *
  * \brief Entropy accumulator implementation
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -134,6 +134,9 @@ typedef struct
 #if defined(MBEDTLS_THREADING_C)
     mbedtls_threading_mutex_t mutex;    /*!< mutex                  */
 #endif
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+    int initial_entropy_run;
+#endif
 }
 mbedtls_entropy_context;
 
@@ -207,6 +210,18 @@ int mbedtls_entropy_func( void *data, unsigned char *output, size_t len );
  */
 int mbedtls_entropy_update_manual( mbedtls_entropy_context *ctx,
                            const unsigned char *data, size_t len );
+
+#if defined(MBEDTLS_ENTROPY_NV_SEED)
+/**
+ * \brief           Trigger an update of the seed file in NV by using the
+ *                  current entropy pool.
+ *
+ * \param ctx       Entropy context
+ *
+ * \return          0 if successful
+ */
+int mbedtls_entropy_update_nv_seed( mbedtls_entropy_context *ctx );
+#endif /* MBEDTLS_ENTROPY_NV_SEED */
 
 #if defined(MBEDTLS_FS_IO)
 /**

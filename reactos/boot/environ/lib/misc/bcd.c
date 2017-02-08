@@ -579,7 +579,7 @@ BcdDeleteElement (
         else
         {
             /* Open the element specifically */
-            Status = BiOpenKey(ElementHandle, TypeString, &ElementHandle);
+            Status = BiOpenKey(ElementsHandle, TypeString, &ElementHandle);
             if (NT_SUCCESS(Status))
             {
                 /* Delete it */
@@ -778,8 +778,7 @@ BiEnumerateSubObjectElements (
                           (&SubObjectList[i])->Data4[4],
                           (&SubObjectList[i])->Data4[5],
                           (&SubObjectList[i])->Data4[6],
-                          (&SubObjectList[i])->Data4[7],
-                          (&SubObjectList[i])->Data4[8]);
+                          (&SubObjectList[i])->Data4[7]);
             Status = STATUS_SUCCESS;
         }
     }
@@ -874,7 +873,7 @@ BiEnumerateElements (
         {
             EfiPrintf(L"Value invalid\r\n");
             BiCloseKey(ElementHandle);
-            ElementHandle = 0;
+            ElementHandle = NULL;
             continue;
         }
 
@@ -1029,7 +1028,7 @@ BiEnumerateElements (
         else if ((Flags & BCD_ENUMERATE_FLAG_DEEP) &&
                  (ElementType.PackedValue == BcdLibraryObjectList_InheritedObjects))
         {
-            /* Inherited objects are requsted, so allocate a buffer for them */
+            /* Inherited objects are requested, so allocate a buffer for them */
             SubObjectList = BlMmAllocateHeap(ElementDataLength);
             if (!SubObjectList)
             {

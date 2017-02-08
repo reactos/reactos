@@ -23,7 +23,7 @@
 #define IDX_APPSPACE         16
 #define IDX_QUICKINFO        20
 
-#define PVM_SETSIZE          (WM_USER+1) 
+#define PVM_SETSIZE          (WM_USER+1)
 #define PVM_GETSIZE          (WM_USER+2)
 #define PVM_SETFONT          (WM_USER+3)
 #define PVM_GETFONT          (WM_USER+4)

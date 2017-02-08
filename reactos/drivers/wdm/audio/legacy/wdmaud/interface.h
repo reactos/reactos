@@ -76,8 +76,8 @@ typedef struct
 ///              InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:        DeviceType identifies the device type, DeviceIndex the index, WaveFormatEx the device details
 /// Result:      is returned in hDevice
-/// Return Code: STATUS_SUCCESS indicates success, otherwise appropiate error code
-/// Prequsites:  none
+/// Return Code: STATUS_SUCCESS indicates success, otherwise appropriate error code
+/// Prerequisites:  none
 
 #define IOCTL_OPEN_WDMAUD \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -94,7 +94,7 @@ typedef struct
 ///              InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:        DeviceType, DeviceIndex and hDevice must be set
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: openend device
+/// Prerequisites: openend device
 
 #define IOCTL_CLOSE_WDMAUD \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -112,7 +112,7 @@ typedef struct
 /// Note:       The DeviceType contains the requested device type.
 /// Result:     The result is returned in DeviceCount
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: none
+/// Prerequisites: none
 
 #define IOCTL_GETNUMDEVS_TYPE \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -129,7 +129,7 @@ typedef struct
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The DeviceType, DeviceIndex, hDevice and State member must be set. State determines the new state
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_SETDEVICE_STATE \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -147,7 +147,7 @@ typedef struct
 /// Note:       The DeviceType and hDevice must be set
 /// Result:     The result is returned in DeviceIndex
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETDEVID \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -165,7 +165,7 @@ typedef struct
 /// Note:       The DeviceType and hDevice must be set
 /// Result:     The result is returned in Volume
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETVOLUME \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -182,7 +182,7 @@ typedef struct
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The DeviceType, hDevice and Volume must be set
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_SETVOLUME \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -191,15 +191,15 @@ typedef struct
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
 
-/// IOCTL_GETCAPABILTIES
+/// IOCTL_GETCAPABILITIES
 ///
-/// Description: This IOCTL retrieves the capabilties of an specific device
+/// Description: This IOCTL retrieves the capabilities of an specific device
 ///
 /// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The DeviceType and DeviceIndex must be set
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: none
+/// Prerequisites: none
 
 #define IOCTL_GETCAPABILITIES \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -216,7 +216,7 @@ typedef struct
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The DeviceType, DeviceIndex, hDevice, BufferSize and Buffer must be set
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_WRITEDATA \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -233,7 +233,7 @@ typedef struct
 /// Note:       The DeviceType and hDevice must be set
 /// Result:     The result is returned in Position
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETPOS \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -250,7 +250,7 @@ typedef struct
 /// Note:       The DeviceType and hDevice must be set
 /// Result:     The result is returned in FrameSize
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETFRAMESIZE \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -267,7 +267,7 @@ typedef struct
 /// Note:       The hDevice member must be set
 /// Result:     The result is returned in MixLine
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETLINEINFO \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -285,7 +285,7 @@ typedef struct
 /// Note:       The hDevice member must be set
 /// Result:     The result is returned in MixControls
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETLINECONTROLS \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -302,7 +302,7 @@ typedef struct
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The hDevice member must be set
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_SETCONTROLDETAILS \
     CTL_CODE(FILE_DEVICE_SOUND, \
@@ -320,7 +320,7 @@ typedef struct
 /// Note:       The hDevice member must be set
 /// Result:     The result is returned in MixDetails
 /// ReturnCode:  STATUS_SUCCESS indicates success
-/// Prequsites: opened device
+/// Prerequisites: opened device
 
 #define IOCTL_GETCONTROLDETAILS \
     CTL_CODE(FILE_DEVICE_SOUND, \

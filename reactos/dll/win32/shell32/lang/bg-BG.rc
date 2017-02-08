@@ -1,43 +1,43 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Големи значета", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Малки значета", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Списък", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Подробен", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Подреждане на &значетата", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Самоподреждане", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "Из&глед"
+        POPUP "Из&глед", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Големи значета", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Малки значета", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Списък", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Подробен", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Подреждане на &значетата"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Подреждане на &значетата", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "По &име", 0x30  /* column 0 */
-            MENUITEM "По &вид", 0x32  /* column 2 */
-            MENUITEM "По &размер", 0x31  /* ... */
-            MENUITEM "По &дата", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Самоподреждане", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Подравнени значета", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Опресняване", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Поставяне", FCIDM_SHVIEW_INSERT
         MENUITEM "Поставяне като връзка", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "Свойства", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -405,19 +405,19 @@ CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Задачи", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Показване на общите задачи в папките", 14001, 20, 25, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Използване на обичайните папки на Windows", 14002, 20, 37, 210, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Показване на общите задачи в папките", IDC_FOLDER_OPTIONS_COMMONTASKS, 20, 25, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Използване на обичайните папки на ReactOS", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 20, 37, 210, 10
     GROUPBOX "Обзор на папките", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", 14004, 20, 70, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", 14005, 20, 82, 210, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Отваряне на всички папки в &един прозорец", IDC_FOLDER_OPTIONS_SAMEWINDOW, 20, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Отваряне на всяка папка в от&делен прозорец", IDC_FOLDER_OPTIONS_OWNWINDOW, 20, 82, 210, 10
     GROUPBOX "Цъкането действа така:", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", 14007, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", 14008, 30, 220, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", 14009, 30, 144, 220, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", 14010, 20, 156, 170, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Отваряне с единично цъкане (избор с посочване)", IDC_FOLDER_OPTIONS_SINGLECLICK, 20, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Подчертаване заглавията на значетата съгласно &обзорника ми", IDC_FOLDER_OPTIONS_ULBROWSER, 30, 220, 170, 10
+    AUTORADIOBUTTON "Подчертаване на заглавията на значетата при &посочване", IDC_FOLDER_OPTIONS_ULPOINT, 30, 144, 220, 10
+    AUTORADIOBUTTON "&Отваряне с двойно цъкане (избиране с единично)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 20, 156, 170, 10
     PUSHBUTTON "От под&разбираните", 14011, 160, 180, 75, 14, WS_TABSTOP
 END
 
@@ -432,8 +432,8 @@ BEGIN
     PUSHBUTTON "Прилагане върху ви&чки папки", 14001, 20, 50, 115, 14, WS_TABSTOP
     PUSHBUTTON "&Зачистване на всички папки", 14002, 140, 50, 115, 14, WS_TABSTOP
     LTEXT "Разширени настройки", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "От под&разбираните", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "От под&разбираните", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -442,7 +442,7 @@ CAPTION "Видове файлове"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Вписани &видове файлове:", -1, 7, 10, 170, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Нов", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "Из&триване", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Подробности за разширение '%s'", 14003, 7, 130, 249, 70
@@ -475,26 +475,26 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Излизане от РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Сигурни ли сте, че искате да излезете?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "&Излизане", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 122, 40, 60, 14
+    DEFPUSHBUTTON "&Излизане", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 99, 38, 43, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Откачане от РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Сигурни ли сте, че искате да се откачите?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "&Откачане", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Сигурни ли сте, че искате да се откачите?", -1, 49, 15, 131, 16
+    DEFPUSHBUTTON "&Откачане", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -603,18 +603,18 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Смяна на значе"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Файлов име:", -1, 7, 14, 208, 10
-    PUSHBUTTON "Обзор...", IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Значета:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "Добре", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 167, 181, 50, 14
+    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Обзор...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -665,6 +665,12 @@ BEGIN
     IDS_CONTROLPANEL "Крило за управление"
     IDS_ADMINISTRATIVETOOLS "Управнически средства"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
+    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
+    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+
     /* context menus */
     IDS_VIEW_LARGE "&Големи значета"
     IDS_VIEW_SMALL "&Малки значета"
@@ -682,8 +688,8 @@ BEGIN
     IDS_RENAME "Преименуване"
     IDS_PASTE "Вмъкване"
 
-    IDS_CREATEFOLDER_DENIED "Създаването на нова папка е невъзможно: недостатъчни права."
-    IDS_CREATEFOLDER_CAPTION "Грешка при създаване на нова папка"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Потвърдете изтриване на файла"
     IDS_DELETEFOLDER_CAPTION "Потвърдете изтриване на папката"
     IDS_DELETEITEM_TEXT "Сигурен ли сте, че искате да изтриете '%1'?"
@@ -709,8 +715,6 @@ BEGIN
     IDS_RESTART_PROMPT "Искате ли да презапуснете системата?"
     IDS_SHUTDOWN_TITLE "Изключване"
     IDS_SHUTDOWN_PROMPT "Искате ли да изключите компютъра?"
-    IDS_LOGOFF_TITLE "Излизане"
-    IDS_LOGOFF_PROMPT "Искате ли да излезете?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
@@ -738,13 +742,13 @@ BEGIN
     IDS_COOKIES "Бисквитки"
     IDS_HISTORY "Местни настройки\\History"
     IDS_PROGRAM_FILES "Program Files"
-    IDS_MYPICTURES "Моите изображения"
+    IDS_MYPICTURES "Моите изображения" // "Документите ми\\Изображенията ми"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Документи"
     IDS_ADMINTOOLS "Пусков изборник\\Приложения\\Управнически средства"
     IDS_COMMON_MUSIC "Документи\\Музиката ми"
     IDS_COMMON_PICTURES "Документи\\Рисунките ми"
-    IDS_COMMON_VIDEO "Документи\\Лентите ми"
+    IDS_COMMON_VIDEO "Документи\\Лентите ми" // "Документите ми\\Видеозаписите ми"
     IDS_CDBURN_AREA "Местни настройки\\Приложни данни\\Microsoft\\CD Burning"
     IDS_NETWORKPLACE "Моята мрежа"
 
@@ -796,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Системен файл"
     IDS_VXD_FILE "Водач на привидно устройство"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Отваряне"
     IDS_EXPLORE_VERB "Explore"
@@ -816,7 +821,7 @@ BEGIN
 
     IDS_FILE_DETAILS "Подробности за разширение '%s"
     IDS_FILE_DETAILSADV "Файловете с разширение '%s' са от вида '%s'. За да промените настройките, за всички '%s' файлове, натиснете „Разширени”."
-    IDS_FILE_TYPES "FileTypes"
+    IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
@@ -830,4 +835,24 @@ BEGIN
     IDS_MENU_EMPTY "(Empty)"
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
+
+    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
+    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
+    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
+    IDS_ADVANCED_HIDDEN "Hidden files and folders"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
+    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
+    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 END

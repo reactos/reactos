@@ -197,6 +197,9 @@ extern "C" {
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX               0x43
 #define PARTITION_LINUX                   0x83
+#define PARTITION_FREEBSD                 0xA5
+#define PARTITION_OPENBSD                 0xA6
+#define PARTITION_NETBSD                  0xA9
 #endif
 #define SERIAL_LSRMST_ESCAPE          0
 #define SERIAL_LSRMST_LSR_DATA        1
@@ -589,15 +592,18 @@ typedef struct {
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13))||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT_12)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT_16)||\
-    ((t&~PARTITION_NTFT)==PARTITION_IFS)||\
-    ((t&~PARTITION_NTFT)==PARTITION_HUGE)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT32)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT32_XINT13)||\
-    ((t&~PARTITION_NTFT)==PARTITION_XINT13)||\
-    ((t&~PARTITION_NTFT)==PARTITION_LINUX)||\
-    ((t&~PARTITION_NTFT)==PARTITION_OLD_LINUX))
+    ((t)==PARTITION_FAT_12)||\
+    ((t)==PARTITION_FAT_16)||\
+    ((t)==PARTITION_IFS)||\
+    ((t)==PARTITION_HUGE)||\
+    ((t)==PARTITION_FAT32)||\
+    ((t)==PARTITION_FAT32_XINT13)||\
+    ((t)==PARTITION_XINT13)||\
+    ((t)==PARTITION_LINUX)||\
+    ((t)==PARTITION_OLD_LINUX)||\
+    ((t)==PARTITION_FREEBSD)||\
+    ((t)==PARTITION_OPENBSD)||\
+    ((t)==PARTITION_NETBSD))
 #else
 #define IsRecognizedPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\
@@ -607,19 +613,19 @@ typedef struct {
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT32_XINT13))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13))||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT_12)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT_16)||\
-    ((t&~PARTITION_NTFT)==PARTITION_IFS)||\
-    ((t&~PARTITION_NTFT)==PARTITION_HUGE)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT32)||\
-    ((t&~PARTITION_NTFT)==PARTITION_FAT32_XINT13)||\
-    ((t&~PARTITION_NTFT)==PARTITION_XINT13))
+    ((t)==PARTITION_FAT_12)||\
+    ((t)==PARTITION_FAT_16)||\
+    ((t)==PARTITION_IFS)||\
+    ((t)==PARTITION_HUGE)||\
+    ((t)==PARTITION_FAT32)||\
+    ((t)==PARTITION_FAT32_XINT13)||\
+    ((t)==PARTITION_XINT13))
 #endif
 #define IsContainerPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_EXTENDED))||\
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13_EXTENDED))||\
-    ((t&~PARTITION_NTFT)==PARTITION_EXTENDED)||\
-    ((t&~PARTITION_NTFT)==PARTITION_XINT13_EXTENDED))
+    ((t)==PARTITION_EXTENDED)||\
+    ((t)==PARTITION_XINT13_EXTENDED))
 
 #ifdef _MSC_VER
 #pragma warning(pop)

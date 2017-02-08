@@ -221,6 +221,9 @@ FT_BEGIN_HEADER
   /* candidates for weak interpolation have this flag set */
 #define AF_FLAG_WEAK_INTERPOLATION  ( 1U << 4 )
 
+  /* the distance to the next point is very small */
+#define AF_FLAG_NEAR  ( 1U << 5 )
+
 
   /* edge hint flags */
 #define AF_EDGE_NORMAL  0
@@ -257,6 +260,7 @@ FT_BEGIN_HEADER
     FT_Byte     flags;       /* edge/segment flags for this segment */
     FT_Char     dir;         /* segment direction                   */
     FT_Short    pos;         /* position of segment                 */
+    FT_Short    delta;       /* deviation from segment position     */
     FT_Short    min_coord;   /* minimum coordinate of segment       */
     FT_Short    max_coord;   /* maximum coordinate of segment       */
     FT_Short    height;      /* the hinted segment height           */
@@ -266,7 +270,6 @@ FT_BEGIN_HEADER
 
     AF_Segment  link;        /* (stem) link segment        */
     AF_Segment  serif;       /* primary segment for serifs */
-    FT_Pos      num_linked;  /* number of linked segments  */
     FT_Pos      score;       /* used during stem matching  */
     FT_Pos      len;         /* used during stem matching  */
 
@@ -289,7 +292,6 @@ FT_BEGIN_HEADER
     AF_Width    blue_edge;  /* non-NULL if this is a blue edge */
     AF_Edge     link;       /* link edge                       */
     AF_Edge     serif;      /* primary edge for serifs         */
-    FT_Short    num_linked; /* number of linked edges          */
     FT_Int      score;      /* used during stem matching       */
 
     AF_Segment  first;      /* first segment in edge */

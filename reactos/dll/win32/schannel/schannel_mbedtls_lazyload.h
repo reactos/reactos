@@ -49,6 +49,7 @@ MAKE_FUNCPTR(mbedtls_ssl_conf_rng)
 MAKE_FUNCPTR(mbedtls_ssl_write)
 MAKE_FUNCPTR(mbedtls_ssl_get_peer_cert)
 MAKE_FUNCPTR(mbedtls_ssl_config_init)
+MAKE_FUNCPTR(mbedtls_ssl_config_free)
 MAKE_FUNCPTR(mbedtls_ssl_config_defaults)
 MAKE_FUNCPTR(mbedtls_ssl_conf_dbg)
 MAKE_FUNCPTR(mbedtls_ssl_setup)
@@ -103,6 +104,7 @@ BOOL schan_imp_init(void)
     LOAD_FUNCPTR(mbedtls_ssl_write)
     LOAD_FUNCPTR(mbedtls_ssl_get_peer_cert)
     LOAD_FUNCPTR(mbedtls_ssl_config_init)
+    LOAD_FUNCPTR(mbedtls_ssl_config_free)
     LOAD_FUNCPTR(mbedtls_ssl_config_defaults)
     LOAD_FUNCPTR(mbedtls_ssl_conf_dbg)
     LOAD_FUNCPTR(mbedtls_ssl_setup)
@@ -162,6 +164,7 @@ void schan_imp_deinit(void)
 #define mbedtls_ssl_write               pmbedtls_ssl_write
 #define mbedtls_ssl_get_peer_cert       pmbedtls_ssl_get_peer_cert
 #define mbedtls_ssl_config_init         pmbedtls_ssl_config_init
+#define mbedtls_ssl_config_free         pmbedtls_ssl_config_free
 #define mbedtls_ssl_config_defaults     pmbedtls_ssl_config_defaults
 #define mbedtls_ssl_conf_dbg            pmbedtls_ssl_conf_dbg
 #define mbedtls_ssl_setup               pmbedtls_ssl_setup

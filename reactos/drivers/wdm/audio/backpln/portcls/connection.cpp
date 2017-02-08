@@ -94,7 +94,7 @@ UnRegisterConnection(
     IN PUNICODE_STRING ToString,
     IN ULONG ToPin)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

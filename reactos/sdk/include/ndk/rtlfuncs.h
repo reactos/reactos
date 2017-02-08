@@ -609,7 +609,7 @@ RtlIsGenericTableEmptyAvl(
 #endif /* RTL_USE_AVL_TABLES */
 
 //
-// Error and Exception Functions
+// Exception and Error Functions
 //
 NTSYSAPI
 PVOID
@@ -637,13 +637,11 @@ RtlSetUnhandledExceptionFilter(
     _In_ PRTLP_UNHANDLED_EXCEPTION_FILTER TopLevelExceptionFilter
 );
 
-#endif /* NTOS_MODE_USER */
-
 NTSYSAPI
-VOID
+LONG
 NTAPI
-RtlCaptureContext(
-    _Out_ PCONTEXT ContextRecord
+RtlUnhandledExceptionFilter(
+    _In_ struct _EXCEPTION_POINTERS* ExceptionInfo
 );
 
 NTSYSAPI
@@ -675,6 +673,58 @@ RtlDecodeSystemPointer(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLastNtStatus(
+    VOID
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlGetLastWin32Error(
+    VOID
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSetLastWin32Error(
+    _In_ ULONG LastError
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
+    _In_ NTSTATUS Status
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetThreadErrorMode(
+    _In_ ULONG NewMode,
+    _Out_opt_ PULONG OldMode
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlGetThreadErrorMode(
+    VOID
+);
+
+#endif /* NTOS_MODE_USER */
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCaptureContext(
+    _Out_ PCONTEXT ContextRecord
+);
+
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlDispatchException(
@@ -702,10 +752,10 @@ RtlNtStatusToDosErrorNoTeb(
 );
 
 NTSYSAPI
-VOID
+NTSTATUS
 NTAPI
-RtlSetLastWin32ErrorAndNtStatusFromNtStatus(
-    _In_ NTSTATUS Status
+RtlMapSecurityErrorToNtStatus(
+    _In_ ULONG SecurityError
 );
 
 NTSYSAPI
@@ -721,13 +771,6 @@ VOID
 NTAPI
 RtlRaiseStatus(
     _In_ NTSTATUS Status
-);
-
-NTSYSAPI
-LONG
-NTAPI
-RtlUnhandledExceptionFilter(
-    _In_ struct _EXCEPTION_POINTERS* ExceptionInfo
 );
 
 NTSYSAPI
@@ -1236,13 +1279,13 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopySidAndAttributesArray(
-    ULONG Count,
-    PSID_AND_ATTRIBUTES Src,
-    ULONG SidAreaSize,
-    PSID_AND_ATTRIBUTES Dest,
-    PVOID SidArea,
-    PVOID* RemainingSidArea,
-    PULONG RemainingSidAreaSize
+    _In_ ULONG Count,
+    _In_ PSID_AND_ATTRIBUTES Src,
+    _In_ ULONG SidAreaSize,
+    _In_ PSID_AND_ATTRIBUTES Dest,
+    _In_ PSID SidArea,
+    _Out_ PSID* RemainingSidArea,
+    _Out_ PULONG RemainingSidAreaSize
 );
 
 _IRQL_requires_max_(APC_LEVEL)
@@ -1425,6 +1468,13 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlLengthRequiredSid(IN ULONG SubAuthorityCount);
+
+_IRQL_requires_max_(APC_LEVEL)
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTSYSAPI
 ULONG
@@ -2156,9 +2206,9 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    PVOID Buffer,
-    INT Length,
-    INT *Flags
+    _In_ CONST VOID* Buffer,
+    _In_ INT Size,
+    _Inout_opt_ INT* Flags
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

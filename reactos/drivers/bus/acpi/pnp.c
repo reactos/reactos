@@ -268,7 +268,7 @@ Bus_StartFdo (
     PFDO_DEVICE_DATA            FdoData,
     PIRP   Irp )
 {
-    NTSTATUS status = STATUS_SUCCESS;
+    NTSTATUS status;
     POWER_STATE powerState;
     ACPI_STATUS AcpiStatus;
 
@@ -285,11 +285,10 @@ Bus_StartFdo (
         DPRINT1("Unable to AcpiInitializeSubsystem\n");
         return STATUS_UNSUCCESSFUL;
     }
-    
-    
-	AcpiStatus = AcpiInitializeTables(NULL, 16, 0);
-    if (ACPI_FAILURE(status)){
-        DPRINT1("Unable to AcpiInitializeSubsystem\n");
+
+    AcpiStatus = AcpiInitializeTables(NULL, 16, 0);
+    if (ACPI_FAILURE(AcpiStatus)){
+        DPRINT1("Unable to AcpiInitializeTables\n");
 		return STATUS_UNSUCCESSFUL;
     }
 
@@ -462,8 +461,6 @@ Bus_InitializePdo (
 
     pdoData->Common.DevicePowerState = ntState;
     pdoData->Common.SystemPowerState = FdoData->Common.SystemPowerState;
-
-    Pdo->Flags |= DO_POWER_PAGABLE;
 
     ExAcquireFastMutex (&FdoData->Mutex);
     InsertTailList(&FdoData->ListOfPDOs, &pdoData->Link);

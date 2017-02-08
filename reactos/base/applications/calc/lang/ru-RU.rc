@@ -290,22 +290,6 @@ BEGIN
     DEFPUSHBUTTON "", IDC_BUTTON_FOCUS, 0, 0, 5, 5, NOT WS_VISIBLE
 END
 
-IDD_DIALOG_ABOUT DIALOGEX 0, 0, 264, 169
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 105, 148, 52, 16
-    CONTROL IDB_BITMAP_ROS, IDC_STATIC, "Static", SS_BITMAP | SS_CENTERIMAGE |
-            SS_REALSIZEIMAGE | WS_BORDER, 4, 4, 104, 48
-    LTEXT "Калькулятор ReactOS", IDC_STATIC, 120, 12, 132, 8, SS_CENTERIMAGE
-    LTEXT "Версия ", IDC_TEXT_VERSION, 120, 20, 132, 8, SS_CENTERIMAGE
-    LTEXT "Автор: Карло Брамини", IDC_STATIC, 120, 32, 132, 8, SS_CENTERIMAGE
-    GROUPBOX "", IDC_STATIC, 112, 0, 148, 52
-    GROUPBOX "", IDC_STATIC, 5, 56, 256, 88
-    EDITTEXT IDC_EDIT_LICENSE, 12, 68, 240, 68, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
 IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Статистика"
@@ -323,89 +307,89 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятичный\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичный\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Десятичный\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двои&чный\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Градусы\tF2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "Радианы\tF3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "Грады\tF4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "&Градусы\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "Радиа&ны\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "Гр&ады\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_SCIENTIFIC_2 MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "Десятичный\tF6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "Двоичный\tF8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Шестнадцатеричный\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "&Десятичный\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Восьмеричный\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "Двои&чный\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "8 байт\tF12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "4 байт\tF2", IDM_VIEW_DWORD, CHECKED
-        MENUITEM "2 байт\tF3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "1 байт\tF4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "&8 байт\tF12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&4 байт\tF2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&2 байт\tF3", IDM_VIEW_WORD, CHECKED
+        MENUITEM "&1 байт\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
 IDR_MENU_STANDARD MENU
 BEGIN
-    POPUP "Правка"
+    POPUP "&Правка"
     BEGIN
-        MENUITEM "Копировать\tCTRL-C", IDM_EDIT_COPY
-        MENUITEM "Вставить\tCTRL-V", IDM_EDIT_PASTE
+        MENUITEM "&Копировать\tCTRL-C", IDM_EDIT_COPY
+        MENUITEM "Вст&авить\tCTRL-V", IDM_EDIT_PASTE
     END
-    POPUP "Вид"
+    POPUP "В&ид"
     BEGIN
-        MENUITEM "Обычный", IDM_VIEW_STANDARD
-        MENUITEM "Научный", IDM_VIEW_SCIENTIFIC
-        MENUITEM "Преобразование", IDM_VIEW_CONVERSION
+        MENUITEM "&Обычный", IDM_VIEW_STANDARD
+        MENUITEM "&Инженерный", IDM_VIEW_SCIENTIFIC
+        MENUITEM "П&еревод величин", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Количество цифр в группе", IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Группировать &цифры", IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "Справка"
+    POPUP "&Справка"
     BEGIN
-        MENUITEM "Вызов справки", IDM_HELP_HELP
+        MENUITEM "&Вызов справки", IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "О программе", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
@@ -413,9 +397,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STRING_LICENSE "Калькулятор ReactOS - свободное программное обеспечение, распространяющееся по лицензии GNU GPL.\r\n\r\nВы можете получить копию лицензии GNU GPL здесь:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nОзнакомиться c переводом лицензии GNU GPL можно здесь:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR "Ошибка"
     IDS_QUICKHELP "Быстрая справка"
+END
+
+/* About */
+STRINGTABLE
+BEGIN
+    IDS_CALC_NAME "Калькулятор ReactOS"
+    IDS_AUTHOR "Автор: Карло Брамини"
 END
 
 /* Types of conversion */

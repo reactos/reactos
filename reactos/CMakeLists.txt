@@ -16,6 +16,11 @@ if(POLICY CMP0051)
     cmake_policy(SET CMP0051 NEW)
 endif()
 
+if(POLICY CMP0058)
+    # Ninja requires custom command byproducts to be explicit
+    cmake_policy(SET CMP0058 OLD)
+endif()
+
 project(REACTOS)
 
 # Versioning
@@ -35,7 +40,6 @@ set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
-set(CMAKE_SKIP_INSTALL_RULES ON)
 
 if(NOT DEFINED NEW_STYLE_BUILD)
     set(NEW_STYLE_BUILD TRUE)
@@ -53,15 +57,15 @@ string(TOLOWER ${ARCH} ARCH)
 
 # Compile options
 if(ARCH STREQUAL "i386")
-    include(cmake/config.cmake)
+    include(sdk/cmake/config.cmake)
 elseif(ARCH STREQUAL "amd64")
-    include(cmake/config-amd64.cmake)
+    include(sdk/cmake/config-amd64.cmake)
 elseif(ARCH STREQUAL "arm")
-    include(cmake/config-arm.cmake)
+    include(sdk/cmake/config-arm.cmake)
 endif()
 
 # Compiler flags handling
-include(cmake/compilerflags.cmake)
+include(sdk/cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
 
@@ -76,7 +80,7 @@ if(NOT MSVC_IDE)
 endif()
 
 # Bison and Flex support
-# include(cmake/bison-flex.cmake)
+# include(sdk/cmake/bison-flex.cmake)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
@@ -94,8 +98,6 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
         endif()
         add_definitions(/Dinline=__inline)
-    else()
-        add_compile_flags("-fshort-wchar -Wno-multichar")
     endif()
 
     include_directories(sdk/include/host)
@@ -108,16 +110,16 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(NOT NEW_STYLE_BUILD)
         if(NOT MSVC)
-            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc rsym mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc rsym mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         else()
-            export(TARGETS bin2c widl gendib cabman cdmake fatten hpp mkhive obj2bin spec2def geninc mkshelllink utf16le FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+            export(TARGETS bin2c widl gendib cabman fatten hpp isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
         endif()
     endif()
 
 else()
 
     if(NEW_STYLE_BUILD)
-        include(cmake/host-tools.cmake)
+        include(sdk/cmake/host-tools.cmake)
     endif()
 
     # Print build type
@@ -207,24 +209,24 @@ else()
     enable_language(RC)
 
     # Localization definitions
-    include(cmake/localization.cmake)
+    include(sdk/cmake/localization.cmake)
     set(I18N_DEFS "")
     # This will set I18N_DEFS for later use
     set_i18n_language(${I18N_LANG})
 
     # Compiler specific definitions and macros
     if(MSVC)
-        include(cmake/msvc.cmake)
+        include(sdk/cmake/msvc.cmake)
     else()
-        include(cmake/gcc.cmake)
+        include(sdk/cmake/gcc.cmake)
     endif()
 
     # Generic macros
-    include(cmake/CMakeMacros.cmake)
+    include(sdk/cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
     # We're using widl now for both MSVC and GCC builds
-    include(cmake/widl-support.cmake)
+    include(sdk/cmake/widl-support.cmake)
 
     include_directories(
         sdk/include
@@ -235,6 +237,7 @@ else()
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
+        ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
         sdk/include/crt
         sdk/include/ddk
         sdk/include/ndk
@@ -255,11 +258,11 @@ else()
     add_subdirectory(sdk/include/asm)
 
     if(NO_ROSSYM)
-        include(cmake/baseaddress_dwarf.cmake)
+        include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)
-        include(cmake/baseaddress_msvc.cmake)
+        include(sdk/cmake/baseaddress_msvc.cmake)
     else()
-        include(cmake/baseaddress.cmake)
+        include(sdk/cmake/baseaddress.cmake)
     endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.

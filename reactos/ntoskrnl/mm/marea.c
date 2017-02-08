@@ -175,7 +175,7 @@ MmInsertMemoryArea(
     marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
 
     /* Build a lame VAD if this is a user-space allocation */
-    if (MA_GetEndingAddress(marea) < (ULONG_PTR)MmSystemRangeStart)
+    if (marea->EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT)
     {
         ASSERT(Process != NULL);
         if (marea->Type != MEMORY_AREA_OWNED_BY_ARM3)
@@ -275,12 +275,6 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
  *
  * @remarks Lock the address space before calling this function.
  */
-VOID
-NTAPI
-MiDeletePte(IN PMMPTE PointerPte,
-            IN PVOID VirtualAddress,
-            IN PEPROCESS CurrentProcess,
-            IN PMMPTE PrototypePte);
 
 NTSTATUS NTAPI
 MmFreeMemoryArea(
@@ -360,7 +354,7 @@ MmFreeMemoryArea(
         //if (MemoryArea->VadNode.StartingVpn < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT
         if (MemoryArea->Vad)
         {
-            ASSERT(MA_GetEndingAddress(MemoryArea) < (ULONG_PTR)MmSystemRangeStart);
+            ASSERT(MemoryArea->EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT);
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
@@ -378,6 +372,9 @@ MmFreeMemoryArea(
         }
     }
 
+#if DBG
+    MemoryArea->Magic = 'daeD';
+#endif
     ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
     DPRINT("MmFreeMemoryAreaByNode() succeeded\n");

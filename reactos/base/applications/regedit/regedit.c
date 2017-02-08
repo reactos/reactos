@@ -138,7 +138,7 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
     {
         case ACTION_ADD:
         {
-            WCHAR szTitle[512], szText[512];
+            WCHAR szText[512];
             WCHAR filename[MAX_PATH];
             FILE *fp;
 
@@ -146,11 +146,9 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
             if (!filename[0])
             {
                 InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
                 exit(4);
             }
-
-            LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
 
             while (filename[0])
             {
@@ -217,7 +215,7 @@ cont:
             if (!reg_key_name[0])
             {
                 InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No registry key is specified for removal.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
                 exit(6);
             }
             delete_registry_key(reg_key_name);
@@ -233,7 +231,7 @@ cont:
             if (!filename[0])
             {
                 InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
-                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
                 exit(7);
             }
 
@@ -318,7 +316,7 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
                         action = ACTION_EXPORT;
                         break;
                     case L'?':
-                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
+                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
                         exit(3);
                         break;
                     default:

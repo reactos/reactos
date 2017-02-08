@@ -39,9 +39,43 @@ typedef struct _WORK_ITEM_DATA
     PVOID Context;
 } WORK_ITEM_DATA, *PWORK_ITEM_DATA;
 
+
+//
+// Definitions for device's PnP state tracking, all this states are described
+// in PnP Device States diagram of DDK documentation.
+//
+typedef enum _DEVICE_PNP_STATE {
+
+    NotStarted = 0,         // Not started
+    Started,                // After handling of START_DEVICE IRP
+    StopPending,            // After handling of QUERY_STOP IRP
+    Stopped,                // After handling of STOP_DEVICE IRP
+    RemovePending,          // After handling of QUERY_REMOVE IRP
+    SurpriseRemovePending,  // After handling of SURPRISE_REMOVE IRP
+    Deleted,                // After handling of REMOVE_DEVICE IRP
+    UnKnown                 // Unknown state
+
+} DEVICE_PNP_STATE;
+
+#define INITIALIZE_PNP_STATE(Data) \
+(Data).PnPState = NotStarted;\
+(Data).PreviousPnPState = NotStarted;
+
+#define SET_NEW_PNP_STATE(Data, state) \
+(Data).PreviousPnPState = (Data).PnPState;\
+(Data).PnPState = (state);
+
+#define RESTORE_PREVIOUS_PNP_STATE(Data) \
+(Data).PnPState = (Data).PreviousPnPState;
+
 typedef struct
 {
     BOOLEAN IsFDO;
+    // We'll track device PnP state via this variables
+    DEVICE_PNP_STATE PnPState;
+    DEVICE_PNP_STATE PreviousPnPState;
+    // Remove lock
+    IO_REMOVE_LOCK RemoveLock;
 } COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
 typedef struct _HUB_CHILDDEVICE_EXTENSION
@@ -72,6 +106,8 @@ typedef struct _HUB_DEVICE_EXTENSION
     PDEVICE_OBJECT RootHubPhysicalDeviceObject;
     PDEVICE_OBJECT RootHubFunctionalDeviceObject;
 
+    KGUARDED_MUTEX HubMutexLock;
+
     ULONG NumberOfHubs;
     KEVENT ResetComplete;
 
@@ -94,7 +130,6 @@ typedef struct _HUB_DEVICE_EXTENSION
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;
     USBD_PIPE_HANDLE PipeHandle;
     PVOID RootHubHandle;
-    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 
     UNICODE_STRING SymbolicLinkName;
     ULONG InstanceCount;

@@ -97,16 +97,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Používať nasledovný efekt prechodu pre ponuky a názvy tlačidiel",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "Po&užívať nasledovnú metódu vyhladenia okrajov zobrazeného písma", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Používať &veľké ikony", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Zobrazovať tiene pod ponukami", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Zobrazovať &obsah okna počas presúvania", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Skrývať podčiarknuté písmená (klávesové skratky) až do stlačenia klávesu Alt",
@@ -180,7 +180,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Štandardná"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -228,28 +228,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Pracovná plocha"
-    IDS_ELEMENT_2 "Záhlavie neaktívneho okna"
-    IDS_ELEMENT_3 "Okraj neaktívneho okna"
-    IDS_ELEMENT_4 "Záhlavie aktívneho okna"
-    IDS_ELEMENT_5 "Okraj aktívneho okna"
-    IDS_ELEMENT_6 "Ponuka"
-    IDS_ELEMENT_7 "Vybraté položky"
-    IDS_ELEMENT_8 "Okno"
-    IDS_ELEMENT_9 "Posúvač"
-    IDS_ELEMENT_10 "Priestorové objekty"
-    IDS_ELEMENT_11 "Názov palety"
-    IDS_ELEMENT_12 "Názov tlačidla"
-    IDS_ELEMENT_13 "Ovládacie tlačidlá" // old=Lišta značiek
-    IDS_ELEMENT_14 "Nedostupné položky ponuky"
-    IDS_ELEMENT_15 "Políčko s hlásením"
-    IDS_ELEMENT_16 "Ovládanie posúvača"
-    IDS_ELEMENT_17 "Pozadie aplikácie"
-    IDS_ELEMENT_18 "Malé ovládacie tlačidlá"
-    IDS_ELEMENT_19 "Rozostup ikon (vodorovne)"
-    IDS_ELEMENT_20 "Rozostup ikon (zvislo)"
-    IDS_ELEMENT_21 "Popis tlačidiel"
-    IDS_ELEMENT_22 "Ikona"
+    IDS_ELEMENT_0 "Pracovná plocha"
+    IDS_ELEMENT_1 "Záhlavie neaktívneho okna"
+    IDS_ELEMENT_2 "Okraj neaktívneho okna"
+    IDS_ELEMENT_3 "Záhlavie aktívneho okna"
+    IDS_ELEMENT_4 "Okraj aktívneho okna"
+    IDS_ELEMENT_5 "Ponuka"
+    IDS_ELEMENT_6 "Vybraté položky"
+    IDS_ELEMENT_7 "Okno"
+    IDS_ELEMENT_8 "Posúvač"
+    IDS_ELEMENT_9 "Priestorové objekty"
+    IDS_ELEMENT_10 "Názov palety"
+    IDS_ELEMENT_11 "Ovládacie tlačidlá" // old=Lišta značiek
+    IDS_ELEMENT_12 "Políčko s hlásením"
+    IDS_ELEMENT_13 "Pozadie aplikácie"
+    IDS_ELEMENT_14 "Rozostup ikon (vodorovne)"
+    IDS_ELEMENT_15 "Rozostup ikon (zvislo)"
+    IDS_ELEMENT_16 "Popis tlačidiel"
+    IDS_ELEMENT_17 "Ikona"
+//  IDS_ELEMENT_18 "Nedostupné položky ponuky"
 END
 
 STRINGTABLE

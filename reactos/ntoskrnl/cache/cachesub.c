@@ -108,11 +108,11 @@ CcScheduleReadAhead(IN PFILE_OBJECT FileObject,
     WorkItem->FileOffset = *FileOffset;
     WorkItem->Length = Length;
 
-    ExInitializeWorkItem(((PWORK_QUEUE_ITEM)WorkItem),
+    ExInitializeWorkItem(&WorkItem->WorkItem,
                          (PWORKER_THREAD_ROUTINE)CcpReadAhead,
                          WorkItem);
 
-    ExQueueWorkItem((PWORK_QUEUE_ITEM)WorkItem, DelayedWorkQueue);
+    ExQueueWorkItem(&WorkItem->WorkItem, DelayedWorkQueue);
     DPRINT("Done\n");
 }
 

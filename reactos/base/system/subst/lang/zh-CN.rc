@@ -7,6 +7,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "参数个数不正确 - %s\n"
     IDS_INVALID_PARAMETER "参数个数不正确 - %s\n"
     IDS_INVALID_PARAMETER2 "无效参数 - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
+    IDS_ACCESS_DENIED "Access denied - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "驱动器已经运行过 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "操作失败！错误码 0x%x：%s\n"
     IDS_USAGE "将一个路径用驱动器号关联。\n\n\

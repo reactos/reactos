@@ -78,10 +78,6 @@ TODO:
 */
 
 extern HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder);
-extern HRESULT CreateToolsBar(REFIID riid, void **ppv);
-extern HRESULT CreateBrandBand(REFIID riid, void **ppv);
-extern HRESULT CreateBandProxy(REFIID riid, void **ppv);
-extern HRESULT CreateAddressBand(REFIID riid, void **ppv);
 
 HRESULT IUnknown_RelayWinEvent(IUnknown * punk, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
@@ -442,7 +438,7 @@ static HRESULT GetFavoritesFolder(IShellFolder ** ppsfFavorites, LPITEMIDLIST * 
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = CreateMergedFolder(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
+    hr = CMergedFolder_CreateInstance(IID_PPV_ARG(IAugmentedShellFolder, &pasf));
     if (FAILED_UNEXPECTEDLY(hr))
     {
         *ppsfFavorites = psfUserFavorites.Detach();
@@ -503,7 +499,7 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::GetObject(LPSMDATA psmd, REFIID riid, v
 
     if (fFavoritesMenu.p == NULL)
     {
-        hResult = CreateMenuBand(IID_PPV_ARG(IShellMenu, &newMenu));
+        hResult = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &newMenu));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = newMenu->Initialize(this, FCIDM_MENU_FAVORITES, -1, SMINIT_VERTICAL | SMINIT_CACHED);
@@ -650,9 +646,9 @@ HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (availableBorderSpace.top > maxHeight)
+    if (maxHeight && availableBorderSpace.bottom - availableBorderSpace.top > maxHeight)
     {
-        availableBorderSpace.top = maxHeight;
+        availableBorderSpace.bottom = availableBorderSpace.top + maxHeight;
     }
 
     return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
@@ -671,7 +667,7 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
 
     *pMenuBar = NULL;
 
-    hResult = CreateMenuBand(IID_PPV_ARG(IShellMenu, &menubar));
+    hResult = CMenuBand_CreateInstance(IID_PPV_ARG(IShellMenu, &menubar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     
@@ -719,29 +715,6 @@ HRESULT CInternetToolbar::CreateMenuBar(IShellMenu **pMenuBar)
     return S_OK;
 }
 
-HRESULT CInternetToolbar::CreateBrandBand(IUnknown **logoBar)
-{
-#if 1
-    return ::CreateBrandBand(IID_PPV_ARG(IUnknown, logoBar));
-#else
-    return CoCreateInstance(CLSID_BrandBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, logoBar));
-#endif
-}
-
-HRESULT CInternetToolbar::CreateToolsBar(IUnknown **toolsBar)
-{
-    return ::CreateToolsBar(IID_PPV_ARG(IUnknown, toolsBar));
-}
-
-HRESULT CInternetToolbar::CreateAddressBand(IUnknown **toolsBar)
-{
-#if 1
-    return ::CreateAddressBand(IID_PPV_ARG(IUnknown, toolsBar));
-#else
-    return CoCreateInstance(CLSID_SH_AddressBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, toolsBar));
-#endif
-}
-
 HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
 {
     REBARBANDINFOW                          rebarBandInfo;
@@ -769,7 +742,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                 SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
             }
         }
-        hResult = ReserveBorderSpace();
+        hResult = ReserveBorderSpace(0);
 
         // TODO: refresh view menu?
     }
@@ -817,7 +790,7 @@ HRESULT CInternetToolbar::CreateAndInitBandProxy()
     hResult = serviceProvider->QueryService(SID_IBandProxy, IID_PPV_ARG(IBandProxy, &fBandProxy));
     if (FAILED_UNEXPECTEDLY(hResult))
     {
-        hResult = CreateBandProxy(IID_PPV_ARG(IBandProxy, &fBandProxy));
+        hResult = CBandProxy_CreateInstance(IID_PPV_ARG(IBandProxy, &fBandProxy));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
         hResult = fBandProxy->SetSite(fSite);
@@ -961,6 +934,8 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::CloseDW(DWORD dwReserved)
             return hResult;
         ReleaseCComPtrExpectZero(fLogoBar);
     }
+
+    SetSite(NULL);
     return S_OK;
 }
 
@@ -1048,7 +1023,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
     // and it will put them in their own row, sized to take up the whole row.
 #if 0
     /* Create and attach the brand/logo to the rebar */
-    hResult = CreateBrandBand(&logoBar);
+    hResult = CBrandBand_CreateInstance(IID_PPV_ARG(IUnknown, &logoBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     AddDockItem(logoBar, ITBBID_BRANDBAND, CDockSite::ITF_NOGRIPPER | CDockSite::ITF_NOTITLE | CDockSite::ITF_FIXEDSIZE);
@@ -1056,7 +1031,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
 #endif
 
     /* Create and attach the standard toolbar to the rebar */
-    hResult = CreateToolsBar(&toolsBar);
+    hResult = CToolsBand_CreateInstance(IID_PPV_ARG(IUnknown, &toolsBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     AddDockItem(toolsBar, ITBBID_TOOLSBAND, CDockSite::ITF_NOTITLE | CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
@@ -1066,7 +1041,7 @@ HRESULT STDMETHODCALLTYPE CInternetToolbar::InitNew()
         return hResult;
 
     /* Create and attach the address/navigation toolbar to the rebar */
-    hResult = CreateAddressBand(&navigationBar);
+    hResult = CAddressBand_CreateInstance(IID_PPV_ARG(IUnknown, &navigationBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     AddDockItem(navigationBar, ITBBID_ADDRESSBAND, CDockSite::ITF_NEWBANDALWAYS | CDockSite::ITF_GRIPPERALWAYS);
@@ -1503,33 +1478,7 @@ LRESULT CInternetToolbar::OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
 
 LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    CComPtr<IObjectWithSite>                objectWithSite;
-    CComPtr<IContextMenu>                   contextMenu;
-    CMINVOKECOMMANDINFO                     commandInfo;
-    const char                              *searchGUID = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}";
-    HRESULT                                 hResult;
-
-    // TODO: Query shell if this command is enabled first
-
-    memset(&commandInfo, 0, sizeof(commandInfo));
-    commandInfo.cbSize = sizeof(commandInfo);
-    commandInfo.hwnd = m_hWnd;
-    commandInfo.lpParameters = searchGUID;
-    commandInfo.nShow = SW_SHOWNORMAL;
-
-    hResult = CoCreateInstance(CLSID_ShellSearchExt, NULL, CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IContextMenu, &contextMenu));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return 0;
-    hResult = contextMenu->QueryInterface(IID_PPV_ARG(IObjectWithSite, &objectWithSite));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return 0;
-    hResult = objectWithSite->SetSite(fSite);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return 0;
-    hResult = contextMenu->InvokeCommand(&commandInfo);
-    hResult = objectWithSite->SetSite(NULL);
-    return 0;
+    return IUnknown_Exec(fSite, CLSID_CommonButtons, 0x123, 1, NULL, NULL); 
 }
 
 LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
@@ -1901,7 +1850,3 @@ LRESULT CInternetToolbar::OnLUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
-HRESULT CreateInternetToolbar(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CInternetToolbar>(riid, ppv);
-}

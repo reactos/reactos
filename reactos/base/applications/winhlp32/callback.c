@@ -30,7 +30,7 @@ static HANDLE CALLBACK WHD_Open(LPSTR name, BYTE flags)
 {
     unsigned    mode = 0;
 
-    WINE_FIXME("(%s %x)\n", wine_dbgstr_a(name), flags);
+    WINE_FIXME("(%s %x)\n", debugstr_a(name), flags);
     switch (flags)
     {
     case 0: mode = GENERIC_READ | GENERIC_WRITE; break;
@@ -50,7 +50,7 @@ static WORD CALLBACK WHD_Close(HANDLE fs)
 
 static HANDLE CALLBACK WHD_OpenBag(HANDLE fs, LPSTR name, BYTE flags)
 {
-    WINE_FIXME("(%p %s %x)\n", fs, name, flags);
+    WINE_FIXME("(%p %s %x)\n", fs, debugstr_a(name), flags);
     return NULL;
 }
 

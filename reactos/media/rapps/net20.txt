@@ -33,6 +33,11 @@ License = Nespecificată
 Description = Pachet necesar pentru execuția în Windows a aplicațiilor gestionate, scrise într-un limbaj ca C#.
 Size = 22,4 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Компоненты, необходимые для запуска некоторых Windows приложений.
+Size = 22,4 МиБ
+
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Yeniden Dağıtılabilir Paket
 License = Bilinmiyor

@@ -74,7 +74,7 @@ SHA1 = 218aacd48c7455d45db3c59aa5771153b330b4e3
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 8.5 MiB
+Size = 8,5 МиБ
 URLSite = http://www.mozilla.org/ru/
 URLDownload = http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/3.6.28/win32/ru/Firefox%20Setup%203.6.28.exe
 SHA1 = 2ff80e64b501d46f77a873e27b9293a49a24001d

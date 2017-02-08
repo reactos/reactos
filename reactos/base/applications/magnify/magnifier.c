@@ -71,7 +71,7 @@ INT_PTR CALLBACK    AboutProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    OptionsProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    WarningProc(HWND, UINT, WPARAM, LPARAM);
 
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     MSG msg;
     HACCEL hAccelTable;
@@ -102,7 +102,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
     /* Main message loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (!TranslateAccelerator(hMainWnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -726,6 +726,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
                 ReleaseCapture();
             }
+            break;
 
         case WM_SIZE:
             if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_SETPOS);
@@ -814,6 +815,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         ShowWindow(hMainWnd, SW_HIDE);
                     else
                         ShowWindow(hMainWnd, SW_SHOW);
+                    break;
             }
             return 0;
         }

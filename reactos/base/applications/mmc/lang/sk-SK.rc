@@ -12,8 +12,8 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Súbor"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otvoriť...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
     END
@@ -27,10 +27,10 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Súbor"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "&Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otvoriť...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Uložiť", IDM_FILE_SAVE
+        MENUITEM "Uložiť &ako...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Skončiť\tAlt+F4", IDM_FILE_EXIT
     END

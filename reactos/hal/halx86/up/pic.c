@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+NTAPI
+HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
+                         IN PKTRAP_FRAME TrapFrame);
+
 /* GLOBALS ********************************************************************/
 
 #ifndef _MINIHAL_
@@ -263,7 +268,7 @@ ULONG FindHigherIrqlMask[32] =
      * so it will always preempt until we reach PROFILE_LEVEL.
      */
     0b00000000000000000001011111110000, /* IRQL 20 */
-    0b00000000000000000001001111110000, /* IRQL 20 */
+    0b00000000000000000001001111110000, /* IRQL 21 */
     0b00000000000000000001000111110000, /* IRQL 22 */
     0b00000000000000000001000011110000, /* IRQL 23 */
     0b00000000000000000001000001110000, /* IRQL 24 */
@@ -732,14 +737,16 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
     KeGetPcr()->IRR &= ~(1 << Irql);
 }
 
-VOID
+PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY
 NTAPI
-HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
-                         IN PKTRAP_FRAME TrapFrame)
+HalpEndSoftwareInterrupt2(IN KIRQL OldIrql,
+                          IN PKTRAP_FRAME TrapFrame)
 {
     ULONG PendingIrql, PendingIrqlMask, PendingIrqMask;
     PKPCR Pcr = KeGetPcr();
     PIC_MASK Mask;
+
+    UNREFERENCED_PARAMETER(TrapFrame);
 
     /* Set old IRQL */
     Pcr->Irql = OldIrql;
@@ -749,10 +756,10 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
     {
         /* Check for pending software interrupts and compare with current IRQL */
         PendingIrqlMask = Pcr->IRR & FindHigherIrqlMask[OldIrql];
-        if (!PendingIrqlMask) return;
+        if (!PendingIrqlMask) return NULL;
 
         /* Check for in-service delayed interrupt */
-        if (Pcr->IrrActive & 0xFFFFFFF0) return;
+        if (Pcr->IrrActive & 0xFFFFFFF0) return NULL;
 
         /* Check if pending IRQL affects hardware state */
         BitScanReverse(&PendingIrql, PendingIrqlMask);
@@ -777,10 +784,11 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql,
         else
         {
             /* No need to loop checking for hardware interrupts */
-            SWInterruptHandlerTable2[PendingIrql](TrapFrame);
-            UNREACHABLE;
+            return SWInterruptHandlerTable2[PendingIrql];
         }
     }
+
+    return NULL;
 }
 
 /* EDGE INTERRUPT DISMISSAL FUNCTIONS *****************************************/

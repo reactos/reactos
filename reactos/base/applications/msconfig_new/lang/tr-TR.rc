@@ -29,7 +29,7 @@ BEGIN
     CONTROL         "S&YSTEM.INI Kütüğünü İşle", IDC_CBX_SYSTEM_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 86, 316, 10
     CONTROL         "&WIN.INI Kütüğünü İşle", IDC_CBX_WIN_INI, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 98, 316, 10
     CONTROL         "D&izge Hizmetlerini Yükle", IDC_CBX_LOAD_SYSTEM_SERVICES, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 110, 316, 10
-    CONTROL         "&Başlangıç Öğelerini Yükle", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
+    CONTROL         "&Başlangıç Ögelerini Yükle", IDC_CBX_LOAD_STARTUP_ITEMS, "Button", BS_AUTO3STATE | WS_TABSTOP, 35, 122, 316, 10
     CONTROL         "&Özgün Ön Yükleme Yapılandırmasını Kullan", IDC_CBX_USE_ORIGINAL_BOOTCFG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 35, 134, 316, 10
     PUSHBUTTON      "Di&zge Geri Yükleme'yi Başlat", IDC_BTN_SYSTEM_RESTORE_START, 146, 156, 124, 14
     PUSHBUTTON      "&Kütüğü Genişlet...", IDC_BTN_FILE_EXTRACTION, 275, 156, 85, 14
@@ -229,7 +229,7 @@ BEGIN
     IDS_TOOLS_COLUMN_NAME "Araç Adı"
     IDS_TOOLS_COLUMN_DESCR "Açıklama"
     IDS_TOOLS_COLUMN_STANDARD "Ölçünlü"
-    IDS_STARTUP_COLUMN_ELEMENT "Öğe"
+    IDS_STARTUP_COLUMN_ELEMENT "Öge"
     IDS_STARTUP_COLUMN_CMD "Komut"
     IDS_STARTUP_COLUMN_PATH "Yol"
 END

@@ -397,6 +397,9 @@ Fat32Format(IN HANDLE FileHandle,
     ULONG TmpVal1;
     ULONG TmpVal2;
     NTSTATUS Status;
+    ULONG UsableFatEntries;
+    ULONG FirstDataSector;
+    ULONG DataClusters;
 
     /* Calculate cluster size */
     if (ClusterSize == 0)
@@ -468,6 +471,20 @@ Fat32Format(IN HANDLE FileHandle,
     TmpVal2 = ((BootSector.BytesPerSector / 4) * BootSector.SectorsPerCluster) + BootSector.FATCount;
     BootSector.FATSectors32 = (TmpVal1 + (TmpVal2 - 1)) / TmpVal2;
     DPRINT("FATSectors32 = %lu\n", BootSector.FATSectors32);
+
+    /* edge case: first 2 fat entries are not usable, so the calculation might need a correction */
+    UsableFatEntries = BootSector.FATSectors32 * (BootSector.BytesPerSector / 4) - 2;
+    FirstDataSector = BootSector.ReservedSectors + BootSector.FATCount * BootSector.FATSectors32;
+    DataClusters = (BootSector.SectorsHuge - FirstDataSector) / BootSector.SectorsPerCluster;
+    if (DataClusters > UsableFatEntries)
+    {
+        /* Need more fat entries */
+        BootSector.FATSectors32 += (DataClusters - UsableFatEntries);
+
+        DPRINT("UsableFatEntries = %lu\n", UsableFatEntries);
+        DPRINT("DataClusters = %lu\n", DataClusters);
+        DPRINT("BootSector.FATSectors32 incremented to %lu\n", BootSector.FATSectors32);
+    }
 
     /* Init context data */
     Context->TotalSectorCount =

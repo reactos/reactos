@@ -1,241 +1,177 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS ping utility
+ * Copyright (c) 2015 Tim Crawford
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+/*
+ * PROJECT:     ReactOS Ping Command
+ * LICENSE:     MIT
  * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
- * PROGRAMMERS:
+ * PROGRAMMERS: Tim Crawford <crawfxrd@gmail.com>
  */
 
+#include <stdlib.h>
+
+#define WIN32_LEAN_AND_MEAN
+
 #define WIN32_NO_STATUS
-#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
-#include <winnls.h>
-#include <wincon.h>
-#define _INC_WINDOWS
+#include <winsock2.h>
 #include <ws2tcpip.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <iphlpapi.h>
+#include <icmpapi.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
 #define NDEBUG
+#include <debug.h>
 
-/* General ICMP constants */
-#define ICMP_MINSIZE        8     /* Minimum ICMP packet size */
-#define ICMP_MAXSIZE        65535 /* Maximum ICMP packet size */
+#define SIZEOF_ICMP_ERROR 8
+#define SIZEOF_IO_STATUS_BLOCK 8
+#define DEFAULT_TIMEOUT 1000
+#define MAX_SEND_SIZE 65500
 
-/* ICMP message types */
-#define ICMPMSG_ECHOREQUEST 8     /* ICMP ECHO request message */
-#define ICMPMSG_ECHOREPLY   0     /* ICMP ECHO reply message */
+static BOOL ParseCmdLine(int argc, PWSTR argv[]);
+static BOOL ResolveTarget(PCWSTR target);
+static void Ping(void);
+static void PrintStats(void);
+static BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType);
 
-#pragma pack(4)
+static HANDLE hIcmpFile = INVALID_HANDLE_VALUE;
+static ULONG Timeout = 4000;
+static int Family = AF_UNSPEC;
+static ULONG RequestSize = 32;
+static ULONG PingCount = 4;
+static BOOL PingForever = FALSE;
+static PADDRINFOW Target = NULL;
+static PCWSTR TargetName = NULL;
+static WCHAR Address[46];
+static WCHAR CanonName[NI_MAXHOST];
+static BOOL ResolveAddress = FALSE;
 
-/* IPv4 header structure */
-typedef struct _IPv4_HEADER
+static ULONG RTTMax = 0;
+static ULONG RTTMin = 0;
+static ULONG RTTTotal = 0;
+static ULONG EchosSent = 0;
+static ULONG EchosReceived = 0;
+static ULONG EchosSuccessful = 0;
+
+static IP_OPTION_INFORMATION IpOptions;
+
+int
+wmain(int argc, WCHAR *argv[])
 {
-    unsigned char IHL:4;
-    unsigned char Version:4;
-    unsigned char TOS;
-    unsigned short Length;
-    unsigned short Id;
-    unsigned short FragFlags;
-    unsigned char TTL;
-    unsigned char Protocol;
-    unsigned short Checksum;
-    unsigned int SrcAddress;
-    unsigned int DstAddress;
-} IPv4_HEADER, *PIPv4_HEADER;
+    WSADATA wsaData;
+    ULONG i;
+    DWORD StrLen = 46;
+    int Status;
 
-/* ICMP echo request/reply header structure */
-typedef struct _ICMP_HEADER
-{
-    unsigned char Type;
-    unsigned char Code;
-    unsigned short Checksum;
-    unsigned short Id;
-    unsigned short SeqNum;
-} ICMP_HEADER, *PICMP_HEADER;
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
-typedef struct _ICMP_ECHO_PACKET
-{
-    ICMP_HEADER Icmp;
-} ICMP_ECHO_PACKET, *PICMP_ECHO_PACKET;
+    IpOptions.Ttl = 128;
 
-#pragma pack(1)
+    if (!ParseCmdLine(argc, argv))
+        return 1;
 
-BOOL                NeverStop;
-BOOL                ResolveAddresses;
-UINT                PingCount;
-UINT                DataSize;   /* ICMP echo request data size */
-BOOL                DontFragment;
-ULONG               TTLValue;
-ULONG               TOSValue;
-ULONG               Timeout;
-WCHAR               TargetName[256];
-SOCKET              IcmpSock;
-SOCKADDR_IN         Target;
-WCHAR               TargetIP[16];
-FD_SET              Fds;
-TIMEVAL             Timeval;
-UINT                CurrentSeqNum;
-UINT                SentCount;
-UINT                LostCount;
-BOOL                MinRTTSet;
-LARGE_INTEGER       MinRTT;     /* Minimum round trip time in microseconds */
-LARGE_INTEGER       MaxRTT;
-LARGE_INTEGER       SumRTT;
-LARGE_INTEGER       AvgRTT;
-LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
-LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
-LARGE_INTEGER       SentTime;
-BOOL                UsePerformanceCounter;
-HANDLE              hStdOutput;
-
-#ifndef NDEBUG
-/* Display the contents of a buffer */
-static VOID DisplayBuffer(
-    PVOID Buffer,
-    DWORD Size)
-{
-    UINT i;
-    PCHAR p;
-
-    printf("Buffer (0x%p)  Size (0x%lX).\n", Buffer, Size);
-
-    p = (PCHAR)Buffer;
-    for (i = 0; i < Size; i++)
+    if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
     {
-        if (i % 16 == 0)
-            printf("\n");
-        printf("%02X ", (p[i]) & 0xFF);
-    }
-}
-#endif /* !NDEBUG */
-
-void FormatOutput(UINT uID, ...)
-{
-    va_list valist;
-
-    WCHAR Buf[1024];
-    CHAR AnsiBuf[1024];
-    LPWSTR pBuf = Buf;
-    PCHAR pAnsiBuf = AnsiBuf;
-    WCHAR Format[1024];
-    DWORD written;
-    UINT DataLength;
-    int AnsiLength;
-
-    if (!LoadString(GetModuleHandle(NULL), uID,
-                    Format, sizeof(Format) / sizeof(WCHAR)))
-    {
-        return;
+        DPRINT("Failed to set control handler: %lu\n", GetLastError());
+        return 1;
     }
 
-    va_start(valist, uID);
-
-    DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING, Format, 0, 0, Buf,\
-                  sizeof(Buf) / sizeof(WCHAR), &valist);
-
-    if(!DataLength)
+    Status = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (Status != 0)
     {
-        if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-        {
-            va_end(valist);
-            return;
-        }
-
-        DataLength = FormatMessage(FORMAT_MESSAGE_FROM_STRING |\
-                                    FORMAT_MESSAGE_ALLOCATE_BUFFER,\
-                                    Format, 0, 0, (LPWSTR)&pBuf, 0, &valist);
+        ConResPrintf(StdErr, IDS_WINSOCK_FAIL, Status);
+        return 1;
     }
 
-    if(!DataLength)
+    if (!ResolveTarget(TargetName))
     {
-        va_end(valist);
-        return;
+        WSACleanup();
+        return 1;
     }
 
-    if(GetFileType(hStdOutput) == FILE_TYPE_CHAR)
+    if (WSAAddressToStringW(Target->ai_addr, (DWORD)Target->ai_addrlen, NULL, Address, &StrLen) != 0)
     {
-        /* Is a console or a printer */
-        WriteConsole(hStdOutput, pBuf, DataLength, &written, NULL);
+        DPRINT("WSAAddressToStringW failed: %d\n", WSAGetLastError());
+        FreeAddrInfoW(Target);
+        WSACleanup();
+        return 1;
     }
+
+    if (Family == AF_INET6)
+        hIcmpFile = Icmp6CreateFile();
     else
+        hIcmpFile = IcmpCreateFile();
+
+
+    if (hIcmpFile == INVALID_HANDLE_VALUE)
     {
-        /* Is a pipe, socket, file or other */
-        AnsiLength = WideCharToMultiByte(CP_ACP, 0, pBuf, DataLength,\
-                                         NULL, 0, NULL, NULL);
-
-        if(AnsiLength >= sizeof(AnsiBuf))
-            pAnsiBuf = (PCHAR)HeapAlloc(GetProcessHeap(), 0, AnsiLength);
-
-        AnsiLength = WideCharToMultiByte(CP_OEMCP, 0, pBuf, DataLength,\
-                                         pAnsiBuf, AnsiLength, " ", NULL);
-
-        WriteFile(hStdOutput, pAnsiBuf, AnsiLength, &written, NULL);
-
-        if(pAnsiBuf != AnsiBuf)
-            HeapFree(NULL, 0, pAnsiBuf);
+        DPRINT("IcmpCreateFile failed: %lu\n", GetLastError());
+        FreeAddrInfoW(Target);
+        WSACleanup();
+        return 1;
     }
 
-    if(pBuf != Buf)
-        LocalFree(pBuf);
-}
+    if (*CanonName)
+        ConResPrintf(StdOut, IDS_PINGING_HOSTNAME, CanonName, Address);
+    else
+        ConResPrintf(StdOut, IDS_PINGING_ADDRESS, Address);
 
-/* Display usage information on screen */
-static VOID Usage(VOID)
-{
-    FormatOutput(IDS_USAGE);
-}
+    ConResPrintf(StdOut, IDS_PING_SIZE, RequestSize);
 
-/* Reset configuration to default values */
-static VOID Reset(VOID)
-{
-    LARGE_INTEGER PerformanceCounterFrequency;
+    Ping();
 
-    NeverStop             = FALSE;
-    ResolveAddresses      = FALSE;
-    PingCount             = 4;
-    DataSize              = 32;
-    DontFragment          = FALSE;
-    TTLValue              = 128;
-    TOSValue              = 0;
-    Timeout               = 1000;
-    UsePerformanceCounter = QueryPerformanceFrequency(&PerformanceCounterFrequency);
-
-    if (UsePerformanceCounter)
+    i = 1;
+    while (i < PingCount)
     {
-        /* Performance counters may return incorrect results on some multiprocessor
-           platforms so we restrict execution on the first processor. This may fail
-           on Windows NT so we fall back to GetCurrentTick() for timing */
-        if (SetThreadAffinityMask (GetCurrentThread(), 1) == 0)
-            UsePerformanceCounter = FALSE;
+        Sleep(1000);
+        Ping();
 
-        /* Convert frequency to ticks per millisecond */
-        TicksPerMs.QuadPart = PerformanceCounterFrequency.QuadPart / 1000;
-        /* And to ticks per microsecond */
-        TicksPerUs.QuadPart = PerformanceCounterFrequency.QuadPart / 1000000;
+        if (!PingForever)
+            i++;
     }
-    if (!UsePerformanceCounter)
-    {
-        /* 1 tick per millisecond for GetCurrentTick() */
-        TicksPerMs.QuadPart = 1;
-        /* GetCurrentTick() cannot handle microseconds */
-        TicksPerUs.QuadPart = 1;
-    }
+
+    PrintStats();
+
+    IcmpCloseHandle(hIcmpFile);
+    FreeAddrInfoW(Target);
+    WSACleanup();
+
+    return 0;
 }
 
-/* Parse command line parameters */
-static BOOL ParseCmdline(int argc, LPWSTR argv[])
+static
+BOOL
+ParseCmdLine(int argc, PWSTR argv[])
 {
-    INT i;
-    BOOL FoundTarget = FALSE, InvalidOption = FALSE;
+    int i;
 
     if (argc < 2)
     {
-        Usage();
+        ConResPrintf(StdOut, IDS_USAGE);
         return FALSE;
     }
 
@@ -245,524 +181,448 @@ static BOOL ParseCmdline(int argc, LPWSTR argv[])
         {
             switch (argv[i][1])
             {
-                case L't': NeverStop = TRUE; break;
-                case L'a': ResolveAddresses = TRUE; break;
-                case L'n':
-                    if (i + 1 < argc)
-                    {
-                        PingCount = wcstoul(argv[++i], NULL, 0);
+            case L't':
+                PingForever = TRUE;
+                break;
 
-                        if (PingCount == 0)
-                        {
-                            FormatOutput(IDS_BAD_VALUE_OPTION_N, UINT_MAX);
-                            return FALSE;
-                        }
-                    }
-                    else
-                        InvalidOption = TRUE;
-                    break;
-                case L'l':
-                    if (i + 1 < argc)
-                    {
-                        DataSize = wcstoul(argv[++i], NULL, 0);
+            case L'a':
+                ResolveAddress = TRUE;
+                break;
 
-                        if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
-                        {
-                            FormatOutput(IDS_BAD_VALUE_OPTION_L, ICMP_MAXSIZE - \
-                                         (int)sizeof(ICMP_ECHO_PACKET) - \
-                                         (int)sizeof(IPv4_HEADER));
-                            return FALSE;
-                        }
-                    } else
-                        InvalidOption = TRUE;
-                    break;
-                case L'f': DontFragment = TRUE; break;
-                case L'i':
-                    if (i + 1 < argc)
-                        TTLValue = wcstoul(argv[++i], NULL, 0);
-                    else
-                        InvalidOption = TRUE;
-                    break;
-                case L'v':
-                    if (i + 1 < argc)
-                        TOSValue = wcstoul(argv[++i], NULL, 0);
-                    else
-                        InvalidOption = TRUE;
-                    break;
-                case L'w':
-                    if (i + 1 < argc)
-                        Timeout = wcstoul(argv[++i], NULL, 0);
-                    else
-                        InvalidOption = TRUE;
-                    break;
-                case '?':
-                    Usage();
-                    return FALSE;
-                default:
-                    FormatOutput(IDS_BAD_OPTION, argv[i]);
-                    return FALSE;
-            }
-            if (InvalidOption)
+            case L'n':
             {
-                FormatOutput(IDS_BAD_OPTION_FORMAT, argv[i]);
+                if (i + 1 < argc)
+                {
+                    PingForever = FALSE;
+                    PingCount = wcstoul(argv[++i], NULL, 0);
+                    if (PingCount == 0)
+                    {
+                        ConResPrintf(StdErr, IDS_BAD_VALUE, argv[i - 1], 1, UINT_MAX);
+                        return FALSE;
+                    }
+                }
+                else
+                {
+                    ConResPrintf(StdErr, IDS_MISSING_VALUE, argv[i]);
+                    return FALSE;
+                }
+                break;
+            }
+
+            case L'l':
+            {
+                if (i + 1 < argc)
+                {
+                    RequestSize = wcstoul(argv[++i], NULL, 0);
+                    if (RequestSize > MAX_SEND_SIZE)
+                    {
+                        ConResPrintf(StdErr, IDS_BAD_VALUE, argv[i - 1], 0, MAX_SEND_SIZE);
+                        return FALSE;
+                    }
+                }
+                else
+                {
+                    ConResPrintf(StdErr, IDS_MISSING_VALUE, argv[i]);
+                    return FALSE;
+                }
+                break;
+            }
+
+            case L'f':
+            {
+                if (Family == AF_INET6)
+                {
+                    ConResPrintf(StdErr, IDS_WRONG_FAMILY, argv[i], L"IPv4");
+                    return FALSE;
+                }
+
+                Family = AF_INET;
+                IpOptions.Flags |= IP_FLAG_DF;
+                break;
+            }
+
+            case L'i':
+            {
+                if (i + 1 < argc)
+                {
+                    ULONG Ttl = wcstoul(argv[++i], NULL, 0);
+
+                    if ((Ttl == 0) || (Ttl > UCHAR_MAX))
+                    {
+                        ConResPrintf(StdErr, IDS_BAD_VALUE, argv[i - 1], 1, UCHAR_MAX);
+                        return FALSE;
+                    }
+
+                    IpOptions.Ttl = (UCHAR)Ttl;
+                }
+                else
+                {
+                    ConResPrintf(StdErr, IDS_MISSING_VALUE, argv[i]);
+                    return FALSE;
+                }
+                break;
+            }
+
+            case L'v':
+            {
+                if (Family == AF_INET6)
+                {
+                    ConResPrintf(StdErr, IDS_WRONG_FAMILY, argv[i], L"IPv4");
+                    return FALSE;
+                }
+
+                Family = AF_INET;
+
+                if (i + 1 < argc)
+                {
+                    /* This option has been deprecated. Don't do anything. */
+                    i++;
+                }
+                else
+                {
+                    ConResPrintf(StdErr, IDS_MISSING_VALUE, argv[i]);
+                    return FALSE;
+                }
+
+                break;
+            }
+
+            case L'w':
+            {
+                if (i + 1 < argc)
+                {
+                    Timeout = wcstoul(argv[++i], NULL, 0);
+                    if (Timeout < DEFAULT_TIMEOUT)
+                        Timeout = DEFAULT_TIMEOUT;
+                }
+                else
+                {
+                    ConResPrintf(StdErr, IDS_MISSING_VALUE, argv[i]);
+                    return FALSE;
+                }
+                break;
+            }
+
+            case L'R':
+            {
+                if (Family == AF_INET)
+                {
+                    ConResPrintf(StdErr, IDS_WRONG_FAMILY, argv[i], L"IPv6");
+                    return FALSE;
+                }
+
+                Family = AF_INET6;
+
+                /* This option has been deprecated. Don't do anything. */
+                break;
+            }
+
+            case L'4':
+            {
+                if (Family == AF_INET6)
+                {
+                    ConResPrintf(StdErr, IDS_WRONG_FAMILY, argv[i], L"IPv4");
+                    return FALSE;
+                }
+
+                Family = AF_INET;
+                break;
+            }
+
+            case L'6':
+            {
+                if (Family == AF_INET)
+                {
+                    ConResPrintf(StdErr, IDS_WRONG_FAMILY, argv[i], L"IPv6");
+                    return FALSE;
+                }
+
+                Family = AF_INET6;
+                break;
+            }
+
+            case L'?':
+                ConResPrintf(StdOut, IDS_USAGE);
+                return FALSE;
+
+            default:
+                ConResPrintf(StdErr, IDS_BAD_OPTION, argv[i]);
+                ConResPrintf(StdErr, IDS_USAGE);
                 return FALSE;
             }
         }
         else
         {
-            if (FoundTarget)
+            if (TargetName != NULL)
             {
-                FormatOutput(IDS_BAD_PARAMETER, argv[i]);
+                ConResPrintf(StdErr, IDS_BAD_PARAMETER, argv[i]);
                 return FALSE;
             }
-            else
-            {
-                wcscpy(TargetName, argv[i]);
-                FoundTarget = TRUE;
-            }
+
+            TargetName = argv[i];
         }
     }
 
-    if (!FoundTarget)
+    if (TargetName == NULL)
     {
-        FormatOutput(IDS_DEST_MUST_BE_SPECIFIED);
+        ConResPrintf(StdErr, IDS_MISSING_ADDRESS);
         return FALSE;
     }
 
     return TRUE;
 }
 
-/* Calculate checksum of data */
-static WORD Checksum(PUSHORT data, UINT size)
+static
+BOOL
+ResolveTarget(PCWSTR target)
 {
-    ULONG sum = 0;
+    ADDRINFOW hints;
+    int Status;
 
-    while (size > 1)
-    {
-        sum  += *data++;
-        size -= sizeof(USHORT);
-    }
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = Family;
+    hints.ai_flags = AI_NUMERICHOST;
 
-    if (size)
-        sum += *(UCHAR*)data;
-
-    sum = (sum >> 16) + (sum & 0xFFFF);
-    sum += (sum >> 16);
-
-    return (USHORT)(~sum);
-}
-
-static BOOL WINAPI StopLoop(DWORD dwCtrlType)
-{
-    NeverStop = FALSE;
-    PingCount = 0;
-
-    return TRUE;
-}
-
-/* Prepare to ping target */
-static BOOL Setup(VOID)
-{
-    WORD     wVersionRequested;
-    WSADATA  WsaData;
-    INT      Status;
-    ULONG    Addr;
-    PHOSTENT phe;
-    CHAR     aTargetName[256];
-
-    wVersionRequested = MAKEWORD(2, 2);
-
-    Status = WSAStartup(wVersionRequested, &WsaData);
+    Status = GetAddrInfoW(target, NULL, &hints, &Target);
     if (Status != 0)
     {
-        FormatOutput(IDS_COULD_NOT_INIT_WINSOCK);
-        return FALSE;
-    }
+        hints.ai_flags = AI_CANONNAME;
 
-    IcmpSock = WSASocket(AF_INET, SOCK_RAW, IPPROTO_ICMP, NULL, 0, 0);
-    if (IcmpSock == INVALID_SOCKET)
-    {
-        FormatOutput(IDS_COULD_NOT_CREATE_SOCKET, WSAGetLastError());
-        return FALSE;
-    }
-
-    if (setsockopt(IcmpSock,
-                   IPPROTO_IP,
-                   IP_DONTFRAGMENT,
-                   (const char *)&DontFragment,
-                   sizeof(DontFragment)) == SOCKET_ERROR)
-    {
-        FormatOutput(IDS_SETSOCKOPT_FAILED, WSAGetLastError());
-        return FALSE;
-    }
-
-    if (setsockopt(IcmpSock,
-                   IPPROTO_IP,
-                   IP_TTL,
-                   (const char *)&TTLValue,
-                   sizeof(TTLValue)) == SOCKET_ERROR)
-    {
-        FormatOutput(IDS_SETSOCKOPT_FAILED, WSAGetLastError());
-        return FALSE;
-    }
-
-
-    if(!WideCharToMultiByte(CP_ACP, 0, TargetName, -1, aTargetName,\
-                            sizeof(aTargetName), NULL, NULL))
-    {
-        FormatOutput(IDS_UNKNOWN_HOST, TargetName);
-        return FALSE;
-    }
-
-    ZeroMemory(&Target, sizeof(Target));
-    phe = NULL;
-    Addr = inet_addr(aTargetName);
-    if (Addr == INADDR_NONE)
-    {
-        phe = gethostbyname(aTargetName);
-        if (phe == NULL)
+        Status = GetAddrInfoW(target, NULL, &hints, &Target);
+        if (Status != 0)
         {
-            FormatOutput(IDS_UNKNOWN_HOST, TargetName);
+            ConResPrintf(StdOut, IDS_UNKNOWN_HOST, target);
             return FALSE;
         }
 
-        CopyMemory(&Target.sin_addr, phe->h_addr, phe->h_length);
-        Target.sin_family = phe->h_addrtype;
+        wcsncpy(CanonName, Target->ai_canonname, wcslen(Target->ai_canonname));
     }
-    else
+    else if (ResolveAddress)
     {
-        Target.sin_addr.s_addr = Addr;
-        Target.sin_family = AF_INET;
+        Status = GetNameInfoW(Target->ai_addr, Target->ai_addrlen,
+                              CanonName, _countof(CanonName),
+                              NULL, 0,
+                              NI_NAMEREQD);
+        if (Status != 0)
+        {
+            DPRINT("GetNameInfoW failed: %d\n", WSAGetLastError());
+        }
     }
 
-
-    swprintf(TargetIP, L"%d.%d.%d.%d", Target.sin_addr.S_un.S_un_b.s_b1,\
-                                       Target.sin_addr.S_un.S_un_b.s_b2,\
-                                       Target.sin_addr.S_un.S_un_b.s_b3,\
-                                       Target.sin_addr.S_un.S_un_b.s_b4);
-    CurrentSeqNum = 1;
-    SentCount = 0;
-    LostCount = 0;
-    MinRTT.QuadPart = 0;
-    MaxRTT.QuadPart = 0;
-    SumRTT.QuadPart = 0;
-    MinRTTSet       = FALSE;
-
-    SetConsoleCtrlHandler(StopLoop, TRUE);
+    Family = Target->ai_family;
 
     return TRUE;
 }
 
-/* Close socket */
-static VOID Cleanup(VOID)
+static
+void
+Ping(void)
 {
-    if (IcmpSock != INVALID_SOCKET)
-        closesocket(IcmpSock);
+    PVOID ReplyBuffer = NULL;
+    PVOID SendBuffer = NULL;
+    DWORD ReplySize = 0;
+    DWORD Status;
 
-    WSACleanup();
-}
-
-static VOID QueryTime(PLARGE_INTEGER Time)
-{
-    if (UsePerformanceCounter)
+    SendBuffer = malloc(RequestSize);
+    if (SendBuffer == NULL)
     {
-        if (QueryPerformanceCounter(Time) == 0)
+        ConResPrintf(StdErr, IDS_NO_RESOURCES);
+        exit(1);
+    }
+
+    ZeroMemory(SendBuffer, RequestSize);
+
+    if (Family == AF_INET6)
+        ReplySize += sizeof(ICMPV6_ECHO_REPLY);
+    else
+        ReplySize += sizeof(ICMP_ECHO_REPLY);
+
+    ReplySize += RequestSize + SIZEOF_ICMP_ERROR + SIZEOF_IO_STATUS_BLOCK;
+
+    ReplyBuffer = malloc(ReplySize);
+    if (ReplyBuffer == NULL)
+    {
+        ConResPrintf(StdErr, IDS_NO_RESOURCES);
+        free(SendBuffer);
+        exit(1);
+    }
+
+    ZeroMemory(ReplyBuffer, ReplySize);
+
+    EchosSent++;
+
+    if (Family == AF_INET6)
+    {
+        struct sockaddr_in6 Source;
+
+        ZeroMemory(&Source, sizeof(Source));
+        Source.sin6_family = AF_INET6;
+
+        Status = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL,
+                                &Source,
+                                (struct sockaddr_in6 *)Target->ai_addr,
+                                SendBuffer, (USHORT)RequestSize, &IpOptions,
+                                ReplyBuffer, ReplySize, Timeout);
+    }
+    else
+    {
+        Status = IcmpSendEcho2(hIcmpFile, NULL, NULL, NULL,
+                               ((PSOCKADDR_IN)Target->ai_addr)->sin_addr.s_addr,
+                               SendBuffer, (USHORT)RequestSize, &IpOptions,
+                               ReplyBuffer, ReplySize, Timeout);
+    }
+
+    free(SendBuffer);
+
+    if (Status == 0)
+    {
+        Status = GetLastError();
+        switch (Status)
         {
-            /* This should not happen, but we fall
-               back to GetCurrentTick() if it does */
-            Time->u.LowPart  = (ULONG)GetTickCount();
-            Time->u.HighPart = 0;
+        case IP_DEST_HOST_UNREACHABLE:
+            ConResPrintf(StdOut, IDS_DEST_HOST_UNREACHABLE);
+            break;
 
-            /* 1 tick per millisecond for GetCurrentTick() */
-            TicksPerMs.QuadPart = 1;
-            /* GetCurrentTick() cannot handle microseconds */
-            TicksPerUs.QuadPart = 1;
+        case IP_DEST_NET_UNREACHABLE:
+            ConResPrintf(StdOut, IDS_DEST_NET_UNREACHABLE);
+            break;
 
-            UsePerformanceCounter = FALSE;
+        case IP_REQ_TIMED_OUT:
+            ConResPrintf(StdOut, IDS_REQUEST_TIMED_OUT);
+            break;
+
+        default:
+            ConResPrintf(StdOut, IDS_TRANSMIT_FAILED, Status);
+            break;
         }
     }
     else
     {
-        Time->u.LowPart  = (ULONG)GetTickCount();
-        Time->u.HighPart = 0;
-    }
-}
+        EchosReceived++;
 
-static VOID TimeToMsString(LPWSTR String, ULONG Length, LARGE_INTEGER Time)
-{
-    WCHAR         Convstr[40];
-    LARGE_INTEGER LargeTime;
-    LPWSTR ms;
+        ConResPrintf(StdOut, IDS_REPLY_FROM, Address);
 
-    LargeTime.QuadPart = Time.QuadPart / TicksPerMs.QuadPart;
-
-    _i64tow(LargeTime.QuadPart, Convstr, 10);
-    wcscpy(String, Convstr);
-    ms = String + wcslen(String);
-    LoadString(GetModuleHandle(NULL), IDS_MS, ms, Length - (ms - String));
-}
-
-/* Locate the ICMP data and print it. Returns TRUE if the packet was good,
-   FALSE if not */
-static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
-{
-    PIPv4_HEADER      IpHeader;
-    PICMP_ECHO_PACKET Icmp;
-    UINT              IphLength;
-    WCHAR             Time[100];
-    LARGE_INTEGER     RelativeTime;
-    LARGE_INTEGER     LargeTime;
-    WCHAR             Sign[2];
-    WCHAR wfromIP[16];
-
-    IpHeader = (PIPv4_HEADER)buffer;
-
-    IphLength = IpHeader->IHL * 4;
-
-    if (size  < IphLength + ICMP_MINSIZE)
-    {
-#ifndef NDEBUG
-        printf("Bad size (0x%X < 0x%X)\n", size, IphLength + ICMP_MINSIZE);
-#endif /* !NDEBUG */
-        return FALSE;
-    }
-
-    Icmp = (PICMP_ECHO_PACKET)(buffer + IphLength);
-
-    if (Icmp->Icmp.Type != ICMPMSG_ECHOREPLY)
-    {
-#ifndef NDEBUG
-        printf("Bad ICMP type (0x%X should be 0x%X)\n", Icmp->Icmp.Type, ICMPMSG_ECHOREPLY);
-#endif /* !NDEBUG */
-        return FALSE;
-    }
-
-    if (Icmp->Icmp.Id != (USHORT)GetCurrentProcessId())
-    {
-#ifndef NDEBUG
-        printf("Bad ICMP id (0x%X should be 0x%X)\n", Icmp->Icmp.Id, (USHORT)GetCurrentProcessId());
-#endif /* !NDEBUG */
-        return FALSE;
-    }
-
-    if (from->sin_addr.s_addr != Target.sin_addr.s_addr)
-    {
-#ifndef NDEBUG
-        printf("Bad source address (%s should be %s)\n", inet_ntoa(from->sin_addr), inet_ntoa(Target.sin_addr));
-#endif /* !NDEBUG */
-        return FALSE;
-    }
-
-    QueryTime(&LargeTime);
-
-    RelativeTime.QuadPart = (LargeTime.QuadPart - SentTime.QuadPart);
-
-    if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1)
-    {
-        wcscpy(Sign, L"<");
-        LoadString(GetModuleHandle(NULL), IDS_1MS, Time, sizeof(Time) / sizeof(WCHAR));
-    }
-    else
-    {
-        wcscpy(Sign, L"=");
-        TimeToMsString(Time, sizeof(Time) / sizeof(WCHAR), RelativeTime);
-    }
-
-
-    swprintf(wfromIP, L"%d.%d.%d.%d", from->sin_addr.S_un.S_un_b.s_b1,\
-                                      from->sin_addr.S_un.S_un_b.s_b2,\
-                                      from->sin_addr.S_un.S_un_b.s_b3,\
-                                      from->sin_addr.S_un.S_un_b.s_b4);
-    FormatOutput(IDS_REPLY_FROM, wfromIP,\
-                 size - IphLength - (int)sizeof(ICMP_ECHO_PACKET),\
-                 Sign, Time, IpHeader->TTL);
-
-    if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet)
-    {
-        MinRTT.QuadPart = RelativeTime.QuadPart;
-        MinRTTSet = TRUE;
-    }
-    if (RelativeTime.QuadPart > MaxRTT.QuadPart)
-        MaxRTT.QuadPart = RelativeTime.QuadPart;
-
-    SumRTT.QuadPart += RelativeTime.QuadPart;
-
-    return TRUE;
-}
-
-/* Send and receive one ping */
-static BOOL Ping(VOID)
-{
-    INT                 Status;
-    SOCKADDR            From;
-    INT                 Length;
-    PVOID               Buffer;
-    UINT                Size;
-    PICMP_ECHO_PACKET   Packet;
-
-    /* Account for extra space for IP header when packet is received */
-    Size   = DataSize + 128;
-    Buffer = GlobalAlloc(0, Size);
-    if (!Buffer)
-    {
-        FormatOutput(IDS_NOT_ENOUGH_RESOURCES);
-        return FALSE;
-    }
-
-    ZeroMemory(Buffer, Size);
-    Packet = (PICMP_ECHO_PACKET)Buffer;
-
-    /* Assemble ICMP echo request packet */
-    Packet->Icmp.Type     = ICMPMSG_ECHOREQUEST;
-    Packet->Icmp.Code     = 0;
-    Packet->Icmp.Id       = (USHORT)GetCurrentProcessId();
-    Packet->Icmp.SeqNum   = htons((USHORT)CurrentSeqNum);
-    Packet->Icmp.Checksum = 0;
-
-    /* Calculate checksum for ICMP header and data area */
-    Packet->Icmp.Checksum = Checksum((PUSHORT)&Packet->Icmp, sizeof(ICMP_ECHO_PACKET) + DataSize);
-
-    CurrentSeqNum++;
-
-    /* Send ICMP echo request */
-
-    FD_ZERO(&Fds);
-    FD_SET(IcmpSock, &Fds);
-    Timeval.tv_sec  = Timeout / 1000;
-    Timeval.tv_usec = Timeout % 1000;
-    Status = select(0, NULL, &Fds, NULL, &Timeval);
-    if ((Status != SOCKET_ERROR) && (Status != 0))
-    {
-
-#ifndef NDEBUG
-        printf("Sending packet\n");
-        DisplayBuffer(Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize);
-        printf("\n");
-#endif /* !NDEBUG */
-
-        Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
-            0, (SOCKADDR*)&Target, sizeof(Target));
-        QueryTime(&SentTime);
-        SentCount++;
-    }
-    if (Status == SOCKET_ERROR)
-    {
-        if (WSAGetLastError() == WSAEHOSTUNREACH)
-            FormatOutput(IDS_DEST_UNREACHABLE);
-        else
-            FormatOutput(IDS_COULD_NOT_TRANSMIT, WSAGetLastError());
-        GlobalFree(Buffer);
-        return FALSE;
-    }
-
-    /* Expect to receive ICMP echo reply */
-    FD_ZERO(&Fds);
-    FD_SET(IcmpSock, &Fds);
-    Timeval.tv_sec  = Timeout / 1000;
-    Timeval.tv_usec = Timeout % 1000;
-
-    do {
-        Status = select(0, &Fds, NULL, NULL, &Timeval);
-        if ((Status != SOCKET_ERROR) && (Status != 0))
+        if (Family == AF_INET6)
         {
-            Length = sizeof(From);
-            Status = recvfrom(IcmpSock, Buffer, Size, 0, &From, &Length);
+            PICMPV6_ECHO_REPLY pEchoReply;
 
-#ifndef NDEBUG
-            printf("Received packet\n");
-            DisplayBuffer(Buffer, Status);
-            printf("\n");
-#endif /* !NDEBUG */
-        }
-        else
-            LostCount++;
-        if (Status == SOCKET_ERROR)
-        {
-            if (WSAGetLastError() != WSAETIMEDOUT)
+            pEchoReply = (PICMPV6_ECHO_REPLY)ReplyBuffer;
+
+            switch (pEchoReply->Status)
             {
-                FormatOutput(IDS_COULD_NOT_RECV, WSAGetLastError());
-                GlobalFree(Buffer);
-                return FALSE;
+            case IP_SUCCESS:
+            {
+                EchosSuccessful++;
+
+                if (pEchoReply->RoundTripTime == 0)
+                    ConResPrintf(StdOut, IDS_REPLY_TIME_0MS);
+                else
+                    ConResPrintf(StdOut, IDS_REPLY_TIME_MS, pEchoReply->RoundTripTime);
+
+                if (pEchoReply->RoundTripTime < RTTMin || RTTMin == 0)
+                    RTTMin = pEchoReply->RoundTripTime;
+
+                if (pEchoReply->RoundTripTime > RTTMax || RTTMax == 0)
+                    RTTMax = pEchoReply->RoundTripTime;
+
+                ConPuts(StdOut, L"\n");
+
+                RTTTotal += pEchoReply->RoundTripTime;
+                break;
             }
-            Status = 0;
+
+            case IP_TTL_EXPIRED_TRANSIT:
+                ConResPrintf(StdOut, IDS_TTL_EXPIRED);
+                break;
+
+            default:
+                ConResPrintf(StdOut, IDS_REPLY_STATUS, pEchoReply->Status);
+                break;
+            }
         }
-
-        if (Status == 0)
-        {
-            FormatOutput(IDS_REQUEST_TIMEOUT);
-            GlobalFree(Buffer);
-            return TRUE;
-        }
-
-    } while (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From));
-
-    GlobalFree(Buffer);
-    return TRUE;
-}
-
-
-/* Program entry point */
-int wmain(int argc, LPWSTR argv[])
-{
-    UINT Count;
-    WCHAR MinTime[20];
-    WCHAR MaxTime[20];
-    WCHAR AvgTime[20];
-
-    hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    Reset();
-
-    if ((ParseCmdline(argc, argv)) && (Setup()))
-    {
-
-        FormatOutput(IDS_PING_WITH_BYTES, TargetName, TargetIP, DataSize);
-
-        Count = 0;
-        while ((NeverStop) || (Count < PingCount))
-        {
-            Ping();
-            Count++;
-            if((NeverStop) || (Count < PingCount))
-                Sleep(Timeout);
-        };
-
-        Cleanup();
-
-        /* Calculate avarage round trip time */
-        if ((SentCount - LostCount) > 0)
-            AvgRTT.QuadPart = SumRTT.QuadPart / (SentCount - LostCount);
         else
-            AvgRTT.QuadPart = 0;
-
-        /* Calculate loss percent */
-        Count = SentCount ? (LostCount * 100) / SentCount : 0;
-
-        if (!MinRTTSet)
-            MinRTT = MaxRTT;
-
-        TimeToMsString(MinTime, sizeof(MinTime) / sizeof(WCHAR), MinRTT);
-        TimeToMsString(MaxTime, sizeof(MaxTime) / sizeof(WCHAR), MaxRTT);
-        TimeToMsString(AvgTime, sizeof(AvgTime) / sizeof(WCHAR), AvgRTT);
-
-        /* Print statistics */
-        FormatOutput(IDS_PING_STATISTICS, TargetIP);
-        FormatOutput(IDS_PACKETS_SENT_RECEIVED_LOST,\
-                     SentCount, SentCount - LostCount, LostCount, Count);
-
-
-        /* Print approximate times or NO approximate times if 100% loss */
-        if ((SentCount - LostCount) > 0)
         {
-            FormatOutput(IDS_APPROXIMATE_ROUND_TRIP);
-            FormatOutput(IDS_MIN_MAX_AVERAGE, MinTime, MaxTime, AvgTime);
+            PICMP_ECHO_REPLY pEchoReply;
+
+            pEchoReply = (PICMP_ECHO_REPLY)ReplyBuffer;
+
+            switch (pEchoReply->Status)
+            {
+            case IP_SUCCESS:
+            {
+                EchosSuccessful++;
+
+                ConResPrintf(StdOut, IDS_REPLY_BYTES, pEchoReply->DataSize);
+
+                if (pEchoReply->RoundTripTime == 0)
+                    ConResPrintf(StdOut, IDS_REPLY_TIME_0MS);
+                else
+                    ConResPrintf(StdOut, IDS_REPLY_TIME_MS, pEchoReply->RoundTripTime);
+
+                ConResPrintf(StdOut, IDS_REPLY_TTL, pEchoReply->Options.Ttl);
+
+                if (pEchoReply->RoundTripTime < RTTMin || RTTMin == 0)
+                    RTTMin = pEchoReply->RoundTripTime;
+
+                if (pEchoReply->RoundTripTime > RTTMax || RTTMax == 0)
+                    RTTMax = pEchoReply->RoundTripTime;
+
+                RTTTotal += pEchoReply->RoundTripTime;
+                break;
+            }
+
+            case IP_TTL_EXPIRED_TRANSIT:
+                ConResPrintf(StdOut, IDS_TTL_EXPIRED);
+                break;
+
+            default:
+                ConResPrintf(StdOut, IDS_REPLY_STATUS, pEchoReply->Status);
+                break;
+            }
         }
     }
-    else
-    {
-        return 1;
-    }
-    return 0;
+
+    free(ReplyBuffer);
 }
 
-/* EOF */
+static
+void
+PrintStats(void)
+{
+    ULONG EchosLost = EchosSent - EchosReceived;
+    ULONG PercentLost = (ULONG)((EchosLost / (double)EchosSent) * 100.0);
+
+    ConResPrintf(StdOut, IDS_STATISTICS, Address, EchosSent, EchosReceived, EchosLost, PercentLost);
+
+    if (EchosSuccessful > 0)
+    {
+        ULONG RTTAverage = RTTTotal / EchosSuccessful;
+        ConResPrintf(StdOut, IDS_APPROXIMATE_RTT, RTTMin, RTTMax, RTTAverage);
+    }
+}
+
+static
+BOOL
+WINAPI
+ConsoleCtrlHandler(DWORD ControlType)
+{
+    switch (ControlType)
+    {
+    case CTRL_C_EVENT:
+        PrintStats();
+        ConResPrintf(StdOut, IDS_CTRL_C);
+        return FALSE;
+
+    case CTRL_BREAK_EVENT:
+        PrintStats();
+        ConResPrintf(StdOut, IDS_CTRL_BREAK);
+        return TRUE;
+
+    case CTRL_CLOSE_EVENT:
+        PrintStats();
+        return FALSE;
+
+    default:
+        return FALSE;
+    }
+}

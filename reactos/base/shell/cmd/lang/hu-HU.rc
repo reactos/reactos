@@ -64,7 +64,7 @@ Az ERRORLEVEL a válasz sorszámára lesz beállítva.\n"
     STRING_CMD_HELP2 "\nElérhetõ lehetõségek:"
     STRING_CMD_HELP3 "  [aliasok]"
     STRING_CMD_HELP4 "  [elõzmények]"
-    STRING_CMD_HELP5 "  [unix típusú állománynév kiegészítés]"
+    STRING_CMD_HELP5 "  [Bash típusú állománynév kiegészítés]"
     STRING_CMD_HELP6 "  [mappa tár]"
     STRING_CMD_HELP7 "  [átirányítások és csõvezetékek]"
     STRING_CMD_HELP8 "Elindít egy új ReactOS parancssor értelmezõ.\n\n\
@@ -241,15 +241,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Megjeleníti a memória statisztikát.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n A memória %12s%%-a foglalt.\n\n\
+    STRING_MEMORY_HELP1 "Megjeleníti a memória statisztikát.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n A memória %12s%%-a foglalt.\n\n\
   %13s bájtnyi teljes fizikai memória.\n\
   %13s bájtnyi elérhetõ memória.\n\n\
   %13s bájt a lapozóállomány.\n\
   %13s bájtnyi elérhetõ a lapozóállományban.\n\n\
   %13s bájt a teljes virtuális memória.\n\
   %13s bájtnyi elérhetõ a virtuális memóriából.\n"
-    STRING_MISC_HELP1 "A folytatáshoz nyomj meg egy billentyût . . .\n"
+    STRING_MISC_HELP1 "A folytatáshoz nyomj meg egy billentyût . . ."
     STRING_MOVE_HELP1 "Felülírja %s (Igen/Nem/Mind)? "
     STRING_MOVE_HELP2 "Áthelyezi és átnevezi az állományokat a mappákban.\n\n\
 Egy vagy több állomány áthelyezéséhez:\n\
@@ -506,7 +506,7 @@ title         new title\n"
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Parancssor értelmezõ\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Running on: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

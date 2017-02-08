@@ -28,10 +28,10 @@ STRINGTABLE
   IDS_BROWSE            "Просмотр"
   IDS_NOTOLEMOD         "Файл не является корректным модулем OLE. Невозможно зарегистрировать элемент управления OLE."
   IDS_NOTOLEMODCAPTION  "Добавить элемент управления"
-  IDS_VERBMENU_OBJECT   "&Object"
-  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Object"
-  IDS_VERBMENU_CONVERT  "&Convert..."
-  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Object"
+  IDS_VERBMENU_OBJECT   "&Объект"
+  IDS_VERBMENU_OBJECT_WITH_NAME "%1 &Объект"
+  IDS_VERBMENU_CONVERT  "&Конвертировать..."
+  IDS_VERBMENU_SINGLEVERB_OBJECT "%1 %2 &Объект"
 }
 
 STRINGTABLE

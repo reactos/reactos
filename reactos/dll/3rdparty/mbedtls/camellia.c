@@ -50,7 +50,7 @@
 
 /* Implementation that should never be optimized out by the compiler */
 static void mbedtls_zeroize( void *v, size_t n ) {
-    volatile unsigned char *p = v; while( n-- ) *p++ = 0;
+    volatile unsigned char *p = (unsigned char*)v; while( n-- ) *p++ = 0;
 }
 
 /*
@@ -963,38 +963,38 @@ int mbedtls_camellia_self_test( int verbose )
             mbedtls_printf( "  CAMELLIA-CBC-%3d (%s): ", 128 + u * 64,
                              ( v == MBEDTLS_CAMELLIA_DECRYPT ) ? "dec" : "enc" );
 
-    memcpy( src, camellia_test_cbc_iv, 16 );
-    memcpy( dst, camellia_test_cbc_iv, 16 );
-    memcpy( key, camellia_test_cbc_key[u], 16 + 8 * u );
-
-    if( v == MBEDTLS_CAMELLIA_DECRYPT ) {
-        mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
-    } else {
-        mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
-    }
-
-    for( i = 0; i < CAMELLIA_TESTS_CBC; i++ ) {
+        memcpy( src, camellia_test_cbc_iv, 16 );
+        memcpy( dst, camellia_test_cbc_iv, 16 );
+        memcpy( key, camellia_test_cbc_key[u], 16 + 8 * u );
 
         if( v == MBEDTLS_CAMELLIA_DECRYPT ) {
-            memcpy( iv , src, 16 );
-            memcpy( src, camellia_test_cbc_cipher[u][i], 16 );
-            memcpy( dst, camellia_test_cbc_plain[i], 16 );
-        } else { /* MBEDTLS_CAMELLIA_ENCRYPT */
-            memcpy( iv , dst, 16 );
-            memcpy( src, camellia_test_cbc_plain[i], 16 );
-            memcpy( dst, camellia_test_cbc_cipher[u][i], 16 );
+            mbedtls_camellia_setkey_dec( &ctx, key, 128 + u * 64 );
+        } else {
+            mbedtls_camellia_setkey_enc( &ctx, key, 128 + u * 64 );
         }
 
-        mbedtls_camellia_crypt_cbc( &ctx, v, 16, iv, src, buf );
+        for( i = 0; i < CAMELLIA_TESTS_CBC; i++ ) {
 
-        if( memcmp( buf, dst, 16 ) != 0 )
-        {
-            if( verbose != 0 )
-                mbedtls_printf( "failed\n" );
+            if( v == MBEDTLS_CAMELLIA_DECRYPT ) {
+                memcpy( iv , src, 16 );
+                memcpy( src, camellia_test_cbc_cipher[u][i], 16 );
+                memcpy( dst, camellia_test_cbc_plain[i], 16 );
+            } else { /* MBEDTLS_CAMELLIA_ENCRYPT */
+                memcpy( iv , dst, 16 );
+                memcpy( src, camellia_test_cbc_plain[i], 16 );
+                memcpy( dst, camellia_test_cbc_cipher[u][i], 16 );
+            }
 
-            return( 1 );
+            mbedtls_camellia_crypt_cbc( &ctx, v, 16, iv, src, buf );
+
+            if( memcmp( buf, dst, 16 ) != 0 )
+            {
+                if( verbose != 0 )
+                    mbedtls_printf( "failed\n" );
+
+                return( 1 );
+            }
         }
-    }
 
         if( verbose != 0 )
             mbedtls_printf( "passed\n" );

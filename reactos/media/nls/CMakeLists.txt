@@ -7,6 +7,8 @@ list(APPEND NLS_FILES
     c_037.nls
     c_424.nls
     c_500.nls
+    c_708.nls
+    c_720.nls
     c_737.nls
     c_775.nls
     c_850.nls
@@ -14,6 +16,7 @@ list(APPEND NLS_FILES
     c_855.nls
     c_856.nls
     c_857.nls
+    c_858.nls
     c_860.nls
     c_861.nls
     c_862.nls
@@ -22,6 +25,7 @@ list(APPEND NLS_FILES
     c_865.nls
     c_866.nls
     c_869.nls
+    c_870.nls
     c_874.nls
     c_875.nls
     c_878.nls
@@ -31,6 +35,17 @@ list(APPEND NLS_FILES
     c_950.nls
     c_1006.nls
     c_1026.nls
+    c_1047.nls
+    c_1140.nls
+    c_1141.nls
+    c_1142.nls
+    c_1143.nls
+    c_1144.nls
+    c_1145.nls
+    c_1146.nls
+    c_1147.nls
+    c_1148.nls
+    c_1149.nls
     c_1250.nls
     c_1251.nls
     c_1253.nls
@@ -40,13 +55,43 @@ list(APPEND NLS_FILES
     c_1257.nls
     c_1258.nls
     c_10000.nls
+    c_10004.nls
+    c_10005.nls
     c_10006.nls
     c_10007.nls
+    c_10010.nls
+    c_10017.nls
+    c_10021.nls
     c_10029.nls
     c_10079.nls
     c_10081.nls
+    c_10082.nls
+    c_20105.nls
+    c_20106.nls
+    c_20107.nls
+    c_20108.nls
     c_20127.nls
+    c_20269.nls
+    c_20273.nls
+    c_20277.nls
+    c_20278.nls
+    c_20280.nls
+    c_20284.nls
+    c_20285.nls
+    c_20290.nls
+    c_20297.nls
+    c_20420.nls
+    c_20423.nls
+    c_20424.nls
+    c_20833.nls
+    c_20838.nls
     c_20866.nls
+    c_20871.nls
+    c_20880.nls
+    c_20905.nls
+    c_20924.nls
+    c_21025.nls
+    c_21027.nls
     c_21866.nls
     c_28591.nls
     c_28592.nls

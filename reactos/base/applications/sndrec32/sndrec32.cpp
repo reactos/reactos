@@ -130,7 +130,7 @@ _tWinMain(HINSTANCE hInstance,
     text2_rect.right = REFRESHB_CX;
     text2_rect.bottom = REFRESHB_CY;
 
-    /* Retrieving defaul system font, and others system informations */
+    /* Retrieving default system font, and others system informations */
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
                          sizeof(NONCLIENTMETRICS),
                          &s_info,
@@ -211,7 +211,7 @@ _tWinMain(HINSTANCE hInstance,
     /* Starts main loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (!TranslateAccelerator(main_win, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -317,17 +317,18 @@ InitInstance_wave(HWND f,
 
     hInst = hInstance;
 
-    hWnd = CreateWindow(TEXT("sndrec32_wave"),
-                        TEXT(""),
-                        WS_DLGFRAME | WS_VISIBLE | WS_CHILD,
-                        WAVEBAR_X,
-                        WAVEBAR_Y,
-                        WAVEBAR_CX,
-                        WAVEBAR_CY,
-                        f,
-                        (HMENU)8,
-                        hInstance,
-                        0);
+    hWnd = CreateWindowEx(WS_EX_STATICEDGE,
+                          TEXT("sndrec32_wave"),
+                          TEXT(""),
+                          WS_VISIBLE | WS_CHILD,
+                          WAVEBAR_X,
+                          WAVEBAR_Y,
+                          WAVEBAR_CX,
+                          WAVEBAR_CY,
+                          f,
+                          (HMENU)8,
+                          hInstance,
+                          0);
 
     if (!hWnd )
     {
@@ -363,6 +364,7 @@ WndProc_wave(HWND hWnd,
         case WM_CREATE:
             GetClientRect(hWnd, &cli);
             break;
+
         case WM_PAINT:
             /* Initialize hdc objects */
             hdc = BeginPaint(hWnd, &ps);
@@ -420,6 +422,7 @@ WndProc_wave(HWND hWnd,
 
         case WM_USER:
             break;
+
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
     }

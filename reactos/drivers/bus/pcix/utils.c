@@ -675,7 +675,7 @@ PciIsCriticalDeviceClass(IN UCHAR BaseClass,
     /* Check for system or bridge devices */
     if (BaseClass == PCI_CLASS_BASE_SYSTEM_DEV)
     {
-        /* Interrupt controlers are critical */
+        /* Interrupt controllers are critical */
         return SubClass == PCI_SUBCLASS_SYS_INTERRUPT_CTLR;
     }
     else if (BaseClass == PCI_CLASS_BRIDGE_DEV)
@@ -1052,7 +1052,7 @@ PciClassifyDeviceType(IN PPCI_PDO_EXTENSION PdoExtension)
 {
     ASSERT(PdoExtension->ExtensionType == PciPdoExtensionType);
 
-    /* Differenriate between devices and bridges */
+    /* Differentiate between devices and bridges */
     if (PdoExtension->BaseClass != PCI_CLASS_BRIDGE_DEV) return PciTypeDevice;
 
     /* The PCI Bus driver handles only CardBus and PCI bridges (plus host) */
@@ -1568,7 +1568,7 @@ PciQueryPowerCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         DevicePowerState = AttachedCaps.DeviceState[CurrentState];
         NewPowerState = DevicePowerState;
 
-        /* The attachee suports D1, but this PDO does not */
+        /* The attachee supports D1, but this PDO does not */
         if ((NewPowerState == PowerDeviceD1) &&
             !(PdoExtension->PowerCapabilities.Support.D1))
         {

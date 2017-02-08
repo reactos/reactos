@@ -38,11 +38,119 @@ DWORD WINAPI GdiGetCodePage(HDC hdc);
 INT WINAPI DrawTextExWorker( HDC hdc, LPWSTR str, INT i_count,
                         LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp );
 
-LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
-                                INT count, INT cTabStops, const INT *lpTabPos, INT nTabOrg,
-                                                                BOOL fDisplayText );
 
 /* FUNCTIONS *****************************************************************/
+
+
+/***********************************************************************
+ *           TEXT_TabbedTextOut
+ *
+ * Helper function for TabbedTextOut() and GetTabbedTextExtent().
+ * Note: this doesn't work too well for text-alignment modes other
+ *       than TA_LEFT|TA_TOP. But we want bug-for-bug compatibility :-)
+ */
+/* WINE synced 22-May-2006 */
+LONG TEXT_TabbedTextOut( HDC hdc,
+                         INT x,
+                         INT y,
+                         LPCWSTR lpstr,
+                         INT count,
+                         INT cTabStops,
+                         const INT *lpTabPos,
+                         INT nTabOrg,
+                         BOOL fDisplayText )
+{
+    INT defWidth;
+    SIZE extent;
+    int i, j;
+    int start = x;
+    TEXTMETRICW tm;
+
+    if (!lpTabPos)
+        cTabStops=0;
+
+    GetTextMetricsW( hdc, &tm );
+
+    if (cTabStops == 1)
+    {
+        defWidth = *lpTabPos;
+        cTabStops = 0;
+    }
+    else
+    {
+        defWidth = 8 * tm.tmAveCharWidth;
+    }
+
+    while (count > 0)
+    {
+        RECT r;
+        INT x0;
+        x0 = x;
+        r.left = x0;
+        /* chop the string into substrings of 0 or more <tabs>
+         * possibly followed by 1 or more normal characters */
+        for (i = 0; i < count; i++)
+            if (lpstr[i] != '\t') break;
+        for (j = i; j < count; j++)
+            if (lpstr[j] == '\t') break;
+        /* get the extent of the normal character part */
+        GetTextExtentPointW( hdc, lpstr + i, j - i , &extent );
+        /* and if there is a <tab>, calculate its position */
+        if( i) {
+            /* get x coordinate for the drawing of this string */
+            for (; cTabStops > i; lpTabPos++, cTabStops--)
+            {
+                if( nTabOrg + abs( *lpTabPos) > x) {
+                    if( lpTabPos[ i - 1] >= 0) {
+                        /* a left aligned tab */
+                        x = nTabOrg + lpTabPos[ i-1] + extent.cx;
+                        break;
+                    }
+                    else
+                    {
+                        /* if tab pos is negative then text is right-aligned
+                         * to tab stop meaning that the string extends to the
+                         * left, so we must subtract the width of the string */
+                        if (nTabOrg - lpTabPos[ i - 1] - extent.cx > x)
+                        {
+                            x = nTabOrg - lpTabPos[ i - 1];
+                            x0 = x - extent.cx;
+                            break;
+                        }
+                    }
+                }
+            }
+            /* if we have run out of tab stops and we have a valid default tab
+             * stop width then round x up to that width */
+            if ((cTabStops <= i) && (defWidth > 0)) {
+                x0 = nTabOrg + ((x - nTabOrg) / defWidth + i) * defWidth;
+                x = x0 + extent.cx;
+            } else if ((cTabStops <= i) && (defWidth < 0)) {
+                x = nTabOrg + ((x - nTabOrg + extent.cx) / -defWidth + i)
+                    * -defWidth;
+                x0 = x - extent.cx;
+            }
+        } else
+            x += extent.cx;
+
+        if (fDisplayText)
+        {
+            r.top    = y;
+            r.right  = x;
+            r.bottom = y + extent.cy;
+
+            ExtTextOutW( hdc, x0, y, GetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
+                         &r, lpstr + i, j - i, NULL );
+        }
+        count -= j;
+        lpstr += j;
+    }
+
+    if(!extent.cy)
+        extent.cy = tm.tmHeight;
+
+    return MAKELONG(x - start, extent.cy);
+}
 
 /*
  * @implemented

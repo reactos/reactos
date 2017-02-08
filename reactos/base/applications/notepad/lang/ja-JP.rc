@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "名前を付けて保存(&A)...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "ページ設定(&T)...", CMD_PAGE_SETUP
-        MENUITEM "印刷(&P)\tCtrl+P", CMD_PRINT
+        MENUITEM "印刷(&P)...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "メモ帳の終了(&X)", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "検索(&F)...\tCtrl+F", CMD_SEARCH
         MENUITEM "次を検索(&S)\tF3", CMD_SEARCH_NEXT
-        MENUITEM "置換\tCtrl+H", CMD_REPLACE
+        MENUITEM "置換...\tCtrl+H", CMD_REPLACE
         MENUITEM "行へ移動...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "すべて選択(&A)\tCtrl+A", CMD_SELECT_ALL

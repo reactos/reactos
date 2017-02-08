@@ -238,7 +238,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Questo test utilizza DirectDraw per disegnare in una modalità schermo intero. I Spostamenti del rettangolo bianco devono essere compilati. Continuare?"
     IDS_DDFULLSCREEN_RESULT "Hai visto un rettangolo bianco in movimento in modalità schermo intero?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "No"
     IDS_D3DTEST_DESCRIPTION "Avviare il test dell'interfaccia Direct3D. Continuare?"
     IDS_D3DTEST_D3Dx "Questo test utilizza accelerazione hardware dell'interfaccia Direct3D % u."

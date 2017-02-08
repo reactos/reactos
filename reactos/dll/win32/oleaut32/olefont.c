@@ -994,8 +994,10 @@ static HRESULT WINAPI OLEFontImpl_Clone(
 
   newObject->pPropertyNotifyCP = NULL;
   newObject->pFontEventsCP = NULL;
-  CreateConnectionPoint((IUnknown*)newObject, &IID_IPropertyNotifySink, &newObject->pPropertyNotifyCP);
-  CreateConnectionPoint((IUnknown*)newObject, &IID_IFontEventsDisp, &newObject->pFontEventsCP);
+  CreateConnectionPoint((IUnknown*)&newObject->IFont_iface, &IID_IPropertyNotifySink,
+                         &newObject->pPropertyNotifyCP);
+  CreateConnectionPoint((IUnknown*)&newObject->IFont_iface, &IID_IFontEventsDisp,
+                         &newObject->pFontEventsCP);
 
   if (!newObject->pPropertyNotifyCP || !newObject->pFontEventsCP)
   {
@@ -2209,12 +2211,22 @@ static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
         return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
 }
 
-static HRESULT WINAPI
-SFCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
-	IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+static HRESULT WINAPI SFCF_QueryInterface(IClassFactory *iface, REFIID riid, void **obj)
+{
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
-	FIXME("(%p)->(%s,%p),stub!\n",This,debugstr_guid(riid),ppobj);
-	return E_NOINTERFACE;
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), obj);
+
+    *obj = NULL;
+
+    if (IsEqualIID(&IID_IClassFactory, riid) || IsEqualIID(&IID_IUnknown, riid))
+    {
+        *obj = iface;
+        IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI

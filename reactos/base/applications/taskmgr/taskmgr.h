@@ -100,7 +100,7 @@ extern	int			nOldWidth;					/* Holds the previous client area width */
 extern	int			nOldHeight;					/* Holds the previous client area height */
 extern	TASKMANAGER_SETTINGS	TaskManagerSettings;
 
-/* Foward declarations of functions included in this code module: */
+/* Forward declarations of functions included in this code module: */
 INT_PTR CALLBACK TaskManagerWndProc(HWND, UINT, WPARAM, LPARAM);
 BOOL OnCreate(HWND hWnd);
 void OnSize(WPARAM nType, int cx, int cy);

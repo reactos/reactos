@@ -936,7 +936,7 @@ HwSpecify(PCONTROLLER_INFO ControllerInfo,
  *     StepRateTime: Step rate time
  *     NonDma: TRUE to disable DMA mode
  * RETURNS:
- *     STATUS_SUCCESS if the contrller is successfully programmed
+ *     STATUS_SUCCESS if the controller is successfully programmed
  *     STATUS_UNSUCCESSFUL if not
  * NOTES:
  *     - Does not interrupt

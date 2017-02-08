@@ -38,7 +38,7 @@ FREE     (free) disc space.\n\
 GOTO     Directs the ReactOS command interpreter to a labeled line in\n\
          a batch program.\n\
 HELP     Provides Help information for ReactOS commands.\n\
-HISTORY  List all commands which has been used\n\
+HISTORY  Lists all commands which have been used.\n\
 IF       Performs conditional processing in batch programs.\n\
 LABEL    Creates, changes, or deletes the volume label of a disk.\n\
 MD       Creates a directory.\n\

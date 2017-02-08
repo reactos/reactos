@@ -916,7 +916,7 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
     //TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
-    // We need a buffer for 2 secors
+    // We need a buffer for 2 sectors
     ReadBuffer = FrLdrTempAlloc(2 * Volume->BytesPerSector, TAG_FAT_BUFFER);
     if (!ReadBuffer)
     {

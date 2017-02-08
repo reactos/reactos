@@ -31,6 +31,11 @@ License = Nespecificată
 Description = Pachet care include fonturi Mono și Sans. Dezarhivați în dosarul ReactOS.
 Size = 2,9 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Набор шрифтов включает Mono и Sans шрифты. Распакуйте в папку ReactOS.
+Size = 2,9 МиБ
+
 [Section.041f]
 Name = Mozilla Fira Yazı Tipi
 License = Bilinmiyor

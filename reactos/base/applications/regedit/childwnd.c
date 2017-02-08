@@ -40,7 +40,7 @@ extern LPCWSTR get_root_key_name(HKEY hRootKey)
 
 extern void ResizeWnd(int cx, int cy)
 {
-    HDWP hdwp = BeginDeferWindowPos(3);
+    HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb;
     const int tHeight = 22;
     SetRect(&rt, 0, 0, cx, cy);
@@ -52,11 +52,11 @@ extern void ResizeWnd(int cx, int cy)
     }
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
     cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - 2*tHeight, rt.top, 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    EndDeferWindowPos(hdwp);
+    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - 2*tHeight, rt.top, 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp) hdwp = DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp) EndDeferWindowPos(hdwp);
 }
 
 /*******************************************************************************

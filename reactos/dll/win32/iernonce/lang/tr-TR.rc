@@ -4,7 +4,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_INVALIDFORMAT "%1 RunEx veyâ RunOnceEx girişinin biçimi geçersiz oldu. WinMain() değişkenlerini desteklemek için işleçten ve işleç adından sonra dikey bir çubuk (|) gereklidir."
+    IDS_INVALIDFORMAT "%1 RunEx veyâ RunOnceEx girişinin biçimi geçersiz oldu. WinMain() değişkenlerini desteklemek için fonksiyondan ve fonksiyon adından sonra dikey bir çubuk (|) gereklidir."
     IDS_LOADERROR "%1 yüklemede bir sorun oluştu. Kütük, kurulu olmayabilir ya da bozulmuş olabilir."
     IDS_CALLERROR "%2 içinde %1 işlecini çağırırken bir yanlışlık ya da ayrıklık oluştu."
     IDS_INCORRECTFORMAT "Aşağıdaki RunEx ya da RunOnceEx komutunun biçimi yanlış: %1. Kabuk çalıştırma komutu || ile başlamalıdır."

@@ -52,7 +52,7 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
 {
     ClassMoniker *This = impl_from_IMoniker(iface);
 
-    TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
+    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
     /* Perform a sanity check on the parameters.*/
     if (!ppvObject)
@@ -218,7 +218,7 @@ static HRESULT WINAPI ClassMoniker_BindToObject(IMoniker* iface,
     IClassActivator *pActivator;
     HRESULT hr;
 
-    TRACE("(%p,%p,%p,%p)\n", pbc, pmkToLeft, riid, ppvResult);
+    TRACE("(%p, %p, %s, %p)\n", pbc, pmkToLeft, debugstr_guid(riid), ppvResult);
 
     bindopts.cbStruct = sizeof(bindopts);
     IBindCtx_GetBindOptions(pbc, (BIND_OPTS *)&bindopts);
@@ -251,7 +251,7 @@ static HRESULT WINAPI ClassMoniker_BindToStorage(IMoniker* iface,
                                              REFIID riid,
                                              VOID** ppvResult)
 {
-    TRACE("(%p,%p,%p,%p)\n",pbc, pmkToLeft, riid, ppvResult);
+    TRACE("(%p, %p, %s, %p)\n", pbc, pmkToLeft, debugstr_guid(riid), ppvResult);
     return IMoniker_BindToObject(iface, pbc, pmkToLeft, riid, ppvResult);
 }
 
@@ -573,7 +573,7 @@ static HRESULT WINAPI ClassMonikerROTData_QueryInterface(IROTData *iface,REFIID 
 
     ClassMoniker *This = impl_from_IROTData(iface);
 
-    TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     return IMoniker_QueryInterface(&This->IMoniker_iface, riid, ppvObject);
 }

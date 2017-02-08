@@ -94,7 +94,7 @@ UINT CopyBufferToBufferChain(
 
         DstSize -= BytesToCopy;
         if (DstSize == 0) {
-            /* No more bytes in desination buffer. Proceed to
+            /* No more bytes in destination buffer. Proceed to
                the next buffer in the destination buffer chain */
             NdisGetNextBuffer(DstBuffer, &DstBuffer);
             if (!DstBuffer)

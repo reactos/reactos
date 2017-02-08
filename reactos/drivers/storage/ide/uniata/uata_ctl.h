@@ -29,6 +29,9 @@ Notes:
 
 Revision History:
 
+Licence:
+    GPLv2
+
 --*/
 
 #ifndef __UNIATA_IO_CONTROL_CODES__H__

@@ -35,6 +35,11 @@ License = Versiune de evaluare
 Description = Cel mai popular client de IRC (Internet Relay Chat).
 Size = 1,7 Mio
 
+[Section.0419]
+License = Условно бесплатно
+Description = Самый популярный клиент для IRC (Internet Relay Chat).
+Size = 1,7 МиБ
+
 [Section.041f]
 License = Paylaşımlı
 Description = Umûmî Ağ Eş Zamanlı Söyleşi (IRC) için en çok tutulan istemci.

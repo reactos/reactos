@@ -1,14 +1,13 @@
 /*
- *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/advapi32/misc/sysfun.c
  * PURPOSE:         advapi32.dll system functions (undocumented)
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
- *	19990413 EA	created
- *	19990415 EA
- *	20080424 Ported from WINE
+ *  19990413 EA created
+ *  19990415 EA
+ *  20080424 Ported from WINE
  */
 
 #include <advapi32.h>
@@ -450,8 +449,8 @@ SystemFunction028(INT a, INT b)
 {
     //NDRCContextBinding()
     //SystemFunction034()
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 28;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 28;
 }
 
 
@@ -464,8 +463,8 @@ WINAPI
 SystemFunction029(INT a, INT b)
 {
     //I_RpcBindingIsClientLocal()
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 29;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 29;
 }
 
 
@@ -484,7 +483,7 @@ SystemFunction029(INT a, INT b)
 BOOL
 WINAPI SystemFunction030(LPCVOID b1, LPCVOID b2)
 {
-	return !memcmp(b1, b2, 0x10);
+    return !memcmp(b1, b2, 0x10);
 }
 
 
@@ -524,8 +523,8 @@ INT
 WINAPI
 SystemFunction033(INT a, INT b)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 33;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 33;
 }
 
 /**********************************************************************
@@ -540,8 +539,8 @@ SystemFunction034(INT a, INT b)
     //I_RpcMapWin32Status
     //RpcStringBindingParseW
     //RpcStringFreeW
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 34;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 34;
 }
 
 
@@ -579,7 +578,7 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
     ////////////////////////////////////////////////////////////////
     //////////////////// B I G   W A R N I N G  !!! ////////////////
     // This function will output numbers based on the tick count. //
-    // It will NOT OUPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
+    // It will NOT OUTPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
     ////////////////////////////////////////////////////////////////
 
     DWORD dwSeed;
@@ -757,7 +756,7 @@ SystemFunction040(
         return STATUS_INVALID_PARAMETER;
     }
 
-	return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
+    return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
 }
 
 /******************************************************************************
@@ -808,7 +807,7 @@ SystemFunction041(
         return STATUS_INVALID_PARAMETER;
     }
 
-	return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
+    return KsecDeviceIoControl(IoControlCode, Memory, MemoryLength, Memory, MemoryLength);
 }
 
 /* EOF */

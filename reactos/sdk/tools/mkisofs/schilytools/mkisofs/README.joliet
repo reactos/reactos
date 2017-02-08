@@ -1,0 +1,53 @@
+Some thoughts on Joliet - why it is a dumb idea to have a CD
+with Joliet enhancements but without Rock Ridge.
+It also helps you to understand why it it not possible to append
+a new session to a multi-session Joliet CD when Rock Ridge is
+missing.
+
+-	Joliet is not an accepted independant international standard
+	like ISO-9660 or Rock Ridge (IEEE-P1282).
+	Joliet has been created in 1995 - Rock Ridge in 1990.
+	Rock Ridge became a IEEE standard around 1992.
+
+Joliet is an unjustified addition to ISO-9660.
+
+-	The Joliet tree has no relation to the
+	ISO-9660 tree. Files from the ISO-9660 tree and from the
+	Joliet tree only share content. In general, it is not
+	possible to find the ISO-9660 name from a Joliet name
+	and vice versa if you check both trees on a CD.
+
+	Rock Ridge extensions are located at the end of each
+	ISO-9660 directory record. This makes the Rock Ridge
+	tree closely coupled to the ISO-9660 tree.
+
+-	Joliet does not allow all characters too, so the
+	Joliet filenames are not identical to the filenames
+	on disk.
+
+	As the ISO-9660 tree is the standard reference tree
+	on a CD and the ISO-9660 filenames don't allow all
+	characters and there is a length limitation, the
+	ISO-9660 names cannot be mapped to the filenames on the
+	OS reference tree on disk for doing multi-session.
+
+	Due to different limitations, the short ISO-9660 name 
+	is in most cases not equal to the Joliet name or the
+	Rock Ridge name.
+
+-	Joliet has a filename length limitation of 64 chars (independent
+	from the character coding and type e.g. European vs. Japanese)
+	This is annoying as modern filesystems all allow 255 chars
+	per path name component.
+
+	Joliet uses UTF-16 coding while Rock Ridge uses ISO-8859 or
+	UTF-16 based chars and allows 255 octets. Using UTF-8,
+	Rock Ridge allows 85 Japanese characers or 255 US-ASCII chars.
+
+Other than slightly longer filenames, Joliet offers no new properties
+over plain ISO 9660. Rock Ridge is an open extendable standard and
+there is no filesystem property on Win32 that could not be implemented 
+using Rock Ridge.
+
+Except Linux and FreeBSD, there is no POSIX-like like OS that supports
+Joliet. Never create Joliet only CD's for that reason.

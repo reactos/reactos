@@ -54,47 +54,47 @@ public:
         Argb = a << 24 | r << 16 | g << 8 | b;
     }
 
-    BYTE GetA(VOID)
+    BYTE GetA(VOID) const
     {
         return (Argb >> 24) & 0xff;
     }
 
-    BYTE GetAlpha(VOID)
+    BYTE GetAlpha(VOID) const
     {
         return (Argb >> 24) & 0xff;
     }
 
-    BYTE GetB(VOID)
+    BYTE GetB(VOID) const
     {
         return Argb & 0xff;
     }
 
-    BYTE GetBlue(VOID)
+    BYTE GetBlue(VOID) const
     {
         return Argb & 0xff;
     }
 
-    BYTE GetG(VOID)
+    BYTE GetG(VOID) const
     {
         return (Argb >> 8) & 0xff;
     }
 
-    BYTE GetGreen(VOID)
+    BYTE GetGreen(VOID) const
     {
         return (Argb >> 8) & 0xff;
     }
 
-    BYTE GetR(VOID)
+    BYTE GetR(VOID) const
     {
         return (Argb >> 16) & 0xff;
     }
 
-    BYTE GetRed(VOID)
+    BYTE GetRed(VOID) const
     {
         return (Argb >> 16) & 0xff;
     }
 
-    ARGB GetValue(VOID)
+    ARGB GetValue(VOID) const
     {
         return Argb;
     }
@@ -106,7 +106,7 @@ public:
 
     VOID SetFromCOLORREF(COLORREF rgb)
     {
-        Argb = 0xff000000 | rgb & 0x000000ff << 16 | rgb & 0x0000ff00 | rgb & 0x00ff0000 >> 16;
+        Argb = 0xff000000 | (rgb & 0x000000ff) << 16 | (rgb & 0x0000ff00) | (rgb & 0x00ff0000) >> 16;
     }
 
     VOID SetValue(ARGB argb)
@@ -114,9 +114,9 @@ public:
         Argb = argb;
     }
 
-    COLORREF ToCOLORREF(VOID)
+    COLORREF ToCOLORREF(VOID) const
     {
-        return Argb & 0x000000ff << 16 | Argb & 0x0000ff00 | Argb & 0x00ff0000 >> 16;
+        return (Argb & 0x000000ff) << 16 | (Argb & 0x0000ff00) | (Argb & 0x00ff0000) >> 16;
     }
 
 protected:

@@ -1,12 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   252
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-#define SYSTEM_COLUMN    (0 * PROPSHEETPADDING)
-#define ICONSIZE         16
-
 /* IDI */
 #define IDI_KEYBOARD_ICO  202
 #define IDI_MARKER_ICO    205

@@ -38,3 +38,10 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     }
     return TRUE;
 }
+
+BOOL WINAPI SnmpMgrTrapListen(HANDLE *available)
+{
+    FIXME("stub: %p\n", available);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}

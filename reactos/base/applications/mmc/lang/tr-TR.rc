@@ -9,11 +9,11 @@ BEGIN
         MENUITEM "&Yeni\tDenetim+N", IDM_FILE_NEW
         MENUITEM "&Aç\tDenetim+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILE_EXIT
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
     END
 END
 
@@ -26,7 +26,7 @@ BEGIN
         MENUITEM "&Sakla", IDM_FILE_SAVE
         MENUITEM "Ay&rı Sakla...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Çıkış\tSeçenek+İ4", IDM_FILE_EXIT
+        MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILE_EXIT
     END
     POPUP "&Pencereler"
     BEGIN
@@ -34,7 +34,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&ReactOS Yönetim Konsolu Üzerine...", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Yönetim Konsolu Üzerine", IDM_HELP_ABOUT
     END
 END
 

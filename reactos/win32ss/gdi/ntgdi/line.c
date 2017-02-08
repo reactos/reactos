@@ -13,16 +13,75 @@
 
 // Some code from the WINE project source (www.winehq.com)
 
+VOID FASTCALL
+AddPenLinesBounds(PDC dc, int count, POINT *points)
+{
+    DWORD join, endcap;
+    RECTL bounds, rect;
+    LONG lWidth;
+    PBRUSH pbrLine;
+
+    /* Get BRUSH from current pen. */
+    pbrLine = dc->dclevel.pbrLine;
+    ASSERT(pbrLine);
+    
+    lWidth = pbrLine->lWidth;
+
+    // Setup bounds
+    bounds.left = bounds.top = INT_MAX;
+    bounds.right = bounds.bottom = INT_MIN;
+
+    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || lWidth > 1)
+    {
+        /* Windows uses some heuristics to estimate the distance from the point that will be painted */
+        lWidth = lWidth + 2;
+        endcap = (PS_ENDCAP_MASK & pbrLine->ulPenStyle);
+        join   = (PS_JOIN_MASK   & pbrLine->ulPenStyle);
+        if (join == PS_JOIN_MITER)
+        {
+           lWidth *= 5;
+           if (endcap == PS_ENDCAP_SQUARE) lWidth = (lWidth * 3 + 1) / 2;
+        }
+        else
+        {
+           if (endcap == PS_ENDCAP_SQUARE) lWidth -= lWidth / 4;
+           else lWidth = (lWidth + 1) / 2;
+        }
+    }
+
+    while (count-- > 0)
+    {
+        rect.left   = points->x - lWidth;
+        rect.top    = points->y - lWidth;
+        rect.right  = points->x + lWidth + 1;
+        rect.bottom = points->y + lWidth + 1;
+        RECTL_bUnionRect(&bounds, &bounds, &rect);        
+        points++;
+    }
+
+    DPRINT("APLB dc %p l %d t %d\n",dc,rect.left,rect.top);
+    DPRINT("                 r %d b %d\n",rect.right,rect.bottom);
+
+    {
+       RECTL rcRgn;
+       if (dc->fs & DC_FLAG_DIRTY_RAO) CLIPPING_UpdateGCRegion(dc);
+       if (REGION_GetRgnBox(dc->prgnRao, &rcRgn))
+       {
+          if (RECTL_bIntersectRect( &rcRgn, &rcRgn, &bounds )) IntUpdateBoundsRect(dc, &rcRgn);
+       }
+       else
+          IntUpdateBoundsRect(dc, &bounds);
+    }
+}
+
 // Should use Fx in Point
 //
 BOOL FASTCALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
                int     Y,
-               LPPOINT Point,
-               BOOL    BypassPath)
+               LPPOINT Point)
 {
-    BOOL  PathIsOpen;
     PDC_ATTR pdcattr = dc->pdcattr;
     if ( Point )
     {
@@ -44,13 +103,6 @@ IntGdiMoveToEx(DC      *dc,
     CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
     pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
-    if (BypassPath) return TRUE;
-
-    PathIsOpen = PATH_IsPathOpen(dc->dclevel);
-
-    if ( PathIsOpen )
-        return PATH_MoveTo ( dc );
-
     return TRUE;
 }
 
@@ -67,7 +119,7 @@ GreMoveTo( HDC hdc,
       EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   Ret = IntGdiMoveToEx(dc, x, y, pptOut, TRUE);
+   Ret = IntGdiMoveToEx(dc, x, y, pptOut);
    DC_UnlockDc(dc);
    return Ret;
 }
@@ -108,16 +160,6 @@ IntGdiLineTo(DC  *dc,
     if (PATH_IsPathOpen(dc->dclevel))
     {
         Ret = PATH_LineTo(dc, XEnd, YEnd);
-        if (Ret)
-        {
-            // FIXME: PATH_LineTo should maybe do this? No
-            pdcattr->ptlCurrent.x = XEnd;
-            pdcattr->ptlCurrent.y = YEnd;
-            pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
-            CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
-            pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
-        }
-        return Ret;
     }
     else
     {
@@ -149,6 +191,13 @@ IntGdiLineTo(DC  *dc,
         /* Get BRUSH from current pen. */
         pbrLine = dc->dclevel.pbrLine;
         ASSERT(pbrLine);
+
+        if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        {
+           DPRINT("Bounds dc %p l %d t %d\n",dc,Bounds.left,Bounds.top);
+           DPRINT("                   r %d b %d\n",Bounds.right,Bounds.bottom);
+           AddPenLinesBounds(dc, 2, Points);
+        }
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
@@ -257,9 +306,6 @@ IntGdiPolyline(DC      *dc,
         return FALSE;
     }
 
-    if (PATH_IsPathOpen(dc->dclevel))
-        return PATH_Polyline(dc, pt, Count);
-
     DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
     psurf = dc->dclevel.pSurface;
 
@@ -280,6 +326,11 @@ IntGdiPolyline(DC      *dc,
             {
                 Points[i].x += dc->ptlDCOrig.x;
                 Points[i].y += dc->ptlDCOrig.y;
+            }
+
+            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+            {
+               AddPenLinesBounds(dc, Count, Points);
             }
 
             Ret = IntEngPolyline(&psurf->SurfObj,
@@ -355,8 +406,9 @@ IntGdiPolyPolyline(DC      *dc,
     pc = PolyPoints;
 
     if (PATH_IsPathOpen(dc->dclevel))
+    {
         return PATH_PolyPolyline( dc, pt, PolyPoints, Count );
-
+    }
     for (i = 0; i < Count; i++)
     {
         ret = IntGdiPolyline ( dc, pts, *pc );
@@ -544,7 +596,7 @@ NtGdiPolyDraw(
         }
 
         if (num_pts >= 2) IntGdiPolyline( dc, line_pts, num_pts );
-        IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL, TRUE );
+        IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL );
         result = TRUE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -592,7 +644,7 @@ NtGdiMoveTo(
     pdc = DC_LockDc(hdc);
     if (!pdc) return FALSE;
 
-    Ret = IntGdiMoveToEx(pdc, x, y, &Point, TRUE);
+    Ret = IntGdiMoveToEx(pdc, x, y, &Point);
 
     if (Ret && pptOut)
     {

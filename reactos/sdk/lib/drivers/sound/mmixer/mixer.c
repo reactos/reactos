@@ -455,7 +455,7 @@ MMixerGetLineControls(
 
         return MM_STATUS_SUCCESS;
     }
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return MM_STATUS_NOT_IMPLEMENTED;
 }
 

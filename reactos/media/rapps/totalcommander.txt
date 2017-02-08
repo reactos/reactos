@@ -32,6 +32,11 @@ License = Versiune de evaluare
 Description = Gestionar de fișiere după modelul paneluri-alăturate, pentru utilizatori avansați.
 Size = 3,6 Mio
 
+[Section.0419]
+License = Условно бесплатно
+Description = Файловый менеджер с двумя панелями.
+Size = 3,6 МиБ
+
 [Section.041f]
 License = Paylaşımlı
 Description = Güçlü kullanıcılar için yan yana iki bölmeli bir kütük yöneticisi.

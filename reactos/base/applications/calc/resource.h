@@ -1,17 +1,16 @@
 #pragma once
 
-#define IDS_STRING_LICENSE    1
+#define IDS_CALC_NAME         1
 #define IDS_MATH_ERROR        2
 #define IDS_QUICKHELP         3
+#define IDS_AUTHOR            4
 #define IDD_DIALOG_SCIENTIFIC 101
 #define IDD_DIALOG_STANDARD   102
-#define IDD_DIALOG_ABOUT      103
 #define IDD_DIALOG_STAT       104
 #define IDD_DIALOG_CONVERSION 105
 #define IDR_MENU_SCIENTIFIC_1 106
 #define IDR_MENU_SCIENTIFIC_2 107
 #define IDR_MENU_STANDARD     108
-#define IDB_BITMAP_ROS        109
 #define IDI_CALC_BIG          110
 #define IDI_CALC_SMALL        111
 #define IDC_RADIO_HEX         1002
@@ -88,7 +87,6 @@
 #define IDC_TEXT_OUTPUT       1074
 #define IDC_TEXT_PARENT       1075
 #define IDC_TEXT_MEMORY       1076
-#define IDC_EDIT_LICENSE      1078
 #define IDC_LIST_STAT         1079
 #define IDC_BUTTON_RET        1080
 #define IDC_BUTTON_LOAD       1081
@@ -98,7 +96,6 @@
 #define IDC_BUTTON_SQRT       1085
 #define IDC_BUTTON_PERCENT    1086
 #define IDC_BUTTON_CONVERT    1087
-#define IDC_TEXT_VERSION      1088
 #define IDC_BUTTON_FOCUS      1089
 #define IDC_COMBO_CATEGORY    1090
 #define IDC_COMBO_FROM        1091

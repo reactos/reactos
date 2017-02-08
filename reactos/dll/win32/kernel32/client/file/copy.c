@@ -6,7 +6,7 @@
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  01/11/98 Created
- *                  07/02/99 Moved to seperate file
+ *                  07/02/99 Moved to separate file
  */
 
 /* INCLUDES ****************************************************************/

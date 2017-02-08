@@ -116,7 +116,7 @@ acpi_extract_package (
 				tail_offset += sizeof(char*);
 				break;
 			default:
-				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d]: got number, expecing [%c].\n", i, format_string[i]));
+				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d]: got number, expecting [%c].\n", i, format_string[i]));
 				return_ACPI_STATUS(AE_BAD_DATA);
 				break;
 			}
@@ -134,7 +134,7 @@ acpi_extract_package (
 				tail_offset += sizeof(UINT8*);
 				break;
 			default:
-				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d] got string/buffer, expecing [%c].\n", i, format_string[i]));
+				ACPI_DEBUG_PRINT((ACPI_DB_WARN, "Invalid package element [%d] got string/buffer, expecting [%c].\n", i, format_string[i]));
 				return_ACPI_STATUS(AE_BAD_DATA);
 				break;
 			}

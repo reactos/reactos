@@ -27,15 +27,10 @@ Implements the navigation band of the cabinet window
 #include <shlwapi_undoc.h>
 #include <shellapi.h>
 
-HRESULT CreateAddressEditBox(REFIID riid, void **ppv);
-
 /*
 TODO:
-****Add command handler for show/hide Go button to OnWinEvent
 ****Add tooltip notify handler
   **Properly implement GetBandInfo
-  **Add correct text to Go button
-  **Implement TranslateAcceleratorIO
     Implement Exec
     Implement QueryService
     Implement Load
@@ -48,7 +43,6 @@ CAddressBand::CAddressBand()
     fGoButton = NULL;
     fComboBox = NULL;
     fGoButtonShown = false;
-    fAdviseCookie = 0;
 }
 
 CAddressBand::~CAddressBand()
@@ -72,7 +66,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
 {
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
-        pdbi->ptMinSize.x = 400;
+        pdbi->ptMinSize.x = 100;
         pdbi->ptMinSize.y = 22;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -87,7 +81,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
     }
     if (pdbi->dwMask & DBIM_ACTUAL)
     {
-        pdbi->ptActual.x = 400;
+        pdbi->ptActual.x = 100;
         pdbi->ptActual.y = 22;
     }
     if (pdbi->dwMask & DBIM_TITLE)
@@ -105,7 +99,6 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
 
 HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 {
-    CComPtr<IBrowserService>                browserService;
     CComPtr<IShellService>                  shellService;
     HWND                                    parentWindow;
     HWND                                    combobox;
@@ -114,7 +107,6 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 
     if (pUnkSite == NULL)
     {
-        hResult = AtlUnadvise(fSite, DIID_DWebBrowserEvents, fAdviseCookie);
         fSite.Release();
         return S_OK;
     }
@@ -155,19 +147,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 
     fEditControl = reinterpret_cast<HWND>(SendMessage(CBEM_GETEDITCONTROL, 0, 0));
     fComboBox = reinterpret_cast<HWND>(SendMessage(CBEM_GETCOMBOCONTROL, 0, 0));
-#if 1
-    hResult = CoCreateInstance(CLSID_AddressEditBox, NULL, CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
-#else
-    hResult = E_FAIL;
-#endif
+    hResult = CAddressEditBox_CreateInstance(IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
     if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        // instantiate new version
-        hResult = CreateAddressEditBox(IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
+        return hResult;
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &shellService));
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -182,13 +164,6 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
     fGoButtonShown = SHRegGetBoolUSValueW(L"Software\\Microsoft\\Internet Explorer\\Main", L"ShowGoButton", FALSE, TRUE);
     if (fGoButtonShown)
         CreateGoButton();
-
-    // take advice to watch events
-    hResult = IUnknown_QueryService(pUnkSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &browserService));
-    if (SUCCEEDED(hResult))
-    {
-        hResult = AtlAdvise(browserService, static_cast<IDispatch *>(this), DIID_DWebBrowserEvents, &fAdviseCookie);
-    }
 
     return hResult;
 }
@@ -222,7 +197,10 @@ HRESULT STDMETHODCALLTYPE CAddressBand::CloseDW(DWORD dwReserved)
 
     m_hWnd = NULL;
 
-    IUnknown_SetSite(fAddressEditBox, NULL);
+    CComPtr<IShellService> pservice;
+    HRESULT hres = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &pservice));
+    if (SUCCEEDED(hres ))
+        pservice->SetOwner(NULL);
 
     if (fAddressEditBox) fAddressEditBox.Release();
     if (fSite) fSite.Release();
@@ -410,108 +388,6 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CAddressBand::GetTypeInfoCount(UINT *pctinfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CAddressBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CAddressBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames,
-    LCID lcid, DISPID *rgDispId)
-{
-    return E_NOTIMPL;
-}
-
-HRESULT STDMETHODCALLTYPE CAddressBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
-    DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
-{
-    CComPtr<IBrowserService> isb;
-    CComPtr<IShellFolder> sf;
-    HRESULT hr;
-    INT indexClosed, indexOpen, itemExists, oldIndex;
-    DWORD result;
-    COMBOBOXEXITEMW item;
-    PIDLIST_ABSOLUTE absolutePIDL;
-    LPCITEMIDLIST pidlChild;
-    LPITEMIDLIST pidlPrevious;
-    STRRET ret;
-    WCHAR buf[4096];
-
-    if (pDispParams == NULL)
-        return E_INVALIDARG;
-
-    switch (dispIdMember)
-    {
-    case DISPID_NAVIGATECOMPLETE2:
-    case DISPID_DOCUMENTCOMPLETE:
-
-        oldIndex = SendMessage(m_hWnd, CB_GETCURSEL, 0, 0);
-
-        itemExists = FALSE;
-        pidlPrevious = NULL;
-
-        ZeroMemory(&item, sizeof(item));
-        item.mask = CBEIF_LPARAM;
-        item.iItem = 0;
-        if (SendMessage(m_hWnd, CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item)))
-        {
-            pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
-            if (pidlPrevious)
-                itemExists = TRUE;
-        }
-
-        hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
-        if (FAILED_UNEXPECTEDLY(hr))
-            return hr;
-        isb->GetPidl(&absolutePIDL);
-
-        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
-
-        sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
-
-        StrRetToBufW(&ret, pidlChild, buf, 4095);
-
-        indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
-
-        item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
-        item.iItem = 0;
-        item.iImage = indexClosed;
-        item.iSelectedImage = indexOpen;
-        item.pszText = buf;
-        item.lParam = reinterpret_cast<LPARAM>(absolutePIDL);
-
-        if (itemExists)
-        {
-            result = SendMessage(m_hWnd, CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
-            oldIndex = 0;
-
-            if (result)
-            {
-                ILFree(pidlPrevious);
-            }
-        }
-        else
-        {
-            oldIndex = SendMessage(m_hWnd, CBEM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item));
-
-            if (oldIndex < 0)
-                DbgPrint("ERROR %d\n", GetLastError());
-        }
-
-        SendMessage(m_hWnd, CB_SETCURSEL, -1, 0);
-        SendMessage(m_hWnd, CB_SETCURSEL, oldIndex, 0);
-
-        //fAddressEditBox->SetCurrentDir(index);
-
-        break;
-    }
-    return S_OK;
-}
-
 LRESULT CAddressBand::OnNotifyClick(WPARAM wParam, NMHDR *notifyHeader, BOOL &bHandled)
 {
     if (notifyHeader->hwndFrom == fGoButton)
@@ -640,11 +516,6 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 
     SendMessage(fComboBox, CB_SETDROPPEDWIDTH, 200, 0);
     return 0;
-}
-
-HRESULT CreateAddressBand(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CAddressBand>(riid, ppv);
 }
 
 void CAddressBand::CreateGoButton()

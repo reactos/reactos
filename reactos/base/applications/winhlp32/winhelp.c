@@ -248,7 +248,7 @@ HLPFILE_WINDOWINFO*     WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name)
 
     if (strcmp(name, "main") != 0)
     {
-        WINE_FIXME("Couldn't find window info for %s\n", name);
+        WINE_FIXME("Couldn't find window info for %s\n", debugstr_a(name));
         assert(0);
         return NULL;
     }
@@ -350,7 +350,7 @@ static LRESULT  WINHELP_HandleCommand(HWND hSrcWnd, LPARAM lParam)
         char*   ptr = (wh->ofsFilename) ? (LPSTR)wh + wh->ofsFilename : NULL;
 
         WINE_TRACE("Got[%u]: cmd=%u data=%08x fn=%s\n",
-                   wh->size, wh->command, wh->data, ptr);
+                   wh->size, wh->command, wh->data, debugstr_a(ptr));
         switch (wh->command)
         {
         case HELP_CONTEXT:
@@ -501,7 +501,7 @@ WINHELP_WINDOW* WINHELP_GrabWindow(WINHELP_WINDOW* win)
 
 /***********************************************************************
  *
- *           WINHELP_RelaseWindow
+ *           WINHELP_ReleaseWindow
  */
 BOOL WINHELP_ReleaseWindow(WINHELP_WINDOW* win)
 {
@@ -968,6 +968,7 @@ static BOOL WINHELP_CheckPopup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
         popup = Globals.active_popup;
         Globals.active_popup = NULL;
         WINHELP_ReleaseWindow(popup);
+        if (lret) *lret = 1;
         return TRUE;
     }
     return FALSE;
@@ -1186,7 +1187,7 @@ static void cb_KWBTree(void *p, void **next, void *cookie)
     HWND hListWnd = cookie;
     int count;
 
-    WINE_TRACE("Adding '%s' to search list\n", (char *)p);
+    WINE_TRACE("Adding %s to search list\n", debugstr_a((char *)p));
     SendMessageA(hListWnd, LB_INSERTSTRING, -1, (LPARAM)p);
     count = SendMessageW(hListWnd, LB_GETCOUNT, 0, 0);
     SendMessageW(hListWnd, LB_SETITEMDATA, count-1, (LPARAM)p);
@@ -1669,7 +1670,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
             break;
 
         default:
-            WINE_FIXME("Unsupported cmd line: %s\n", cmdline);
+            WINE_FIXME("Unsupported cmd line: %s\n", debugstr_a(cmdline));
             break;
 	}
     }

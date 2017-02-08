@@ -498,80 +498,6 @@ typedef struct _SHARE_ACCESS {
   ULONG SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
-/* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
-   inheritance, even from a struct renders the type non-POD. So we use
-   this hack */
-#define PCI_COMMON_HEADER_LAYOUT                \
-  USHORT VendorID;                              \
-  USHORT DeviceID;                              \
-  USHORT Command;                               \
-  USHORT Status;                                \
-  UCHAR RevisionID;                             \
-  UCHAR ProgIf;                                 \
-  UCHAR SubClass;                               \
-  UCHAR BaseClass;                              \
-  UCHAR CacheLineSize;                          \
-  UCHAR LatencyTimer;                           \
-  UCHAR HeaderType;                             \
-  UCHAR BIST;                                   \
-  union {                                       \
-    struct _PCI_HEADER_TYPE_0 {                 \
-      ULONG BaseAddresses[PCI_TYPE0_ADDRESSES]; \
-      ULONG CIS;                                \
-      USHORT SubVendorID;                       \
-      USHORT SubSystemID;                       \
-      ULONG ROMBaseAddress;                     \
-      UCHAR CapabilitiesPtr;                    \
-      UCHAR Reserved1[3];                       \
-      ULONG Reserved2;                          \
-      UCHAR InterruptLine;                      \
-      UCHAR InterruptPin;                       \
-      UCHAR MinimumGrant;                       \
-      UCHAR MaximumLatency;                     \
-    } type0;                                    \
-    struct _PCI_HEADER_TYPE_1 {                 \
-      ULONG BaseAddresses[PCI_TYPE1_ADDRESSES]; \
-      UCHAR PrimaryBus;                         \
-      UCHAR SecondaryBus;                       \
-      UCHAR SubordinateBus;                     \
-      UCHAR SecondaryLatency;                   \
-      UCHAR IOBase;                             \
-      UCHAR IOLimit;                            \
-      USHORT SecondaryStatus;                   \
-      USHORT MemoryBase;                        \
-      USHORT MemoryLimit;                       \
-      USHORT PrefetchBase;                      \
-      USHORT PrefetchLimit;                     \
-      ULONG PrefetchBaseUpper32;                \
-      ULONG PrefetchLimitUpper32;               \
-      USHORT IOBaseUpper16;                     \
-      USHORT IOLimitUpper16;                    \
-      UCHAR CapabilitiesPtr;                    \
-      UCHAR Reserved1[3];                       \
-      ULONG ROMBaseAddress;                     \
-      UCHAR InterruptLine;                      \
-      UCHAR InterruptPin;                       \
-      USHORT BridgeControl;                     \
-    } type1;                                    \
-    struct _PCI_HEADER_TYPE_2 {                 \
-      ULONG SocketRegistersBaseAddress;         \
-      UCHAR CapabilitiesPtr;                    \
-      UCHAR Reserved;                           \
-      USHORT SecondaryStatus;                   \
-      UCHAR PrimaryBus;                         \
-      UCHAR SecondaryBus;                       \
-      UCHAR SubordinateBus;                     \
-      UCHAR SecondaryLatency;                   \
-      struct {                                  \
-        ULONG Base;                             \
-        ULONG Limit;                            \
-      } Range[PCI_TYPE2_ADDRESSES-1];           \
-      UCHAR InterruptLine;                      \
-      UCHAR InterruptPin;                       \
-      USHORT BridgeControl;                     \
-    } type2;                                    \
-  } u;
-
 typedef enum _CREATE_FILE_TYPE {
   CreateFileTypeNone,
   CreateFileTypeNamedPipe,
@@ -1836,7 +1762,7 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define VPB_RAW_MOUNT                     0x0010
 #define VPB_DIRECT_WRITES_ALLOWED         0x0020
 
-/* IRP.Flags */
+/* IO_STACK_LOCATION.Flags */
 
 #define SL_FORCE_ACCESS_CHECK             0x01
 #define SL_OPEN_PAGING_FILE               0x02
@@ -1876,6 +1802,8 @@ $if (_WDMDDK_ || _DEVIOCTL_)
 
 $endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
+
+/* IRP.Flags */
 #define IRP_NOCACHE                     0x00000001
 #define IRP_PAGING_IO                   0x00000002
 #define IRP_MOUNT_COMPLETION            0x00000002
@@ -1896,6 +1824,7 @@ $if (_WDMDDK_)
 #define IRP_RETRY_IO_COMPLETION         0x00004000
 #define IRP_CLASS_CACHE_OPERATION       0x00008000
 
+/* IRP.AllocationFlags */
 #define IRP_QUOTA_CHARGED                 0x01
 #define IRP_ALLOCATED_MUST_SUCCEED        0x02
 #define IRP_ALLOCATED_FIXED_SIZE          0x04
@@ -2044,6 +1973,13 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
   IO_ERROR_LOG_PACKET EntryData;
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
 
+/* See ndk/lpctypes.h */
+#ifdef _WIN64
+#define PORT_MAXIMUM_MESSAGE_LENGTH 512
+#else
+#define PORT_MAXIMUM_MESSAGE_LENGTH 256
+#endif
+
 #define ERROR_LOG_LIMIT_SIZE               240
 #define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
                                             sizeof(IO_ERROR_LOG_PACKET) + \
@@ -2056,12 +1992,6 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
         PORT_MAXIMUM_MESSAGE_LENGTH)
 #define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
                                 IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
-
-#ifdef _WIN64
-#define PORT_MAXIMUM_MESSAGE_LENGTH    512
-#else
-#define PORT_MAXIMUM_MESSAGE_LENGTH    256
-#endif
 
 typedef enum _DMA_WIDTH {
   Width8Bits,
@@ -2209,13 +2139,23 @@ typedef VOID
 typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 _Function_class_(DRIVER_DISPATCH)
-_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI DRIVER_DISPATCH)(
   _In_ struct _DEVICE_OBJECT *DeviceObject,
   _Inout_ struct _IRP *Irp);
 typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
+typedef DRIVER_DISPATCH DRIVER_DISPATCH_RAISED;
+
+_Function_class_(DRIVER_DISPATCH)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+typedef NTSTATUS
+(NTAPI DRIVER_DISPATCH_PAGED)(
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp);
+typedef DRIVER_DISPATCH_PAGED *PDRIVER_DISPATCH_PAGED;
 
 typedef struct _DRIVER_OBJECT {
   CSHORT Type;
@@ -3170,6 +3110,80 @@ typedef struct _PCI_SLOT_NUMBER {
 #define PCI_TYPE0_ADDRESSES               6
 #define PCI_TYPE1_ADDRESSES               2
 #define PCI_TYPE2_ADDRESSES               5
+
+/* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
+   inheritance, even from a struct renders the type non-POD. So we use
+   this hack */
+#define PCI_COMMON_HEADER_LAYOUT                \
+  USHORT VendorID;                              \
+  USHORT DeviceID;                              \
+  USHORT Command;                               \
+  USHORT Status;                                \
+  UCHAR RevisionID;                             \
+  UCHAR ProgIf;                                 \
+  UCHAR SubClass;                               \
+  UCHAR BaseClass;                              \
+  UCHAR CacheLineSize;                          \
+  UCHAR LatencyTimer;                           \
+  UCHAR HeaderType;                             \
+  UCHAR BIST;                                   \
+  union {                                       \
+    struct _PCI_HEADER_TYPE_0 {                 \
+      ULONG BaseAddresses[PCI_TYPE0_ADDRESSES]; \
+      ULONG CIS;                                \
+      USHORT SubVendorID;                       \
+      USHORT SubSystemID;                       \
+      ULONG ROMBaseAddress;                     \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved1[3];                       \
+      ULONG Reserved2;                          \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      UCHAR MinimumGrant;                       \
+      UCHAR MaximumLatency;                     \
+    } type0;                                    \
+    struct _PCI_HEADER_TYPE_1 {                 \
+      ULONG BaseAddresses[PCI_TYPE1_ADDRESSES]; \
+      UCHAR PrimaryBus;                         \
+      UCHAR SecondaryBus;                       \
+      UCHAR SubordinateBus;                     \
+      UCHAR SecondaryLatency;                   \
+      UCHAR IOBase;                             \
+      UCHAR IOLimit;                            \
+      USHORT SecondaryStatus;                   \
+      USHORT MemoryBase;                        \
+      USHORT MemoryLimit;                       \
+      USHORT PrefetchBase;                      \
+      USHORT PrefetchLimit;                     \
+      ULONG PrefetchBaseUpper32;                \
+      ULONG PrefetchLimitUpper32;               \
+      USHORT IOBaseUpper16;                     \
+      USHORT IOLimitUpper16;                    \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved1[3];                       \
+      ULONG ROMBaseAddress;                     \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      USHORT BridgeControl;                     \
+    } type1;                                    \
+    struct _PCI_HEADER_TYPE_2 {                 \
+      ULONG SocketRegistersBaseAddress;         \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved;                           \
+      USHORT SecondaryStatus;                   \
+      UCHAR PrimaryBus;                         \
+      UCHAR SecondaryBus;                       \
+      UCHAR SubordinateBus;                     \
+      UCHAR SecondaryLatency;                   \
+      struct {                                  \
+        ULONG Base;                             \
+        ULONG Limit;                            \
+      } Range[PCI_TYPE2_ADDRESSES-1];           \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      USHORT BridgeControl;                     \
+    } type2;                                    \
+  } u;
 
 typedef struct _PCI_COMMON_HEADER {
   PCI_COMMON_HEADER_LAYOUT

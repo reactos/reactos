@@ -299,9 +299,15 @@
          FT_READ_USHORT( count )          )
       goto Exit;
 
-    /* check maximum value and a rough minimum size */
+    /* check maximum value and a rough minimum size:     */
+    /* - no more than 13106 log fonts                    */
+    /* - we need 5 bytes for a log header record         */
+    /* - we need at least 18 bytes for a log font record */
+    /* - the overall size is at least 95 bytes plus the  */
+    /*   log header and log font records                 */
     if ( count > ( ( 1 << 16 ) - 2 ) / 5                ||
-         2 + count * 5 >= stream->size - section_offset )
+         2 + count * 5 >= stream->size - section_offset ||
+         95 + count * ( 5 + 18 ) >= stream->size        )
     {
       FT_ERROR(( "pfr_log_font_count:"
                  " invalid number of logical fonts\n" ));
@@ -377,7 +383,7 @@
         if ( flags & PFR_LOG_2BYTE_STROKE )
           local++;
 
-        if ( (flags & PFR_LINE_JOIN_MASK) == PFR_LINE_JOIN_MITER )
+        if ( ( flags & PFR_LINE_JOIN_MASK ) == PFR_LINE_JOIN_MITER )
           local += 3;
       }
       if ( flags & PFR_LOG_BOLD )
@@ -609,7 +615,7 @@
 
   Too_Short:
     error = FT_THROW( Invalid_Table );
-    FT_ERROR(( "pfr_exta_item_load_stem_snaps:"
+    FT_ERROR(( "pfr_extra_item_load_stem_snaps:"
                " invalid stem snaps table\n" ));
     goto Exit;
   }
@@ -737,12 +743,14 @@
     FT_UInt     n, ok;
 
 
+    if ( *astring )
+      FT_FREE( *astring );
+
     if ( len > 0 && p[len - 1] == 0 )
       len--;
 
-    /* check that each character is ASCII for making sure not to
-       load garbage
-     */
+    /* check that each character is ASCII  */
+    /* for making sure not to load garbage */
     ok = ( len > 0 );
     for ( n = 0; n < len; n++ )
       if ( p[n] < 32 || p[n] > 127 )
@@ -759,6 +767,7 @@
       FT_MEM_COPY( result, p, len );
       result[len] = 0;
     }
+
   Exit:
     *astring = result;
     return error;

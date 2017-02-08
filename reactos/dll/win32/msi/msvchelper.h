@@ -14,6 +14,7 @@ CUSTOMPROC_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
     {
         push ebp
         mov ebp, esp
+        sub esp, 4
         push dword ptr [ebp + 12]
         mov eax, dword ptr [ebp + 8]
         call eax

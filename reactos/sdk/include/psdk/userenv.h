@@ -89,6 +89,8 @@ typedef struct _GROUP_POLICY_OBJECTW {
 BOOL WINAPI InitializeProfiles (VOID);
 BOOL WINAPI CreateUserProfileA (PSID, LPCSTR);
 BOOL WINAPI CreateUserProfileW (PSID, LPCWSTR);
+BOOL WINAPI CreateUserProfileExA (PSID, LPCSTR, LPCSTR, LPSTR, DWORD, BOOL);
+BOOL WINAPI CreateUserProfileExW (PSID, LPCWSTR, LPCWSTR, LPWSTR, DWORD, BOOL);
 BOOL WINAPI AddDesktopItemA (BOOL, LPCSTR, LPCSTR, LPCSTR, INT, LPCSTR, WORD, INT);
 BOOL WINAPI AddDesktopItemW (BOOL, LPCWSTR, LPCWSTR, LPCWSTR, INT, LPCWSTR, WORD, INT);
 BOOL WINAPI DeleteDesktopItemA (BOOL, LPCSTR);
@@ -103,6 +105,7 @@ BOOL WINAPI DeleteItemA (LPCSTR, BOOL, LPCSTR, BOOL);
 BOOL WINAPI DeleteItemW (LPCWSTR, BOOL, LPCWSTR, BOOL);
 BOOL WINAPI CopyProfileDirectoryA(LPCSTR, LPCSTR, DWORD);
 BOOL WINAPI CopyProfileDirectoryW(LPCWSTR, LPCWSTR, DWORD);
+PSID WINAPI GetUserSid(HANDLE);
 /* end private */
 BOOL WINAPI LoadUserProfileA (HANDLE, LPPROFILEINFOA);
 BOOL WINAPI LoadUserProfileW (HANDLE, LPPROFILEINFOW);
@@ -162,6 +165,7 @@ typedef PROFILEINFOW PROFILEINFO;
 typedef LPPROFILEINFOW LPPROFILEINFO;
 /* begin private */
 #define CreateUserProfile  CreateUserProfileW
+#define CreateUserProfileEx  CreateUserProfileExW
 #define AddDesktopItem  AddDesktopItemW
 #define DeleteDesktopItem  DeleteDesktopItemW
 #define CreateGroup  CreateGroupW
@@ -188,6 +192,7 @@ typedef PROFILEINFOA PROFILEINFO;
 typedef LPPROFILEINFOA LPPROFILEINFO;
 /* begin private */
 #define CreateUserProfile  CreateUserProfileA
+#define CreateUserProfileEx  CreateUserProfileExA
 #define AddDesktopItem  AddDesktopItemA
 #define DeleteDesktopItem  DeleteDesktopItemA
 #define CreateGroup  CreateGroupA

@@ -53,6 +53,8 @@ struct _IAVIEditStreamImpl {
   LPBITMAPINFOHEADER   lpFrame;    /* frame of pCurStream */
 };
 
+static IAVIEditStreamImpl *AVIFILE_CreateEditStream(IAVIStream *stream);
+
 static inline IAVIEditStreamImpl *impl_from_IAVIEditStream(IAVIEditStream *iface)
 {
     return CONTAINING_RECORD(iface, IAVIEditStreamImpl, IAVIEditStream_iface);
@@ -381,15 +383,15 @@ static HRESULT WINAPI IAVIEditStream_fnCopy(IAVIEditStream*iface,LONG*plStart,
     *(LPDWORD)plLength = This->sInfo.dwStart + This->sInfo.dwLength -
       *(LPDWORD)plStart;
 
-  pEdit = (IAVIEditStreamImpl*)AVIFILE_CreateEditStream(NULL);
+  pEdit = AVIFILE_CreateEditStream(NULL);
   if (pEdit == NULL)
     return AVIERR_MEMORY;
 
-  hr = IAVIEditStream_Paste((PAVIEDITSTREAM)pEdit, &start, plLength, &This->IAVIStream_iface,
+  hr = IAVIEditStream_Paste(&pEdit->IAVIEditStream_iface, &start, plLength, &This->IAVIStream_iface,
                             *plStart, *plStart + *plLength);
   *plStart = start;
   if (FAILED(hr))
-    IAVIEditStream_Release((PAVIEDITSTREAM)pEdit);
+    IAVIEditStream_Release(&pEdit->IAVIEditStream_iface);
   else
     *ppResult = &This->IAVIStream_iface;
 
@@ -597,7 +599,7 @@ static HRESULT WINAPI IAVIEditStream_fnClone(IAVIEditStream*iface,
     return AVIERR_BADPARAM;
   *ppResult = NULL;
 
-  pEdit = (IAVIEditStreamImpl*)AVIFILE_CreateEditStream(NULL);
+  pEdit = AVIFILE_CreateEditStream(NULL);
   if (pEdit == NULL)
     return AVIERR_MEMORY;
   if (This->nStreams > pEdit->nTableSize) {
@@ -638,7 +640,7 @@ static HRESULT WINAPI IAVIEditStream_fnSetInfo(IAVIEditStream*iface,
   This->sInfo.dwRate    = asi->dwRate;
   This->sInfo.dwScale   = asi->dwScale;
   This->sInfo.dwQuality = asi->dwQuality;
-  CopyRect(&This->sInfo.rcFrame, &asi->rcFrame);
+  This->sInfo.rcFrame   = asi->rcFrame;
   memcpy(This->sInfo.szName, asi->szName, sizeof(asi->szName));
   This->sInfo.dwEditCount++;
 
@@ -988,7 +990,7 @@ static const struct IAVIStreamVtbl ieditstast = {
   IEditAVIStream_fnSetInfo
 };
 
-PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream)
+static IAVIEditStreamImpl *AVIFILE_CreateEditStream(IAVIStream *pstream)
 {
   IAVIEditStreamImpl *pedit = NULL;
 
@@ -1002,5 +1004,39 @@ PAVIEDITSTREAM AVIFILE_CreateEditStream(PAVISTREAM pstream)
 
   IAVIStream_Create(&pedit->IAVIStream_iface, (LPARAM)pstream, 0);
 
-  return (PAVIEDITSTREAM)pedit;
+  return pedit;
+}
+
+/***********************************************************************
+ *             CreateEditableStream     (AVIFIL32.@)
+ */
+HRESULT WINAPI CreateEditableStream(IAVIStream **editable, IAVIStream *src)
+{
+    IAVIEditStream *edit = NULL;
+    IAVIEditStreamImpl *editobj;
+    HRESULT hr;
+
+    TRACE("(%p,%p)\n", editable, src);
+
+    if (!editable)
+        return AVIERR_BADPARAM;
+    *editable = NULL;
+
+    if (src) {
+        hr = IAVIStream_QueryInterface(src, &IID_IAVIEditStream, (void**)&edit);
+        if (SUCCEEDED(hr) && edit) {
+            hr = IAVIEditStream_Clone(edit, editable);
+            IAVIEditStream_Release(edit);
+
+            return hr;
+        }
+    }
+
+    /* Need own implementation of IAVIEditStream */
+    editobj = AVIFILE_CreateEditStream(src);
+    if (!editobj)
+        return AVIERR_MEMORY;
+    *editable = &editobj->IAVIStream_iface;
+
+    return S_OK;
 }

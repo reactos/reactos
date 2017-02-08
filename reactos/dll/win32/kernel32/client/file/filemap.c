@@ -266,7 +266,7 @@ UnmapViewOfFile(LPCVOID lpBaseAddress)
         return FALSE;
     }
 
-    /* Otherwise, return sucess */
+    /* Otherwise, return success */
     return TRUE;
 }
 

@@ -227,7 +227,8 @@ FT_BEGIN_HEADER
   FT_LOCAL( FT_Error )
   cff_decoder_parse_charstrings( CFF_Decoder*  decoder,
                                  FT_Byte*      charstring_base,
-                                 FT_ULong      charstring_len );
+                                 FT_ULong      charstring_len,
+                                 FT_Bool       in_dict );
 #endif
 
   FT_LOCAL( FT_Error )

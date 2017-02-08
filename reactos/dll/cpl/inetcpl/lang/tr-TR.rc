@@ -27,7 +27,7 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_CPL_NAME        "Umûmî Ağ Ayarları"
-    IDS_CPL_INFO        "Wine Umûmî Ağ Tarayıcısı'nı ve ilişkili ayarları yapılandırır."
+    IDS_CPL_INFO        "ReactOS Umûmî Ağ Tarayıcısı'nı ve ilişkili ayarları yapılandırır."
     IDS_SEC_SETTINGS    "Bölgeye Göre Güvenlik Ayarları: "
     IDS_SEC_LEVEL0      "Husûsî"
     IDS_SEC_LEVEL1      "Çok Düşük"

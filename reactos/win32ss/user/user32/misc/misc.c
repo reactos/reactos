@@ -283,7 +283,7 @@ ValidateHandle(HANDLE handle, UINT uType)
   if ( (!pEntry) ||
         (pEntry->type != uType) ||
         !pEntry->ptr ||
-        (pEntry->flags & HANDLEENTRY_INDESTROY) )
+        (pEntry->flags & HANDLEENTRY_DESTROY) || (pEntry->flags & HANDLEENTRY_INDESTROY) )
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!

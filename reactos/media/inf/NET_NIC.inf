@@ -63,6 +63,7 @@ ReactOS = "Echipa ReactOS"
 DisplayClassName = "Adaptoare de rețea"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 DisplayClassName = "Сетевые адаптеры"
 
 [Strings.041B]

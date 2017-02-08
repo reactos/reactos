@@ -75,36 +75,40 @@ HSplitterWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 hdwp = BeginDeferWindowPos(3);
 
                 /* Size HSplitBar */
-                DeferWindowPos(hdwp,
-                               hHSplitter,
-                               0,
-                               GetWindowWidth(hTreeView) + SPLIT_WIDTH,
-                               Point.y,
-                               Width,
-                               SPLIT_WIDTH,
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hHSplitter,
+                                          0,
+                                          GetWindowWidth(hTreeView) + SPLIT_WIDTH,
+                                          Point.y,
+                                          Width,
+                                          SPLIT_WIDTH,
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
                 /* Size ListView */
-                DeferWindowPos(hdwp,
-                               hListView,
-                               0,
-                               GetWindowWidth(hTreeView) + SPLIT_WIDTH,
-                               GetWindowHeight(hToolBar),
-                               Width,
-                               Point.y - GetWindowHeight(hToolBar),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hListView,
+                                          0,
+                                          GetWindowWidth(hTreeView) + SPLIT_WIDTH,
+                                          GetWindowHeight(hToolBar),
+                                          Width,
+                                          Point.y - GetWindowHeight(hToolBar),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
                 /* Size RichEdit */
-                DeferWindowPos(hdwp,
-                               hRichEdit,
-                               0,
-                               GetWindowWidth(hTreeView) + SPLIT_WIDTH,
-                               Point.y + SPLIT_WIDTH,
-                               Width,
-                               GetClientWindowHeight(hMainWnd) - (Point.y + SPLIT_WIDTH + GetWindowHeight(hStatusBar)),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hRichEdit,
+                                          0,
+                                          GetWindowWidth(hTreeView) + SPLIT_WIDTH,
+                                          Point.y + SPLIT_WIDTH,
+                                          Width,
+                                          GetClientWindowHeight(hMainWnd) - (Point.y + SPLIT_WIDTH + GetWindowHeight(hStatusBar)),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
-                EndDeferWindowPos(hdwp);
+                if (hdwp)
+                    EndDeferWindowPos(hdwp);
             }
         break;
     }
@@ -119,7 +123,7 @@ CreateHSplitBar(HWND hwnd)
     WCHAR szWindowClass[] = L"HSplitterWindowClass";
     WNDCLASSEXW WndClass = {0};
 
-    WndClass.cbSize        = sizeof(WNDCLASSEXW);
+    WndClass.cbSize        = sizeof(WndClass);
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = HSplitterWindowProc;
     WndClass.hInstance     = hInst;
@@ -192,54 +196,60 @@ VSplitterWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                 hdwp = BeginDeferWindowPos(5);
 
                 /* Size VSplitBar */
-                DeferWindowPos(hdwp,
-                               hwnd,
-                               0,
-                               Point.x,
-                               GetWindowHeight(hToolBar),
-                               SPLIT_WIDTH,
-                               GetClientWindowHeight(hMainWnd) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hwnd,
+                                          0,
+                                          Point.x,
+                                          GetWindowHeight(hToolBar),
+                                          SPLIT_WIDTH,
+                                          GetClientWindowHeight(hMainWnd) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
                 /* Size TreeView */
-                DeferWindowPos(hdwp,
-                               hTreeView,
-                               0,
-                               0,
-                               GetWindowHeight(hToolBar),
-                               Point.x,
-                               GetClientWindowHeight(hMainWnd) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hTreeView,
+                                          0,
+                                          0,
+                                          GetWindowHeight(hToolBar),
+                                          Point.x,
+                                          GetClientWindowHeight(hMainWnd) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
                 /* Size ListView */
-                DeferWindowPos(hdwp,
-                               hListView,
-                               0,
-                               Point.x + SPLIT_WIDTH,
-                               GetWindowHeight(hToolBar),
-                               GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
-                               GetHSplitterPos() - GetWindowHeight(hToolBar),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hListView,
+                                          0,
+                                          Point.x + SPLIT_WIDTH,
+                                          GetWindowHeight(hToolBar),
+                                          GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
+                                          GetHSplitterPos() - GetWindowHeight(hToolBar),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
-                DeferWindowPos(hdwp,
-                               hRichEdit,
-                               0,
-                               Point.x + SPLIT_WIDTH,
-                               GetHSplitterPos() + SPLIT_WIDTH,
-                               GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
-                               GetClientWindowHeight(hMainWnd) - (GetHSplitterPos() + SPLIT_WIDTH + GetWindowHeight(hStatusBar)),
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hRichEdit,
+                                          0,
+                                          Point.x + SPLIT_WIDTH,
+                                          GetHSplitterPos() + SPLIT_WIDTH,
+                                          GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
+                                          GetClientWindowHeight(hMainWnd) - (GetHSplitterPos() + SPLIT_WIDTH + GetWindowHeight(hStatusBar)),
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
-                DeferWindowPos(hdwp,
-                               hHSplitter,
-                               0,
-                               Point.x + SPLIT_WIDTH,
-                               GetHSplitterPos(),
-                               GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
-                               SPLIT_WIDTH,
-                               SWP_NOZORDER|SWP_NOACTIVATE);
+                if (hdwp)
+                    hdwp = DeferWindowPos(hdwp,
+                                          hHSplitter,
+                                          0,
+                                          Point.x + SPLIT_WIDTH,
+                                          GetHSplitterPos(),
+                                          GetClientWindowWidth(hMainWnd) - (Point.x + SPLIT_WIDTH),
+                                          SPLIT_WIDTH,
+                                          SWP_NOZORDER|SWP_NOACTIVATE);
 
-                EndDeferWindowPos(hdwp);
+                if (hdwp)
+                    EndDeferWindowPos(hdwp);
             }
         break;
     }
@@ -254,7 +264,7 @@ CreateVSplitBar(HWND hwnd)
     WCHAR szWindowClass[] = L"VSplitterWindowClass";
     WNDCLASSEXW WndClass = {0};
 
-    WndClass.cbSize        = sizeof(WNDCLASSEXW);
+    WndClass.cbSize        = sizeof(WndClass);
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = VSplitterWindowProc;
     WndClass.hInstance     = hInst;

@@ -46,12 +46,12 @@ Device_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
         CmDescriptor->u.Generic.Start.HighPart = 0;
         CmDescriptor->u.Generic.Length = IoDescriptor->u.Generic.Length;
 
-        /* Read the actual BAR value */
-        Bar = BarArray[i];
-
-        /* Check which BAR is being processed now */
-        if (i != PCI_TYPE0_ADDRESSES)
+        /* Check if we're handling PCI BARs, or the ROM BAR */
+        if (i < PCI_TYPE0_ADDRESSES)
         {
+            /* Read the actual BAR value */
+            Bar = BarArray[i];
+
             /* Check if this is an I/O BAR */
             if (Bar & PCI_ADDRESS_IO_SPACE)
             {

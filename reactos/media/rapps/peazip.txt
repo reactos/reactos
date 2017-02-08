@@ -27,6 +27,10 @@ Description = PeaZip to darmowy, wieloplatformowy menedżer plików i archiwów,
 Description = Gestionar de fișiere și arhivare gratuit, multiplatformă, cu surse deschise. Recunoaște peste 150 tipuri de arhive.
 Size = 6,5 Mio
 
+[Section.0419]
+Description = Свободный и бесплатный кроссплатформенный портативный архиватор и графическая оболочка для других архиваторов. Поддержка более 150 форматов.
+Size = 6,5 МиБ
+
 [Section.041f]
 License = LGPL sürüm 3, OpenCandy EULA
 Description = Ücretsiz, çapraz platform, açık kaynak bir kütük ve belgelik yöneticisidir. 150'den çok belgelikleme biçimini destekler.

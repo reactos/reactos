@@ -1424,21 +1424,35 @@ xsltProcessUserParamInternal(xsltTransformContextPtr ctxt,
     /*
      * Name lookup
      */
-
-    name = xsltSplitQName(ctxt->dict, name, &prefix);
     href = NULL;
-    if (prefix != NULL) {
-	xmlNsPtr ns;
 
-	ns = xmlSearchNs(style->doc, xmlDocGetRootElement(style->doc),
-			 prefix);
-	if (ns == NULL) {
-	    xsltTransformError(ctxt, style, NULL,
-	    "user param : no namespace bound to prefix %s\n", prefix);
-	    href = NULL;
-	} else {
-	    href = ns->href;
-	}
+    if (name[0] == '{') {
+        int len = 0;
+
+        while ((name[len] != 0) && (name[len] != '}')) len++;
+        if (name[len] == 0) {
+           xsltTransformError(ctxt, style, NULL,
+           "user param : malformed parameter name : %s\n", name);
+        } else {
+           href = xmlDictLookup(ctxt->dict, &name[1], len-1);
+           name = xmlDictLookup(ctxt->dict, &name[len + 1], -1);
+       }
+    }
+    else {
+        name = xsltSplitQName(ctxt->dict, name, &prefix);
+        if (prefix != NULL) {
+            xmlNsPtr ns;
+
+            ns = xmlSearchNs(style->doc, xmlDocGetRootElement(style->doc),
+                             prefix);
+            if (ns == NULL) {
+                xsltTransformError(ctxt, style, NULL,
+                "user param : no namespace bound to prefix %s\n", prefix);
+                href = NULL;
+            } else {
+                href = ns->href;
+            }
+        }
     }
 
     if (name == NULL)

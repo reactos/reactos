@@ -196,6 +196,7 @@ LPITEMIDLIST  GetParentPidl(LPITEMIDLIST pidl);
 static LPITEMIDLIST GetPidlFromName(IShellFolder *psf,LPWSTR lpcstrFileName);
 static BOOL IsPidlFolder (LPSHELLFOLDER psf, LPCITEMIDLIST pidl);
 static UINT GetNumSelected( IDataObject *doSelected );
+static void COMCTL32_ReleaseStgMedium(STGMEDIUM medium);
 
 /* Shell memory allocation */
 static void *MemAlloc(UINT size);
@@ -434,6 +435,13 @@ static BOOL GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
       ret = FALSE;
   }
 
+  /* set the lpstrFileTitle */
+  if (ret && ofn->lpstrFile && ofn->lpstrFileTitle)
+  {
+      LPSTR lpstrFileTitle = PathFindFileNameA(ofn->lpstrFile);
+      lstrcpynA(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
+  }
+
   if (lpstrSavDir)
   {
       SetCurrentDirectoryA(lpstrSavDir);
@@ -524,6 +532,13 @@ static BOOL GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
       break;
   default :
       ret = FALSE;
+  }
+
+  /* set the lpstrFileTitle */
+  if (ret && ofn->lpstrFile && ofn->lpstrFileTitle)
+  {
+      LPWSTR lpstrFileTitle = PathFindFileNameW(ofn->lpstrFile);
+      lstrcpynW(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
   }
 
   if (lpstrSavDir)
@@ -621,7 +636,7 @@ int COMDLG32_SplitFileNames(LPWSTR lpstrEdit, UINT nStrLen, LPWSTR *lpstrFileLis
 	  if ( lpstrEdit[nStrCharCount]=='"' )
 	  {
 	    nStrCharCount++;
-	    while ((lpstrEdit[nStrCharCount]!='"') && (nStrCharCount <= nStrLen))
+	    while ((nStrCharCount <= nStrLen) && (lpstrEdit[nStrCharCount]!='"'))
 	    {
 	      (*lpstrFileList)[nFileIndex++] = lpstrEdit[nStrCharCount];
 	      nStrCharCount++;
@@ -1535,10 +1550,16 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
          result = GetFullPathNameW(fodInfos->filename, MAX_PATH, tmpBuf, &nameBit);
          if (result) {
 
-            /* nameBit is always shorter than the original filename */
-            lstrcpyW(fodInfos->filename,nameBit);
+            /* nameBit is always shorter than the original filename. It may be NULL
+             * when the filename contains only a drive name instead of file name */
+            if (nameBit)
+            {
+                lstrcpyW(fodInfos->filename,nameBit);
+                *nameBit = 0x00;
+            }
+            else
+                *fodInfos->filename = '\0';
 
-            *nameBit = 0x00;
             MemFree(fodInfos->initdir);
             fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf) + 1)*sizeof(WCHAR));
             lstrcpyW(fodInfos->initdir, tmpBuf);
@@ -2511,6 +2532,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                 && fodInfos->ofnInfos->Flags & OFN_EXPLORER)
             {
               SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
+              SendMessageA(fodInfos->DlgInfos.hwndFileName, WM_SETTEXT, 0, (LPARAM)"");
             }
 	  }
 	  else if( nOpenAction == ONOPEN_SEARCH )
@@ -2521,6 +2543,13 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           COMDLG32_SHFree(pidlCurrent);
           if (filename_is_edit( fodInfos ))
               SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
+          else
+          {
+              HWND hwnd;
+
+              hwnd = (HWND)SendMessageA(fodInfos->DlgInfos.hwndFileName, CBEM_GETEDITCONTROL, 0, 0);
+              SendMessageW(hwnd, EM_SETSEL, 0, -1);
+          }
         }
       }
       ret = FALSE;
@@ -2705,23 +2734,6 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
               lpszTemp = PathFindExtensionA(tempFileA);
               fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - tempFileA) + 1 : 0;
           }
-
-          /* set the lpstrFileTitle */
-          if(fodInfos->ofnInfos->lpstrFileTitle)
-	  {
-            LPWSTR lpstrFileTitle = PathFindFileNameW(lpstrPathAndFile);
-            if(fodInfos->unicode)
-            {
-              LPOPENFILENAMEW ofn = fodInfos->ofnInfos;
-	      lstrcpynW(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
-            }
-            else
-            {
-              LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)fodInfos->ofnInfos;
-              WideCharToMultiByte(CP_ACP, 0, lpstrFileTitle, -1,
-                    ofn->lpstrFileTitle, ofn->nMaxFileTitle, NULL, NULL);
-            }
-	  }
 
           /* copy currently selected filter to lpstrCustomFilter */
           if (fodInfos->ofnInfos->lpstrCustomFilter)
@@ -3591,6 +3603,25 @@ static void FILEDLG95_LOOKIN_Clean(HWND hwnd)
 }
 
 /***********************************************************************
+ *          get_def_format
+ *
+ * Fill the FORMATETC used in the shell id list
+ */
+static FORMATETC get_def_format(void)
+{
+    static CLIPFORMAT cfFormat;
+    FORMATETC formatetc;
+
+    if (!cfFormat) cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLISTA);
+    formatetc.cfFormat = cfFormat;
+    formatetc.ptd = 0;
+    formatetc.dwAspect = DVASPECT_CONTENT;
+    formatetc.lindex = -1;
+    formatetc.tymed = TYMED_HGLOBAL;
+    return formatetc;
+}
+
+/***********************************************************************
  * FILEDLG95_FILENAME_FillFromSelection
  *
  * fills the edit box from the cached DataObject
@@ -3599,84 +3630,72 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
 {
     FileOpenDlgInfos *fodInfos;
     LPITEMIDLIST      pidl;
-    UINT              nFiles = 0, nFileToOpen, nFileSelected, nLength = 0;
-    WCHAR             lpstrTemp[MAX_PATH];
-    LPWSTR            lpstrAllFile, lpstrCurrFile;
+    LPWSTR            lpstrAllFiles, lpstrTmp;
+    UINT nFiles = 0, nFileToOpen, nFileSelected, nAllFilesLength = 0, nThisFileLength, nAllFilesMaxLength;
+    STGMEDIUM medium;
+    LPIDA cida;
+    FORMATETC formatetc = get_def_format();
 
     TRACE("\n");
     fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
-    /* Count how many files we have */
-    nFileSelected = GetNumSelected( fodInfos->Shell.FOIDataObject );
+    if (FAILED(IDataObject_GetData(fodInfos->Shell.FOIDataObject, &formatetc, &medium)))
+        return;
 
-    /* calculate the string length, count files */
-    if (nFileSelected >= 1)
+    cida = GlobalLock(medium.u.hGlobal);
+    nFileSelected = cida->cidl;
+
+    /* Allocate a buffer */
+    nAllFilesMaxLength = MAX_PATH + 3;
+    lpstrAllFiles = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nAllFilesMaxLength * sizeof(WCHAR));
+    if (!lpstrAllFiles)
+        goto ret;
+
+    /* Loop through the selection, handle only files (not folders) */
+    for (nFileToOpen = 0; nFileToOpen < nFileSelected; nFileToOpen++)
     {
-      nLength += 3;	/* first and last quotes, trailing \0 */
-      for ( nFileToOpen = 0; nFileToOpen < nFileSelected; nFileToOpen++ )
-      {
-        pidl = GetPidlFromDataObject( fodInfos->Shell.FOIDataObject, nFileToOpen+1 );
-
+        pidl = (LPITEMIDLIST)((LPBYTE)cida + cida->aoffset[nFileToOpen + 1]);
         if (pidl)
-	{
-          /* get the total length of the selected file names */
-          lpstrTemp[0] = '\0';
-          GetName( fodInfos->Shell.FOIShellFolder, pidl, SHGDN_INFOLDER|SHGDN_FORPARSING, lpstrTemp );
-
-          if ( ! IsPidlFolder(fodInfos->Shell.FOIShellFolder, pidl) ) /* Ignore folders */
-	  {
-            nLength += lstrlenW( lpstrTemp ) + 3;
-            nFiles++;
-	  }
-          COMDLG32_SHFree( pidl );
-	}
-      }
+        {
+            if (!IsPidlFolder(fodInfos->Shell.FOIShellFolder, pidl))
+            {
+                if (nAllFilesLength + MAX_PATH + 3 > nAllFilesMaxLength)
+                {
+                    nAllFilesMaxLength *= 2;
+                    lpstrTmp = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, lpstrAllFiles, nAllFilesMaxLength * sizeof(WCHAR));
+                    if (!lpstrTmp)
+                        goto ret;
+                    lpstrAllFiles = lpstrTmp;
+                }
+                nFiles += 1;
+                lpstrAllFiles[nAllFilesLength++] = '"';
+                GetName(fodInfos->Shell.FOIShellFolder, pidl, SHGDN_INFOLDER | SHGDN_FORPARSING, lpstrAllFiles + nAllFilesLength);
+                nThisFileLength = lstrlenW(lpstrAllFiles + nAllFilesLength);
+                nAllFilesLength += nThisFileLength;
+                lpstrAllFiles[nAllFilesLength++] = '"';
+                lpstrAllFiles[nAllFilesLength++] = ' ';
+            }
+        }
     }
 
-    /* allocate the buffer */
-    if (nFiles <= 1) nLength = MAX_PATH;
-    lpstrAllFile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(WCHAR));
-
-    /* Generate the string for the edit control */
-    if(nFiles >= 1)
+    if (nFiles != 0)
     {
-      lpstrCurrFile = lpstrAllFile;
-      for ( nFileToOpen = 0; nFileToOpen < nFileSelected; nFileToOpen++ )
-      {
-        pidl = GetPidlFromDataObject( fodInfos->Shell.FOIDataObject, nFileToOpen+1 );
-
-        if (pidl)
-	{
-	  /* get the file name */
-          lpstrTemp[0] = '\0';
-          GetName( fodInfos->Shell.FOIShellFolder, pidl, SHGDN_INFOLDER|SHGDN_FORPARSING, lpstrTemp );
-
-          if (! IsPidlFolder(fodInfos->Shell.FOIShellFolder, pidl)) /* Ignore folders */
-	  {
-            if ( nFiles > 1)
-	    {
-              *lpstrCurrFile++ =  '\"';
-              lstrcpyW( lpstrCurrFile, lpstrTemp );
-              lpstrCurrFile += lstrlenW( lpstrTemp );
-              *lpstrCurrFile++ = '\"';
-              *lpstrCurrFile++ = ' ';
-              *lpstrCurrFile = 0;
-	    }
-	    else
-	    {
-              lstrcpyW( lpstrAllFile, lpstrTemp );
-	    }
-          }
-          COMDLG32_SHFree( pidl );
-	}
-      }
-      SetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrAllFile );
-       
-      /* Select the file name like Windows does */
-      if (filename_is_edit( fodInfos ))
-          SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
+        /* If there's only one file, use the name as-is without quotes */
+        lpstrTmp = lpstrAllFiles;
+        if (nFiles == 1)
+        {
+            lpstrTmp += 1;
+            lpstrTmp[nThisFileLength] = 0;
+        }
+        SetWindowTextW(fodInfos->DlgInfos.hwndFileName, lpstrTmp);
+        /* Select the file name like Windows does */
+        if (filename_is_edit(fodInfos))
+            SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
     }
-    HeapFree(GetProcessHeap(),0, lpstrAllFile );
+
+ret:
+    HeapFree(GetProcessHeap(), 0, lpstrAllFiles);
+    COMCTL32_ReleaseStgMedium(medium);
 }
 
 
@@ -3737,15 +3756,6 @@ static int FILEDLG95_FILENAME_GetFileNames (HWND hwnd, LPWSTR * lpstrFileList, U
 	return nFileCount;
 }
 
-#define SETDefFormatEtc(fe,cf,med) \
-{ \
-    (fe).cfFormat = cf;\
-    (fe).dwAspect = DVASPECT_CONTENT; \
-    (fe).ptd =NULL;\
-    (fe).tymed = med;\
-    (fe).lindex = -1;\
-};
-
 /*
  * DATAOBJECT Helper functions
  */
@@ -3779,16 +3789,13 @@ LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex)
 {
 
     STGMEDIUM medium;
-    FORMATETC formatetc;
+    FORMATETC formatetc = get_def_format();
     LPITEMIDLIST pidl = NULL;
 
     TRACE("sv=%p index=%u\n", doSelected, nPidlIndex);
 
     if (!doSelected)
         return NULL;
-	
-    /* Set the FORMATETC structure*/
-    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLISTA), TYMED_HGLOBAL);
 
     /* Get the pidls from IDataObject */
     if(SUCCEEDED(IDataObject_GetData(doSelected,&formatetc,&medium)))
@@ -3813,14 +3820,11 @@ static UINT GetNumSelected( IDataObject *doSelected )
 {
     UINT retVal = 0;
     STGMEDIUM medium;
-    FORMATETC formatetc;
+    FORMATETC formatetc = get_def_format();
 
     TRACE("sv=%p\n", doSelected);
 
     if (!doSelected) return 0;
-
-    /* Set the FORMATETC structure*/
-    SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLISTA), TYMED_HGLOBAL);
 
     /* Get the pidls from IDataObject */
     if(SUCCEEDED(IDataObject_GetData(doSelected,&formatetc,&medium)))

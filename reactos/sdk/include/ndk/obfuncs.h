@@ -4,11 +4,11 @@ Copyright (c) Alex Ionescu.  All rights reserved.
 
 Header Name:
 
-    obtypes.h
+    obfuncs.h
 
 Abstract:
 
-    Type definitions for the Object Manager
+    Function definitions for the Object Manager
 
 Author:
 

@@ -242,6 +242,15 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
    return pMenu;
 }
 
+BOOL
+FASTCALL
+IntIsMenu(HMENU Menu)
+{
+  if (UserGetMenuObject(Menu)) return TRUE;
+  return FALSE;
+}
+
+
 PMENU WINAPI
 IntGetMenu(HWND hWnd)
 {
@@ -313,13 +322,9 @@ UserDestroyMenuObject(PVOID Object)
 BOOL FASTCALL
 IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
-   if(Menu)
+   if (Menu)
    {
       PWND Window;
-      ULONG Error;
-
-      /* Remove all menu items */
-      IntDestroyMenu( Menu, bRecurse);
 
       if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
       {
@@ -341,22 +346,14 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
                }
             }
          }
-         if (UserObjectInDestroy(Menu->head.h))
-         {
-            WARN("Menu already dead!\n");
-            return FALSE;
-         }
+
+         if (!UserMarkObjectDestroy(Menu)) return TRUE;
+
+         /* Remove all menu items */
+         IntDestroyMenu( Menu, bRecurse);
+
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
-         if (!ret)
-         {  // Make sure it is really dead or just marked for deletion.
-            Error = EngGetLastError();
-            ret = UserObjectInDestroy(Menu->head.h);
-            if (ret && EngGetLastError() == ERROR_INVALID_HANDLE)
-            {
-               EngSetLastError(Error);
-               ret = FALSE;
-            }
-         }  // See test_subpopup_locked_by_menu tests....
+         TRACE("IntDestroyMenuObject %d\n",ret);
          return ret;
       }
    }
@@ -1327,7 +1324,7 @@ IntGetMenuDefaultItem(PMENU MenuObject, UINT fByPos, UINT gmdiFlags, DWORD *gism
    if ( (!(GMDI_USEDISABLED & gmdiFlags)) && (MenuItem->fState & MFS_DISABLED )) return -1;
 
    /* search rekursiv when needed */
-   if ( (MenuItem->fType & MF_POPUP) && (gmdiFlags & GMDI_GOINTOPOPUPS) && MenuItem->spSubMenu)
+   if ( (gmdiFlags & GMDI_GOINTOPOPUPS) && MenuItem->spSubMenu )
    {
       UINT ret;
       (*gismc)++;
@@ -2210,7 +2207,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
     if (lpitem->fType & MF_SYSMENU)
     {
-        if ( (Wnd->style & WS_MINIMIZE))
+        if (!(Wnd->style & WS_MINIMIZE))
         {
           NC_GetInsideRect(Wnd, &rect);
           UserDrawSysMenuButton(Wnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
@@ -2587,7 +2584,7 @@ static void FASTCALL MENU_DrawPopupMenu(PWND wnd, HDC hdc, PMENU menu )
                 UINT u;
 
                 item = menu->rgItems;
-                for (u = 0; u < menu->cItems; u++, item++)
+                for( u = menu->cItems; u > 0; u--, item++)
                 {
                     MENU_DrawMenuItem(wnd, menu, menu->spwndNotify, hdc, item,
                                          menu->cyMenu, FALSE, ODA_DRAWENTIRE);
@@ -2706,7 +2703,13 @@ UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw )
     HFONT hfontOld = 0;
     PMENU lppop = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
 
-    if (lppop == NULL || lprect == NULL)
+    if (lppop == NULL)
+    {
+        // No menu. Do not reserve any space
+        return 0;
+    }
+
+    if (lprect == NULL)
     {
         return UserGetSystemMetrics(SM_CYMENU);
     }
@@ -2937,11 +2940,15 @@ static void FASTCALL MENU_SelectItem(PWND pwndOwner, PMENU menu, UINT wIndex,
                                     BOOL sendMenuSelect, PMENU topmenu)
 {
     HDC hdc;
-    PWND pWnd = ValidateHwndNoErr(menu->hWnd);
+    PWND pWnd;
 
     TRACE("M_SI: owner=%p menu=%p index=0x%04x select=0x%04x\n", pwndOwner, menu, wIndex, sendMenuSelect);
 
-    if (!menu || !menu->cItems || !pWnd) return;
+    if (!menu || !menu->cItems) return;
+
+    pWnd = ValidateHwndNoErr(menu->hWnd);
+
+    if (!pWnd) return;
 
     if (menu->iItem == wIndex) return;
 
@@ -3111,6 +3118,8 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   PWND pWnd;
 
   TRACE("owner=%x menu=%p 0x%04x\n", WndOwner, Menu, SelectFirst);
+
+  if (!Menu) return Menu;
 
   if (Menu->iItem == NO_SELECTED_ITEM) return Menu;
   
@@ -3450,7 +3459,15 @@ static BOOL FASTCALL MENU_MouseMove(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
   if ( PtMenu )
   {
       if (IS_SYSTEM_MENU(PtMenu))
+      {
           Index = 0;
+          //// ReactOS only HACK: CORE-2338
+          // Windows tracks mouse moves to the system menu but does not open it.
+          // Only keyboard tracking can do that.
+          //
+          TRACE("SystemMenu\n");
+          return TRUE; // Stay inside the Loop!
+      }
       else
           MENU_FindItemByCoords( PtMenu, pmt->Pt, &Index );
   }
@@ -3569,7 +3586,7 @@ static LRESULT FASTCALL MENU_DoNextMenu(MTRACKER* pmt, UINT Vk, UINT wFlags)
           {
               /* switch to the system menu */
               MenuTmp = get_win_sys_menu(hNewWnd);
-              hNewMenu = UserHMGetHandle(MenuTmp);
+              if (MenuTmp) hNewMenu = UserHMGetHandle(MenuTmp);
           }
           else
               return FALSE;
@@ -4108,9 +4125,12 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
            if (mt.TopMenu->fFlags & MNF_POPUP)
            {
               PWND pwndTM = ValidateHwndNoErr(mt.TopMenu->hWnd);
-              IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
+              if (pwndTM)
+              {
+                 IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
 
-              co_UserDestroyWindow(pwndTM);
+                 co_UserDestroyWindow(pwndTM);
+              }
               mt.TopMenu->hWnd = NULL;
 
               if (!(wFlags & TPM_NONOTIFY))
@@ -4340,6 +4360,9 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
        {
           co_IntSendMessage( UserHMGetHandle(pWnd), WM_INITMENUPOPUP, (WPARAM) UserHMGetHandle(menu), 0);
        }
+
+       if (menu->fFlags & MNF_SYSMENU)
+          MENU_InitSysMenuPopup( menu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
        if (MENU_ShowPopup(pWnd, menu, 0, wFlags, x, y, 0, 0 ))
           ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd,
@@ -4723,7 +4746,7 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags)
 
    if (pItem->spSubMenu)
    {
-      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType) & 0xff);
+      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType|MF_POPUP) & 0xff);
    }
    else
       return (pItem->fType | pItem->fState);
@@ -5099,7 +5122,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
 
       ItemInfo.cbSize = sizeof(MENUITEMINFOW);
       ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
-      ItemInfo.fType = 0;
+      ItemInfo.fType = MF_POPUP;
       ItemInfo.fState = MFS_ENABLED;
       ItemInfo.dwTypeData = NULL;
       ItemInfo.cch = 0;
@@ -5168,7 +5191,7 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
       if (OldMenu)
       {
           OldMenu->fFlags &= ~MNF_SYSMENU;
-         IntDestroyMenuObject(OldMenu, TRUE);
+          IntDestroyMenuObject(OldMenu, TRUE);
       }
    }
 

@@ -1077,7 +1077,7 @@ typedef struct _ETHREAD
            ULONG OwnsSessionWorkingSetExclusive:1;
            ULONG OwnsSessionWorkingSetShared:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-           ULONG SupressSymbolLoad:1;
+           ULONG SuppressSymbolLoad:1;
            ULONG Spare1:3;
            ULONG PriorityRegionActive:4;
 #else

@@ -50,6 +50,9 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
     ULONG ReturnSize;
     NTSTATUS Status;
 
+    if (lpBuffer != NULL && *nSize > 0)
+        lpBuffer[0] = 0;
+
     RtlInitUnicodeString(&KeyName, RegistryKey);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -88,7 +91,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
 
     if (!NT_SUCCESS(Status))
     {
-        *nSize = ReturnSize;
+        *nSize = (ReturnSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data)) / sizeof(WCHAR);
         goto failed;
     }
 
@@ -100,7 +103,7 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
 
     if (!lpBuffer || *nSize < (KeyInfo->DataLength / sizeof(WCHAR)))
     {
-        *nSize = ReturnSize;
+        *nSize = (ReturnSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data)) / sizeof(WCHAR);
         Status = STATUS_BUFFER_OVERFLOW;
         goto failed;
     }
@@ -134,6 +137,13 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
     NTSTATUS Status;
     BOOL ret = TRUE;
     DWORD HostSize;
+
+    if ((nSize == NULL) ||
+        (lpBuffer == NULL && *nSize > 0))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
     switch (NameType)
     {
@@ -263,12 +273,23 @@ GetComputerNameExA(COMPUTER_NAME_FORMAT NameType,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     BOOL Result;
-    PWCHAR TempBuffer = RtlAllocateHeap( RtlGetProcessHeap(), 0, *nSize * sizeof(WCHAR) );
+    PWCHAR TempBuffer = NULL;
 
-    if (!TempBuffer)
+    if ((nSize == NULL) ||
+        (lpBuffer == NULL && *nSize > 0))
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
+    }
+
+    if (*nSize > 0)
+    {
+        TempBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, *nSize * sizeof(WCHAR));
+        if (!TempBuffer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
     }
 
     AnsiString.MaximumLength = (USHORT)*nSize;
@@ -280,7 +301,7 @@ GetComputerNameExA(COMPUTER_NAME_FORMAT NameType,
     if (Result)
     {
         UnicodeString.MaximumLength = (USHORT)*nSize * sizeof(WCHAR) + sizeof(WCHAR);
-        UnicodeString.Length = (USHORT)*nSize * sizeof(WCHAR) + sizeof(WCHAR);
+        UnicodeString.Length = (USHORT)*nSize * sizeof(WCHAR);
         UnicodeString.Buffer = TempBuffer;
 
         RtlUnicodeStringToAnsiString(&AnsiString,

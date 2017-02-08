@@ -51,7 +51,7 @@ WINED3D_SETTINGS gwd3dsDdRender[] =
 void InitControl(HWND hWndDlg, HKEY hKey, PWCHAR szKey, PWINED3D_SETTINGS pSettings, INT iControlId, INT iCount)
 {
     WCHAR szBuffer[MAX_KEY_LENGTH];
-    DWORD dwSize = MAX_KEY_LENGTH;
+    DWORD dwSize = sizeof(szBuffer);
     DWORD dwType = 0;
     INT iCurrent;
     INT iActive = 0;

@@ -516,9 +516,6 @@ static int x509_get_subject_alt_name( unsigned char **p,
 /*
  * X.509 v3 extensions
  *
- * TODO: Perform all of the basic constraints tests required by the RFC
- * TODO: Set values for undetected extensions to a sane default?
- *
  */
 static int x509_get_crt_ext( unsigned char **p,
                              const unsigned char *end,
@@ -680,14 +677,9 @@ static int x509_crt_parse_der_core( mbedtls_x509_crt *crt, const unsigned char *
     if( crt == NULL || buf == NULL )
         return( MBEDTLS_ERR_X509_BAD_INPUT_DATA );
 
-    p = mbedtls_calloc( 1, len = buflen );
-    if( p == NULL )
-        return( MBEDTLS_ERR_X509_ALLOC_FAILED );
-
-    memcpy( p, buf, buflen );
-
-    crt->raw.p = p;
-    crt->raw.len = len;
+    // Use the original buffer until we figure out actual length
+    p = (unsigned char*) buf;
+    len = buflen;
     end = p + len;
 
     /*
@@ -710,6 +702,18 @@ static int x509_crt_parse_der_core( mbedtls_x509_crt *crt, const unsigned char *
                 MBEDTLS_ERR_ASN1_LENGTH_MISMATCH );
     }
     crt_end = p + len;
+
+    // Create and populate a new buffer for the raw field
+    crt->raw.len = crt_end - buf;
+    crt->raw.p = p = mbedtls_calloc( 1, crt->raw.len );
+    if( p == NULL )
+        return( MBEDTLS_ERR_X509_ALLOC_FAILED );
+
+    memcpy( p, buf, crt->raw.len );
+
+    // Direct pointers to the new buffer 
+    p += crt->raw.len - len;
+    end = crt_end = p + len;
 
     /*
      * TBSCertificate  ::=  SEQUENCE  {
@@ -965,8 +969,12 @@ int mbedtls_x509_crt_parse_der( mbedtls_x509_crt *chain, const unsigned char *bu
  */
 int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, size_t buflen )
 {
+#ifndef __REACTOS__
     int success = 0, first_error = 0, total_failed = 0;
+#endif
+#if defined(MBEDTLS_PEM_PARSE_C)
     int buf_format = MBEDTLS_X509_FORMAT_DER;
+#endif
 
     /*
      * Check for valid input
@@ -984,10 +992,12 @@ int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, s
     {
         buf_format = MBEDTLS_X509_FORMAT_PEM;
     }
-#endif
 
     if( buf_format == MBEDTLS_X509_FORMAT_DER )
         return mbedtls_x509_crt_parse_der( chain, buf, buflen );
+#else
+    return mbedtls_x509_crt_parse_der( chain, buf, buflen );
+#endif
 
 #if defined(MBEDTLS_PEM_PARSE_C)
     if( buf_format == MBEDTLS_X509_FORMAT_PEM )
@@ -1060,7 +1070,6 @@ int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, s
             success = 1;
         }
     }
-#endif /* MBEDTLS_PEM_PARSE_C */
 
     if( success )
         return( total_failed );
@@ -1068,6 +1077,7 @@ int mbedtls_x509_crt_parse( mbedtls_x509_crt *chain, const unsigned char *buf, s
         return( first_error );
     else
         return( MBEDTLS_ERR_X509_CERT_UNKNOWN_FORMAT );
+#endif /* MBEDTLS_PEM_PARSE_C */
 }
 
 #if defined(MBEDTLS_FS_IO)
@@ -1349,6 +1359,14 @@ int mbedtls_x509_crt_info( char *buf, size_t size, const char *prefix,
     p = buf;
     n = size;
 
+    if( NULL == crt )
+    {
+        ret = mbedtls_snprintf( p, n, "\nCertificate is uninitialised!\n" );
+        MBEDTLS_X509_SAFE_SNPRINTF;
+
+        return( (int) ( size - n ) );
+    }
+
     ret = mbedtls_snprintf( p, n, "%scert. version     : %d\n",
                                prefix, crt->version );
     MBEDTLS_X509_SAFE_SNPRINTF;
@@ -1600,7 +1618,8 @@ int mbedtls_x509_crt_is_revoked( const mbedtls_x509_crt *crt, const mbedtls_x509
 }
 
 /*
- * Check that the given certificate is valid according to the CRL.
+ * Check that the given certificate is not revoked according to the CRL.
+ * Skip validation is no CRL for the given CA is present.
  */
 static int x509_crt_verifycrl( mbedtls_x509_crt *crt, mbedtls_x509_crt *ca,
                                mbedtls_x509_crl *crl_list,
@@ -1612,12 +1631,6 @@ static int x509_crt_verifycrl( mbedtls_x509_crt *crt, mbedtls_x509_crt *ca,
 
     if( ca == NULL )
         return( flags );
-
-    /*
-     * TODO: What happens if no CRL is present?
-     * Suggestion: Revocation state should be unknown if no CRL is present.
-     * For backwards compatibility this is not yet implemented.
-     */
 
     while( crl_list != NULL )
     {
@@ -1940,6 +1953,16 @@ static int x509_crt_verify_top(
             continue;
         }
 
+        if( mbedtls_x509_time_is_past( &trust_ca->valid_to ) )
+        {
+            continue;
+        }
+
+        if( mbedtls_x509_time_is_future( &trust_ca->valid_from ) )
+        {
+            continue;
+        }
+
         if( mbedtls_pk_verify_ext( child->sig_pk, child->sig_opts, &trust_ca->pk,
                            child->sig_md, hash, mbedtls_md_get_size( md_info ),
                            child->sig.p, child->sig.len ) != 0 )
@@ -1974,12 +1997,6 @@ static int x509_crt_verify_top(
 #else
         ((void) ca_crl);
 #endif
-
-        if( mbedtls_x509_time_is_past( &trust_ca->valid_to ) )
-            ca_flags |= MBEDTLS_X509_BADCERT_EXPIRED;
-
-        if( mbedtls_x509_time_is_future( &trust_ca->valid_from ) )
-            ca_flags |= MBEDTLS_X509_BADCERT_FUTURE;
 
         if( NULL != f_vrfy )
         {

@@ -19,7 +19,7 @@ audio_membuffer::alloc_mem_(unsigned int bytes)
     if (bytes == 0)
         return;
 
-    /* Checks previsiously alloc'd memory and frees it */
+    /* Checks previously alloc'd memory and frees it */
     if (audio_data)
         delete[] audio_data;
 
@@ -99,7 +99,7 @@ audio_membuffer::truncate_(void)
         audio_data = newbuf;
         buf_size = bytes_received;
 
-        /* Buffer truncation successfull. Now the buffer size is exactly big
+        /* Buffer truncation successful. Now the buffer size is exactly big
            as much audio data was received */
     }
 }

@@ -237,8 +237,7 @@ HRESULT STDMETHODCALLTYPE CExtractIcon::GetIconLocation(
             return E_OUTOFMEMORY;
     }
 
-    hr = GetIconLocation(
-        uFlags, szIconFileW, cchMax, piIndex, pwFlags);
+    hr = GetIconLocation(uFlags, szIconFileW, cchMax, piIndex, pwFlags);
     if (SUCCEEDED(hr) && cchMax > 0)
         if (0 == WideCharToMultiByte(CP_ACP, 0, szIconFileW, cchMax, szIconFile, cchMax, NULL, NULL))
             hr = E_FAIL;

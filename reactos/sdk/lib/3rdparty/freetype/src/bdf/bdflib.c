@@ -1127,7 +1127,7 @@
       propid = ft_hash_str_lookup( name, &(font->proptbl) );
     }
 
-    /* Allocate another property if this is overflow. */
+    /* Allocate another property if this is overflowing. */
     if ( font->props_used == font->props_size )
     {
       if ( font->props_size == 0 )
@@ -1976,8 +1976,18 @@
       error = _bdf_list_split( &p->list, (char *)" +", line, linelen );
       if ( error )
         goto Exit;
+
       /* at this point, `p->font' can't be NULL */
       p->cnt = p->font->props_size = _bdf_atoul( p->list.field[1] );
+      /* We need at least 4 bytes per property. */
+      if ( p->cnt > p->size / 4 )
+      {
+        p->font->props_size = 0;
+
+        FT_ERROR(( "_bdf_parse_glyphs: " ERRMSG5, lineno, "STARTPROPERTIES" ));
+        error = FT_THROW( Invalid_Argument );
+        goto Exit;
+      }
 
       if ( FT_NEW_ARRAY( p->font->props, p->cnt ) )
       {

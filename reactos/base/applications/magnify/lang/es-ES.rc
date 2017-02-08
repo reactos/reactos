@@ -11,7 +11,7 @@ BEGIN
         MENUITEM "S&alir", IDM_EXIT
         MENUITEM "&Opciones", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca de...", IDM_ABOUT
+        MENUITEM "&Acerca de", IDM_ABOUT
     END
 END
 
@@ -38,22 +38,22 @@ CAPTION "Configurar lupa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Aceptar", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Ayuda", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Niveles de aumento:", IDC_STATIC, 6, 8, 68, 8
+    PUSHBUTTON "&Ayuda", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Nive&les de aumento:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 76, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Seguimiento", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Presentación", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Seguir el cursor del ratón", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Seguir el &cursor del ratón", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "Seguir la entrada del teclado", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Seguir la &entrada del teclado", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "Seguir la edición de texto", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "Seguir la edición de &texto", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "Invertir colores", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Invertir colores", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "Comenzar minimizado", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "Comen&zar minimizado", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "Mostrar lupa", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "M&ostrar lupa", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 

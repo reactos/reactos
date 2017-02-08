@@ -14,6 +14,38 @@
 
 VOID
 NTAPI
+LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER(
+    IN PLSAPR_ACCOUNT_ENUM_BUFFER Ptr)
+{
+    ULONG i;
+
+    if (Ptr == NULL)
+        return;
+
+    if (Ptr->Information != NULL)
+    {
+        for (i = 0; i < Ptr->EntriesRead; i++)
+            midl_user_free(Ptr->Information[i].Sid);
+
+        midl_user_free(Ptr->Information);
+    }
+
+    midl_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_CR_CIPHER_VALUE(
+    IN PLSAPR_CR_CIPHER_VALUE Ptr)
+{
+    if (Ptr != NULL)
+        midl_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
                                   IN PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
@@ -121,10 +153,116 @@ LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
 
 VOID
 NTAPI
+LsaIFree_LSAPR_PRIVILEGE_ENUM_BUFFER(
+    IN PLSAPR_PRIVILEGE_ENUM_BUFFER Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Privileges != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Privileges[i].Name.Buffer != NULL)
+                    midl_user_free(Ptr->Privileges[i].Name.Buffer);
+            }
+
+            midl_user_free(Ptr->Privileges);
+        }
+    }
+}
+
+
+VOID
+NTAPI
 LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr)
 {
     if (Ptr != NULL)
     {
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_REFERENCED_DOMAIN_LIST(
+    IN PLSAPR_REFERENCED_DOMAIN_LIST Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Domains != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Domains[i].Name.Buffer != NULL)
+                     midl_user_free(Ptr->Domains[i].Name.Buffer);
+
+                if (Ptr->Domains[i].Sid != NULL)
+                    midl_user_free(Ptr->Domains[i].Sid);
+            }
+
+            midl_user_free(Ptr->Domains);
+        }
+
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_SR_SECURITY_DESCRIPTOR(
+    IN PLSAPR_SR_SECURITY_DESCRIPTOR Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->SecurityDescriptor != NULL)
+            midl_user_free(Ptr->SecurityDescriptor);
+
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_TRANSLATED_NAMES(
+    IN PLSAPR_TRANSLATED_NAMES Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Names != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Names[i].Name.Buffer != NULL)
+                    midl_user_free(Ptr->Names[i].Name.Buffer);
+            }
+
+            midl_user_free(Ptr->Names);
+        }
+
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_TRANSLATED_SIDS(
+    IN PLSAPR_TRANSLATED_SIDS Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Sids != NULL)
+            midl_user_free(Ptr->Sids);
+
         midl_user_free(Ptr);
     }
 }
@@ -184,7 +322,7 @@ LsapInitLsa(VOID)
     if (hEvent == NULL)
     {
         dwError = GetLastError();
-        TRACE("Failed to create the notication event (Error %lu)\n", dwError);
+        TRACE("Failed to create the notification event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
         {
@@ -204,14 +342,6 @@ LsapInitLsa(VOID)
 
     /* NOTE: Do not close the event handle!!!! */
 
-    return STATUS_SUCCESS;
-}
-
-
-NTSTATUS WINAPI
-ServiceInit(VOID)
-{
-    TRACE("ServiceInit() called\n");
     return STATUS_SUCCESS;
 }
 

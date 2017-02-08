@@ -387,7 +387,7 @@ Return Value:
             //
             //  Here are the rules concerning filling up the buffer:
             //
-            //  1.  The Io system garentees that there will always be
+            //  1.  The Io system guarantees that there will always be
             //      enough room for at least one base record.
             //
             //  2.  If the full first record (including file name) cannot
@@ -733,7 +733,7 @@ Return Value:
     } finally {
 
         //
-        //  Cleanup our search context - *before* aquiring the FCB mutex exclusive,
+        //  Cleanup our search context - *before* acquiring the FCB mutex exclusive,
         //  else can block on threads in cdcreateinternalstream/purge which 
         //  hold the FCB but are waiting for all maps in this stream to be released.
         //
@@ -741,7 +741,7 @@ Return Value:
         CdCleanupFileContext( IrpContext, &FileContext );
 
         //
-        //  Now we can safely aqure the FCB mutex if we need to.
+        //  Now we can safely acquire the FCB mutex if we need to.
         //
 
         if (DoCcbUpdate && !NT_ERROR( Status )) {
@@ -1371,7 +1371,7 @@ Return Value:
     PAGED_CODE();
 
     //
-    //  Loop until we find a match or exaust the directory.
+    //  Loop until we find a match or exhaust the directory.
     //
 
     while (TRUE) {

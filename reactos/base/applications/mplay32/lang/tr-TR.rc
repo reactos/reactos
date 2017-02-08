@@ -31,7 +31,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...", IDM_ABOUT
+        MENUITEM "&Üzerine", IDM_ABOUT
     END
 END
 

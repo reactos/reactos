@@ -60,7 +60,7 @@ typedef struct mbedtls_ssl_cache_entry mbedtls_ssl_cache_entry;
 struct mbedtls_ssl_cache_entry
 {
 #if defined(MBEDTLS_HAVE_TIME)
-    time_t timestamp;           /*!< entry timestamp    */
+    mbedtls_time_t timestamp;           /*!< entry timestamp    */
 #endif
     mbedtls_ssl_session session;        /*!< entry session      */
 #if defined(MBEDTLS_X509_CRT_PARSE_C)

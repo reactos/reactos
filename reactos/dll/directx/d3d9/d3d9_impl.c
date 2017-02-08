@@ -242,7 +242,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterModeCount(LPDIRECT3D9 iface, UINT Ad
 *
 * @param UINT Mode
 * Index within the pixel format to be returned.
-* The maximym value for this is the value returned by IDirect3D9::GetAdapterModeCount() - 1.
+* The maximum value for this is the value returned by IDirect3D9::GetAdapterModeCount() - 1.
 *
 * @param D3DDISPLAYMODE* pMode
 * Pointer to a D3DDISPLAYMODE structure to be filled with the display mode information
@@ -434,7 +434,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Ada
 
     if (TRUE == Windowed && TRUE == IsExtendedFormat(DisplayFormat))
     {
-        DPRINT1("Extended diplay modes can only be used in fullscreen mode");
+        DPRINT1("Extended display modes can only be used in fullscreen mode");
         UNLOCK_D3D9();
         return D3DERR_NOTAVAILABLE;
     }
@@ -623,7 +623,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT A
 
         if (RType != D3DRTYPE_TEXTURE)
         {
-            DPRINT1("Invalid Usage speficied, D3DUSAGE_DMAP must be combined with RType D3DRTYPE_TEXTURE");
+            DPRINT1("Invalid Usage specified, D3DUSAGE_DMAP must be combined with RType D3DRTYPE_TEXTURE");
             UNLOCK_D3D9();
             return D3DERR_INVALIDCALL;
         }
@@ -664,7 +664,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceMultiSampleType(LPDIRECT3D9 ifac
 * One of the D3DDEVTYPE enum members.
 *
 * @param D3DFORMAT AdapterFormat
-* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN that the display adapter mode where the test should occurr.
+* One of the D3DFORMAT enum members except D3DFMT_UNKNOWN that the display adapter mode where the test should occur.
 *
 * @param D3DFORMAT RenderTargetFormat
 * One of the D3DFORMAT enum members except D3DFMT_UNKNOWN for the display adapter mode's render target format to be tested.

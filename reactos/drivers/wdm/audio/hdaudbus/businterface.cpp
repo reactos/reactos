@@ -37,7 +37,7 @@ HDA_TransferCodecVerbs(
     ULONG Index;
     PHDA_PDO_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("HDA_TransferCodecVerbs Coun %lu CodecTransfer %p Callback %p Context %p\n", Count, CodecTransfer, Callback, Context);
+    DPRINT1("HDA_TransferCodecVerbs Count %lu CodecTransfer %p Callback %p Context %p\n", Count, CodecTransfer, Callback, Context);
 
     /* get device extension */
     DeviceExtension = (PHDA_PDO_DEVICE_EXTENSION)_context;

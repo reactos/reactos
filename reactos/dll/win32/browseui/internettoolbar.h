@@ -98,9 +98,7 @@ public:
     void AddDockItem(IUnknown *newItem, int bandID, int flags);
     HRESULT ReserveBorderSpace(LONG maxHeight = -1);
     HRESULT CreateMenuBar(IShellMenu **menuBar);
-    HRESULT CreateBrandBand(IUnknown **logoBar);
     HRESULT CreateToolsBar(IUnknown **toolsBar);
-    HRESULT CreateAddressBand(IUnknown **toolsBar);
     HRESULT LockUnlockToolbars(bool locked);
     HRESULT CommandStateChanged(bool newValue, int commandID);
     HRESULT CreateAndInitBandProxy();

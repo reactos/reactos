@@ -1,44 +1,29 @@
-﻿/*
+/*
  * PROJECT:     ReactOS
  * LICENSE:     GNU GPLv2 only as published by the Free Software Foundation
- * PURPOSE:     Implements tree.com functionality similar to Windows
+ * PURPOSE:     Implements tree.com command similar to Windows
  * PROGRAMMERS: Asif Bahrainwala (asif_bahrainwala@hotmail.com)
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
 #define STR_MAX 2048
 
-static void GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine);
+static VOID GetDirectoryStructure(PWSTR strPath, UINT width, PCWSTR prevLine);
 
-/* if this flag is set to true, files will also be listed */
+/* If this flag is set to true, files will also be listed within the folder structure */
 BOOL bShowFiles = FALSE;
 
-/* if this flag is true, ASCII characters will be used instead of UNICODE ones */
+/* If this flag is true, ASCII characters will be used instead of UNICODE ones */
 BOOL bUseAscii = FALSE;
-
-/*
- * This takes strings from a resource string table
- * and outputs it to the console.
- */
-VOID PrintResourceString(INT resID, ...)
-{
-    WCHAR tmpBuffer[STR_MAX];
-    CHAR tmpBufferA[STR_MAX];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandle(NULL), resID, tmpBuffer, STR_MAX);
-    CharToOemW(tmpBuffer, tmpBufferA);
-    vfprintf(stdout, tmpBufferA, arg_ptr);
-    va_end(arg_ptr);
-}
 
 /**
 * @name: HasSubFolder
@@ -47,20 +32,20 @@ VOID PrintResourceString(INT resID, ...)
 * Must specify folder name
 *
 * @return
-* true if folder has sub folders, else will return false
+* true if folder has sub-folders, else will return false
 */
-static BOOL HasSubFolder(const wchar_t *strPath1)
+static BOOL HasSubFolder(PCWSTR strPath1)
 {
     BOOL ret = FALSE;
-    WIN32_FIND_DATA FindFileData;
+    WIN32_FIND_DATAW FindFileData;
     HANDLE hFind = NULL;
-    static wchar_t strPath[STR_MAX] = L"";
+    static WCHAR strPath[STR_MAX] = L"";
     ZeroMemory(strPath, sizeof(strPath));
 
     wcscat(strPath, strPath1);
     wcscat(strPath, L"\\*.");
 
-    hFind = FindFirstFile(strPath, &FindFileData);
+    hFind = FindFirstFileW(strPath, &FindFileData);
     do
     {
         if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -71,11 +56,11 @@ static BOOL HasSubFolder(const wchar_t *strPath1)
                 continue;
             }
 
-            ret = TRUE;  //found subfolder
+            ret = TRUE;  // Sub-folder found
             break;
         }
     }
-    while (FindNextFile(hFind, &FindFileData));
+    while (FindNextFileW(hFind, &FindFileData));
 
     FindClose(hFind);
     return ret;
@@ -100,22 +85,22 @@ static BOOL HasSubFolder(const wchar_t *strPath1)
  * @return
  * void
  */
-static void DrawTree(const wchar_t* strPath,
-                     const WIN32_FIND_DATA *arrFolder,
+static VOID DrawTree(PCWSTR strPath,
+                     const WIN32_FIND_DATAW* arrFolder,
                      const size_t szArr,
                      UINT width,
-                     const wchar_t *prevLine,
+                     PCWSTR prevLine,
                      BOOL drawfolder)
 {
     BOOL bHasSubFolder = HasSubFolder(strPath);
     UINT i = 0;
 
-    /* this will format the spaces required for correct formatting */
+    /* This will format the spaces required for correct formatting */
     for (i = 0; i < szArr; ++i)
     {
-        wchar_t *consoleOut = (wchar_t*)malloc(sizeof(wchar_t) * STR_MAX);
+        PWSTR consoleOut = (PWSTR)malloc(STR_MAX * sizeof(WCHAR));
         UINT j = 0;
-        static wchar_t str[STR_MAX];
+        static WCHAR str[STR_MAX];
 
         /* As we do not seem to have the _s functions properly set up, use the non-secure version for now */
         //wcscpy_s(consoleOut, STR_MAX, L"");
@@ -125,15 +110,14 @@ static void DrawTree(const wchar_t* strPath,
 
         for (j = 0; j < width - 1; ++j)
         {
-            /* if the previous line has '├' or '│' then the current line will
+            /* If the previous line has '├' or '│' then the current line will
                add '│' to continue the connecting line */
-            if ((BYTE)prevLine[j] == 195 || (BYTE)prevLine[j] == 179 ||
-                (BYTE)prevLine[j] == L'+' || (BYTE)prevLine[j] == L'|')
+            if (prevLine[j] == L'\x251C' || prevLine[j] == L'\x2502' ||
+                prevLine[j] == L'+' || prevLine[j] == L'|')
             {
                 if (!bUseAscii)
                 {
-                    wchar_t a[] = {179, 0};
-                    wcscat(consoleOut, a);
+                    wcscat(consoleOut, L"\x2502");
                 }
                 else
                 {
@@ -150,27 +134,27 @@ static void DrawTree(const wchar_t* strPath,
         {
             if (drawfolder)
             {
-                /* will add '├───Folder name */
+                /* Add '├───Folder name' (\xC3\xC4\xC4\xC4 or \x251C\x2500\x2500\x2500) */
                 if (bUseAscii)
-                    wsprintf(str, L"+---%s", (wchar_t*)arrFolder[i].cFileName);
+                    swprintf(str, L"+---%s", arrFolder[i].cFileName);
                 else
-                    wsprintf(str, L"%c%c%c%c%s", 195, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
+                    swprintf(str, L"\x251C\x2500\x2500\x2500%s", arrFolder[i].cFileName);
             }
             else
             {
                 if (bHasSubFolder)
                 {
-                    /* will add '│   FileNamw'  //thie line is added to connect
-                       the belowfolder sub structure */
+                    /* Add '│   FileName' (\xB3 or \x2502) */
+                    // This line is added to connect the below-folder sub-structure
                     if (bUseAscii)
-                        wsprintf(str,L"|   %s", (wchar_t*)arrFolder[i].cFileName);
+                        swprintf(str, L"|   %s", arrFolder[i].cFileName);
                     else
-                        wsprintf(str,L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
+                        swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
                 }
                 else
                 {
-                    /* will add '    FileNamw' */
-                    wsprintf(str,L"     %s", (wchar_t*)arrFolder[i].cFileName);
+                    /* Add '    FileName' */
+                    swprintf(str, L"    %s", arrFolder[i].cFileName);
                 }
             }
         }
@@ -178,44 +162,44 @@ static void DrawTree(const wchar_t* strPath,
         {
             if (drawfolder)
             {
-                /* '└───Folder name' */
+                /* '└───Folder name' (\xC0\xC4\xC4\xC4 or \x2514\x2500\x2500\x2500) */
                 if (bUseAscii)
-                    wsprintf(str, L"\\---%s", (wchar_t*)arrFolder[i].cFileName);
+                    swprintf(str, L"\\---%s", arrFolder[i].cFileName);
                 else
-                    wsprintf(str, L"%c%c%c%c%s", 192, 196, 196, 196, (wchar_t*)arrFolder[i].cFileName);
+                    swprintf(str, L"\x2514\x2500\x2500\x2500%s", arrFolder[i].cFileName);
             }
             else
             {
                 if (bHasSubFolder)
                 {
-                    /* '│   FileName' */
+                    /* '│   FileName' (\xB3 or \x2502) */
                     if (bUseAscii)
-                        wsprintf(str, L"|   %s", (wchar_t*)arrFolder[i].cFileName);
+                        swprintf(str, L"|   %s", arrFolder[i].cFileName);
                     else
-                        wsprintf(str, L"%c   %s", 179, (wchar_t*)arrFolder[i].cFileName);
+                        swprintf(str, L"\x2502   %s", arrFolder[i].cFileName);
                 }
                 else
                 {
                     /* '    FileName' */
-                    wsprintf(str, L"     %s", (wchar_t*)arrFolder[i].cFileName);
+                    swprintf(str, L"    %s", arrFolder[i].cFileName);
                 }
             }
         }
 
         wcscat(consoleOut, str);
-        wprintf(L"%s\n", consoleOut);
+        ConPrintf(StdOut, L"%s\n", consoleOut);
 
         if (drawfolder)
         {
-          wchar_t *str = (wchar_t*)malloc(STR_MAX * sizeof(wchar_t));
-          ZeroMemory(str, STR_MAX * sizeof(wchar_t));
+            PWSTR str = (PWSTR)malloc(STR_MAX * sizeof(WCHAR));
+            ZeroMemory(str, STR_MAX * sizeof(WCHAR));
 
-          wcscat(str, strPath);
-          wcscat(str, L"\\");
-          wcscat(str, arrFolder[i].cFileName);
-          GetDirectoryStructure(str, width + 4, consoleOut);
+            wcscat(str, strPath);
+            wcscat(str, L"\\");
+            wcscat(str, arrFolder[i].cFileName);
+            GetDirectoryStructure(str, width + 4, consoleOut);
 
-          free(str);
+            free(str);
         }
         free(consoleOut);
     }
@@ -235,27 +219,27 @@ static void DrawTree(const wchar_t* strPath,
  * @return
  * void
  */
-static void
-GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine)
+static VOID
+GetDirectoryStructure(PWSTR strPath, UINT width, PCWSTR prevLine)
 {
-    WIN32_FIND_DATA FindFileData;
+    WIN32_FIND_DATAW FindFileData;
     HANDLE hFind = NULL;
     //DWORD err = 0;
-    /* will fill up with names of all sub folders */
-    WIN32_FIND_DATA *arrFolder = NULL;
+    /* Fill up with names of all sub-folders */
+    WIN32_FIND_DATAW *arrFolder = NULL;
     UINT arrFoldersz = 0;
-    /* will fill up with names of all sub folders */
-    WIN32_FIND_DATA *arrFile = NULL;
+    /* Fill up with names of all sub-folders */
+    WIN32_FIND_DATAW *arrFile = NULL;
     UINT arrFilesz = 0;
 
     ZeroMemory(&FindFileData, sizeof(FindFileData));
 
     {
-        static wchar_t tmp[STR_MAX] = L"";
+        static WCHAR tmp[STR_MAX] = L"";
         ZeroMemory(tmp, sizeof(tmp));
         wcscat(tmp, strPath);
         wcscat(tmp, L"\\*.*");
-        hFind = FindFirstFile(tmp, &FindFileData);
+        hFind = FindFirstFileW(tmp, &FindFileData);
         //err = GetLastError(); 
     }
 
@@ -271,7 +255,7 @@ GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine)
                 continue;
 
             ++arrFoldersz;
-            arrFolder = (WIN32_FIND_DATA*)realloc(arrFolder, arrFoldersz * sizeof(FindFileData));
+            arrFolder = (WIN32_FIND_DATAW*)realloc(arrFolder, arrFoldersz * sizeof(FindFileData));
 
             if (arrFolder == NULL)
                 exit(-1);
@@ -282,7 +266,7 @@ GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine)
         else
         {
             ++arrFilesz;
-            arrFile = (WIN32_FIND_DATA*)realloc(arrFile, arrFilesz * sizeof(FindFileData));
+            arrFile = (WIN32_FIND_DATAW*)realloc(arrFile, arrFilesz * sizeof(FindFileData));
 
             if(arrFile == NULL)
                 exit(-1);
@@ -290,17 +274,17 @@ GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine)
             arrFile[arrFilesz - 1] = FindFileData;
         }
     }
-    while (FindNextFile(hFind, &FindFileData));
+    while (FindNextFileW(hFind, &FindFileData));
 
     FindClose(hFind);
 
     if (bShowFiles)
     {
-        /* will free(arrFile) */
+        /* Will free(arrFile) */
         DrawTree(strPath, arrFile, arrFilesz, width, prevLine, FALSE);
     }
 
-    /* will free(arrFile) */
+    /* Will free(arrFile) */
     DrawTree(strPath, arrFolder, arrFoldersz, width, prevLine, TRUE);
 
     free(arrFolder);
@@ -314,18 +298,21 @@ GetDirectoryStructure(wchar_t* strPath, UINT width, const wchar_t* prevLine)
 * @return
 * error /success value
 */
-int wmain( int argc, wchar_t *argv[])
+int wmain(int argc, WCHAR* argv[])
 {
     DWORD dwSerial = 0;
-    wchar_t t = 0;
-    wchar_t *strPath = NULL;
+    WCHAR t = 0;
+    PWSTR strPath = NULL;
     DWORD sz = 0;
-    //wchar_t *context = NULL;
-    wchar_t *driveLetter = NULL;
+    //PWSTR context = NULL;
+    PWSTR driveLetter = NULL;
 
     int i;
 
-    /* parse the command line */
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
+    /* Parse the command line */
     for (i = 1; i < argc; ++i)
     {
         if (argv[i][0] == L'-' || argv[i][0] == L'/')
@@ -333,49 +320,51 @@ int wmain( int argc, wchar_t *argv[])
             switch (towlower(argv[i][1]))
             {
                 case L'?':
-                    /* will print help and exit after */
-                    PrintResourceString(IDS_USAGE);
+                    /* Print help and exit after */
+                    ConResPuts(StdOut, IDS_USAGE);
                     return 0;
+
                 case L'f':
-                    /* if set to true, will populate all the files within the folder structure */
                     bShowFiles = TRUE;
                     break;
+
                 case L'a':
                     bUseAscii = TRUE;
                     break;
+
                 default:
                     break;
             }
         }
         else
         {
-            /* this must be path to some folder */
+            /* This must be path to some folder */
 
-            /* will set the current directory for this executable */
+            /* Set the current directory for this executable */
             BOOL b = SetCurrentDirectoryW(argv[i]);
             if (b == FALSE)
             {
-                PrintResourceString(IDS_NO_SUBDIRECTORIES);
+                ConResPuts(StdOut, IDS_NO_SUBDIRECTORIES);
                 return 1;
             }
         }
     }
 
-    PrintResourceString(IDS_FOLDER_PATH);
+    ConResPuts(StdOut, IDS_FOLDER_PATH);
 
-    GetVolumeInformation(NULL, NULL, 0, &dwSerial, NULL, NULL, NULL, 0);
-    PrintResourceString(IDS_VOL_SERIAL, dwSerial >> 16, dwSerial & 0xffff);
+    GetVolumeInformationW(NULL, NULL, 0, &dwSerial, NULL, NULL, NULL, 0);
+    ConResPrintf(StdOut, IDS_VOL_SERIAL, dwSerial >> 16, dwSerial & 0xffff);
 
     /* get the buffer size */
-    sz = GetCurrentDirectory(1, &t);
+    sz = GetCurrentDirectoryW(1, &t);
     /* must not return before calling delete[] */
-    strPath = (wchar_t*)malloc(sizeof(wchar_t) * sz);
+    strPath = (PWSTR)malloc(sz * sizeof(WCHAR));
 
     /* get the current directory */
-    GetCurrentDirectory(sz, strPath);
+    GetCurrentDirectoryW(sz, strPath);
 
     /* get the drive letter , must not return before calling delete[] */
-    driveLetter = (wchar_t*)malloc(sizeof(wchar_t) * sz);
+    driveLetter = (PWSTR)malloc(sz * sizeof(WCHAR));
 
     /* As we do not seem to have the _s functions properly set up, use the non-secure version for now */
     //wcscpy_s(driveLetter,sz,strPath);
@@ -383,15 +372,15 @@ int wmain( int argc, wchar_t *argv[])
     wcscpy(driveLetter, strPath);
     wcstok(driveLetter, L":");
 
-    wprintf(L"%s:.\n", driveLetter);
+    ConPrintf(StdOut, L"%s:.\n", driveLetter);
 
     free(driveLetter);
 
-    /* get the sub directories within this current folder */
+    /* get the sub-directories within this current folder */
     GetDirectoryStructure(strPath, 1, L"          ");
 
     free(strPath);
-    wprintf(L"\n");
+    ConPuts(StdOut, L"\n");
 
     return 0;
 }

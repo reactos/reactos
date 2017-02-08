@@ -76,6 +76,48 @@ BEGIN
     PUSHBUTTON "&zavřít", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalátor ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Zvolte, zda chcete použít typická nastavení nebo si je přizpůsobit:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Typická nastavení", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Přizpůsobit", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "Vytvoří připojení k síti pomocí Síťového klienta ReactOS, sdílení souborů a tiskáren a nastaví automatickou adresu protokolu TCP/IP.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Umožní ruční nastavení sítě.", IDC_STATIC, 65, 90, 243, 20
+END
+
+IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalátor ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Pro zařízení:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "není k dispozici", IDC_NETWORK_DEVICE, 75, 2, 253, 20
+    LTEXT "Toto připojení používá zaškrtnuté komponenty:", IDC_STATIC, 33, 12, 253, 20
+    CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
+    PUSHBUTTON "&Instalovat...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Odinstalovar", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Vlastnosti", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "Popis", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+END
+
+IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalátor ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Má být tento počítač součástí domény?\n\
+(Tuto informaci můžete obdržet od Vašeho správce sítě.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Ne, tento počítáč bude součástí pracovní skupiny.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Ano, tento počítáč bude součástí domény.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Název skupiny nebo domény:", IDC_STATIC, 33, 72, 126, 14
+    EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Poznámka: Pokud tento počítač nebude součástí sítě, nemáte dostatečná oprávnění pro připojení k doméně, nebo nevíte, jakou možnost zvolit, vyberte zatím možnost síťová skupina. Tato nastavení mohou být později změněna.", IDC_STATIC, 33, 107, 263, 50
+END
+
 STRINGTABLE
 BEGIN
     IDS_PHYSICAL_ADDRESS "Fyzická adresa"
@@ -105,7 +147,7 @@ BEGIN
     IDS_STATUS_OPERATIONAL "Připojeno"
     IDS_NET_ACTIVATE "Zapnout"
     IDS_NET_DEACTIVATE "Vypnout"
-    IDS_NET_STATUS "Status"
+    IDS_NET_STATUS "Stav"
     IDS_NET_REPAIR "Opravit"
     IDS_NET_CREATELINK "Vytvořit zástupce"
     IDS_NET_DELETE "Smazat"
@@ -119,4 +161,16 @@ BEGIN
     IDS_DURATION_DAYS "%d Dnů %s"
     IDS_ASSIGNED_DHCP "Přiřazeno DHCP"
     IDS_ASSIGNED_MANUAL "Ručně nastaveno"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORKSETTINGSTITLE "Síťová nastavení"
+    IDS_NETWORKSETTINGSSUBTITLE "Instaluje síťový software používaný k připojení k dalším sítím, počítačům a k Internetu."
+    IDS_NETWORKCOMPONENTTITLE "Síťové součásti"
+    IDS_NETWORKCOMPONENTSUBTITLE "Určete, které síťové součásti jsou používány. Přidání nové součásti provedete kliknutím na Instalovat."
+    IDS_NETWORKDOMAINTITLE "Doména nebo pracovní skupina"
+    IDS_NETWORKDOMAINSUBTITLE "Doména je skupina počítaču definovaná správcem sítě. Pracovní skupina je skupina počítačů sdilející název pracovní skupiny."
+    IDS_REACTOS_SETUP "Instalátor ReactOS"
+    IDS_WZD_DOMAIN_NAME "Instalátor nemůže pokračovat dokud\nnezadáte jméno domény\nnebo pracovní skupiny."
 END

@@ -527,6 +527,7 @@ __ASM_GLOBAL_FUNC( CUSTOMPROC_wrapper,
     __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
     "movl %esp,%ebp\n\t"
     __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
+    "subl $4,%esp\n\t"
     "pushl 12(%ebp)\n\t"
     "movl 8(%ebp),%eax\n\t"
     "call *%eax\n\t"

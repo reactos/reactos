@@ -15,8 +15,12 @@ Description = Ein Win32 Sega Genesis / Sega CD / Sega 32X Emulator.
 Size = 573,1 KiB
 
 [Section.0418]
-Description = Un emulator Win32 pentru Sega Genesis / Sega CD / Sega 32x.
+Description = Program Win32 de emulare pentru Sega Genesis / Sega CD / Sega 32x.
 Size = 573,1 Kio
+
+[Section.0419]
+Description = Эмулятор Sega Genesis / Sega CD / Sega 32X для Win32.
+Size = 573,1 КиБ
 
 [Section.041f]
 Name = Gens Öykünücü

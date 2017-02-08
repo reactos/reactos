@@ -90,7 +90,6 @@ BEGIN
     END
     POPUP "&?", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Ist dies eine &legale ReactOS-Kopie?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "Inf&o", IDM_HELP_ABOUT
     END
 END

@@ -219,8 +219,8 @@ FT_BEGIN_HEADER
    *       U+0F00 - U+0FFF  // Tibetan
    *       U+1900 - U+194F  // Limbu
    *       U+1B80 - U+1BBF  // Sundanese
-   *       U+1C80 - U+1CDF  // Meetei Mayak
    *       U+A800 - U+A82F  // Syloti Nagri
+   *       U+ABC0 - U+ABFF  // Meetei Mayek
    *      U+11800 - U+118DF // Sharada
    *     }
    *
@@ -428,6 +428,9 @@ FT_BEGIN_HEADER
    * @note:
    *   This property can be used with @FT_Property_Get also.
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable (using values 1 and 0 for `on' and `off', respectively).
+   *
    *   The warping code can also change advance widths.  Have a look at the
    *   `lsb_delta' and `rsb_delta' fields in the @FT_GlyphSlotRec structure
    *   for details on improving inter-glyph distances while rendering.
@@ -473,6 +476,9 @@ FT_BEGIN_HEADER
    *   The smaller the size (especially 9ppem and down), the higher the loss
    *   of emboldening versus the CFF driver.
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable similar to the CFF driver.
+   *
    */
 
 
@@ -489,6 +495,8 @@ FT_BEGIN_HEADER
    *   CFF_CONFIG_OPTION_DARKENING_PARAMETER_* #defines for consistency.
    *   Note the differences described in @no-stem-darkening[autofit].
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable similar to the CFF driver.
    */
 
 

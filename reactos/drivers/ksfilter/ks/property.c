@@ -30,6 +30,8 @@ FindPropertyHandler(
     OUT PKSPROPERTY_ITEM *PropertyItem)
 {
     ULONG Index, ItemIndex;
+    PULONG Flags;
+    PKSPROPERTY_DESCRIPTION Description;
 
     for(Index = 0; Index < PropertySetCount; Index++)
     {
@@ -39,46 +41,16 @@ FindPropertyHandler(
         {
             for(ItemIndex = 0; ItemIndex < PropertySet[Index].PropertiesCount; ItemIndex++)
             {
+
+                /* store property set */
+                *Set = (PKSPROPERTY_SET)&PropertySet[Index];
+                *PropertyItem = (PKSPROPERTY_ITEM)&PropertySet[Index].PropertyItem[ItemIndex];
+
+
                 if (PropertySet[Index].PropertyItem[ItemIndex].PropertyId == Property->Id)
                 {
-                    if (PropertySet[Index].PropertyItem[ItemIndex].MinProperty > InputBufferLength)
-                    {
-                        /* too small input buffer */
-                        IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinProperty;
-                        return STATUS_INVALID_PARAMETER;
-                    }
-
-                    if (PropertySet[Index].PropertyItem[ItemIndex].MinData > OutputBufferLength)
-                    {
-                        /* too small output buffer */
-                        IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinData;
-                        return STATUS_MORE_ENTRIES;
-                    }
-
-                    /* store property set */
-                    *Set = (PKSPROPERTY_SET)&PropertySet[Index];
-                    *PropertyItem = (PKSPROPERTY_ITEM)&PropertySet[Index].PropertyItem[ItemIndex];
-
-                    if (Property->Flags & KSPROPERTY_TYPE_SET)
-                    {
-                        /* store property handler */
-                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
-                        return STATUS_SUCCESS;
-                    }
-
-                    if (Property->Flags & KSPROPERTY_TYPE_GET)
-                    {
-                        /* store property handler */
-                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
-                        return STATUS_SUCCESS;
-                    }
-
-
                     if (Property->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
                     {
-                        PULONG Flags;
-                        PKSPROPERTY_DESCRIPTION Description;
-
                         if (sizeof(ULONG) > OutputBufferLength)
                         {
                             /* too small buffer */
@@ -123,6 +95,37 @@ FindPropertyHandler(
                         }
                         return STATUS_SUCCESS;
                     }
+
+                    if (PropertySet[Index].PropertyItem[ItemIndex].MinProperty > InputBufferLength)
+                    {
+                        /* too small input buffer */
+                        IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinProperty;
+                        return STATUS_INVALID_PARAMETER;
+                    }
+
+                    if (PropertySet[Index].PropertyItem[ItemIndex].MinData > OutputBufferLength)
+                    {
+                        /* too small output buffer */
+                        IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinData;
+                        return STATUS_MORE_ENTRIES;
+                    }
+
+
+                    if (Property->Flags & KSPROPERTY_TYPE_SET)
+                    {
+                        /* store property handler */
+                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
+                        return STATUS_SUCCESS;
+                    }
+
+                    if (Property->Flags & KSPROPERTY_TYPE_GET)
+                    {
+                        /* store property handler */
+                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
+                        return STATUS_SUCCESS;
+                    }
+
+
                 }
             }
         }

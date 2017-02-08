@@ -35,17 +35,19 @@ char *i386ExceptionDescriptionText[] =
 
 #define SCREEN_ATTR 0x1F    // Bright white on blue background
 
-void
+#if 0
+static void
 i386PrintChar(char chr, ULONG x, ULONG y)
 {
     MachVideoPutChar(chr, SCREEN_ATTR, x, y);
 }
+#endif
 
 /* Used to store the current X and Y position on the screen */
 ULONG i386_ScreenPosX = 0;
 ULONG i386_ScreenPosY = 0;
 
-void
+static void
 i386PrintText(char *pszText)
 {
     char chr;
@@ -66,7 +68,7 @@ i386PrintText(char *pszText)
     }
 }
 
-void
+static void
 PrintText(const char *format, ...)
 {
     va_list argptr;
@@ -79,7 +81,7 @@ PrintText(const char *format, ...)
     i386PrintText(buffer);
 }
 
-void
+static void
 i386PrintFrames(PKTRAP_FRAME TrapFrame)
 {
     FRAME *Frame;
@@ -105,6 +107,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
 {
     PUCHAR InstructionPointer;
 
+    MachVideoHideShowTextCursor(FALSE);
     MachVideoClearScreen(SCREEN_ATTR);
     i386_ScreenPosX = 0;
     i386_ScreenPosY = 0;
@@ -182,7 +185,7 @@ FrLdrBugCheckWithMessage(
     CHAR Buffer[1024];
     va_list argptr;
 
-    /* Blue screen for the win */
+    MachVideoHideShowTextCursor(FALSE);
     MachVideoClearScreen(SCREEN_ATTR);
     i386_ScreenPosX = 0;
     i386_ScreenPosY = 0;
@@ -215,6 +218,7 @@ FrLdrBugCheckEx(
     PCHAR File,
     ULONG Line)
 {
+    MachVideoHideShowTextCursor(FALSE);
     MachVideoClearScreen(SCREEN_ATTR);
     i386_ScreenPosX = 0;
     i386_ScreenPosY = 0;
@@ -231,6 +235,8 @@ FrLdrBugCheckEx(
     PrintText("Bug Information:\n    %p\n    %p\n    %p\n    %p\n    %p\n\n",
               BugCheckInfo[0], BugCheckInfo[1], BugCheckInfo[2], BugCheckInfo[3], BugCheckInfo[4]);
 
+    _disable();
+    __halt();
     for (;;);
 }
 

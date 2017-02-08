@@ -104,6 +104,16 @@ typedef struct _VGA_DYNAMIC_FUNC_TABLE
 
 #pragma pack(pop)
 
+/* MACROS *********************************************************************/
+
+//
+// These macros are defined for ease-of-use of some VGA I/O ports
+// whose addresses depend whether we are in Monochrome or Colour mode.
+//
+#define VGA_INSTAT1_READ    Bda->CrtBasePort + 6    // VGA_INSTAT1_READ_MONO or VGA_INSTAT1_READ_COLOR
+#define VGA_CRTC_INDEX      Bda->CrtBasePort        // VGA_CRTC_INDEX_MONO   or VGA_CRTC_INDEX_COLOR
+#define VGA_CRTC_DATA       Bda->CrtBasePort + 1    // VGA_CRTC_DATA_MONO    or VGA_CRTC_DATA_COLOR
+
 /* FUNCTIONS ******************************************************************/
 
 VOID WINAPI VidBiosVideoService(LPWORD Stack);

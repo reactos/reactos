@@ -1,12 +1,31 @@
-#include <stdarg.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <locale.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #include <wincon.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <assert.h>
-#include <locale.h>
+
+/* Console API functions which are absent from wincon.h */
+VOID
+WINAPI
+ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName);
+
+DWORD
+WINAPI
+GetConsoleCommandHistoryW(LPWSTR lpHistory,
+                          DWORD cbHistory,
+                          LPCWSTR lpExeName);
+
+DWORD
+WINAPI
+GetConsoleCommandHistoryLengthW(LPCWSTR lpExeName);
+
+BOOL
+WINAPI
+SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
+                            LPCWSTR lpExeName);
 
 #include "doskey.h"
 
@@ -14,19 +33,12 @@
 WCHAR szStringBuf[MAX_STRING];
 LPWSTR pszExeName = L"cmd.exe";
 
-/* Function pointers */
-typedef DWORD (WINAPI *GetConsoleCommandHistoryW_t) (LPWSTR sCommands, DWORD nBufferLength, LPWSTR sExeName);
-typedef DWORD (WINAPI *GetConsoleCommandHistoryLengthW_t) (LPWSTR sExeName);
-typedef BOOL (WINAPI *SetConsoleNumberOfCommandsW_t)(DWORD nNumber, LPWSTR sExeName);
-typedef VOID (WINAPI *ExpungeConsoleCommandHistoryW_t)(LPWSTR sExeName);
-
-GetConsoleCommandHistoryW_t pGetConsoleCommandHistoryW;
-GetConsoleCommandHistoryLengthW_t pGetConsoleCommandHistoryLengthW;
-SetConsoleNumberOfCommandsW_t pSetConsoleNumberOfCommandsW;
-ExpungeConsoleCommandHistoryW_t pExpungeConsoleCommandHistoryW;
-
 static VOID SetInsert(DWORD dwFlag)
 {
+    /*
+     * NOTE: Enabling the ENABLE_INSERT_MODE mode can also be done by calling
+     * kernel32:SetConsoleCommandHistoryMode(CONSOLE_OVERSTRIKE) .
+     */
     DWORD dwMode;
     HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
     GetConsoleMode(hConsole, &dwMode);
@@ -36,7 +48,7 @@ static VOID SetInsert(DWORD dwFlag)
 
 static VOID PrintHistory(VOID)
 {
-    DWORD Length = pGetConsoleCommandHistoryLengthW(pszExeName);
+    DWORD Length = GetConsoleCommandHistoryLengthW(pszExeName);
     PBYTE HistBuf;
     WCHAR *Hist;
     WCHAR *HistEnd;
@@ -48,9 +60,13 @@ static VOID PrintHistory(VOID)
     Hist = (WCHAR *)HistBuf;
     HistEnd = (WCHAR *)&HistBuf[Length];
 
-    if (pGetConsoleCommandHistoryW(Hist, Length, pszExeName))
+    if (GetConsoleCommandHistoryW(Hist, Length, pszExeName))
+    {
         for (; Hist < HistEnd; Hist += wcslen(Hist) + 1)
+        {
             wprintf(L"%s\n", Hist);
+        }
+    }
 
     HeapFree(GetProcessHeap(), 0, HistBuf);
 }
@@ -102,8 +118,12 @@ static VOID PrintMacros(LPWSTR pszExeName, LPWSTR Indent)
     AliasEnd = (WCHAR *)&AliasBuf[Length];
 
     if (GetConsoleAliasesW(Alias, Length * sizeof(BYTE), pszExeName))
+    {
         for (; Alias < AliasEnd; Alias += wcslen(Alias) + 1)
+        {
             wprintf(L"%s%s\n", Indent, Alias);
+        }
+    }
 
     HeapFree(GetProcessHeap(), 0, AliasBuf);
 }
@@ -198,23 +218,12 @@ wmain(VOID)
 {
     WCHAR *pArgStart;
     WCHAR *pArgEnd;
-    HMODULE hKernel32;
 
     setlocale(LC_ALL, "");
 
     /* Get the full command line using GetCommandLine(). We can't just use argv,
      * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
     pArgEnd = GetCommandLineW();
-	hKernel32 = LoadLibraryW(L"kernel32.dll");
-
-	/* Get function pointers */
-	pGetConsoleCommandHistoryW = (GetConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "GetConsoleCommandHistoryW");
-	pGetConsoleCommandHistoryLengthW = (GetConsoleCommandHistoryLengthW_t)GetProcAddress( hKernel32,  "GetConsoleCommandHistoryLengthW");
-	pSetConsoleNumberOfCommandsW = (SetConsoleNumberOfCommandsW_t)GetProcAddress( hKernel32,  "SetConsoleNumberOfCommandsW");
-	pExpungeConsoleCommandHistoryW = (ExpungeConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "ExpungeConsoleCommandHistoryW");
-
-	assert(pGetConsoleCommandHistoryW && pGetConsoleCommandHistoryLengthW &&
-		pSetConsoleNumberOfCommandsW && pExpungeConsoleCommandHistoryW);
 
     /* Skip the application name */
     GetArg(&pArgStart, &pArgEnd);
@@ -242,11 +251,11 @@ wmain(VOID)
         }
         else if (!_wcsnicmp(pArgStart, L"/LISTSIZE=", 10))
         {
-            pSetConsoleNumberOfCommandsW(_wtoi(pArgStart + 10), pszExeName);
+            SetConsoleNumberOfCommandsW(_wtoi(pArgStart + 10), pszExeName);
         }
         else if (!wcsicmp(pArgStart, L"/REINSTALL"))
         {
-            pExpungeConsoleCommandHistoryW(pszExeName);
+            ExpungeConsoleCommandHistoryW(pszExeName);
         }
         else if (!wcsicmp(pArgStart, L"/INSERT"))
         {

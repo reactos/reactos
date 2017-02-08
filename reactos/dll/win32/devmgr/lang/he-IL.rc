@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "התקן זה פועל כראוי"
     IDS_DEV_NOT_CONFIGURED "This device is not configured correctly."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  could not load the driver for this device because the computer is reporting two %1 bus types."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS could not load the driver for this device because the computer is reporting two %1 bus types."
     IDS_DEV_DEVLOADER_FAILED2 "The %1 device loader(s) for this device could not load the device driver."
     IDS_DEV_OUT_OF_MEMORY "The driver for this device may be bad, or your system may be running low on memory or other resources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "This device is not working properly because one of its drivers may be bad, or your registry may be bad."

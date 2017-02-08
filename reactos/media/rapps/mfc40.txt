@@ -45,6 +45,11 @@ License = Nespecificată
 Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt40.dll.
 Size = 865,0 Kio
 
+[Section.0419]
+License = Неизвестно
+Description = MFC 4 необходима для работы некоторых приложений. Содержит: mfc40.dll, msvcrt40.dll.
+Size = 865,0 КиБ
+
 [Section.041f]
 Name = OLE Görüntüleyicisi ve Microsoft Ana Sınıfları (MFC) Sürüm 4
 License = Bilinmiyor

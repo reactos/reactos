@@ -1,6 +1,6 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 250, 220
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Power Schemes"
 FONT 8, "MS Shell Dlg"
@@ -110,8 +110,6 @@ BEGIN
     IDS_TEXT "ข้อความ"
     IDS_CONFIG1 "ตั้งค่าให้กับ %1 ค่าพลังงาน"
     IDS_CONFIG2 "การตั้งค่าแบบขั้นสูงเป็น %1"
-    IDS_SIZEBYTS "%i bytes"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "ไม่เปลี่ยนค่า"
     IDS_PowerActionNone1 "ไม่เปลี่ยนค่า"
     IDS_PowerActionUnknown "ไม่ทราบ"

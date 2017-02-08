@@ -67,7 +67,7 @@
                             "pshinter" );
     return ( module && pshinter && pshinter->get_globals_funcs )
            ? pshinter->get_globals_funcs( module )
-           : 0 ;
+           : 0;
   }
 
 

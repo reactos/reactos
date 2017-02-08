@@ -291,7 +291,7 @@ GetDriverName(
                          NULL);
 
     swprintf(KeyName,
-             L"\\Scsi\\Scsi Port %lu",
+             L"\\Scsi\\Scsi Port %hu",
              DiskEntry->Port);
 
     RtlZeroMemory(&QueryTable,
@@ -1267,9 +1267,9 @@ AddDiskToList(
     DiskEntry->BytesPerSector = DiskGeometry.BytesPerSector;
 
     DPRINT("Cylinders %I64u\n", DiskEntry->Cylinders);
-    DPRINT("TracksPerCylinder %I64u\n", DiskEntry->TracksPerCylinder);
-    DPRINT("SectorsPerTrack %I64u\n", DiskEntry->SectorsPerTrack);
-    DPRINT("BytesPerSector %I64u\n", DiskEntry->BytesPerSector);
+    DPRINT("TracksPerCylinder %lu\n", DiskEntry->TracksPerCylinder);
+    DPRINT("SectorsPerTrack %lu\n", DiskEntry->SectorsPerTrack);
+    DPRINT("BytesPerSector %lu\n", DiskEntry->BytesPerSector);
 
     DiskEntry->SectorCount.QuadPart = DiskGeometry.Cylinders.QuadPart *
                                       (ULONGLONG)DiskGeometry.TracksPerCylinder *
@@ -1279,7 +1279,7 @@ AddDiskToList(
     DiskEntry->CylinderAlignment = DiskGeometry.TracksPerCylinder *
                                    DiskGeometry.SectorsPerTrack;
 
-    DPRINT("SectorCount %I64u\n", DiskEntry->SectorCount);
+    DPRINT("SectorCount %I64u\n", DiskEntry->SectorCount.QuadPart);
     DPRINT("SectorAlignment %lu\n", DiskEntry->SectorAlignment);
 
     DiskEntry->DiskNumber = DiskNumber;
@@ -1359,7 +1359,7 @@ AddDiskToList(
         }
         else
         {
-            DPRINT1("No matching aligment found! Partition 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
+            DPRINT1("No matching alignment found! Partition 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
         }
     }
     else
@@ -1672,7 +1672,7 @@ PrintPartitionData(
         {
            GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
                                               PartTypeString,
-                                              30);
+                                              ARRAYSIZE(PartTypeString));
            PartType = PartTypeString;
         }
 

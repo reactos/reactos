@@ -411,21 +411,15 @@ static WINECRYPT_CERTSTORE *CRYPT_SysRegOpenStoreW(HCRYPTPROV hCryptProv,
         SetLastError(E_INVALIDARG);
         return NULL;
     }
-    /* FIXME:  In Windows, the root store (even the current user location) is
-     * protected:  adding to it or removing from it present a user interface,
-     * and the keys are owned by the system process, not the current user.
-     * Wine's registry doesn't implement access controls, so a similar
-     * mechanism isn't possible yet.
-     */
-    if ((dwFlags & CERT_SYSTEM_STORE_LOCATION_MASK) ==
-     CERT_SYSTEM_STORE_LOCAL_MACHINE && !lstrcmpiW(storeName, rootW))
-        return CRYPT_RootOpenStore(hCryptProv, dwFlags);
 
     switch (dwFlags & CERT_SYSTEM_STORE_LOCATION_MASK)
     {
     case CERT_SYSTEM_STORE_LOCAL_MACHINE:
         root = HKEY_LOCAL_MACHINE;
         base = CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH;
+        /* If the HKLM\Root certs are requested, expressing system certs into the registry */
+        if (!lstrcmpiW(storeName, rootW))
+            CRYPT_ImportSystemRootCertsToReg();
         break;
     case CERT_SYSTEM_STORE_CURRENT_USER:
         root = HKEY_CURRENT_USER;
@@ -1374,6 +1368,51 @@ BOOL WINAPI CertRegisterPhysicalStore(const void *pvSystemStore, DWORD dwFlags,
     else
         FIXME("(%s, %08x, %s, %p, %p): stub\n", debugstr_w(pvSystemStore),
          dwFlags, debugstr_w(pwszStoreName), pStoreInfo, pvReserved);
+    return FALSE;
+}
+
+BOOL WINAPI CertRegisterSystemStore(const void *pvSystemStore, DWORD dwFlags,
+  PCERT_SYSTEM_STORE_INFO pStoreInfo, void *pvReserved)
+{
+    HCERTSTORE hstore;
+
+    if (dwFlags & CERT_SYSTEM_STORE_RELOCATE_FLAG )
+    {
+        FIXME("(%p, %08x, %p, %p): flag not supported\n", pvSystemStore, dwFlags, pStoreInfo, pvReserved);
+        return FALSE;
+    }
+
+    TRACE("(%s, %08x, %p, %p)\n", debugstr_w(pvSystemStore), dwFlags, pStoreInfo, pvReserved);
+
+    hstore = CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W, 0, 0, dwFlags, pvSystemStore);
+    if (hstore)
+    {
+        CertCloseStore(hstore, 0);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL WINAPI CertUnregisterSystemStore(void *pvSystemStore, DWORD dwFlags)
+{
+    HCERTSTORE hstore;
+
+    if (dwFlags & CERT_SYSTEM_STORE_RELOCATE_FLAG)
+    {
+        FIXME("(%p, %08x): flag not supported\n", pvSystemStore, dwFlags);
+        return FALSE;
+    }
+    TRACE("(%s, %08x)\n", debugstr_w(pvSystemStore), dwFlags);
+
+    hstore = CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W, 0, 0, dwFlags | CERT_STORE_OPEN_EXISTING_FLAG, pvSystemStore);
+    if (hstore == NULL)
+        return FALSE;
+
+    hstore = CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY_W, 0, 0, dwFlags | CERT_STORE_DELETE_FLAG, pvSystemStore);
+    if (hstore == NULL && GetLastError() == 0)
+        return TRUE;
+
     return FALSE;
 }
 

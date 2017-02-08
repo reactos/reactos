@@ -3,11 +3,11 @@ Name = Foxit Reader
 Version = 7.3.4
 License = Freeware
 Description = Alternative PDF reader, rivaling Adobe Reader functionality-wise.
-Size = 40.9 MiB
+Size = 49.4 MiB
 Category = 6
 URLSite = http://www.foxitsoftware.com/Secure_PDF_Reader/
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/en_us/FoxitReader734_prom_enu_Setup.exe
-SHA1 = 72f4ed8f850130073d7d0fa3d8a7a80a464ad198
+SHA1 = e9fe8e878f9f057ad6bd2cb06d750e8f19a1d31d
 CDPath = none
 
 [Section.0407]
@@ -28,7 +28,15 @@ SHA1 = 57d26745910841cefb3e7d86067da024d31fb267
 [Section.0418]
 License = Gratuită
 Description = Lector PDF, rivalizând în funcționalitate cu Adobe Reader.
-Size = 40,9 Mio
+Size = 49,4 Mio
+
+[Section.0419]
+Version = 7.3.6.321
+License = Бесплатно
+Description = Бесплатное приложение для просмотра электронных документов в формате PDF.
+URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_prom_L10N_Setup.exe
+SHA1 = 23e6992e8e47c3295145c9c44b9a05cc630b8dc6
+Size = 60,0 МиБ
 
 [Section.041f]
 Name = Foxit Okuyucu

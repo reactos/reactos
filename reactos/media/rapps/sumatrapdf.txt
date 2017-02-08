@@ -38,6 +38,11 @@ Description = Lector PDF ușor, gratuit (cu surse deschise), și portabil.
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 Size = 4,6 Mio
 
+[Section.0419]
+Description = Тонкий, свободный, с открытым исходным кодом программа для чтения PDF.
+URLSite = http://www.sumatrapdfreader.org/free-pdf-reader-ru.html
+Size = 4,6 МиБ
+
 [Section.041f]
 License = GPL sürüm 3
 Description = Yeğni, ücretsiz ve açık kaynak bir PDF okuyucusu. Kutunun dışında taşınabilirdir.

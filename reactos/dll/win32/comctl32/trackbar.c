@@ -32,6 +32,8 @@
 
 #include "comctl32.h"
 
+#include <math.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(trackbar);
 
 typedef struct
@@ -188,7 +190,7 @@ TRACKBAR_ConvertPlaceToPosition (const TRACKBAR_INFO *infoPtr, int place)
         pos = infoPtr->lRangeMin;
 
     TRACE("%.2f\n", pos);
-    return (LONG)(pos + 0.5);
+    return (LONG)floor(pos + 0.5);
 }
 
 
@@ -482,16 +484,12 @@ TRACKBAR_DrawOneTic (const TRACKBAR_INFO *infoPtr, HDC hdc, LONG ticPos, int fla
 
     if (flags & TBS_VERT) {
         offsetthumb = (infoPtr->rcThumb.bottom - infoPtr->rcThumb.top)/2;
-	rcTics.left = infoPtr->rcThumb.left - 2;
-	rcTics.right = infoPtr->rcThumb.right + 2;
-	rcTics.top    = infoPtr->rcChannel.top + offsetthumb;
-	rcTics.bottom = infoPtr->rcChannel.bottom - offsetthumb - 1;
+        SetRect(&rcTics, infoPtr->rcThumb.left - 2, infoPtr->rcChannel.top + offsetthumb,
+                infoPtr->rcThumb.right + 2, infoPtr->rcChannel.bottom - offsetthumb - 1);
     } else {
         offsetthumb = (infoPtr->rcThumb.right - infoPtr->rcThumb.left)/2;
-	rcTics.left   = infoPtr->rcChannel.left + offsetthumb;
-	rcTics.right  = infoPtr->rcChannel.right - offsetthumb - 1;
-	rcTics.top = infoPtr->rcThumb.top - 2;
-	rcTics.bottom = infoPtr->rcThumb.bottom + 2;
+        SetRect(&rcTics, infoPtr->rcChannel.left + offsetthumb, infoPtr->rcThumb.top - 2,
+                infoPtr->rcChannel.right - offsetthumb - 1, infoPtr->rcThumb.bottom + 2);
     }
 
     if (flags & (TBS_TOP | TBS_LEFT)) {
@@ -940,8 +938,11 @@ TRACKBAR_Refresh (TRACKBAR_INFO *infoPtr, HDC hdcDst)
         if (GetWindowTheme (infoPtr->hwndSelf)) {
             DrawThemeParentBackground (infoPtr->hwndSelf, hdc, 0);
         }
-        else
-	    FillRect (hdc, &rcClient, GetSysColorBrush(COLOR_BTNFACE));
+        else {
+            HBRUSH brush = (HBRUSH)SendMessageW(infoPtr->hwndNotify, WM_CTLCOLORSTATIC,
+                    (WPARAM)hdc, (LPARAM)infoPtr->hwndSelf);
+            FillRect (hdc, &rcClient, brush ? brush : GetSysColorBrush(COLOR_BTNFACE));
+        }
         if (gcdrf != CDRF_DODEFAULT)
 	    notify_customdraw(infoPtr, &nmcd, CDDS_POSTERASE);
     }
@@ -1234,21 +1235,21 @@ TRACKBAR_SetRange (TRACKBAR_INFO *infoPtr, BOOL redraw, LONG range)
     infoPtr->lRangeMin = (SHORT)LOWORD(range);
     infoPtr->lRangeMax = (SHORT)HIWORD(range);
 
-    if (infoPtr->lPos < infoPtr->lRangeMin) {
+    /* clip position to new min/max limit */
+    if (infoPtr->lPos < infoPtr->lRangeMin)
         infoPtr->lPos = infoPtr->lRangeMin;
-        infoPtr->flags |= TB_THUMBPOSCHANGED;
-    }
 
-    if (infoPtr->lPos > infoPtr->lRangeMax) {
+    if (infoPtr->lPos > infoPtr->lRangeMax)
         infoPtr->lPos = infoPtr->lRangeMax;
-        infoPtr->flags |= TB_THUMBPOSCHANGED;
-    }
 
     infoPtr->lPageSize = (infoPtr->lRangeMax - infoPtr->lRangeMin) / 5;
     if (infoPtr->lPageSize == 0) infoPtr->lPageSize = 1;
 
-    if (changed && (infoPtr->dwStyle & TBS_AUTOTICKS))
-        TRACKBAR_RecalculateTics (infoPtr);
+    if (changed) {
+        if (infoPtr->dwStyle & TBS_AUTOTICKS)
+            TRACKBAR_RecalculateTics (infoPtr);
+        infoPtr->flags |= TB_THUMBPOSCHANGED;
+    }
 
     if (redraw) TRACKBAR_InvalidateAll(infoPtr);
 

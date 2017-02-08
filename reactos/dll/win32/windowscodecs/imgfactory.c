@@ -104,22 +104,23 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromFilename(
     return hr;
 }
 
-static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendor,
-                                       WICDecodeOptions metadataOptions)
+static HRESULT find_decoder(IStream *pIStream, const GUID *pguidVendor,
+                            WICDecodeOptions metadataOptions, IWICBitmapDecoder **decoder)
 {
     IEnumUnknown *enumdecoders;
     IUnknown *unkdecoderinfo;
     IWICBitmapDecoderInfo *decoderinfo;
-    IWICBitmapDecoder *decoder = NULL;
     GUID vendor;
     HRESULT res;
     ULONG num_fetched;
     BOOL matches;
 
-    res = CreateComponentEnumerator(WICDecoder, WICComponentEnumerateDefault, &enumdecoders);
-    if (FAILED(res)) return NULL;
+    *decoder = NULL;
 
-    while (!decoder)
+    res = CreateComponentEnumerator(WICDecoder, WICComponentEnumerateDefault, &enumdecoders);
+    if (FAILED(res)) return res;
+
+    while (!*decoder)
     {
         res = IEnumUnknown_Next(enumdecoders, 1, &unkdecoderinfo, &num_fetched);
 
@@ -144,18 +145,21 @@ static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendo
 
                 if (SUCCEEDED(res) && matches)
                 {
-                    res = IWICBitmapDecoderInfo_CreateInstance(decoderinfo, &decoder);
+                    res = IWICBitmapDecoderInfo_CreateInstance(decoderinfo, decoder);
 
                     /* FIXME: should use QueryCapability to choose a decoder */
 
                     if (SUCCEEDED(res))
                     {
-                        res = IWICBitmapDecoder_Initialize(decoder, pIStream, metadataOptions);
+                        res = IWICBitmapDecoder_Initialize(*decoder, pIStream, metadataOptions);
 
                         if (FAILED(res))
                         {
-                            IWICBitmapDecoder_Release(decoder);
-                            decoder = NULL;
+                            IWICBitmapDecoder_Release(*decoder);
+                            IWICBitmapDecoderInfo_Release(decoderinfo);
+                            IUnknown_Release(unkdecoderinfo);
+                            *decoder = NULL;
+                            return res;
                         }
                     }
                 }
@@ -171,7 +175,7 @@ static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendo
 
     IEnumUnknown_Release(enumdecoders);
 
-    return decoder;
+    return WINCODEC_ERR_COMPONENTNOTFOUND;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
@@ -185,9 +189,9 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
         metadataOptions, ppIDecoder);
 
     if (pguidVendor)
-        decoder = find_decoder(pIStream, pguidVendor, metadataOptions);
+        res = find_decoder(pIStream, pguidVendor, metadataOptions, &decoder);
     if (!decoder)
-        decoder = find_decoder(pIStream, NULL, metadataOptions);
+        res = find_decoder(pIStream, NULL, metadataOptions, &decoder);
 
     if (decoder)
     {
@@ -202,17 +206,17 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
             BYTE data[4];
             ULONG bytesread;
 
-            WARN("failed to load from a stream\n");
+            WARN("failed to load from a stream %#x\n", res);
 
             seek.QuadPart = 0;
-            res = IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL);
-            if (SUCCEEDED(res))
-                res = IStream_Read(pIStream, data, 4, &bytesread);
-            if (SUCCEEDED(res))
-                WARN("first %i bytes of stream=%x %x %x %x\n", bytesread, data[0], data[1], data[2], data[3]);
+            if (IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL) == S_OK)
+            {
+                if (IStream_Read(pIStream, data, 4, &bytesread) == S_OK)
+                    WARN("first %i bytes of stream=%x %x %x %x\n", bytesread, data[0], data[1], data[2], data[3]);
+            }
         }
         *ppIDecoder = NULL;
-        return WINCODEC_ERR_COMPONENTNOTFOUND;
+        return res;
     }
 }
 
@@ -579,12 +583,36 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromMemory(IWICComponentFacto
     UINT width, UINT height, REFWICPixelFormatGUID format, UINT stride,
     UINT size, BYTE *buffer, IWICBitmap **bitmap)
 {
+    HRESULT hr;
+
     TRACE("(%p,%u,%u,%s,%u,%u,%p,%p\n", iface, width, height,
         debugstr_guid(format), stride, size, buffer, bitmap);
 
     if (!stride || !size || !buffer || !bitmap) return E_INVALIDARG;
 
-    return BitmapImpl_Create(width, height, stride, size, buffer, format, WICBitmapCacheOnLoad, bitmap);
+    hr = BitmapImpl_Create(width, height, stride, size, NULL, format, WICBitmapCacheOnLoad, bitmap);
+    if (SUCCEEDED(hr))
+    {
+        IWICBitmapLock *lock;
+
+        hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
+        if (SUCCEEDED(hr))
+        {
+            UINT buffersize;
+            BYTE *data;
+
+            IWICBitmapLock_GetDataPointer(lock, &buffersize, &data);
+            memcpy(data, buffer, buffersize);
+
+            IWICBitmapLock_Release(lock);
+        }
+        else
+        {
+            IWICBitmap_Release(*bitmap);
+            *bitmap = NULL;
+        }
+    }
+    return hr;
 }
 
 static BOOL get_16bpp_format(HBITMAP hbm, WICPixelFormatGUID *format)
@@ -1080,8 +1108,12 @@ static HRESULT WINAPI ComponentFactory_CreateMetadataWriterFromReader(IWICCompon
 static HRESULT WINAPI ComponentFactory_CreateQueryReaderFromBlockReader(IWICComponentFactory *iface,
         IWICMetadataBlockReader *block_reader, IWICMetadataQueryReader **query_reader)
 {
-    FIXME("%p,%p,%p: stub\n", iface, block_reader, query_reader);
-    return E_NOTIMPL;
+    TRACE("%p,%p,%p\n", iface, block_reader, query_reader);
+
+    if (!block_reader || !query_reader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(block_reader, query_reader);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateQueryWriterFromBlockWriter(IWICComponentFactory *iface,
@@ -1155,4 +1187,51 @@ HRESULT ComponentFactory_CreateInstance(REFIID iid, void** ppv)
     IWICComponentFactory_Release(&This->IWICComponentFactory_iface);
 
     return ret;
+}
+
+HRESULT WINAPI WICCreateBitmapFromSectionEx(UINT width, UINT height,
+        REFWICPixelFormatGUID format, HANDLE section, UINT stride,
+        UINT offset, WICSectionAccessLevel wicaccess, IWICBitmap **bitmap)
+{
+    DWORD access;
+    void *buffer;
+    HRESULT hr;
+
+    TRACE("%u,%u,%s,%p,%u,%#x,%#x,%p\n", width, height, debugstr_guid(format),
+        section, stride, offset, wicaccess, bitmap);
+
+    if (!width || !height || !section || !bitmap) return E_INVALIDARG;
+
+    switch (wicaccess)
+    {
+    case WICSectionAccessLevelReadWrite:
+        access = FILE_MAP_READ | FILE_MAP_WRITE;
+        break;
+
+    case WICSectionAccessLevelRead:
+        access = FILE_MAP_READ;
+        break;
+
+    default:
+        FIXME("unsupported access %#x\n", wicaccess);
+        return E_INVALIDARG;
+    }
+
+    buffer = MapViewOfFile(section, access, 0, offset, 0);
+    if (!buffer) return HRESULT_FROM_WIN32(GetLastError());
+
+    hr = BitmapImpl_Create(width, height, stride, 0, buffer, format, WICBitmapCacheOnLoad, bitmap);
+    if (FAILED(hr)) UnmapViewOfFile(buffer);
+    return hr;
+}
+
+HRESULT WINAPI WICCreateBitmapFromSection(UINT width, UINT height,
+        REFWICPixelFormatGUID format, HANDLE section,
+        UINT stride, UINT offset, IWICBitmap **bitmap)
+{
+    TRACE("%u,%u,%s,%p,%u,%u,%p\n", width, height, debugstr_guid(format),
+        section, stride, offset, bitmap);
+
+    return WICCreateBitmapFromSectionEx(width, height, format, section,
+        stride, offset, WICSectionAccessLevelRead, bitmap);
 }

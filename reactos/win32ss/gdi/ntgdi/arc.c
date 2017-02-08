@@ -211,6 +211,7 @@ IntGdiArcInternal(
                YStartArc,
                  XEndArc,
                  YEndArc,
+                       0,
                  arctype);
   }
 
@@ -238,9 +239,9 @@ IntGdiArcInternal(
   if (arctype == GdiTypeArcTo)
   {
      if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
-       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL, TRUE);
+       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
      else
-       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL, TRUE);
+       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
   }
   return Ret;
 }
@@ -285,7 +286,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     IntGdiMoveToEx(pDC, x2, y2, NULL, TRUE);
+     IntGdiMoveToEx(pDC, x2, y2, NULL);
   }
   return result;
 }
@@ -374,6 +375,12 @@ NtGdiArcInternal(
     DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
+  }
+  if (arctype > GdiTypePie)
+  {
+    DC_UnlockDc(dc);
+    EngSetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
   }
 
   DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);

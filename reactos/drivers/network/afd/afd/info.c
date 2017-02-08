@@ -198,6 +198,7 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PMDL Mdl = NULL;
 
     UNREFERENCED_PARAMETER(DeviceObject);
+    ASSERT(Irp->MdlAddress == NULL);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
@@ -226,6 +227,11 @@ AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                               TDI_QUERY_ADDRESS_INFO,
                                               Mdl );
         }
+
+        /* Check if MmProbeAndLockPages or TdiQueryInformation failed and
+         * clean up Mdl */
+        if (!NT_SUCCESS(Status) && Irp->MdlAddress != Mdl)
+            IoFreeMdl(Mdl);
     } else
         Status = STATUS_INSUFFICIENT_RESOURCES;
 

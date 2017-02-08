@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "תכניות צריכת חשמל"
 FONT 8, "MS Shell Dlg"
@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "טקסט"
     IDS_CONFIG1 "Settings for %1 power scheme"
     IDS_CONFIG2 "אפשרויות מתקדמות ל %1"
-    IDS_SIZEBYTS "%i בית"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "אל תעשה דבר"
     IDS_PowerActionNone1 "שום פעולה"
     IDS_PowerActionUnknown "לא ידוע"

@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Regim de consum"
 FONT 8, "MS Shell Dlg"
@@ -42,7 +42,7 @@ CAPTION "Alarme"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Alarmă baterie decongestionată", -1, 6, 7, 239, 104
-    CONTROL "Alarmează „baterie &decongestionată” când se ajunge la:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    CONTROL "Alarmează „baterie &decongestionată” când va ajunge la:", IDC_ALARM1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
     LTEXT "nespecificat", IDC_ALARMVALUE1, 215, 20, 20, 10
     LTEXT "0%", -1, 28, 43, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR1, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
@@ -55,7 +55,7 @@ BEGIN
     LTEXT "Exec. program:", -1, 95, 95, 55, 10
     LTEXT "Nespecificat", IDC_ALARMPROG1, 154, 95, 84, 10
     GROUPBOX "Alarmă baterie descărcată", -1, 6, 120, 239, 106
-    CONTROL "Alarmează „baterie d&escărcată” când se ajunge la:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    CONTROL "Alarmează „baterie d&escărcată” când va ajunge la:", IDC_ALARM2, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
     LTEXT "nespecificat", IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT "0%", -1, 28, 154, 15, 10
     CONTROL "Slider1", IDC_ALARMBAR2, "msctls_trackbar32", TBS_HORZ | TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
@@ -115,8 +115,6 @@ BEGIN
     IDS_TEXT "text"
     IDS_CONFIG1 "Configurare regim %1"
     IDS_CONFIG2 "Opțiuni avansate pentru %1"
-    IDS_SIZEBYTS "%i octeți"
-    IDS_SIZEMB "%i Mo"
     IDS_NOACTION "nespecificată"
     IDS_PowerActionNone1 "acțiune nespecificată"
     IDS_PowerActionUnknown "acțiune necunoscută"

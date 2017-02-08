@@ -65,6 +65,24 @@ interface ITargetFrame: IUnknown
 
     HRESULT SetFrameSrc([in] LPCWSTR pszFrameSrc);
     HRESULT GetFrameSrc([out] LPWSTR *ppszFrameSrc);
+    HRESULT GetFramesContainer([out] IOleContainer **ppContainer);
+    HRESULT SetFrameOptions([in] DWORD dwFlags);
+    HRESULT GetFrameOptions([out] DWORD *pdwFlags);
+
+    HRESULT SetFrameMargins(
+            [in] DWORD dwWidth,
+            [in] DWORD dwHeight);
+
+    HRESULT GetFrameMargins(
+            [out] DWORD *pdwWidth,
+            [out] DWORD *pdwHeight);
+
+    HRESULT RemoteNavigate(
+            [in] ULONG cLength,
+            [in, size_is(cLength)] ULONG *pulData);
+
+    HRESULT OnChildFrameActivate([in] IUnknown *pUnkChildFrame);
+    HRESULT OnChildFrameDeactivate([in] IUnknown *pUnkChildFrame);
 }
 
 /*****************************************************************************

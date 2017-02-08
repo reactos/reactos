@@ -127,7 +127,7 @@ INT cmd_move (LPTSTR param)
             "\n"
             "  [drive:][path]filename1  Specifies the location and name of the file\n"
             "                           or files you want to move.\n"
-            "  /N                       Nothing. Don everthing but move files or direcories.\n"
+            "  /N                       Nothing. Don everthing but move files or directories.\n"
             "  /Y\n"
             "  /-Y\n"
             "..."));

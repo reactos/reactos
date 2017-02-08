@@ -501,7 +501,7 @@ PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
         }
     }
 
-    /* Return the resouce list */
+    /* Return the resource list */
     *Buffer = ResourceList;
     return STATUS_SUCCESS;
 }
@@ -610,7 +610,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
         /* Check if the requirements are actually the zero list */
         if (*RequirementsList == PciZeroIoResourceRequirements)
         {
-            /* A simple NULL will sufficie for the PnP Manager */
+            /* A simple NULL will suffice for the PnP Manager */
             *RequirementsList = NULL;
             DPRINT1("Returning NULL requirements list\n");
         }
@@ -748,7 +748,7 @@ PciConfigureIdeController(IN PPCI_PDO_EXTENSION PdoExtension,
             PciData->ProgIf = ProgIf;
             PdoExtension->ProgIf = NewProgIf;
 
-            /* Clear the first four BARs to reset current BAR setttings */
+            /* Clear the first four BARs to reset current BAR settings */
             PciData->u.type0.BaseAddresses[0] = 0;
             PciData->u.type0.BaseAddresses[1] = 0;
             PciData->u.type0.BaseAddresses[2] = 0;
@@ -996,7 +996,7 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
             /*
              * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
              * i820, i840, i845 Chipsets) that have subtractive decode enabled,
-             * and whose hack flags do not specifiy that this support is broken.
+             * and whose hack flags do not specify that this support is broken.
              */
             if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) &&
                 (PdoExtension->Dependent.type1.SubtractiveDecode) &&

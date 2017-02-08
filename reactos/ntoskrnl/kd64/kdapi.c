@@ -113,7 +113,7 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
     /*
      * We may have modified executable code, flush the instruction cache
      */
-     KeSweepICache((PVOID)Address, TotalSize);
+     KeSweepICache((PVOID)(ULONG_PTR)Address, TotalSize);
 
     /*
      * Return the size we managed to copy
@@ -2013,7 +2013,7 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
         if (KdPreviouslyEnabled)
         {
             /* Reinitialize the Debugger */
-            KdInitSystem(0, NULL) ;
+            KdInitSystem(0, NULL);
             KdpRestoreAllBreakpoints();
         }
     }

@@ -183,7 +183,7 @@ TV1_Initialize(PSERVICEPROPSHEET pDlgInfo,
 {
     BOOL bRet = FALSE;
 
-    /* Accociate the imagelist with TV1 */
+    /* Associate the imagelist with TV1 */
     pDlgInfo->hDependsTreeView1 = GetDlgItem(pDlgInfo->hDependsWnd, IDC_DEPEND_TREE1);
     if (!pDlgInfo->hDependsTreeView1)
     {

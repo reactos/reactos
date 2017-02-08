@@ -350,8 +350,11 @@ xsltExtModuleRegisterDynamic(const xmlChar * URI)
         i++;
     }
 
-    if (*(i - 1) == '_')
+    /* Strip underscores from end of string. */
+    while (i > ext_name && *(i - 1) == '_') {
+        i--;
         *i = '\0';
+    }
 
     /* determine module directory */
     ext_directory = (xmlChar *) getenv("LIBXSLT_PLUGINS_PATH");
@@ -1605,7 +1608,7 @@ xsltRegisterExtModuleElement(const xmlChar * name, const xmlChar * URI,
                              xsltPreComputeFunction precomp,
                              xsltTransformFunction transform)
 {
-    int ret;
+    int ret = 0;
 
     xsltExtElementPtr ext;
 
@@ -1631,7 +1634,7 @@ xsltRegisterExtModuleElement(const xmlChar * name, const xmlChar * URI,
 done:
     xmlMutexUnlock(xsltExtMutex);
 
-    return (0);
+    return (ret);
 }
 
 /**

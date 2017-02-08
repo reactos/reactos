@@ -9,9 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserPainting);
 
-#define RDW_CLIPCHILDREN  4096
-#define RDW_NOUPDATEDIRTY 32768
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**
@@ -369,6 +366,26 @@ IntSendNCPaint(PWND pWnd, HRGN hRgn)
 VOID FASTCALL
 IntSendChildNCPaint(PWND pWnd)
 {
+   PWND Child;
+   HWND *List, *phWnd;
+
+   List = IntWinListChildren(UserGetDesktopWindow());
+   if ( List )
+   {
+      for (phWnd = List; *phWnd; ++phWnd)
+      {
+          Child = ValidateHwndNoErr(*phWnd);
+          if ( Child && Child->hrgnUpdate == NULL && Child->state & WNDS_SENDNCPAINT)
+          {
+             USER_REFERENCE_ENTRY Ref;
+             UserRefObjectCo(Child, &Ref);
+             IntSendNCPaint(Child, HRGN_WINDOW);
+             UserDerefObjectCo(Child);
+          }
+      }
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+   }
+/* FIXME : Use snap shot mode until window death is fixed while surfing menus! Fix CORE-12085 and CORE-12071.
    pWnd = pWnd->spwndChild;
    while(pWnd)
    {
@@ -380,7 +397,7 @@ IntSendChildNCPaint(PWND pWnd)
          UserDerefObjectCo(pWnd);
       }
       pWnd = pWnd->spwndNext;
-   }
+   }*/
 }
 
 /*
@@ -1158,6 +1175,16 @@ IntFindWindowToRepaint(PWND Window, PTHREADINFO Thread)
       }
    }
    return Window;
+}
+
+//
+// Internal painting of windows.
+//
+VOID FASTCALL
+IntPaintWindow( PWND Window )
+{
+   // Handle normal painting.
+   co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
 }
 
 BOOL FASTCALL
@@ -1998,7 +2025,7 @@ UserDrawCaptionText(
    TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
-   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &nclm, 0))
+   if (!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, nclm.cbSize, &nclm, 0))
    {
       ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;

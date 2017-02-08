@@ -19,12 +19,14 @@
 
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 WCHAR swShell32Name[MAX_PATH];
 
 DWORD NumIconOverlayHandlers = 0;
 IShellIconOverlayIdentifier ** Handlers = NULL;
 
-static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
+static HRESULT getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
                                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     static const WCHAR shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
@@ -39,7 +41,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     {
         WCHAR wszFolderPath[MAX_PATH];
 
-        if (!SHGetPathFromIDListW(pidl, wszFolderPath))
+        if (!ILGetDisplayNameExW(psf, pidl, wszFolderPath, 0))
             return FALSE;
 
         PathAppendW(wszFolderPath, wszDesktopIni);
@@ -87,7 +89,7 @@ static HRESULT getIconLocationForFolder(LPCITEMIDLIST pidl, UINT uFlags,
     return S_OK;
 }
 
-void InitIconOverlays(void)
+static void InitIconOverlays(void)
 {
     HKEY hKey;
     DWORD dwIndex, dwResult, dwSize;
@@ -161,6 +163,8 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
     if(!SHGetPathFromIDListW(pidl, szPath))
         return FALSE;
 
+    if (!Handlers)
+        InitIconOverlays();
 
     HighestPriority = 101;
     IconIndex = NumIconOverlayHandlers;
@@ -192,137 +196,23 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
         return FALSE;
 }
 
-/**************************************************************************
-*  IExtractIconW_Constructor
-*/
-IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
+HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
-    CComPtr<IDefaultExtractIconInit>    initIcon;
-    CComPtr<IExtractIconW> extractIcon;
-    GUID const * riid;
-    int icon_idx;
-    UINT flags;
-    CHAR sTemp[MAX_PATH];
-    WCHAR wTemp[MAX_PATH];
-    LPITEMIDLIST pSimplePidl = ILFindLastID(pidl);
+    CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr;
+    int icon_idx = 0;
+    UINT flags = 0; // FIXME: Use it!
+    CHAR sTemp[MAX_PATH] = "";
+    WCHAR wTemp[MAX_PATH] = L"";
 
     hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
     if (FAILED(hr))
-        return NULL;
+        return hr;
 
-    hr = initIcon->QueryInterface(IID_PPV_ARG(IExtractIconW,&extractIcon));
-    if (FAILED(hr))
-        return NULL;
-
-    if (_ILIsDesktop(pSimplePidl))
+    if (_ILIsFolder (pidl))
     {
-        initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DESKTOP);
-    }
-    else if ((riid = _ILGetGUIDPointer(pSimplePidl)))
-    {
-        /* my computer and other shell extensions */
-        static const WCHAR fmt[] = { 'C', 'L', 'S', 'I', 'D', '\\',
-                                     '{', '%', '0', '8', 'l', 'x', '-', '%', '0', '4', 'x', '-', '%', '0', '4', 'x', '-',
-                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '-', '%', '0', '2', 'x', '%', '0', '2', 'x',
-                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '}', 0
-                                   };
-        WCHAR xriid[50];
-
-        swprintf(xriid, fmt,
-                 riid->Data1, riid->Data2, riid->Data3,
-                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-        const WCHAR* iconname = NULL;
-        if (_ILIsBitBucket(pSimplePidl))
-        {
-            static const WCHAR szFull[] = {'F','u','l','l',0};
-            static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
-            CComPtr<IEnumIDList> EnumIDList;
-            CoInitialize(NULL);
-
-            CComPtr<IShellFolder2> psfRecycleBin;
-            CComPtr<IShellFolder> psfDesktop;
-            hr = SHGetDesktopFolder(&psfDesktop);
-
-            if (SUCCEEDED(hr))
-                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_PPV_ARG(IShellFolder2, &psfRecycleBin));
-            if (SUCCEEDED(hr))
-                hr = psfRecycleBin->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &EnumIDList);
-
-            ULONG itemcount;
-            LPITEMIDLIST pidl = NULL;
-            if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
-            {
-                CoTaskMemFree(pidl);
-                iconname = szFull;
-            } else {
-                iconname = szEmpty;
-            }
-        }
-
-        if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
-        {
-            initIcon->SetNormalIcon(wTemp, icon_idx);
-        }
-        else
-        {
-            if (IsEqualGUID(*riid, CLSID_MyComputer))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-            else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-            else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-            else
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
-        }
-    }
-
-    else if (_ILIsDrive (pSimplePidl))
-    {
-        static const WCHAR drive[] = { 'D', 'r', 'i', 'v', 'e', 0 };
-        int icon_idx = -1;
-
-        if (_ILGetDrive(pSimplePidl, sTemp, MAX_PATH))
-        {
-            switch(GetDriveTypeA(sTemp))
-            {
-                case DRIVE_REMOVABLE:
-                    icon_idx = IDI_SHELL_3_14_FLOPPY;
-                    break;
-                case DRIVE_CDROM:
-                    icon_idx = IDI_SHELL_CDROM;
-                    break;
-                case DRIVE_REMOTE:
-                    icon_idx = IDI_SHELL_NETDRIVE;
-                    break;
-                case DRIVE_RAMDISK:
-                    icon_idx = IDI_SHELL_RAMDISK;
-                    break;
-                case DRIVE_NO_ROOT_DIR:
-                    icon_idx = IDI_SHELL_CDROM;
-                    break;
-            }
-        }
-
-        if (icon_idx != -1)
-        {
-            initIcon->SetNormalIcon(swShell32Name, -icon_idx);
-        }
-        else
-        {
-            if (HCR_GetIconW(drive, wTemp, NULL, MAX_PATH, &icon_idx))
-                initIcon->SetNormalIcon(wTemp, icon_idx);
-            else
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DRIVE);
-        }
-    }
-
-    else if (_ILIsFolder (pSimplePidl))
-    {
-        if (SUCCEEDED(getIconLocationForFolder(
-                          pidl, 0, wTemp, MAX_PATH,
+        if (SUCCEEDED(getIconLocationForFolder(psf, 
+                          pidl, 0, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
@@ -332,22 +222,22 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             //        the following line removed.
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
-        if (SUCCEEDED(getIconLocationForFolder(
-                          pidl, GIL_DEFAULTICON, wTemp, MAX_PATH,
+        if (SUCCEEDED(getIconLocationForFolder(psf, 
+                          pidl, GIL_DEFAULTICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
-        // if (SUCCEEDED(getIconLocationForFolder(
-        //                   pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
+        // if (SUCCEEDED(getIconLocationForFolder(psf, 
+        //                   pidl, GIL_FORSHORTCUT, wTemp, _countof(wTemp),
         //                   &icon_idx,
         //                   &flags)))
         // {
         //     initIcon->SetShortcutIcon(wTemp, icon_idx);
         // }
-        if (SUCCEEDED(getIconLocationForFolder(
-                          pidl, GIL_OPENICON, wTemp, MAX_PATH,
+        if (SUCCEEDED(getIconLocationForFolder(psf, 
+                          pidl, GIL_OPENICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
@@ -358,24 +248,19 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
     {
         BOOL found = FALSE;
 
-        if (_ILIsCPanelStruct(pSimplePidl))
+        if (_ILGetExtension(pidl, sTemp, _countof(sTemp)))
         {
-            if (SUCCEEDED(CPanel_GetIconLocationW(pSimplePidl, wTemp, MAX_PATH, &icon_idx)))
-                found = TRUE;
-        }
-        else if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
-        {
-            if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
-                    && HCR_GetIconA(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
+            if (HCR_MapTypeToValueA(sTemp, sTemp, _countof(sTemp), TRUE)
+                    && HCR_GetIconA(sTemp, sTemp, NULL, _countof(sTemp), &icon_idx))
             {
                 if (!lstrcmpA("%1", sTemp)) /* icon is in the file */
                 {
-                    SHGetPathFromIDListW(pidl, wTemp);
+                    ILGetDisplayNameExW(psf, pidl, wTemp, 0);
                     icon_idx = 0;
                 }
                 else
                 {
-                    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, wTemp, MAX_PATH);
+                    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, wTemp, _countof(wTemp));
                 }
 
                 found = TRUE;
@@ -383,25 +268,30 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             else if (!lstrcmpiA(sTemp, "lnkfile"))
             {
                 /* extract icon from shell shortcut */
-                CComPtr<IShellFolder>        dsf;
-                CComPtr<IShellLinkW>        psl;
+                CComPtr<IShellLinkW> psl;
+                CComPtr<IExtractIconW> pei;
 
-                if (SUCCEEDED(SHGetDesktopFolder(&dsf)))
+                HRESULT hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
+                if (SUCCEEDED(hr))
                 {
-                    HRESULT hr = dsf->GetUIObjectOf(NULL, 1, (LPCITEMIDLIST*) &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
-
-                    if (SUCCEEDED(hr))
+                    hr = psl->GetIconLocation(wTemp, _countof(wTemp), &icon_idx);
+                    if (FAILED(hr) || !*wTemp)
                     {
-                        hr = psl->GetIconLocation(wTemp, MAX_PATH, &icon_idx);
-
-                        if (SUCCEEDED(hr) && *sTemp)
-                            found = TRUE;
-
+                        /* The icon was not found directly, try to retrieve it from the shell link target */
+                        hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei));
+                        if (FAILED(hr) || !pei)
+                            TRACE("No IExtractIconW interface!\n");
+                        else
+                            hr = pei->GetIconLocation(GIL_FORSHELL, wTemp, _countof(wTemp), &icon_idx, &flags);
                     }
+
+                    if (SUCCEEDED(hr) && *wTemp)
+                        found = TRUE;
                 }
             }
         }
 
+        /* FIXME: We should normally use the correct icon format according to 'flags' */
         if (!found)
             /* default icon */
             initIcon->SetNormalIcon(swShell32Name, 0);
@@ -409,24 +299,5 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
             initIcon->SetNormalIcon(wTemp, icon_idx);
     }
 
-    return extractIcon.Detach();
-}
-
-/**************************************************************************
-*  IExtractIconA_Constructor
-*/
-IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
-{
-    CComPtr<IExtractIconW> extractIconW;
-    CComPtr<IExtractIconA> extractIconA;
-    HRESULT hr;
-
-    extractIconW = IExtractIconW_Constructor(pidl);
-    if (!extractIconW)
-        return NULL;
-
-    hr = extractIconW->QueryInterface(IID_PPV_ARG(IExtractIconA, &extractIconA));
-    if (FAILED(hr))
-        return NULL;
-    return extractIconA.Detach();
+    return initIcon->QueryInterface(iid, ppvOut);
 }

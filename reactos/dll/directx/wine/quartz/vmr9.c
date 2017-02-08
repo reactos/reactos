@@ -227,8 +227,8 @@ static DWORD VMR9_SendSampleData(struct quartz_vmr *This, VMR9PresentationInfo *
     width = bmiHeader->biWidth;
     height = bmiHeader->biHeight;
 
-    TRACE("Src Rect: %d %d %d %d\n", This->source_rect.left, This->source_rect.top, This->source_rect.right, This->source_rect.bottom);
-    TRACE("Dst Rect: %d %d %d %d\n", This->target_rect.left, This->target_rect.top, This->target_rect.right, This->target_rect.bottom);
+    TRACE("Src Rect: %s\n", wine_dbgstr_rect(&This->source_rect));
+    TRACE("Dst Rect: %s\n", wine_dbgstr_rect(&This->target_rect));
 
     hr = IDirect3DSurface9_LockRect(info->lpSurf, &lock, NULL, D3DLOCK_DISCARD);
     if (FAILED(hr))
@@ -237,7 +237,17 @@ static DWORD VMR9_SendSampleData(struct quartz_vmr *This, VMR9PresentationInfo *
         return hr;
     }
 
-    if (lock.Pitch != width * bmiHeader->biBitCount / 8)
+    if (height > 0) {
+        /* Bottom up image needs inverting */
+        lock.pBits = (char *)lock.pBits + (height * lock.Pitch);
+        while (height--)
+        {
+            memcpy(lock.pBits, data, width * bmiHeader->biBitCount / 8);
+            data = data + width * bmiHeader->biBitCount / 8;
+            lock.pBits = (char *)lock.pBits - lock.Pitch;
+        }
+    }
+    else if (lock.Pitch != width * bmiHeader->biBitCount / 8)
     {
         WARN("Slow path! %u/%u\n", lock.Pitch, width * bmiHeader->biBitCount/8);
 
@@ -335,9 +345,9 @@ static HRESULT WINAPI VMR9_CheckMediaType(BaseRenderer *iface, const AM_MEDIA_TY
 
         This->bmiheader = format->bmiHeader;
         TRACE("Resolution: %dx%d\n", format->bmiHeader.biWidth, format->bmiHeader.biHeight);
-        This->source_rect.right = This->VideoWidth = format->bmiHeader.biWidth;
-        This->source_rect.bottom = This->VideoHeight = format->bmiHeader.biHeight;
-        This->source_rect.top = This->source_rect.left = 0;
+        This->VideoWidth = format->bmiHeader.biWidth;
+        This->VideoHeight = format->bmiHeader.biHeight;
+        SetRect(&This->source_rect, 0, 0, This->VideoWidth, This->VideoHeight);
     }
     else if (IsEqualIID(&pmt->formattype, &FORMAT_VideoInfo2))
     {
@@ -346,9 +356,9 @@ static HRESULT WINAPI VMR9_CheckMediaType(BaseRenderer *iface, const AM_MEDIA_TY
         This->bmiheader = format->bmiHeader;
 
         TRACE("Resolution: %dx%d\n", format->bmiHeader.biWidth, format->bmiHeader.biHeight);
-        This->source_rect.right = This->VideoWidth = format->bmiHeader.biWidth;
-        This->source_rect.bottom = This->VideoHeight = format->bmiHeader.biHeight;
-        This->source_rect.top = This->source_rect.left = 0;
+        This->VideoWidth = format->bmiHeader.biWidth;
+        This->VideoHeight = format->bmiHeader.biHeight;
+        SetRect(&This->source_rect, 0, 0, This->VideoWidth, This->VideoHeight);
     }
     else
     {
@@ -408,9 +418,7 @@ static HRESULT VMR9_maybe_init(struct quartz_vmr *This, BOOL force)
     hr = IVMRSurfaceAllocatorEx9_InitializeDevice(This->allocator, This->cookie, &info, &buffers);
     if (SUCCEEDED(hr))
     {
-        This->source_rect.left = This->source_rect.top = 0;
-        This->source_rect.right = This->bmiheader.biWidth;
-        This->source_rect.bottom = This->bmiheader.biHeight;
+        SetRect(&This->source_rect, 0, 0, This->bmiheader.biWidth, This->bmiheader.biHeight);
 
         This->num_surfaces = buffers;
     }
@@ -526,9 +534,7 @@ static RECT WINAPI VMR9_GetDefaultRect(BaseWindow *This)
     struct quartz_vmr* pVMR9 = impl_from_BaseWindow(This);
     static RECT defRect;
 
-    defRect.left = defRect.top = 0;
-    defRect.right = pVMR9->VideoWidth;
-    defRect.bottom = pVMR9->VideoHeight;
+    SetRect(&defRect, 0, 0, pVMR9->VideoWidth, pVMR9->VideoHeight);
 
     return defRect;
 }
@@ -670,10 +676,7 @@ static HRESULT WINAPI VMR9_SetDefaultSourceRect(BaseControlVideo* This)
 {
     struct quartz_vmr* pVMR9 = impl_from_BaseControlVideo(This);
 
-    pVMR9->source_rect.left = 0;
-    pVMR9->source_rect.top = 0;
-    pVMR9->source_rect.right = pVMR9->VideoWidth;
-    pVMR9->source_rect.bottom = pVMR9->VideoHeight;
+    SetRect(&pVMR9->source_rect, 0, 0, pVMR9->VideoWidth, pVMR9->VideoHeight);
 
     return S_OK;
 }
@@ -686,10 +689,7 @@ static HRESULT WINAPI VMR9_SetDefaultTargetRect(BaseControlVideo* This)
     if (!GetClientRect(pVMR9->baseControlWindow.baseWindow.hWnd, &rect))
         return E_FAIL;
 
-    pVMR9->target_rect.left = 0;
-    pVMR9->target_rect.top = 0;
-    pVMR9->target_rect.right = rect.right;
-    pVMR9->target_rect.bottom = rect.bottom;
+    SetRect(&pVMR9->target_rect, 0, 0, rect.right, rect.bottom);
 
     return S_OK;
 }
@@ -928,7 +928,7 @@ static HRESULT WINAPI Videowindow_QueryInterface(IVideoWindow *iface, REFIID rii
 {
     struct quartz_vmr *This = impl_from_IVideoWindow(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return VMR9_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -1006,7 +1006,7 @@ static HRESULT WINAPI Basicvideo_QueryInterface(IBasicVideo *iface, REFIID riid,
 {
     struct quartz_vmr *This = impl_from_IBasicVideo(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return VMR9_QueryInterface(&This->renderer.filter.IBaseFilter_iface, riid, ppvObj);
 }
@@ -1238,7 +1238,7 @@ static HRESULT WINAPI VMR7FilterConfig_GetRenderingMode(IVMRFilterConfig *iface,
 {
     struct quartz_vmr *This = impl_from_IVMRFilterConfig(iface);
 
-    TRACE("(%p/%p)->(%p) stub\n", iface, This, mode);
+    TRACE("(%p/%p)->(%p)\n", iface, This, mode);
     if (!mode) return E_POINTER;
 
     if (This->mode)
@@ -1300,7 +1300,7 @@ static BOOL CALLBACK get_available_monitors_proc(HMONITOR hmon, HDC hdc, LPRECT 
             else
                 info->guid.pGUID = NULL;
 
-            CopyRect(&info->rcMonitor, &mi.rcMonitor);
+            info->rcMonitor     = mi.rcMonitor;
             info->hMon          = hmon;
             info->dwFlags       = mi.dwFlags;
 
@@ -1317,7 +1317,7 @@ static BOOL CALLBACK get_available_monitors_proc(HMONITOR hmon, HDC hdc, LPRECT 
             memset(info, 0, sizeof(*info));
 
             info->uDevID        = 0; /* FIXME */
-            CopyRect(&info->rcMonitor, &mi.rcMonitor);
+            info->rcMonitor     = mi.rcMonitor;
             info->hMon          = hmon;
             info->dwFlags       = mi.dwFlags;
 
@@ -1661,7 +1661,7 @@ static HRESULT WINAPI VMR9FilterConfig_GetRenderingMode(IVMRFilterConfig9 *iface
 {
     struct quartz_vmr *This = impl_from_IVMRFilterConfig9(iface);
 
-    TRACE("(%p/%p)->(%p) stub\n", iface, This, mode);
+    TRACE("(%p/%p)->(%p)\n", iface, This, mode);
     if (!mode)
         return E_POINTER;
 
@@ -1761,8 +1761,7 @@ static HRESULT WINAPI VMR7WindowlessControl_SetVideoPosition(IVMRWindowlessContr
         This->target_rect = *dest;
         if (This->baseControlWindow.baseWindow.hWnd)
         {
-            FIXME("Output rectangle: starting at %dx%d, up to point %dx%d\n",
-                  dest->left, dest->top, dest->right, dest->bottom);
+            FIXME("Output rectangle: %s\n", wine_dbgstr_rect(dest));
             SetWindowPos(This->baseControlWindow.baseWindow.hWnd, NULL,
                          dest->left, dest->top, dest->right - dest->left, dest->bottom-dest->top,
                          SWP_NOACTIVATE|SWP_NOCOPYBITS|SWP_NOOWNERZORDER|SWP_NOREDRAW);
@@ -1966,7 +1965,7 @@ static HRESULT WINAPI VMR9WindowlessControl_SetVideoPosition(IVMRWindowlessContr
         This->target_rect = *dest;
         if (This->baseControlWindow.baseWindow.hWnd)
         {
-            FIXME("Output rectangle: starting at %dx%d, up to point %dx%d\n", dest->left, dest->top, dest->right, dest->bottom);
+            FIXME("Output rectangle: %s\n", wine_dbgstr_rect(dest));
             SetWindowPos(This->baseControlWindow.baseWindow.hWnd, NULL, dest->left, dest->top, dest->right - dest->left,
                          dest->bottom-dest->top, SWP_NOACTIVATE|SWP_NOCOPYBITS|SWP_NOOWNERZORDER|SWP_NOREDRAW);
         }
@@ -2584,14 +2583,9 @@ static HRESULT VMR9_ImagePresenter_PresentOffscreenSurface(VMR9DefaultAllocatorP
         return hr;
     }
 
-    target_rect = This->pVMR9->target_rect;
-    target_rect.right -= target_rect.left;
-    target_rect.bottom -= target_rect.top;
-    target_rect.left = target_rect.top = 0;
-
-    /* Flip */
-    target_rect.top = target_rect.bottom;
-    target_rect.bottom = 0;
+    /* Move rect to origin and flip it */
+    SetRect(&target_rect, 0, This->pVMR9->target_rect.bottom - This->pVMR9->target_rect.top,
+            This->pVMR9->target_rect.right - This->pVMR9->target_rect.left, 0);
 
     hr = IDirect3DDevice9_StretchRect(This->d3d9_dev, surface, &This->pVMR9->source_rect, target, &target_rect, D3DTEXF_LINEAR);
     if (FAILED(hr))
@@ -2610,7 +2604,7 @@ static HRESULT WINAPI VMR9_ImagePresenter_PresentImage(IVMRImagePresenter9 *ifac
 
     TRACE("(%p/%p/%p)->(...) stub\n", iface, This, This->pVMR9);
     GetWindowRect(This->pVMR9->baseControlWindow.baseWindow.hWnd, &output);
-    TRACE("Output rectangle: starting at %dx%d, up to point %dx%d\n", output.left, output.top, output.right, output.bottom);
+    TRACE("Output rectangle: %s\n", wine_dbgstr_rect(&output));
 
     /* This might happen if we don't have active focus (eg on a different virtual desktop) */
     if (!This->d3d9_dev)

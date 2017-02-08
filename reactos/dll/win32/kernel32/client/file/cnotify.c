@@ -309,7 +309,7 @@ ReadDirectoryChangesW(IN HANDLE hDirectory,
         return FALSE;
     }
 
-    /* Does the caller want an APC callbac? */
+    /* Does the caller want an APC callback? */
     if (lpCompletionRoutine)
     {
         /* Don't use an event in this case */
@@ -364,7 +364,7 @@ ReadDirectoryChangesW(IN HANDLE hDirectory,
                                          (BOOLEAN)bWatchSubtree);
     if (NT_ERROR(Status))
     {
-        /* Normally we cleanup the context in the completon routine, but we failed */
+        /* Normally we cleanup the context in the completion routine, but we failed */
         if (ActivationContext) BasepFreeActivationContextActivationBlock(ActivationContext);
 
         /* Convert the error and fail */

@@ -12,7 +12,7 @@ b) environment subsystem servers, because each one should register in
 c) terminal emulators for optional subsystems, like posixw32 and os2w32,
    to ask the SM to start the optional subsystem server they need connect to;
 
-d) system and development utilites to debug/query the SM.
+d) system and development utilities to debug/query the SM.
 
 2004-02-15 ea
 

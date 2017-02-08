@@ -3,6 +3,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winreg.h>
+#include <shellapi.h>
 
 #define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
 
@@ -211,8 +212,8 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_DMS,  MODIFIER_INV,              1, rpn_dec2dms, rpn_dms2dec, NULL,     NULL      },
     { IDC_BUTTON_FE,   0,                         1, run_fe,      NULL,        NULL,     NULL      },
     { IDC_BUTTON_DAT,  0,                         1, run_dat_sta, NULL,        NULL,     NULL,     },
-    { IDC_BUTTON_MP,   MODIFIER_INV,              1, run_mp,      run_mm,      NULL,     NULL,     },
-    { IDC_BUTTON_MS,   MODIFIER_INV,              1, run_ms,      run_mw,      NULL,     NULL,     },
+    { IDC_BUTTON_MP,   MODIFIER_INV|NO_CHAIN,     1, run_mp,      run_mm,      NULL,     NULL,     },
+    { IDC_BUTTON_MS,   MODIFIER_INV|NO_CHAIN,     1, run_ms,      run_mw,      NULL,     NULL,     },
     { IDC_BUTTON_CANC, NO_CHAIN,                  0, run_canc,    NULL,        NULL,     NULL,     },
     { IDC_BUTTON_RIGHTPAR, NO_CHAIN,              1, run_rpar,    NULL,        NULL,     NULL,     },
     { IDC_BUTTON_LEFTPAR,  NO_CHAIN,              0, run_lpar,    NULL,        NULL,     NULL,     },
@@ -434,7 +435,7 @@ KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 static void update_lcd_display(HWND hwnd)
 {
     /*
-     * muliply size of calc.buffer by 2 because it may
+     * multiply size of calc.buffer by 2 because it may
      * happen that separator is used between each digit.
      * Also added little additional space for dot and '\0'.
      */
@@ -932,15 +933,18 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     return FALSE;
 }
 
-static WPARAM idm_2_idc(int idm)
+static BOOL idm_2_idc(int idm, WPARAM *pIdc)
 {
     int x;
 
     for (x=0; x<SIZEOF(upd); x++) {
         if (upd[x].idm == idm)
-            break;
+        {
+            *pIdc = (WPARAM)(upd[x].idc);
+            return TRUE;
+        }
     }
-    return (WPARAM)(upd[x].idc);
+    return FALSE;
 }
 
 static void CopyMemToClipboard(void *ptr)
@@ -1338,8 +1342,14 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             SetFocus(GetDlgItem(hWnd, IDC_BUTTON_FOCUS));
         switch (LOWORD(wp)) {
         case IDM_HELP_ABOUT:
-            DialogBox(calc.hInstance,MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hWnd, AboutDlgProc);
+        {
+            TCHAR infotitle[100];
+            TCHAR infotext[200];
+            LoadString(calc.hInstance, IDS_CALC_NAME, infotitle, SIZEOF(infotitle));
+            LoadString(calc.hInstance, IDS_AUTHOR, infotext, SIZEOF(infotext));
+            ShellAbout(hWnd, infotitle, infotext, (HICON)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
             return TRUE;
+        }
         case IDM_HELP_HELP:
 #ifndef DISABLE_HTMLHELP_SUPPORT
             HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
@@ -1401,8 +1411,15 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDM_VIEW_DWORD:
         case IDM_VIEW_WORD:
         case IDM_VIEW_BYTE:
-            SendMessage(hWnd, WM_COMMAND, idm_2_idc(LOWORD(wp)), 0);
-            return TRUE;
+        {
+            WPARAM idc;
+            if(idm_2_idc(LOWORD(wp), &idc))
+            {
+                SendMessage(hWnd, WM_COMMAND, idc, 0);
+                return TRUE;
+            }
+            return FALSE;
+        }
         case IDM_EDIT_COPY:
             handle_copy_command(hWnd);
             return TRUE;

@@ -25,12 +25,8 @@
 #include <shlobj.h>
 
 static const WCHAR about_blank[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
-#ifdef __REACTOS__
-static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','r','e','a','c','t','o','s','.','o','r','g',0};
-#else
-static const WCHAR default_home[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
-#endif
 static const WCHAR start_page[] = {'S','t','a','r','t',' ','P','a','g','e',0};
+static const WCHAR default_page[] = {'D','e','f','a','u','l','t','_','P','a','g','e','_','U','R','L',0};
 static const WCHAR reg_ie_main[] = {'S','o','f','t','w','a','r','e','\\',
                                     'M','i','c','r','o','s','o','f','t','\\',
                                     'I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r','\\',
@@ -169,6 +165,10 @@ static DWORD parse_url_from_outside(LPCWSTR url, LPWSTR out, DWORD maxlen)
  */
 static INT_PTR general_on_command(HWND hwnd, WPARAM wparam)
 {
+    WCHAR buffer[INTERNET_MAX_URL_LENGTH];
+    DWORD len;
+    DWORD type;
+    LONG res;
 
     switch (wparam)
     {
@@ -182,7 +182,10 @@ static INT_PTR general_on_command(HWND hwnd, WPARAM wparam)
             break;
 
         case MAKEWPARAM(IDC_HOME_DEFAULT, BN_CLICKED):
-            SetDlgItemTextW(hwnd, IDC_HOME_EDIT, default_home);
+            len = sizeof(buffer);
+            type = REG_SZ;
+            res = SHRegGetUSValueW(reg_ie_main, default_page, &type, buffer, &len, FALSE, (LPBYTE) about_blank, sizeof(about_blank));
+            if (!res && (type == REG_SZ)) SetDlgItemTextW(hwnd, IDC_HOME_EDIT, buffer);
             break;
 
         case MAKEWPARAM(IDC_HISTORY_DELETE, BN_CLICKED):

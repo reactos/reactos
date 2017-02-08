@@ -37,6 +37,9 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define TYPE_DEV_EXTENT        0xCC
 #define TYPE_DEV_ITEM          0xD8
 #define TYPE_CHUNK_ITEM        0xE4
+#define TYPE_TEMP_ITEM         0xF8
+#define TYPE_DEV_STATS         0xF9
+#define TYPE_SUBVOL_UUID       0xFB
 
 #define BTRFS_ROOT_ROOT         1
 #define BTRFS_ROOT_EXTENT       2
@@ -44,6 +47,8 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define BTRFS_ROOT_DEVTREE      4
 #define BTRFS_ROOT_FSTREE       5
 #define BTRFS_ROOT_CHECKSUM     7
+#define BTRFS_ROOT_UUID         9
+#define BTRFS_ROOT_DATA_RELOC   0xFFFFFFFFFFFFFFF7
 
 #define BTRFS_COMPRESSION_NONE  0
 #define BTRFS_COMPRESSION_ZLIB  1
@@ -69,6 +74,7 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 
 #define FREE_SPACE_CACHE_ID     0xFFFFFFFFFFFFFFF5
 #define EXTENT_CSUM_ID          0xFFFFFFFFFFFFFFF6
+#define BALANCE_ITEM_ID         0xFFFFFFFFFFFFFFFC
 
 #define BTRFS_INODE_NODATASUM   0x001
 #define BTRFS_INODE_NODATACOW   0x002
@@ -98,6 +104,8 @@ static const UINT64 superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4
 #define BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA    0x0100
 #define BTRFS_INCOMPAT_FLAGS_NO_HOLES           0x0200
 
+#define BTRFS_SUPERBLOCK_FLAGS_SEEDING   0x100000000
+
 #pragma pack(push, 1)
 
 typedef struct {
@@ -110,8 +118,9 @@ typedef struct {
     UINT64 offset;
 } KEY;
 
-#define HEADER_FLAG_MIXED_BACKREF   0x100000000000000
+#define HEADER_FLAG_WRITTEN         0x000000000000001
 #define HEADER_FLAG_SHARED_BACKREF  0x000000000000002
+#define HEADER_FLAG_MIXED_BACKREF   0x100000000000000
 
 typedef struct {
     UINT8 csum[32];
@@ -155,6 +164,33 @@ typedef struct {
 } DEV_ITEM;
 
 #define SYS_CHUNK_ARRAY_SIZE 0x800
+#define BTRFS_NUM_BACKUP_ROOTS 4
+
+typedef struct {
+    UINT64 root_tree_addr;
+    UINT64 root_tree_generation;
+    UINT64 chunk_tree_addr;
+    UINT64 chunk_tree_generation;
+    UINT64 extent_tree_addr;
+    UINT64 extent_tree_generation;
+    UINT64 fs_tree_addr;
+    UINT64 fs_tree_generation;
+    UINT64 dev_root_addr;
+    UINT64 dev_root_generation;
+    UINT64 csum_root_addr;
+    UINT64 csum_root_generation;
+    UINT64 total_bytes;
+    UINT64 bytes_used;
+    UINT64 num_devices;
+    UINT64 reserved[4];
+    UINT8 root_level;
+    UINT8 chunk_root_level;
+    UINT8 extent_root_level;
+    UINT8 fs_root_level;
+    UINT8 dev_root_level;
+    UINT8 csum_root_level;
+    UINT8 reserved2[10];
+} superblock_backup;
 
 typedef struct {
     UINT8 checksum[32];
@@ -190,8 +226,8 @@ typedef struct {
     UINT64 uuid_tree_generation;
     UINT64 reserved[30];
     UINT8 sys_chunk_array[SYS_CHUNK_ARRAY_SIZE];
-//     struct btrfs_root_backup super_roots[BTRFS_NUM_BACKUP_ROOTS];
-    UINT8 reserved2[1237];
+    superblock_backup backup[BTRFS_NUM_BACKUP_ROOTS];
+    UINT8 reserved2[565];
 } superblock;
 
 #define BTRFS_TYPE_UNKNOWN   0
@@ -325,6 +361,11 @@ typedef struct {
 } EXTENT_ITEM;
 
 typedef struct {
+    KEY firstitem;
+    UINT8 level;
+} EXTENT_ITEM2;
+
+typedef struct {
     UINT32 refcount;
 } EXTENT_ITEM_V0;
 
@@ -355,7 +396,7 @@ typedef struct {
     UINT64 root;
     UINT64 gen;
     UINT64 objid;
-    UINT64 count;
+    UINT32 count;
 } EXTENT_REF_V0;
 
 typedef struct {
@@ -397,6 +438,62 @@ typedef struct {
     UINT64 length;
     BTRFS_UUID chunktree_uuid;
 } DEV_EXTENT;
+
+#define BALANCE_FLAGS_DATA          0x1
+#define BALANCE_FLAGS_SYSTEM        0x2
+#define BALANCE_FLAGS_METADATA      0x4
+
+#define BALANCE_ARGS_FLAGS_PROFILES         0x001
+#define BALANCE_ARGS_FLAGS_USAGE            0x002
+#define BALANCE_ARGS_FLAGS_DEVID            0x004
+#define BALANCE_ARGS_FLAGS_DRANGE           0x008
+#define BALANCE_ARGS_FLAGS_VRANGE           0x010
+#define BALANCE_ARGS_FLAGS_LIMIT            0x020
+#define BALANCE_ARGS_FLAGS_LIMIT_RANGE      0x040
+#define BALANCE_ARGS_FLAGS_STRIPES_RANGE    0x080
+#define BALANCE_ARGS_FLAGS_CONVERT          0x100
+#define BALANCE_ARGS_FLAGS_SOFT             0x200
+#define BALANCE_ARGS_FLAGS_USAGE_RANGE      0x400
+
+typedef struct {
+    UINT64 profiles;
+
+    union {
+            UINT64 usage;
+            struct {
+                    UINT32 usage_start;
+                    UINT32 usage_end;
+            };
+    };
+
+    UINT64 devid;
+    UINT64 drange_start;
+    UINT64 drange_end;
+    UINT64 vrange_start;
+    UINT64 vrange_end;
+    UINT64 convert;
+    UINT64 flags;
+
+    union {
+            UINT64 limit;
+            struct {
+                    UINT32 limit_start;
+                    UINT32 limit_end;
+            };
+    };
+
+    UINT32 stripes_start;
+    UINT32 stripes_end;
+    UINT8 reserved[48];
+} BALANCE_ARGS;
+
+typedef struct {
+    UINT64 flags;
+    BALANCE_ARGS data;
+    BALANCE_ARGS metadata;
+    BALANCE_ARGS system;
+    UINT8 reserved[32];
+} BALANCE_ITEM;
 
 #pragma pack(pop)
 

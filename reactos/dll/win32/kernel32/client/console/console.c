@@ -2780,7 +2780,7 @@ SetConsoleIcon(HICON hIcon)
  * \name SetConsoleInputExeNameW
  * \brief Sets the console input file name from a unicode string.
  * \param lpExeName Pointer to a unicode string with the name.
- * \return TRUE if successful, FALSE if unsuccsedful.
+ * \return TRUE if successful, FALSE if unsuccessful.
  * \remarks If lpExeName is 0 or the string length is 0 or greater than 255,
  *          the function fails and sets last error to ERROR_INVALID_PARAMETER.
  */
@@ -2820,7 +2820,7 @@ SetConsoleInputExeNameW(IN LPWSTR lpExeName)
  * \name SetConsoleInputExeNameA
  * \brief Sets the console input file name from an ansi string.
  * \param lpExeName Pointer to an ansi string with the name.
- * \return TRUE if successful, FALSE if unsuccsedful.
+ * \return TRUE if successful, FALSE if unsuccessful.
  * \remarks If lpExeName is 0 or the string length is 0 or greater than 255,
  *          the function fails and sets last error to ERROR_INVALID_PARAMETER.
  */

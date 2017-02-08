@@ -700,7 +700,7 @@ HRESULT STDMETHODCALLTYPE CBandSiteBase::UIActivateDBC(DWORD dwState)
         return E_FAIL;
 
     ShowWindow(fRebarWindow, (dwState & DBC_SHOW) ? SW_SHOW : SW_HIDE);
-    FIXME("IDeskBarClient::UIActivateDBC() Properly notify bands?\n");
+    //FIXME: Properly notify bands?
     return S_OK;
 }
 

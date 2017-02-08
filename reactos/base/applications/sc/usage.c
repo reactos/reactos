@@ -33,22 +33,22 @@ VOID MainUsage(VOID)
     _T("\t  interrogate    : Sends a INTERROGATE control request to a service.\n")
     _T("\t  continue       : Sends a CONTINUE control request to a service.\n")
     _T("\t  stop           : Sends a STOP request to a service.\n")
-//    "\t  config         : Changes the configuration of a service (persistant).\n"
-//    "\t  description    : Changes the description of a service.\n"
-//    "\t  failure        : Changes the actions taken by a service upon failure.\n"
-//    "\t  qc             : Queries the configuration information for a service.\n"
-//    "\t  qdescription   : Queries the description for a service.\n"
-//    "\t  qfailure       : Queries the actions taken by a service upon failure.\n"
+    _T("\t  config         : Changes the configuration of a service (persistent).\n")
+    _T("\t  description    : Changes the description of a service.\n")
+    _T("\t  failure        : Changes the actions taken by a service upon failure.\n")
+    _T("\t  qc             : Queries the configuration information for a service.\n")
+    _T("\t  qdescription   : Queries the description for a service.\n")
+    _T("\t  qfailure       : Queries the actions taken by a service upon failure.\n")
     _T("\t  delete         : Deletes a service (from the registry).\n")
-    _T("\t  create         : Creates a service. (adds it to the registry).\n")
-    _T("\t  control        : Sends a control to a service.\n"));
-//    "\t  sdshow         : Displays a service's security descriptor.\n")
-//    "\t  sdset          : Sets a service's security descriptor.\n")
-//    "\t  GetDisplayName : Gets the DisplayName for a service.\n")
-//    "\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
-//    "\t  EnumDepend     : Enumerates Service Dependencies.\n")
+    _T("\t  create         : Creates a service (adds it to the registry).\n")
+    _T("\t  control        : Sends a control to a service.\n")
+    _T("\t  sdshow         : Displays a service's security descriptor.\n")
+    _T("\t  sdset          : Sets a service's security descriptor.\n")
+    _T("\t  GetDisplayName : Gets the DisplayName for a service.\n")
+    _T("\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
+    _T("\t  EnumDepend     : Enumerates Service Dependencies.\n"));
 //    "\n")
-//    "\tService Name Independant Commands:\n")
+//    "\tService Name Independent Commands:\n")
 //    "\t  boot           : (ok | bad) Indicates whether the last boot should\n")
 //    "\t                   be saved as the last-known-good boot configuration\n")
 //    "\t  Lock           : Locks the SCM Database\n")
@@ -134,21 +134,6 @@ VOID ContinueUsage(VOID)
                 _T("        sc <server> continue [service name]\n"));
 }
 
-
-VOID ConfigUsage(VOID)
-{
-    _tprintf(_T("not yet implemented\n"));
-}
-
-
-VOID DescriptionUsage(VOID)
-{
-    _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sets the description string for a service.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> description [service name]\n"));
-}
-
 VOID DeleteUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
@@ -186,7 +171,119 @@ VOID CreateUsage(VOID)
 VOID ControlUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sends a CONTROL control request to a service.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> control [service name] <value>\n"));
+             _T("        Sends a CONTROL control request to a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> control [service name] <value>\n"));
+}
+
+VOID SdShowUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Displays a service's security descriptor in SDDL format.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> sdshow <service name>\n"));
+}
+
+VOID SdSetUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Sets a service's security descriptor.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> sdset <service name> <SD in SDDL format>\n"));
+}
+
+VOID QueryConfigUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Queries the configuration information for a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qc [service name] <bufferSize>\n"));
+}
+
+VOID QueryDescriptionUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Retrieves the description string of a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qdescription [service name] <bufferSize>\n"));
+}
+
+VOID QueryFailureUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Retrieves the actions performed on service failure.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qfailure [service name] <bufferSize>\n"));
+}
+
+VOID SetDescriptionUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Sets the description string of a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> description [service name] [description]\n"));
+}
+
+VOID SetConfigUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Modifies a service entry in the registry and Service Database.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> config [service name] <option1> <option2>...\n")
+             _T("CONFIG OPTIONS:\n")
+             _T("        NOTE: The option name includes the equal sign.\n")
+             _T("        type= <own|share|interact|kernel|filesys|rec>\n")
+             _T("        start= <boot|system|auto|demand|disabled>\n")
+             _T("        error= <normal|severe|critical|ignore>\n")
+             _T("        binPath= <BinaryPathName>\n")
+             _T("        group= <LoadOrderGroup>\n")
+             _T("        tag= <yes|no>\n")
+             _T("        depend= <Dependencies(separated by / (forward slash))>\n")
+             _T("        obj= <AccountName|ObjectName>\n")
+             _T("        DisplayName= <display name>\n")
+             _T("        password= <password>\n"));
+}
+
+VOID SetFailureUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Changes the actions upon failure.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> failure [service name] <option1> <option2>...\n")
+             _T("\n")
+             _T("OPTIONS:\n")
+             _T("        reset= <Length of period of no failures (in seconds)\n")
+             _T("                after which to reset the failure count to 0 (may be INFINITE)>\n")
+             _T("               (Must be used in conjunction with actions= )\n")
+             _T("        reboot= <Message broadcast before rebooting on failure>\n")
+             _T("        command= <Command line to be run on failure>\n")
+             _T("        actions= <Failure actions and their delay time (in milliseconds),\n")
+             _T("                  separated by / (forward slash) -- e.g., run/5000/reboot/800\n")
+             _T("                  Valid actions are <run|restart|reboot> >\n")
+             _T("                 (Must be used in conjunction with the reset= option)\n"));
+}
+
+VOID GetDisplayNameUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Gets the display name associated with a particular service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> GetDisplayName <service key name> <bufsize>\n"));
+}
+
+VOID GetKeyNameUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Gets the key name associated with a particular service, using the\n")
+             _T("        display name as input.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> GetKeyName <service display name> <bufsize>\n"));
+}
+
+VOID EnumDependUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Enumerates te Services that are dependent on this one.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> EnumDepend <service display name> <bufsize>\n"));
 }

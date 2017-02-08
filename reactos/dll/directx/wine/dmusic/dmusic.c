@@ -403,7 +403,7 @@ HRESULT WINAPI DMUSIC_CreateDirectMusicImpl(LPCGUID riid, LPVOID* ret_iface, LPU
     IDirectMusic8Impl *dmusic;
     HRESULT ret;
 
-    TRACE("(%p,%p,%p)\n", riid, ret_iface, unkouter);
+    TRACE("(%s, %p, %p)\n", debugstr_guid(riid), ret_iface, unkouter);
 
     *ret_iface = NULL;
     if (unkouter)
@@ -428,7 +428,7 @@ HRESULT WINAPI DMUSIC_CreateDirectMusicImpl(LPCGUID riid, LPVOID* ret_iface, LPU
 
     DMUSIC_LockModule();
     ret = IDirectMusic8Impl_QueryInterface(&dmusic->IDirectMusic8_iface, riid, ret_iface);
-    IDirectMusic8Impl_Release(&dmusic->IDirectMusic8_iface);
+    IDirectMusic8_Release(&dmusic->IDirectMusic8_iface);
 
     return ret;
 }

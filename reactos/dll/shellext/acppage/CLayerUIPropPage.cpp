@@ -17,6 +17,11 @@
  */
 
 #include "precomp.h"
+
+#include <shlwapi.h>
+#include <shellapi.h>
+#include <strsafe.h>
+#include <apphelp.h>
 #include <windowsx.h>
 #include <sfc.h>
 
@@ -46,8 +51,7 @@ void ACDBG_FN(PCSTR FunctionName, PCWSTR Format, ...)
 
 
 CLayerUIPropPage::CLayerUIPropPage()
-:m_Filename(NULL)
-, m_IsSfcProtected(FALSE)
+: m_IsSfcProtected(FALSE)
 , m_AllowPermLayer(FALSE)
 , m_LayerQueryFlags(GPLK_USER)
 , m_RegistryOSMode(0)
@@ -72,7 +76,7 @@ static struct {
     const PCWSTR Name;
 } g_CompatModes[] = {
     { L"Windows 95", L"WIN95" },
-    { L"Windows 98", L"WIN98" },
+    { L"Windows 98/ME", L"WIN98" },
     { L"Windows NT 4.0 (SP5)", L"NT4SP5" },
     { L"Windows 2000", L"WIN2000" },
     { L"Windows XP (SP2)", L"WINXPSP2" },

@@ -2,7 +2,7 @@
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  *                        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * PURPOSE:               Platform independant remove directory command
+ * PURPOSE:               Platform independent remove directory command
  */
 
 #include <dirent.h>

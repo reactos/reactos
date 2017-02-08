@@ -1087,9 +1087,9 @@
 
     for ( ; count > 0; count--, idx++ )
     {
-      FT_Byte*    q = (FT_Byte*)objects[idx] + field->offset;
+      FT_Byte*    q      = (FT_Byte*)objects[idx] + field->offset;
       FT_Long     val;
-      FT_String*  string;
+      FT_String*  string = NULL;
 
 
       skip_spaces( &cur, limit );
@@ -1217,7 +1217,7 @@
       case T1_FIELD_TYPE_MM_BBOX:
         {
           FT_Memory  memory = parser->memory;
-          FT_Fixed*  temp;
+          FT_Fixed*  temp   = NULL;
           FT_Int     result;
           FT_UInt    i;
 

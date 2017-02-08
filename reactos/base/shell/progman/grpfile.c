@@ -21,6 +21,7 @@
 
 #include "progman.h"
 
+#if 0
 #define MALLOCHUNK 1000
 
 #define GET_USHORT(buffer, i)\
@@ -35,6 +36,7 @@ static HLOCAL GRPFILE_ScanGroup(LPCSTR, INT, LPCSTR, BOOL);
 static HLOCAL GRPFILE_ScanProgram(LPCSTR, INT, LPCSTR, INT,
 				  LPCSTR, HLOCAL,LPCSTR);
 static BOOL GRPFILE_DoWriteGroupFile(HFILE file, PROGGROUP *group);
+#endif
 
 /***********************************************************************
  *
@@ -43,6 +45,7 @@ static BOOL GRPFILE_DoWriteGroupFile(HFILE file, PROGGROUP *group);
  *  Change extension `.grp' to `.gr'
  */
 
+#if 0
 static VOID GRPFILE_ModifyFileName(LPSTR lpszNewName, LPCSTR lpszOrigName,
 				   INT nSize, BOOL bModify)
 {
@@ -52,14 +55,16 @@ static VOID GRPFILE_ModifyFileName(LPSTR lpszNewName, LPCSTR lpszOrigName,
   if (!lstrcmpiA(lpszNewName + strlen(lpszNewName) - 4, ".grp"))
     lpszNewName[strlen(lpszNewName) - 1] = '\0';
 }
+#endif
 
 /***********************************************************************
  *
  *           GRPFILE_ReadGroupFile
  */
 
-HLOCAL GRPFILE_ReadGroupFile(LPCSTR lpszPath)
+DWORD GRPFILE_ReadGroupFile(LPCWSTR lpszPath, BOOL bIsCommonGroup)
 {
+#if 0
   CHAR   szPath_gr[MAX_PATHNAME_LEN];
   BOOL   bFileNameModified = FALSE;
   OFSTRUCT dummy;
@@ -90,6 +95,10 @@ HLOCAL GRPFILE_ReadGroupFile(LPCSTR lpszPath)
   LocalFree(hBuffer);
 
   return(hGroup);
+
+#else
+    return ERROR_SUCCESS;
+#endif
 }
 
 /***********************************************************************
@@ -97,6 +106,7 @@ HLOCAL GRPFILE_ReadGroupFile(LPCSTR lpszPath)
  *           GRPFILE_ReadFileToBuffer
  */
 
+#if 0
 static BOOL GRPFILE_ReadFileToBuffer(LPCSTR path, HLOCAL *phBuffer,
 				     INT *piSize)
 {
@@ -143,11 +153,13 @@ static BOOL GRPFILE_ReadFileToBuffer(LPCSTR path, HLOCAL *phBuffer,
   *piSize   = size;
   return TRUE;
 }
+#endif
 
 /***********************************************************************
  *           GRPFILE_ScanGroup
  */
 
+#if 0
 static HLOCAL GRPFILE_ScanGroup(LPCSTR buffer, INT size,
 				LPCSTR lpszGrpFile,
 				BOOL bModifiedFileName)
@@ -221,11 +233,13 @@ static HLOCAL GRPFILE_ScanGroup(LPCSTR buffer, INT size,
 
   return hGroup;
 }
+#endif
 
 /***********************************************************************
  *           GRPFILE_ScanProgram
  */
 
+#if 0
 static HLOCAL GRPFILE_ScanProgram(LPCSTR buffer, INT size,
 				  LPCSTR program_ptr, INT seqnum,
 				  LPCSTR extension, HLOCAL hGroup,
@@ -276,11 +290,7 @@ static HLOCAL GRPFILE_ScanProgram(LPCSTR buffer, INT size,
   if (iconANDbits_ptr + iconANDsize > buffer + size ||
       iconXORbits_ptr + iconXORsize > buffer + size) return(0);
 
-#ifdef __REACTOS__
   hIcon = CreateIcon(Globals.hInstance, width, height, planes, bpp, (PBYTE)iconANDbits_ptr, (PBYTE)iconXORbits_ptr);
-#else
-  hIcon = CreateIcon( Globals.hInstance, width, height, planes, bpp, iconANDbits_ptr, iconXORbits_ptr );
-#endif
 
   lpszName        = buffer + GET_USHORT(program_ptr, 18);
   lpszCmdLine     = buffer + GET_USHORT(program_ptr, 20);
@@ -338,14 +348,16 @@ static HLOCAL GRPFILE_ScanProgram(LPCSTR buffer, INT size,
 			     nIconIndex, lpszWorkDir,
 			     nHotKey, nCmdShow));
 }
+#endif
 
 /***********************************************************************
  *
  *           GRPFILE_WriteGroupFile
  */
 
-BOOL GRPFILE_WriteGroupFile(HLOCAL hGroup)
+BOOL GRPFILE_WriteGroupFile(PROGGROUP* hGroup)
 {
+#if 0
   CHAR szPath[MAX_PATHNAME_LEN];
   PROGGROUP *group = LocalLock(hGroup);
   OFSTRUCT dummy;
@@ -403,7 +415,13 @@ BOOL GRPFILE_WriteGroupFile(HLOCAL hGroup)
     MAIN_MessageBoxIDS_s(IDS_FILE_WRITE_ERROR_s, szPath, IDS_ERROR, MB_OK);
 
   return(ret);
+
+#else
+    return TRUE;
+#endif
 }
+
+#if 0
 
 /***********************************************************************
  *
@@ -511,11 +529,9 @@ static BOOL GRPFILE_DoWriteGroupFile(HFILE file, PROGGROUP *group)
   HLOCAL hProgram;
   INT    NumProg, Title, Progs, Icons, Extension;
   INT    CurrProg, CurrIcon, nCmdShow, ptr, seqnum;
-#ifdef __REACTOS__
+
   UINT sizeAnd, sizeXor;
-#else
-  DWORD  sizeAnd, sizeXor;
-#endif
+
   BOOL   need_extension;
   LPCSTR lpszTitle = LocalLock(group->hName);
 
@@ -732,3 +748,5 @@ static BOOL GRPFILE_DoWriteGroupFile(HFILE file, PROGGROUP *group)
 
   return TRUE;
 }
+
+#endif

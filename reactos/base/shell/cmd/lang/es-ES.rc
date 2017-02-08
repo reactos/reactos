@@ -66,7 +66,7 @@ ERRORLEVEL se configura al offset de la tecla que presione el usuario.\n"
     STRING_CMD_HELP2 "\nCaracterísticas disponibles:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [Completador de nombres de archivos unix]"
+    STRING_CMD_HELP5 "  [Completador de nombres de archivos Bash]"
     STRING_CMD_HELP6 "  [Pila de directorios]"
     STRING_CMD_HELP7 "  [Redirecciones y túneles]"
     STRING_CMD_HELP8 "Comienza una nueva sesion del interprete de comandos de ReactOS.\n\n\
@@ -254,15 +254,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Muestra la cantidad de memoria del sistema.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% carga de memoria.\n\n\
+    STRING_MEMORY_HELP1 "Muestra la cantidad de memoria del sistema.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% carga de memoria.\n\n\
   %13s bytes totales de RAM física.\n\
   %13s bytes libres de RAM física.\n\n\
   %13s bytes totales del archivo de paginación.\n\
   %13s bytes disponibles del archivo de paginación.\n\n\
   %13s bytes totales de memoria virtual.\n\
   %13s bytes disponibles de memoria virtual.\n"
-    STRING_MISC_HELP1 "Pulsa cualquier tecla para continuar...\n"
+    STRING_MISC_HELP1 "Pulsa cualquier tecla para continuar..."
     STRING_MOVE_HELP1 "¿Sobreescribir %s (Si/No/Todos)? "
     STRING_MOVE_HELP2 "Mueve archivos y renombra archivos y directorios.\n\n\
 Para mover uno o más archivos:\n\
@@ -524,7 +524,7 @@ title         Nuevo título\n"
     STRING_REPLACE_ERROR6 "No se han encontrado archivos - %s\n"
     STRING_REPLACE_ERROR7 "Error extendido 32\n"
     STRING_CMD_INFOLINE "  Consola de comandos de ReactOS                Escribe HELP para ver la ayuda  "
-    STRING_REACTOS_VERSION "Sistema operativo ReactOS [Versión %s-%s]\n"
+    STRING_REACTOS_VERSION "Sistema operativo ReactOS [Versión %s %s]\n"
     STRING_CMD_SHELLINFO "\nIntérprete de comandos de ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Funcionando en: "
     STRING_VERSION_RUNVER "%s [Versión %d.%d.%d] %s"

@@ -116,6 +116,8 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
     PLPCP_MESSAGE Message;
     PLPCP_PORT_OBJECT ConnectionPort = NULL;
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
+    PLPCP_NONPAGED_PORT_QUEUE MessageQueue;
+
     PAGED_CODE();
     LPCTRACE(LPC_CLOSE_DEBUG, "Port: %p. Flags: %lx\n", Port, Port->Flags);
 
@@ -229,9 +231,10 @@ LpcpDestroyPortQueue(IN PLPCP_PORT_OBJECT Port,
         if (Port->MsgQueue.Semaphore)
         {
             /* Use the semaphore to find the port queue and free it */
-            ExFreePool(CONTAINING_RECORD(Port->MsgQueue.Semaphore,
-                                         LPCP_NONPAGED_PORT_QUEUE,
-                                         Semaphore));
+            MessageQueue = CONTAINING_RECORD(Port->MsgQueue.Semaphore,
+                                             LPCP_NONPAGED_PORT_QUEUE,
+                                             Semaphore);
+            ExFreePoolWithTag(MessageQueue, 'troP');
         }
     }
 }
@@ -245,6 +248,7 @@ LpcpClosePort(IN PEPROCESS Process OPTIONAL,
               IN ULONG SystemHandleCount)
 {
     PLPCP_PORT_OBJECT Port = (PLPCP_PORT_OBJECT)Object;
+
     LPCTRACE(LPC_CLOSE_DEBUG, "Port: %p. Flags: %lx\n", Port, Port->Flags);
 
     /* Only Server-side Connection Ports need clean up*/
@@ -305,9 +309,11 @@ LpcpDeletePort(IN PVOID ObjectBody)
     PLIST_ENTRY ListHead, NextEntry;
     HANDLE Pid;
     CLIENT_DIED_MSG ClientDiedMsg;
-    Timeout.QuadPart = -1000000;
+
     PAGED_CODE();
     LPCTRACE(LPC_CLOSE_DEBUG, "Port: %p. Flags: %lx\n", Port, Port->Flags);
+
+    Timeout.QuadPart = -1000000;
 
     /* Check if this is a communication port */
     if ((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_COMMUNICATION_PORT)
@@ -347,8 +353,8 @@ LpcpDeletePort(IN PVOID ObjectBody)
         for (;;)
         {
             /* Send the message */
-            if (LpcRequestPort(Port,
-                               &ClientDiedMsg.h) != STATUS_NO_MEMORY) break;
+            if (LpcRequestPort(Port, &ClientDiedMsg.h) != STATUS_NO_MEMORY)
+                break;
 
             /* Wait until trying again */
             KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
@@ -432,20 +438,20 @@ LpcpDeletePort(IN PVOID ObjectBody)
 
         /* Dereference the object unless it's the same port */
         if (ConnectionPort != Port) ObDereferenceObject(ConnectionPort);
+
+        /* Check if this is a connection port with a server process */
+        if (((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CONNECTION_PORT) &&
+            (ConnectionPort->ServerProcess))
+        {
+            /* Dereference the server process */
+            ObDereferenceObject(ConnectionPort->ServerProcess);
+            ConnectionPort->ServerProcess = NULL;
+        }
     }
     else
     {
         /* Release the lock */
         KeReleaseGuardedMutex(&LpcpLock);
-    }
-
-    /* Check if this is a connection port with a server process */
-    if (((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CONNECTION_PORT) &&
-        (ConnectionPort->ServerProcess))
-    {
-        /* Dereference the server process */
-        ObDereferenceObject(ConnectionPort->ServerProcess);
-        ConnectionPort->ServerProcess = NULL;
     }
 
     /* Free client security */

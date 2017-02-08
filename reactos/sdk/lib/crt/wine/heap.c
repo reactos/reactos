@@ -288,9 +288,9 @@ size_t CDECL _msize(void* mem)
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL calloc(size_t size, size_t count)
+void* CDECL calloc(size_t count, size_t size)
 {
-  return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size * count );
+  return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, count * size );
 }
 
 /*********************************************************************

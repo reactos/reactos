@@ -17,13 +17,19 @@ BEGIN
         MENUITEM "&Guardar\tCtrl+G", IDM_FILESAVE
         MENUITEM "Guardar &como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Definir como fundo (Mosaico)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Definir como fundo (Centrado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Definir como fundo (Esticado)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sai&r\tAlt+F4", IDM_FILEEXIT
     END
@@ -37,7 +43,7 @@ BEGIN
         MENUITEM "Co&lar\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Limpar &seleção\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
-        MENUITEM "Selecion&ar tudo\tCtrl+T", IDM_EDITSELECTALL
+        MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiar para...", IDM_EDITCOPYTO
         MENUITEM "Colar &de...", IDM_EDITPASTEFROM
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "Polígono"
     IDS_TOOLTIP15 "Elipse"
     IDS_TOOLTIP16 "Retângulo arredondado"
-    IDS_OPENFILTER "Ficheiros de mapa de bits (*.bmp;*.dib)\1*.bmp;*.dib\1Todos os arquivos (*.*)\1*.*\1"
-    IDS_SAVEFILTER "Mapa de bits de 24 bits (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Todos os arquivos"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
     IDS_PRINTRES "%d x %d pixels per meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"

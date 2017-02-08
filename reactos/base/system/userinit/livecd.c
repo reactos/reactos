@@ -18,16 +18,16 @@ InitImageInfo(PIMGINFO ImgInfo)
 
     ZeroMemory(ImgInfo, sizeof(*ImgInfo));
 
-    ImgInfo->hBitmap = LoadImage(hInstance,
-                                 MAKEINTRESOURCE(IDB_ROSLOGO),
-                                 IMAGE_BITMAP,
-                                 0,
-                                 0,
-                                 LR_DEFAULTCOLOR);
+    ImgInfo->hBitmap = LoadImageW(hInstance,
+                                  MAKEINTRESOURCEW(IDB_ROSLOGO),
+                                  IMAGE_BITMAP,
+                                  0,
+                                  0,
+                                  LR_DEFAULTCOLOR);
 
     if (ImgInfo->hBitmap != NULL)
     {
-        GetObject(ImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
+        GetObject(ImgInfo->hBitmap, sizeof(bitmap), &bitmap);
 
         ImgInfo->cxSource = bitmap.bmWidth;
         ImgInfo->cySource = bitmap.bmHeight;
@@ -46,11 +46,11 @@ IsLiveCD(VOID)
 
     TRACE("IsLiveCD()\n");
 
-    rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                      REGSTR_PATH_CURRENT_CONTROL_SET,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &ControlKey);
+    rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       REGSTR_PATH_CURRENT_CONTROL_SET,
+                       0,
+                       KEY_QUERY_VALUE,
+                       &ControlKey);
     if (rc != ERROR_SUCCESS)
     {
         WARN("RegOpenKeyEx() failed with error %lu\n", rc);
@@ -110,7 +110,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     {
         if (bSpain == FALSE)
         {
-            LoadStringW(hInstance, IDS_SPAIN, lang, 255);
+            LoadStringW(hInstance, IDS_SPAIN, lang, ARRAYSIZE(lang));
             bSpain = TRUE;
         }
         else
@@ -120,7 +120,7 @@ LocalesEnumProc(LPTSTR lpLocale)
     }
     else
     {
-        GetLocaleInfoW(lcid, LOCALE_SLANGUAGE, lang, sizeof(lang)/sizeof(WCHAR));
+        GetLocaleInfoW(lcid, LOCALE_SLANGUAGE, lang, ARRAYSIZE(lang));
     }
 
     if (bNoShow == FALSE)
@@ -151,7 +151,7 @@ CreateLanguagesList(HWND hwnd)
 
     /* Select current locale */
     /* or should it be System and not user? */
-    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, sizeof(langSel)/sizeof(WCHAR));
+    GetLocaleInfoW(GetUserDefaultLCID(), LOCALE_SLANGUAGE, langSel, ARRAYSIZE(langSel));
 
     SendMessageW(hList,
                  CB_SELECTSTRING,
@@ -170,13 +170,13 @@ GetLayoutName(
     DWORD dwBufLen;
     WCHAR szBuf[MAX_PATH], szDispName[MAX_PATH], szIndex[MAX_PATH], szPath[MAX_PATH];
     HANDLE hLib;
-    unsigned i, j, k;
+    UINT i, j, k;
 
     wsprintf(szBuf, L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\%s", szLCID);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, (LPCTSTR)szBuf, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
-        dwBufLen = sizeof(szBuf);
+        dwBufLen = sizeof(szDispName);
 
         if (RegQueryValueExW(hKey, L"Layout Display Name", NULL, NULL, (LPBYTE)szDispName, &dwBufLen) == ERROR_SUCCESS)
         {
@@ -197,12 +197,12 @@ GetLayoutName(
                         szDispName[i] = szDispName[i + 1];
                 }
 
-                if (ExpandEnvironmentStringsW(szDispName, szPath, MAX_PATH))
+                if (ExpandEnvironmentStringsW(szDispName, szPath, ARRAYSIZE(szPath)))
                 {
                     hLib = LoadLibraryW(szPath);
                     if (hLib)
                     {
-                        if (LoadStringW(hLib, _wtoi(szIndex), szPath, sizeof(szPath) / sizeof(WCHAR)) != 0)
+                        if (LoadStringW(hLib, _wtoi(szIndex), szPath, ARRAYSIZE(szPath)) != 0)
                         {
                             wcscpy(szName, szPath);
                             RegCloseKey(hKey);
@@ -323,7 +323,7 @@ CreateKeyboardLayoutList(
 
     while (TRUE)
     {
-        dwSize = sizeof(szLayoutId) / sizeof(WCHAR);
+        dwSize = ARRAYSIZE(szLayoutId);
 
         lError = RegEnumKeyExW(hKey,
                                dwIndex,
@@ -458,10 +458,10 @@ InitializeDefaultUserLocale(
     i = 0;
     while (LocaleData[i].pValue != NULL)
     {
-        if (GetLocaleInfo(lcid,
-                          LocaleData[i].LCType | LOCALE_NOUSEROVERRIDE,
-                          szBuffer,
-                          sizeof(szBuffer) / sizeof(WCHAR)))
+        if (GetLocaleInfoW(lcid,
+                           LocaleData[i].LCType | LOCALE_NOUSEROVERRIDE,
+                           szBuffer,
+                           ARRAYSIZE(szBuffer)))
         {
             RegSetValueExW(hLocaleKey,
                            LocaleData[i].pValue,
@@ -515,7 +515,7 @@ OnDrawItem(
 
     if (lpDrawItem->CtlID == uCtlID)
     {
-        /* position image in centre of dialog */
+        /* Position image in centre of dialog */
         left = (lpDrawItem->rcItem.right - pState->ImageInfo.cxSource) / 2;
 
         hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
@@ -549,17 +549,17 @@ LocaleDlgProc(
     PSTATE pState;
 
     /* Retrieve pointer to the state */
-    pState = (PSTATE)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pState = (PSTATE)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the global state */
             pState = (PSTATE)lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pState);
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
 
             /* Center the dialog window */
-            CenterWindow (hwndDlg);
+            CenterWindow(hwndDlg);
 
             /* Fill the language and keyboard layout lists */
             CreateLanguagesList(GetDlgItem(hwndDlg, IDC_LANGUAGELIST));
@@ -666,14 +666,14 @@ StartDlgProc(
     PSTATE pState;
 
     /* Retrieve pointer to the state */
-    pState = (PSTATE)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
+    pState = (PSTATE)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
             /* Save pointer to the state */
             pState = (PSTATE)lParam;
-            SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pState);
+            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (DWORD_PTR)pState);
 
             /* Center the dialog window */
             CenterWindow(hwndDlg);
@@ -734,19 +734,19 @@ RunLiveCD(
         switch (pState->NextPage)
         {
             case LOCALEPAGE:
-                DialogBoxParam(hInstance,
-                               MAKEINTRESOURCE(IDD_LOCALEPAGE),
-                               NULL,
-                               LocaleDlgProc,
-                               (LPARAM)pState);
+                DialogBoxParamW(hInstance,
+                                MAKEINTRESOURCEW(IDD_LOCALEPAGE),
+                                NULL,
+                                LocaleDlgProc,
+                                (LPARAM)pState);
                 break;
 
             case STARTPAGE:
-                DialogBoxParam(hInstance,
-                               MAKEINTRESOURCE(IDD_STARTPAGE),
-                               NULL,
-                               StartDlgProc,
-                               (LPARAM)pState);
+                DialogBoxParamW(hInstance,
+                                MAKEINTRESOURCEW(IDD_STARTPAGE),
+                                NULL,
+                                StartDlgProc,
+                                (LPARAM)pState);
                 break;
 
             default:

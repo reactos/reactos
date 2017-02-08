@@ -59,8 +59,8 @@
 59 stdcall EtwQueryAllTracesW(ptr long ptr)
 60 stdcall -stub EtwQueryTraceA(double str ptr)
 61 stdcall -stub EtwQueryTraceW(double wstr ptr)
-62 stdcall -stub EtwReceiveNotificationsA() # FIXME prototype
-63 stdcall -stub EtwReceiveNotificationsW() # FIXME prototype
+62 stdcall -stub EtwReceiveNotificationsA(long long long long)
+63 stdcall -stub EtwReceiveNotificationsW(long long long long)
 64 stdcall EtwRegisterTraceGuidsA(ptr ptr ptr long ptr str str ptr)
 65 stdcall EtwRegisterTraceGuidsW(ptr ptr ptr long ptr wstr wstr ptr)
 66 stdcall EtwStartTraceA(ptr str ptr)
@@ -74,8 +74,8 @@
 74 stdcall EtwUnregisterTraceGuids(double)
 75 stdcall -stub EtwUpdateTraceA(double str ptr)
 76 stdcall -stub EtwUpdateTraceW(double wstr ptr)
-# EtwpGetTraceBuffer
-# EtwpSetHWConfigFunction
+77 stdcall -stub EtwpGetTraceBuffer(long long long long)
+78 stdcall -stub EtwpSetHWConfigFunction(ptr long)
 79 stdcall -arch=i386 KiFastSystemCall()
 80 stdcall -arch=i386 KiFastSystemCallRet()
 81 stdcall -arch=i386 KiIntSystemCall()
@@ -771,7 +771,7 @@
 @ stdcall -arch=x86_64 RtlLookupFunctionEntry(long ptr ptr)
 767 stdcall RtlMakeSelfRelativeSD(ptr ptr ptr)
 768 stdcall RtlMapGenericMask(long ptr)
-# stdcall RtlMapSecurityErrorToNtStatus
+769 stdcall RtlMapSecurityErrorToNtStatus(long)
 770 stdcall RtlMoveMemory(ptr ptr long)
 771 stdcall RtlMultiAppendUnicodeStringBuffer(ptr long ptr)
 772 stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
@@ -791,7 +791,7 @@
 786 stdcall RtlNumberGenericTableElementsAvl(ptr)
 787 stdcall RtlNumberOfClearBits(ptr)
 788 stdcall RtlNumberOfSetBits(ptr)
-# stdcall RtlOemStringToUnicodeSize(ptr)
+789 stdcall RtlOemStringToUnicodeSize(ptr) RtlxOemStringToUnicodeSize
 790 stdcall RtlOemStringToUnicodeString(ptr ptr long)
 791 stdcall RtlOemToUnicodeN(ptr long ptr ptr long)
 792 stdcall RtlOpenCurrentUser(long ptr)
@@ -909,11 +909,11 @@
 903 stdcall RtlTryEnterCriticalSection(ptr)
 # stdcall RtlUnhandledExceptionFilter2
 905 stdcall RtlUnhandledExceptionFilter(ptr)
-# stdcall RtlUnicodeStringToAnsiSize(ptr)
+906 stdcall RtlUnicodeStringToAnsiSize(ptr) RtlxUnicodeStringToAnsiSize
 907 stdcall RtlUnicodeStringToAnsiString(ptr ptr long)
 908 stdcall RtlUnicodeStringToCountedOemString(ptr ptr long)
 909 stdcall RtlUnicodeStringToInteger(ptr long ptr)
-# stdcall RtlUnicodeStringToOemSize(ptr)
+910 stdcall RtlUnicodeStringToOemSize(ptr) RtlxUnicodeStringToOemSize
 911 stdcall RtlUnicodeStringToOemString(ptr ptr long)
 912 stdcall RtlUnicodeToCustomCPN(ptr ptr long ptr wstr long)
 913 stdcall RtlUnicodeToMultiByteN(ptr long ptr ptr long)
@@ -969,7 +969,7 @@
 961 stdcall RtlxAnsiStringToUnicodeSize(ptr)
 962 stdcall RtlxOemStringToUnicodeSize(ptr)
 963 stdcall RtlxUnicodeStringToAnsiSize(ptr)
-964 stdcall RtlxUnicodeStringToOemSize(ptr) ; RtlUnicodeStringToOemSize
+964 stdcall RtlxUnicodeStringToOemSize(ptr)
 965 stdcall -ret64 VerSetConditionMask(double long long)
 966 stdcall ZwAcceptConnectPort(ptr long ptr long long ptr) NtAcceptConnectPort
 967 stdcall ZwAccessCheck(ptr long long ptr ptr ptr ptr ptr) NtAccessCheck
@@ -1325,7 +1325,7 @@
 1312 cdecl _wcsicmp(wstr wstr)
 1313 cdecl _wcslwr(wstr)
 1314 cdecl _wcsnicmp(wstr wstr long)
-# _wcstoui64
+1315 cdecl _wcstoui64(wstr ptr long)
 1316 cdecl _wcsupr(wstr)
 1317 cdecl _wtoi(wstr)
 1318 cdecl _wtoi64(wstr)

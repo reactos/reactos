@@ -1,7 +1,7 @@
 [Section]
 Name = Scratch
 Version = 1.4
-Licence = GPL
+License = GPL
 Description = Visual object-oriented programming enviroment for children.
 Size = 33.0 MiB
 Category = 8
@@ -14,11 +14,12 @@ Description = Visuelle objektorientierte Programmierumgebug für Kinder.
 Size = 33,0 MiB
 
 [Section.0418]
-Description = Un mediu de programare orientat pe obiecte adresat copiilor.
+Description = Mediu de programare orientat pe obiecte adresat copiilor.
 Size = 33,0 Mio
 
 [Section.0419]
 Description = Визуальная объектно-ориентированная среда программирования для детей.
+Size = 33,0 МиБ
 
 [Section.041f]
 Description = Çocuklar için görmelik nesneye yönelik izlenceleme ortamı.

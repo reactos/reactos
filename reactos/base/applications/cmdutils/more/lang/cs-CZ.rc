@@ -16,6 +16,7 @@ BEGIN
   Příkaz\t\t     Příkaz, jehož výstup bude zobrazen.\n\n\
   Při výzvě ""-- Pokračovat --"" lze stisknout libovolnou klávesu\n\
   pro zobrazení další stránky.\n"
-    IDS_CONTINUE " -- Pokračovat (100%) -- "
-    IDS_FILE_ACCESS "Nelze získat přístup k souboru %s."
+    IDS_CONTINUE "-- Pokračovat --"
+    IDS_CONTINUE_PROGRESS "-- Pokračovat (%d%%) --"
+    IDS_FILE_ACCESS "Nelze získat přístup k souboru %s.\n"
 END

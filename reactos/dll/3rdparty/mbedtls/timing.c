@@ -38,6 +38,11 @@
 
 #if !defined(MBEDTLS_TIMING_ALT)
 
+#if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
+    !defined(__APPLE__) && !defined(_WIN32)
+#error "This module only works on Unix and Windows, see MBEDTLS_TIMING_C in config.h"
+#endif
+
 #ifndef asm
 #define asm __asm
 #endif

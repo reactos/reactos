@@ -126,6 +126,29 @@ HidP_GetCaps(
 }
 
 NTSTATUS
+TranslateStatusForUpperLayer(
+    IN HIDPARSER_STATUS Status)
+{
+    //
+    // now we are handling only this values, for others just return
+    // status as it is.
+    //
+    switch (Status)
+    {
+    case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
+        return STATUS_INSUFFICIENT_RESOURCES;
+    case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
+        return HIDP_STATUS_INVALID_REPORT_TYPE;
+    case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
+        return STATUS_BUFFER_TOO_SMALL;
+    case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
+        return STATUS_NO_DATA_DETECTED;
+    default:
+        return Status;
+    }
+}
+
+NTSTATUS
 NTAPI
 HidP_GetCollectionDescription(
     IN PHIDP_REPORT_DESCRIPTOR ReportDesc,
@@ -134,6 +157,7 @@ HidP_GetCollectionDescription(
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
     HID_PARSER Parser;
+    NTSTATUS Status;
 
     //
     // init parser
@@ -143,7 +167,8 @@ HidP_GetCollectionDescription(
     //
     // get description;
     //
-    return HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
+    Status = HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
+    return TranslateStatusForUpperLayer(Status);
 }
 
 HIDAPI
@@ -389,7 +414,7 @@ HidP_GetSpecificButtonCaps(
     IN OUT PUSHORT ButtonCapsLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -405,7 +430,7 @@ HidP_GetData(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -420,7 +445,7 @@ HidP_GetExtendedAttributes(
     OUT PHIDP_EXTENDED_ATTRIBUTES  Attributes,
     IN OUT PULONG  LengthAttributes)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -433,7 +458,7 @@ HidP_GetLinkCollectionNodes(
     IN OUT PULONG  LinkCollectionNodesLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -446,7 +471,7 @@ HidP_SysPowerEvent(
     IN PHIDP_PREPARSED_DATA Ppd,
     OUT PULONG OutputBuffer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -457,7 +482,7 @@ HidP_SysPowerCaps(
     IN PHIDP_PREPARSED_DATA Ppd,
     OUT PULONG OutputBuffer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -476,7 +501,7 @@ HidP_GetUsageValueArray(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -495,7 +520,7 @@ HidP_UnsetUsages(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -511,7 +536,7 @@ HidP_TranslateUsagesToI8042ScanCodes(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -529,7 +554,7 @@ HidP_SetUsages(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -548,7 +573,7 @@ HidP_SetUsageValueArray(
     OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -566,7 +591,7 @@ HidP_SetUsageValue(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -584,7 +609,7 @@ HidP_SetScaledUsageValue(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -600,7 +625,7 @@ HidP_SetData(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -612,7 +637,7 @@ HidP_MaxDataListLength(
     IN HIDP_REPORT_TYPE  ReportType,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -627,7 +652,7 @@ HidP_InitializeReportForID(
     IN OUT PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -643,7 +668,7 @@ HidP_GetValueCaps(
     PUSHORT ValueCapsLength,
     PHIDP_PREPARSED_DATA PreparsedData)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }

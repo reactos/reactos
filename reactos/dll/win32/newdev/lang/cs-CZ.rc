@@ -27,7 +27,7 @@ BEGIN
     LTEXT "Instalace selhala", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Zařízení nemohlo být nainstalováno, protože ovladač nebyl nalezen.", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Klikněte na Zpět, pokud máte disk s ovladačem nebo znáte cestu k ovladači.", IDC_STATIC, 120, 98, 195, 16
-    CONTROL "Neukazovat více tento dialog", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
+    CONTROL "Tento dialog příště nezobrazovat", IDC_DONOTSHOWDLG, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 120, 170, 195, 12
 END
 
 IDD_INSTALLFAILED DIALOGEX 0, 0, 317, 193
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Instalace je kompletní", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Bude potřeba restartovat systém, aby mohla být dokončena instalace:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na Dokončit zavřete průvodce.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 12
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -88,14 +88,14 @@ BEGIN
     LTEXT "Instalace je kompletní", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Průvodce dokončil instalaci ovladače pro:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na Dokončit zavřete průvodce.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UNKNOWN DEVICE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁMÉ ZAŘÍZENÍ", IDC_DEVICE, 148, 53, 147, 12
 END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLWIZARDTITLE "New Hardware Wizard"
-    IDS_UPDATEWIZARDTITLE "Update Driver Wizard"
-    IDS_CHSOURCE_TITLE "Choose search and install options"
-    IDS_SEARCHDRV_TITLE "Searching..."
-    IDS_INSTALLDRV_TITLE "Installing..."
+    IDS_INSTALLWIZARDTITLE "Průvodce novým harwarem"
+    IDS_UPDATEWIZARDTITLE "Průvodce aktualizací ovladače"
+    IDS_CHSOURCE_TITLE "Zvolte možnosti vyhledávání a instalace"
+    IDS_SEARCHDRV_TITLE "Hledání..."
+    IDS_INSTALLDRV_TITLE "Instalace..."
 END

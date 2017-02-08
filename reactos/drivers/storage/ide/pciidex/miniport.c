@@ -42,6 +42,42 @@ PciIdeXForwardOrIgnore(
 	}
 }
 
+_Dispatch_type_(IRP_MJ_POWER)
+static DRIVER_DISPATCH PciIdeXPowerDispatch;
+static NTSTATUS NTAPI
+PciIdeXPowerDispatch(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	NTSTATUS Status;
+	PIO_STACK_LOCATION IoStack;
+	PDEVICE_OBJECT LowerDevice;
+
+	IoStack = IoGetCurrentIrpStackLocation(Irp);
+	if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
+	{
+		LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+		PoStartNextPowerIrp(Irp);
+		IoSkipCurrentIrpStackLocation(Irp);
+		return PoCallDriver(LowerDevice, Irp);
+	}
+	else
+	{
+		switch (IoStack->MinorFunction)
+		{
+			case IRP_MN_SET_POWER:
+			case IRP_MN_QUERY_POWER:
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		}
+		Status = Irp->IoStatus.Status;
+		PoStartNextPowerIrp(Irp);
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return Status;
+	}
+}
+
+_Dispatch_type_(IRP_MJ_PNP)
 static DRIVER_DISPATCH PciIdeXPnpDispatch;
 static NTSTATUS NTAPI
 PciIdeXPnpDispatch(
@@ -83,6 +119,7 @@ PciIdeXInitialize(
 
 	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = PciIdeXForwardOrIgnore;
+	DriverObject->MajorFunction[IRP_MJ_POWER] = PciIdeXPowerDispatch;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = PciIdeXPnpDispatch;
 
 	return STATUS_SUCCESS;

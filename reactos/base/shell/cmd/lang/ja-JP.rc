@@ -64,7 +64,7 @@ CHOICE  [/C[:]選択肢][/N][/S][/T[:]c,nn][文字列]\n\n\
     STRING_CMD_HELP2 "\n利用できる機能:"
     STRING_CMD_HELP3 "  [エイリアス]"
     STRING_CMD_HELP4 "  [ヒストリ]"
-    STRING_CMD_HELP5 "  [UNIX ファイル名補完]"
+    STRING_CMD_HELP5 "  [Bash ファイル名補完]"
     STRING_CMD_HELP6 "  [ディレクトリ スタック]"
     STRING_CMD_HELP7 "  [リダイレクトとパイプ]"
     STRING_CMD_HELP8 "ReactOS コマンド ライン インタープリタの新しいインスタンスを開始します。\n\n\
@@ -262,15 +262,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "システム メモリの量を表示します。\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% のメモリが使用されています。\n\n\
+    STRING_MEMORY_HELP1 "システム メモリの量を表示します。\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% のメモリが使用されています。\n\n\
   %13s バイト: 全物理メモリ\n\
   %13s バイト: 利用可能な物理メモリ\n\n\
   %13s バイト: 全ページファイル\n\
   %13s バイト: 利用可能なページファイル\n\n\
   %13s バイト: 全仮想メモリ\n\
   %13s バイト: 利用可能な仮想メモリ\n"
-    STRING_MISC_HELP1 "続行するには何かキーを押してください ...\n"
+    STRING_MISC_HELP1 "続行するには何かキーを押してください ..."
     STRING_MOVE_HELP1 "%s を上書きしますがよろしいですか (Yes/No/All)? "
     STRING_MOVE_HELP2 "ファイルを移動およびファイルとディレクトリ名を変更します。\n\n\
 1 つまたは複数のファイルを移動するには:\n\
@@ -529,7 +529,7 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_REPLACE_ERROR6 "No files found - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Command Line Interpreter\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Running on: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

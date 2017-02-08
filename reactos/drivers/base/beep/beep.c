@@ -130,7 +130,7 @@ BeepCancel(IN PDEVICE_OBJECT DeviceObject,
     }
     else
     {
-        /* Otherwise, remove the packet from the queue and relelase the lock */
+        /* Otherwise, remove the packet from the queue and release the lock */
         KeRemoveEntryDeviceQueue(&DeviceObject->DeviceQueue,
                                  &Irp->Tail.Overlay.DeviceQueueEntry);
         IoReleaseCancelSpinLock(Irp->CancelIrql);
@@ -234,7 +234,7 @@ BeepDeviceControl(IN PDEVICE_OBJECT DeviceObject,
         }
         else if ((BeepParam->Frequency != 0) && !(BeepParam->Duration))
         {
-            /* No duration, return imemdiately */
+            /* No duration, return immediately */
             Status = STATUS_SUCCESS;
         }
         else

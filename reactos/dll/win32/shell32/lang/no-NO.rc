@@ -1,43 +1,43 @@
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Store ikoner", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Små ikoner", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Ordne &ikoner", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Ordne &automatisk", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Vis"
+        POPUP "&Vis", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Store ikoner", FCIDM_SHVIEW_BIGICON
             MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Ordne &ikoner"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Ordne &ikoner", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Etter &navn", 0x30  /* column 0 */
-            MENUITEM "Etter &type", 0x32  /* column 2 */
-            MENUITEM "Etter &størrelse", 0x31  /* ... */
-            MENUITEM "Etter &dato", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Ordne &automatisk", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Still opp ikoner", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Oppdater", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Lim inn", FCIDM_SHVIEW_INSERT
         MENUITEM "Lim inn som snarvei", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "Egenskaper", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -405,19 +405,19 @@ CAPTION "Generielt"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Oppgaver", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Vis felles oppgaver i &mapper", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Bruk ReactOS klass&isk mapper", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "Vis felles oppgaver i &mapper", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Bruk ReactOS klass&isk mapper", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 120, 10
     GROUPBOX "Utforsk mapper", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Åpne hver mapper i sa&mme vindu", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Åpne hver mapper i sitt egen &vindu", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Åpne hver mapper i sa&mme vindu", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Åpne hver mapper i sitt egen &vindu", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 140, 10
     GROUPBOX "Klikk enheter som følgende", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", 14007, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Understrek ikon titteler konsekvent med min &utforsker", 14008, 50, 132, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Understrek ikon titteler bare mens jeg &peker på dem", 14009, 50, 144, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", 14010, 40, 156, 194, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Enkelt-klikk for å åpne en enhet (peker for å velge)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Understrek ikon titteler konsekvent med min &utforsker", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 190, 10
+    AUTORADIOBUTTON "Understrek ikon titteler bare mens jeg &peker på dem", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 190, 10
+    AUTORADIOBUTTON "&Dobbelt klikk for å åpne enheten (Enkelt-klikk for å velge)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 194, 10
     PUSHBUTTON "&Bruk standard", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
@@ -432,8 +432,8 @@ BEGIN
     PUSHBUTTON "Bruk til a&lle mappene", 14001, 60, 50, 80, 14, WS_TABSTOP
     PUSHBUTTON "&Gjenopprett alle mapper", 14002, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Avanserte innstillinger:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "Gjenopprett &standard", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "Gjenopprett &standard", 14004, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -442,7 +442,7 @@ CAPTION "Filtyper"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Registerert fil&typer:", -1, 7, 10, 70, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "&Ny", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Slett", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "Detailjer for '%s' utvidelser", 14003, 7, 130, 249, 70
@@ -475,26 +475,26 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Logg av ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
     LTEXT "Er du sikker på at du vil logge av?", -1, 43, 11, 140, 22
     DEFPUSHBUTTON "&Logg av", IDOK, 57, 40, 60, 14
     PUSHBUTTON "Avbryt", IDCANCEL, 122, 40, 60, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Koble fra ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Er du sikker på du vil koble fra?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "&Koble fra", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Er du sikker på du vil koble fra?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Koble fra", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -603,18 +603,18 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Endre ikon"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Filnavn:", -1, 7, 14, 208, 10
-    PUSHBUTTON "Utforsk...", IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "Avbryt", IDCANCEL, 167, 181, 50, 14
+    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Utforsk...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Avbryt", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -665,6 +665,12 @@ BEGIN
     IDS_CONTROLPANEL "Kontrollpanel"
     IDS_ADMINISTRATIVETOOLS "Administrative verktøy"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
+    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
+    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+
     /* context menus */
     IDS_VIEW_LARGE "&Store ikoner"
     IDS_VIEW_SMALL "S&må ikoner"
@@ -682,8 +688,8 @@ BEGIN
     IDS_RENAME "Endre navn"
     IDS_PASTE "Sett inn"
 
-    IDS_CREATEFOLDER_DENIED "Kunne ikke opprette ny mappe: tilgang nektet."
-    IDS_CREATEFOLDER_CAPTION "Klarte ikke opprette ny mappe"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Bekreft filsletting"
     IDS_DELETEFOLDER_CAPTION "Bekreft sletting av mappe"
     IDS_DELETEITEM_TEXT "Virkelig slette «%1»?"
@@ -709,8 +715,6 @@ BEGIN
     IDS_RESTART_PROMPT "Vil du starte datamaskinen på nytt?"
     IDS_SHUTDOWN_TITLE "Avslutt"
     IDS_SHUTDOWN_PROMPT "Vil du slå av datamaskinen?"
-    IDS_LOGOFF_TITLE "Log Off"
-    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
@@ -796,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Systemfil"
     IDS_VXD_FILE "Virtuell enhetdriver"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Åpne"
     IDS_EXPLORE_VERB "Explore"
@@ -812,11 +817,11 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Standard tildelingsstørrelse"
     IDS_COPY_OF "Copy of"
 
-    IDS_SHLEXEC_NOASSOC "Intet Windows-program er satt opp til å åpne denne filtypen."
+    IDS_SHLEXEC_NOASSOC "Intet ReactOS-program er satt opp til å åpne denne filtypen."
 
     IDS_FILE_DETAILS "Detailjer for '%s' utvidelser"
     IDS_FILE_DETAILSADV "Filer med utvidelser '%s' er av typen '%s'. For å endre innstillingene som er av filen '%s', trykk på avansert."
-    IDS_FILE_TYPES "FileTypes"
+    IDS_FILE_TYPES "File Types"
     IDS_COLUMN_EXTENSION "Extensions"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
@@ -830,4 +835,24 @@ BEGIN
     IDS_MENU_EMPTY "(Empty)"
     IDS_OBJECTS "%d Objects"
     IDS_OBJECTS_SELECTED "%d Objects Selected"
+
+    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
+    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
+    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
+    IDS_ADVANCED_HIDDEN "Hidden files and folders"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
+    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
+    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 END

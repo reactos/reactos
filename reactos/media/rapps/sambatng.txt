@@ -34,6 +34,10 @@ Description = Narzędzie pozwalające na dostęp z poziomu ReactOSa do współdz
 Description = Instrument care permite accesarea în ReactOS a dosarelor și imprimantelor partajate din Windows.
 Size = 2,1 Mio
 
+[Section.0419]
+Description = Позволяет получить доступ к общим папкам Windows и принтерам в ReactOS.
+Size = 2,1 МиБ
+
 [Section.041f]
 Description = Size, ReactOS'la Windows paylaşılan dizinlere ve paylaşılan yazıcılara erişime olanak sağlar.
 Size = 2,1 MiB

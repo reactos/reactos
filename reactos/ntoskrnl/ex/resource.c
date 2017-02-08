@@ -141,7 +141,7 @@ ExpCheckForApcsDisabled(IN KIRQL Irql,
         !(Thread->CombinedApcDisable))
     {
         /* Bad! */
-        DPRINT1("EX: resource: APCs still enabled before resource %p acquire "
+        DPRINT1("EX: resource: APCs still enabled before resource %p acquire/release "
                 "!!!\n", Resource);
         DbgBreakPoint();
     }
@@ -1817,7 +1817,7 @@ FASTCALL
 ExReleaseResourceLite(IN PERESOURCE Resource)
 {
     /* Just call the For-Thread function */
-    ExReleaseResourceForThreadLite(Resource, (ERESOURCE_THREAD)PsGetCurrentThread());
+    ExReleaseResourceForThreadLite(Resource, ExGetCurrentResourceThread());
 }
 
 /*++
@@ -1855,7 +1855,7 @@ ExReleaseResourceForThreadLite(IN PERESOURCE Resource,
 
     /* Sanity checks */
     ExpVerifyResource(Resource);
-    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, (PKTHREAD)Thread);
+    ExpCheckForApcsDisabled(LockHandle.OldIrql, Resource, KeGetCurrentThread());
 
     /* Check if it's exclusively owned */
     if (IsOwnedExclusive(Resource))

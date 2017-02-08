@@ -314,7 +314,7 @@ void run_operator(calc_node_t *result,
             calc.is_nan = TRUE;
     } else {
         operator_list[operation].op_i(&dc, &da, &db);
-        /* apply final limitator to result */
+        /* apply final limiter to result */
         apply_int_mask(&dc);
     }
 

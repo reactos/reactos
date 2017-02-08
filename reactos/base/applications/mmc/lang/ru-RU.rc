@@ -7,13 +7,13 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе...", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
@@ -22,24 +22,24 @@ BEGIN
     POPUP "&Файл"
     BEGIN
         MENUITEM "&Создать\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "&Открыть...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "Со&хранить", IDM_FILE_SAVE
+        MENUITEM "Сохр&анить как...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Выход\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Окно"
     BEGIN
-        MENUITEM "Сверху вниз", IDM_WINDOWS_LIST
+        MENUITEM "&Сверху вниз", IDM_WINDOWS_LIST
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе...", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Консоль управления ReactOS"
-    IDS_CONSOLETITLE "Console%1!u!"
+    IDS_CONSOLETITLE "Консоль%1!u!"
 END

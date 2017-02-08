@@ -66,7 +66,7 @@ ERRORLEVEL wird auf den Offset der Taste, welche der Benutzer gedrückt hat, ges
     STRING_CMD_HELP2 "\nVerfügbare Funktionen:"
     STRING_CMD_HELP3 "  [Aliase]"
     STRING_CMD_HELP4 "  [Verlauf]"
-    STRING_CMD_HELP5 "  [Unix Dateinamen-Vervollständigung]"
+    STRING_CMD_HELP5 "  [Bash Dateinamen-Vervollständigung]"
     STRING_CMD_HELP6 "  [Verzeichnis-Stack]"
     STRING_CMD_HELP7 "  [Weiterleitung und Piping]"
     STRING_CMD_HELP8 "Startet eine neue Instanz der ReactOS-Eingabeaufforderung.\n\n\
@@ -253,15 +253,15 @@ MKLINK [/D | /H | /J] Linkname Ziel\n\n\
   /H  Erzeugt einen Hardlink.\n\
   /J  Erzeugt einen Junction Point.\n\n\
 Wenn weder /H noch /J angegeben werden, wird eine symbolische Verknüpfung angelegt."
-    STRING_MEMMORY_HELP1 "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% Speicher geladen.\n\n\
+    STRING_MEMORY_HELP1 "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% Speicher geladen.\n\n\
   %13s Bytes RAM (insgesamt)\n\
   %13s Bytes verfügbarer RAM\n\n\
   %13s Bytes Auslagerungsdatei (insgesamt)\n\
   %13s Bytes verfügbare Auslagerungsdatei\n\n\
   %13s Bytes Virtueller Speicher (insgesamt)\n\
   %13s Bytes verfügbarer virtueller Speicher\n"
-    STRING_MISC_HELP1 "Drücken Sie eine beliebige Taste . . .\n"
+    STRING_MISC_HELP1 "Drücken Sie eine beliebige Taste . . ."
     STRING_MOVE_HELP1 "Überschreiben %s (Ja/Nein/Alle)? "
     STRING_MOVE_HELP2 "Verschiebt Dateien und benennt Dateien sowie Verzeichnisse um.\n\n\
 Um eine oder mehrere Dateien zu verschieben:\n\
@@ -521,7 +521,7 @@ Titel         neuer Titel"
     STRING_REPLACE_ERROR6 "Keine Dateien gefunden - %s\n"
     STRING_REPLACE_ERROR7 "Erweiterter Fehler 32\n"
     STRING_CMD_INFOLINE "  ReactOS Eingabeaufforderung                            HELP eingeben = Hilfe  "
-    STRING_REACTOS_VERSION "ReactOS Betriebssystem [Version %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Betriebssystem [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Eingabeaufforderung\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Läuft in: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

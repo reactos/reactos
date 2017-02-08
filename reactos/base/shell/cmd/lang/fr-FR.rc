@@ -68,7 +68,7 @@ ERRORLEVEL est modifié à l'offset de la touche enfoncée parmi les choix."
     STRING_CMD_HELP2 "\nFonctions disponibles :"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [historique]"
-    STRING_CMD_HELP5 "  [complétion des noms de fichiers façon unix]"
+    STRING_CMD_HELP5 "  [complétion des noms de fichiers façon Bash]"
     STRING_CMD_HELP6 "  [pile de répertoires]"
     STRING_CMD_HELP7 "  [redirections et canaux]"
     STRING_CMD_HELP8 "Démarre une nouvelle instance de l'interpréteur de commandes de ReactOS.\n\n\
@@ -193,7 +193,7 @@ Modifier les paramètres mémorisés avec un - (tiret)--par exemple, /-W.\n"
     STRING_DIR_HELP3 " Le lecteur %c n'a pas de nom de volume\n"
     STRING_DIR_HELP4 " Le numéro de série du volume est %04X-%04X\n"
     STRING_DIR_HELP5 "\n   Total de fichiers listés :\n%16i Fichier(s)% 14s octets\n"
-    STRING_DIR_HELP6 "%16i Rep(s)% 15s octets libres\n"
+    STRING_DIR_HELP6 "%16i Rép(s)% 15s octets libres\n"
     STRING_DIR_HELP7 "\n Répertoire de %s\n\n"
     STRING_DIR_HELP8 "%16i Fichier(s)% 14s octets\n"
     STRING_DIRSTACK_HELP1 "Stocke le répertoire courant pour utilisation avec la commande POPD,\n\
@@ -266,15 +266,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Affiche la quantité de mémoire système.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% de charge mémoire.\n\n\
+    STRING_MEMORY_HELP1 "Affiche la quantité de mémoire système.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% de charge mémoire.\n\n\
   %13s octets de RAM physique au total.\n\
   %13s octets de RAM physique disponible.\n\n\
   %13s octets de fichier d'échange au total.\n\
   %13s octets de fichier d'échange disponible.\n\n\
   %13s octets de mémoire virtuelle au total.\n\
   %13s octets de mémoire virtuelle disponible.\n"
-    STRING_MISC_HELP1 "Appuyer sur une touche pour continuer...\n"
+    STRING_MISC_HELP1 "Appuyer sur une touche pour continuer..."
     STRING_MOVE_HELP1 "Ecraser %s (Oui/Non/Tous) ? "
     STRING_MOVE_HELP2 "Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
 Pouur déplacer un ou plusieurs fichiers:\n\
@@ -536,7 +536,7 @@ titre         titre de la fenêtre"
     STRING_REPLACE_ERROR6 "Aucun fichier trouvé - %s\n"
     STRING_REPLACE_ERROR7 "Erreur étendue 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterpréteur de ligne de commandes ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "Fonctionnant sous: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

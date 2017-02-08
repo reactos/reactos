@@ -394,6 +394,39 @@ static VOID WINAPI EmsIntHandler(LPWORD Stack)
             break;
         }
 
+        /* Get or Set Page Map */
+        case 0x4E:
+        {
+            switch (getAL())
+            {
+                /* Get Mapping Registers  */
+                // case 0x00: // TODO: NOT IMPLEMENTED
+ 
+                /* Set Mapping Registers */
+                // case 0x01: // TODO: NOT IMPLEMENTED
+
+                /* Get and Set Mapping Registers At Once */
+                // case 0x02: // TODO: NOT IMPLEMENTED
+
+                /* Get Size of Page-Mapping Array */
+                case 0x03:
+                {
+                    setAH(EMS_STATUS_SUCCESS);
+                    setAL(sizeof(Mapping));
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT1("EMS function AH = 0x4E, subfunction AL = %02X NOT IMPLEMENTED\n", getAL());
+                    setAH(EMS_STATUS_UNKNOWN_FUNCTION);
+                    break;
+                }
+            }
+            
+            break;
+        }
+
         /* Get/Set Handle Name */
         case 0x53:
         {

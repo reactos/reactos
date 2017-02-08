@@ -582,6 +582,28 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    return Object;
 }
 
+BOOL
+FASTCALL
+UserMarkObjectDestroy(PVOID Object)
+{
+    PUSER_HANDLE_ENTRY entry;
+    PHEAD ObjHead = Object;
+
+    entry = handle_to_entry(gHandleTable, ObjHead->h);
+
+    ASSERT(entry != NULL);
+
+    entry->flags |= HANDLEENTRY_DESTROY;
+
+    if (ObjHead->cLockObj > 1)
+    {
+        entry->flags &= ~HANDLEENTRY_INDESTROY;
+        TRACE("Count %d\n",ObjHead->cLockObj);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 BOOL
 FASTCALL

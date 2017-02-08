@@ -105,7 +105,7 @@ static HRESULT enum_key( HKEY root, const WCHAR *subkey, VARIANT *names, VARIANT
         if (!(strings[i] = SysAllocString( buf )))
         {
             for (i--; i >= 0; i--) SysFreeString( strings[i] );
-            hr = ERROR_OUTOFMEMORY;
+            hr = E_OUTOFMEMORY;
             break;
         }
         i++;
@@ -210,7 +210,7 @@ static HRESULT enum_values( HKEY root, const WCHAR *subkey, VARIANT *names, VARI
         if (!(value_names[i] = SysAllocString( buf )))
         {
             for (i--; i >= 0; i--) SysFreeString( value_names[i] );
-            hr = ERROR_OUTOFMEMORY;
+            hr = E_OUTOFMEMORY;
             break;
         }
         i++;

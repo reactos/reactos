@@ -15,6 +15,8 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
+int gLanguageToggleKeyState = 0;
+DWORD gdwLanguageToggleKey = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -819,7 +821,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     }
 
     /* Check if this is a hotkey */
-    if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
+    if (co_UserProcessHotKeys(wSimpleVk, bIsDown)) //// Check if this is correct, refer to hotkey sequence message tests.
     {
         TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
@@ -1088,8 +1090,17 @@ UserProcessKeyboardInput(
         KbdInput.dwFlags = 0;
         if (pKbdInputData->Flags & KEY_BREAK)
             KbdInput.dwFlags |= KEYEVENTF_KEYUP;
+
         if (wVk & KBDEXT)
             KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+        //
+        // Based on wine input:test_Input_blackbox this is okay. It seems the 
+        // bit did not get set and more research is needed. Now the right
+        // shift works.
+        //
+        if (wVk == VK_RSHIFT)
+            KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+
         KbdInput.time = 0;
         KbdInput.dwExtraInfo = pKbdInputData->ExtraInformation;
         UserSendKeyboardInput(&KbdInput, FALSE);

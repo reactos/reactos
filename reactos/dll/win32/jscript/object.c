@@ -67,8 +67,8 @@ static HRESULT Object_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
         jsstr_t *ret;
         WCHAR *ptr;
 
-        ptr = jsstr_alloc_buf(9+strlenW(str), &ret);
-        if(!ptr)
+        ret = jsstr_alloc_buf(9+strlenW(str), &ptr);
+        if(!ret)
             return E_OUTOFMEMORY;
 
         sprintfW(ptr, formatW, str);
@@ -255,6 +255,9 @@ static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
 
     switch(flags) {
     case DISPATCH_METHOD:
+    case DISPATCH_CONSTRUCT: {
+        jsdisp_t *obj;
+
         if(argc) {
             if(!is_undefined(argv[0]) && !is_null(argv[0]) && (!is_object_instance(argv[0]) || get_object(argv[0]))) {
                 IDispatch *disp;
@@ -270,9 +273,6 @@ static HRESULT ObjectConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
                 return S_OK;
             }
         }
-        /* fall through */
-    case DISPATCH_CONSTRUCT: {
-        jsdisp_t *obj;
 
         hres = create_object(ctx, NULL, &obj);
         if(FAILED(hres))

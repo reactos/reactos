@@ -528,7 +528,7 @@ SeCaptureSecurityDescriptor(
     {
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
-    _SEH2_END
+    _SEH2_END;
 
     /*
      * Allocate enough memory to store a complete copy of a self-relative

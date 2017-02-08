@@ -15,11 +15,9 @@
 #include <windows.h>
 #endif
 
-#ifndef _M_AMD64
+#if defined(__LP64__) || (!defined(_M_AMD64) && defined(__WINESRC__))
 #if !defined(__ROS_LONG64__)
-#ifdef __WINESRC__
 #define __ROS_LONG64__
-#endif
 #endif
 #endif
 

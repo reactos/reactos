@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&Tümünü Seç\tDenetim+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Bul...\tDenetim+F",          ID_FIND
-        MENUITEM "S&onrakini Bul\tİ3",          ID_FIND_NEXT
+        MENUITEM "S&onrakini Bul\tF3",          ID_FIND_NEXT
         MENUITEM "&Değiştir...\tDenetim+H",     ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Ya&lnızca Okunur",            ID_EDIT_READONLY
@@ -78,7 +78,7 @@ BEGIN
     POPUP "&Biçim"
     BEGIN
         MENUITEM "&Yazı Tipi...",                ID_FONTSETTINGS
-        MENUITEM "&Öğe İmleri",                  ID_BULLET
+        MENUITEM "&Öge İmleri",                  ID_BULLET
         MENUITEM "&Paragraf...",                 ID_PARAFORMAT
         MENUITEM "&Sekme Durakları...",          ID_TABSTOPS
         POPUP "&Arka Plan"
@@ -101,7 +101,7 @@ BEGIN
         MENUITEM "&Çoğalt",             ID_EDIT_COPY
         MENUITEM "&Yapıştır",           ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Öğe İmleri",         ID_BULLET
+        MENUITEM "&Öge İmleri",         ID_BULLET
         MENUITEM "&Paragraf...",        ID_PARAFORMAT
     END
 END

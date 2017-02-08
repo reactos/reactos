@@ -19,29 +19,32 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
+#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);
 
+CHAR FrldrBootPath[MAX_PATH] = "";
+
 static BOOLEAN bReportError = TRUE;
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS
-/////////////////////////////////////////////////////////////////////////////////////////////
+/* FUNCTIONS *****************************************************************/
 
-VOID DiskReportError (BOOLEAN bError)
+VOID DiskReportError(BOOLEAN bError)
 {
     bReportError = bError;
 }
 
 VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 {
-    CHAR    ErrorCodeString[200];
+    CHAR ErrorCodeString[200];
 
     if (bReportError == FALSE)
         return;
 
-    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
+    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
+            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
     TRACE("%s\n", ErrorCodeString);
 
@@ -83,118 +86,70 @@ PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
     }
 }
 
-// This function is in arch/i386/i386disk.c
-//BOOLEAN DiskReadLogicalSectors(ULONG DriveNumber, U64 SectorNumber, ULONG SectorCount, PVOID Buffer)
-
 BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber)
 {
-    // Hard disks use drive numbers >= 0x80
-    // So if the drive number indicates a hard disk
-    // then return FALSE
-    // 0x49 is our magic ramdisk drive, so return FALSE for that too
+    /*
+     * Hard disks use drive numbers >= 0x80 . So if the drive number
+     * indicates a hard disk then return FALSE.
+     * 0x49 is our magic ramdisk drive, so return FALSE for that too.
+     */
     if ((DriveNumber >= 0x80) || (DriveNumber == 0x49))
-    {
         return FALSE;
-    }
 
-    // Drive is a floppy diskette so return TRUE
+    /* The drive is a floppy diskette so return TRUE */
     return TRUE;
 }
 
-BOOLEAN
-DiskGetBootPath(char *BootPath, unsigned Size)
+
+extern BOOLEAN
+DiskIsCdRomDrive(UCHAR DriveNumber);
+
+BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
-    static char Path[] = "multi(0)disk(0)";
-    char Device[4];
-    MASTER_BOOT_RECORD MasterBootRecord;
+    if (*FrldrBootPath)
+        goto Done;
 
     /* 0x49 is our magic ramdisk drive, so try to detect it first */
     if (FrldrBootDrive == 0x49)
     {
         /* This is the ramdisk. See ArmDiskGetBootPath too... */
-
-        PCCH RamDiskPath = "ramdisk(0)";
-
-        if (Size < sizeof(RamDiskPath))
-        {
-            return FALSE;
-        }
-
-        strcpy(BootPath, RamDiskPath);
+        // sprintf(FrldrBootPath, "ramdisk(%u)", 0);
+        strcpy(FrldrBootPath, "ramdisk(0)");
     }
     else if (FrldrBootDrive < 0x80)
     {
         /* This is a floppy */
-
-        if (Size <= sizeof(Path) + 7 + sizeof(Device))
-        {
-            return FALSE;
-        }
-
-        strcpy(BootPath, Path);
-
-        _itoa(FrldrBootDrive, Device, 10);
-        strcat(BootPath, "fdisk(");
-        strcat(BootPath, Device);
-        strcat(BootPath, ")");
+        sprintf(FrldrBootPath, "multi(0)disk(0)fdisk(%u)", FrldrBootDrive);
     }
-    /* FIXME */
-    else if (DiskReadBootRecord(FrldrBootDrive, 0, &MasterBootRecord))
+    else if (DiskIsCdRomDrive(FrldrBootDrive))
+    {
+        /* This is a CD-ROM drive */
+        sprintf(FrldrBootPath, "multi(0)disk(0)cdrom(%u)", FrldrBootDrive - 0x80);
+    }
+    else
     {
         ULONG BootPartition;
         PARTITION_TABLE_ENTRY PartitionEntry;
-        char Partition[4];
 
         /* This is a hard disk */
         if (!DiskGetActivePartitionEntry(FrldrBootDrive, &PartitionEntry, &BootPartition))
         {
-            DbgPrint("Invalid active partition information\n");
+            ERR("Invalid active partition information\n");
             return FALSE;
         }
 
         FrldrBootPartition = BootPartition;
 
-        if (Size <= sizeof(Path) + 18 + sizeof(Device) + sizeof(Partition))
-        {
-            return FALSE;
-        }
-
-        strcpy(BootPath, Path);
-
-        _itoa(FrldrBootDrive - 0x80, Device, 10);
-        strcat(BootPath, "rdisk(");
-        strcat(BootPath, Device);
-        strcat(BootPath, ")");
-
-        _itoa(FrldrBootPartition, Partition, 10);
-        strcat(BootPath, "partition(");
-        strcat(BootPath, Partition);
-        strcat(BootPath, ")");
-    }
-    else
-    {
-        /* This is a CD-ROM drive */
-
-        if (Size <= sizeof(Path) + 7 + sizeof(Device))
-        {
-            return FALSE;
-        }
-
-        strcpy(BootPath, Path);
-
-        _itoa(FrldrBootDrive - 0x80, Device, 10);
-        strcat(BootPath, "cdrom(");
-        strcat(BootPath, Device);
-        strcat(BootPath, ")");
+        sprintf(FrldrBootPath, "multi(0)disk(0)rdisk(%u)partition(%lu)",
+                FrldrBootDrive - 0x80, FrldrBootPartition);
     }
 
+Done:
+    /* Copy back the buffer */
+    if (Size < strlen(FrldrBootPath) + 1)
+        return FALSE;
+    strncpy(BootPath, FrldrBootPath, Size);
     return TRUE;
 }
-
-// This function is in arch/i386/i386disk.c
-//VOID DiskStopFloppyMotor(VOID)
-
-// This function is in arch/i386/i386disk.c
-//ULONG DiskGetCacheableBlockCount(UCHAR DriveNumber)
 
 #endif

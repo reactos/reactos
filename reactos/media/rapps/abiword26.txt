@@ -34,6 +34,10 @@ Description = Edytor tekstu.
 Description = Procesor de text, rapid, cu surse deschise.
 Size = 5,6 Mio
 
+[Section.0419]
+Description = Текстовый процесор.
+Size = 5,6 МиБ
+
 [Section.041f]
 Description = Canlı ve açık kaynak sözcük işlemcisi.
 Size = 5,6 MiB

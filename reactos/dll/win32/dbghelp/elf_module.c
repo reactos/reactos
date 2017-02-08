@@ -642,7 +642,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
     hash_table_iter_init(&module->ht_symbols, &hti, NULL);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+        sym = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
         switch (sym->symt.tag)
         {
         case SymTagFunction:

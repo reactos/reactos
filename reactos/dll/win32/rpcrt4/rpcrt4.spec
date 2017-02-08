@@ -124,7 +124,7 @@
 124 stub NDRcopy
 125 stdcall NdrAllocate(ptr long)
 126 varargs NdrAsyncClientCall(ptr ptr)
-127 stub NdrAsyncServerCall
+127 stdcall NdrAsyncServerCall(ptr)
 128 stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
 129 stdcall NdrByteCountPointerFree(ptr ptr ptr)
 130 stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
@@ -392,8 +392,8 @@
 392 stub RpcMgmtInqComTimeout
 393 stub RpcMgmtInqDefaultProtectLevel
 394 stdcall RpcMgmtInqIfIds(ptr ptr)
-395 stub RpcMgmtInqServerPrincNameA
-396 stub RpcMgmtInqServerPrincNameW
+395 stdcall -stub RpcMgmtInqServerPrincNameA(ptr long ptr)
+396 stdcall -stub RpcMgmtInqServerPrincNameW(ptr long ptr)
 397 stdcall RpcMgmtInqStats(ptr ptr)
 398 stdcall RpcMgmtIsServerListening(ptr)
 399 stdcall RpcMgmtSetAuthorizationFn(ptr)

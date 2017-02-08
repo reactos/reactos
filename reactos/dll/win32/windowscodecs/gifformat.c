@@ -1,6 +1,6 @@
 /*
  * Copyright 2009 Vincent Povirk for CodeWeavers
- * Copyright 2012 Dmitry Timoshkov
+ * Copyright 2012,2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,40 @@
 
 #include "ungif.h"
 
+#include "pshpack1.h"
+
+struct logical_screen_descriptor
+{
+    char signature[6];
+    USHORT width;
+    USHORT height;
+    BYTE packed;
+    /* global_color_table_flag : 1;
+     * color_resolution : 3;
+     * sort_flag : 1;
+     * global_color_table_size : 3;
+     */
+    BYTE background_color_index;
+    BYTE pixel_aspect_ratio;
+};
+
+struct image_descriptor
+{
+    USHORT left;
+    USHORT top;
+    USHORT width;
+    USHORT height;
+    BYTE packed;
+    /* local_color_table_flag : 1;
+     * interlace_flag : 1;
+     * sort_flag : 1;
+     * reserved : 2;
+     * local_color_table_size : 3;
+     */
+};
+
+#include "poppack.h"
+
 static LPWSTR strdupAtoW(const char *src)
 {
     int len = MultiByteToWideChar(CP_ACP, 0, src, -1, NULL, 0);
@@ -34,22 +68,7 @@ static LPWSTR strdupAtoW(const char *src)
 static HRESULT load_LSD_metadata(IStream *stream, const GUID *vendor, DWORD options,
                                  MetadataItem **items, DWORD *count)
 {
-#include "pshpack1.h"
-    struct logical_screen_descriptor
-    {
-        char signature[6];
-        USHORT width;
-        USHORT height;
-        BYTE packed;
-        /* global_color_table_flag : 1;
-         * color_resolution : 3;
-         * sort_flag : 1;
-         * global_color_table_size : 3;
-         */
-        BYTE background_color_index;
-        BYTE pixel_aspect_ratio;
-    } lsd_data;
-#include "poppack.h"
+    struct logical_screen_descriptor lsd_data;
     HRESULT hr;
     ULONG bytesread, i;
     MetadataItem *result;
@@ -133,23 +152,6 @@ HRESULT LSDReader_CreateInstance(REFIID iid, void **ppv)
 {
     return MetadataReader_Create(&LSDReader_Vtbl, iid, ppv);
 }
-
-#include "pshpack1.h"
-struct image_descriptor
-{
-    USHORT left;
-    USHORT top;
-    USHORT width;
-    USHORT height;
-    BYTE packed;
-    /* local_color_table_flag : 1;
-     * interlace_flag : 1;
-     * sort_flag : 1;
-     * reserved : 2;
-     * local_color_table_size : 3;
-     */
-};
-#include "poppack.h"
 
 static HRESULT load_IMD_metadata(IStream *stream, const GUID *vendor, DWORD options,
                                  MetadataItem **items, DWORD *count)
@@ -236,7 +238,7 @@ static HRESULT load_GCE_metadata(IStream *stream, const GUID *vendor, DWORD opti
                                  MetadataItem **items, DWORD *count)
 {
 #include "pshpack1.h"
-    struct graphic_control_extenstion
+    struct graphic_control_extension
     {
         BYTE packed;
         /* reservred: 3;
@@ -314,7 +316,7 @@ static HRESULT load_APE_metadata(IStream *stream, const GUID *vendor, DWORD opti
                                  MetadataItem **items, DWORD *count)
 {
 #include "pshpack1.h"
-    struct application_extenstion
+    struct application_extension
     {
         BYTE extension_introducer;
         BYTE extension_label;
@@ -421,7 +423,7 @@ static HRESULT load_GifComment_metadata(IStream *stream, const GUID *vendor, DWO
                                         MetadataItem **items, DWORD *count)
 {
 #include "pshpack1.h"
-    struct gif_extenstion
+    struct gif_extension
     {
         BYTE extension_introducer;
         BYTE extension_label;
@@ -801,8 +803,14 @@ static HRESULT WINAPI GifFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
 static HRESULT WINAPI GifFrameDecode_GetMetadataQueryReader(IWICBitmapFrameDecode *iface,
     IWICMetadataQueryReader **ppIMetadataQueryReader)
 {
+    GifFrameDecode *This = impl_from_IWICBitmapFrameDecode(iface);
+
     TRACE("(%p,%p)\n", iface, ppIMetadataQueryReader);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+
+    if (!ppIMetadataQueryReader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(&This->IWICMetadataBlockReader_iface, ppIMetadataQueryReader);
 }
 
 static HRESULT WINAPI GifFrameDecode_GetColorContexts(IWICBitmapFrameDecode *iface,
@@ -1177,6 +1185,9 @@ static HRESULT WINAPI GifDecoder_CopyPalette(IWICBitmapDecoder *iface, IWICPalet
 
     TRACE("(%p,%p)\n", iface, palette);
 
+    if (!This->gif)
+        return WINCODEC_ERR_WRONGSTATE;
+
     cm = This->gif->SColorMap;
     if (cm)
     {
@@ -1433,6 +1444,948 @@ HRESULT GifDecoder_CreateInstance(REFIID iid, void** ppv)
 
     ret = IWICBitmapDecoder_QueryInterface(&This->IWICBitmapDecoder_iface, iid, ppv);
     IWICBitmapDecoder_Release(&This->IWICBitmapDecoder_iface);
+
+    return ret;
+}
+
+typedef struct GifEncoder
+{
+    IWICBitmapEncoder IWICBitmapEncoder_iface;
+    LONG ref;
+    IStream *stream;
+    CRITICAL_SECTION lock;
+    BOOL initialized, info_written, committed;
+    UINT n_frames;
+    WICColor palette[256];
+    UINT colors;
+} GifEncoder;
+
+static inline GifEncoder *impl_from_IWICBitmapEncoder(IWICBitmapEncoder *iface)
+{
+    return CONTAINING_RECORD(iface, GifEncoder, IWICBitmapEncoder_iface);
+}
+
+typedef struct GifFrameEncode
+{
+    IWICBitmapFrameEncode IWICBitmapFrameEncode_iface;
+    LONG ref;
+    GifEncoder *encoder;
+    BOOL initialized, interlace, committed;
+    UINT width, height, lines;
+    double xres, yres;
+    WICColor palette[256];
+    UINT colors;
+    BYTE *image_data;
+} GifFrameEncode;
+
+static inline GifFrameEncode *impl_from_IWICBitmapFrameEncode(IWICBitmapFrameEncode *iface)
+{
+    return CONTAINING_RECORD(iface, GifFrameEncode, IWICBitmapFrameEncode_iface);
+}
+
+static HRESULT WINAPI GifFrameEncode_QueryInterface(IWICBitmapFrameEncode *iface, REFIID iid, void **ppv)
+{
+    TRACE("%p,%s,%p\n", iface, debugstr_guid(iid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+
+    if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IWICBitmapFrameEncode, iid))
+    {
+        IWICBitmapFrameEncode_AddRef(iface);
+        *ppv = iface;
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI GifFrameEncode_AddRef(IWICBitmapFrameEncode *iface)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("%p -> %u\n", iface, ref);
+    return ref;
+}
+
+static ULONG WINAPI GifFrameEncode_Release(IWICBitmapFrameEncode *iface)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("%p -> %u\n", iface, ref);
+
+    if (!ref)
+    {
+        IWICBitmapEncoder_Release(&This->encoder->IWICBitmapEncoder_iface);
+        HeapFree(GetProcessHeap(), 0, This->image_data);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI GifFrameEncode_Initialize(IWICBitmapFrameEncode *iface, IPropertyBag2 *options)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, options);
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (!This->initialized)
+    {
+        This->initialized = TRUE;
+        hr = S_OK;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetSize(IWICBitmapFrameEncode *iface, UINT width, UINT height)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%u,%u\n", iface, width, height);
+
+    if (!width || !height) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized)
+    {
+        HeapFree(GetProcessHeap(), 0, This->image_data);
+
+        This->image_data = HeapAlloc(GetProcessHeap(), 0, width * height);
+        if (This->image_data)
+        {
+            This->width = width;
+            This->height = height;
+            hr = S_OK;
+        }
+        else
+            hr = E_OUTOFMEMORY;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetResolution(IWICBitmapFrameEncode *iface, double xres, double yres)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%f,%f\n", iface, xres, yres);
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized)
+    {
+        This->xres = xres;
+        This->yres = yres;
+        hr = S_OK;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetPixelFormat(IWICBitmapFrameEncode *iface, WICPixelFormatGUID *format)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%s\n", iface, debugstr_guid(format));
+
+    if (!format) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized)
+    {
+        *format = GUID_WICPixelFormat8bppIndexed;
+        hr = S_OK;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetColorContexts(IWICBitmapFrameEncode *iface, UINT count, IWICColorContext **context)
+{
+    FIXME("%p,%u,%p: stub\n", iface, count, context);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetPalette(IWICBitmapFrameEncode *iface, IWICPalette *palette)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, palette);
+
+    if (!palette) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized)
+        hr = IWICPalette_GetColors(palette, 256, This->palette, &This->colors);
+    else
+        hr = WINCODEC_ERR_NOTINITIALIZED;
+
+    LeaveCriticalSection(&This->encoder->lock);
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_SetThumbnail(IWICBitmapFrameEncode *iface, IWICBitmapSource *thumbnail)
+{
+    FIXME("%p,%p: stub\n", iface, thumbnail);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI GifFrameEncode_WritePixels(IWICBitmapFrameEncode *iface, UINT lines, UINT stride, UINT size, BYTE *pixels)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%u,%u,%u,%p\n", iface, lines, stride, size, pixels);
+
+    if (!pixels) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized && This->image_data)
+    {
+        if (This->lines + lines <= This->height)
+        {
+            UINT i;
+            BYTE *src, *dst;
+
+            src = pixels;
+            dst = This->image_data + This->lines * This->width;
+
+            for (i = 0; i < lines; i++)
+            {
+                memcpy(dst, src, This->width);
+                src += stride;
+                dst += This->width;
+            }
+
+            This->lines += lines;
+            hr = S_OK;
+        }
+        else
+            hr = E_INVALIDARG;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_WriteSource(IWICBitmapFrameEncode *iface, IWICBitmapSource *source, WICRect *rc)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p,%p\n", iface, source, rc);
+
+    if (!source) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->initialized)
+    {
+        const GUID *format = &GUID_WICPixelFormat8bppIndexed;
+
+        hr = configure_write_source(iface, source, rc, format,
+                                    This->width, This->height, This->xres, This->yres);
+        if (hr == S_OK)
+            hr = write_source(iface, source, rc, format, 8, This->width, This->height);
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+    return hr;
+}
+
+#define LZW_DICT_SIZE (1 << 12)
+
+struct lzw_dict
+{
+    short prefix[LZW_DICT_SIZE];
+    unsigned char suffix[LZW_DICT_SIZE];
+};
+
+struct lzw_state
+{
+    struct lzw_dict dict;
+    short init_code_bits, code_bits, next_code, clear_code, eof_code;
+    unsigned bits_buf;
+    int bits_count;
+    int (*user_write_data)(void *user_ptr, void *data, int length);
+    void *user_ptr;
+};
+
+struct input_stream
+{
+    unsigned len;
+    const BYTE *in;
+};
+
+struct output_stream
+{
+    struct
+    {
+        unsigned char len;
+        char data[255];
+    } gif_block;
+    IStream *out;
+};
+
+static int lzw_output_code(struct lzw_state *state, short code)
+{
+    state->bits_buf |= code << state->bits_count;
+    state->bits_count += state->code_bits;
+
+    while (state->bits_count >= 8)
+    {
+        unsigned char byte = (unsigned char)state->bits_buf;
+        if (state->user_write_data(state->user_ptr, &byte, 1) != 1)
+            return 0;
+        state->bits_buf >>= 8;
+        state->bits_count -= 8;
+    }
+
+    return 1;
+}
+
+static inline int lzw_output_clear_code(struct lzw_state *state)
+{
+    return lzw_output_code(state, state->clear_code);
+}
+
+static inline int lzw_output_eof_code(struct lzw_state *state)
+{
+    return lzw_output_code(state, state->eof_code);
+}
+
+static int lzw_flush_bits(struct lzw_state *state)
+{
+    unsigned char byte;
+
+    while (state->bits_count >= 8)
+    {
+        byte = (unsigned char)state->bits_buf;
+        if (state->user_write_data(state->user_ptr, &byte, 1) != 1)
+            return 0;
+        state->bits_buf >>= 8;
+        state->bits_count -= 8;
+    }
+
+    if (state->bits_count)
+    {
+        static const char mask[8] = { 0x00,0x01,0x03,0x07,0x0f,0x1f,0x3f,0x7f };
+
+        byte = (unsigned char)state->bits_buf & mask[state->bits_count];
+        if (state->user_write_data(state->user_ptr, &byte, 1) != 1)
+            return 0;
+    }
+
+    state->bits_buf = 0;
+    state->bits_count = 0;
+
+    return 1;
+}
+
+static void lzw_dict_reset(struct lzw_state *state)
+{
+    int i;
+
+    state->code_bits = state->init_code_bits + 1;
+    state->next_code = (1 << state->init_code_bits) + 2;
+
+    for(i = 0; i < LZW_DICT_SIZE; i++)
+    {
+        state->dict.prefix[i] = 1 << 12; /* impossible LZW code value */
+        state->dict.suffix[i] = 0;
+    }
+}
+
+static void lzw_state_init(struct lzw_state *state, short init_code_bits, void *user_write_data, void *user_ptr)
+{
+    state->init_code_bits = init_code_bits;
+    state->clear_code = 1 << init_code_bits;
+    state->eof_code = state->clear_code + 1;
+    state->bits_buf = 0;
+    state->bits_count = 0;
+    state->user_write_data = user_write_data;
+    state->user_ptr = user_ptr;
+
+    lzw_dict_reset(state);
+}
+
+static int lzw_dict_add(struct lzw_state *state, short prefix, unsigned char suffix)
+{
+    if (state->next_code < LZW_DICT_SIZE)
+    {
+        state->dict.prefix[state->next_code] = prefix;
+        state->dict.suffix[state->next_code] = suffix;
+
+        if ((state->next_code & (state->next_code - 1)) == 0)
+            state->code_bits++;
+
+        state->next_code++;
+        return state->next_code;
+    }
+
+    return -1;
+}
+
+static short lzw_dict_lookup(const struct lzw_state *state, short prefix, unsigned char suffix)
+{
+    short i;
+
+    for (i = 0; i < state->next_code; i++)
+    {
+        if (state->dict.prefix[i] == prefix && state->dict.suffix[i] == suffix)
+            return i;
+    }
+
+    return -1;
+}
+
+static inline int write_byte(struct output_stream *out, char byte)
+{
+    if (out->gif_block.len == 255)
+    {
+        if (IStream_Write(out->out, &out->gif_block, sizeof(out->gif_block), NULL) != S_OK)
+            return 0;
+
+        out->gif_block.len = 0;
+    }
+
+    out->gif_block.data[out->gif_block.len++] = byte;
+
+    return 1;
+}
+
+static int write_data(void *user_ptr, void *user_data, int length)
+{
+    unsigned char *data = user_data;
+    struct output_stream *out = user_ptr;
+    int len = length;
+
+    while (len-- > 0)
+    {
+        if (!write_byte(out, *data++)) return 0;
+    }
+
+    return length;
+}
+
+static int flush_output_data(void *user_ptr)
+{
+    struct output_stream *out = user_ptr;
+
+    if (out->gif_block.len)
+    {
+        if (IStream_Write(out->out, &out->gif_block, out->gif_block.len + sizeof(out->gif_block.len), NULL) != S_OK)
+            return 0;
+    }
+
+    /* write GIF block terminator */
+    out->gif_block.len = 0;
+    return IStream_Write(out->out, &out->gif_block, sizeof(out->gif_block.len), NULL) == S_OK;
+}
+
+static inline int read_byte(struct input_stream *in, unsigned char *byte)
+{
+    if (in->len)
+    {
+        in->len--;
+        *byte = *in->in++;
+        return 1;
+    }
+
+    return 0;
+}
+
+static HRESULT gif_compress(IStream *out_stream, const BYTE *in_data, ULONG in_size)
+{
+    struct input_stream in;
+    struct output_stream out;
+    struct lzw_state state;
+    short init_code_bits, prefix, code;
+    unsigned char suffix;
+
+    in.in = in_data;
+    in.len = in_size;
+
+    out.gif_block.len = 0;
+    out.out = out_stream;
+
+    init_code_bits = suffix = 8;
+    if (IStream_Write(out.out, &suffix, sizeof(suffix), NULL) != S_OK)
+        return E_FAIL;
+
+    lzw_state_init(&state, init_code_bits, write_data, &out);
+
+    if (!lzw_output_clear_code(&state))
+        return E_FAIL;
+
+    if (read_byte(&in, &suffix))
+    {
+        prefix = suffix;
+
+        while (read_byte(&in, &suffix))
+        {
+            code = lzw_dict_lookup(&state, prefix, suffix);
+            if (code == -1)
+            {
+                if (!lzw_output_code(&state, prefix))
+                    return E_FAIL;
+
+                if (lzw_dict_add(&state, prefix, suffix) == -1)
+                {
+                    if (!lzw_output_clear_code(&state))
+                        return E_FAIL;
+                    lzw_dict_reset(&state);
+                }
+
+                prefix = suffix;
+            }
+            else
+                prefix = code;
+        }
+
+        if (!lzw_output_code(&state, prefix))
+            return E_FAIL;
+        if (!lzw_output_eof_code(&state))
+            return E_FAIL;
+        if (!lzw_flush_bits(&state))
+            return E_FAIL;
+    }
+
+    return flush_output_data(&out) ? S_OK : E_FAIL;
+}
+
+static HRESULT WINAPI GifFrameEncode_Commit(IWICBitmapFrameEncode *iface)
+{
+    GifFrameEncode *This = impl_from_IWICBitmapFrameEncode(iface);
+    HRESULT hr;
+
+    TRACE("%p\n", iface);
+
+    EnterCriticalSection(&This->encoder->lock);
+
+    if (This->image_data && This->lines == This->height && !This->committed)
+    {
+        BYTE gif_palette[256][3];
+
+        hr = S_OK;
+
+        if (!This->encoder->info_written)
+        {
+            struct logical_screen_descriptor lsd;
+
+            /* Logical Screen Descriptor */
+            memcpy(lsd.signature, "GIF89a", 6);
+            lsd.width = This->width;
+            lsd.height = This->height;
+            lsd.packed = 0;
+            if (This->encoder->colors)
+                lsd.packed |= 0x80; /* global color table flag */
+            lsd.packed |= 0x07 << 4; /* color resolution */
+            lsd.packed |= 0x07; /* global color table size */
+            lsd.background_color_index = 0; /* FIXME */
+            lsd.pixel_aspect_ratio = 0;
+            hr = IStream_Write(This->encoder->stream, &lsd, sizeof(lsd), NULL);
+            if (hr == S_OK && This->encoder->colors)
+            {
+                UINT i;
+
+                /* Global Color Table */
+                memset(gif_palette, 0, sizeof(gif_palette));
+                for (i = 0; i < This->encoder->colors; i++)
+                {
+                    gif_palette[i][0] = (This->encoder->palette[i] >> 16) & 0xff;
+                    gif_palette[i][1] = (This->encoder->palette[i] >> 8) & 0xff;
+                    gif_palette[i][2] = This->encoder->palette[i] & 0xff;
+                }
+                hr = IStream_Write(This->encoder->stream, gif_palette, sizeof(gif_palette), NULL);
+            }
+
+            /* FIXME: write GCE, APE, etc. GIF extensions */
+
+            if (hr == S_OK)
+                This->encoder->info_written = TRUE;
+        }
+
+        if (hr == S_OK)
+        {
+            char image_separator = 0x2c;
+
+            hr = IStream_Write(This->encoder->stream, &image_separator, sizeof(image_separator), NULL);
+            if (hr == S_OK)
+            {
+                struct image_descriptor imd;
+
+                /* Image Descriptor */
+                imd.left = 0;
+                imd.top = 0;
+                imd.width = This->width;
+                imd.height = This->height;
+                imd.packed = 0;
+                if (This->colors)
+                {
+                    imd.packed |= 0x80; /* local color table flag */
+                    imd.packed |= 0x07; /* local color table size */
+                }
+                /* FIXME: interlace flag */
+                hr = IStream_Write(This->encoder->stream, &imd, sizeof(imd), NULL);
+                if (hr == S_OK && This->colors)
+                {
+                    UINT i;
+
+                    /* Local Color Table */
+                    memset(gif_palette, 0, sizeof(gif_palette));
+                    for (i = 0; i < This->colors; i++)
+                    {
+                        gif_palette[i][0] = (This->palette[i] >> 16) & 0xff;
+                        gif_palette[i][1] = (This->palette[i] >> 8) & 0xff;
+                        gif_palette[i][2] = This->palette[i] & 0xff;
+                    }
+                    hr = IStream_Write(This->encoder->stream, gif_palette, sizeof(gif_palette), NULL);
+                    if (hr == S_OK)
+                    {
+                        /* Image Data */
+                        hr = gif_compress(This->encoder->stream, This->image_data, This->width * This->height);
+                        if (hr == S_OK)
+                            This->committed = TRUE;
+                    }
+                }
+            }
+        }
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->encoder->lock);
+    return hr;
+}
+
+static HRESULT WINAPI GifFrameEncode_GetMetadataQueryWriter(IWICBitmapFrameEncode *iface, IWICMetadataQueryWriter **writer)
+{
+    FIXME("%p, %p: stub\n", iface, writer);
+    return E_NOTIMPL;
+}
+
+static const IWICBitmapFrameEncodeVtbl GifFrameEncode_Vtbl =
+{
+    GifFrameEncode_QueryInterface,
+    GifFrameEncode_AddRef,
+    GifFrameEncode_Release,
+    GifFrameEncode_Initialize,
+    GifFrameEncode_SetSize,
+    GifFrameEncode_SetResolution,
+    GifFrameEncode_SetPixelFormat,
+    GifFrameEncode_SetColorContexts,
+    GifFrameEncode_SetPalette,
+    GifFrameEncode_SetThumbnail,
+    GifFrameEncode_WritePixels,
+    GifFrameEncode_WriteSource,
+    GifFrameEncode_Commit,
+    GifFrameEncode_GetMetadataQueryWriter
+};
+
+static HRESULT WINAPI GifEncoder_QueryInterface(IWICBitmapEncoder *iface, REFIID iid, void **ppv)
+{
+    TRACE("%p,%s,%p\n", iface, debugstr_guid(iid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+
+    if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IWICBitmapEncoder, iid))
+    {
+        IWICBitmapEncoder_AddRef(iface);
+        *ppv = iface;
+        return S_OK;
+    }
+
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI GifEncoder_AddRef(IWICBitmapEncoder *iface)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("%p -> %u\n", iface, ref);
+    return ref;
+}
+
+static ULONG WINAPI GifEncoder_Release(IWICBitmapEncoder *iface)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("%p -> %u\n", iface, ref);
+
+    if (!ref)
+    {
+        if (This->stream) IStream_Release(This->stream);
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI GifEncoder_Initialize(IWICBitmapEncoder *iface, IStream *stream, WICBitmapEncoderCacheOption option)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p,%#x\n", iface, stream, option);
+
+    if (!stream) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->lock);
+
+    if (!This->initialized)
+    {
+        IStream_AddRef(stream);
+        This->stream = stream;
+        This->initialized = TRUE;
+        hr = S_OK;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->lock);
+
+    return hr;
+}
+
+static HRESULT WINAPI GifEncoder_GetContainerFormat(IWICBitmapEncoder *iface, GUID *format)
+{
+    if (!format) return E_INVALIDARG;
+
+    *format = GUID_ContainerFormatGif;
+    return S_OK;
+}
+
+static HRESULT WINAPI GifEncoder_GetEncoderInfo(IWICBitmapEncoder *iface, IWICBitmapEncoderInfo **info)
+{
+    IWICComponentInfo *comp_info;
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, info);
+
+    if (!info) return E_INVALIDARG;
+
+    hr = CreateComponentInfo(&CLSID_WICGifEncoder, &comp_info);
+    if (hr == S_OK)
+    {
+        hr = IWICComponentInfo_QueryInterface(comp_info, &IID_IWICBitmapEncoderInfo, (void **)info);
+        IWICComponentInfo_Release(comp_info);
+    }
+    return hr;
+}
+
+static HRESULT WINAPI GifEncoder_SetColorContexts(IWICBitmapEncoder *iface, UINT count, IWICColorContext **context)
+{
+    FIXME("%p,%u,%p: stub\n", iface, count, context);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI GifEncoder_SetPalette(IWICBitmapEncoder *iface, IWICPalette *palette)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p\n", iface, palette);
+
+    if (!palette) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->lock);
+
+    if (This->initialized)
+        hr = IWICPalette_GetColors(palette, 256, This->palette, &This->colors);
+    else
+        hr = WINCODEC_ERR_NOTINITIALIZED;
+
+    LeaveCriticalSection(&This->lock);
+    return hr;
+}
+
+static HRESULT WINAPI GifEncoder_SetThumbnail(IWICBitmapEncoder *iface, IWICBitmapSource *thumbnail)
+{
+    TRACE("%p,%p\n", iface, thumbnail);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI GifEncoder_SetPreview(IWICBitmapEncoder *iface, IWICBitmapSource *preview)
+{
+    TRACE("%p,%p\n", iface, preview);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI GifEncoder_CreateNewFrame(IWICBitmapEncoder *iface, IWICBitmapFrameEncode **frame, IPropertyBag2 **options)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    HRESULT hr;
+
+    TRACE("%p,%p,%p\n", iface, frame, options);
+
+    if (!frame) return E_INVALIDARG;
+
+    EnterCriticalSection(&This->lock);
+
+    if (This->initialized && !This->committed)
+    {
+        GifFrameEncode *ret = HeapAlloc(GetProcessHeap(), 0, sizeof(*ret));
+        if (ret)
+        {
+            This->n_frames++;
+
+            ret->IWICBitmapFrameEncode_iface.lpVtbl = &GifFrameEncode_Vtbl;
+            ret->ref = 1;
+            ret->encoder = This;
+            ret->initialized = FALSE;
+            ret->interlace = FALSE; /* FIXME: read from the properties */
+            ret->committed = FALSE;
+            ret->width = 0;
+            ret->height = 0;
+            ret->lines = 0;
+            ret->xres = 0.0;
+            ret->yres = 0.0;
+            ret->colors = 0;
+            ret->image_data = NULL;
+            IWICBitmapEncoder_AddRef(iface);
+            *frame = &ret->IWICBitmapFrameEncode_iface;
+
+            hr = S_OK;
+
+            if (options)
+            {
+                hr = CreatePropertyBag2(NULL, 0, options);
+                if (hr != S_OK)
+                {
+                    IWICBitmapFrameEncode_Release(*frame);
+                    *frame = NULL;
+                }
+            }
+        }
+        else
+            hr = E_OUTOFMEMORY;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->lock);
+
+    return hr;
+
+}
+
+static HRESULT WINAPI GifEncoder_Commit(IWICBitmapEncoder *iface)
+{
+    GifEncoder *This = impl_from_IWICBitmapEncoder(iface);
+    HRESULT hr;
+
+    TRACE("%p\n", iface);
+
+    EnterCriticalSection(&This->lock);
+
+    if (This->initialized && !This->committed)
+    {
+        char gif_trailer = 0x3b;
+
+        /* FIXME: write text, comment GIF extensions */
+
+        hr = IStream_Write(This->stream, &gif_trailer, sizeof(gif_trailer), NULL);
+        if (hr == S_OK)
+            This->committed = TRUE;
+    }
+    else
+        hr = WINCODEC_ERR_WRONGSTATE;
+
+    LeaveCriticalSection(&This->lock);
+    return hr;
+}
+
+static HRESULT WINAPI GifEncoder_GetMetadataQueryWriter(IWICBitmapEncoder *iface, IWICMetadataQueryWriter **writer)
+{
+    FIXME("%p,%p: stub\n", iface, writer);
+    return E_NOTIMPL;
+}
+
+static const IWICBitmapEncoderVtbl GifEncoder_Vtbl =
+{
+    GifEncoder_QueryInterface,
+    GifEncoder_AddRef,
+    GifEncoder_Release,
+    GifEncoder_Initialize,
+    GifEncoder_GetContainerFormat,
+    GifEncoder_GetEncoderInfo,
+    GifEncoder_SetColorContexts,
+    GifEncoder_SetPalette,
+    GifEncoder_SetThumbnail,
+    GifEncoder_SetPreview,
+    GifEncoder_CreateNewFrame,
+    GifEncoder_Commit,
+    GifEncoder_GetMetadataQueryWriter
+};
+
+HRESULT GifEncoder_CreateInstance(REFIID iid, void **ppv)
+{
+    GifEncoder *This;
+    HRESULT ret;
+
+    TRACE("%s,%p\n", debugstr_guid(iid), ppv);
+
+    *ppv = NULL;
+
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This) return E_OUTOFMEMORY;
+
+    This->IWICBitmapEncoder_iface.lpVtbl = &GifEncoder_Vtbl;
+    This->ref = 1;
+    This->stream = NULL;
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": GifEncoder.lock");
+    This->initialized = FALSE;
+    This->info_written = FALSE;
+    This->committed = FALSE;
+    This->n_frames = 0;
+    This->colors = 0;
+
+    ret = IWICBitmapEncoder_QueryInterface(&This->IWICBitmapEncoder_iface, iid, ppv);
+    IWICBitmapEncoder_Release(&This->IWICBitmapEncoder_iface);
 
     return ret;
 }

@@ -25,37 +25,13 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 CFontsFolder::CFontsFolder()
 {
-    m_pisfInner = NULL;
+    m_pidlInner = NULL;
 }
 
 CFontsFolder::~CFontsFolder()
 {
-}
-
-HRESULT WINAPI CFontsFolder::FinalConstruct()
-{
-    HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_pisfInner));
-    if (FAILED(hr))
-        return hr;
-
-    hr = m_pisfInner->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
-
-    LPITEMIDLIST pidl = _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
-    if (!pidl)
-        return E_OUTOFMEMORY;
-        
-    PERSIST_FOLDER_TARGET_INFO info;
-    ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
-    info.csidl = CSIDL_FONTS;
-    hr = ppf3->InitializeEx(NULL, pidl, &info);
-
-    ILFree(pidl);
-    
-    return hr;
+    if(m_pidlInner)
+        SHFree(m_pidlInner);
 }
 
 HRESULT WINAPI CFontsFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName,
@@ -138,8 +114,8 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlag
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    /* Return the display name from the registry */
-    return HCR_GetClassName(CLSID_FontsFolderShortcut, strRet);
+    ERR("Got empty pidl without SHGDN_FORPARSING\n");
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */
@@ -195,15 +171,22 @@ HRESULT WINAPI CFontsFolder::GetClassID(CLSID *lpClassId)
 
 HRESULT WINAPI CFontsFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    return S_OK;
+    m_pidlInner = ILClone(pidl);
+    if (!m_pidlInner)
+        return E_OUTOFMEMORY;
+
+    return SHELL32_CoCreateInitSF(m_pidlInner, 
+                                  NULL,
+                                  NULL,
+                                  &CLSID_ShellFSFolder,
+                                  CSIDL_FONTS,
+                                  IID_PPV_ARG(IShellFolder2, &m_pisfInner));
 }
 
 HRESULT WINAPI CFontsFolder::GetCurFolder(LPITEMIDLIST *pidl)
 {
     if (!pidl)
         return E_POINTER;
-
-    *pidl = _ILCreateGuid(PT_GUID, CLSID_FontsFolderShortcut);
-
+    *pidl = ILClone(m_pidlInner);
     return S_OK;
 }

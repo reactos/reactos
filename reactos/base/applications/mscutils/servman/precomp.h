@@ -1,9 +1,6 @@
 #ifndef __SERVMAN_PRECOMP_H
 #define __SERVMAN_PRECOMP_H
 
-#if 0
-#include <stdarg.h>
-
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COM_NO_WINDOWS_H
@@ -14,13 +11,9 @@
 #include <winsvc.h>
 #include <wincon.h>
 #include <shlobj.h>
+#include <commdlg.h>
 #include <strsafe.h>
-#else
-#include <windows.h>
-#include <commctrl.h>
-#include <process.h>
-#include <strsafe.h>
-#endif
+
 #include "resource.h"
 
 #ifdef _MSC_VER
@@ -171,6 +164,14 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg,
                                  UINT uMsg,
                                  WPARAM wParam,
                                  LPARAM lParam);
+INT_PTR CALLBACK LogonPageProc(HWND hwndDlg,
+                               UINT uMsg,
+                               WPARAM wParam,
+                               LPARAM lParam);
+INT_PTR CALLBACK RecoveryPageProc(HWND hwndDlg,
+                                  UINT uMsg,
+                                  WPARAM wParam,
+                                  LPARAM lParam);
 
 /* export.c */
 VOID ExportFile(PMAIN_WND_INFO Info);
@@ -202,5 +203,12 @@ HIMAGELIST InitImageList(UINT StartResource,
                          UINT Width,
                          UINT Height,
                          ULONG type);
+VOID
+ResourceMessageBox(
+    HINSTANCE hInstance,
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId);
 
 #endif /* __SERVMAN_PRECOMP_H */

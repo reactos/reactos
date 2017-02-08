@@ -30,7 +30,7 @@
  *        implement proper BATCH file nesting and other improvements.
  *
  *    16 Jul 1998 (John P Price <linux-guru@gcfl.net>)
- *        Seperated commands into individual files.
+ *        Separated commands into individual files.
  *
  *    19 Jul 1998 (Hans B Pufal) [HBP_001]
  *        Preserve state of echo flag across batch calls.
@@ -104,7 +104,7 @@ LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
 
 
 /*
- * Batch_params builds a parameter list in newlay allocated memory.
+ * Batch_params builds a parameter list in newly allocated memory.
  * The parameters consist of null terminated strings with a final
  * NULL character signalling the end of the parameters.
  *

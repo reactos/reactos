@@ -15,7 +15,7 @@
 BL_MEMORY_DESCRIPTOR MmStaticMemoryDescriptors[512];
 ULONG MmGlobalMemoryDescriptorCount;
 PBL_MEMORY_DESCRIPTOR MmGlobalMemoryDescriptors;
-BOOLEAN MmGlobalMemoryDescriptorsUsed;
+ULONG MmGlobalMemoryDescriptorsUsed;
 PBL_MEMORY_DESCRIPTOR MmDynamicMemoryDescriptors;
 ULONG MmDynamicMemoryDescriptorCount;
 
@@ -44,19 +44,19 @@ MmMdpHasPrecedence (
     BL_MEMORY_CLASS Class1, Class2;
     ULONG i, j;
 
-    /* Descriptor is free RAM -- it preceeds */
+    /* Descriptor is free RAM -- it precedes */
     if (Type1 == BlConventionalMemory)
     {
         return TRUE;
     }
 
-    /* It isn't free RAM, but the comparator is -- it suceeds it */
+    /* It isn't free RAM, but the comparator is -- it succeeds it */
     if (Type2 == BlConventionalMemory)
     {
         return FALSE;
     }
 
-    /* Descriptor is not system, application, or loader class -- it preceeds */
+    /* Descriptor is not system, application, or loader class -- it precedes */
     Class1 = Type1 >> BL_MEMORY_CLASS_SHIFT;
     if ((Class1 != BlSystemClass) &&
         (Class1 != BlApplicationClass) &&
@@ -65,7 +65,7 @@ MmMdpHasPrecedence (
         return TRUE;
     }
 
-    /* It isn't one of those classes, but the comparator it -- it suceeds it */
+    /* It isn't one of those classes, but the comparator it -- it succeeds it */
     Class2 = Type2 >> BL_MEMORY_CLASS_SHIFT;
     if ((Class2 != BlSystemClass) &&
         (Class2 != BlApplicationClass) &&
@@ -124,23 +124,23 @@ MmMdpHasPrecedence (
             }
         }
 
-        /* The comparator isn't system, so it preceeds it */
+        /* The comparator isn't system, so it precedes it */
         return TRUE;
     }
 
-    /* Descriptor is not system class, but comparator is -- it suceeds it */
+    /* Descriptor is not system class, but comparator is -- it succeeds it */
     if (Class2 == BlSystemClass)
     {
         return FALSE;
     }
 
-    /* Descriptor is loader class -- it preceeds */
+    /* Descriptor is loader class -- it precedes */
     if (Class1 == BlLoaderClass)
     {
         return TRUE;
     }
 
-    /* It isn't loader class  -- if the other guy is, suceed it */
+    /* It isn't loader class  -- if the other guy is, succeed it */
     return Class2 != BlLoaderClass;
 }
 
@@ -197,6 +197,139 @@ MmMdpSaveCurrentListPointer (
     }
 }
 
+ULONG
+MmMdCountList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
+    )
+{
+    PLIST_ENTRY First, NextEntry;
+    ULONG Count;
+    
+    /* Iterate the list */
+    for (Count = 0, First = MdList->First, NextEntry = First->Flink;
+         NextEntry != First;
+         NextEntry = NextEntry->Flink, Count++);
+
+    /* Return the count */
+    return Count;
+}
+
+VOID
+MmMdInitializeList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
+    _In_ ULONG Type,
+    _In_ PLIST_ENTRY ListHead
+    )
+{
+    /* Check if a list was specified */
+    if (ListHead)
+    {
+        /* Use it */
+        MdList->First = ListHead;
+    }
+    else
+    {
+        /* Otherwise, use the internal, built-in list */
+        InitializeListHead(&MdList->ListHead);
+        MdList->First = &MdList->ListHead;
+    }
+
+    /* Set the type */
+    MdList->Type = Type;
+
+    /* Initialize current iterator to nothing */
+    MdList->This = NULL;
+}
+
+NTSTATUS
+MmMdCopyList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList, 
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST SourceList,
+    _In_opt_ PBL_MEMORY_DESCRIPTOR ListDescriptor,
+    _Out_ PULONG ActualCount, 
+    _In_ ULONG Count,
+    _In_ ULONG Flags
+    )
+{
+    NTSTATUS Status;
+    PULONG Used;
+    PLIST_ENTRY First, NextEntry;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+
+    /* Both parameters must be present */
+    if (!(DestinationList) || !(SourceList))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Check if a descriptor is being used to store the list */
+    if (ListDescriptor)
+    {
+        /* See how big it is */
+        Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG;
+        Used = ActualCount;
+    }
+    else
+    {
+        /* We are using our internal descriptors instead */
+        Used = &MmGlobalMemoryDescriptorsUsed;
+        ++MmDescriptorCallTreeCount;
+
+        /* Use as many as are available */
+        Count = MmGlobalMemoryDescriptorCount;
+        ListDescriptor = MmGlobalMemoryDescriptors;
+    }
+    
+    /* Never truncate descriptors during a list copy */
+    Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG;
+
+    /* Iterate through the list */
+    First = SourceList->First;
+    NextEntry = First->Flink;
+    while ((NextEntry != First) && (NT_SUCCESS(Status)))
+    {
+        /* Make sure there's still space */
+        if (Count <= *Used)
+        {
+            Status = STATUS_NO_MEMORY;
+            break;
+        }
+
+        /* Get the current descriptor */
+        Descriptor = CONTAINING_RECORD(NextEntry,
+                                       BL_MEMORY_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Copy it into one of the descriptors we have */
+        RtlCopyMemory(&ListDescriptor[*Used],
+                      Descriptor,
+                      sizeof(*Descriptor));
+
+        /* Add it to the list we have */
+        Status = MmMdAddDescriptorToList(DestinationList,
+                                         &ListDescriptor[*Used],
+                                         Flags);
+        ++*Used;
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check if the global descriptors were used */
+    if (ListDescriptor == MmGlobalMemoryDescriptors)
+    {
+        /* Unwind our usage */
+        MmMdFreeGlobalDescriptors();
+        --MmDescriptorCallTreeCount;
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
 VOID
 MmMdRemoveDescriptorFromList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -206,7 +339,7 @@ MmMdRemoveDescriptorFromList (
     /* Remove the entry */
     RemoveEntryList(&Entry->ListEntry);
 
-    /*  Check if this was the current link */
+    /* Check if this was the current link */
     if (MdList->This == &Entry->ListEntry)
     {
         /* Remove the current link and set the next one */
@@ -343,7 +476,7 @@ MmMdpCoalesceDescriptor (
           ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
            (PreviousMappedEndPage == MemoryDescriptor->VirtualPage))))
     {
-        EfiPrintf(L"Previous descriptor coalescible!\r\n");
+        EfiPrintf(L"Previous descriptor coalescable!\r\n");
     }
 
     /* CHeck if the current entry touches the next entry, and is compatible */
@@ -355,7 +488,7 @@ MmMdpCoalesceDescriptor (
             ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
                 (MappedEndPage == NextDescriptor->VirtualPage))))
     {
-        EfiPrintf(L"Next descriptor coalescible!\r\n");
+        EfiPrintf(L"Next descriptor coalescable!\r\n");
     }
 
     /* Nothing to do */
@@ -547,7 +680,6 @@ MmMdRemoveRegionFromMdlEx (
         FoundPageCount = Descriptor->PageCount;
         FoundEndPage = FoundBasePage + FoundPageCount;
         EndPage = PageCount + BasePage;
-        //EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\r\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
 
         /* Make a copy of the original descriptor */
         RtlCopyMemory(&NewDescriptor, NextEntry, sizeof(NewDescriptor));
@@ -561,19 +693,52 @@ MmMdRemoveRegionFromMdlEx (
                 /* Check if the found region starts after the region or ends before the region */
                 if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
                 {
-                    /* This descriptor doesn't cover any part of the range */
-                    //EarlyPrint(L"No part of this descriptor contains the region\r\n");
+                    /* This descriptor doesn't cover any part of the range -- nothing to do */
+                    NOTHING;
                 }
                 else
                 {
-                    /* This descriptor covers the head of the allocation */
-                    //EarlyPrint(L"Descriptor covers the head of the region\r\n");
+                    /* This descriptor fully covers the entire allocation */
+                    FoundBasePage = Descriptor->BasePage;
+                    FoundPageCount = BasePage - FoundBasePage;
+
+                    /* This is how many pages we will eat away from the descriptor */
+                    RegionSize = FoundPageCount + PageCount;
+
+                    /* Update the descriptor to account for the consumed pages */
+                    Descriptor->BasePage += RegionSize;
+                    Descriptor->PageCount -= RegionSize;
+                    if (Descriptor->VirtualPage)
+                    {
+                        Descriptor->VirtualPage += RegionSize;
+                    }
+                    
+                    /* Initialize a descriptor for the start of the region */
+                    Descriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                                Descriptor->Type,
+                                                                FoundBasePage,
+                                                                Descriptor->VirtualPage,
+                                                                FoundPageCount);
+                    if (!Descriptor)
+                    {
+                        Status = STATUS_NO_MEMORY;
+                        goto Quickie;
+                    }
+
+                    /* Add it into the list */
+                    Status = MmMdAddDescriptorToList(MdList, Descriptor, Flags);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        Status = STATUS_NO_MEMORY;
+                        goto Quickie;
+                    }
                 }
             }
             else
             {
                 /* This descriptor contains the entire allocation */
-                //EarlyPrint(L"Descriptor contains the entire region\r\n");
+                RegionSize = FoundEndPage - BasePage;
+                Descriptor->PageCount -= RegionSize;
             }
 
             /* Keep going */
@@ -590,14 +755,14 @@ MmMdRemoveRegionFromMdlEx (
              *
              * So first, figure out if we cover the entire end or not
              */
-            if (EndPage > FoundEndPage)
+            if (EndPage < FoundEndPage)
             {
                 /* The allocation goes past the end of this descriptor */
-                EndPage = FoundEndPage;
+                FoundEndPage = EndPage;
             }
 
             /* This is how many pages we will eat away from the descriptor */
-            RegionSize = EndPage - FoundBasePage;
+            RegionSize = FoundEndPage - FoundBasePage;
 
             /* Update the descriptor to account for the consumed pages */
             Descriptor->BasePage += RegionSize;
@@ -614,7 +779,6 @@ MmMdRemoveRegionFromMdlEx (
             if (!Descriptor->PageCount)
             {
                 /* Remove it */
-                //EarlyPrint(L"Entire descriptor consumed\r\n");
                 MmMdRemoveDescriptorFromList(MdList, Descriptor);
                 MmMdFreeDescriptor(Descriptor);
 
@@ -644,6 +808,204 @@ Quickie:
     }
 
     return Status;
+}
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptorFromMdl (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
+    _In_ ULONG Flags, 
+    _In_ ULONGLONG Page
+    )
+{
+    BOOLEAN IsVirtual;
+    PLIST_ENTRY NextEntry, ListHead;
+    PBL_MEMORY_DESCRIPTOR Current;
+    ULONGLONG BasePage;
+
+    /* Assume physical */
+    IsVirtual = FALSE;
+
+    /* Check if the caller wants physical memory */
+    if (!(Flags & BL_MM_REMOVE_VIRTUAL_REGION_FLAG))
+    {
+        /* Check if this is a virtual memory list */
+        if (MdList->Type == BlMdVirtual)
+        {
+            /* We won't find anything */
+            return NULL;
+        }
+    }
+    else if (MdList->Type == BlMdPhysical)
+    {
+        /* Otherwise, caller wants virtual, but this is a physical list */
+        IsVirtual = TRUE;
+        NextEntry = MdList->First->Flink;
+    }
+    
+    /* Check if this is a physical search */
+    if (!IsVirtual)
+    {
+        /* Check if we can use the current pointer */
+        NextEntry = MdList->This;
+        if (!NextEntry)
+        {
+            /* We can't -- start at the beginning */
+            NextEntry = MdList->First->Flink;
+        }
+        else
+        {
+            /* If the page is below the current pointer, restart */
+            Current = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+            if (Page < Current->BasePage)
+            {
+                NextEntry = MdList->First->Flink;
+            }
+        }
+    }
+
+    /* Loop the list of descriptors */
+    ListHead = MdList->First;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current one */
+        Current = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+        /* Check if we are looking for virtual memory */
+        if (IsVirtual)
+        {
+            /* Use the base address */
+            BasePage = Current->VirtualPage;
+        }
+        else
+        {
+            /* Use the page */
+            BasePage = Current->BasePage;
+        }
+
+        /* If this is a virtual descriptor, make sure it has a base address */
+        if ((!(IsVirtual) || (BasePage)) &&
+            (BasePage <= Page) &&
+            (Page < (BasePage + Current->PageCount)))
+        {
+            /* The descriptor fits the page being requested */
+            return Current;
+        }
+
+        /* Try the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Nothing found if we're here */
+    return NULL;
+}
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptor (
+    _In_ ULONG WhichList, 
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
+    )
+{
+    PBL_MEMORY_DESCRIPTOR FoundDescriptor;
+
+    /* Check if the caller is looking for mapped, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_MAPPED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlMappedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for mapped, unallocated memory */
+    if (WhichList & BL_MM_INCLUDE_MAPPED_UNALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlMappedUnallocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for unmapped, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_UNMAPPED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlUnmappedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for unmapped, unallocated memory */
+    if (WhichList & BL_MM_INCLUDE_UNMAPPED_UNALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlUnmappedUnallocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for reserved, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_RESERVED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlReservedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for bad memory */
+    if (WhichList & BL_MM_INCLUDE_BAD_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlBadMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for truncated memory */
+    if (WhichList & BL_MM_INCLUDE_TRUNCATED_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlTruncatedMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for persistent memory */
+    if (WhichList & BL_MM_INCLUDE_PERSISTENT_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlPersistentMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Nothing if we got here */
+    return NULL;
 }
 
 BOOLEAN
@@ -742,7 +1104,7 @@ MmMdFindSatisfyingRegion (
     }
 
     /* Bail out if the allocation flags don't match */
-    if (((Flags ^ Descriptor->Flags) & (BlMemoryRuntime | BlMemoryReserved | BlMemoryUnknown)))
+    if (((Flags ^ Descriptor->Flags) & (BlMemoryRuntime | BlMemoryBelow1MB | BlMemoryUnknown)))
     {
         //EfiPrintf(L"Incorrect memory allocation flags\r\n");
         return FALSE;
@@ -838,6 +1200,6 @@ MmMdInitialize (
         MmGlobalMemoryDescriptorCount = RTL_NUMBER_OF(MmStaticMemoryDescriptors);
         MmGlobalMemoryDescriptors = MmStaticMemoryDescriptors;
         RtlZeroMemory(MmStaticMemoryDescriptors, sizeof(MmStaticMemoryDescriptors));
-        MmGlobalMemoryDescriptorsUsed = FALSE;
+        MmGlobalMemoryDescriptorsUsed = 0;
     }
 }

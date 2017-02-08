@@ -80,7 +80,7 @@
 
 #if 0
 
-  /* org_width is is font units, result in device pixels, 26.6 format */
+  /* org_width is in font units, result in device pixels, 26.6 format */
   FT_LOCAL_DEF( FT_Pos )
   psh_dimension_snap_width( PSH_Dimension  dimension,
                             FT_Int         org_width )

@@ -90,6 +90,11 @@ static const char *wine_dbgstr_icerr( int ret )
     return str;
 }
 
+static inline int get_stride(int width, int depth)
+{
+    return ((depth * width + 31) >> 3) & ~3;
+}
+
 static WINE_HIC*        MSVIDEO_FirstHic /* = NULL */;
 
 typedef struct _reg_driver reg_driver;
@@ -291,9 +296,8 @@ static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
     ICINFO *lpicinfo = param;
     DWORD fccHandler = mmioStringToFOURCCA(drv + 5, 0);
 
-    /* exact match of fccHandler or nth driver found */
-    if ((lpicinfo->fccHandler != nr) && (lpicinfo->fccHandler != fccHandler))
-	return FALSE;
+    if (lpicinfo->fccHandler != nr && compare_fourcc(lpicinfo->fccHandler, fccHandler))
+        return FALSE;
 
     lpicinfo->fccHandler = fccHandler;
     lpicinfo->dwFlags = 0;
@@ -442,7 +446,7 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
             local = ICOpen(fccType, info.fccHandler, wMode);
             if (local != 0)
             {
-                TRACE("Returning %s as defult handler for %s\n",
+                TRACE("Returning %s as default handler for %s\n",
                       wine_dbgstr_fcc(info.fccHandler), wine_dbgstr_fcc(fccType));
                 return local;
             }
@@ -711,25 +715,86 @@ HIC VFWAPI ICGetDisplayFormat(
 	HIC hic,LPBITMAPINFOHEADER lpbiIn,LPBITMAPINFOHEADER lpbiOut,
 	INT depth,INT dx,INT dy)
 {
-	HIC	tmphic = hic;
+    static const struct
+    {
+        int depth;
+        int compression;
+    }
+    try_depths[] =
+    {
+        { 8, BI_RGB},
+        {16, BI_RGB},
+        {16, BI_BITFIELDS},
+        {24, BI_RGB},
+        {32, BI_RGB},
+    };
 
-	TRACE("(%p,%p,%p,%d,%d,%d)!\n",hic,lpbiIn,lpbiOut,depth,dx,dy);
+    int screen_depth, i;
+    BOOL found = FALSE;
+    HIC tmphic;
+    HDC hdc;
 
-	if (!tmphic) {
-		tmphic=ICLocate(ICTYPE_VIDEO,0,lpbiIn,NULL,ICMODE_DECOMPRESS);
-		if (!tmphic)
-			return tmphic;
-	}
-	if ((dy == lpbiIn->biHeight) && (dx == lpbiIn->biWidth))
-		dy = dx = 0; /* no resize needed */
+    TRACE("(%p,%p,%p,%d,%d,%d)!\n", hic, lpbiIn, lpbiOut, depth, dx, dy);
+
+    tmphic = hic ? hic : ICLocate(ICTYPE_VIDEO, 0, lpbiIn, NULL, ICMODE_DECOMPRESS);
+    if (!tmphic) return tmphic;
+
+    hdc = GetDC(0);
+    screen_depth = GetDeviceCaps(hdc, BITSPIXEL) * GetDeviceCaps(hdc, PLANES);
+    ReleaseDC(0, hdc);
+
+    if (dx <= 0) dx = lpbiIn->biWidth;
+    if (dy <= 0) dy = lpbiIn->biHeight;
+    if (!depth) depth = screen_depth;
 
 	/* Can we decompress it ? */
-	if (ICDecompressQuery(tmphic,lpbiIn,NULL) != 0)
+	if (ICDecompressQuery(tmphic, lpbiIn, NULL) != ICERR_OK)
 		goto errout; /* no, sorry */
 
 	ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut);
 
-	if (lpbiOut->biCompression != 0) {
+    lpbiOut->biSize = sizeof(BITMAPINFOHEADER);
+    lpbiOut->biWidth = dx;
+    lpbiOut->biHeight = dy;
+    lpbiOut->biPlanes = 1;
+
+    for (i = 0; i < sizeof(try_depths) / sizeof(try_depths[0]); i++)
+    {
+        if (!found && try_depths[i].depth != depth)
+            continue;
+
+        found = TRUE;
+        lpbiOut->biBitCount = try_depths[i].depth;
+        lpbiOut->biCompression = try_depths[i].compression;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+        {
+            if (try_depths[i].depth == 8)
+                ICDecompressGetPalette(tmphic, lpbiIn, lpbiOut);
+            goto success;
+        }
+    }
+
+    if (!found)
+    {
+        lpbiOut->biBitCount = depth;
+        lpbiOut->biCompression = BI_RGB;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+            goto success;
+
+        lpbiOut->biBitCount = screen_depth;
+        lpbiOut->biCompression = BI_RGB;
+        lpbiOut->biSizeImage = dx * get_stride(dy, lpbiOut->biBitCount);
+        if (ICDecompressQuery(tmphic, lpbiIn, lpbiOut) == ICERR_OK)
+            goto success;
+    }
+
+    if (ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut))
+        goto errout;
+
+    if (lpbiOut->biCompression != 0) {
            FIXME("Ooch, how come decompressor outputs compressed data (%d)??\n",
 			 lpbiOut->biCompression);
 	}
@@ -738,20 +803,11 @@ HIC VFWAPI ICGetDisplayFormat(
 			 lpbiOut->biSize);
 	   lpbiOut->biSize = sizeof(*lpbiOut);
 	}
-	if (!depth) {
-		HDC	hdc;
 
-		hdc = GetDC(0);
-		depth = GetDeviceCaps(hdc,BITSPIXEL)*GetDeviceCaps(hdc,PLANES);
-		ReleaseDC(0,hdc);
-		if (depth==15)	depth = 16;
-		if (depth<8)	depth =  8;
-	}
-	if (lpbiIn->biBitCount == 8)
-		depth = 8;
-
+success:
 	TRACE("=> %p\n", tmphic);
 	return tmphic;
+
 errout:
 	if (hic!=tmphic)
 		ICClose(tmphic);

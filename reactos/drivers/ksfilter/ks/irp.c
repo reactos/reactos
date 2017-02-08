@@ -195,7 +195,7 @@ KsReadFile(
 
         if (Result && NT_SUCCESS(IoStatusBlock->Status))
         {
-            /* request was handeled and succeeded */
+            /* request was handled and succeeded */
             return STATUS_SUCCESS;
         }
     }
@@ -295,7 +295,7 @@ KsWriteFile(
 
         if (Result && NT_SUCCESS(IoStatusBlock->Status))
         {
-            /* request was handeled and succeeded */
+            /* request was handled and succeeded */
             return STATUS_SUCCESS;
         }
     }
@@ -574,7 +574,7 @@ KsStreamIo(
 
                     if (Ret)
                     {
-                        /* the request was handeled */
+                        /* the request was handled */
                         return IoStatusBlock->Status;
                     }
                 }
@@ -589,7 +589,7 @@ KsStreamIo(
 
                     if (Ret)
                     {
-                        /* the request was handeled */
+                        /* the request was handled */
                         return IoStatusBlock->Status;
                     }
                 }
@@ -2151,7 +2151,7 @@ NTAPI
 KsGetNodeIdFromIrp(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return KSFILTER_NODE;
 }
 

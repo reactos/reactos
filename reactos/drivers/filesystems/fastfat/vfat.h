@@ -25,6 +25,12 @@
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+#define ROUND_DOWN_64(n, align) \
+    (((ULONGLONG)n) & ~((align) - 1LL))
+
+#define ROUND_UP_64(n, align) \
+    ROUND_DOWN_64(((ULONGLONG)n) + (align) - 1LL, (align))
+
 #include <pshpack1.h>
 struct _BootSector
 {
@@ -235,6 +241,7 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 typedef struct
 {
     ULONG VolumeID;
+    CHAR VolumeLabel[11];
     ULONG FATStart;
     ULONG FATCount;
     ULONG FATSectors;
@@ -380,8 +387,14 @@ typedef struct _VFATFCB
     /* List of FCB's for this volume */
     LIST_ENTRY FcbListEntry;
 
+    /* List of FCB's for the parent */ 
+    LIST_ENTRY ParentListEntry;
+
     /* pointer to the parent fcb */
     struct _VFATFCB *parentFcb;
+
+    /* List for the children */
+    LIST_ENTRY ParentListHead;
 
     /* Flags for the fcb */
     ULONG Flags;
@@ -411,7 +424,7 @@ typedef struct _VFATFCB
     FILE_LOCK FileLock;
 
     /*
-     * Optimalization: caching of last read/write cluster+offset pair. Can't
+     * Optimization: caching of last read/write cluster+offset pair. Can't
      * be in VFATCCB because it must be reset everytime the allocated clusters
      * change.
      */
@@ -488,6 +501,7 @@ typedef struct _VFAT_MOVE_CONTEXT
     ULONG FileSize;
     USHORT CreationDate;
     USHORT CreationTime;
+    BOOLEAN InPlace;
 } VFAT_MOVE_CONTEXT, *PVFAT_MOVE_CONTEXT;
 
 FORCEINLINE
@@ -805,11 +819,16 @@ vfatNewFCB(
     PUNICODE_STRING pFileNameU);
 
 NTSTATUS
+vfatSetFCBNewDirName(
+    PDEVICE_EXTENSION pVCB,
+    PVFATFCB Fcb,
+    PVFATFCB ParentFcb);
+
+NTSTATUS
 vfatUpdateFCB(
     PDEVICE_EXTENSION pVCB,
     PVFATFCB Fcb,
-    PUNICODE_STRING LongName,
-    PUNICODE_STRING ShortName,
+    PVFAT_DIRENTRY_CONTEXT DirContext,
     PVFATFCB ParentFcb);
 
 VOID

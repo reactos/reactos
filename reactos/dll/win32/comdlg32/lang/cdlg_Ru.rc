@@ -29,7 +29,7 @@ STRINGTABLE
 Хотите ли вы его создать?"
     IDS_OVERWRITEFILE       "Файл уже существует.\n\
 Заменить его?"
-    IDS_INVALID_FILENAME_TITLE "Некорректный символ в записи пути"
+    IDS_INVALID_FILENAME_TITLE "Некорректный символ(ы) в записи пути"
     IDS_INVALID_FILENAME    "Имя файла не может содержать следующие символы:\n\
                           / : < > |"
     IDS_PATHNOTEXISTING     "Путь не существует"
@@ -42,7 +42,7 @@ STRINGTABLE
     IDS_UPFOLDER         "Вверх на один уровень"
     IDS_NEWFOLDER        "Создать новую папку"
     IDS_LISTVIEW         "Список"
-    IDS_REPORTVIEW       "Подробности"
+    IDS_REPORTVIEW       "Таблица"
     IDS_TODESKTOP        "Переход на рабочий стол"
 }
 
@@ -53,10 +53,10 @@ STRINGTABLE
     PD32_VALUE_UREADABLE                  "Нечитаемый элемент"
     PD32_INVALID_PAGE_RANGE "Это значение не лежит внутри диапазона страниц.\n\
 Введите значение между %1!%d! и %2!d!."
-    PD32_FROM_NOT_ABOVE_TO                "Значение 'от' не должно превышать значения 'до'."
+    PD32_FROM_NOT_ABOVE_TO                "Значение ""от"" не должно превышать значения ""до""."
     PD32_MARGINS_OVERLAP                  "Границы перекрывают или превышают размеры бумаги.\n\
 Введите их заново."
-    PD32_NR_OF_COPIES_EMPTY               "Число копий не может быть пустым."
+    PD32_NR_OF_COPIES_EMPTY               "Поле ""Число копий"" не может быть пустым."
     PD32_TOO_LARGE_COPIES                 "Такое большое количество копий не может быть напечатано вашим принтером.\n\
 Введите значение от 1 до %d."
     PD32_PRINT_ERROR                      "Произошла ошибка принтера."
@@ -77,8 +77,8 @@ STRINGTABLE
     PD32_PRINTER_STATUS_PAUSED            "Приостановлено; "
     PD32_PRINTER_STATUS_ERROR             "Ошибка; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Ожидание удаления; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Бумага застряла; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Не хватило бумаги; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Замятие бумаги; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Недостаточно бумаги; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Вставьте бумагу вручную; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Проблема с бумагой; "
     PD32_PRINTER_STATUS_OFFLINE           "Принтер в автономном режиме; "
@@ -138,7 +138,7 @@ STRINGTABLE
     IDS_SAVE_AS     "Сохранить как"
     IDS_OPEN_FILE   "Открыть файл"
     IDS_SELECT_FOLDER "Выбрать папку"
-    IDS_FONT_SIZE_INPUT "Font size has to be a number."
+    IDS_FONT_SIZE_INPUT "Размер шрифта должен быть числом."
 }
 
 /*

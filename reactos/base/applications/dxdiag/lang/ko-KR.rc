@@ -240,7 +240,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "이 테스트는 DirectDraw를 사용하여 전체 화면을 그릴 것입니다. 움직이는 하얀 사각형을이 그려질 것입니다. 계속할까요?"
     IDS_DDFULLSCREEN_RESULT "전체 화면 상태에서 움직이는 하얀 사각형을 보셨나요?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u 비트)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u 비트)(%uHz)"
     IDS_OPTION_NO "아니오"
     IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
     IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."

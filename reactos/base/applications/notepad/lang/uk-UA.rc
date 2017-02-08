@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Зберегти &як...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
-        MENUITEM "Д&рук\tCtrl+P", CMD_PRINT
+        MENUITEM "Д&рук...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "В&ихід", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "З&найти...\tCtrl+F", CMD_SEARCH
         MENUITEM "Зна&йти далі\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Зам&інити\tCtrl+H", CMD_REPLACE
+        MENUITEM "Зам&інити...\tCtrl+H", CMD_REPLACE
         MENUITEM "П&ерейти...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Виді&лити все\tCtrl+A", CMD_SELECT_ALL

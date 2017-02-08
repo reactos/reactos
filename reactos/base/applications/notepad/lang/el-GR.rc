@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Αποθήκευση &ως...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Ε&πιλογές σελίδας...", CMD_PAGE_SETUP
-        MENUITEM "&Εκτύπωση\tCtrl+P", CMD_PRINT
+        MENUITEM "&Εκτύπωση...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Έ&ξοδος", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Εύρεση...\tCtrl+F", CMD_SEARCH
         MENUITEM "Εύρεση ε&πόμενου\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Αντικατάσταση\tCtrl+H", CMD_REPLACE
+        MENUITEM "Αντικατάσταση...\tCtrl+H", CMD_REPLACE
         MENUITEM "&Μετάβαση στο...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Επιλογή &Όλων\tCtrl+A", CMD_SELECT_ALL

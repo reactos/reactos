@@ -25,10 +25,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define RTL_SEM_FAILCRITICALERRORS      (SEM_FAILCRITICALERRORS << 4)
-#define RTL_SEM_NOGPFAULTERRORBOX       (SEM_NOGPFAULTERRORBOX << 4)
-#define RTL_SEM_NOALIGNMENTFAULTEXCEPT  (SEM_NOALIGNMENTFAULTEXCEPT << 4)
-
 struct error_table
 {
     DWORD       start;
@@ -50,21 +46,23 @@ static const struct error_table error_table[20];
  *  The mapped Win32 error code, or ERROR_MR_MID_NOT_FOUND if there is no
  *  mapping defined.
  */
-ULONG WINAPI RtlNtStatusToDosErrorNoTeb( NTSTATUS status )
+ULONG
+NTAPI
+RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 {
     const struct error_table *table = error_table;
 
-    if (!status || (status & 0x20000000)) return status;
+    if (!Status || (Status & 0x20000000)) return Status;
 
     /* 0xd... is equivalent to 0xc... */
-    if ((status & 0xf0000000) == 0xd0000000) status &= ~0x10000000;
+    if ((Status & 0xf0000000) == 0xd0000000) Status &= ~0x10000000;
 
     while (table->start)
     {
-        if ((ULONG)status < table->start) break;
-        if ((ULONG)status < table->end)
+        if ((ULONG)Status < table->start) break;
+        if ((ULONG)Status < table->end)
         {
-            DWORD ret = table->table[status - table->start];
+            DWORD ret = table->table[Status - table->start];
             /* unknown entries are 0 */
             if (!ret) goto no_mapping;
             return ret;
@@ -73,11 +71,11 @@ ULONG WINAPI RtlNtStatusToDosErrorNoTeb( NTSTATUS status )
     }
 
     /* now some special cases */
-    if (HIWORD(status) == 0xc001) return LOWORD(status);
-    if (HIWORD(status) == 0x8007) return LOWORD(status);
+    if (HIWORD(Status) == 0xc001) return LOWORD(Status);
+    if (HIWORD(Status) == 0x8007) return LOWORD(Status);
 
 no_mapping:
-    DPRINT1( "no mapping for %08x\n", status );
+    DPRINT1( "no mapping for %08x\n", Status );
     return ERROR_MR_MID_NOT_FOUND;
 }
 
@@ -93,15 +91,17 @@ no_mapping:
  *  The mapped Win32 error code, or ERROR_MR_MID_NOT_FOUND if there is no
  *  mapping defined.
  */
-ULONG WINAPI RtlNtStatusToDosError( NTSTATUS status )
+ULONG
+NTAPI
+RtlNtStatusToDosError(IN NTSTATUS Status)
 {
-    PTEB Teb = NtCurrentTeb ();
+    PTEB Teb = NtCurrentTeb();
 
     if (NULL != Teb)
     {
-       Teb->LastStatusValue = status;
+        Teb->LastStatusValue = Status;
     }
-    return RtlNtStatusToDosErrorNoTeb( status );
+    return RtlNtStatusToDosErrorNoTeb(Status);
 }
 
 /**********************************************************************
@@ -109,7 +109,9 @@ ULONG WINAPI RtlNtStatusToDosError( NTSTATUS status )
  *
  * Get the current per-thread status.
  */
-NTSTATUS WINAPI RtlGetLastNtStatus(void)
+NTSTATUS
+NTAPI
+RtlGetLastNtStatus(VOID)
 {
     return NtCurrentTeb()->LastStatusValue;
 }
@@ -125,7 +127,9 @@ NTSTATUS WINAPI RtlGetLastNtStatus(void)
  * RETURNS
  *  The current error value for the thread, as set by SetLastWin32Error() or SetLastError().
  */
-DWORD WINAPI RtlGetLastWin32Error(void)
+ULONG
+NTAPI
+RtlGetLastWin32Error(VOID)
 {
     return NtCurrentTeb()->LastErrorValue;
 }
@@ -142,9 +146,11 @@ DWORD WINAPI RtlGetLastWin32Error(void)
  * RETURNS
  *  Nothing.
  */
-void WINAPI RtlSetLastWin32Error( DWORD err )
+VOID
+NTAPI
+RtlSetLastWin32Error(IN ULONG LastError)
 {
-    NtCurrentTeb()->LastErrorValue = err;
+    NtCurrentTeb()->LastErrorValue = LastError;
 }
 
 /***********************************************************************
@@ -158,9 +164,11 @@ void WINAPI RtlSetLastWin32Error( DWORD err )
  * RETURNS
  *  Nothing.
  */
-void WINAPI RtlSetLastWin32ErrorAndNtStatusFromNtStatus( NTSTATUS status )
+VOID
+NTAPI
+RtlSetLastWin32ErrorAndNtStatusFromNtStatus(IN NTSTATUS Status)
 {
-    NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError( status );
+    NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError(Status);
 }
 
 /*
@@ -168,9 +176,7 @@ void WINAPI RtlSetLastWin32ErrorAndNtStatusFromNtStatus( NTSTATUS status )
 */
 NTSTATUS
 NTAPI
-RtlMapSecurityErrorToNtStatus(
-    IN ULONG SecurityError
-    )
+RtlMapSecurityErrorToNtStatus(IN ULONG SecurityError)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

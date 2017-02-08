@@ -61,7 +61,7 @@ BEGIN
     END
     POPUP "?"
     BEGIN
-        MENUITEM "Rreth...", ID_ABOUT
+        MENUITEM "Rreth", ID_ABOUT
     END
 END
 

@@ -18,6 +18,10 @@ Size = 92,3 MiB
 Description = Acronim pentru „GNU Image Manipulation Program” (program GNU de manipulare a imaginilor). Este un program gratuit pentru retușare foto, compoziție de imagine și creare de imagini.
 Size = 92,3 Mio
 
+[Section.0419]
+Description = Программа для создания и обработки растровой графики. Имеется частичная поддержка работы с векторной графикой.
+Size = 92,3 МиБ
+
 [Section.041f]
 Description = GNU Resim Oynama İzlencesi (GNU Image Manipulation Program) için bir kısaltma. Fotoğraf düzeltme, resim birleştirme ve resim oluşturma gibi görevler için özgürce dağıtılan bir izlencedir.
 Size = 92,3 MiB

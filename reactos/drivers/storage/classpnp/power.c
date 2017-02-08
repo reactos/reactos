@@ -788,7 +788,7 @@ ClasspPowerDownCompletion(
 
                 BOOLEAN retry;
 
-                DebugPrint((1, "(%p)\tError occured when issueing STOP_UNIT "
+                DebugPrint((1, "(%p)\tError occured when issuing STOP_UNIT "
                             "command to device. Srb %p, Status %lx\n",
                             Irp,
                             &context->Srb,
@@ -940,7 +940,7 @@ ClasspPowerDownCompletion(
 
             DebugPrint((1, "(%p)\tFreeing srb and completing\n", Irp));
             context->InUse = FALSE;
-            status = context->FinalStatus; // allow failure to propogate
+            status = context->FinalStatus; // allow failure to propagate
             context = NULL;
 
             if(Irp->PendingReturned) {

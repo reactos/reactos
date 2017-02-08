@@ -190,8 +190,8 @@ LsapInitSids(VOID)
 
     /* NT Authority */
 
-    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szAccountName, 80);
-    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, 80);
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szAccountName, ARRAYSIZE(szAccountName));
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, ARRAYSIZE(szDomainName));
     LsapCreateSid(&NtAuthority,
                   0,
                   NULL,
@@ -201,7 +201,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Null Sid */
-    LsapLoadString(hInstance, IDS_NULL_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_NULL_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_NULL_RID;
     LsapCreateSid(&NullSidAuthority,
@@ -213,7 +213,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* World Sid */
-    LsapLoadString(hInstance, IDS_WORLD_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_WORLD_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_WORLD_RID;
     LsapCreateSid(&WorldSidAuthority,
@@ -225,7 +225,7 @@ LsapInitSids(VOID)
                   &LsapWorldSid);
 
     /* Local Sid */
-    LsapLoadString(hInstance, IDS_LOCAL_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_LOCAL_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_LOCAL_RID;
     LsapCreateSid(&LocalSidAuthority,
@@ -237,7 +237,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Creator Owner Sid */
-    LsapLoadString(hInstance, IDS_CREATOR_OWNER_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_CREATOR_OWNER_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_CREATOR_OWNER_RID;
     LsapCreateSid(&CreatorSidAuthority,
@@ -249,7 +249,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Creator Group Sid */
-    LsapLoadString(hInstance, IDS_CREATOR_GROUP_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_CREATOR_GROUP_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_CREATOR_GROUP_RID;
     LsapCreateSid(&CreatorSidAuthority,
@@ -261,7 +261,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Creator Owner Server Sid */
-    LsapLoadString(hInstance, IDS_CREATOR_OWNER_SERVER_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_CREATOR_OWNER_SERVER_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_CREATOR_OWNER_SERVER_RID;
     LsapCreateSid(&CreatorSidAuthority,
@@ -273,7 +273,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Creator Group Server Sid */
-    LsapLoadString(hInstance, IDS_CREATOR_GROUP_SERVER_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_CREATOR_GROUP_SERVER_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_CREATOR_GROUP_SERVER_RID;
     LsapCreateSid(&CreatorSidAuthority,
@@ -285,8 +285,8 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Dialup Sid */
-    LsapLoadString(hInstance, IDS_DIALUP_RID, szAccountName, 80);
-    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, 80);
+    LsapLoadString(hInstance, IDS_DIALUP_RID, szAccountName, ARRAYSIZE(szAccountName));
+    LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, ARRAYSIZE(szDomainName));
 
     SubAuthorities[0] = SECURITY_DIALUP_RID;
     LsapCreateSid(&NtAuthority,
@@ -298,7 +298,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Network Sid */
-    LsapLoadString(hInstance, IDS_DIALUP_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_NETWORK_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_NETWORK_RID;
     LsapCreateSid(&NtAuthority,
@@ -310,7 +310,7 @@ LsapInitSids(VOID)
                   &LsapNetworkSid);
 
     /* Batch Sid*/
-    LsapLoadString(hInstance, IDS_BATCH_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_BATCH_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BATCH_RID;
     LsapCreateSid(&NtAuthority,
@@ -322,7 +322,7 @@ LsapInitSids(VOID)
                   &LsapBatchSid);
 
     /* Interactive Sid */
-    LsapLoadString(hInstance, IDS_INTERACTIVE_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_INTERACTIVE_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_INTERACTIVE_RID;
     LsapCreateSid(&NtAuthority,
@@ -334,7 +334,7 @@ LsapInitSids(VOID)
                   &LsapInteractiveSid);
 
     /* Service Sid */
-    LsapLoadString(hInstance, IDS_SERVICE_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_SERVICE_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
@@ -346,7 +346,7 @@ LsapInitSids(VOID)
                   &LsapServiceSid);
 
     /* Anonymous Logon Sid */
-    LsapLoadString(hInstance, IDS_ANONYMOUS_LOGON_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ANONYMOUS_LOGON_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_ANONYMOUS_LOGON_RID;
     LsapCreateSid(&NtAuthority,
@@ -358,7 +358,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Proxy Sid */
-    LsapLoadString(hInstance, IDS_PROXY_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_PROXY_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_PROXY_RID;
     LsapCreateSid(&NtAuthority,
@@ -370,7 +370,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Enterprise Controllers Sid */
-    LsapLoadString(hInstance, IDS_ENTERPRISE_CONTROLLERS_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ENTERPRISE_CONTROLLERS_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_ENTERPRISE_CONTROLLERS_RID;
     LsapCreateSid(&NtAuthority,
@@ -382,7 +382,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Principal Self Sid */
-    LsapLoadString(hInstance, IDS_PRINCIPAL_SELF_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_PRINCIPAL_SELF_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_PRINCIPAL_SELF_RID;
     LsapCreateSid(&NtAuthority,
@@ -394,7 +394,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Authenticated Users Sid */
-    LsapLoadString(hInstance, IDS_AUTHENTICATED_USER_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_AUTHENTICATED_USER_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_AUTHENTICATED_USER_RID;
     LsapCreateSid(&NtAuthority,
@@ -406,7 +406,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Restricted Code Sid */
-    LsapLoadString(hInstance, IDS_RESTRICTED_CODE_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_RESTRICTED_CODE_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_RESTRICTED_CODE_RID;
     LsapCreateSid(&NtAuthority,
@@ -418,7 +418,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Terminal Server Sid */
-    LsapLoadString(hInstance, IDS_TERMINAL_SERVER_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_TERMINAL_SERVER_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_TERMINAL_SERVER_RID;
     LsapCreateSid(&NtAuthority,
@@ -430,7 +430,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Remote Logon Sid */
-    LsapLoadString(hInstance, IDS_REMOTE_LOGON_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_REMOTE_LOGON_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_REMOTE_LOGON_RID;
     LsapCreateSid(&NtAuthority,
@@ -442,7 +442,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* This Organization Sid */
-    LsapLoadString(hInstance, IDS_THIS_ORGANIZATION_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_THIS_ORGANIZATION_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_THIS_ORGANIZATION_RID;
     LsapCreateSid(&NtAuthority,
@@ -454,7 +454,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Local System Sid */
-    LsapLoadString(hInstance, IDS_LOCAL_SYSTEM_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_LOCAL_SYSTEM_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_LOCAL_SYSTEM_RID;
     LsapCreateSid(&NtAuthority,
@@ -466,7 +466,7 @@ LsapInitSids(VOID)
                   &LsapLocalSystemSid);
 
     /* Local Service Sid */
-    LsapLoadString(hInstance, IDS_LOCAL_SERVICE_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_LOCAL_SERVICE_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_LOCAL_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
@@ -486,7 +486,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Network Service Sid */
-    LsapLoadString(hInstance, IDS_NETWORK_SERVICE_RID, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_NETWORK_SERVICE_RID, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_NETWORK_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
@@ -506,8 +506,8 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Builtin Domain Sid */
-    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szAccountName, 80);
-    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szDomainName, 80);
+    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szAccountName, ARRAYSIZE(szAccountName));
+    LsapLoadString(hInstance, IDS_BUILTIN_DOMAIN_RID, szDomainName, ARRAYSIZE(szDomainName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     LsapCreateSid(&NtAuthority,
@@ -519,7 +519,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Administrators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_ADMINS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_ADMINS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_ADMINS;
@@ -532,7 +532,7 @@ LsapInitSids(VOID)
                   &LsapAdministratorsSid);
 
     /* Users Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_USERS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_USERS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_USERS;
@@ -545,7 +545,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Guests Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_GUESTS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_GUESTS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_GUESTS;
@@ -558,7 +558,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Power User Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_POWER_USERS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_POWER_USERS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_POWER_USERS;
@@ -571,7 +571,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Account Operators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_ACCOUNT_OPS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_ACCOUNT_OPS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_ACCOUNT_OPS;
@@ -584,7 +584,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* System Operators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_SYSTEM_OPS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_SYSTEM_OPS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_SYSTEM_OPS;
@@ -597,7 +597,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Print Operators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_PRINT_OPS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_PRINT_OPS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_PRINT_OPS;
@@ -610,7 +610,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Backup Operators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_BACKUP_OPS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_BACKUP_OPS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_BACKUP_OPS;
@@ -623,7 +623,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Replicators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_REPLICATOR, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_REPLICATOR, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_REPLICATOR;
@@ -636,7 +636,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* RAS Servers Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_RAS_SERVERS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_RAS_SERVERS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_RAS_SERVERS;
@@ -649,7 +649,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Pre-Windows 2000 Compatible Access Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_PREW2KCOMPACCESS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_PREW2KCOMPACCESS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_PREW2KCOMPACCESS;
@@ -662,7 +662,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Remote Desktop Users Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_REMOTE_DESKTOP_USERS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_REMOTE_DESKTOP_USERS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS;
@@ -675,7 +675,7 @@ LsapInitSids(VOID)
                   NULL);
 
     /* Network Configuration Operators Alias Sid */
-    LsapLoadString(hInstance, IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS, szAccountName, 80);
+    LsapLoadString(hInstance, IDS_ALIAS_RID_NETWORK_CONFIGURATION_OPS, szAccountName, ARRAYSIZE(szAccountName));
 
     SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
     SubAuthorities[1] = DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS;
@@ -930,7 +930,7 @@ LsapAddDomainToDomainsList(PLSAPR_REFERENCED_DOMAIN_LIST ReferencedDomains,
     ReferencedDomains->Domains[i].Name.Length = Name->Length;
     ReferencedDomains->Domains[i].Name.MaximumLength = Name->MaximumLength;
     ReferencedDomains->Domains[i].Name.Buffer = MIDL_user_allocate(Name->MaximumLength);
-    if (ReferencedDomains->Domains[i].Sid == NULL)
+    if (ReferencedDomains->Domains[i].Name.Buffer == NULL)
     {
         MIDL_user_free(ReferencedDomains->Domains[i].Sid);
         ReferencedDomains->Domains[i].Sid = NULL;

@@ -88,8 +88,11 @@ MiInitSystemMemoryAreas(VOID)
     // ReactOS requires a memory area to keep the initial NP area off-bounds
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
-    // System NP
-    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, MiNonPagedSystemSize, FALSE);
+    // System PTE space
+    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
+
+    // Nonpaged pool expansion space
+    MiCreateArm3StaticMemoryArea(MmNonPagedPoolExpansionStart, (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)MmNonPagedPoolExpansionStart, FALSE);
 
     // System view space
     MiCreateArm3StaticMemoryArea(MiSystemViewStart, MmSystemViewSize, FALSE);
@@ -100,22 +103,21 @@ MiInitSystemMemoryAreas(VOID)
     // Paged pool
     MiCreateArm3StaticMemoryArea(MmPagedPoolStart, MmSizeOfPagedPoolInBytes, FALSE);
 
-#ifndef _M_AMD64
-    // KPCR, one page per CPU. Only for 32-bit kernel.
-    MiCreateArm3StaticMemoryArea(PCR, PAGE_SIZE * KeNumberProcessors, FALSE);
-#endif
-
-    // KUSER_SHARED_DATA
-    MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
-
     // Debugger mapping
     MiCreateArm3StaticMemoryArea(MI_DEBUG_MAPPING, PAGE_SIZE, FALSE);
 
 #if defined(_X86_)
-    // Reserve the 2 pages we currently make use of for HAL mappings.
-    // TODO: Remove hard-coded constant and replace with a define.
-    MiCreateArm3StaticMemoryArea((PVOID)0xFFC00000, PAGE_SIZE * 2, FALSE);
-#endif
+    // Reserved HAL area (includes KUSER_SHARED_DATA and KPCR)
+    MiCreateArm3StaticMemoryArea((PVOID)MM_HAL_VA_START, MM_HAL_VA_END - MM_HAL_VA_START + 1, FALSE);
+#else /* _X86_ */
+#ifndef _M_AMD64
+    // KPCR, one page per CPU. Only for 32-bit kernel.
+    MiCreateArm3StaticMemoryArea(PCR, PAGE_SIZE * KeNumberProcessors, FALSE);
+#endif /* _M_AMD64 */
+
+    // KUSER_SHARED_DATA
+    MiCreateArm3StaticMemoryArea((PVOID)KI_USER_SHARED_DATA, PAGE_SIZE, FALSE);
+#endif /* _X86_ */
 }
 
 VOID

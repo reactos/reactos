@@ -104,7 +104,7 @@ NTAPI
 CPortTopology::AddEventToEventList(
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 void
@@ -117,7 +117,7 @@ CPortTopology::GenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -197,7 +197,7 @@ CPortTopology::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortTopology_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortTopology_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
 

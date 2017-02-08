@@ -42,7 +42,12 @@
     state->buf_total += count;
     state->in_eof     = FT_BOOL( count < state->num_bits );
     state->buf_offset = 0;
-    state->buf_size   = ( state->buf_size << 3 ) - ( state->num_bits - 1 );
+
+    state->buf_size <<= 3;
+    if ( state->buf_size > state->num_bits )
+      state->buf_size -= state->num_bits - 1;
+    else
+      return -1; /* not enough data */
 
     if ( count == 0 )  /* end of file */
       return -1;
@@ -66,7 +71,10 @@
     {
       if ( state->free_ent >= state->free_bits )
       {
-        state->num_bits  = ++num_bits;
+        state->num_bits = ++num_bits;
+        if ( num_bits > LZW_MAX_BITS )
+          return -1;
+
         state->free_bits = state->num_bits < state->max_bits
                            ? (FT_UInt)( ( 1UL << num_bits ) - 256 )
                            : state->max_free + 1;

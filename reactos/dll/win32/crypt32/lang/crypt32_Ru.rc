@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) & updated by Stopkin Sergey (stopkin.sergey@gmail.com)*/
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -177,9 +177,9 @@ STRINGTABLE
 STRINGTABLE
 {
     IDS_KEY_ID "KeyID="
-    IDS_CERT_ISSUER "Certificate Issuer"
+    IDS_CERT_ISSUER "Издатель сертификата"
     IDS_CERT_SERIAL_NUMBER "Серийный номер сертификата="
-    IDS_ALT_NAME_OTHER_NAME "Other Name="
+    IDS_ALT_NAME_OTHER_NAME "Дополнительное имя="
     IDS_ALT_NAME_RFC822_NAME "Почтовый адрес="
     IDS_ALT_NAME_DNS_NAME "DNS-имя="
     IDS_ALT_NAME_DIRECTORY_NAME "Адрес каталога"
@@ -187,14 +187,14 @@ STRINGTABLE
     IDS_ALT_NAME_IP_ADDRESS "IP-адрес="
     IDS_ALT_NAME_MASK "Маска="
     IDS_ALT_NAME_REGISTERED_ID "Зарегистрированный идентификатор="
-    IDS_USAGE_UNKNOWN "Unknown Key Usage"
+    IDS_USAGE_UNKNOWN "Неизвестное использование ключа"
     IDS_SUBJECT_TYPE "Тип субъекта="
     IDS_SUBJECT_TYPE_CA "CA"
     IDS_SUBJECT_TYPE_END_CERT "End Entity"
-    IDS_PATH_LENGTH "Path Length Constraint="
-    IDS_PATH_LENGTH_NONE "None"
-    IDS_INFO_NOT_AVAILABLE "Information Not Available"
-    IDS_AIA "Authority Info Access"
+    IDS_PATH_LENGTH "Ограничение длины пути: "
+    IDS_PATH_LENGTH_NONE "Неограничено"
+    IDS_INFO_NOT_AVAILABLE "Информация отсутствует"
+    IDS_AIA "Доступ к информации о центре сертификации"
     IDS_ACCESS_METHOD "Метод доступа="
     IDS_ACCESS_METHOD_OCSP "OCSP"
     IDS_ACCESS_METHOD_CA_ISSUERS "CA Issuers"
@@ -209,7 +209,7 @@ STRINGTABLE
     IDS_REASON_KEY_COMPROMISE "Key Compromise"
     IDS_REASON_CA_COMPROMISE "CA Compromise"
     IDS_REASON_AFFILIATION_CHANGED "Affiliation Changed"
-    IDS_REASON_SUPERSEDED "Superseded"
+    IDS_REASON_SUPERSEDED "Заменено"
     IDS_REASON_CESSATION_OF_OPERATION "Operation Ceased"
     IDS_REASON_CERTIFICATE_HOLD "Certificate Hold"
     IDS_FINANCIAL_CRITERIA "Финансовая информация="
@@ -220,16 +220,16 @@ STRINGTABLE
     IDS_NO "Нет"
     IDS_DIGITAL_SIGNATURE "Цифровая подпись"
     IDS_NON_REPUDIATION "Non-Repudiation"
-    IDS_KEY_ENCIPHERMENT "Key Encipherment"
-    IDS_DATA_ENCIPHERMENT "Data Encipherment"
-    IDS_KEY_AGREEMENT "Key Agreement"
-    IDS_CERT_SIGN "Certificate Signing"
-    IDS_OFFLINE_CRL_SIGN "Off-line CRL Signing"
-    IDS_CRL_SIGN "CRL Signing"
-    IDS_ENCIPHER_ONLY "Encipher Only"
-    IDS_DECIPHER_ONLY "Decipher Only"
-    IDS_NETSCAPE_SSL_CLIENT "SSL Client Authentication"
-    IDS_NETSCAPE_SSL_SERVER "SSL Server Authentication"
+    IDS_KEY_ENCIPHERMENT "Зашифрование ключей шифрования"
+    IDS_DATA_ENCIPHERMENT "Зашифрование данных"
+    IDS_KEY_AGREEMENT "Согласование ключей шифрования"
+    IDS_CERT_SIGN "Подписание сертификатов"
+    IDS_OFFLINE_CRL_SIGN "Подписание списков отзыва сертификатов, проверяемых вне сети"
+    IDS_CRL_SIGN "Подписание списков отзыва сертификатов (CLR)"
+    IDS_ENCIPHER_ONLY "Только шифрование"
+    IDS_DECIPHER_ONLY "Только расшифрование"
+    IDS_NETSCAPE_SSL_CLIENT "Проверка подлинности клиента SSL"
+    IDS_NETSCAPE_SSL_SERVER "Проверка подлинности сервера SSL"
     IDS_NETSCAPE_SMIME "S/MIME"
     IDS_NETSCAPE_SIGN "Подпись"
     IDS_NETSCAPE_SSL_CA "SSL CA"

@@ -46,9 +46,9 @@
 #include <mbedtls/md_internal.h>
 #include <mbedtls/ssl_internal.h>
 
-#define ROS_SCHAN_IS_BLOCKING (0xCCCFFFFF & 0xFFF00000)
-#define ROS_SCHAN_IS_BLOCKING_MARSHALL(read_len) (ROS_SCHAN_IS_BLOCKING | (read_len & 0x000FFFFF))
-#define ROS_SCHAN_IS_BLOCKING_RETRIEVE(read_len)                          (read_len & 0x000FFFFF)
+#define ROS_SCHAN_IS_BLOCKING(read_len)          ((read_len & 0xFFF00000) == 0xCCC00000)
+#define ROS_SCHAN_IS_BLOCKING_MARSHALL(read_len) ((read_len & 0x000FFFFF) |  0xCCC00000)
+#define ROS_SCHAN_IS_BLOCKING_RETRIEVE(read_len)  (read_len & 0x000FFFFF)
 
 #ifndef __REACTOS__
  /* WINE defines the back-end glue in here */
@@ -244,6 +244,7 @@ void schan_imp_dispose_session(schan_imp_session session)
     mbedtls_ssl_free(&s->ssl);
     mbedtls_ctr_drbg_free(&s->ctr_drbg);
     mbedtls_entropy_free(&s->entropy);
+    mbedtls_ssl_config_free(&s->conf);
 
     /* safely overwrite the freed context with zeroes */
     HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, s);
@@ -280,7 +281,7 @@ SECURITY_STATUS schan_imp_handshake(schan_imp_session session)
 
     TRACE("MBEDTLS schan_imp_handshake: %p  err: %#x \n", session, err);
 
-    if ((err & ROS_SCHAN_IS_BLOCKING) == ROS_SCHAN_IS_BLOCKING)
+    if (ROS_SCHAN_IS_BLOCKING(err))
     {
         TRACE("Received ERR_NET_WANT_READ/WRITE... let's try again!\n");
         return SEC_I_CONTINUE_NEEDED;
@@ -622,7 +623,7 @@ SECURITY_STATUS schan_imp_send(schan_imp_session session, const void *buffer,
 
         *length = ret;
     }
-    else if ((ret & ROS_SCHAN_IS_BLOCKING) == ROS_SCHAN_IS_BLOCKING)
+    else if (ROS_SCHAN_IS_BLOCKING(ret))
     {
         *length = ROS_SCHAN_IS_BLOCKING_RETRIEVE(ret);
 
@@ -664,7 +665,7 @@ SECURITY_STATUS schan_imp_recv(schan_imp_session session, void *buffer,
 
         *length = ret;
     }
-    else if ((ret & ROS_SCHAN_IS_BLOCKING) == ROS_SCHAN_IS_BLOCKING)
+    else if (ROS_SCHAN_IS_BLOCKING(ret))
     {
         *length = ROS_SCHAN_IS_BLOCKING_RETRIEVE(ret);
 
@@ -681,6 +682,7 @@ SECURITY_STATUS schan_imp_recv(schan_imp_session session, void *buffer,
     }
     else if (ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY)
     {
+        *length = 0;
         TRACE("MBEDTLS schan_imp_recv: ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY -> SEC_E_OK\n");
         return SEC_E_OK;
     }

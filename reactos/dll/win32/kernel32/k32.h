@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
  * FILE:            dll/win32/kernel32/k32.h
- * PURPOSE:         Win32 Kernel Libary Header
+ * PURPOSE:         Win32 Kernel Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
@@ -21,6 +21,11 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
+
+#undef TEXT
+#define TEXT(s) L##s
+#include <regstr.h>
+
 #include <tlhelp32.h>
 
 /* Redefine NTDDI_VERSION to 2K3 SP1 to get correct NDK definitions */
@@ -40,7 +45,7 @@
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
 
-/* CSRSS Header */
+/* CSRSS Headers */
 #include <csr/csr.h>
 #include <win/base.h>
 #include <win/basemsg.h>

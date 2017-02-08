@@ -66,7 +66,7 @@ ERRORLEVEL, seçeneklerdeki düğme kullanıcısı basmalarının ofsetine ayarl
     STRING_CMD_HELP2 "\nKullanılabilir husûsiyetler:"
     STRING_CMD_HELP3 "  [başka adlar]"
     STRING_CMD_HELP4 "  [geçmiş]"
-    STRING_CMD_HELP5 "  [Unix kütük adı bütünlemesi]"
+    STRING_CMD_HELP5 "  [Bash kütük adı bütünlemesi]"
     STRING_CMD_HELP6 "  [dizin yığını]"
     STRING_CMD_HELP7 "  [yönlendirmeler ve borulama]"
     STRING_CMD_HELP8 "ReactOS komut yatacı yorumlayıcısının yeni bir örneğini başlatır.\n\n\
@@ -261,15 +261,15 @@ MKLINK [/D | /H | /J] bağlantı adı varış\n\n\
   /H  Bir değişmez bağlantı oluştur.\n\
   /J  Bir dizin bağlantısı oluştur.\n\n\
 /H ve /J belirtilmemişse bir simgelik bağlantı oluşmuştur."
-    STRING_MEMMORY_HELP1 "Dizge belleğinin niceliğini görüntüler.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  Bellek %%%12s yüklü.\n\n\
+    STRING_MEMORY_HELP1 "Dizge belleğinin niceliğini görüntüler.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  Bellek %%%12s yüklü.\n\n\
   %13s çoklu tüm fizîkî RAM.\n\
   %13s çoklu kullanılabilir fizîkî RAM.\n\n\
   %13s çoklu tüm sayfalama kütüğü.\n\
   %13s çoklu kullanılabilir sayfalama kütüğü.\n\n\
   %13s çoklu tüm farazî bellek.\n\
   %13s çoklu kullanılabilir farazî bellek.\n"
-    STRING_MISC_HELP1 "Sürdürmek için bir düğmeye basınız...\n"
+    STRING_MISC_HELP1 "Sürdürmek için bir düğmeye basınız..."
     STRING_MOVE_HELP1 "Üzerine yaz: %s (Evet/Hayır/Tümü)? "
     STRING_MOVE_HELP2 "Kütükleri taşır ve kütükleri ve dizinleri yeniden adlandırır.\n\n\
 Bir ya da daha çok kütüğü taşımak için:\n\
@@ -527,7 +527,7 @@ başlık        Yeni başlık\n"
     STRING_REPLACE_ERROR6 "Bir kütük yok - %s\n"
     STRING_REPLACE_ERROR7 "Ek Yanlışlık 32\n"
     STRING_CMD_INFOLINE "  ReactOS Komut İstemi                                    HELP yazmak = Yardım  "
-    STRING_REACTOS_VERSION "ReactOS İşletim Dizgesi [Sürüm %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS İşletim Dizgesi [Sürüm %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Komut Yatacı Yorumlayıcısı\nSürüm %s %s"
     STRING_VERSION_RUNNING_ON "Üzerinde çalışıyor: "
     STRING_VERSION_RUNVER "%s [Sürüm %d.%d.%d] %s"

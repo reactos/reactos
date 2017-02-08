@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Applications Manager
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/rapps_new/available.cpp
- * PURPOSE:         Functions for working with availabled applications
+ * PURPOSE:         Functions for working with available applications
  * PROGRAMMERS:     Dmitry Chapyshev           (dmitry@reactos.org)
  *                  Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
@@ -18,11 +18,11 @@
     } \
 
 #define GET_STRING1(a, b)  \
-    if (!ParserGetString(a, b, MAX_PATH, FindFileData.cFileName)) \
+    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         continue;
 
 #define GET_STRING2(a, b)  \
-    if (!ParserGetString(a, b, MAX_PATH, FindFileData.cFileName)) \
+    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         b[0] = '\0';
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };

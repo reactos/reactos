@@ -498,6 +498,12 @@ TOOLTIPS_GetTipText (const TOOLTIPS_INFO *infoPtr, INT nTool, WCHAR *buffer)
         buffer[0] = '\0';
     }
 
+    if (!(GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE) & TTS_NOPREFIX)) {
+        WCHAR *ptrW;
+        if ((ptrW = strchrW(buffer, '\t')))
+            *ptrW = 0;
+    }
+
     TRACE("%s\n", debugstr_w(buffer));
 }
 
@@ -1315,12 +1321,10 @@ TOOLTIPS_GetDelayTime (const TOOLTIPS_INFO *infoPtr, DWORD duration)
 
 
 static LRESULT
-TOOLTIPS_GetMargin (const TOOLTIPS_INFO *infoPtr, LPRECT lpRect)
+TOOLTIPS_GetMargin (const TOOLTIPS_INFO *infoPtr, RECT *rect)
 {
-    lpRect->left   = infoPtr->rcMargin.left;
-    lpRect->right  = infoPtr->rcMargin.right;
-    lpRect->bottom = infoPtr->rcMargin.bottom;
-    lpRect->top    = infoPtr->rcMargin.top;
+    if (rect)
+        *rect = infoPtr->rcMargin;
 
     return 0;
 }
@@ -1592,12 +1596,10 @@ TOOLTIPS_SetDelayTime (TOOLTIPS_INFO *infoPtr, DWORD duration, INT nTime)
 
 
 static LRESULT
-TOOLTIPS_SetMargin (TOOLTIPS_INFO *infoPtr, const RECT *lpRect)
+TOOLTIPS_SetMargin (TOOLTIPS_INFO *infoPtr, const RECT *rect)
 {
-    infoPtr->rcMargin.left   = lpRect->left;
-    infoPtr->rcMargin.right  = lpRect->right;
-    infoPtr->rcMargin.bottom = lpRect->bottom;
-    infoPtr->rcMargin.top    = lpRect->top;
+    if (rect)
+        infoPtr->rcMargin = *rect;
 
     return 0;
 }

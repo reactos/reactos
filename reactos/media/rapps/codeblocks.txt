@@ -26,6 +26,11 @@ Name = Code::Blocks (fără compilator)
 Description = Mediu de dezvoltare integrat (IDE) puternic, multiplatformă, cu surse deschise. Nu conține nici un compilator.
 Size = 32,9 Mio
 
+[Section.0419]
+Name = Code::Blocks (без компилятора)
+Description = Свободная кроссплатформенная среда разработки.
+Size = 32,9 МиБ
+
 [Section.041f]
 Name = Code::Blocks (Derleyicisiz)
 License = GPL sürüm 3

@@ -129,7 +129,7 @@ EtfspGetDirentNameLength (
     PUCHAR Pos;
 
     RealLength = Length = DirEntry->FileIdLen;
-    for (Pos = &DirEntry->FileIdLen + Length; Length; --Pos)
+    for (Pos = DirEntry->FileId + Length - 1; Length; --Pos)
     {
         --Length;
 
@@ -141,7 +141,7 @@ EtfspGetDirentNameLength (
     }
 
     Length = RealLength;
-    for (Pos = &DirEntry->FileIdLen + Length; Length; --Pos)
+    for (Pos = DirEntry->FileId + Length - 1; Length; --Pos)
     {
         --Length;
 
@@ -601,7 +601,7 @@ EtfsOpen (
     }
 
     /* Zero it out */
-    RtlZeroMemory(NewFile, sizeof(*EtfsFile));
+    RtlZeroMemory(EtfsFile, sizeof(*EtfsFile));
 
     /* Capture the device ID of the directory */
     NewFile->DeviceId = Directory->DeviceId;
@@ -635,7 +635,7 @@ EtfsOpen (
         NewFile->Flags |= BL_FILE_ENTRY_DIRECTORY;
     }
 
-    /* Write down the name of the filesytem */
+    /* Write down the name of the filesystem */
     EtfsFile->FsName = L"cdfs";
 
     /* All done, return the file entry, and save the ETFS side */

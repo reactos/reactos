@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "Hjälp"
     BEGIN
-        MENUITEM "Om...", ID_ABOUT
+        MENUITEM "Om", ID_ABOUT
     END
 END
 

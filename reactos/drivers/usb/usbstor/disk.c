@@ -218,7 +218,7 @@ USBSTOR_GetFieldLength(
     ULONG LastCharacterPosition = 0;
 
     //
-    // scan the field and return last positon which contains a valid character
+    // scan the field and return last position which contains a valid character
     //
     for(Index = 0; Index < MaxLength; Index++)
     {

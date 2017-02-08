@@ -864,7 +864,7 @@ CUSBQueue::FindInterruptEndpointDescriptor(
         Index++;
     }
 
-    DPRINT("InterruptInterval %lu Selected InterruptIndex %lu Choosen Interval %lu\n", InterruptInterval, Index, Power);
+    DPRINT("InterruptInterval %lu Selected InterruptIndex %lu Chosen Interval %lu\n", InterruptInterval, Index, Power);
 
     //
     // return endpoint
@@ -918,7 +918,7 @@ CUSBQueue::AbortDevicePipe(
         // IMPLEMENT me
         //
         ASSERT(Type == USB_ENDPOINT_TYPE_ISOCHRONOUS);
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         return STATUS_NOT_IMPLEMENTED;
     }
 

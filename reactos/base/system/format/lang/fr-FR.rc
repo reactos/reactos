@@ -14,7 +14,7 @@ BEGIN
                    NTFS peut utiliser 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT peut utiliser 8192, 16K, 32K, 64K, 128K, 256K.\n\
                    La compression NTFS n'est pas possible au de là de 4096.\n\
-  -C               Les fichiers sur le nouveau disque seront compressés automatiquement."
+  -C               Les fichiers sur le nouveau disque seront compressés automatiquement.\n\n"
     STRING_COMPLETE "%lu pourcent effectués.\r"
     STRING_FORMAT_FAIL "FormatEx ne peut se finir avec succés.\n\n"
     STRING_NO_SUPPORT "Fontion Non Supportée"
@@ -29,7 +29,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "Donner un nom pour le disque %C : "
     STRING_ERROR_LABEL "Le nom pour le disque n'est pas correct.\n"
     STRING_YN_FORMAT "\nATTENTION, TOUTES LES DONNÉES SUR LE DISQUE %C: SERONT\n\
-PERDUES !\nContinuer avec le formatage ? (O/N) ?"
+PERDUES !\nContinuer avec le formatage (O/N) ? "
     STRING_YES_NO_FAQ "ON"
     STRING_VERIFYING "Vérifications"
     STRING_FAST_FMT "Formatage rapide"

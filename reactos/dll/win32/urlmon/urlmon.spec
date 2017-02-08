@@ -80,7 +80,7 @@
 179 stdcall GetSoftwareUpdateInfo(ptr ptr)
 #180 GetUrlmonThreadNotificationHwnd
 181 stdcall -stub HlinkGoBack(ptr)
-#182 stub HlinkGoForward
+182 stdcall -stub HlinkGoForward(ptr)
 #183 stub HlinkNavigateMoniker
 184 stdcall HlinkNavigateString(ptr wstr)
 185 stdcall HlinkSimpleNavigateToMoniker(ptr wstr wstr ptr ptr ptr long long)
@@ -113,7 +113,7 @@
 #212 ShouldDisplayPunycodeForUri
 #213 ShouldShowIntranetWarningSecband
 #214 ShowTrustAlertDialog
-#215 stub URLDownloadA
+215 stdcall -stub URLDownloadA(long ptr long ptr long)
 216 stdcall URLDownloadToCacheFileA(ptr str str long long ptr)
 217 stdcall URLDownloadToCacheFileW(ptr wstr wstr long long ptr)
 218 stdcall URLDownloadToFileA(ptr str str long ptr)

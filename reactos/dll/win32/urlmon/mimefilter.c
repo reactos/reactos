@@ -686,7 +686,7 @@ HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
     if(dwReserved)
         WARN("dwReserved=%d\n", dwReserved);
 
-    /* pBC seams to not be used */
+    /* pBC seems to not be used */
 
     if(!ppwzMimeOut || (!pwzUrl && !pBuffer))
         return E_INVALIDARG;

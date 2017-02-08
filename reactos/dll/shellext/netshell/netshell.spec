@@ -21,12 +21,12 @@
 20 stub HrRunWizard
 21 stub InvokeDunFile
 22 stdcall NcFreeNetconProperties(ptr)
-23 stub NcIsValidConnectionName
+23 stdcall NcIsValidConnectionName(wstr)
 24 stub NetSetupAddRasConnection
 25 stub NetSetupFinishInstall
 26 stub NetSetupInstallSoftware
 27 stub NetSetupPrepareSysPrep
-28 stub NetSetupRequestWizardPages
+28 stdcall NetSetupRequestWizardPages(ptr ptr ptr)
 29 stub NetSetupSetProgressCallback
 30 stub NormalizeExtendedStatus
 31 stub RaiseSupportDialog

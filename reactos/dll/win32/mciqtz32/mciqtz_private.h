@@ -26,17 +26,6 @@
 #include <dshow.h>
 
 typedef struct {
-    HANDLE         thread;
-    HANDLE         notify;
-    HANDLE         done;
-    DWORD          msg;
-    DWORD_PTR      devid;
-    DWORD          flags;
-    DWORD_PTR      parms;
-    LRESULT        res;
-} WINE_MCIQTZ_TASK;
-
-typedef struct {
     MCIDEVICEID    wDevID;
     BOOL           opened;
     BOOL           uninit;
@@ -54,8 +43,6 @@ typedef struct {
     HANDLE         callback;
     HANDLE         thread;
     HANDLE         stop_event;
-    CRITICAL_SECTION cs;
-    WINE_MCIQTZ_TASK task;
 } WINE_MCIQTZ;
 
 #endif  /* __WINE_PRIVATE_MCIQTZ_H */

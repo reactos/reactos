@@ -61,23 +61,50 @@
   static FT_Error
   tt_property_set( FT_Module    module,         /* TT_Driver */
                    const char*  property_name,
-                   const void*  value )
+                   const void*  value,
+                   FT_Bool      value_is_string )
   {
     FT_Error   error  = FT_Err_Ok;
     TT_Driver  driver = (TT_Driver)module;
 
+#ifndef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+    FT_UNUSED( value_is_string );
+#endif
+
 
     if ( !ft_strcmp( property_name, "interpreter-version" ) )
     {
-      FT_UInt*  interpreter_version = (FT_UInt*)value;
+      FT_UInt  interpreter_version;
 
 
-#ifndef TT_CONFIG_OPTION_SUBPIXEL_HINTING
-      if ( *interpreter_version != TT_INTERPRETER_VERSION_35 )
-        error = FT_ERR( Unimplemented_Feature );
+#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+      if ( value_is_string )
+      {
+        const char*  s = (const char*)value;
+
+
+        interpreter_version = (FT_UInt)ft_strtol( s, NULL, 10 );
+      }
       else
 #endif
-        driver->interpreter_version = *interpreter_version;
+      {
+        FT_UInt*  iv = (FT_UInt*)value;
+
+
+        interpreter_version = *iv;
+      }
+
+      if ( interpreter_version == TT_INTERPRETER_VERSION_35
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+           || interpreter_version == TT_INTERPRETER_VERSION_38
+#endif
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+           || interpreter_version == TT_INTERPRETER_VERSION_40
+#endif
+         )
+        driver->interpreter_version = interpreter_version;
+      else
+        error = FT_ERR( Unimplemented_Feature );
 
       return error;
     }
@@ -312,6 +339,25 @@
     {
       error = tt_size_reset( ttsize );
       ttsize->root.metrics = ttsize->metrics;
+
+#ifdef TT_USE_BYTECODE_INTERPRETER
+      /* for the `MPS' bytecode instruction we need the point size */
+      {
+        FT_UInt  resolution = ttsize->metrics.x_ppem > ttsize->metrics.y_ppem
+                                ? req->horiResolution
+                                : req->vertResolution;
+
+
+        /* if we don't have a resolution value, assume 72dpi */
+        if ( req->type == FT_SIZE_REQUEST_TYPE_SCALES ||
+             !resolution                              )
+          resolution = 72;
+
+        ttsize->point_size = FT_MulDiv( ttsize->ttmetrics.ppem,
+                                        64 * 72,
+                                        resolution );
+      }
+#endif
     }
 
     return error;

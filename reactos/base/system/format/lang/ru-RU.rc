@@ -31,7 +31,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "Введите текущую метку тома %C: "
     STRING_ERROR_LABEL "Неправильная метка тома для этого устройства.\n"
     STRING_YN_FORMAT "\nВНИМАНИЕ, ВСЕ ДАННЫЕ НА ДИСКЕ NON_REMOVABLE\n\
-  %C: БУДУТ УНИЧТОЖЕНЫ!\nНачать форматирование (Y/N)? "
+  %C: БУДУТ УНИЧТОЖЕНЫ!\nНачать форматирование (Y-Да|N-Нет)? "
     STRING_YES_NO_FAQ "YN"
     STRING_VERIFYING "Проверка"
     STRING_FAST_FMT "Быстрое форматирование"

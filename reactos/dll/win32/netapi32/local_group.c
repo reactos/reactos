@@ -103,7 +103,7 @@ BuildAliasInfoBuffer(PALIAS_GENERAL_INFORMATION AliasInfo,
         case 0:
             LocalInfo0 = (PLOCALGROUP_INFO_0)LocalBuffer;
 
-            Ptr = (LPWSTR)LocalInfo0++;
+            Ptr = (LPWSTR)((ULONG_PTR)LocalInfo0 + sizeof(LOCALGROUP_INFO_0));
             LocalInfo0->lgrpi0_name = Ptr;
 
             memcpy(LocalInfo0->lgrpi0_name,
@@ -1163,7 +1163,7 @@ NetLocalGroupEnum(
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Phase != DonePhase)
+    if (ApiStatus == NERR_Success && EnumContext != NULL && EnumContext->Phase != DonePhase)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)

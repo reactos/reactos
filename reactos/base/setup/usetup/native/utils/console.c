@@ -218,7 +218,7 @@ ReadConsoleInput(
         return FALSE;
 
     lpBuffer->EventType = KEY_EVENT;
-    Status = IntTranslateKey(&InputData, &lpBuffer->Event.KeyEvent);
+    Status = IntTranslateKey(hConsoleInput, &InputData, &lpBuffer->Event.KeyEvent);
     if (!NT_SUCCESS(Status))
         return FALSE;
 

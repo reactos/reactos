@@ -228,7 +228,7 @@
 
 
     if ( !fontName || !face_index )
-      return FT_THROW( Invalid_Argument) ;
+      return FT_THROW( Invalid_Argument);
 
     err = FT_GetFileRef_From_Mac_ATS_Name( fontName, &ref, face_index );
     if ( err )

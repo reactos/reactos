@@ -47,6 +47,9 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/wldap32_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/wldap32_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/wldap32_Ko.rc"
 #endif

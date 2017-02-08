@@ -181,8 +181,8 @@ typedef struct _END_POINT_CAPABILITIES
 {
     ULONG InterruptScheduleMask:8;
     ULONG SplitCompletionMask:8;
-    ULONG HubAddr:6;
-    ULONG PortNumber:6;
+    ULONG HubAddr:7;
+    ULONG PortNumber:7;
     ULONG NumberOfTransactionPerFrame:2;
 } END_POINT_CAPABILITIES, *PEND_POINT_CAPABILITIES;
 

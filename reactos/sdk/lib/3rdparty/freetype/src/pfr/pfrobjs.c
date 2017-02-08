@@ -524,8 +524,8 @@
         FT_UInt    probe       = power * size;
         FT_UInt    extra       = count - power;
         FT_Byte*   base        = stream->cursor;
-        FT_Bool    twobytes    = FT_BOOL( item->flags & 1 );
-        FT_Bool    twobyte_adj = FT_BOOL( item->flags & 2 );
+        FT_Bool    twobytes    = FT_BOOL( item->flags & PFR_KERN_2BYTE_CHAR );
+        FT_Bool    twobyte_adj = FT_BOOL( item->flags & PFR_KERN_2BYTE_ADJ  );
         FT_Byte*   p;
         FT_UInt32  cpair;
 

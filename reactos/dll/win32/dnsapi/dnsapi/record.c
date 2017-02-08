@@ -108,12 +108,15 @@ BOOL WINAPI DnsRecordCompare( PDNS_RECORD r1, PDNS_RECORD r2 )
 
     DPRINT( "(%p,%p)\n", r1, r2 );
 
-    if (r1->wType       != r2->wType       ||
-        r1->wDataLength != r2->wDataLength ||
-        r1->Flags.DW    != r2->Flags.DW    ||
-        r1->dwReserved  != r2->dwReserved) return FALSE;
+    if (r1->wType            != r2->wType            ||
+        r1->wDataLength      != r2->wDataLength      ||
+        r1->Flags.S.Section  != r2->Flags.S.Section  ||
+        r1->Flags.S.Delete   != r2->Flags.S.Delete   ||
+        r1->Flags.S.Unused   != r2->Flags.S.Unused   ||
+        r1->Flags.S.Reserved != r2->Flags.S.Reserved ||
+        r1->dwReserved       != r2->dwReserved) return FALSE;
 
-    wide = (r1->Flags.S.CharSet == DnsCharSetUnicode) ? TRUE : FALSE;
+    wide = (r1->Flags.S.CharSet == DnsCharSetUnicode || r1->Flags.S.CharSet == DnsCharSetUnknown);
     if (dns_strcmpX( r1->pName, r2->pName, wide )) return FALSE;
 
     switch (r1->wType)
@@ -354,6 +357,7 @@ static LPVOID dns_strcpyX( LPCVOID src, DNS_CHARSET in, DNS_CHARSET out )
             DPRINT1( "unhandled target charset: %d\n", out );
             break;
         }
+        break;
     }
     case DnsCharSetUtf8:
         switch (out)
@@ -365,6 +369,7 @@ static LPVOID dns_strcpyX( LPCVOID src, DNS_CHARSET in, DNS_CHARSET out )
             DPRINT1( "unhandled target charset: %d\n", out );
             break;
         }
+        break;
     case DnsCharSetAnsi:
         switch (out)
         {
@@ -375,6 +380,7 @@ static LPVOID dns_strcpyX( LPCVOID src, DNS_CHARSET in, DNS_CHARSET out )
             DPRINT1( "unhandled target charset: %d\n", out );
             break;
         }
+        break;
     default:
         DPRINT1( "unhandled source charset: %d\n", in );
         break;

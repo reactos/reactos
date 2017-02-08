@@ -25,6 +25,10 @@ Author:
 #include <umtypes.h>
 #include <iotypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //
 // I/O Functions
 //
@@ -1063,6 +1067,10 @@ ZwWriteFileGather(
     _In_ PLARGE_INTEGER ByteOffset,
     _In_opt_ PULONG Key
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

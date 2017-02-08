@@ -136,11 +136,9 @@ static void concat_W( WCHAR *buffer, const WCHAR *src1, const WCHAR *src2, const
         if (buffer[-1] != '\\') *buffer++ = '\\';
         if (src3) while (*src3 == '\\') src3++;
     }
+
     if (src3)
-    {
         strcpyW( buffer, src3 );
-        buffer += strlenW(buffer );
-    }
 }
 
 
@@ -996,16 +994,42 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
 
     TRACE("copy %s to %s style 0x%x\n",debugstr_w(source),debugstr_w(target),style);
 
+    /* Get a temp file name */
+    if (!GetTempPathW(sizeof(TempPath) / sizeof(WCHAR), TempPath))
+    {
+        ERR("GetTempPathW error\n");
+        return FALSE;
+    }
+    if (!GetTempFileNameW(TempPath, L"", 0, TempFile))
+    {
+        ERR("GetTempFileNameW(%s) error\n", debugstr_w(TempPath));
+        return FALSE;
+    }
+
+    /* Try to open the source file */
     hSource = LZOpenFileW((LPWSTR)source, &OfStruct, OF_READ);
     if (hSource < 0)
+    {
+        ERR("LZOpenFileW(1) error %d %s\n", (int)hSource, debugstr_w(source));
         return FALSE;
-
-    /* Get a temp file name */
-    GetTempPathW(sizeof(TempPath) / sizeof(WCHAR), TempPath);
-    GetTempFileNameW(TempPath, L"", 0, TempFile);
+    }
 
     /* Extract the compressed file to a temp location */
     hTemp = LZOpenFileW(TempFile, &OfStruct, OF_CREATE);
+    if (hTemp < 0)
+    {
+        DWORD dwLastError = GetLastError();
+
+        ERR("LZOpenFileW(2) error %d %s\n", (int)hTemp, debugstr_w(TempFile));
+
+        /* Close the source handle */
+        LZClose(hSource);
+
+        /* Restore error condition triggered by LZOpenFileW */
+        SetLastError(dwLastError);
+        return FALSE;
+    }
+
     LZCopy(hSource, hTemp);
     LZClose(hSource);
     LZClose(hTemp);

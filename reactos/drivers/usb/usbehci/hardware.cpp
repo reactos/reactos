@@ -23,7 +23,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-EhciDefferedRoutine(
+EhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -67,7 +67,7 @@ public:
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
-    friend VOID NTAPI EhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI EhciDeferredRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     // constructor / destructor
     CUSBHardwareDevice(IUnknown *OuterUnknown){}
@@ -193,7 +193,7 @@ CUSBHardwareDevice::Initialize(
     Status = GetBusInterface(PhysicalDeviceObject, &m_BusInterface);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get BusInteface!\n");
+        DPRINT1("Failed to get BusInterface!\n");
         return Status;
     }
 
@@ -316,7 +316,7 @@ CUSBHardwareDevice::PnpStart(
             case CmResourceTypeInterrupt:
             {
                 KeInitializeDpc(&m_IntDpcObject,
-                                EhciDefferedRoutine,
+                                EhciDeferredRoutine,
                                 this);
 
                 Status = IoConnectInterrupt(&m_Interrupt,
@@ -499,7 +499,7 @@ NTSTATUS
 STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStop(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1223,7 +1223,7 @@ ULONG
 STDMETHODCALLTYPE
 CUSBHardwareDevice::GetPeriodicListRegister()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -1287,7 +1287,7 @@ InterruptServiceRoutine(
 }
 
 VOID NTAPI
-EhciDefferedRoutine(
+EhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -1301,7 +1301,7 @@ EhciDefferedRoutine(
     This = (CUSBHardwareDevice*) SystemArgument1;
     CStatus = (ULONG) SystemArgument2;
 
-    DPRINT("EhciDefferedRoutine CStatus %lx\n", CStatus);
+    DPRINT("EhciDeferredRoutine CStatus %lx\n", CStatus);
 
     //
     // check for completion of async schedule

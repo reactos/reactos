@@ -149,6 +149,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PFILE_OBJECT FileObject;
     LARGE_INTEGER SectionSize;
     LARGE_INTEGER FileSize;
+    BOOLEAN PinAccess;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     KSPIN_LOCK CacheMapLock;
@@ -183,6 +184,9 @@ typedef struct _ROS_VACB
     KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
+    /* How many times was it pinned? */
+    _Guarded_by_(Mutex)
+    LONG PinCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
@@ -190,11 +194,13 @@ typedef struct _ROS_VACB
 
 typedef struct _INTERNAL_BCB
 {
+    /* Lock */
+    ERESOURCE Lock;
     PUBLIC_BCB PFCB;
     PROS_VACB Vacb;
     BOOLEAN Dirty;
+    BOOLEAN Pinned;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
-    PVOID OwnerPointer;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID
@@ -320,6 +326,7 @@ NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,
+    BOOLEAN PinAccess,
     PCACHE_MANAGER_CALLBACKS CallBacks,
     PVOID LazyWriterContext
 );
@@ -333,6 +340,29 @@ CcRosReleaseFileCache(
 NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+
+FORCEINLINE
+NTSTATUS
+CcRosAcquireVacbLock(
+    _Inout_ PROS_VACB Vacb,
+    _In_ PLARGE_INTEGER Timeout)
+{
+    NTSTATUS Status;
+    Status = KeWaitForSingleObject(&Vacb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   Timeout);
+    return Status;
+}
+
+FORCEINLINE
+VOID
+CcRosReleaseVacbLock(
+    _Inout_ PROS_VACB Vacb)
+{
+    KeReleaseMutex(&Vacb->Mutex, FALSE);
+}
 
 FORCEINLINE
 BOOLEAN

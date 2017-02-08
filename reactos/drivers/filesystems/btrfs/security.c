@@ -17,6 +17,9 @@
 
 #include "btrfs_drv.h"
 
+#define SEF_DACL_AUTO_INHERIT 0x01
+#define SEF_SACL_AUTO_INHERIT 0x02
+
 typedef struct {
     UCHAR revision;
     UCHAR elements;
@@ -198,6 +201,7 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
     um = ExAllocatePoolWithTag(PagedPool, sizeof(uid_map), ALLOC_TAG);
     if (!um) {
         ERR("out of memory\n");
+        ExFreePool(sid);
         return;
     }
     
@@ -207,7 +211,7 @@ void add_user_mapping(WCHAR* sidstring, ULONG sidstringlength, UINT32 uid) {
     InsertTailList(&uid_map_list, &um->listentry);
 }
 
-static void uid_to_sid(UINT32 uid, PSID* sid) {
+void uid_to_sid(UINT32 uid, PSID* sid) {
     LIST_ENTRY* le;
     uid_map* um;
     sid_header* sh;
@@ -281,7 +285,7 @@ static void uid_to_sid(UINT32 uid, PSID* sid) {
     *sid = sh;
 }
 
-static UINT32 sid_to_uid(PSID sid) {
+UINT32 sid_to_uid(PSID sid) {
     LIST_ENTRY* le;
     uid_map* um;
     sid_header* sh = sid;
@@ -382,103 +386,6 @@ static ACL* load_default_acl() {
     return acl;
 }
 
-static ACL* inherit_acl(SECURITY_DESCRIPTOR* parsd, BOOL file) {
-    ULONG size;
-    NTSTATUS Status;
-    ACL *paracl, *acl;
-    BOOLEAN parhasdacl, pardefaulted;
-    ACE_HEADER *ah, *parah;
-    UINT32 i;
-    USHORT num_aces;
-    
-    // FIXME - replace this with SeAssignSecurity
-    
-    Status = RtlGetDaclSecurityDescriptor(parsd, &parhasdacl, &paracl, &pardefaulted);
-    if (!NT_SUCCESS(Status)) {
-        ERR("RtlGetDaclSecurityDescriptor returned %08x\n", Status);
-        return NULL;
-    }
-    
-    // FIXME - handle parhasdacl == FALSE
-
-//     OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE | INHERIT_ONLY_ACE
-    num_aces = 0;
-    size = sizeof(ACL);
-    ah = (ACE_HEADER*)&paracl[1];
-    for (i = 0; i < paracl->AceCount; i++) {
-        if (!file && ah->AceFlags & CONTAINER_INHERIT_ACE) {
-            num_aces++;
-            size += ah->AceSize;
-            
-            if (ah->AceFlags & INHERIT_ONLY_ACE) {
-                num_aces++;
-                size += ah->AceSize;
-            }
-        }
-        
-        if (ah->AceFlags & OBJECT_INHERIT_ACE && (file || !(ah->AceFlags & CONTAINER_INHERIT_ACE))) {
-            num_aces++;
-            size += ah->AceSize;
-        }
-        
-        ah = (ACE_HEADER*)((UINT8*)ah + ah->AceSize);
-    }
-    
-    acl = ExAllocatePoolWithTag(PagedPool, size, ALLOC_TAG);
-    if (!acl) {
-        ERR("out of memory\n");
-        return NULL;
-    }
-    
-    acl->AclRevision = ACL_REVISION;
-    acl->Sbz1 = 0;
-    acl->AclSize = size;
-    acl->AceCount = num_aces;
-    acl->Sbz2 = 0;
-    
-    ah = (ACE_HEADER*)&acl[1];
-    parah = (ACE_HEADER*)&paracl[1];
-    for (i = 0; i < paracl->AceCount; i++) {
-        if (!file && parah->AceFlags & CONTAINER_INHERIT_ACE) {
-            if (parah->AceFlags & INHERIT_ONLY_ACE) {
-                RtlCopyMemory(ah, parah, parah->AceSize);
-                ah->AceFlags &= ~INHERIT_ONLY_ACE;
-                ah->AceFlags |= INHERITED_ACE;
-                ah->AceFlags &= ~(OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE);
-                
-                ah = (ACE_HEADER*)((UINT8*)ah + ah->AceSize);
-            }
-            
-            RtlCopyMemory(ah, parah, parah->AceSize);
-            ah->AceFlags |= INHERITED_ACE;
-            
-            if (ah->AceFlags & NO_PROPAGATE_INHERIT_ACE)
-                ah->AceFlags &= ~(OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE);
-            
-            ah = (ACE_HEADER*)((UINT8*)ah + ah->AceSize);
-        }
-        
-        if (parah->AceFlags & OBJECT_INHERIT_ACE && (file || !(parah->AceFlags & CONTAINER_INHERIT_ACE))) {
-            RtlCopyMemory(ah, parah, parah->AceSize);
-            ah->AceFlags |= INHERITED_ACE;
-            
-            if (file)
-                ah->AceFlags &= ~INHERIT_ONLY_ACE;
-            else
-                ah->AceFlags |= INHERIT_ONLY_ACE;
-            
-            if (ah->AceFlags & NO_PROPAGATE_INHERIT_ACE || file)
-                ah->AceFlags &= ~(OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE);
-            
-            ah = (ACE_HEADER*)((UINT8*)ah + ah->AceSize);
-        }
-        
-        parah = (ACE_HEADER*)((UINT8*)parah + parah->AceSize);
-    }
-    
-    return acl;
-}
-
 // static void STDCALL sid_to_string(PSID sid, char* s) {
 //     sid_header* sh = (sid_header*)sid;
 //     LARGE_INTEGER authnum;
@@ -494,13 +401,9 @@ static ACL* inherit_acl(SECURITY_DESCRIPTOR* parsd, BOOL file) {
 //     }
 // }
 
-static BOOL get_sd_from_xattr(fcb* fcb) {
-    ULONG buflen;
+BOOL get_sd_from_xattr(fcb* fcb, ULONG buflen) {
     NTSTATUS Status;
     PSID sid, usersid;
-    
-    if (!get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8**)&fcb->sd, (UINT16*)&buflen))
-        return FALSE;
     
     TRACE("using xattr " EA_NTACL " for security descriptor\n");
     
@@ -532,7 +435,7 @@ static BOOL get_sd_from_xattr(fcb* fcb) {
                     ERR("RtlSelfRelativeToAbsoluteSD 1 returned %08x\n", Status);
                 }
                 
-                ERR("sdsize = %u, daclsize = %u, saclsize = %u, ownersize = %u, groupsize = %u\n", sdsize, daclsize, saclsize, ownersize, groupsize);
+                TRACE("sdsize = %u, daclsize = %u, saclsize = %u, ownersize = %u, groupsize = %u\n", sdsize, daclsize, saclsize, ownersize, groupsize);
                 
                 newsd2 = sdsize == 0 ? NULL : ExAllocatePoolWithTag(PagedPool, sdsize, ALLOC_TAG);
                 dacl = daclsize == 0 ? NULL : ExAllocatePoolWithTag(PagedPool, daclsize, ALLOC_TAG);
@@ -540,7 +443,7 @@ static BOOL get_sd_from_xattr(fcb* fcb) {
                 owner = ownersize == 0 ? NULL : ExAllocatePoolWithTag(PagedPool, ownersize, ALLOC_TAG);
                 group = groupsize == 0 ? NULL : ExAllocatePoolWithTag(PagedPool, groupsize, ALLOC_TAG);
                 
-                if ((sdsize > 0 && !newsd2) || (daclsize > 0 && !dacl) || (saclsize > 0 && !sacl) || (ownersize > 0 && !owner) || (groupsize > 0 || !group)) {
+                if ((sdsize > 0 && !newsd2) || (daclsize > 0 && !dacl) || (saclsize > 0 && !sacl) || (ownersize > 0 && !owner) || (groupsize > 0 && !group)) {
                     ERR("out of memory\n");
                     if (newsd2) ExFreePool(newsd2);
                     if (dacl) ExFreePool(dacl);
@@ -646,15 +549,12 @@ static BOOL get_sd_from_xattr(fcb* fcb) {
     return TRUE;
 }
 
-void fcb_get_sd(fcb* fcb) {
+static void get_top_level_sd(fcb* fcb) {
     NTSTATUS Status;
     SECURITY_DESCRIPTOR sd;
     ULONG buflen;
     ACL* acl = NULL;
     PSID usersid = NULL, groupsid = NULL;
-    
-    if (get_sd_from_xattr(fcb))
-        goto end;
     
     Status = RtlCreateSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
     
@@ -694,14 +594,10 @@ void fcb_get_sd(fcb* fcb) {
         }
 //     }
     
-    if (!fcb->par)
-        acl = load_default_acl();
-    else
-        acl = inherit_acl(fcb->par->sd, fcb->type != BTRFS_TYPE_DIRECTORY);
+    acl = load_default_acl();
     
     if (!acl) {
         ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
         goto end;
     }
 
@@ -755,12 +651,64 @@ end:
         ExFreePool(groupsid);
 }
 
+void fcb_get_sd(fcb* fcb, struct _fcb* parent, BOOL look_for_xattr, PIRP Irp) {
+    NTSTATUS Status;
+    PSID usersid = NULL, groupsid = NULL;
+    SECURITY_SUBJECT_CONTEXT subjcont;
+    ULONG buflen;
+    
+    if (look_for_xattr && get_xattr(fcb->Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8**)&fcb->sd, (UINT16*)&buflen, Irp)) {
+        if (get_sd_from_xattr(fcb, buflen))
+            return;
+    }
+    
+    if (!parent) {
+        get_top_level_sd(fcb);
+        return;
+    }
+    
+    SeCaptureSubjectContext(&subjcont);
+    
+    Status = SeAssignSecurityEx(parent->sd, NULL, (void**)&fcb->sd, NULL, fcb->type == BTRFS_TYPE_DIRECTORY, SEF_DACL_AUTO_INHERIT,
+                                &subjcont, IoGetFileObjectGenericMapping(), PagedPool);
+    if (!NT_SUCCESS(Status)) {
+        ERR("SeAssignSecurityEx returned %08x\n", Status);
+    }
+    
+    uid_to_sid(fcb->inode_item.st_uid, &usersid);
+    if (!usersid) {
+        ERR("out of memory\n");
+        return;
+    }
+    
+    RtlSetOwnerSecurityDescriptor(&fcb->sd, usersid, FALSE);
+    
+    gid_to_sid(fcb->inode_item.st_gid, &groupsid);
+    if (!groupsid) {
+        ERR("out of memory\n");
+        return;
+    }
+       
+    RtlSetGroupSecurityDescriptor(&fcb->sd, groupsid, FALSE);
+    
+    ExFreePool(usersid);
+    ExFreePool(groupsid);
+}
+
 static NTSTATUS STDCALL get_file_security(device_extension* Vcb, PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* relsd, ULONG* buflen, SECURITY_INFORMATION flags) {
     NTSTATUS Status;
     fcb* fcb = FileObject->FsContext;
+    ccb* ccb = FileObject->FsContext2;
+    file_ref* fileref = ccb ? ccb->fileref : NULL;
     
-    if (fcb->ads)
-        fcb = fcb->par;
+    if (fcb->ads) {
+        if (fileref && fileref->parent)
+            fcb = fileref->parent->fcb;
+        else {
+            ERR("could not get parent fcb for stream\n");
+            return STATUS_INTERNAL_ERROR;
+        }
+    }
     
 //     TRACE("buflen = %u, fcb->sdlen = %u\n", *buflen, fcb->sdlen);
 
@@ -779,14 +727,34 @@ NTSTATUS STDCALL drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     NTSTATUS Status;
     SECURITY_DESCRIPTOR* sd;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    device_extension* Vcb = DeviceObject->DeviceExtension;
     ULONG buflen;
     BOOL top_level;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    ccb* ccb = FileObject ? FileObject->FsContext2 : NULL;
 
     TRACE("query security\n");
     
     FsRtlEnterFileSystem();
 
     top_level = is_top_level(Irp);
+    
+    if (Vcb && Vcb->type == VCB_TYPE_PARTITION0) {
+        Status = part0_passthrough(DeviceObject, Irp);
+        goto exit;
+    }
+    
+    if (!ccb) {
+        ERR("no ccb\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
+    }
+    
+    if (Irp->RequestorMode == UserMode && !(ccb->access & READ_CONTROL)) {
+        WARN("insufficient permissions\n");
+        Status = STATUS_ACCESS_DENIED;
+        goto end;
+    }
     
     Status = STATUS_SUCCESS;
     
@@ -812,12 +780,13 @@ NTSTATUS STDCALL drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     
     if (Irp->MdlAddress && !sd) {
         ERR("MmGetSystemAddressForMdlSafe returned NULL\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
     }
     
     buflen = IrpSp->Parameters.QuerySecurity.Length;
     
-    Status = get_file_security(DeviceObject->DeviceExtension, IrpSp->FileObject, sd, &buflen, IrpSp->Parameters.QuerySecurity.SecurityInformation);
+    Status = get_file_security(Vcb, IrpSp->FileObject, sd, &buflen, IrpSp->Parameters.QuerySecurity.SecurityInformation);
     
     if (NT_SUCCESS(Status))
         Irp->IoStatus.Information = IrpSp->Parameters.QuerySecurity.Length;
@@ -827,12 +796,14 @@ NTSTATUS STDCALL drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     } else
         Irp->IoStatus.Information = 0;
     
+end:
     TRACE("Irp->IoStatus.Information = %u\n", Irp->IoStatus.Information);
     
     Irp->IoStatus.Status = Status;
 
-    IoCompleteRequest( Irp, IO_NO_INCREMENT );
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     
+exit:
     if (top_level) 
         IoSetTopLevelIrp(NULL);    
     
@@ -846,25 +817,27 @@ NTSTATUS STDCALL drv_query_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT FileObject, SECURITY_DESCRIPTOR* sd, SECURITY_INFORMATION flags) {
     NTSTATUS Status;
     fcb* fcb = FileObject->FsContext;
+    ccb* ccb = FileObject->FsContext2;
+    file_ref* fileref = ccb ? ccb->fileref : NULL;
     SECURITY_DESCRIPTOR* oldsd;
-    INODE_ITEM* ii;
-    KEY searchkey;
-    traverse_ptr tp;
     LARGE_INTEGER time;
     BTRFS_TIME now;
-    LIST_ENTRY rollback;
     
     TRACE("(%p, %p, %p, %x)\n", Vcb, FileObject, sd, flags);
-    
-    InitializeListHead(&rollback);
     
     if (Vcb->readonly)
         return STATUS_MEDIA_WRITE_PROTECTED;
     
-    acquire_tree_lock(Vcb, TRUE);
+    if (fcb->ads) {
+        if (fileref && fileref->parent)
+            fcb = fileref->parent->fcb;
+        else {
+            ERR("could not find parent fcb for stream\n");
+            return STATUS_INTERNAL_ERROR;
+        }
+    }
     
-    if (fcb->ads)
-        fcb = fcb->par;
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
     
     if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY) {
         Status = STATUS_ACCESS_DENIED;
@@ -882,31 +855,14 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
     
     ExFreePool(oldsd);
     
-    searchkey.obj_id = fcb->inode;
-    searchkey.obj_type = TYPE_INODE_ITEM;
-    searchkey.offset = 0;
-    
-    Status = find_item(Vcb, fcb->subvol, &tp, &searchkey, FALSE);
-    if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
-        goto end;
-    }
-    
-    if (keycmp(&tp.item->key, &searchkey)) {
-        ERR("error - could not find INODE_ITEM for inode %llx in subvol %llx\n", fcb->inode, fcb->subvol->id);
-        Status = STATUS_INTERNAL_ERROR;
-        free_traverse_ptr(&tp);
-        goto end;
-    }
-    
-    delete_tree_item(Vcb, &tp, &rollback);
-    free_traverse_ptr(&tp);
-    
     KeQuerySystemTime(&time);
     win_time_to_unix(time, &now);
     
     fcb->inode_item.transid = Vcb->superblock.generation;
-    fcb->inode_item.st_ctime = now;
+    
+    if (!ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
+    
     fcb->inode_item.sequence++;
     
     if (flags & OWNER_SECURITY_INFORMATION) {
@@ -923,48 +879,29 @@ static NTSTATUS STDCALL set_file_security(device_extension* Vcb, PFILE_OBJECT Fi
         fcb->inode_item.st_uid = sid_to_uid(owner);
     }
     
-    ii = ExAllocatePoolWithTag(PagedPool, sizeof(INODE_ITEM), ALLOC_TAG);
-    if (!ii) {
-        ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto end;
-    }
-    
-    RtlCopyMemory(ii, &fcb->inode_item, sizeof(INODE_ITEM));
-    
-    if (!insert_tree_item(Vcb, fcb->subvol, fcb->inode, TYPE_INODE_ITEM, 0, ii, sizeof(INODE_ITEM), NULL, &rollback)) {
-        ERR("error - failed to insert INODE_ITEM\n");
-        Status = STATUS_INTERNAL_ERROR;
-        ExFreePool(ii);
-        goto end;
-    }
-    
-    Status = set_xattr(Vcb, fcb->subvol, fcb->inode, EA_NTACL, EA_NTACL_HASH, (UINT8*)fcb->sd, RtlLengthSecurityDescriptor(fcb->sd), &rollback);
-    if (!NT_SUCCESS(Status)) {
-        ERR("set_xattr returned %08x\n", Status);
-        ExFreePool(ii);
-        goto end;
-    }
+    fcb->sd_dirty = TRUE;
+    fcb->inode_item_changed = TRUE;
     
     fcb->subvol->root_item.ctransid = Vcb->superblock.generation;
     fcb->subvol->root_item.ctime = now;
     
-    Status = consider_write(Vcb);
+    mark_fcb_dirty(fcb);
+    
+    send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_SECURITY, FILE_ACTION_MODIFIED);
     
 end:
-    if (NT_SUCCESS(Status))
-        clear_rollback(&rollback);
-    else
-        do_rollback(Vcb, &rollback);
+    ExReleaseResourceLite(fcb->Header.Resource);
 
-    release_tree_lock(Vcb, TRUE);
-    
     return Status;
 }
 
 NTSTATUS STDCALL drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    ccb* ccb = FileObject ? FileObject->FsContext2 : NULL;
+    device_extension* Vcb = DeviceObject->DeviceExtension;
+    ULONG access_req = 0;
     BOOL top_level;
 
     TRACE("set security\n");
@@ -973,34 +910,58 @@ NTSTATUS STDCALL drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
 
     top_level = is_top_level(Irp);
     
+    if (Vcb && Vcb->type == VCB_TYPE_PARTITION0) {
+        Status = part0_passthrough(DeviceObject, Irp);
+        goto exit;
+    }
+    
+    if (!ccb) {
+        ERR("no ccb\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
+    }
+    
     Status = STATUS_SUCCESS;
     
     Irp->IoStatus.Information = 0;
     
-    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & OWNER_SECURITY_INFORMATION)
+    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & OWNER_SECURITY_INFORMATION) {
         TRACE("OWNER_SECURITY_INFORMATION\n");
+        access_req |= WRITE_OWNER;
+    }
 
-    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & GROUP_SECURITY_INFORMATION)
+    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & GROUP_SECURITY_INFORMATION) {
         TRACE("GROUP_SECURITY_INFORMATION\n");
+        access_req |= WRITE_OWNER;
+    }
 
-    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & DACL_SECURITY_INFORMATION)
+    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & DACL_SECURITY_INFORMATION) {
         TRACE("DACL_SECURITY_INFORMATION\n");
+        access_req |= WRITE_DAC;
+    }
 
-    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & SACL_SECURITY_INFORMATION)
+    if (IrpSp->Parameters.QuerySecurity.SecurityInformation & SACL_SECURITY_INFORMATION) {
         TRACE("SACL_SECURITY_INFORMATION\n");
+        access_req |= ACCESS_SYSTEM_SECURITY;
+    }
     
-    Status = set_file_security(DeviceObject->DeviceExtension, IrpSp->FileObject, IrpSp->Parameters.SetSecurity.SecurityDescriptor,
+    if ((ccb->access & access_req) != access_req) {
+        Status = STATUS_ACCESS_DENIED;
+        WARN("insufficient privileges\n");
+        goto end;
+    }
+    
+    Status = set_file_security(DeviceObject->DeviceExtension, FileObject, IrpSp->Parameters.SetSecurity.SecurityDescriptor,
                                IrpSp->Parameters.SetSecurity.SecurityInformation);
     
+end:
     Irp->IoStatus.Status = Status;
 
-    IoCompleteRequest( Irp, IO_NO_INCREMENT );
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     
-    if (top_level) 
-        IoSetTopLevelIrp(NULL);
-
     TRACE("returning %08x\n", Status);
-    
+
+exit:
     if (top_level) 
         IoSetTopLevelIrp(NULL);
 
@@ -1009,16 +970,16 @@ NTSTATUS STDCALL drv_set_security(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     return Status;
 }
 
-NTSTATUS fcb_get_new_sd(fcb* fcb, ACCESS_STATE* as) {
+NTSTATUS fcb_get_new_sd(fcb* fcb, file_ref* parfileref, ACCESS_STATE* as) {
     NTSTATUS Status;
     PSID owner;
     BOOLEAN defaulted;
     
-    Status = SeAssignSecurity(fcb->par ? fcb->par->sd : NULL, as->SecurityDescriptor, (void**)&fcb->sd, fcb->type == BTRFS_TYPE_DIRECTORY,
-                              &as->SubjectSecurityContext, IoGetFileObjectGenericMapping(), PagedPool);
-    
+    Status = SeAssignSecurityEx(parfileref ? parfileref->fcb->sd : NULL, as->SecurityDescriptor, (void**)&fcb->sd, NULL, fcb->type == BTRFS_TYPE_DIRECTORY,
+                                SEF_SACL_AUTO_INHERIT, &as->SubjectSecurityContext, IoGetFileObjectGenericMapping(), PagedPool);
+
     if (!NT_SUCCESS(Status)) {
-        ERR("SeAssignSecurity returned %08x\n", Status);
+        ERR("SeAssignSecurityEx returned %08x\n", Status);
         return Status;
     }
     
@@ -1027,7 +988,7 @@ NTSTATUS fcb_get_new_sd(fcb* fcb, ACCESS_STATE* as) {
         ERR("RtlGetOwnerSecurityDescriptor returned %08x\n", Status);
         fcb->inode_item.st_uid = UID_NOBODY;
     } else {
-        fcb->inode_item.st_uid = sid_to_uid(&owner);
+        fcb->inode_item.st_uid = sid_to_uid(owner);
     }
     
     return STATUS_SUCCESS;

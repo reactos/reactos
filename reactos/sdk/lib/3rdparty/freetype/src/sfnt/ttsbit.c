@@ -197,6 +197,27 @@
     if ( !error )
       FT_TRACE3(( "sbit_num_strikes: %u\n", face->sbit_num_strikes ));
 
+    face->ebdt_start = 0;
+    face->ebdt_size  = 0;
+
+    if ( face->sbit_table_type != TT_SBIT_TABLE_TYPE_NONE )
+    {
+      FT_ULong  ebdt_size;
+
+
+      error = face->goto_table( face, TTAG_CBDT, stream, &ebdt_size );
+      if ( error )
+        error = face->goto_table( face, TTAG_EBDT, stream, &ebdt_size );
+      if ( error )
+        error = face->goto_table( face, TTAG_bdat, stream, &ebdt_size );
+
+      if ( !error )
+      {
+        face->ebdt_start = FT_STREAM_POS();
+        face->ebdt_size  = ebdt_size;
+      }
+    }
+
     return FT_Err_Ok;
 
   Exit:
@@ -323,6 +344,16 @@
                                           strike[18] + /* max_width      */
                                  (FT_Char)strike[23]   /* min_advance_SB */
                                                      ) * 64;
+
+        /* set the scale values (in 16.16 units) so advances */
+        /* from the hmtx and vmtx table are scaled correctly */
+        metrics->x_scale = FT_MulDiv( metrics->x_ppem,
+                                      64 * 0x10000,
+                                      face->header.Units_Per_EM );
+        metrics->y_scale = FT_MulDiv( metrics->y_ppem,
+                                      64 * 0x10000,
+                                      face->header.Units_Per_EM );
+
         return FT_Err_Ok;
       }
 
@@ -414,17 +445,13 @@
                         FT_ULong             strike_index,
                         TT_SBit_MetricsRec*  metrics )
   {
-    FT_Error   error;
+    FT_Error   error  = FT_ERR( Table_Missing );
     FT_Stream  stream = face->root.stream;
-    FT_ULong   ebdt_size;
 
 
-    error = face->goto_table( face, TTAG_CBDT, stream, &ebdt_size );
-    if ( error )
-      error = face->goto_table( face, TTAG_EBDT, stream, &ebdt_size );
-    if ( error )
-      error = face->goto_table( face, TTAG_bdat, stream, &ebdt_size );
-    if ( error )
+    if ( !face->ebdt_size )
+      goto Exit;
+    if ( FT_STREAM_SEEK( face->ebdt_start ) )
       goto Exit;
 
     decoder->face    = face;
@@ -435,8 +462,8 @@
     decoder->metrics_loaded   = 0;
     decoder->bitmap_allocated = 0;
 
-    decoder->ebdt_start = FT_STREAM_POS();
-    decoder->ebdt_size  = ebdt_size;
+    decoder->ebdt_start = face->ebdt_start;
+    decoder->ebdt_size  = face->ebdt_size;
 
     decoder->eblc_base  = face->sbit_table;
     decoder->eblc_limit = face->sbit_table + face->sbit_table_size;
@@ -854,7 +881,7 @@
         }
 
         *pwrite++ |= ( ( rval >> nbits ) & 0xFF ) &
-                     ( ~( 0xFF << w ) << ( 8 - w - x_pos ) );
+                     ( ~( 0xFFU << w ) << ( 8 - w - x_pos ) );
         rval     <<= 8;
 
         w = line_bits - w;

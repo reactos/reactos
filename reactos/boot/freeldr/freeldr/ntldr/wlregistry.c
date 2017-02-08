@@ -179,7 +179,6 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* TODO: Load OEM HAL font */
 
-
     return TRUE;
 }
 
@@ -563,7 +562,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     ValueSize = sizeof(TempImagePath);
                     rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
 
-                    /* Write the whole path if it suceeded, else prepare to fail */
+                    /* Write the whole path if it succeeded, else prepare to fail */
                     if (rc != ERROR_SUCCESS)
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");
@@ -705,7 +704,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
 
     // Check - if we have a valid ImagePath, if not - we need to build it
     // like "System32\\Drivers\\blah.sys"
-    if (ImagePath && (wcslen(ImagePath) > 0))
+    if (ImagePath && (ImagePath[0] != 0))
     {
         // Just copy ImagePath to the corresponding field in the structure
         PathLength = (USHORT)wcslen(ImagePath) * sizeof(WCHAR) + sizeof(UNICODE_NULL);

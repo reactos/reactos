@@ -28,6 +28,11 @@ License = Versiune de evaluare
 Description = Unul dintre cele mai bune jocuri de pasiență Mahjongg.
 Size = 13,8 Mio
 
+[Section.0419]
+License = Условно бесплатно
+Description = Одина из лучших игр Пасьянс Маджонг.
+Size = 13,8 МиБ
+
 [Section.041f]
 License = Paylaşımlı
 Description = Mahjong solitaire oyunları arasında en iyilerinden biri.

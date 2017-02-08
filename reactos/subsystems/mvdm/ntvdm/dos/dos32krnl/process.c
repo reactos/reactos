@@ -796,7 +796,9 @@ WORD DosCreateProcess(IN LPCSTR ProgramName,
         /* Those are handled by NTVDM */
         case SCS_WOW_BINARY:
         {
-            DisplayMessage(L"Trying to load '%S'. WOW16 applications are not supported at the moment.",
+            DisplayMessage(L"Trying to load '%S'.\n"
+                           L"WOW16 applications are not supported internally by NTVDM at the moment.\n"
+                           L"Press 'OK' to continue.",
                            ProgramName);
             // Fall through
         }

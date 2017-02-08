@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 218
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Energieschemata"
 FONT 8, "MS Shell Dlg"
@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "Text"
     IDS_CONFIG1 "Einstellungen für Energieschema %s."
     IDS_CONFIG2 "Erweiterte Einstellungen für %s."
-    IDS_SIZEBYTS "%i Bytes"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "Nichts unternehmen"
     IDS_PowerActionNone1 "Keine Aktion"
     IDS_PowerActionUnknown "Unbekannt"

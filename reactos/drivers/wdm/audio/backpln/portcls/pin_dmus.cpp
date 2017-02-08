@@ -98,7 +98,7 @@ NTSTATUS
 NTAPI
 CPortPinDMus::GetTime(OUT REFERENCE_TIME  *prtTime)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 
@@ -161,7 +161,7 @@ NTAPI
 CPortPinDMus::SetState(
     IN KSSTATE State)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -181,7 +181,7 @@ NTAPI
 CPortPinDMus::ConnectOutput(
     IN PMXF sinkMXF)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -191,7 +191,7 @@ NTAPI
 CPortPinDMus::DisconnectOutput(
     IN PMXF sinkMXF)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -342,7 +342,7 @@ CPortPinDMus::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -357,7 +357,7 @@ CPortPinDMus::DeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

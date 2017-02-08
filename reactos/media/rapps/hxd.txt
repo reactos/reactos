@@ -34,6 +34,13 @@ Size = 859,4 Kio
 URLDownload = http://mh-nexus.de/downloads/HxDSetupROM.zip
 SHA1 = 0279fecb170301fc0a1eba3402a1ab80482e3250
 
+[Section.0419]
+License = Бесплатно
+Description = Хороший шестнадцатеричный редактор. Вам понадобится 7-zip, чтобы распаковать его.
+URLDownload = http://mh-nexus.de/downloads/HxDSetupRU.zip
+SHA1 = 728479ca08405718ea18416a7571fec1b23e3db8
+Size = 854,4 КиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = İyi bir onaltılık düzenleyici. Çıkartmak için 7-Zip ya da benzeri bir yazılım kullanmanız gerekir.

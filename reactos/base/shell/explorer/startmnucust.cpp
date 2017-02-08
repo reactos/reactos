@@ -21,23 +21,29 @@
 
 #include "precomp.h"
 
-VOID OnAddStartmenuItems(HWND hDlg)
+// TODO: Windows Explorer appears to be calling NewLinkHere / ConfigStartMenu directly for both items.
+VOID OnAddStartMenuItems(HWND hDlg)
 {
     WCHAR szPath[MAX_PATH];
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
     {
         WCHAR szCommand[MAX_PATH] = L"appwiz.cpl,NewLinkHere ";
-        if(SUCCEEDED(StringCchCatW(szCommand, MAX_PATH, szPath)))
+        if (SUCCEEDED(StringCchCatW(szCommand, _countof(szCommand), szPath)))
             ShellExecuteW(hDlg, L"open", L"rundll32.exe", szCommand, NULL, SW_SHOWNORMAL);
     }
+}
+
+VOID OnRemoveStartmenuItems(HWND hDlg)
+{
+    ShellExecuteW(hDlg, L"open", L"rundll32.exe", L"appwiz.cpl,ConfigStartMenu", NULL, SW_SHOWNORMAL);
 }
 
 VOID OnAdvancedStartMenuItems()
 {
     WCHAR szPath[MAX_PATH];
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
     {
         ShellExecuteW(NULL, L"explore", szPath, NULL, NULL, SW_SHOWNORMAL);
     }
@@ -46,19 +52,19 @@ VOID OnAdvancedStartMenuItems()
 VOID OnClearRecentItems()
 {
    WCHAR szPath[MAX_PATH], szFile[MAX_PATH];
-   WIN32_FIND_DATA info;
+   WIN32_FIND_DATAW info;
    HANDLE hPath;
 
-    if(SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
     {
-        StringCchPrintf(szFile,MAX_PATH, L"%s\\*.*", szPath);
+        StringCchPrintfW(szFile, _countof(szFile), L"%s\\*.*", szPath);
         hPath = FindFirstFileW(szFile, &info);
         do
         {
-            StringCchPrintf(szFile,MAX_PATH, L"%s\\%s", szPath, info.cFileName);
+            StringCchPrintfW(szFile, _countof(szFile), L"%s\\%s", szPath, info.cFileName);
             DeleteFileW(szFile);
-
-        }while(FindNextFileW(hPath, &info));
+        }
+        while (FindNextFileW(hPath, &info));
         FindClose(hPath);
         /* FIXME: Disable the button*/
     }
@@ -69,13 +75,16 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     switch(Message)
     {
         case WM_INITDIALOG:
-            /* FIXME: Properly intialize the dialog (check whether 'clear' button must be disabled, for example) */
+            /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
         return TRUE;
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDC_CLASSICSTART_ADD:
-                    OnAddStartmenuItems(hwnd);
+                    OnAddStartMenuItems(hwnd);
+                break;
+                case IDC_CLASSICSTART_REMOVE:
+                    OnRemoveStartmenuItems(hwnd);
                 break;
                 case IDC_CLASSICSTART_ADVANCED:
                     OnAdvancedStartMenuItems();
@@ -99,5 +108,5 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 
 VOID ShowCustomizeClassic(HINSTANCE hInst, HWND hExplorer)
 {
-     DialogBox(hInst, MAKEINTRESOURCE(IDD_CLASSICSTART_CUSTOMIZE), hExplorer, CustomizeClassicProc);
+    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_CLASSICSTART_CUSTOMIZE), hExplorer, CustomizeClassicProc);
 }

@@ -18,15 +18,21 @@ BEGIN
         MENUITEM "&Uložiť\tCtrl+S", IDM_FILESAVE
         MENUITEM "Uložiť &ako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Nastaviť ako pozadie (vydláždené)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Nastaviť ako pozadie (v strede)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Nastaviť ako pozadie (roztiahnuté)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Skončiť\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Skončiť\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Upraviť"
     BEGIN
@@ -38,7 +44,7 @@ BEGIN
         MENUITEM "Prilepiť\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Vymazať výber\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Invertovať výber", IDM_EDITINVERTSELECTION
-        MENUITEM "Vybrať všetko\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopírovať do...", IDM_EDITCOPYTO
         MENUITEM "Prilepiť z...", IDM_EDITPASTEFROM
@@ -211,8 +217,8 @@ BEGIN
     IDS_TOOLTIP14 "Polygón" //mnohouholník
     IDS_TOOLTIP15 "Elipsa"
     IDS_TOOLTIP16 "Zaoblený obdĺžnik"
-    IDS_OPENFILTER "Súbory bitových máp (*.bmp;*.dib)\1*.bmp;*.dib\1Všetky súbory (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24-bitová mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Všetky súbory"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bajtov"
     IDS_PRINTRES "%d x %d pixelov na meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"

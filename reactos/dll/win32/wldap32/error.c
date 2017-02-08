@@ -22,8 +22,6 @@
 
 #include <winuser.h>
 
-extern HINSTANCE hwldap32;
-
 ULONG map_error( int error )
 {
     switch (error)

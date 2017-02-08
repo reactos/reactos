@@ -3,7 +3,7 @@
  *
  * \brief Consistency checks for configuration options
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -128,6 +128,16 @@
 #if defined(MBEDTLS_ENTROPY_C) && \
     defined(MBEDTLS_ENTROPY_FORCE_SHA256) && !defined(MBEDTLS_SHA256_C)
 #error "MBEDTLS_ENTROPY_FORCE_SHA256 defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_TEST_NULL_ENTROPY) && \
+    ( !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) )
+#error "MBEDTLS_TEST_NULL_ENTROPY defined, but not all prerequisites"
+#endif
+#if defined(MBEDTLS_TEST_NULL_ENTROPY) && \
+     ( defined(MBEDTLS_ENTROPY_NV_SEED) || defined(MBEDTLS_ENTROPY_HARDWARE_ALT) || \
+    defined(MBEDTLS_HAVEGE_C) )
+#error "MBEDTLS_TEST_NULL_ENTROPY defined, but entropy sources too"
 #endif
 
 #if defined(MBEDTLS_GCM_C) && (                                        \
@@ -357,9 +367,46 @@
 #error "MBEDTLS_PLATFORM_STD_SNPRINTF defined, but not all prerequisites"
 #endif
 
+#if defined(MBEDTLS_ENTROPY_NV_SEED) &&\
+    ( !defined(MBEDTLS_PLATFORM_C) || !defined(MBEDTLS_ENTROPY_C) )
+#error "MBEDTLS_ENTROPY_NV_SEED defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_NV_SEED_ALT) &&\
+    !defined(MBEDTLS_ENTROPY_NV_SEED)
+#error "MBEDTLS_PLATFORM_NV_SEED_ALT defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_STD_NV_SEED_READ) &&\
+    !defined(MBEDTLS_PLATFORM_NV_SEED_ALT)
+#error "MBEDTLS_PLATFORM_STD_NV_SEED_READ defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_STD_NV_SEED_WRITE) &&\
+    !defined(MBEDTLS_PLATFORM_NV_SEED_ALT)
+#error "MBEDTLS_PLATFORM_STD_NV_SEED_WRITE defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_NV_SEED_READ_MACRO) &&\
+    ( defined(MBEDTLS_PLATFORM_STD_NV_SEED_READ) ||\
+      defined(MBEDTLS_PLATFORM_NV_SEED_ALT) )
+#error "MBEDTLS_PLATFORM_NV_SEED_READ_MACRO and MBEDTLS_PLATFORM_STD_NV_SEED_READ cannot be defined simultaneously"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO) &&\
+    ( defined(MBEDTLS_PLATFORM_STD_NV_SEED_WRITE) ||\
+      defined(MBEDTLS_PLATFORM_NV_SEED_ALT) )
+#error "MBEDTLS_PLATFORM_NV_SEED_WRITE_MACRO and MBEDTLS_PLATFORM_STD_NV_SEED_WRITE cannot be defined simultaneously"
+#endif
+
 #if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_BIGNUM_C) ||         \
     !defined(MBEDTLS_OID_C) )
 #error "MBEDTLS_RSA_C defined, but not all prerequisites"
+#endif
+
+#if defined(MBEDTLS_RSA_C) && ( !defined(MBEDTLS_PKCS1_V21) &&         \
+    !defined(MBEDTLS_PKCS1_V15) )
+#error "MBEDTLS_RSA_C defined, but none of the PKCS1 versions enabled"
 #endif
 
 #if defined(MBEDTLS_X509_RSASSA_PSS_SUPPORT) &&                        \

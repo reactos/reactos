@@ -74,7 +74,7 @@ SHA1 = 72399fe377298b9aac6926de78e10c70b2538b5c
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
-Size = 41.7 MiB
+Size = 41,7 МиБ
 URLSite = http://www.mozilla.org/ru/
 URLDownload = http://ftp.mozilla.org/pub/firefox/releases/45.0.1/win32/ru/Firefox%20Setup%2045.0.1.exe
 SHA1 = 934d782f662bffe6d64b726c92482190d836b500

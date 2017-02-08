@@ -118,9 +118,11 @@ BOOL    MCIAVI_CreateWindow(WINE_MCIAVI* wma, DWORD dwFlags, LPMCI_DGV_OPEN_PARM
     if (dwFlags & MCI_DGV_OPEN_PARENT)	hParent = lpOpenParms->hWndParent;
     if (dwFlags & MCI_DGV_OPEN_WS)	dwStyle = lpOpenParms->dwStyle;
 
-    rc.left = rc.top = 0;
-    rc.right = (wma->hic ? wma->outbih : wma->inbih)->biWidth;
-    rc.bottom = (wma->hic ? wma->outbih : wma->inbih)->biHeight;
+    if (wma->hic)
+        SetRect(&rc, 0, 0, wma->outbih->biWidth, wma->outbih->biHeight);
+    else
+        SetRect(&rc, 0, 0, wma->inbih->biWidth, wma->inbih->biHeight);
+
     AdjustWindowRect(&rc, dwStyle, FALSE);
     if (!(dwStyle & (WS_CHILD|WS_POPUP))) /* overlapped window ? */
     {
@@ -157,10 +159,8 @@ DWORD	MCIAVI_mciPut(UINT wDevID, DWORD dwFlags, LPMCI_DGV_PUT_PARMS lpParms)
     if (dwFlags & MCI_DGV_RECT) {
         /* In MCI, RECT structure is used differently: rc.right = width & rc.bottom = height
          * So convert input MCI RECT into a normal RECT */
-        rc.left = lpParms->rc.left;
-        rc.top = lpParms->rc.top;
-        rc.right = lpParms->rc.left + lpParms->rc.right;
-        rc.bottom = lpParms->rc.top + lpParms->rc.bottom;
+        SetRect(&rc, lpParms->rc.left, lpParms->rc.top, lpParms->rc.left + lpParms->rc.right,
+                lpParms->rc.top + lpParms->rc.bottom);
     } else {
         GetClientRect(wma->hWndPaint, &rc);
     }
@@ -231,10 +231,7 @@ DWORD	MCIAVI_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lpParms)
     }
     if (dwFlags & MCI_DGV_WHERE_SOURCE) {
 	if (dwFlags & MCI_DGV_WHERE_MAX) {
-	    rc.left = 0;
-	    rc.top = 0;
-	    rc.right = wma->inbih->biWidth;
-	    rc.bottom = wma->inbih->biHeight;
+            SetRect(&rc, 0, 0, wma->inbih->biWidth, wma->inbih->biHeight);
 	    TRACE("WHERE_SOURCE_MAX %s\n", wine_dbgstr_rect(&rc));
  	} else {
 	    TRACE("WHERE_SOURCE %s\n", wine_dbgstr_rect(&wma->source));
@@ -261,10 +258,7 @@ DWORD	MCIAVI_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lpParms)
 
     /* In MCI, RECT structure is used differently: rc.right = width & rc.bottom = height
      * So convert the normal RECT into a MCI RECT before returning */
-    lpParms->rc.left = rc.left;
-    lpParms->rc.top = rc.top;
-    lpParms->rc.right = rc.right - rc.left;
-    lpParms->rc.bottom = rc.bottom - rc.top;
+    SetRect(&lpParms->rc, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
 
     LeaveCriticalSection(&wma->cs);
     return 0;

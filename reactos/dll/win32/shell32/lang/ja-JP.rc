@@ -1,43 +1,43 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
     MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
     MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "アイコンの整列(&I)", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "表示(&V)"
+        POPUP "表示(&V)", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
             MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
             MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "アイコンの整列(&I)"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "アイコンの整列(&I)", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "名前順(&N)", 0x30  /* column 0 */
-            MENUITEM "種類順(&T)", 0x32  /* column 2 */
-            MENUITEM "サイズ順(&S)", 0x31  /* ... */
-            MENUITEM "日付順(&D)", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "等間隔に整列", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "最新の情報に更新", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "貼り付け", FCIDM_SHVIEW_INSERT
         MENUITEM "ショートカットの貼り付け", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "プロパティ", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -99,7 +99,7 @@ BEGIN
     LTEXT "フォルダ:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
     EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "新しいフォルダの作成(&M)", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "新しいフォルダの作成(&M)", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 188, 85, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "キャンセル", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
@@ -153,12 +153,12 @@ END
 
 IDD_RUN DIALOGEX 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Run"
+CAPTION "実行"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
     LTEXT "実行するプログラム名、または開くフォルダや文書名、インターネット リソース名を入力してください。", 12289, 36, 11, 182, 18
-    LTEXT "名前(&O):", 12305, 7, 39, 24, 10
+    LTEXT "名前(&O):", 12305, 7, 39, 30, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
     PUSHBUTTON "キャンセル", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
@@ -219,9 +219,9 @@ BEGIN
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "場所:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 68, 56, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "サイズ:", 14010, 8, 72, 55, 10
+    LTEXT "論理サイズ:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 68, 72, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Size on disk:", 140101, 8, 88, 55, 10
+    LTEXT "物理サイズ:", 140101, 8, 88, 55, 10
     EDITTEXT 14012, 68, 88, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "収容サイズ:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 68, 104, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -233,7 +233,7 @@ BEGIN
     AUTOCHECKBOX "読み取り専用(&R)", 14021, 56, 152, 70, 10
     AUTOCHECKBOX "隠しファイル(&H)", 14022, 56, 166, 70, 10
     AUTOCHECKBOX "アーカイブ(&A)", 14023, 56, 180, 70, 10
-    PUSHBUTTON "A&dvanced...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "詳細設定(&D)...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -245,17 +245,17 @@ BEGIN
     EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "ファイルの種類:", 14004, 8, 35, 50, 10
-    CONTROL "ファ・Cル", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
+    CONTROL "ファイル", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 68, 35, 160, 10
     LTEXT "実行プログラム:", 14006, 8, 53, 50, 10
     ICON "", 14025, 68, 52, 11, 10, NOT WS_VISIBLE
-    PUSHBUTTON "&Change...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "変更(&C)...", 14024, 168, 50, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
     EDITTEXT 14007, 68, 53, 90, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "", -1, 8, 68, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "場所:", 14008, 8, 75, 45, 10
     EDITTEXT 14009, 68, 75, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
-    LTEXT "サイズ:", 14010, 8, 91, 45, 10
+    LTEXT "論理サイズ:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 68, 91, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Size on disk:", 140112, 8, 107, 55, 10
+    LTEXT "物理サイズ:", 140112, 8, 107, 55, 10
     EDITTEXT 14012, 68, 107, 160, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "作成日時:", 14014, 8, 131, 45, 10
@@ -269,7 +269,7 @@ BEGIN
     AUTOCHECKBOX "読み取り専用(&R)", 14021, 58, 189, 67, 10
     AUTOCHECKBOX "隠しファイル(&H)", 14022, 126, 189, 50, 10
     AUTOCHECKBOX "アーカイブ(&A)", 14023, 181, 189, 49, 10
-    PUSHBUTTON "A&dvanced...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "詳細設定(&D)...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -320,7 +320,7 @@ BEGIN
     PUSHBUTTON "ディスクのクリーンアップ", 14010, 160, 154, 70, 15, WS_TABSTOP
     LTEXT "", -1, 8, 171, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     CHECKBOX "ドライブを圧縮してディスク領域を確保する", 14011, 8, 191, 222, 10, WS_DISABLED
-    CHECKBOX "このディスクにインデックスを付けてファイル検索を速くする。", 14012, 8, 205, 222, 10, WS_DISABLED
+    CHECKBOX "このディスクにインデックスを付けてファイル検索を速くする", 14012, 8, 205, 222, 10, WS_DISABLED
 END
 
 IDD_DRIVE_TOOLS DIALOGEX 0, 0, 240, 230
@@ -334,7 +334,7 @@ BEGIN
     PUSHBUTTON "すぐにチェック...", 14000, 130, 45, 90, 15, WS_TABSTOP
     GROUPBOX "最適化", -1, 5, 65, 230, 60
     ICON IDI_SHELL_TOOLS_DEFRAG, IDC_STATIC, 13, 85, 21, 20
-    LTEXT "このオプションはこのボリュームのファイルを最適化します", -1, 40, 85, 160, 20
+    LTEXT "このオプションはこのボリュームのファイルを最適化します。", -1, 40, 85, 160, 20
     PUSHBUTTON "すぐに最適化...", 14001, 130, 105, 90, 15, WS_TABSTOP
     GROUPBOX "バックアップ", -1, 5, 130, 230, 60
     ICON IDI_SHELL_TOOLS_BACKUP, IDC_STATIC, 13, 150, 21, 20
@@ -357,7 +357,7 @@ BEGIN
     LTEXT "このプログラムを実行するユーザーアカウントを選択してください", -1, 10, 20, 220, 20
     CHECKBOX "現在のユーザー (%s)", 14000, 10, 45, 150, 10
     LTEXT "許可されていないプログラムの活動からコンピュータとデータを保護する", -1, 25, 57, 200, 10, WS_DISABLED
-    CHECKBOX "このオプションはコンピュータや個人データに危害をもたらすコンピュータウイルスを未然に防止することができます。ただし、このオプションを選択するとプログラムが正常に機能しなくなる可能性があります。", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+    CHECKBOX "このオプションはコンピュータや個人データに危害をもたらすコンピュータウイルスを未然に防止することができます。ただし、このオプションを選択するとプログラムが正常に機能しなくなる可能性があります。", 14001, 25, 68, 210, 30, WS_DISABLED | BS_MULTILINE
     CHECKBOX "次のユーザー:", 14002, 10, 100, 90, 10
     LTEXT "ユーザー名:", -1, 20, 118, 54, 10
     COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
@@ -379,7 +379,7 @@ BEGIN
     RADIOBUTTON "カスタムサイズ(&C):", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "最大サイズ(MB)(&A):", -1, 20, 105, 70, 10
-    RADIOBUTTON "ファイルをごみ箱に・ﾚ動せずにすぐに削除する。(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+    RADIOBUTTON "ファイルをごみ箱に移動せずにすぐに削除する(&R)", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "削除の確認ダイアログを表示する(&D)", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
@@ -405,20 +405,20 @@ CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     GROUPBOX "タスク", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "フォルダに共通のタスクを表示する(&F)", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 25, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS クラシック フォルダを使用する(&I)", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 37, 210, 10
     GROUPBOX "フォルダの参照", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "同じウィンドウでフォルダを開く(&M)", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "フォルダごとに異なるウィンドウで開く(&W)", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "同じウィンドウでフォルダを開く(&M)", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "フォルダごとに異なるウィンドウで開く(&W)", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 210, 10
     GROUPBOX "項目のクリック方法", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "シングルクリックで項目を開く(ポイントで選択) (&S)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ブラウザに合わせてアイコンタイトルに下線を引く(&B)", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ポイントしたときのみアイコンタイトルに下線を引く(&P)", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ダブルクリックで項目を開く(シングルクリックで選択)(&D)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
-    PUSHBUTTON "デフォルトに戻す(&R)", 14011, 180, 180, 60, 14, WS_TABSTOP
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "シングルクリックで項目を開く(ポイントで選択) (&S)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ブラウザに合わせてアイコンタイトルに下線を引く(&B)", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
+    AUTORADIOBUTTON "ポイントしたときのみアイコンタイトルに下線を引く(&P)", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "ダブルクリックで項目を開く(シングルクリックで選択)(&D)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    PUSHBUTTON "デフォルトに戻す(&R)", 14011, 180, 180, 75, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -428,12 +428,12 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     GROUPBOX "フォルダの表示方法", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
-    LTEXT "このフォルダに使用している表示方法(詳細表示や並べて表示など)\nをすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
-    PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 150, 50, 80, 14, WS_TABSTOP
+    LTEXT "このフォルダに使用している表示方法 (詳細表示や並べて表示など) をすべてのフォルダに適用できます。", -1, 60, 20, 180, 20
+    PUSHBUTTON "すべてのフォルダに適用(&L)", 14001, 50, 50, 95, 14, WS_TABSTOP
+    PUSHBUTTON "すべてのフォルダをリセット(&R)", 14002, 147, 50, 106, 14, WS_TABSTOP
     LTEXT "詳細設定:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "デフォルトに戻す(&D)", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "デフォルトに戻す(&D)", 14004, 168, 210, 88, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -441,17 +441,17 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "ファイルの種類"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-    LTEXT "登録されているファイルの種類(&T):", -1, 7, 10, 70, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+    LTEXT "登録済みのファイルの種類(&T):", -1, 7, 10, 180, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
     PUSHBUTTON "新規(&N)", 14001, 120, 110, 50, 14, WS_TABSTOP
     PUSHBUTTON "削除(&D)", 14002, 180, 110, 50, 14, WS_TABSTOP
     GROUPBOX "拡張子 '%s' の詳細", 14003, 7, 130, 249, 70
-    LTEXT "開くプログラム:", -1, 12, 140, 40, 10
+    LTEXT "開くプログラム:", -1, 12, 140, 80, 10
     //ICON
-    LTEXT "アプリ名", 14005, 100, 140, 40, 10
-    PUSHBUTTON "変更(&C)...", 14006, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", 14007, 12, 155, 160, 30
-    PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "アプリ名", 14005, 100, 140, 80, 10
+    PUSHBUTTON "変更(&C)...", 14006, 180, 140, 75, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 155, 165, 40
+    PUSHBUTTON "詳細設定(&V)", 14008, 180, 175, 75, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -475,26 +475,26 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ReactOSのログオフ"
 FONT 9, "MS UI Gothic"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 22, 21
     LTEXT "ログオフしてもよろしいですか?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "ログオフ(&L)", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "キャンセル", IDCANCEL, 122, 40, 60, 14
+    DEFPUSHBUTTON "ログオフ(&L)", IDOK, 41, 39, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 95, 39, 50, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ReactOSの切断"
 FONT 9, "MS UI Gothic"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "切断してもよろしいですか?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "切断(&D)", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "キャンセル", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "切断してもよろしいですか?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "切断(&D)", IDOK, 47, 38, 47, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 99, 38, 47, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -597,24 +597,24 @@ BEGIN
     DEFPUSHBUTTON "開始", IDOK, 63, 95, 60, 14
     GROUPBOX "チェックディスクオプション", -1, 7, 6, 179, 40
     PUSHBUTTON "キャンセル", IDCANCEL, 128, 95, 60, 14
-    AUTOCHECKBOX "自動的にファイルシステムのエラーを修復する", 14000, 12, 15, 155, 10
-    AUTOCHECKBOX "バッドセクタをスキャンし回復を試みる(&S)", 14001, 16, 30, 165, 10
+    AUTOCHECKBOX "自動的にファイルシステムのエラーを修復する", 14000, 12, 15, 165, 10
+    AUTOCHECKBOX "バッドセクタをスキャンし回復を試みる(&S)", 14001, 12, 30, 165, 10
     CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 50, 179, 8
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "アイコンの変更"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
-    LTEXT "ファイル名:", -1, 7, 14, 208, 10
-    PUSHBUTTON "参照...", IDC_BUTTON_PATH, 148, 24, 67, 14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "アイコン:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "キャンセル", IDCANCEL, 167, 181, 50, 14
+    LTEXT "次のファイルのアイコンを見る:", -1, 7, 7, 185, 10
+    PUSHBUTTON "参照...", IDC_BUTTON_PATH, 135, 17, 50, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
+    LTEXT "以下のリストからアイコンを選択:", -1, 7, 36, 185, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 75
@@ -623,12 +623,9 @@ CAPTION "Caution"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON IDI_SHELL_SYSTEM_FILE, IDI_SHELL_SYSTEM_FILE, 5, 5, 21, 20
-    LTEXT "This file could either be used by the operating system or by\n\
-another application. Modifying this file might damage your\n\
-system or make it less functional.\n\n\
-Are you sure you want to open this file?", IDC_STATIC, 35, 5, 230, 60
-    DEFPUSHBUTTON "Yes", IDYES, 125, 55, 50, 14
-    PUSHBUTTON "No", IDNO, 180, 55, 50, 14
+    LTEXT "このファイルは、OSによって使われているか、他のアプリで使われています。このファイルの変更は、あなたのシステムに損傷を与えるか、機能しなくさせます。\n\nそれでもこのファイルを開きたいですか?", IDC_STATIC, 35, 5, 230, 60
+    DEFPUSHBUTTON "はい", IDYES, 125, 55, 50, 14
+    PUSHBUTTON "いいえ", IDNO, 180, 55, 50, 14
 END
 
 STRINGTABLE
@@ -665,6 +662,12 @@ BEGIN
     IDS_CONTROLPANEL "コントロール パネル"
     IDS_ADMINISTRATIVETOOLS "管理ツール"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "あなたのコンピュータに対する管理者設定を変更します。"
+    IDS_FOLDER_OPTIONS_DESCRIPTION "ファイルとフォルダの表示をカスタマイズし、ファイル関連付けを変更します。"
+    IDS_FONTS_DESCRIPTION "あなたのコンピュータのフォントを追加、変更、管理します。"
+    IDS_PRINTERS_DESCRIPTION "インストール済みのプリンタやFAXプリンタを表示し、新しいのを追加するのを助けます。"
+
     /* context menus */
     IDS_VIEW_LARGE "大きいアイコン(&G)"
     IDS_VIEW_SMALL "小さいアイコン(&M)"
@@ -682,8 +685,8 @@ BEGIN
     IDS_RENAME "名前の変更"
     IDS_PASTE "挿入"
 
-    IDS_CREATEFOLDER_DENIED "新しいフォルダを作成できませんでした: アクセス権がありません。"
-    IDS_CREATEFOLDER_CAPTION "新しいフォルダの作成中にエラーが発生しました"
+    IDS_CREATEFOLDER_DENIED "フォルダ '%1' を作成できません"
+    IDS_CREATEFOLDER_CAPTION "フォルダを作成できません"
     IDS_DELETEITEM_CAPTION "ファイル削除の確認"
     IDS_DELETEFOLDER_CAPTION "フォルダ削除の確認"
     IDS_DELETEITEM_TEXT "'%1' を削除してもよろしいですか?"
@@ -697,11 +700,11 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "ファイル上書きの確認"
     IDS_OVERWRITEFOLDER_TEXT "このフォルダには既にフォルダ'%1'が含まれています。\n\nディレクトリフォルダ内のファイル名が選択されたフォルダ内のファイル名\nと同じ時は置き換えられます。それでも、フォルダを移動または\nコピーしますか?"
 
-    IDS_FILEOOP_COPYING "Copying..."
-    IDS_FILEOOP_MOVING "Moving..."
-    IDS_FILEOOP_DELETING "Deleting..."
-    IDS_FILEOOP_FROM_TO "From %1 to %2"
-    IDS_FILEOOP_FROM "From %1"
+    IDS_FILEOOP_COPYING "コピー中..."
+    IDS_FILEOOP_MOVING "移動中..."
+    IDS_FILEOOP_DELETING "削除中..."
+    IDS_FILEOOP_FROM_TO "%1 から %2 へ"
+    IDS_FILEOOP_FROM "%1 から"
     IDS_FILEOOP_PREFLIGHT "Preflight"
 
     /* message box strings */
@@ -709,14 +712,12 @@ BEGIN
     IDS_RESTART_PROMPT "システムを再起動しますか?"
     IDS_SHUTDOWN_TITLE "シャットダウン"
     IDS_SHUTDOWN_PROMPT "シャットダウンしますか?"
-    IDS_LOGOFF_TITLE "Log Off"
-    IDS_LOGOFF_PROMPT "Do you want to log off?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Unable to display Run File dialog box (internal error)"
     IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
-    IDS_RUNDLG_BROWSE_FILTER "Executable Files (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
+    IDS_RUNDLG_BROWSE_CAPTION "参照"
+    IDS_RUNDLG_BROWSE_FILTER "実行可能ファイル Files (*.exe)\0*.exe\0すべてのファイル (*.*)\0*.*\0"
 
     /* shell folder path default values */
     IDS_PROGRAMS "スタート メニュー\\プログラム"
@@ -751,17 +752,17 @@ BEGIN
     IDS_NEWFOLDER "新しいフォルダ"
 
     IDS_DRIVE_FIXED "ローカル ディスク"
-    IDS_DRIVE_CDROM "CD Drive"
+    IDS_DRIVE_CDROM "CDドライブ"
     IDS_DRIVE_NETWORK "ネットワーク ディスク"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
+    IDS_DRIVE_FLOPPY "3.5フロッピー"
+    IDS_DRIVE_REMOVABLE "リムーバブル ディスク"
     IDS_FS_UNKNOWN "Unknown"
 
     /* Open With */
     IDS_OPEN_WITH "プログラムから開く"
     IDS_OPEN_WITH_CHOOSE "プログラムの選択..."
-    IDS_OPEN_WITH_RECOMMENDED "Recommended Programs:"
-    IDS_OPEN_WITH_OTHER "Other Programs:"
+    IDS_OPEN_WITH_RECOMMENDED "推奨されるプログラム:"
+    IDS_OPEN_WITH_OTHER "他のプログラム:"
 
     IDS_SHELL_ABOUT_AUTHORS "制作者(&A)"
     IDS_SHELL_ABOUT_BACK "< 戻る(&B)"
@@ -789,16 +790,17 @@ BEGIN
     IDS_TTF_FILE "TrueType フォント ファイル"
     IDS_OTF_FILE "OpenType フォント ファイル"
     IDS_HLP_FILE "ヘルプ ファイル"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "アイコン ファイル"
     IDS_INI_FILE "設定ファイル"
     IDS_LNK_FILE "ショートカット"
-    IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
+    IDS_PIF_FILE "NT VDM プログラム情報ファイル"
+    IDS_SCR_FILE "スクリーンセーバー"
     IDS_SYS_FILE "システム ファイル"
     IDS_VXD_FILE "仮想 デバイス ドライバ"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "開く"
-    IDS_EXPLORE_VERB "Explore"
+    IDS_EXPLORE_VERB "エクスプローラで開く"
     IDS_RUNAS_VERB "別のユーザーとして実行..."
     IDS_EDIT_VERB "編集"
     IDS_FIND_VERB "検索"
@@ -812,22 +814,42 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "デフォルト アロケーション サイズ"
     IDS_COPY_OF "コピー ～"
 
-    IDS_SHLEXEC_NOASSOC "There is no Windows program configured to open this type of file."
+    IDS_SHLEXEC_NOASSOC "この種類のファイルを開くように設定されたReactOSプログラムがありません。"
 
     IDS_FILE_DETAILS "拡張子 '%s' の詳細"
     IDS_FILE_DETAILSADV "拡張子 '%s' のファイルの種類は'%s'です。 '%s' のファイルすべてに対する設定を変更するには 詳細設定をクリックしてください。"
-    IDS_FILE_TYPES "FileTypes"
-    IDS_COLUMN_EXTENSION "Extensions"
+    IDS_FILE_TYPES "ファイルの種類"
+    IDS_COLUMN_EXTENSION "拡張子"
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "%s File"
 
-    IDS_BYTES_FORMAT "bytes"
-    IDS_UNKNOWN_APP "Unknown application"
-    IDS_EXE_DESCRIPTION "Description:"
+    IDS_BYTES_FORMAT "バイト"
+    IDS_UNKNOWN_APP "未知のアプリ"
+    IDS_EXE_DESCRIPTION "説明:"
 
-    IDS_MENU_EMPTY "(Empty)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_MENU_EMPTY "(空)"
+    IDS_OBJECTS "%d 個のオブジェクト"
+    IDS_OBJECTS_SELECTED "%d 個のオブジェクトが選択済み"
+
+    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
+    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
+    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
+    IDS_ADVANCED_HIDDEN "Hidden files and folders"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
+    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
+    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 END

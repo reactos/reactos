@@ -301,9 +301,9 @@ OnInitDialog(HWND hwndDlg)
     HICON hIcon;
 
     /* Create the image list */
-    hImgList = ImageList_Create(16,16,ILC_COLOR8 | ILC_MASK,5,5);
-    hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_GROUP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
-    ImageList_AddIcon(hImgList,hIcon);
+    hImgList = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 5, 5);
+    hIcon = LoadImage(hApplet, MAKEINTRESOURCE(IDI_GROUP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    ImageList_AddIcon(hImgList, hIcon);
     DestroyIcon(hIcon);
 
     hwndListView = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);

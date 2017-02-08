@@ -582,7 +582,7 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
 
         } else {
 
-            if (Nocache) {
+            if (Nocache && Ccb != NULL && Fcb->SectionObject.DataSectionObject) {
 
                 if (!ExAcquireResourceExclusiveLite(
                             &Fcb->MainResource,
@@ -592,14 +592,23 @@ Ext2ReadFile(IN PEXT2_IRP_CONTEXT IrpContext)
                 }
                 MainResourceAcquired = TRUE;
 
-                if (FileObject->SectionObjectPointer->DataSectionObject != NULL) {
-                    CcFlushCache( FileObject->SectionObjectPointer,
-                                 &ByteOffset,
-                                  Length,
-                                 &Irp->IoStatus );
-                    if (!NT_SUCCESS(Irp->IoStatus.Status))
-                        _SEH2_LEAVE;
+                CcFlushCache(&Fcb->SectionObject,
+                             &ByteOffset,
+                              Length,
+                             &Irp->IoStatus );
+                if (!NT_SUCCESS(Irp->IoStatus.Status))
+                    _SEH2_LEAVE;
+                ClearLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
+
+                if (ExAcquireResourceExclusiveLite(&(Fcb->PagingIoResource), TRUE)) {
+                    ExReleaseResourceLite(&(Fcb->PagingIoResource));
                 }
+                CcPurgeCacheSection( &Fcb->SectionObject,
+                                     NULL,
+                                     0,
+                                     FALSE );
+
+                ExConvertExclusiveToShared(&Fcb->MainResource);
 
             } else {
 

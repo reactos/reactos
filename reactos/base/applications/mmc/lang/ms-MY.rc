@@ -6,14 +6,14 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Fail"
     BEGIN
-        MENUITEM "Baru\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Baru(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Buka(&O)...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "Bantuan(&H)"
     BEGIN
-        MENUITEM "Tent&ang Konsol Pengurusan ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "Tent&ang Konsol Pengurusan ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -21,10 +21,10 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Fail"
     BEGIN
-        MENUITEM "Baru\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "Baru(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "Buka(&O)...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Simpan", IDM_FILE_SAVE
+        MENUITEM "Simp&an sebagai...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Keluar(&X)\tAlt+F4", IDM_FILE_EXIT
     END
@@ -34,7 +34,7 @@ BEGIN
     END
     POPUP "Bantuan(&H)"
     BEGIN
-        MENUITEM "Tent&ang Konsol Pengurusan ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "Tent&ang Konsol Pengurusan ReactOS", IDM_HELP_ABOUT
     END
 END
 

@@ -197,9 +197,8 @@ static HRESULT WINAPI MkProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri,
 {
     MkProtocol *This = impl_from_IInternetProtocolEx(iface);
     LPWSTR mime, progid, display_name, colon_ptr;
-    DWORD path_size = INTERNET_MAX_URL_LENGTH;
     DWORD bindf=0, eaten=0, scheme=0, len;
-    BSTR url, path_tmp, path = NULL;
+    BSTR url, path = NULL;
     IParseDisplayName *pdn;
     BINDINFO bindinfo;
     STATSTG statstg;
@@ -238,22 +237,20 @@ static HRESULT WINAPI MkProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri,
         CoTaskMemFree(mime);
     }
 
-    hres = IUri_GetPath(pUri, &path_tmp);
+    hres = IUri_GetPath(pUri, &path);
     if(FAILED(hres))
         return hres;
-    path = heap_alloc(path_size);
-    hres = UrlUnescapeW((LPWSTR)path_tmp, path, &path_size, 0);
-    SysFreeString(path_tmp);
-    if (FAILED(hres))
-    {
-        heap_free(path);
+    len = SysStringLen(path)+1;
+    hres = UrlUnescapeW(path, NULL, &len, URL_UNESCAPE_INPLACE);
+    if (FAILED(hres)) {
+        SysFreeString(path);
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
     }
+
     progid = path+1; /* skip '@' symbol */
     colon_ptr = strchrW(path, ':');
-    if(!colon_ptr)
-    {
-        heap_free(path);
+    if(!colon_ptr) {
+        SysFreeString(path);
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
     }
 
@@ -263,7 +260,7 @@ static HRESULT WINAPI MkProtocol_StartEx(IInternetProtocolEx *iface, IUri *pUri,
 
     progid[colon_ptr-progid] = 0; /* overwrite ':' with NULL terminator */
     hres = CLSIDFromProgID(progid, &clsid);
-    heap_free(path);
+    SysFreeString(path);
     if(FAILED(hres))
     {
         heap_free(display_name);

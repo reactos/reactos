@@ -40,7 +40,7 @@ void ApphelppInitDebugLevel(void)
 {
     UNICODE_STRING DebugKey, DebugValue;
     NTSTATUS Status;
-    ULONG NewLevel = 0;
+    ULONG NewLevel = SHIM_ERR;
     WCHAR Buffer[40];
 
     RtlInitUnicodeString(&DebugKey, L"SHIM_DEBUG_LEVEL");
@@ -82,10 +82,23 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 
 BOOL WINAPI ApphelpCheckInstallShieldPackage(void* ptr, LPCWSTR path)
 {
-    SHIM_WARN("stub: ptr=%p path='%S'\r\n", ptr, path);
+    SHIM_WARN("stub: ptr=%p, path='%S'\r\n", ptr, path);
     return TRUE;
 }
 
+
+BOOL WINAPI ApphelpCheckShellObject(REFCLSID ObjectCLSID, BOOL bShimIfNecessary, ULONGLONG *pullFlags)
+{
+    WCHAR GuidString[100];
+    if (!ObjectCLSID || !SdbGUIDToString(ObjectCLSID, GuidString, 100))
+        GuidString[0] = L'\0';
+    SHIM_WARN("stub: ObjectCLSID='%S', bShimIfNecessary=%d, pullFlags=%p)\n", GuidString, bShimIfNecessary, pullFlags);
+
+    if (pullFlags)
+        *pullFlags = 0;
+
+    return TRUE;
+}
 
 /**
  * Outputs diagnostic info.
@@ -102,7 +115,8 @@ BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format
 {
     char Buffer[512];
     va_list ArgList;
-    char* Current = Buffer, *LevelStr;
+    char* Current = Buffer;
+    const char* LevelStr;
     size_t Length = sizeof(Buffer);
 
     if (g_ShimDebugLevel == 0xffffffff)

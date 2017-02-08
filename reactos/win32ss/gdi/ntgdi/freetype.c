@@ -494,6 +494,7 @@ IntGetFontRenderMode(LOGFONTW *logfont)
 {
     switch (logfont->lfQuality)
     {
+    case ANTIALIASED_QUALITY:
     case NONANTIALIASED_QUALITY:
         return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
@@ -3316,7 +3317,7 @@ GreExtTextOutW(
     IN INT YStart,
     IN UINT fuOptions,
     IN OPTIONAL PRECTL lprc,
-    IN LPWSTR String,
+    IN LPCWSTR String,
     IN INT Count,
     IN OPTIONAL LPINT Dx,
     IN DWORD dwCodePage)
@@ -3408,9 +3409,15 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    Start.x = XStart;
-    Start.y = YStart;
-    IntLPtoDP(dc, &Start, 1);
+    if(pdcattr->lTextAlign & TA_UPDATECP)
+    {
+        Start.x = pdcattr->ptlCurrent.x;
+        Start.y = pdcattr->ptlCurrent.y;
+    } else {
+        Start.x = XStart;
+        Start.y = YStart;
+        IntLPtoDP(dc, &Start, 1);
+    }
 
     RealXStart = ((LONGLONG)Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
@@ -3438,6 +3445,11 @@ GreExtTextOutW(
         DestRect.top    += dc->ptlDCOrig.y;
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
+
+        if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        {
+           IntUpdateBoundsRect(dc, &DestRect);
+        }
 
         DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
@@ -3715,6 +3727,10 @@ GreExtTextOutW(
             DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+            {
+               IntUpdateBoundsRect(dc, &DestRect);
+            }
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
@@ -3842,6 +3858,11 @@ GreExtTextOutW(
 
         String++;
     }
+
+    if (pdcattr->lTextAlign & TA_UPDATECP) {
+        pdcattr->ptlCurrent.x = DestRect.right - dc->ptlDCOrig.x;
+    }
+
     IntUnLockFreeType;
 
     DC_vFinishBlit(dc, NULL) ;
@@ -3885,7 +3906,7 @@ NtGdiExtTextOutW(
     RECTL SafeRect;
     BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
     PVOID Buffer = LocalBuffer;
-    LPWSTR SafeString = NULL;
+    LPCWSTR SafeString = NULL;
     LPINT SafeDx = NULL;
     ULONG BufSize, StringSize, DxSize = 0;
 
@@ -3922,7 +3943,7 @@ NtGdiExtTextOutW(
         _SEH2_TRY
         {
             /* Put the Dx before the String to assure alignment of 4 */
-            SafeString = (LPWSTR)(((ULONG_PTR)Buffer) + DxSize);
+            SafeString = (LPCWSTR)(((ULONG_PTR)Buffer) + DxSize);
 
             /* Probe and copy the string */
             ProbeForRead(UnsafeString, StringSize, 1);

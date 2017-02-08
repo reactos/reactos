@@ -72,7 +72,6 @@ BEGIN
     END
     POPUP "Помо&щ", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Законен ли е този брой на РеактОС?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&За РеактОС", IDM_HELP_ABOUT
     END
 END

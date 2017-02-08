@@ -27,6 +27,10 @@ Description = Globulation 2 to gra strategiczna czasu rzeczywistego. Gra minimal
 Description = Joc de strategie în timp real. Jocul minimizează microgestiunea prin alocarea automată de sarcini unităților.
 Size = 13,4 Mio
 
+[Section.0419]
+Description = Стратегия в реальном времени. В игре не нужно раздавать задания юнитам. Вместо этого вы указываете кол-во юнитов для задачи, а игра сама решит, каких юнитов направить на её выполнение.
+Size = 13,4 МиБ
+
 [Section.041f]
 Description = Gerçek zamanlı bir izlem oyunu. Bu oyun, birimlere kendiliğinden görevler atayarak oyun mikro yönetimini en aza indirir.
 Size = 13,4 MiB

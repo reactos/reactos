@@ -31,6 +31,7 @@ typedef struct BitmapImpl {
     int palette_set;
     LONG lock; /* 0 if not locked, -1 if locked for writing, count if locked for reading */
     BYTE *data;
+    BOOL is_section; /* TRUE if data is a section created by an application */
     UINT width, height;
     UINT stride;
     UINT bpp;
@@ -121,6 +122,7 @@ static HRESULT WINAPI BitmapLockImpl_QueryInterface(IWICBitmapLock *iface, REFII
     }
     else
     {
+        FIXME("unknown interface %s\n", debugstr_guid(iid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }
@@ -234,12 +236,14 @@ static HRESULT WINAPI BitmapImpl_QueryInterface(IWICBitmap *iface, REFIID iid,
     {
         *ppv = &This->IWICBitmap_iface;
     }
-    else if (IsEqualIID(&IID_IMILBitmapSource, iid))
+    else if (IsEqualIID(&IID_IMILBitmap, iid) ||
+             IsEqualIID(&IID_IMILBitmapSource, iid))
     {
         *ppv = &This->IMILBitmapSource_iface;
     }
     else
     {
+        FIXME("unknown interface %s\n", debugstr_guid(iid));
         *ppv = NULL;
         return E_NOINTERFACE;
     }
@@ -270,7 +274,10 @@ static ULONG WINAPI BitmapImpl_Release(IWICBitmap *iface)
         if (This->palette) IWICPalette_Release(This->palette);
         This->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&This->cs);
-        HeapFree(GetProcessHeap(), 0, This->data);
+        if (This->is_section)
+            UnmapViewOfFile(This->data);
+        else
+            HeapFree(GetProcessHeap(), 0, This->data);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -465,13 +472,22 @@ static HRESULT WINAPI IMILBitmapImpl_QueryInterface(IMILBitmapSource *iface, REF
     if (!ppv) return E_INVALIDARG;
 
     if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IMILBitmap, iid) ||
         IsEqualIID(&IID_IMILBitmapSource, iid))
     {
         IUnknown_AddRef(&This->IMILBitmapSource_iface);
         *ppv = &This->IMILBitmapSource_iface;
         return S_OK;
     }
+    else if (IsEqualIID(&IID_IWICBitmap, iid) ||
+             IsEqualIID(&IID_IWICBitmapSource, iid))
+    {
+        IUnknown_AddRef(&This->IWICBitmap_iface);
+        *ppv = &This->IWICBitmap_iface;
+        return S_OK;
+    }
 
+    FIXME("unknown interface %s\n", debugstr_guid(iid));
     *ppv = NULL;
     return E_NOINTERFACE;
 }
@@ -492,6 +508,7 @@ static HRESULT WINAPI IMILBitmapImpl_GetSize(IMILBitmapSource *iface,
     UINT *width, UINT *height)
 {
     BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p,%p)\n", iface, width, height);
     return IWICBitmap_GetSize(&This->IWICBitmap_iface, width, height);
 }
 
@@ -545,6 +562,7 @@ static HRESULT WINAPI IMILBitmapImpl_GetPixelFormat(IMILBitmapSource *iface,
         }
     }
 
+    TRACE("=> %u\n", *format);
     return S_OK;
 }
 
@@ -552,6 +570,7 @@ static HRESULT WINAPI IMILBitmapImpl_GetResolution(IMILBitmapSource *iface,
     double *dpix, double *dpiy)
 {
     BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p,%p)\n", iface, dpix, dpiy);
     return IWICBitmap_GetResolution(&This->IWICBitmap_iface, dpix, dpiy);
 }
 
@@ -559,6 +578,7 @@ static HRESULT WINAPI IMILBitmapImpl_CopyPalette(IMILBitmapSource *iface,
     IWICPalette *palette)
 {
     BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p)\n", iface, palette);
     return IWICBitmap_CopyPalette(&This->IWICBitmap_iface, palette);
 }
 
@@ -566,10 +586,11 @@ static HRESULT WINAPI IMILBitmapImpl_CopyPixels(IMILBitmapSource *iface,
     const WICRect *rc, UINT stride, UINT size, BYTE *buffer)
 {
     BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p,%u,%u,%p)\n", iface, rc, stride, size, buffer);
     return IWICBitmap_CopyPixels(&This->IWICBitmap_iface, rc, stride, size, buffer);
 }
 
-static HRESULT WINAPI IMILBitmapImpl_UnknownMethod1(IMILBitmapSource *iface, void **ppv)
+static HRESULT WINAPI IMILBitmapImpl_unknown1(IMILBitmapSource *iface, void **ppv)
 {
     BitmapImpl *This = impl_from_IMILBitmapSource(iface);
 
@@ -577,10 +598,44 @@ static HRESULT WINAPI IMILBitmapImpl_UnknownMethod1(IMILBitmapSource *iface, voi
 
     if (!ppv) return E_INVALIDARG;
 
-    IUnknown_AddRef(&This->IMILUnknown1_iface);
+    /* reference count is not incremented here */
     *ppv = &This->IMILUnknown1_iface;
 
     return S_OK;
+}
+
+static HRESULT WINAPI IMILBitmapImpl_Lock(IMILBitmapSource *iface, const WICRect *rc, DWORD flags, IWICBitmapLock **lock)
+{
+    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p,%08x,%p)\n", iface, rc, flags, lock);
+    return IWICBitmap_Lock(&This->IWICBitmap_iface, rc, flags, lock);
+}
+
+static HRESULT WINAPI IMILBitmapImpl_Unlock(IMILBitmapSource *iface, IWICBitmapLock *lock)
+{
+    TRACE("(%p,%p)\n", iface, lock);
+    IWICBitmapLock_Release(lock);
+    return S_OK;
+}
+
+static HRESULT WINAPI IMILBitmapImpl_SetPalette(IMILBitmapSource *iface, IWICPalette *palette)
+{
+    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%p)\n", iface, palette);
+    return IWICBitmap_SetPalette(&This->IWICBitmap_iface, palette);
+}
+
+static HRESULT WINAPI IMILBitmapImpl_SetResolution(IMILBitmapSource *iface, double dpix, double dpiy)
+{
+    BitmapImpl *This = impl_from_IMILBitmapSource(iface);
+    TRACE("(%p,%f,%f)\n", iface, dpix, dpiy);
+    return IWICBitmap_SetResolution(&This->IWICBitmap_iface, dpix, dpiy);
+}
+
+static HRESULT WINAPI IMILBitmapImpl_AddDirtyRect(IMILBitmapSource *iface, const WICRect *rc)
+{
+    FIXME("(%p,%p): stub\n", iface, rc);
+    return E_NOTIMPL;
 }
 
 static const IMILBitmapSourceVtbl IMILBitmapImpl_Vtbl =
@@ -593,26 +648,20 @@ static const IMILBitmapSourceVtbl IMILBitmapImpl_Vtbl =
     IMILBitmapImpl_GetResolution,
     IMILBitmapImpl_CopyPalette,
     IMILBitmapImpl_CopyPixels,
-    IMILBitmapImpl_UnknownMethod1,
+    IMILBitmapImpl_unknown1,
+    IMILBitmapImpl_Lock,
+    IMILBitmapImpl_Unlock,
+    IMILBitmapImpl_SetPalette,
+    IMILBitmapImpl_SetResolution,
+    IMILBitmapImpl_AddDirtyRect
 };
 
 static HRESULT WINAPI IMILUnknown1Impl_QueryInterface(IMILUnknown1 *iface, REFIID iid,
     void **ppv)
 {
-    BitmapImpl *This = impl_from_IMILUnknown1(iface);
-
-    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
-
-    if (!ppv) return E_INVALIDARG;
-
-    if (IsEqualIID(&IID_IUnknown, iid))
-    {
-        IUnknown_AddRef(&This->IMILUnknown1_iface);
-        *ppv = iface;
-        return S_OK;
-    }
-
-    return IWICBitmap_QueryInterface(&This->IWICBitmap_iface, iid, ppv);
+    FIXME("(%p,%s,%p): stub\n", iface, debugstr_guid(iid), ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI IMILUnknown1Impl_AddRef(IMILUnknown1 *iface)
@@ -627,47 +676,108 @@ static ULONG WINAPI IMILUnknown1Impl_Release(IMILUnknown1 *iface)
     return IWICBitmap_Release(&This->IWICBitmap_iface);
 }
 
+DECLSPEC_HIDDEN void WINAPI IMILUnknown1Impl_unknown1(IMILUnknown1 *iface, void *arg)
+{
+    FIXME("(%p,%p): stub\n", iface, arg);
+}
+
+static HRESULT WINAPI IMILUnknown1Impl_unknown2(IMILUnknown1 *iface, void *arg1, void *arg2)
+{
+    FIXME("(%p,%p,%p): stub\n", iface, arg1, arg2);
+    return E_NOTIMPL;
+}
+
+DECLSPEC_HIDDEN HRESULT WINAPI IMILUnknown1Impl_unknown3(IMILUnknown1 *iface, void *arg)
+{
+    FIXME("(%p,%p): stub\n", iface, arg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown1Impl_unknown4(IMILUnknown1 *iface, void *arg)
+{
+    FIXME("(%p,%p): stub\n", iface, arg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown1Impl_unknown5(IMILUnknown1 *iface, void *arg)
+{
+    FIXME("(%p,%p): stub\n", iface, arg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown1Impl_unknown6(IMILUnknown1 *iface, DWORD64 arg)
+{
+    FIXME("(%p,%s): stub\n", iface, wine_dbgstr_longlong(arg));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown1Impl_unknown7(IMILUnknown1 *iface, void *arg)
+{
+    FIXME("(%p,%p): stub\n", iface, arg);
+    return E_NOTIMPL;
+}
+
+DECLSPEC_HIDDEN HRESULT WINAPI IMILUnknown1Impl_unknown8(IMILUnknown1 *iface)
+{
+    FIXME("(%p): stub\n", iface);
+    return E_NOTIMPL;
+}
+
+DEFINE_THISCALL_WRAPPER(IMILUnknown1Impl_unknown1, 8)
+DEFINE_THISCALL_WRAPPER(IMILUnknown1Impl_unknown3, 8)
+DEFINE_THISCALL_WRAPPER(IMILUnknown1Impl_unknown8, 4)
+
 static const IMILUnknown1Vtbl IMILUnknown1Impl_Vtbl =
 {
     IMILUnknown1Impl_QueryInterface,
     IMILUnknown1Impl_AddRef,
     IMILUnknown1Impl_Release,
+    THISCALL(IMILUnknown1Impl_unknown1),
+    IMILUnknown1Impl_unknown2,
+    THISCALL(IMILUnknown1Impl_unknown3),
+    IMILUnknown1Impl_unknown4,
+    IMILUnknown1Impl_unknown5,
+    IMILUnknown1Impl_unknown6,
+    IMILUnknown1Impl_unknown7,
+    THISCALL(IMILUnknown1Impl_unknown8)
 };
 
 static HRESULT WINAPI IMILUnknown2Impl_QueryInterface(IMILUnknown2 *iface, REFIID iid,
     void **ppv)
 {
-    BitmapImpl *This = impl_from_IMILUnknown2(iface);
-
-    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
-
-    if (!ppv) return E_INVALIDARG;
-
-    if (IsEqualIID(&IID_IUnknown, iid))
-    {
-        IUnknown_AddRef(&This->IMILUnknown2_iface);
-        *ppv = iface;
-        return S_OK;
-    }
-
-    return IWICBitmap_QueryInterface(&This->IWICBitmap_iface, iid, ppv);
+    FIXME("(%p,%s,%p): stub\n", iface, debugstr_guid(iid), ppv);
+    *ppv = NULL;
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI IMILUnknown2Impl_AddRef(IMILUnknown2 *iface)
 {
-    BitmapImpl *This = impl_from_IMILUnknown2(iface);
-    return IWICBitmap_AddRef(&This->IWICBitmap_iface);
+    FIXME("(%p): stub\n", iface);
+    return 0;
 }
 
 static ULONG WINAPI IMILUnknown2Impl_Release(IMILUnknown2 *iface)
 {
-    BitmapImpl *This = impl_from_IMILUnknown2(iface);
-    return IWICBitmap_Release(&This->IWICBitmap_iface);
+    FIXME("(%p): stub\n", iface);
+    return 0;
 }
 
-static HRESULT WINAPI IMILUnknown2Impl_UnknownMethod1(IMILUnknown2 *iface, void *arg1, void *arg2)
+static HRESULT WINAPI IMILUnknown2Impl_unknown1(IMILUnknown2 *iface, void *arg1, void **arg2)
 {
     FIXME("(%p,%p,%p): stub\n", iface, arg1, arg2);
+    if (arg2) *arg2 = NULL;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown2Impl_unknown2(IMILUnknown2 *iface, void *arg1, void *arg2)
+{
+    FIXME("(%p,%p,%p): stub\n", iface, arg1, arg2);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IMILUnknown2Impl_unknown3(IMILUnknown2 *iface, void *arg1)
+{
+    FIXME("(%p,%p): stub\n", iface, arg1);
     return E_NOTIMPL;
 }
 
@@ -676,17 +786,18 @@ static const IMILUnknown2Vtbl IMILUnknown2Impl_Vtbl =
     IMILUnknown2Impl_QueryInterface,
     IMILUnknown2Impl_AddRef,
     IMILUnknown2Impl_Release,
-    IMILUnknown2Impl_UnknownMethod1,
+    IMILUnknown2Impl_unknown1,
+    IMILUnknown2Impl_unknown2,
+    IMILUnknown2Impl_unknown3
 };
 
 HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
-    UINT stride, UINT datasize, BYTE *bits,
+    UINT stride, UINT datasize, BYTE *data,
     REFWICPixelFormatGUID pixelFormat, WICBitmapCreateCacheOption option,
     IWICBitmap **ppIBitmap)
 {
     HRESULT hr;
     BitmapImpl *This;
-    BYTE *data;
     UINT bpp;
 
     hr = get_pixelformat_bpp(pixelFormat, &bpp);
@@ -699,14 +810,20 @@ HRESULT BitmapImpl_Create(UINT uiWidth, UINT uiHeight,
     if (stride < ((bpp*uiWidth)+7)/8) return E_INVALIDARG;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(BitmapImpl));
-    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, datasize);
-    if (!This || !data)
+    if (!This) return E_OUTOFMEMORY;
+
+    if (!data)
     {
-        HeapFree(GetProcessHeap(), 0, This);
-        HeapFree(GetProcessHeap(), 0, data);
-        return E_OUTOFMEMORY;
+        data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, datasize);
+        if (!data)
+        {
+            HeapFree(GetProcessHeap(), 0, This);
+            return E_OUTOFMEMORY;
+        }
+        This->is_section = FALSE;
     }
-    if (bits) memcpy(data, bits, datasize);
+    else
+        This->is_section = TRUE;
 
     This->IWICBitmap_iface.lpVtbl = &BitmapImpl_Vtbl;
     This->IMILBitmapSource_iface.lpVtbl = &IMILBitmapImpl_Vtbl;

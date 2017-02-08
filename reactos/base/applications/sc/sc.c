@@ -179,6 +179,135 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             ControlUsage();
     }
+    else if (!lstrcmpi(Command, _T("sdshow")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            SdShow(ServiceName);
+        }
+        else
+            SdShowUsage();
+    }
+    else if (!lstrcmpi(Command, _T("sdset")))
+    {
+        LPCTSTR SecurityDescriptor;
+
+        if (ArgCount > 1)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            SecurityDescriptor = *ServiceArgs++;
+            ArgCount--;
+
+            SdSet(ServiceName, SecurityDescriptor);
+        }
+        else
+            SdSetUsage();
+    }
+    else if (!lstrcmpi(Command, _T("qc")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryConfig(ServiceName);
+        }
+        else
+            QueryConfigUsage();
+    }
+    else if (!lstrcmpi(Command, _T("qdescription")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryDescription(ServiceName);
+        }
+        else
+            QueryDescriptionUsage();
+    }
+    else if (!lstrcmpi(Command, _T("qfailure")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryFailure(ServiceName);
+        }
+        else
+            QueryFailureUsage();
+    }
+    else if (!lstrcmpi(Command, _T("description")))
+    {
+        LPCTSTR Description = NULL;
+
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            if (ArgCount > 0)
+            {
+                Description = *ServiceArgs++;
+                ArgCount--;
+            }
+
+            SetDescription(ServiceName, Description);
+        }
+        else
+            SetDescriptionUsage();
+    }
+    else if (!lstrcmpi(Command, _T("config")))
+    {
+        SetConfig(ServiceArgs, ArgCount);
+    }
+    else if (!lstrcmpi(Command, _T("failure")))
+    {
+        SetFailure(ServiceArgs, ArgCount);
+    }
+    else if (!lstrcmpi(Command, _T("GetDisplayName")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            GetDisplayName(ServiceName);
+        }
+        else
+            GetDisplayNameUsage();
+    }
+    else if (!lstrcmpi(Command, _T("GetKeyName")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            GetKeyName(ServiceName);
+        }
+        else
+            GetKeyNameUsage();
+    }
+    else if (!lstrcmpi(Command, _T("EnumDepend")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            EnumDepend(ServiceName);
+        }
+        else
+            EnumDependUsage();
+    }
     else
     {
         MainUsage();

@@ -72,16 +72,17 @@ IContextMenu2 *	ISvBgCm_Constructor(LPSHELLFOLDER pSFParent, BOOL bDesktop);
 HRESULT WINAPI IShellView_Constructor(IShellFolder *pFolder, IShellView **newView);
 HRESULT WINAPI CDefView_Constructor(IShellFolder *pFolder, REFIID riid, LPVOID * ppvOut);
 HRESULT WINAPI CDefViewDual_Constructor(REFIID riid, LPVOID * ppvOut);
-HRESULT WINAPI CShell_Constructor(REFIID riid, LPVOID * ppvOut);
+HRESULT WINAPI CShellDispatch_Constructor(REFIID riid, LPVOID * ppvOut);
 
-HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown * pUnkOuter, REFIID riid, LPCITEMIDLIST pidl, LPVOID * ppv);
+HRESULT WINAPI IShellLink_ConstructFromPath(WCHAR *path, REFIID riid, LPVOID *ppv);
+HRESULT WINAPI IShellLink_ConstructFromFile(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv);
 HRESULT WINAPI IFileSystemBindData_Constructor(const WIN32_FIND_DATAW *pfd, LPBC *ppV);
-extern HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST, LPWSTR, UINT, int*) DECLSPEC_HIDDEN;
 HRESULT WINAPI CPanel_ExtractIconA(LPITEMIDLIST pidl, LPCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) DECLSPEC_HIDDEN;
 HRESULT WINAPI CPanel_ExtractIconW(LPITEMIDLIST pidl, LPCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize) DECLSPEC_HIDDEN;
 
-LPEXTRACTICONA	IExtractIconA_Constructor(LPCITEMIDLIST) DECLSPEC_HIDDEN;
-LPEXTRACTICONW	IExtractIconW_Constructor(LPCITEMIDLIST) DECLSPEC_HIDDEN;
+HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut);
+
+HRESULT CRegFolder_CreateInstance(const GUID *pGuid, LPCITEMIDLIST pidlRoot, LPCWSTR lpszPath, REFIID riid, void **ppv);
 
 /* initialisation for FORMATETC */
 #define InitFormatEtc(fe, cf, med) \
@@ -108,7 +109,6 @@ HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 /* Change Notification */
 void InitChangeNotifications(void) DECLSPEC_HIDDEN;
 void FreeChangeNotifications(void) DECLSPEC_HIDDEN;
-void InitIconOverlays(void);
 
 /* file operation */
 #define ASK_DELETE_FILE           1
@@ -188,10 +188,9 @@ BOOL SHELL_IsShortcut(LPCITEMIDLIST) DECLSPEC_HIDDEN;
 INT_PTR CALLBACK SH_FileGeneralDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SH_FileVersionDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HPROPSHEETPAGE SH_CreatePropertySheetPage(WORD wDialogId, DLGPROC pfnDlgProc, LPARAM lParam, LPCWSTR pwszTitle);
-BOOL SH_ShowDriveProperties(WCHAR *drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);
+BOOL SH_ShowDriveProperties(WCHAR *drive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl);
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
-BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);
-BOOL SH_ShowFolderProperties(LPWSTR pwszFolder, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl);
+BOOL SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl);
 LPWSTR SH_FormatFileSizeWithBytes(PULARGE_INTEGER lpQwSize, LPWSTR pszBuf, UINT cchBuf);
 
 HRESULT WINAPI DoRegisterServer(void);

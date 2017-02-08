@@ -6,69 +6,16 @@
  * PROGRAMMERS: Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */
 
-
 #define SECURITY_WIN32
 #include <security.h>
 #include <sddl.h>
-
 #include <strsafe.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
-
-/* Unicode (W) to ANSI OEM wrapper function, as console and Unicode don't mix well, sigh */
-static void WhoamiOemConversion_printf(const WCHAR *lpSourceFormatW, ...)
-{
-    CHAR  *lpBufferA = NULL;
-    WCHAR *lpBufferW = NULL;
-
-    UINT Size;
-    va_list Args;
-
-    /* first let's find out the final output'ed length of the wprintf routine */
-    va_start(Args, lpSourceFormatW);
-
-    Size = _vscwprintf(lpSourceFormatW, Args);
-
-    va_end(Args);
-
-    /* allocate a proportional memory chunk taking into account the char width */
-    lpBufferW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (Size + 1) * sizeof(WCHAR));
-
-    if (!lpBufferW)
-        return;
-
-    /* do wprintf to this newly allocated buffer of ours */
-    va_start(Args, lpSourceFormatW);
-
-    _vsnwprintf(lpBufferW, Size, lpSourceFormatW, Args);
-
-    va_end(Args);
-
-    /* allocate a similarly sized buffer for the ANSI/OEM version of our string */
-    lpBufferA = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (Size + 1) * sizeof(CHAR));
-
-    if (!lpBufferA)
-    {
-        HeapFree(GetProcessHeap(), 0, lpBufferW);
-        return;
-    }
-
-    /* convert our Unicode/Wide char string into a proper ANSI/OEM
-       string that our console may understand, at least in theory */
-    CharToOemBuffW(lpBufferW,
-                   lpBufferA,
-                   Size);
-
-    /* print the converted OEM string into the console's output and call it a day */
-    printf("%s", lpBufferA);
-
-    /* clean everything up */
-    HeapFree(GetProcessHeap(), 0, lpBufferW);
-    HeapFree(GetProcessHeap(), 0, lpBufferA);
-}
-
-#define wprintf WhoamiOemConversion_printf
+#define wprintf(...) ConPrintf(StdOut, ##__VA_ARGS__)
 
 BOOL NoHeader = FALSE;
 UINT NoHeaderArgCount = 0;
@@ -194,7 +141,6 @@ void WhoamiPrintHeader(int HeaderId)
     while (Length--)
         wprintf(L"-");
 
-    /* _putws seems to be broken in ReactOS' CRT ??? */
     wprintf(L"\n\n");
 }
 
@@ -718,12 +664,15 @@ int WhoamiPriv(void)
 
 int wmain(int argc, WCHAR* argv[])
 {
-    INT i;
-    BYTE WamBit = 0;
-
     #define WAM_USER   1<<0
     #define WAM_GROUPS 1<<1
     #define WAM_PRIV   1<<2
+
+    INT i;
+    BYTE WamBit = 0;
+
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
 
     /* * * * * * * * * * * * * * * *
@@ -753,7 +702,7 @@ int wmain(int argc, WCHAR* argv[])
         {
             NoHeaderArgCount++;
 
-            if (NoHeader != TRUE)
+            if (NoHeader == FALSE)
             {
                 NoHeader = TRUE;
                 // wprintf(L"Headers disabled!\n");
@@ -788,7 +737,7 @@ int wmain(int argc, WCHAR* argv[])
 
                     /* looks like you can't use the "/fo list /nh" options together
                        for some stupid reason */
-                    if (PrintFormat == list && NoHeader == TRUE)
+                    if (PrintFormat == list && NoHeader != FALSE)
                     {
                         wprintf(WhoamiLoadRcString(IDS_ERROR_NH_LIST));
                         return 1;

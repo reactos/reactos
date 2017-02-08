@@ -290,7 +290,7 @@ RecoveryInProgress(OUT PBOOL pbCancelled)
  */
 HRESULT
 WINAPI
-RegisterApplicationRecoveryCallback(IN APPLICATION_RECOVERY_CALLBACK pRecoveyCallback,
+RegisterApplicationRecoveryCallback(IN APPLICATION_RECOVERY_CALLBACK pRecoveryCallback,
                                     IN PVOID pvParameter  OPTIONAL,
                                     DWORD dwPingInterval,
                                     DWORD dwFlags)

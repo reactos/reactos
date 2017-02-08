@@ -328,7 +328,7 @@ RWSeekToCylinder(PDRIVE_INFO DriveInfo, UCHAR Cylinder)
 
     if(CurCylinder != Cylinder)
     {
-        WARN_(FLOPPY, "RWSeekToTrack(): Seeek to track failed; current cylinder is 0x%x\n", CurCylinder);
+        WARN_(FLOPPY, "RWSeekToTrack(): Seek to track failed; current cylinder is 0x%x\n", CurCylinder);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -543,7 +543,7 @@ ReadWritePassive(PDRIVE_INFO DriveInfo, PIRP Irp)
      * greatly (and I even wrote some of the kernel's DMA code, so if it confuses me, it
      * probably confuses at least a couple of other people too).
      *
-     * MmGetMdlVirtualAddress() returns the virtal address, as mapped in the buffer's original
+     * MmGetMdlVirtualAddress() returns the virtual address, as mapped in the buffer's original
      * process context, of the MDL.  In other words:  say you start with a buffer at address X, then
      * you build an MDL out of that buffer called Mdl. If you call MmGetMdlVirtualAddress(Mdl), it
      * will return X.

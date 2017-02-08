@@ -867,7 +867,7 @@ Return Value:
                 //  Since we're always last in the mount order,  we won't be preventing
                 //  any other FS from trying to mount the data track.  However if the 
                 //  data track was at the start of the disc,  then we abort,  to avoid
-                //  having to filter it from our synthesised directory listing later.  We
+                //  having to filter it from our synthesized directory listing later.  We
                 //  already filtered off any data track at the end.
                 //
 
@@ -1869,7 +1869,7 @@ Return Value:
     CdReleaseVcb( IrpContext, Vcb );
 
     //
-    //  Send notification that the volume is avaliable.
+    //  Send notification that the volume is available.
     //
 
     if (NT_SUCCESS( Status )) {
@@ -2295,7 +2295,7 @@ Return Value:
 
     Status = ObReferenceObjectByHandle( Handle,
                                         0,
-                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibily with exported kernel data */
+                                        IoFileObjectType, /* ReactOS Change: GCC/LD Incompatibility with exported kernel data */
                                         KernelMode,
                                         (PVOID*)&FileToMarkBad, /* ReactOS Change: GCC "passing argument 5 of 'ObReferenceObjectByHandle' from incompatible pointer type" */
                                         NULL );
@@ -2554,7 +2554,7 @@ Return Value:
     //  and still have the disk work.  As this form of error worked in NT 4.0, and
     //  since these disks really do exist, I don't want to change them.
     //
-    //  If we wished to support all such media (we don't), it would be neccesary
+    //  If we wished to support all such media (we don't), it would be necessary
     //  to clear this flag on finding ISO or HSG descriptors below.
     //
 

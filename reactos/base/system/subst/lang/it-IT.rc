@@ -5,13 +5,16 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER "Numero di parametri errato - %s\n"
     IDS_INVALID_PARAMETER2 "Parametro errato - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
+    IDS_ACCESS_DENIED "Access denied - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Unità già sostituita\n"
     IDS_FAILED_WITH_ERRORCODE "Interruzione con codice di errore 0x%x: %s\n"
     IDS_USAGE "Associa un percorso ad una lettera di unità.\n\n\
 SUBST [unità1: [unità2:]percorso]\n\
 SUBST unità1: /D\n\n\
-  unità1:           Specifica un'unità virtuale alla quale assegnare un percorso.\n\
-  [unità2:]percorso Specifica un'unità fisica e un percorso da assegnare ad una\n                  unità virtuale.\n\
-  /D                Elimina un'unità (virtuale) sostituita.\n\n\
+  unità1:            Specifica un'unità virtuale alla quale assegnare un percorso.\n\
+  [unità2:]percorso  Specifica un'unità fisica e un percorso da assegnare ad una\n\
+                     unità virtuale.\n\
+  /D                 Elimina un'unità (virtuale) sostituita.\n\n\
 Digitare SUBST senza parametri per mostrare un elenco delle unità virtuali attuali.\n"
 END

@@ -37,6 +37,7 @@
 #include <objbase.h>
 #include <dmusici.h>
 #include <dmusics.h>
+#include <dmksctrl.h>
 
 #include <wine/debug.h>
 #include <wine/list.h>
@@ -56,8 +57,6 @@ typedef struct IDirectMusicDownloadImpl IDirectMusicDownloadImpl;
 typedef struct IReferenceClockImpl IReferenceClockImpl;
 
 typedef struct IDirectMusicInstrumentImpl IDirectMusicInstrumentImpl;
-
-typedef struct SynthPortImpl SynthPortImpl;
 
 /*****************************************************************************
  * Some stuff to make my life easier :=)
@@ -161,28 +160,6 @@ struct IDirectMusicDownloadImpl {
     LONG ref;
 
     /* IDirectMusicDownloadImpl fields */
-};
-
-/*****************************************************************************
- * SynthPortImpl implementation structure
- */
-struct SynthPortImpl {
-    /* IUnknown fields */
-    IDirectMusicPort IDirectMusicPort_iface;
-    IDirectMusicPortDownload IDirectMusicPortDownload_iface;
-    IDirectMusicThru IDirectMusicThru_iface;
-    LONG ref;
-
-    /* IDirectMusicPort fields */
-    IDirectSound* pDirectSound;
-    IReferenceClock* pLatencyClock;
-    IDirectMusicSynth* synth;
-    IDirectMusicSynthSink* synth_sink;
-    BOOL fActive;
-    DMUS_PORTCAPS caps;
-    DMUS_PORTPARAMS params;
-    int nrofgroups;
-    DMUSIC_PRIVATE_CHANNEL_GROUP group[1];
 };
 
 /** Internal factory */

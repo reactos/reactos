@@ -21,6 +21,8 @@
 
 class Matrix : public GdiplusBase
 {
+  friend class Region;
+
 public:
   Matrix(const RectF &rect, const PointF *dstplg)
   {
@@ -45,7 +47,7 @@ public:
   Matrix *Clone(VOID)
   {
     Matrix *cloneMatrix = new Matrix();  // FIXME: Matrix::matrix already initialized --> potential memory leak
-    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, &cloneMatrix);
+    cloneMatrix->status = DllExports::GdipCloneMatrix(matrix, &cloneMatrix->matrix);
     return cloneMatrix;
   }
 
@@ -130,7 +132,7 @@ public:
     return SetStatus(DllExports::GdipSetMatrixElements(matrix, m11, m12, m21, m22, dx, dy));
   }
 
-  Status Shear(REAL shearX, REAL shearY, REAL order)
+  Status Shear(REAL shearX, REAL shearY, MatrixOrder order)
   {
     return SetStatus(DllExports::GdipShearMatrix(matrix, shearX, shearY, order));
   }
@@ -155,7 +157,7 @@ public:
     return SetStatus(DllExports::GdipVectorTransformMatrixPoints(matrix, pts, count));
   }
 
-  Status Translate(REAL offsetX, REAL offsetY, REAL order)
+  Status Translate(REAL offsetX, REAL offsetY, MatrixOrder order)
   {
     return SetStatus(DllExports::GdipTranslateMatrix(matrix, offsetX, offsetY, order));
   }

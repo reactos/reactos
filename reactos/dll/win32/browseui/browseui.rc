@@ -77,6 +77,9 @@ IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
@@ -104,3 +107,6 @@ IDR_ACLISTISF REGISTRY "res/shellautocomplete.rgs"
 #ifdef LANGUAGE_ZH_TW
     #include "lang/zh-TW.rc"
 #endif
+
+/* Include band button bitmaps */
+IDB_BANDBUTTONS BITMAP "res/barbtn.bmp"

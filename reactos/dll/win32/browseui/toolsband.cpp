@@ -433,7 +433,7 @@ LRESULT CToolsBand::OnGetButtonInfo(UINT idControl, NMHDR *pNMHDR, BOOL &bHandle
     return 0;
 }
 
-HRESULT CreateToolsBar(REFIID riid, void **ppv)
+HRESULT CToolsBand_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreator<CToolsBand>(riid, ppv);
 }

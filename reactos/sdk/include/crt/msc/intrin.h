@@ -342,6 +342,19 @@ void  __forceinline __invlpg_fixed(void * Address)
 #pragma intrinsic(__wbinvd)
 #pragma intrinsic(__lidt)
 #pragma intrinsic(__sidt)
+#if (_MSC_VER >= 1800)
+#pragma intrinsic(_sgdt)
+#else
+__forceinline
+void _sgdt(void *Destination)
+{
+    __asm
+    {
+        mov eax, Destination
+        sgdt [eax]
+    }
+}
+#endif
 #pragma intrinsic(_mm_pause)
 #endif
 #if defined(_M_ARM)

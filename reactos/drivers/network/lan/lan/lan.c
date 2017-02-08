@@ -483,7 +483,7 @@ ProtocolStatusComplete(
 
 /*!
  * @brief Called by NDIS during NdisRegisterProtocol to set up initial
- *           bindings, and periodically thereafer as new adapters come online
+ *           bindings, and periodically thereafter as new adapters come online
  *
  * @param Status - Return value to NDIS
  * @param BindContext - Handle provided by NDIS to track pending binding operations

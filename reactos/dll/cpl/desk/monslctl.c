@@ -698,7 +698,7 @@ MonSelGetMonitorFont(IN OUT PMONITORSELWND infoPtr,
     hFont = infoPtr->Monitors[Index].hFont;
     if (hFont == NULL &&
         GetObject(infoPtr->hFont,
-                  sizeof(LOGFONT),
+                  sizeof(lf),
                   &lf) != 0)
     {
         rcsize.cx = infoPtr->Monitors[Index].rc.right - infoPtr->Monitors[Index].rc.left -
@@ -1580,9 +1580,9 @@ MonitorSelWndProc(IN HWND hwnd,
 
         case WM_CREATE:
         {
-            infoPtr = (PMONITORSELWND) HeapAlloc(GetProcessHeap(),
-                                                 0,
-                                                 sizeof(MONITORSELWND));
+            infoPtr = (PMONITORSELWND)HeapAlloc(GetProcessHeap(),
+                                                0,
+                                                sizeof(MONITORSELWND));
             if (infoPtr == NULL)
             {
                 Ret = (LRESULT)-1;

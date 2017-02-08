@@ -111,6 +111,7 @@ ReadVolumeLabel(
     ULONG SizeDirEntry;
     ULONG EntriesPerPage;
     OEM_STRING StringO;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     NameU.Buffer = Vpb->VolumeLabel;
     NameU.Length = 0;
@@ -134,7 +135,16 @@ ReadVolumeLabel(
     ExReleaseResourceLite(&DeviceExt->DirResource);
 
     FileOffset.QuadPart = 0;
-    if (CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+    _SEH2_TRY
+    {
+        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (NT_SUCCESS(Status))
     {
         while (TRUE)
         {
@@ -164,7 +174,16 @@ ReadVolumeLabel(
             {
                 CcUnpinData(Context);
                 FileOffset.u.LowPart += PAGE_SIZE;
-                if (!CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+                _SEH2_TRY
+                {
+                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+                if (!NT_SUCCESS(Status))
                 {
                     Context = NULL;
                     break;
@@ -441,6 +460,23 @@ VfatOpenFile(
         return STATUS_ACCESS_DENIED;
     }
 
+    if ((*Fcb->Attributes & FILE_ATTRIBUTE_READONLY) &&
+        (RequestedOptions & FILE_DELETE_ON_CLOSE))
+    {
+        vfatReleaseFCB(DeviceExt, Fcb);
+        return STATUS_CANNOT_DELETE;
+    }
+
+    if ((vfatFCBIsRoot(Fcb) ||
+         (Fcb->LongNameU.Length == sizeof(WCHAR) && Fcb->LongNameU.Buffer[0] == L'.') ||
+         (Fcb->LongNameU.Length == 2 * sizeof(WCHAR) && Fcb->LongNameU.Buffer[0] == L'.' && Fcb->LongNameU.Buffer[1] == L'.')) &&
+        (RequestedOptions & FILE_DELETE_ON_CLOSE))
+    {
+        // we cannot delete a '.', '..' or the root directory
+        vfatReleaseFCB(DeviceExt, Fcb);
+        return STATUS_CANNOT_DELETE;
+    }
+
     DPRINT("Attaching FCB to fileObject\n");
     Status = vfatAttachFCBToFileObject(DeviceExt, Fcb, FileObject);
     if (!NT_SUCCESS(Status))
@@ -482,6 +518,11 @@ VfatCreateFile(
 
     FileObject = Stack->FileObject;
     DeviceExt = DeviceObject->DeviceExtension;
+
+    if (Stack->Parameters.Create.Options & FILE_OPEN_BY_FILE_ID)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
 
     /* Check their validity. */
     if (RequestedOptions & FILE_DIRECTORY_FILE &&
@@ -528,6 +569,11 @@ VfatCreateFile(
             return STATUS_INVALID_PARAMETER;
         }
 
+        if (RequestedOptions & FILE_DELETE_ON_CLOSE)
+        {
+            return STATUS_CANNOT_DELETE;
+        }
+
         pFcb = DeviceExt->VolumeFcb;
 
         if (pFcb->OpenHandleCount == 0)
@@ -565,7 +611,7 @@ VfatCreateFile(
         return STATUS_OBJECT_PATH_NOT_FOUND;
     }
 
-    /* Check for illegal characters and illegale dot sequences in the file name */
+    /* Check for illegal characters and illegal dot sequences in the file name */
     PathNameU = FileObject->FileName;
     c = PathNameU.Buffer + PathNameU.Length / sizeof(WCHAR);
     last = c - 1;
@@ -846,7 +892,8 @@ VfatCreateFile(
         {
             if (Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA ||
                 RequestedDisposition == FILE_OVERWRITE ||
-                RequestedDisposition == FILE_OVERWRITE_IF)
+                RequestedDisposition == FILE_OVERWRITE_IF ||
+                (RequestedOptions & FILE_DELETE_ON_CLOSE))
             {
                 if (!MmFlushImageSection(&pFcb->SectionObjectPointers, MmFlushForWrite))
                 {
@@ -854,7 +901,8 @@ VfatCreateFile(
                     DPRINT1("%d %d %d\n", Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA,
                             RequestedDisposition == FILE_OVERWRITE, RequestedDisposition == FILE_OVERWRITE_IF);
                     VfatCloseFile (DeviceExt, FileObject);
-                    return STATUS_SHARING_VIOLATION;
+                    return (RequestedOptions & FILE_DELETE_ON_CLOSE) ? STATUS_CANNOT_DELETE
+                                                                     : STATUS_SHARING_VIOLATION;
                 }
             }
         }

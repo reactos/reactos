@@ -20,7 +20,7 @@ EthCreateFilter(
 /*
  * FUNCTION: Construct an ethernet filter
  * ARGUMENTS:
- *     MaximumMulticastAddresses: Maximum number of multicast adderesses.
+ *     MaximumMulticastAddresses: Maximum number of multicast addresses.
  *     AdapterAddress: Current ethernet address of the adapter.
  *     Filter: The created filter on successful return.
  * RETURNS:

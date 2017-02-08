@@ -13,6 +13,28 @@ BEGIN
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
+IDPROMPTFORDISK DIALOG 0, 0, 260, 120
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Требуемые файлы"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Вставьте установочный диск производителя, а затем\nубедитесь, что правильный диск выбран ниже", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Скопируйте файлы производителя из:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
+    DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Отмена", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Обзор...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROMPTDISK   "Требуется файл '%1' на %2"
+    IDS_UNKNOWN      "Неизвестно"
+    IDS_COPYFROM     "Копирование файлов из:"
+    IDS_INFO         "Введите путь, где находится файл, а затем нажмите кнопку OK."
+END
+
 STRINGTABLE
 BEGIN
     IDS_QUERY_REBOOT_TEXT "Ваш компьютер должен быть перезагружен, чтобы завершить установку. Продолжить?"

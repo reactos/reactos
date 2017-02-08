@@ -126,7 +126,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
             ActiveIMMApp_Constructor,
         };
 
-        return IClassFactory_QueryInterface((IClassFactory*)&cf, riid, ppv);
+        return IClassFactory_QueryInterface(&cf.IClassFactory_iface, riid, ppv);
     }
 
     FIXME("(%s %s %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);

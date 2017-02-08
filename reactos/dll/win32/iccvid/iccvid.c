@@ -95,6 +95,10 @@ static inline BOOL heap_free( LPVOID ptr )
     return HeapFree( GetProcessHeap(), 0, ptr );
 }
 
+static inline int get_stride(int width, int depth)
+{
+    return ((depth * width + 31) >> 3) & ~3;
+}
 
 /* ------------------------------------------------------------------------ */
 static unsigned char *in_buffer, uiclip[1024], *uiclp = NULL;
@@ -463,7 +467,7 @@ static void decode_cinepak(cinepak_info *cvinfo, unsigned char *buf, int size,
             break;
         }
 
-    frm_stride = out_width * bpp;
+    frm_stride = get_stride(out_width, bpp * 8);
     frm_ptr = output;
 
     if(frame.length != size)
@@ -848,9 +852,9 @@ static LRESULT ICCVID_DecompressGetFormat( ICCVID_Info *info, LPBITMAPINFO in, L
     if( out )
     {
         memcpy( out, in, size );
+        out->bmiHeader.biBitCount = 24;
         out->bmiHeader.biCompression = BI_RGB;
-        out->bmiHeader.biSizeImage = in->bmiHeader.biHeight
-                                   * in->bmiHeader.biWidth *4;
+        out->bmiHeader.biSizeImage = get_stride(in->bmiHeader.biWidth, 24) * in->bmiHeader.biHeight;
         return ICERR_OK;
     }
     return size;

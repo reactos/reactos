@@ -27,15 +27,17 @@
 
 #if defined(MBEDTLS_SSL_TICKET_C)
 
-#include "mbedtls/ssl_ticket.h"
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
 #define mbedtls_calloc    calloc
-#define mbedtls_free       free
+#define mbedtls_free      free
+#define mbedtls_time      time
+#define mbedtls_time_t    time_t
 #endif
+
+#include "mbedtls/ssl_ticket.h"
 
 #include <string.h>
 
@@ -69,7 +71,7 @@ static int ssl_ticket_gen_key( mbedtls_ssl_ticket_context *ctx,
     mbedtls_ssl_ticket_key *key = ctx->keys + index;
 
 #if defined(MBEDTLS_HAVE_TIME)
-    key->generation_time = (uint32_t) time( NULL );
+    key->generation_time = (uint32_t) mbedtls_time( NULL );
 #endif
 
     if( ( ret = ctx->f_rng( ctx->p_rng, key->name, sizeof( key->name ) ) ) != 0 )
@@ -98,7 +100,7 @@ static int ssl_ticket_update_keys( mbedtls_ssl_ticket_context *ctx )
 #else
     if( ctx->ticket_lifetime != 0 )
     {
-        uint32_t current_time = (uint32_t) time( NULL );
+        uint32_t current_time = (uint32_t) mbedtls_time( NULL );
         uint32_t key_time = ctx->keys[ctx->active].generation_time;
 
         if( current_time > key_time &&
@@ -451,7 +453,7 @@ int mbedtls_ssl_ticket_parse( void *p_ticket,
 #if defined(MBEDTLS_HAVE_TIME)
     {
         /* Check for expiration */
-        time_t current_time = time( NULL );
+        mbedtls_time_t current_time = mbedtls_time( NULL );
 
         if( current_time < session->start ||
             (uint32_t)( current_time - session->start ) > ctx->ticket_lifetime )

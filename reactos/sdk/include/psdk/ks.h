@@ -115,6 +115,11 @@ DEFINE_GUIDSTRUCT("9b365890-165f-11d0-a195-0020afd156e4", KSNAME_Filter);
 DEFINE_GUIDSTRUCT("d833f8f8-7894-11d1-b069-00a0c9062802", KSMEMORY_TYPE_KERNEL_PAGED);
 #define KSMEMORY_TYPE_KERNEL_PAGED  DEFINE_GUIDNAMED(KSMEMORY_TYPE_KERNEL_PAGED)
 
+#define STATIC_KSDATAFORMAT_SUBTYPE_NONE \
+    0xe436eb8eL, 0x524f, 0x11ce, {0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}
+DEFINE_GUIDSTRUCT("e436eb8e-524f-11ce-9f53-0020af0ba770", KSDATAFORMAT_SUBTYPE_NONE);
+#define KSDATAFORMAT_SUBTYPE_NONE DEFINE_GUIDNAMED(KSDATAFORMAT_SUBTYPE_NONE)
+
 /* ===============================================================
     I/O Control Codes
 */
@@ -1494,6 +1499,14 @@ typedef struct {
   ULONG Revision;
 } KSCOMPONENTID, *PKSCOMPONENTID;
 
+#define DEFINE_KSPROPERTY_ITEM_GENERAL_COMPONENTID(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_GENERAL_COMPONENTID,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSCOMPONENTID),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
 /* ===============================================================
     Properties
 */
@@ -2790,6 +2803,13 @@ struct _KSGATE {
 
 #ifndef _NTOS_
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+PKSGATE
+NTAPI
+KsPinGetAndGate(
+    _In_ PKSPIN Pin);
+
 _IRQL_requires_max_(HIGH_LEVEL)
 static
 __inline
@@ -3823,6 +3843,43 @@ NTAPI
 KsPinGetNextSiblingPin(
   _In_ PKSPIN Pin);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+PKSSTREAM_POINTER
+NTAPI
+KsPinGetLeadingEdgeStreamPointer(
+  _In_ PKSPIN Pin,
+  _In_ KSSTREAM_POINTER_STATE State);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerSetStatusCode(
+    _In_ PKSSTREAM_POINTER StreamPointer,
+    _In_ NTSTATUS Status
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+void
+NTAPI
+KsStreamPointerDelete(
+    _In_ PKSSTREAM_POINTER StreamPointer
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerClone(
+    _In_ PKSSTREAM_POINTER StreamPointer,
+    _In_opt_ PFNKSSTREAMPOINTER CancelCallback,
+    _In_ ULONG ContextSize,
+    _Out_ PKSSTREAM_POINTER* CloneStreamPointer
+);
+
+
 /* Does this belong here? */
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -4117,6 +4174,13 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
 VOID
 NTAPI
+KsReleaseDevice(
+  _In_ PKSDEVICE);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
 KsReleaseIrpOnCancelableQueue(
   _In_ PIRP Irp,
   _In_opt_ PDRIVER_CANCEL DriverCancel);
@@ -4156,6 +4220,7 @@ KsSetMajorFunctionHandler(
   _In_ PDRIVER_OBJECT DriverObject,
   _In_ ULONG MajorFunction);
 
+_Check_return_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
@@ -4172,6 +4237,44 @@ KsStreamIo(
   _In_ ULONG Length,
   _In_ ULONG Flags,
   _In_ KPROCESSOR_MODE RequestorMode);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsStreamPointerUnlock(
+  _In_ PKSSTREAM_POINTER StreamPointer,
+  _In_ BOOLEAN Eject);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerAdvanceOffsets(
+  _In_ PKSSTREAM_POINTER StreamPointer,
+  _In_ ULONG             InUsed,
+  _In_ ULONG             OutUsed,
+  _In_ BOOLEAN           Eject);
+
+_Check_return_
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerAdvance(
+  _In_ PKSSTREAM_POINTER StreamPointer);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsStreamPointerAdvanceOffsetsAndUnlock(
+	_In_ PKSSTREAM_POINTER StreamPointer,
+	_In_ ULONG             InUsed,
+	_In_ ULONG             OutUsed,
+	_In_ BOOLEAN           Eject
+	);
+
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
@@ -4695,6 +4798,28 @@ NTAPI
 KsDispatchSetSecurity(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PIRP Irp);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsPinAttemptProcessing(
+    _In_ PKSPIN Pin,
+    _In_ BOOLEAN Asynchronous);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsPinAcquireProcessingMutex(
+    _In_ PKSPIN Pin);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsPinReleaseProcessingMutex(
+    _In_ PKSPIN Pin);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI

@@ -1,5 +1,6 @@
 /*
  * Copyright 2000 Juergen Schmied
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -111,9 +112,6 @@
 #define IDS_DRIVE_REMOVABLE      76
 #define IDS_FS_UNKNOWN           77
 
-#define IDS_LOGOFF_TITLE  78
-#define IDS_LOGOFF_PROMPT 79
-
 #define IDS_CREATEFOLDER_DENIED   128
 #define IDS_CREATEFOLDER_CAPTION  129
 #define IDS_DELETEITEM_CAPTION    130
@@ -133,7 +131,6 @@
 #define IDS_SHELL_ABOUT_AUTHORS   144
 #define IDS_SHELL_ABOUT_BACK      145
 #define FCIDM_SHVIEW_NEW          146
-#define FCIDM_SHVIEW_VIEW         147
 #define IDS_CONTROLPANEL          148
 #define IDS_NEWFOLDER             149
 #define IDS_COLUMN_EXTENSION      151
@@ -163,6 +160,7 @@
 #define IDS_SCR_FILE              217
 #define IDS_SYS_FILE              218
 #define IDS_VXD_FILE              219
+#define IDS_ANY_FILE              220
 
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173
@@ -226,6 +224,10 @@
 
 /* Note: those strings are referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME 8964
+#define IDS_PRINTERS_DESCRIPTION   12696
+#define IDS_FONTS_DESCRIPTION      22920
+#define IDS_ADMINISTRATIVETOOLS_DESCRIPTION 22921
+#define IDS_FOLDER_OPTIONS_DESCRIPTION 22924
 #define IDS_ADMINISTRATIVETOOLS    22982
 #define IDS_FOLDER_OPTIONS         22985
 #define IDS_FONTS                  22981
@@ -235,6 +237,27 @@
 #define IDS_NETWORKPLACE           9217
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
+
+/* Advanced settings */
+#define IDS_ADVANCED_FOLDER                         30498
+#define IDS_ADVANCED_NET_CRAWLER                    30509
+#define IDS_ADVANCED_FOLDER_SIZE_TIP                30514
+#define IDS_ADVANCED_FRIENDLY_TREE                  30511
+#define IDS_ADVANCED_WEB_VIEW_BARRICADE             30510
+#define IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS         30505
+#define IDS_ADVANCED_SHOW_FULL_PATH                 30504
+#define IDS_ADVANCED_DISABLE_THUMB_CACHE            30517
+#define IDS_ADVANCED_HIDDEN                         30499
+#define IDS_ADVANCED_DONT_SHOW_HIDDEN               30501
+#define IDS_ADVANCED_SHOW_HIDDEN                    30500
+#define IDS_ADVANCED_HIDE_FILE_EXT                  30503
+#define IDS_ADVANCED_SUPER_HIDDEN                   30508
+#define IDS_ADVANCED_DESKTOP_PROCESS                30507
+#define IDS_ADVANCED_CLASSIC_VIEW_STATE             30506
+#define IDS_ADVANCED_PERSIST_BROWSERS               30513
+#define IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER   30497
+#define IDS_ADVANCED_SHOW_COMP_COLOR                30512
+#define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
 /* Dialogs */
 
@@ -284,9 +307,20 @@
 #define IDD_SHORTCUT_EXTENDED_PROPERTIES 16
 
 /* Folder Options */
-#define IDD_FOLDER_OPTIONS_GENERAL   17
-#define IDD_FOLDER_OPTIONS_VIEW      18
-#define IDD_FOLDER_OPTIONS_FILETYPES 19
+#define IDD_FOLDER_OPTIONS_GENERAL         17
+#define IDD_FOLDER_OPTIONS_VIEW            18
+#define IDD_FOLDER_OPTIONS_FILETYPES       19
+#define IDC_FOLDER_OPTIONS_TASKICON        30109
+#define IDC_FOLDER_OPTIONS_FOLDERICON      30110
+#define IDC_FOLDER_OPTIONS_CLICKICON       30111
+#define IDC_FOLDER_OPTIONS_COMMONTASKS     14001
+#define IDC_FOLDER_OPTIONS_CLASSICFOLDERS  14002
+#define IDC_FOLDER_OPTIONS_SAMEWINDOW      14004
+#define IDC_FOLDER_OPTIONS_OWNWINDOW       14005
+#define IDC_FOLDER_OPTIONS_SINGLECLICK     14007
+#define IDC_FOLDER_OPTIONS_ULBROWSER       14008
+#define IDC_FOLDER_OPTIONS_ULPOINT         14009
+#define IDC_FOLDER_OPTIONS_DOUBLECLICK     14010
 
 /* Yes to all msgbox */
 #define IDD_YESTOALL_MSGBOX  20
@@ -565,18 +599,21 @@
  * AVI resources
  *
  * windows shell32 has 14 of them: 150-152 and 160-170
- * FIXME: Add 150-152
+ * FIXME: Add 165, 166
  */
 
-#define IDA_SHELL_COPY          160
-#define IDA_SHELL_COPY1         161
-#define IDA_SHELL_COPY2         167
-#define IDA_SHELL_COPY3         168
-#define IDA_SHELL_RECYCLE       162
-#define IDA_SHELL_EMPTY_RECYCLE 163
-#define IDA_SHELL_DELETE        164
-#define IDA_SHELL_DELETE1       169
-#define IDA_SHELL_DOWNLOAD      170
+#define IDA_SHELL_AUTOPLAY        150
+#define IDA_SHELL_SEARCHING_INDEX 151
+#define IDA_SHELL_COMPUTER_SEARCH 152
+#define IDA_SHELL_COPY            160
+#define IDA_SHELL_COPY1           161
+#define IDA_SHELL_RECYCLE         162
+#define IDA_SHELL_EMPTY_RECYCLE   163
+#define IDA_SHELL_DELETE          164
+#define IDA_SHELL_COPY2           167
+#define IDA_SHELL_COPY3           168
+#define IDA_SHELL_DELETE1         169
+#define IDA_SHELL_DOWNLOAD        170
 
 /* Desktop Browser commands */
 #define FCIDM_DESKBROWSER_CLOSE      0xA004
@@ -586,6 +623,7 @@
 
 /* Shell view commands */
 #define FCIDM_SHVIEW_ARRANGE         0x7001
+#define FCIDM_SHVIEW_VIEW            0x7002
 #define FCIDM_SHVIEW_DELETE          0x7011
 #define FCIDM_SHVIEW_PROPERTIES      0x7013
 #define FCIDM_SHVIEW_CUT             0x7018

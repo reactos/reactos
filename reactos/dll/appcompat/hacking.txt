@@ -1,0 +1,23 @@
+
+Set the environment variable 'SHIM_DEBUG_LEVEL' to '4' before loading apphelp.dll for debug info related to loading / matching modules.
+The environment variable 'SHIMENG_DEBUG_LEVEL' is related to the hooking code.
+
+
+When there is not enough debug output, force memory allocations to fail:
+
+pSdbCreateDatabase
+    [Err ][SdbpCreateFile      ] Failed to convert DOS path "TEST1.SDB"
+    [Err ][SdbCreateDatabase   ] Failed to create the database.
+    [Err ][SdbpWriteBufferedData] Failed to allocate 65548 bytes.
+
+pSdbWriteStringTag
+    [Err ][SdbpAddStringToTable] Error Getting temp path 0x8
+    [Err ][SdbpCreateFile      ] Failed to convert DOS path "C:\Users\MAE67~1.JAN\AppData\Local\Temp\SDBAB16.tmp"
+    [Err ][SdbpAddStringToTable] Error copying string table temp filename
+    [Err ][HashCreate          ] Failed to allocate 8 bytes.
+    [Err ][SdbpAddStringToTable] Error creating hash table
+    [Err ][HashAddString       ] Failed to allocate 22 bytes.
+
+pSdbCloseDatabaseWrite
+    [Err ][SdbCloseDatabase    ] Failed to close the file.
+    [Err ][SdbpDeleteFile      ] Failed to convert DOS path "C:\Users\MAE67~1.JAN\AppData\Local\Temp\SDBAB2D.tmp"

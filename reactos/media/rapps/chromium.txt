@@ -27,6 +27,10 @@ Description = Chromium B.S.U to gra w stylu Arcade, z widokiem z góry.
 Description = Joc de tip arcadă de vânătoare în spațiul cosmic.
 Size = 2,2 Mio
 
+[Section.0419]
+Description = Свободная аркадная игра в жанре шутер.
+Size = 2,2 МиБ
+
 [Section.041f]
 Description = Oyun konsolu salonu oyunu türünde, üstten kaydırmalı bir uzay gezleyicisidir.
 Size = 2,2 MiB

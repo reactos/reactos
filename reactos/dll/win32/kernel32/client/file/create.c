@@ -435,7 +435,7 @@ OpenFile(LPCSTR lpFileName,
 
         switch (dwAttributes)
         {
-            case 0xFFFFFFFF: /* File does not exist */
+            case INVALID_FILE_ATTRIBUTES: /* File does not exist */
                 SetLastError(ERROR_FILE_NOT_FOUND);
                 lpReOpenBuff->nErrCode = (WORD) ERROR_FILE_NOT_FOUND;
                 return -1;

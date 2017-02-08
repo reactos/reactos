@@ -56,10 +56,10 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_FINDINGRESOURCE     "Se caută %s"
-    IDS_BEGINDOWNLOADDATA   "Începe a se descărca %s"
-    IDS_ENDDOWNLOADDATA     "Se descarcă %s"
-    IDS_SENDINGREQUEST      "Se solicită %s"
+    IDS_FINDINGRESOURCE     "În căutarea resursei %s"
+    IDS_BEGINDOWNLOADDATA   "În început de descărcare din %s"
+    IDS_ENDDOWNLOADDATA     "În curs de descărcare din %s"
+    IDS_SENDINGREQUEST      "În așteptarea răspunsului de la %s"
 }
 
 

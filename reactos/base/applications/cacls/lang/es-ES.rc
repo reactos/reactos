@@ -18,7 +18,8 @@ CACLS archivo  [/T] [/E] [/C] [/G user:perm [...]] [/R usuario [...]]\n\
                                  W  Escribir\n\
                                  C  Cambiar (escribir)\n\
                                  F  Control total\n\
-   /R usuario    Revoca los derechos de acceso al usuario especificado (unicamente válido con /E).\n\
+   /R usuario    Revoca los derechos de acceso al usuario especificado\n\
+                 (unicamente válido con /E).\n\
    /P user:perm  Reemplaza los derechos de acceso del usuario especificado.\n\
                  Perm puede ser: N  Ninguno\n\
                                  R  Leer\n\

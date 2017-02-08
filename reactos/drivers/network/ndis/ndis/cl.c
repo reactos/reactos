@@ -19,7 +19,7 @@ NdisClGetProtocolVcContextFromTapiCallId(
     IN UNICODE_STRING  TapiCallId,
     OUT PNDIS_HANDLE  ProtocolVcContext)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -41,7 +41,7 @@ NdisClAddParty(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -61,7 +61,7 @@ NdisClCloseAddressFamily(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -84,7 +84,7 @@ NdisClCloseCall(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -104,7 +104,7 @@ NdisClDeregisterSap(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -126,7 +126,7 @@ NdisClDropParty(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -148,7 +148,7 @@ NdisClIncomingCallComplete(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -169,7 +169,7 @@ NdisClMakeCall(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -190,7 +190,7 @@ NdisClModifyCallQoS(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -215,7 +215,7 @@ NdisClOpenAddressFamily(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }
@@ -238,7 +238,7 @@ NdisClRegisterSap(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     return NDIS_STATUS_FAILURE;
 }

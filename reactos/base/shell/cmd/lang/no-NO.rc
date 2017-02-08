@@ -64,7 +64,7 @@ ERRORLEVEL settes til nummer for knappen brukeren velger.\n"
     STRING_CMD_HELP2 "\nFunksjoner tilgjengelig:"
     STRING_CMD_HELP3 "  [aliaser]"
     STRING_CMD_HELP4 "  [historikk]"
-    STRING_CMD_HELP5 "  [unix filnavnfullføring]"
+    STRING_CMD_HELP5 "  [Bash filnavnfullføring]"
     STRING_CMD_HELP6 "  [mappeliste]"
     STRING_CMD_HELP7 "  [omadressering og datakanaler]"
     STRING_CMD_HELP8 "Start et nytt eksempel av ReactOS kommandotolk.\n\n\
@@ -253,15 +253,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Vis mengde av system minne.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% benyttet minne.\n\n\
+    STRING_MEMORY_HELP1 "Vis mengde av system minne.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% benyttet minne.\n\n\
   %13s byte totalt fysisk RAM.\n\
   %13s byte tilgjengelig fysisk RAM.\n\n\
   %13s byte total sidevekslingsfil.\n\
   %13s byte tilgjengelig sidevekslingsfil.\n\n\
   %13s byte totalt virtuell minne.\n\
   %13s byte tilgjengelig virtuell minne.\n"
-    STRING_MISC_HELP1 "Trykk en tast for å fortsette...\n"
+    STRING_MISC_HELP1 "Trykk en tast for å fortsette..."
     STRING_MOVE_HELP1 "Overskrive %s (Ja/Nei/Alle)? "
     STRING_MOVE_HELP2 "Flytt filer, og gi nytt navn på filer og mapper.\n\n\
 For å flytte en eller flere filer:\n\
@@ -520,7 +520,7 @@ tittel        ny tittel\n"
     STRING_REPLACE_ERROR6 "Ingen filer ble funnet - %s\n"
     STRING_REPLACE_ERROR7 "Extended Error 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operativsystem [Versjon %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Operativsystem [Versjon %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS Kommandotolk\nVersjon %s %s"
     STRING_VERSION_RUNNING_ON "Kjører på: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

@@ -722,7 +722,21 @@ NtUserGetObjectInformation(
     switch (nIndex)
     {
         case UOI_FLAGS:
-            Status = STATUS_NOT_IMPLEMENTED;
+            nDataSize = sizeof(USEROBJECTFLAGS);
+            if (nLength >= nDataSize)
+            {
+                PUSEROBJECTFLAGS ObjectFlags = pvInformation;
+
+                ObjectFlags->fInherit = 0;
+                ObjectFlags->fReserved = 0;
+                ObjectFlags->dwFlags = 0;
+
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                Status = STATUS_BUFFER_TOO_SMALL;
+            }
             ERR("UOI_FLAGS unimplemented!\n");
             break;
 

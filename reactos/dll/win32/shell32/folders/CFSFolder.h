@@ -23,14 +23,12 @@
 #ifndef _CFSFOLDER_H_
 #define _CFSFOLDER_H_
 
-WCHAR *BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
-
 class CFSFolder :
     public CComCoClass<CFSFolder, &CLSID_ShellFSFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
     public IPersistFolder3,
-    public IDropTarget
+    public IContextMenuCB
 {
     private:
         CLSID *pclsid;
@@ -40,24 +38,15 @@ class CFSFolder :
 
         LPITEMIDLIST pidlRoot; /* absolute pidl */
 
-        UINT cfShellIDList;    /* clipboardformat for IDropTarget */
-        BOOL fAcceptFmt;       /* flag for pending Drop */
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
         DWORD m_bGroupPolicyActive;
-        void SF_RegisterClipFmt();
-        BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
-        static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
-        virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
         virtual HRESULT WINAPI _GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut);
         virtual HRESULT WINAPI _LoadDynamicDropTargetHandlerForKey(HKEY hRootKey, LPCWSTR pwcsname, LPVOID *ppvOut);
         virtual HRESULT WINAPI _LoadDynamicDropTargetHandler(const CLSID *pclsid, LPCWSTR pwcsname, LPVOID *ppvOut);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
 
     public:
         CFSFolder();
         ~CFSFolder();
         
-
         // IShellFolder
         virtual HRESULT WINAPI ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLESTR lpszDisplayName, DWORD *pchEaten, PIDLIST_RELATIVE *ppidl, DWORD *pdwAttributes);
         virtual HRESULT WINAPI EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLIST *ppEnumIDList);
@@ -92,11 +81,8 @@ class CFSFolder :
         virtual HRESULT WINAPI InitializeEx(IBindCtx *pbc, LPCITEMIDLIST pidlRoot, const PERSIST_FOLDER_TARGET_INFO *ppfti);
         virtual HRESULT WINAPI GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO *ppfti);
 
-        // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
+        // IContextMenuCB
+        virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)
@@ -110,16 +96,7 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder2, IPersistFolder2)
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
-        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         END_COM_MAP()
-};
-
-struct _DoDropData {
-    CFSFolder *This;
-    IStream *pStream;
-    DWORD dwKeyState;
-    POINTL pt; 
-    DWORD pdwEffect;
 };
 
 #endif /* _CFSFOLDER_H_ */

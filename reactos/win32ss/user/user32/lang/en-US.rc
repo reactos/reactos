@@ -41,7 +41,7 @@ BEGIN
 END
 
 SYSMENUMDI MENU
-{
+BEGIN
     MENUITEM "&Restore", SC_RESTORE
     MENUITEM "&Move", SC_MOVE
     MENUITEM "&Size", SC_SIZE
@@ -51,7 +51,7 @@ SYSMENUMDI MENU
     MENUITEM "&Close\tCtrl+F4", SC_CLOSE
     MENUITEM SEPARATOR
     MENUITEM "Nex&t\tCtrl+F6", SC_NEXTWINDOW
-}
+END
 
 /* Strings */
 

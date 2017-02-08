@@ -26,7 +26,7 @@ if /I "%1" == "arm_hosttools" (
     REM This launches %VSINSTALLDIR%VS\vcvarsall.bat
     call %2 x86
 
-    REM Configure host tools for x86
+    REM Configure host tools for x86.
     cmake -G %3 -DARCH:STRING=i386 %~dp0
     exit
 )
@@ -58,6 +58,7 @@ if defined ROS_ARCH (
     cl 2>&1 | find "17.00." > NUL && set VS_VERSION=11
     cl 2>&1 | find "18.00." > NUL && set VS_VERSION=12
     cl 2>&1 | find "19.00." > NUL && set VS_VERSION=14
+    cl 2>&1 | find "19.10." > NUL && set VS_VERSION=15
     if not defined VS_VERSION (
         echo Error: Visual Studio version too old or version detection failed.
         endlocal
@@ -146,6 +147,15 @@ REM Parse command line parameters
                 ) else (
                     set CMAKE_GENERATOR="Visual Studio 14"
                 )
+            ) else if "!VS_VERSION!" == "15" (
+                if "!ARCH!" == "amd64" (
+                    set CMAKE_GENERATOR="Visual Studio 15 Win64"
+                ) else if "!ARCH!" == "arm" (
+                    set CMAKE_GENERATOR="Visual Studio 15 ARM"
+                    set CMAKE_GENERATOR_HOST="Visual Studio 15"
+                ) else (
+                    set CMAKE_GENERATOR="Visual Studio 15"
+                )
             )
         ) else if /I "%1" == "RTC" (
             echo Runtime checks enabled
@@ -214,6 +224,7 @@ if "%NEW_STYLE_BUILD%"=="0" (
 
 if EXIST CMakeCache.txt (
     del CMakeCache.txt /q
+    del host-tools\CMakeCache.txt /q
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (

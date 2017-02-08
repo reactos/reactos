@@ -1,0 +1,77 @@
+;
+; PROJECT:        ROS Kernel
+; LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
+; PURPOSE:        Storahci Driver INF
+; PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
+;
+
+[version]
+signature="$Windows NT$"
+Class=hdc
+ClassGuid={4D36E96A-E325-11CE-BFC1-08002BE10318}
+Provider=%ROS%
+
+[SourceDisksNames]
+1 = %DeviceDesc%,,,
+
+[SourceDisksFiles]
+storahci.sys = 1
+
+[DestinationDirs]
+DefaultDestDir = 12 ; DIRID_DRIVERS
+
+[Manufacturer]
+%ROS%=STORAHCI,NTx86
+
+[STORAHCI]
+
+[STORAHCI.NTx86]
+%SATA_AHCI.DeviceDesc%=storahci_Inst, PCI\CC_010601; Standard SATA AHCI Controller
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+[storahci_Inst]
+CopyFiles = storahci_CopyFiles
+
+[storahci_Inst.HW]
+; Enables Storport IPM for this adapter
+HKR, "StorPort", "EnableIdlePowerManagement", %REG_DWORD%, 0x01
+
+[storahci_Inst.Services]
+AddService = storahci, %SPSVCINST_ASSOCSERVICE%, storahci_Service_Inst, Miniport_EventLog_Inst
+
+[storahci_Service_Inst]
+DisplayName    = %DeviceDesc%
+ServiceType    = %SERVICE_KERNEL_DRIVER%
+StartType      = %SERVICE_BOOT_START%
+ErrorControl   = %SERVICE_ERROR_CRITICAL%
+ServiceBinary  = %12%\storahci.sys
+LoadOrderGroup = SCSI Miniport
+AddReg         = ahci_addreg
+
+[storahci_CopyFiles]
+storahci.sys,,,1
+
+[ahci_addreg]
+HKR, "Parameters\PnpInterface", "5", %REG_DWORD%, 0x00000001
+HKR, "Parameters", "BusType", %REG_DWORD%, 0x0000000B
+
+[Miniport_EventLog_Inst]
+AddReg = Miniport_EventLog_AddReg
+
+[Miniport_EventLog_AddReg]
+HKR,,EventMessageFile,%REG_EXPAND_SZ%,"%%SystemRoot%%\System32\IoLogMsg.dll"
+HKR,,TypesSupported,%REG_DWORD%,7
+
+[Strings]
+ROS                     = "ReactOS"
+DeviceDesc              = "AHCI SATA Driver"
+SATA_AHCI.DeviceDesc    = "Standard SATA AHCI Controller"
+
+SPSVCINST_ASSOCSERVICE = 0x00000002
+SERVICE_KERNEL_DRIVER  = 1
+SERVICE_BOOT_START     = 0
+SERVICE_ERROR_CRITICAL = 3
+REG_EXPAND_SZ          = 0x00020000
+REG_DWORD              = 0x00010001

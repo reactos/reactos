@@ -89,7 +89,7 @@ STID_BACK, 		"Înap&oi"
 STID_ALL_FILES, 	"Toate fișierele (*.*)"
 STID_HELP_FILES_HLP, 	"Fișierele manual (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Fișierul „%s” nu poate fi găsit. Doriți să-l căutați?"
-STID_NO_RICHEDIT	"Nu s-a găsit o implementare pentru richedit… Operația este abandonată"
+STID_NO_RICHEDIT	"Nu a fost găsită o implementare pentru richedit… Operație abandonată."
 STID_PSH_INDEX,		"Subiecte în manual:"
 }
 

@@ -503,7 +503,7 @@ BOOL WINAPI CreateRestrictedToken(
     PHANDLE newToken)
 {
     TOKEN_TYPE type;
-    SECURITY_IMPERSONATION_LEVEL level = TokenImpersonationLevel;
+    SECURITY_IMPERSONATION_LEVEL level = SecurityAnonymous;
     DWORD size;
 
     FIXME("(%p, 0x%x, %u, %p, %u, %p, %u, %p, %p): stub\n",

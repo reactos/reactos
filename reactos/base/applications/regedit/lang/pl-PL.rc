@@ -30,7 +30,7 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&Informacje...", ID_HELP_ABOUT
+        MENUITEM "&Informacje", ID_HELP_ABOUT
     END
 END
 
@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&Podłącz rejestr sieciowy...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Odłącz rejestr sieciowy...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Drukuj\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Drukuj...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Za&kończ", ID_REGISTRY_EXIT
     END
@@ -73,7 +73,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Kopiuj nazwę klucza", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Znajdź\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Znajdź...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Zn&ajdź następny\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Widok"
@@ -133,7 +133,7 @@ BEGIN
             MENUITEM "Wartość &wielociągu", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Wartość ciągu &rozwijalnego", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Znajdź", ID_EDIT_FIND
+        MENUITEM "&Znajdź...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "U&suń", ID_TREE_DELETE
         MENUITEM "Z&mień nazwę", ID_TREE_RENAME

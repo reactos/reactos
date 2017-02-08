@@ -57,6 +57,13 @@ Size = 60,4 Mio
 URLDownload = http://download.microsoft.com/download/5/6/E/56E4DBA3-D725-43EA-B1E5-DC148022999C/PowerPointViewer.exe
 SHA1 = 5cf30cc86d5bc76f7c715a1d07499f21b9f57bac
 
+[Section.0419]
+License = Неизвестно
+Description = Бесплатная программа для просмотра офесных форматов (*.ppt).
+URLDownload = http://download.microsoft.com/download/C/9/4/C9419731-CC9C-4847-BFB6-0444F97D7BD5/PowerPointViewer.exe
+Size = 60,5 МиБ
+SHA1 = d465a85621f1c93cd34c882169e21897e0dc2766
+
 [Section.041f]
 Name = Microsoft Powerpoint Görüntüleyici
 License = Bilinmiyor
@@ -72,7 +79,7 @@ URLDownload = http://download.microsoft.com/download/C/E/8/CE879E6E-D3F3-4234-A9
 SHA1 = b5c45563401e2b2d28c79f1b992ecd12f47a9938
 
 [Section.0804]
-Licence = 未知
+License = 未知
 Size = 60.8 MiB
 Description = 免费软件演示文稿查看器 Office 格式 (*.ppt)。
 URLDownload = http://download.microsoft.com/download/2/9/C/29CA8826-374F-4EFB-B477-A26D1CF6E1BD/PowerPointViewer.exe

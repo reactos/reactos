@@ -395,8 +395,8 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 			2 + len_program +	/* AlternateShell */
 			2 + len_directory +	/* WorkingDir */
 			/* size of TS_EXTENDED_INFO_PACKET */
-			2 +	/* clientAdressFamily */
-			2 +	/* cbClientAdress */
+			2 +	/* clientAddressFamily */
+			2 +	/* cbClientAddress */
 			len_ip +	/* clientAddress */
 			2 +	/* cbClientDir */
 			len_dll +	/* clientDir */

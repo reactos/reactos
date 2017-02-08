@@ -21,7 +21,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über ...", IDM_ABOUT
+        MENUITEM "&Über...", IDM_ABOUT
     END
 END
 

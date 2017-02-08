@@ -26,6 +26,10 @@
 
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+/*
+ * This is the common code for harddisk for both the PC and the XBOX.
+ */
+
 typedef struct tagDISKCONTEXT
 {
     UCHAR DriveNumber;
@@ -36,17 +40,21 @@ typedef struct tagDISKCONTEXT
 } DISKCONTEXT;
 
 extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern CHAR reactos_arc_strings[32][256];
+extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 static CHAR Hex[] = "0123456789abcdef";
+
 UCHAR PcBiosDiskCount = 0;
-CHAR PcDiskIdentifier[32][20];
+static CHAR PcDiskIdentifier[32][20];
+
 PVOID DiskReadBuffer;
 SIZE_T DiskReadBufferSize;
 
 
-static ARC_STATUS DiskClose(ULONG FileId)
+/* FUNCTIONS *****************************************************************/
+
+static ARC_STATUS
+DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -54,7 +62,8 @@ static ARC_STATUS DiskClose(ULONG FileId)
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+static ARC_STATUS
+DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -65,7 +74,8 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS
+DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
     UCHAR DriveNumber;
@@ -85,9 +95,12 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     }
     else
     {
-        /* This is either a floppy disk device (DrivePartition == 0) or
-         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
-         * it doesn't matter which one because they both have 512 bytes per sector */
+        /*
+         * This is either a floppy disk device (DrivePartition == 0) or
+         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF)
+         * but it doesn't matter which one because they both have 512 bytes
+         * per sector.
+         */
         SectorSize = 512;
     }
 
@@ -95,13 +108,21 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     {
         if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
+
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
     }
+#if 0 // FIXME: Investigate
+    else
+    {
+        SectorCount = 0; /* FIXME */
+    }
+#endif
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
     if (!Context)
         return ENOMEM;
+
     Context->DriveNumber = DriveNumber;
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
@@ -112,7 +133,8 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+static ARC_STATUS
+DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
@@ -124,7 +146,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
 
-    ret = 1;
+    ret = TRUE;
 
     while (TotalSectors)
     {
@@ -132,11 +154,10 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         if (ReadSectors > MaxSectors)
             ReadSectors = MaxSectors;
 
-        ret = MachDiskReadLogicalSectors(
-            Context->DriveNumber,
-            SectorOffset,
-            ReadSectors,
-            DiskReadBuffer);
+        ret = MachDiskReadLogicalSectors(Context->DriveNumber,
+                                         SectorOffset,
+                                         ReadSectors,
+                                         DiskReadBuffer);
         if (!ret)
             break;
 
@@ -157,7 +178,8 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return (!ret) ? EIO : ESUCCESS;
 }
 
-static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+static ARC_STATUS
+DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -170,7 +192,8 @@ static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekM
     return ESUCCESS;
 }
 
-static const DEVVTBL DiskVtbl = {
+static const DEVVTBL DiskVtbl =
+{
     DiskClose,
     DiskGetFileInformation,
     DiskOpen,
@@ -178,23 +201,22 @@ static const DEVVTBL DiskVtbl = {
     DiskSeek,
 };
 
+
 PCHAR
-GetHarddiskIdentifier(
-    UCHAR DriveNumber)
+GetHarddiskIdentifier(UCHAR DriveNumber)
 {
     return PcDiskIdentifier[DriveNumber - 0x80];
 }
 
-VOID
-GetHarddiskInformation(
-    UCHAR DriveNumber)
+static VOID
+GetHarddiskInformation(UCHAR DriveNumber)
 {
     PMASTER_BOOT_RECORD Mbr;
-    ULONG *Buffer;
+    PULONG Buffer;
     ULONG i;
     ULONG Checksum;
     ULONG Signature;
-    CHAR ArcName[256];
+    CHAR ArcName[MAX_PATH];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     PCHAR Identifier = PcDiskIdentifier[DriveNumber - 0x80];
 
@@ -208,12 +230,12 @@ GetHarddiskInformation(
     Buffer = (ULONG*)DiskReadBuffer;
     Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
 
-    Signature =  Mbr->Signature;
+    Signature = Mbr->Signature;
     TRACE("Signature: %x\n", Signature);
 
     /* Calculate the MBR checksum */
     Checksum = 0;
-    for (i = 0; i < 128; i++)
+    for (i = 0; i < 512 / sizeof(ULONG); i++)
     {
         Checksum += Buffer[i];
     }
@@ -221,12 +243,12 @@ GetHarddiskInformation(
     TRACE("Checksum: %x\n", Checksum);
 
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info[reactos_disk_count].Signature = Signature;
-    reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
     sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)", reactos_disk_count);
-    strcpy(reactos_arc_strings[reactos_disk_count], ArcName);
-    reactos_arc_disk_info[reactos_disk_count].ArcName =
-        reactos_arc_strings[reactos_disk_count];
+    strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
+        reactos_arc_disk_info[reactos_disk_count].ArcName;
     reactos_disk_count++;
 
     sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);
@@ -265,56 +287,61 @@ GetHarddiskInformation(
     Identifier[15] = Hex[(Signature >> 4) & 0x0F];
     Identifier[16] = Hex[Signature & 0x0F];
     Identifier[17] = '-';
-    Identifier[18] = 'A';
+    Identifier[18] = 'A'; // FIXME: Not always 'A' ...
     Identifier[19] = 0;
     TRACE("Identifier: %s\n", Identifier);
 }
 
-
 BOOLEAN
-HwInitializeBiosDisks(VOID)
+PcInitializeBootDevices(VOID)
 {
     UCHAR DiskCount, DriveNumber;
     ULONG i;
     BOOLEAN Changed;
-    CHAR BootPath[512];
     BOOLEAN BootDriveReported = FALSE;
+    CHAR BootPath[MAX_PATH];
 
     /* Count the number of visible drives */
     DiskReportError(FALSE);
     DiskCount = 0;
     DriveNumber = 0x80;
 
-    /* There are some really broken BIOSes out there. There are even BIOSes
-        * that happily report success when you ask them to read from non-existent
-        * harddisks. So, we set the buffer to known contents first, then try to
-        * read. If the BIOS reports success but the buffer contents haven't
-        * changed then we fail anyway */
-    memset(DiskReadBuffer, 0xcd, 512);
+    /*
+     * There are some really broken BIOSes out there. There are even BIOSes
+     * that happily report success when you ask them to read from non-existent
+     * harddisks. So, we set the buffer to known contents first, then try to
+     * read. If the BIOS reports success but the buffer contents haven't
+     * changed then we fail anyway.
+     */
+    memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
     while (MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, DiskReadBuffer))
     {
         Changed = FALSE;
-        for (i = 0; ! Changed && i < 512; i++)
+        for (i = 0; !Changed && i < DiskReadBufferSize; i++)
         {
             Changed = ((PUCHAR)DiskReadBuffer)[i] != 0xcd;
         }
-        if (! Changed)
+        if (!Changed)
         {
             TRACE("BIOS reports success for disk %d but data didn't change\n",
-                      (int)DiskCount);
+                  (int)DiskCount);
             break;
         }
 
+        /* Cache the BIOS hard disk information for later use */
         GetHarddiskInformation(DriveNumber);
 
+        /* Check if we have seen the boot drive */
         if (FrldrBootDrive == DriveNumber)
             BootDriveReported = TRUE;
 
         DiskCount++;
         DriveNumber++;
-        memset(DiskReadBuffer, 0xcd, 512);
+        memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
     }
     DiskReportError(TRUE);
+    TRACE("BIOS reports %d harddisk%s\n",
+          (int)DiskCount, (DiskCount == 1) ? "" : "s");
 
     /* Get the drive we're booting from */
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
@@ -323,18 +350,25 @@ HwInitializeBiosDisks(VOID)
     if ((FrldrBootDrive >= 0x80 && !BootDriveReported) ||
         DiskIsDriveRemovable(FrldrBootDrive))
     {
-        /* TODO: Check if it's really a cdrom drive */
-        ULONG* Buffer;
+        /* TODO: Check if it's really a CDROM drive */
+
+        PMASTER_BOOT_RECORD Mbr;
+        PULONG Buffer;
         ULONG Checksum = 0;
+        ULONG Signature;
 
         /* Read the MBR */
         if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, DiskReadBuffer))
         {
-          ERR("Reading MBR failed\n");
-          return FALSE;
+            ERR("Reading MBR failed\n");
+            return FALSE;
         }
 
         Buffer = (ULONG*)DiskReadBuffer;
+        Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
+
+        Signature = Mbr->Signature;
+        TRACE("Signature: %x\n", Signature);
 
         /* Calculate the MBR checksum */
         for (i = 0; i < 2048 / sizeof(ULONG); i++) Checksum += Buffer[i];
@@ -342,10 +376,11 @@ HwInitializeBiosDisks(VOID)
         TRACE("Checksum: %x\n", Checksum);
 
         /* Fill out the ARC disk block */
-        reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
-        strcpy(reactos_arc_strings[reactos_disk_count], BootPath);
-        reactos_arc_disk_info[reactos_disk_count].ArcName =
-            reactos_arc_strings[reactos_disk_count];
+        reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
+        reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
+        strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, BootPath);
+        reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
+            reactos_arc_disk_info[reactos_disk_count].ArcName;
         reactos_disk_count++;
 
         FsRegisterDevice(BootPath, &DiskVtbl);
@@ -356,5 +391,5 @@ HwInitializeBiosDisks(VOID)
     TRACE("BIOS reports %d harddisk%s\n",
           (int)DiskCount, (DiskCount == 1) ? "": "s");
 
-    return DiskCount != 0;
+    return (DiskCount != 0);
 }

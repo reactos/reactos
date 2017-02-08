@@ -68,7 +68,7 @@ DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 
     /* try to find the pointer in our ht */
     while ((ptr = hash_table_iter_up(&hti))) {
-        idx_to_ptr = GET_ENTRY(ptr, struct symt_idx_to_ptr, hash_elt);
+        idx_to_ptr = CONTAINING_RECORD(ptr, struct symt_idx_to_ptr, hash_elt);
         if (idx_to_ptr->sym == sym)
             return idx_to_ptr->idx;
     }
@@ -430,7 +430,7 @@ struct symt_block* symt_close_func_block(struct module* module,
 
     if (pc) block->size = func->address + pc - block->address;
     return (block->container->tag == SymTagBlock) ? 
-        GET_ENTRY(block->container, struct symt_block, symt) : NULL;
+        CONTAINING_RECORD(block->container, struct symt_block, symt) : NULL;
 }
 
 struct symt_hierarchy_point* symt_add_function_point(struct module* module,
@@ -749,7 +749,7 @@ static BOOL symt_enum_module(struct module_pair* pair, const WCHAR* match,
     hash_table_iter_init(&pair->effective->ht_symbols, &hti, NULL);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+        sym = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
         nameW = symt_get_nameW(&sym->symt);
         ret = SymMatchStringW(nameW, match, FALSE);
         HeapFree(GetProcessHeap(), 0, nameW);
@@ -1337,7 +1337,7 @@ static BOOL find_name(struct process* pcs, struct module* module, const char* na
     hash_table_iter_init(&pair.effective->ht_symbols, &hti, name);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+        sym = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
 
         if (!strcmp(sym->hash_elt.name, name))
         {
@@ -2156,7 +2156,7 @@ BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
     {
         unsigned int    i;
 
-        sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+        sym = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
         if (sym->symt.tag != SymTagFunction) continue;
 
         sci.FileName[0] = '\0';

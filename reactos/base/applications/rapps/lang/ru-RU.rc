@@ -23,7 +23,7 @@ BEGIN
     POPUP "Справка"
     BEGIN
         MENUITEM "Содержание\tF1", ID_HELP, GRAYED
-        MENUITEM "О программе...", ID_ABOUT
+        MENUITEM "О программе", ID_ABOUT
     END
 END
 
@@ -201,6 +201,6 @@ BEGIN
     IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
-    IDS_INTERRUPTED_DOWNLOAD "The download was interrupted. Check connection to Internet."
-    IDS_UNABLE_TO_WRITE "Unable to write to disk. Disk may be at capacity."
+    IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
+    IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
 END

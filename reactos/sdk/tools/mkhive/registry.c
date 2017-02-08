@@ -582,6 +582,7 @@ RegSetValueExW(
         /* The value already exists, use it. Get the value cell. */
         ValueCell = HvGetCell(&Key->RegistryHive->Hive, CellIndex);
         ASSERT(ValueCell != NULL);
+        Status = STATUS_SUCCESS;
     }
 
     // /**/HvReleaseCell(Hive, CellIndex);/**/
@@ -629,7 +630,7 @@ RegSetValueExW(
             NewOffset = HvAllocateCell(Hive, cbData, Stable, HCELL_NIL);
             if (NewOffset == HCELL_NIL)
             {
-                DPRINT("HvAllocateCell() failed with status 0x%08x\n", Status);
+                DPRINT("HvAllocateCell() has failed!\n");
                 return ERROR_UNSUCCESSFUL;
             }
 
@@ -660,8 +661,7 @@ RegSetValueExW(
     /* Save the write time */
     KeQuerySystemTime(&KeyNode->LastWriteTime);
 
-    DPRINT("Return status 0x%08x\n", Status);
-    return Status;
+    return ERROR_SUCCESS;
 }
 
 

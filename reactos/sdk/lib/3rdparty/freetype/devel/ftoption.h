@@ -77,6 +77,36 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* If you enable this configuration option, FreeType recognizes an       */
+  /* environment variable called `FREETYPE_PROPERTIES', which can be used  */
+  /* to control the various font drivers and modules.  The controllable    */
+  /* properties are listed in the section `Controlling FreeType Modules'   */
+  /* in the reference's table of contents; currently there are properties  */
+  /* for the auto-hinter (file `ftautoh.h'), CFF (file `ftcffdrv.h'), and  */
+  /* TrueType (file `ftttdrv.h').                                          */
+  /*                                                                       */
+  /* `FREETYPE_PROPERTIES' has the following syntax form (broken here into */
+  /* multiple lines for better readability).                               */
+  /*                                                                       */
+  /*   <optional whitespace>                                               */
+  /*   <module-name1> ':'                                                  */
+  /*   <property-name1> '=' <property-value1>                              */
+  /*   <whitespace>                                                        */
+  /*   <module-name2> ':'                                                  */
+  /*   <property-name2> '=' <property-value2>                              */
+  /*   ...                                                                 */
+  /*                                                                       */
+  /* Example:                                                              */
+  /*                                                                       */
+  /*   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \               */
+  /*                       cff:no-stem-darkening=1 \                       */
+  /*                       autofitter:warping=1                            */
+  /*                                                                       */
+//#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* Uncomment the line below if you want to activate sub-pixel rendering  */
   /* (a.k.a. LCD rendering, or ClearType) in this build of the library.    */
   /*                                                                       */
@@ -492,7 +522,21 @@ FT_BEGIN_HEADER
   /*   code will be used.                                                  */
   /*                                                                       */
   /*   Setting this macro is needed for systems that prohibit address      */
-  /*   fixups, such as BREW.                                               */
+  /*   fixups, such as BREW.  [Note that standard compilers like gcc or    */
+  /*   clang handle PIC generation automatically; you don't have to set    */
+  /*   FT_CONFIG_OPTION_PIC, which is only necessary for very special      */
+  /*   compilers.]                                                         */
+  /*                                                                       */
+  /*   Note that FT_CONFIG_OPTION_PIC support is not available for all     */
+  /*   modules (see `modules.cfg' for a complete list).  For building with */
+  /*   FT_CONFIG_OPTION_PIC support, do the following.                     */
+  /*                                                                       */
+  /*     0. Clone the repository.                                          */
+  /*     1. Define FT_CONFIG_OPTION_PIC.                                   */
+  /*     2. Remove all subdirectories in `src' that don't have             */
+  /*        FT_CONFIG_OPTION_PIC support.                                  */
+  /*     3. Comment out the corresponding modules in `modules.cfg'.        */
+  /*     4. Compile.                                                       */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_PIC */
 
@@ -586,23 +630,53 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* Define TT_CONFIG_OPTION_SUBPIXEL_HINTING if you want to compile       */
-  /* EXPERIMENTAL subpixel hinting support into the TrueType driver.  This */
-  /* replaces the native TrueType hinting mechanism when anything but      */
-  /* FT_RENDER_MODE_MONO is requested.                                     */
+  /* subpixel hinting support into the TrueType driver.  This modifies the */
+  /* TrueType hinting mechanism when anything but FT_RENDER_MODE_MONO is   */
+  /* requested.                                                            */
   /*                                                                       */
-  /* Enabling this causes the TrueType driver to ignore instructions under */
-  /* certain conditions.  This is done in accordance with the guide here,  */
-  /* with some minor differences:                                          */
+  /* In particular, it modifies the bytecode interpreter to interpret (or  */
+  /* not) instructions in a certain way so that all TrueType fonts look    */
+  /* like they do in a Windows ClearType (DirectWrite) environment.  See   */
+  /* [1] for a technical overview on what this means.  See `ttinterp.h'    */
+  /* for more details on the LEAN option.                                  */
   /*                                                                       */
-  /*  http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx */
+  /* There are three options.                                              */
   /*                                                                       */
-  /* By undefining this, you only compile the code necessary to hint       */
-  /* TrueType glyphs with native TT hinting.                               */
+  /* 1. This option is associated with the `Infinality' moniker.           */
+  /*    Contributed by an individual nicknamed Infinality with the goal of */
+  /*    making TrueType fonts render better than on Windows.  A high       */
+  /*    amount of configurability and flexibility, down to rules for       */
+  /*    single glyphs in fonts, but also very slow.  Its experimental and  */
+  /*    slow nature and the original developer losing interest meant that  */
+  /*    this option was never enabled in default builds.                   */
   /*                                                                       */
-  /*   This option requires TT_CONFIG_OPTION_BYTECODE_INTERPRETER to be    */
-  /*   defined.                                                            */
+  /* 2. The new default mode for the TrueType driver.  The Infinality code */
+  /*    base was stripped to the bare minimum and all configurability      */
+  /*    removed in the name of speed and simplicity.  The configurability  */
+  /*    was mainly aimed at legacy fonts like Arial, Times New Roman, or   */
+  /*    Courier.  Legacy fonts are fonts that modify vertical stems to     */
+  /*    achieve clean black-and-white bitmaps.  The new mode focuses on    */
+  /*    applying a minimal set of rules to all fonts indiscriminately so   */
+  /*    that modern and web fonts render well while legacy fonts render    */
+  /*    okay.                                                              */
   /*                                                                       */
-#define TT_CONFIG_OPTION_SUBPIXEL_HINTING
+  /* 3. Compile both.                                                      */
+  /*                                                                       */
+  /* By undefining these, you get rendering behavior like on Windows       */
+  /* without ClearType, i.e., Windows XP without ClearType enabled and     */
+  /* Win9x (interpreter version v35).  Or not, depending on how much       */
+  /* hinting blood and testing tears the font designer put into a given    */
+  /* font.  If you define one or both subpixel hinting options, you can    */
+  /* switch between between v35 and the ones you define.                   */
+  /*                                                                       */
+  /* This option requires TT_CONFIG_OPTION_BYTECODE_INTERPRETER to be      */
+  /* defined.                                                              */
+  /*                                                                       */
+  /* [1] http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx */
+  /*                                                                       */
+/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  1     */
+/* #define TT_CONFIG_OPTION_SUBPIXEL_HINTING  2     */
+#define TT_CONFIG_OPTION_SUBPIXEL_HINTING     ( 1 | 2 )
 
 
   /*************************************************************************/
@@ -811,6 +885,14 @@ FT_BEGIN_HEADER
    */
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
 #define  TT_USE_BYTECODE_INTERPRETER
+
+#if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 1
+#define  TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+#endif
+
+#if TT_CONFIG_OPTION_SUBPIXEL_HINTING & 2
+#define  TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+#endif
 #endif
 
 

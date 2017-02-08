@@ -159,7 +159,7 @@ static struct symt* symt_find_type_by_name(const struct module* module,
     hash_table_iter_init(&module->ht_types, &hti, typename);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        type = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+        type = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
 
         if ((sym_tag == SymTagNull || type->symt.tag == sym_tag) &&
             type->hash_elt.name && !strcmp(type->hash_elt.name, typename))

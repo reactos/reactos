@@ -11,8 +11,8 @@ STRINGTABLE
     STRING_COPY,     "%1!d! файл(ов) скопировано.\n"
     STRING_QISDIR,   "'%1' является файлом или папкой?\n\
                      (F - Файл, D - Папка)\n"
-    STRING_SRCPROMPT,"%1? (Yes|No)\n"
-    STRING_OVERWRITE,"Переписать %1? (Yes|No|All)\n"
+    STRING_SRCPROMPT,"%1? (Yes-Да|No-Нет)\n"
+    STRING_OVERWRITE,"Переписать %1? (Yes-Да|No-Нет|All-Все)\n"
     STRING_COPYFAIL, "При копировании '%1' в '%2' произошла ошибка: %3!d!\n"
     STRING_OPENFAIL, "Невозможно открыть '%1'\n"
     STRING_READFAIL, "При чтении '%1' произошла ошибка\n"

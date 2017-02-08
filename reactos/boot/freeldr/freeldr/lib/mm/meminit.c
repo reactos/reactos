@@ -674,7 +674,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCou
     StartPage -= MmLowestPhysicalPage;
 
     // Make sure they aren't trying to go past the
-    // end of availabe memory
+    // end of available memory
     if ((StartPage + PageCount) > TotalPageCount)
     {
         return FALSE;
@@ -683,7 +683,7 @@ BOOLEAN MmAreMemoryPagesAvailable(PVOID PageLookupTable, PFN_NUMBER TotalPageCou
     for (Index = StartPage; Index < (StartPage + PageCount); Index++)
     {
         // If this page is allocated then there obviously isn't
-        // memory availabe so return FALSE
+        // memory available so return FALSE
         if (RealPageLookupTable[Index].PageAllocated != LoaderFree)
         {
             return FALSE;

@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature="$ReactOS$"
 
 [AddReg]
@@ -17,11 +17,6 @@ HKCR,"Folder\shell\open\command","",0x00000000,"explorer.exe ""%1"""
 HKCR,"Folder\shell\explore","BrowserFlags",0x00010001,"0x00000022"
 HKCR,"Folder\shell\explore","ExplorerFlags",0x00010001,"0x00000021"
 HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
-
-; Drive property page
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}","",0x00000000,"Drive Property Page Extension"
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","",0x00000000,"shell32.dll"
-HKCR,"CLSID\{5F5295E0-429F-1069-A2E2-08002B30309D}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
@@ -58,6 +53,7 @@ HKCR,"anifile\DefaultIcon","",0x00000000,"%1"
 ; ReactOS Batch Files
 HKCR,".bat","",0x00000000,"batfile"
 HKCR,"batfile","",0x00000000,"ReactOS Batch File"
+HKCR,"batfile","EditFlags",0x00010001,0x00000010
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
@@ -66,6 +62,7 @@ HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; ReactOS Command Script Files
 HKCR,".cmd","",0x00000000,"cmdfile"
 HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
+HKCR,"cmdfile","EditFlags",0x00010001,0x00000010
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
 HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
@@ -74,6 +71,7 @@ HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
 HKCR,"comfile","",0x00000000,"DOS Application"
+HKCR,"comfile","EditFlags",0x00010001,0x00000010
 HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-203"
 HKCR,"comfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-3"
 HKCR,"comfile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -97,6 +95,7 @@ HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
 HKCR,"dllfile","",0x00000000,"Application Extension"
+HKCR,"dllfile","EditFlags",0x00010001,0x00000001
 HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-206"
 HKCR,"dllfile","NoOpen",0x00000000,""
 HKCR,"dllfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
@@ -110,6 +109,7 @@ HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154
 ; Applications
 HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile","",0x00000000,"Application"
+HKCR,"exefile","EditFlags",0x00010001,0x00000010
 HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-208"
 HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
@@ -193,10 +193,17 @@ HKCR,".jpg","PerceivedType",0x00000000,"image"
 HKCR,".jpeg","",0x00000000,"jpegfile"
 HKCR,".jpeg","Content Type",0x00000000,"image/jpeg"
 HKCR,".jpeg","PerceivedType",0x00000000,"image"
+HKCR,".jpe","",0x00000000,"jpegfile"
+HKCR,".jpe","Content Type",0x00000000,"image/jpeg"
+HKCR,".jpe","PerceivedType",0x00000000,"image"
+HKCR,".jfif","",0x00000000,"jpegfile"
+HKCR,".jfif","Content Type",0x00000000,"image/jpeg"
+HKCR,".jfif","PerceivedType",0x00000000,"image"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
 HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
@@ -204,10 +211,14 @@ HKCR,".bmp","Content Type",0x00000000,"image/bmp"
 HKCR,".bmp","PerceivedType",0x00000000,"image"
 HKCR,".bmp\shellnew","",0x00000000,""
 HKCR,".bmp\shellnew","NullFile",0x00020000,""
+HKCR,".dib","",0x00000000,"bmpfile"
+HKCR,".dib","Content Type",0x00000000,"image/bmp"
+HKCR,".dib","PerceivedType",0x00000000,"image"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
@@ -217,6 +228,7 @@ HKCR,"pngfile","",0x00000000,"PNG Image"
 HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; TIF Images
 HKCR,".tif","",0x00000000,"TIFImage.Document"
@@ -229,6 +241,7 @@ HKCR,"TIFImage.Document","",0x00000000,"TIF Image"
 HKCR,"TIFImage.Document","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-306"
 HKCR,"TIFImage.Document\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
 
 ; WMF Images
 HKCR,".wmf","",0x00000000,"wmffile"
@@ -261,6 +274,7 @@ HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,".lnk\shellnew","",0x00000000,""
 HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere %1"
 HKCR,"lnkfile","",0x00000000,"Shortcut"
+HKCR,"lnkfile","EditFlags",0x00010001,0x00000001
 HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-215"
 HKCR,"lnkfile","IsShortcut",0x00000000,"yes"
 HKCR,"lnkfile","NeverShowExt",0x00000000,""
@@ -321,6 +335,7 @@ HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\
 ; Program Information File for NT VDM
 HKCR,".pif","",0x00000000,"piffile"
 HKCR,"piffile","",0x00000000,"NT VDM Program Information File"
+HKCR,"piffile","EditFlags",0x00010001,0x00000001
 HKCR,"piffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-216"
 HKCR,"piffile","IsShortcut",0x00000000,"yes"
 HKCR,"piffile","NeverShowExt",0x00000000,""
@@ -333,6 +348,14 @@ HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
 HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
 HKCR,"regfile\shell\open","",0x00000000,%MERGE%
 HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
+
+; Remote Desktop File
+HKCR,".rdp","",0x00000000,"rdpfile"
+HKCR,"rdpfile","",0x00000000,"Remote Desktop Connection"
+;HKCR,"rdpfile","FriendlyTypeName",0x00020000,"%SystemRoot%\mstsc.exe,-4004"
+HKCR,"rdpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mstsc.exe,0"
+HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe %1"
+;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit %1"
 
 ; Screen Savers
 HKCR,".scr","",0x00000000,"scrfile"
@@ -710,6 +733,28 @@ CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
 
+; LANG_ITALIAN SUBLANG_NEUTRAL
+[Strings.0010]
+CPLFILE_OPENWITH="Aprire con il Pannello di Controllo"
+
+CHMFILE="File della guida HTML compilato"
+XMLFILE="Documento XML"
+XSLFILE="Foglio di stile XSL"
+MSIPACK="Pacchetto di installazione di ReactOS"
+MSSTYLESFILE="File di stili visivi"
+THEMEFILE="File di tema visivo"
+WAVFILE="Audio wave"
+MIDFILE="Sequenza MIDI"
+CDAFILE="Traccia Audio CD"
+AVIFILE="Filmato video"
+MERGE="Unione"
+CONFIGURE="Configura"
+INSTALL="Installa"
+UNINSTALL="Rimuovi"
+REPAIR="Ripara"
+TEST="Prova"
+
+
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
@@ -720,9 +765,8 @@ CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
 CPLFILE_OPENWITH="Deschide în Panoul de control"
 
 CHMFILE="Manual compilat din HTML"
-HTMLFILE="Fișier HTML"
 XMLFILE="Document XML"
-XSLFILE="Fișier de stil XSL"
+XSLFILE="Foaie de stil XSL"
 MSIPACK="Pachet de instalare ReactOS"
 MSSTYLESFILE="Fișier de stil vizual"
 THEMEFILE="Temă de interfață grafică"
@@ -730,6 +774,16 @@ WAVFILE="Fișier audio Wave"
 MIDFILE="Secvență audio MIDI"
 CDAFILE="Pistă de CD audio"
 AVIFILE="Fișier video"
+CSSFILE="Foaie de stiluri în cascadă"
+OCXFILE="Extensie de control OLE"
+SCFFILE="Comandă de Explorator ReactOS"
+WMZFILE="Metafișier îmbunătățit comprimat"
+MERGE="Unește"
+CONFIGURE="Configurează"
+INSTALL="Instalează"
+UNINSTALL="Dezinstalează"
+REPAIR="Repară"
+TEST="Testează"
 
 
 ; LANG_RUSSIAN SUBLANG_NEUTRAL

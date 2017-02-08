@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "บันทืกเป็น...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "ปรับแต่งหน้า...", CMD_PAGE_SETUP
-        MENUITEM "พิมพ์\tCtrl+P", CMD_PRINT
+        MENUITEM "พิมพ์...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "ออก", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "ค้นหา\tCtrl+F", CMD_SEARCH
         MENUITEM "ค้นหาต่อไป\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "เลือกทั้งหมด\tCtrl+A", CMD_SELECT_ALL

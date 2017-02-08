@@ -18,6 +18,8 @@
 
 #include "jscript.h"
 
+#include <wine/rbtree.h>
+
 WINE_DECLARE_DEBUG_CHANNEL(jscript_disas);
 
 typedef struct _statement_ctx_t {
@@ -34,6 +36,12 @@ typedef struct _statement_ctx_t {
 } statement_ctx_t;
 
 typedef struct {
+    struct wine_rb_entry entry;
+    BSTR name;
+    int ref;
+} function_local_t;
+
+typedef struct {
     parser_ctx_t *parser;
     bytecode_t *code;
 
@@ -46,14 +54,16 @@ typedef struct {
     unsigned labels_size;
     unsigned labels_cnt;
 
+    struct wine_rb_tree locals;
+    unsigned locals_cnt;
+
     statement_ctx_t *stat_ctx;
     function_code_t *func;
 
-    variable_declaration_t *var_head;
-    variable_declaration_t *var_tail;
-
     function_expression_t *func_head;
     function_expression_t *func_tail;
+
+    heap_pool_t heap;
 } compiler_ctx_t;
 
 static const struct {
@@ -399,6 +409,40 @@ static inline BOOL is_memberid_expr(expression_type_t type)
     return type == EXPR_IDENT || type == EXPR_MEMBER || type == EXPR_ARRAY;
 }
 
+static BOOL bind_local(compiler_ctx_t *ctx, const WCHAR *identifier, int *ret_ref)
+{
+    statement_ctx_t *iter;
+    local_ref_t *ref;
+
+    for(iter = ctx->stat_ctx; iter; iter = iter->next) {
+        if(iter->using_scope)
+            return FALSE;
+    }
+
+    ref = lookup_local(ctx->func, identifier);
+    if(!ref)
+        return FALSE;
+
+    *ret_ref = ref->ref;
+    return TRUE;
+}
+
+static HRESULT emit_identifier_ref(compiler_ctx_t *ctx, const WCHAR *identifier, unsigned flags)
+{
+    int local_ref;
+    if(bind_local(ctx, identifier, &local_ref))
+        return push_instr_int(ctx, OP_local_ref, local_ref);
+    return push_instr_bstr_uint(ctx, OP_identid, identifier, flags);
+}
+
+static HRESULT emit_identifier(compiler_ctx_t *ctx, const WCHAR *identifier)
+{
+    int local_ref;
+    if(bind_local(ctx, identifier, &local_ref))
+        return push_instr_int(ctx, OP_local, local_ref);
+    return push_instr_bstr(ctx, OP_ident, identifier);
+}
+
 static HRESULT compile_memberid_expression(compiler_ctx_t *ctx, expression_t *expr, unsigned flags)
 {
     HRESULT hres = S_OK;
@@ -407,7 +451,7 @@ static HRESULT compile_memberid_expression(compiler_ctx_t *ctx, expression_t *ex
     case EXPR_IDENT: {
         identifier_expression_t *ident_expr = (identifier_expression_t*)expr;
 
-        hres = push_instr_bstr_uint(ctx, OP_identid, ident_expr->identifier, flags);
+        hres = emit_identifier_ref(ctx, ident_expr->identifier, flags);
         break;
     }
     case EXPR_ARRAY: {
@@ -550,12 +594,20 @@ static HRESULT compile_new_expression(compiler_ctx_t *ctx, call_expression_t *ex
         arg_cnt++;
     }
 
-    return push_instr_uint(ctx, OP_new, arg_cnt);
+    hres = push_instr_uint(ctx, OP_new, arg_cnt);
+    if(FAILED(hres))
+        return hres;
+
+    hres = push_instr_uint(ctx, OP_pop, arg_cnt+1);
+    if(FAILED(hres))
+        return hres;
+
+    return push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *expr, BOOL emit_ret)
 {
-    unsigned arg_cnt = 0;
+    unsigned arg_cnt = 0, extra_args;
     argument_t *arg;
     unsigned instr;
     jsop_t op;
@@ -563,9 +615,11 @@ static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *e
 
     if(is_memberid_expr(expr->expression->type)) {
         op = OP_call_member;
+        extra_args = 2;
         hres = compile_memberid_expression(ctx, expr->expression, 0);
     }else {
         op = OP_call;
+        extra_args = 1;
         hres = compile_expression(ctx, expr->expression, TRUE);
     }
 
@@ -585,7 +639,12 @@ static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *e
 
     instr_ptr(ctx, instr)->u.arg[0].uint = arg_cnt;
     instr_ptr(ctx, instr)->u.arg[1].lng = emit_ret;
-    return S_OK;
+
+    hres = push_instr_uint(ctx, OP_pop, arg_cnt + extra_args);
+    if(FAILED(hres))
+        return hres;
+
+    return !emit_ret || push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_delete_expression(compiler_ctx_t *ctx, unary_expression_t *expr)
@@ -849,17 +908,9 @@ static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expres
     return S_OK;
 }
 
-static HRESULT compile_function_expression(compiler_ctx_t *ctx, function_expression_t *expr)
+static HRESULT compile_function_expression(compiler_ctx_t *ctx, function_expression_t *expr, BOOL emit_ret)
 {
-    ctx->func_tail = ctx->func_tail ? (ctx->func_tail->next = expr) : (ctx->func_head = expr);
-
-    /* FIXME: not exactly right */
-    if(expr->identifier && !expr->event_target) {
-        ctx->func->func_cnt++;
-        return push_instr_bstr(ctx, OP_ident, expr->identifier);
-    }
-
-    return push_instr_uint(ctx, OP_func, ctx->func->func_cnt++);
+    return emit_ret ? push_instr_uint(ctx, OP_func, expr->func_id) : S_OK;
 }
 
 static HRESULT compile_expression(compiler_ctx_t *ctx, expression_t *expr, BOOL emit_ret)
@@ -944,8 +995,7 @@ static HRESULT compile_expression(compiler_ctx_t *ctx, expression_t *expr, BOOL 
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_eq2);
         break;
     case EXPR_FUNC:
-        hres = compile_function_expression(ctx, (function_expression_t*)expr);
-        break;
+        return compile_function_expression(ctx, (function_expression_t*)expr, emit_ret);
     case EXPR_GREATER:
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_gt);
         break;
@@ -953,7 +1003,7 @@ static HRESULT compile_expression(compiler_ctx_t *ctx, expression_t *expr, BOOL 
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_gteq);
         break;
     case EXPR_IDENT:
-        hres = push_instr_bstr(ctx, OP_ident, ((identifier_expression_t*)expr)->identifier);
+        hres = emit_identifier(ctx, ((identifier_expression_t*)expr)->identifier);
         break;
     case EXPR_IN:
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_in);
@@ -1076,25 +1126,22 @@ static HRESULT compile_variable_list(compiler_ctx_t *ctx, variable_declaration_t
 
     assert(list != NULL);
 
-    if(ctx->var_tail)
-        ctx->var_tail->global_next = list;
-    else
-        ctx->var_head = list;
-
     for(iter = list; iter; iter = iter->next) {
-        ctx->func->var_cnt++;
-        iter->global_next = iter->next;
-        if(!iter->next)
-            ctx->var_tail = iter;
-
         if(!iter->expr)
             continue;
+
+        hres = emit_identifier_ref(ctx, iter->identifier, 0);
+        if(FAILED(hres))
+            return hres;
 
         hres = compile_expression(ctx, iter->expr, TRUE);
         if(FAILED(hres))
             return hres;
 
-        hres = push_instr_bstr(ctx, OP_var_set, iter->identifier);
+        if(!push_instr(ctx, OP_assign))
+            return E_OUTOFMEMORY;
+
+        hres = push_instr_uint(ctx, OP_pop, 1);
         if(FAILED(hres))
             return hres;
     }
@@ -1292,7 +1339,7 @@ static HRESULT compile_forin_statement(compiler_ctx_t *ctx, forin_statement_t *s
         return hres;
 
     if(stat->variable) {
-        hres = push_instr_bstr_uint(ctx, OP_identid, stat->variable->identifier, fdexNameEnsure);
+        hres = emit_identifier_ref(ctx, stat->variable->identifier, fdexNameEnsure);
         if(FAILED(hres))
             return hres;
     }else if(is_memberid_expr(stat->expr->type)) {
@@ -1471,7 +1518,7 @@ static HRESULT compile_return_statement(compiler_ctx_t *ctx, expression_statemen
     if(FAILED(hres))
         return hres;
 
-    return push_instr(ctx, OP_ret) ? S_OK : E_OUTOFMEMORY;
+    return push_instr_uint(ctx, OP_ret, !stat->expr);
 }
 
 /* ECMA-262 3rd Edition    12.10 */
@@ -1766,6 +1813,380 @@ static HRESULT compile_statement(compiler_ctx_t *ctx, statement_ctx_t *stat_ctx,
     return hres;
 }
 
+static int function_local_cmp(const void *key, const struct wine_rb_entry *entry)
+{
+    function_local_t *local = WINE_RB_ENTRY_VALUE(entry, function_local_t, entry);
+    return strcmpW(key, local->name);
+}
+
+static inline function_local_t *find_local(compiler_ctx_t *ctx, const WCHAR *name)
+{
+    struct wine_rb_entry *entry = wine_rb_get(&ctx->locals, name);
+    return entry ? WINE_RB_ENTRY_VALUE(entry, function_local_t, entry) : NULL;
+}
+
+static BOOL alloc_local(compiler_ctx_t *ctx, BSTR name, int ref)
+{
+    function_local_t *local;
+
+    local = heap_pool_alloc(&ctx->heap, sizeof(*local));
+    if(!local)
+        return FALSE;
+
+    local->name = name;
+    local->ref = ref;
+    wine_rb_put(&ctx->locals, name, &local->entry);
+    ctx->locals_cnt++;
+    return TRUE;
+}
+
+static BOOL alloc_variable(compiler_ctx_t *ctx, const WCHAR *name)
+{
+    BSTR ident;
+
+    if(find_local(ctx, name))
+        return TRUE;
+
+    ident = compiler_alloc_bstr(ctx, name);
+    if(!ident)
+        return FALSE;
+
+    return alloc_local(ctx, ident, ctx->func->var_cnt++);
+}
+
+static BOOL visit_function_expression(compiler_ctx_t *ctx, function_expression_t *expr)
+{
+    expr->func_id = ctx->func->func_cnt++;
+    ctx->func_tail = ctx->func_tail ? (ctx->func_tail->next = expr) : (ctx->func_head = expr);
+
+    return !expr->identifier || expr->event_target || alloc_variable(ctx, expr->identifier);
+}
+
+static HRESULT visit_expression(compiler_ctx_t *ctx, expression_t *expr)
+{
+    HRESULT hres = S_OK;
+
+    switch(expr->type) {
+    case EXPR_ADD:
+    case EXPR_AND:
+    case EXPR_ARRAY:
+    case EXPR_ASSIGN:
+    case EXPR_ASSIGNADD:
+    case EXPR_ASSIGNAND:
+    case EXPR_ASSIGNSUB:
+    case EXPR_ASSIGNMUL:
+    case EXPR_ASSIGNDIV:
+    case EXPR_ASSIGNMOD:
+    case EXPR_ASSIGNOR:
+    case EXPR_ASSIGNLSHIFT:
+    case EXPR_ASSIGNRSHIFT:
+    case EXPR_ASSIGNRRSHIFT:
+    case EXPR_ASSIGNXOR:
+    case EXPR_BAND:
+    case EXPR_BOR:
+    case EXPR_COMMA:
+    case EXPR_DIV:
+    case EXPR_EQ:
+    case EXPR_EQEQ:
+    case EXPR_GREATER:
+    case EXPR_GREATEREQ:
+    case EXPR_IN:
+    case EXPR_INSTANCEOF:
+    case EXPR_LESS:
+    case EXPR_LESSEQ:
+    case EXPR_LSHIFT:
+    case EXPR_MOD:
+    case EXPR_MUL:
+    case EXPR_NOTEQ:
+    case EXPR_NOTEQEQ:
+    case EXPR_OR:
+    case EXPR_RSHIFT:
+    case EXPR_RRSHIFT:
+    case EXPR_SUB:
+    case EXPR_BXOR: {
+        binary_expression_t *binary_expr = (binary_expression_t*)expr;
+
+        hres = visit_expression(ctx, binary_expr->expression1);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_expression(ctx, binary_expr->expression2);
+        break;
+    }
+    case EXPR_BITNEG:
+    case EXPR_DELETE:
+    case EXPR_LOGNEG:
+    case EXPR_MINUS:
+    case EXPR_PLUS:
+    case EXPR_POSTDEC:
+    case EXPR_POSTINC:
+    case EXPR_PREDEC:
+    case EXPR_PREINC:
+    case EXPR_TYPEOF:
+    case EXPR_VOID:
+        hres = visit_expression(ctx, ((unary_expression_t*)expr)->expression);
+        break;
+    case EXPR_IDENT:
+    case EXPR_LITERAL:
+    case EXPR_THIS:
+        break;
+    case EXPR_ARRAYLIT: {
+        array_literal_expression_t *array_expr = (array_literal_expression_t*)expr;
+        array_element_t *iter;
+
+        for(iter = array_expr->element_list; iter; iter = iter->next) {
+            hres = visit_expression(ctx, iter->expr);
+            if(FAILED(hres))
+                return hres;
+        }
+        break;
+    }
+    case EXPR_CALL:
+    case EXPR_NEW: {
+        call_expression_t *call_expr = (call_expression_t*)expr;
+        argument_t *arg;
+
+        hres = visit_expression(ctx, call_expr->expression);
+        if(FAILED(hres))
+            return hres;
+
+        for(arg = call_expr->argument_list; arg; arg = arg->next) {
+            hres = visit_expression(ctx, arg->expr);
+            if(FAILED(hres))
+                return hres;
+        }
+        break;
+    }
+    case EXPR_COND: {
+        conditional_expression_t *cond_expr = (conditional_expression_t*)expr;
+
+        hres = visit_expression(ctx, cond_expr->expression);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_expression(ctx, cond_expr->true_expression);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_expression(ctx, cond_expr->false_expression);
+        break;
+    }
+    case EXPR_FUNC:
+        visit_function_expression(ctx, (function_expression_t*)expr);
+        break;
+    case EXPR_MEMBER:
+        hres = visit_expression(ctx, ((member_expression_t*)expr)->expression);
+        break;
+    case EXPR_PROPVAL: {
+        prop_val_t *iter;
+        for(iter = ((property_value_expression_t*)expr)->property_list; iter; iter = iter->next) {
+            hres = visit_expression(ctx, iter->value);
+            if(FAILED(hres))
+                return hres;
+        }
+        break;
+    }
+    DEFAULT_UNREACHABLE;
+    }
+
+    return hres;
+}
+
+static HRESULT visit_variable_list(compiler_ctx_t *ctx, variable_declaration_t *list)
+{
+    variable_declaration_t *iter;
+    HRESULT hres;
+
+    for(iter = list; iter; iter = iter->next) {
+        if(!alloc_variable(ctx, iter->identifier))
+            return E_OUTOFMEMORY;
+
+        if(iter->expr) {
+            hres = visit_expression(ctx, iter->expr);
+            if(FAILED(hres))
+                return hres;
+        }
+    }
+
+    return S_OK;
+}
+
+static HRESULT visit_statement(compiler_ctx_t*,statement_t*);
+
+static HRESULT visit_block_statement(compiler_ctx_t *ctx, statement_t *iter)
+{
+    HRESULT hres;
+
+    while(iter) {
+        hres = visit_statement(ctx, iter);
+        if(FAILED(hres))
+            return hres;
+
+        iter = iter->next;
+    }
+
+    return S_OK;
+}
+
+static HRESULT visit_statement(compiler_ctx_t *ctx, statement_t *stat)
+{
+    HRESULT hres = S_OK;
+
+    switch(stat->type) {
+    case STAT_BLOCK:
+        hres = visit_block_statement(ctx, ((block_statement_t*)stat)->stat_list);
+        break;
+    case STAT_BREAK:
+    case STAT_CONTINUE:
+    case STAT_EMPTY:
+        break;
+    case STAT_EXPR:
+    case STAT_RETURN:
+    case STAT_THROW: {
+        expression_statement_t *expr_stat = (expression_statement_t*)stat;
+        if(expr_stat->expr)
+            hres = visit_expression(ctx, expr_stat->expr);
+        break;
+    }
+    case STAT_FOR: {
+        for_statement_t *for_stat = (for_statement_t*)stat;
+
+        if(for_stat->variable_list)
+            hres = visit_variable_list(ctx, for_stat->variable_list);
+        else if(for_stat->begin_expr)
+            hres = visit_expression(ctx, for_stat->begin_expr);
+        if(FAILED(hres))
+            break;
+
+        if(for_stat->expr) {
+            hres = visit_expression(ctx, for_stat->expr);
+            if(FAILED(hres))
+                break;
+        }
+
+        hres = visit_statement(ctx, for_stat->statement);
+        if(FAILED(hres))
+            break;
+
+        if(for_stat->end_expr)
+            hres = visit_expression(ctx, for_stat->end_expr);
+        break;
+    }
+    case STAT_FORIN:  {
+        forin_statement_t *forin_stat = (forin_statement_t*)stat;
+
+        if(forin_stat->variable) {
+            hres = visit_variable_list(ctx, forin_stat->variable);
+            if(FAILED(hres))
+                break;
+        }
+
+        hres = visit_expression(ctx, forin_stat->in_expr);
+        if(FAILED(hres))
+            return hres;
+
+        if(forin_stat->expr) {
+            hres = visit_expression(ctx, forin_stat->expr);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        hres = visit_statement(ctx, forin_stat->statement);
+        break;
+    }
+    case STAT_IF: {
+        if_statement_t *if_stat = (if_statement_t*)stat;
+
+        hres = visit_expression(ctx, if_stat->expr);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_statement(ctx, if_stat->if_stat);
+        if(FAILED(hres))
+            return hres;
+
+        if(if_stat->else_stat)
+            hres = visit_statement(ctx, if_stat->else_stat);
+        break;
+    }
+    case STAT_LABEL:
+        hres = visit_statement(ctx, ((labelled_statement_t*)stat)->statement);
+        break;
+    case STAT_SWITCH: {
+        switch_statement_t *switch_stat = (switch_statement_t*)stat;
+        statement_t *stat_iter;
+        case_clausule_t *iter;
+
+        hres = visit_expression(ctx, switch_stat->expr);
+        if(FAILED(hres))
+            return hres;
+
+        for(iter = switch_stat->case_list; iter; iter = iter->next) {
+            if(!iter->expr)
+                continue;
+            hres = visit_expression(ctx, iter->expr);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        for(iter = switch_stat->case_list; iter; iter = iter->next) {
+            while(iter->next && iter->next->stat == iter->stat)
+                iter = iter->next;
+            for(stat_iter = iter->stat; stat_iter && (!iter->next || iter->next->stat != stat_iter);
+                stat_iter = stat_iter->next) {
+                hres = visit_statement(ctx, stat_iter);
+                if(FAILED(hres))
+                    return hres;
+            }
+        }
+        break;
+    }
+    case STAT_TRY: {
+        try_statement_t *try_stat = (try_statement_t*)stat;
+
+        hres = visit_statement(ctx, try_stat->try_statement);
+        if(FAILED(hres))
+            return hres;
+
+        if(try_stat->catch_block) {
+            hres = visit_statement(ctx, try_stat->catch_block->statement);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        if(try_stat->finally_statement)
+            hres = visit_statement(ctx, try_stat->finally_statement);
+        break;
+    }
+    case STAT_VAR:
+        hres = visit_variable_list(ctx, ((var_statement_t*)stat)->variable_list);
+        break;
+    case STAT_WHILE: {
+        while_statement_t *while_stat = (while_statement_t*)stat;
+
+        hres = visit_expression(ctx, while_stat->expr);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_statement(ctx, while_stat->statement);
+        break;
+    }
+    case STAT_WITH: {
+        with_statement_t *with_stat = (with_statement_t*)stat;
+
+        hres = visit_expression(ctx, with_stat->expr);
+        if(FAILED(hres))
+            return hres;
+
+        hres = visit_statement(ctx, with_stat->statement);
+        break;
+    }
+    DEFAULT_UNREACHABLE;
+    }
+
+    return hres;
+}
+
 static void resolve_labels(compiler_ctx_t *ctx, unsigned off)
 {
     instr_t *instr;
@@ -1830,34 +2251,22 @@ static HRESULT init_code(compiler_ctx_t *compiler, const WCHAR *source)
 static HRESULT compile_function(compiler_ctx_t *ctx, source_elements_t *source, function_expression_t *func_expr,
         BOOL from_eval, function_code_t *func)
 {
-    variable_declaration_t *var_iter;
     function_expression_t *iter;
+    function_local_t *local;
     unsigned off, i;
     HRESULT hres;
 
     TRACE("\n");
 
-    ctx->var_head = ctx->var_tail = NULL;
     ctx->func_head = ctx->func_tail = NULL;
     ctx->from_eval = from_eval;
-
-    off = ctx->code_off;
     ctx->func = func;
-    hres = compile_block_statement(ctx, source->statement);
-    if(FAILED(hres))
-        return hres;
-
-    resolve_labels(ctx, off);
-
-    if(!push_instr(ctx, OP_ret))
-        return E_OUTOFMEMORY;
-
-    if(TRACE_ON(jscript_disas))
-        dump_code(ctx, off);
-
-    func->instr_off = off;
+    ctx->locals_cnt = 0;
+    wine_rb_init(&ctx->locals, function_local_cmp);
 
     if(func_expr) {
+        parameter_t *param_iter;
+
         if(func_expr->identifier) {
             func->name = compiler_alloc_bstr(ctx, func_expr->identifier);
             if(!func->name)
@@ -1869,10 +2278,6 @@ static HRESULT compile_function(compiler_ctx_t *ctx, source_elements_t *source, 
             if(!func->event_target)
                 return E_OUTOFMEMORY;
         }
-    }
-
-    if(func_expr) {
-        parameter_t *param_iter;
 
         func->source = func_expr->src_str;
         func->source_len = func_expr->src_len;
@@ -1891,27 +2296,70 @@ static HRESULT compile_function(compiler_ctx_t *ctx, source_elements_t *source, 
         }
     }
 
+    for(i = 0; i < func->param_cnt; i++) {
+        if(!find_local(ctx, func->params[i]) && !alloc_local(ctx, func->params[i], -i-1))
+            return E_OUTOFMEMORY;
+    }
+
+    hres = visit_block_statement(ctx, source->statement);
+    if(FAILED(hres))
+        return hres;
+
+    func->locals = compiler_alloc(ctx->code, ctx->locals_cnt * sizeof(*func->locals));
+    if(!func->locals)
+        return E_OUTOFMEMORY;
+    func->locals_cnt = ctx->locals_cnt;
+
     func->variables = compiler_alloc(ctx->code, func->var_cnt * sizeof(*func->variables));
     if(!func->variables)
         return E_OUTOFMEMORY;
 
-    for(var_iter = ctx->var_head, i=0; var_iter; var_iter = var_iter->global_next, i++) {
-        func->variables[i] = compiler_alloc_bstr(ctx, var_iter->identifier);
-        if(!func->variables[i])
-            return E_OUTOFMEMORY;
+    i = 0;
+    WINE_RB_FOR_EACH_ENTRY(local, &ctx->locals, function_local_t, entry) {
+        func->locals[i].name = local->name;
+        func->locals[i].ref = local->ref;
+        if(local->ref >= 0) {
+            func->variables[local->ref].name = local->name;
+            func->variables[local->ref].func_id = -1;
+        }
+        i++;
     }
-
-    assert(i == func->var_cnt);
+    assert(i == ctx->locals_cnt);
 
     func->funcs = compiler_alloc(ctx->code, func->func_cnt * sizeof(*func->funcs));
     if(!func->funcs)
         return E_OUTOFMEMORY;
     memset(func->funcs, 0, func->func_cnt * sizeof(*func->funcs));
 
+    off = ctx->code_off;
+    hres = compile_block_statement(ctx, source->statement);
+    if(FAILED(hres))
+        return hres;
+
+    resolve_labels(ctx, off);
+
+    hres = push_instr_uint(ctx, OP_ret, !from_eval);
+    if(FAILED(hres))
+        return hres;
+
+    if(TRACE_ON(jscript_disas))
+        dump_code(ctx, off);
+
+    func->instr_off = off;
+
     for(iter = ctx->func_head, i=0; iter; iter = iter->next, i++) {
         hres = compile_function(ctx, iter->source_elements, iter, FALSE, func->funcs+i);
         if(FAILED(hres))
             return hres;
+
+        TRACE("[%d] func %s\n", i, debugstr_w(func->funcs[i].name));
+        if(func->funcs[i].name && !func->funcs[i].event_target) {
+            local_ref_t *local_ref = lookup_local(func, func->funcs[i].name);
+            func->funcs[i].local_ref = local_ref->ref;
+            TRACE("found ref %s %d for %s\n", debugstr_w(local_ref->name), local_ref->ref, debugstr_w(func->funcs[i].name));
+            if(local_ref->ref >= 0)
+                func->variables[local_ref->ref].func_id = i;
+        }
     }
 
     assert(i == func->func_cnt);
@@ -2019,7 +2467,9 @@ HRESULT compile_script(script_ctx_t *ctx, const WCHAR *code, const WCHAR *args, 
         return hres;
     }
 
+    heap_pool_init(&compiler.heap);
     hres = compile_function(&compiler, compiler.parser->source, NULL, from_eval, &compiler.code->global_code);
+    heap_pool_free(&compiler.heap);
     parser_release(compiler.parser);
     if(FAILED(hres)) {
         release_bytecode(compiler.code);

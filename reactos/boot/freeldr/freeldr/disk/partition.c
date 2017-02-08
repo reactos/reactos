@@ -17,18 +17,31 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+/*
+ * TODO: This is here where we should add support for GPT partitions
+ * as well as partitionless disks!
+ */
+
 #ifndef _M_ARM
 #include <freeldr.h>
+
+#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);
 
+/* This function serves to retrieve a partition entry for devices that handle partitions differently */
+DISK_GET_PARTITION_ENTRY DiskGetPartitionEntry = DiskGetMbrPartitionEntry;
+
 BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
-                                 PPARTITION_TABLE_ENTRY PartitionTableEntry,
-                                 ULONG *ActivePartition)
+                                    PPARTITION_TABLE_ENTRY PartitionTableEntry,
+                                    ULONG *ActivePartition)
 {
-    ULONG              BootablePartitionCount = 0;
+    ULONG BootablePartitionCount = 0;
+    ULONG CurrentPartitionNumber;
+    ULONG Index;
     MASTER_BOOT_RECORD MasterBootRecord;
+    PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
 
     *ActivePartition = 0;
 
@@ -38,26 +51,29 @@ BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
         return FALSE;
     }
 
-    // Count the bootable partitions
-    if (MasterBootRecord.PartitionTable[0].BootIndicator == 0x80)
+    CurrentPartitionNumber = 0;
+    for (Index=0; Index<4; Index++)
     {
-        BootablePartitionCount++;
-        *ActivePartition = 1;
-    }
-    if (MasterBootRecord.PartitionTable[1].BootIndicator == 0x80)
-    {
-        BootablePartitionCount++;
-        *ActivePartition = 2;
-    }
-    if (MasterBootRecord.PartitionTable[2].BootIndicator == 0x80)
-    {
-        BootablePartitionCount++;
-        *ActivePartition = 3;
-    }
-    if (MasterBootRecord.PartitionTable[3].BootIndicator == 0x80)
-    {
-        BootablePartitionCount++;
-        *ActivePartition = 4;
+        ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
+
+        if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
+            ThisPartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
+            ThisPartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
+        {
+            CurrentPartitionNumber++;
+
+            // Test if this is the bootable partition
+            if (ThisPartitionTableEntry->BootIndicator == 0x80)
+            {
+                BootablePartitionCount++;
+                *ActivePartition = CurrentPartitionNumber;
+
+                // Copy the partition table entry
+                RtlCopyMemory(PartitionTableEntry,
+                              ThisPartitionTableEntry,
+                              sizeof(PARTITION_TABLE_ENTRY));
+            }
+        }
     }
 
     // Make sure there was only one bootable partition
@@ -72,21 +88,18 @@ BOOLEAN DiskGetActivePartitionEntry(UCHAR DriveNumber,
         return FALSE;
     }
 
-    // Copy the partition table entry
-    RtlCopyMemory(PartitionTableEntry,
-                  &MasterBootRecord.PartitionTable[*ActivePartition - 1],
-                  sizeof(PARTITION_TABLE_ENTRY));
-
     return TRUE;
 }
 
-BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
+BOOLEAN DiskGetMbrPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    MASTER_BOOT_RECORD        MasterBootRecord;
-    PARTITION_TABLE_ENTRY    ExtendedPartitionTableEntry;
-    ULONG                        ExtendedPartitionNumber;
-    ULONG                        ExtendedPartitionOffset;
-    ULONG                        Index;
+    MASTER_BOOT_RECORD MasterBootRecord;
+    PARTITION_TABLE_ENTRY ExtendedPartitionTableEntry;
+    ULONG ExtendedPartitionNumber;
+    ULONG ExtendedPartitionOffset;
+    ULONG Index;
+    ULONG CurrentPartitionNumber;
+    PPARTITION_TABLE_ENTRY ThisPartitionTableEntry;
 
     // Read master boot record
     if (!DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord))
@@ -94,73 +107,76 @@ BOOLEAN DiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITI
         return FALSE;
     }
 
-    // If they are asking for a primary
-    // partition then things are easy
-    if (PartitionNumber < 5)
+    CurrentPartitionNumber = 0;
+    for (Index=0; Index<4; Index++)
     {
-        // PartitionNumber is one-based and we need it zero-based
-        PartitionNumber--;
+        ThisPartitionTableEntry = &MasterBootRecord.PartitionTable[Index];
 
-        // Copy the partition table entry
-        RtlCopyMemory(PartitionTableEntry, &MasterBootRecord.PartitionTable[PartitionNumber], sizeof(PARTITION_TABLE_ENTRY));
-
-        return TRUE;
-    }
-    else
-    {
-        // They want an extended partition entry so we will need
-        // to loop through all the extended partitions on the disk
-        // and return the one they want.
-
-        ExtendedPartitionNumber = PartitionNumber - 5;
-
-        // Set the initial relative starting sector to 0
-        // This is because extended partition starting
-        // sectors a numbered relative to their parent
-        ExtendedPartitionOffset = 0;
-
-        for (Index=0; Index<=ExtendedPartitionNumber; Index++)
+        if (ThisPartitionTableEntry->SystemIndicator != PARTITION_ENTRY_UNUSED &&
+            ThisPartitionTableEntry->SystemIndicator != PARTITION_EXTENDED &&
+            ThisPartitionTableEntry->SystemIndicator != PARTITION_XINT13_EXTENDED)
         {
-            // Get the extended partition table entry
-            if (!DiskGetFirstExtendedPartitionEntry(&MasterBootRecord, &ExtendedPartitionTableEntry))
-            {
-                return FALSE;
-            }
-
-            // Adjust the relative starting sector of the partition
-            ExtendedPartitionTableEntry.SectorCountBeforePartition += ExtendedPartitionOffset;
-            if (ExtendedPartitionOffset == 0)
-            {
-                // Set the start of the parrent extended partition
-                ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
-            }
-            // Read the partition boot record
-            if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
-            {
-                return FALSE;
-            }
-
-            // Get the first real partition table entry
-            if (!DiskGetFirstPartitionEntry(&MasterBootRecord, PartitionTableEntry))
-            {
-                return FALSE;
-            }
-
-            // Now correct the start sector of the partition
-            PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionTableEntry.SectorCountBeforePartition;
+            CurrentPartitionNumber++;
         }
 
-        // When we get here we should have the correct entry
-        // already stored in PartitionTableEntry
-        // so just return TRUE
-        return TRUE;
+        if (PartitionNumber == CurrentPartitionNumber)
+        {
+            RtlCopyMemory(PartitionTableEntry, ThisPartitionTableEntry, sizeof(PARTITION_TABLE_ENTRY));
+            return TRUE;
+        }
     }
 
+    // They want an extended partition entry so we will need
+    // to loop through all the extended partitions on the disk
+    // and return the one they want.
+
+    ExtendedPartitionNumber = PartitionNumber - CurrentPartitionNumber - 1;
+
+    // Set the initial relative starting sector to 0
+    // This is because extended partition starting
+    // sectors a numbered relative to their parent
+    ExtendedPartitionOffset = 0;
+
+    for (Index=0; Index<=ExtendedPartitionNumber; Index++)
+    {
+        // Get the extended partition table entry
+        if (!DiskGetFirstExtendedPartitionEntry(&MasterBootRecord, &ExtendedPartitionTableEntry))
+        {
+            return FALSE;
+        }
+
+        // Adjust the relative starting sector of the partition
+        ExtendedPartitionTableEntry.SectorCountBeforePartition += ExtendedPartitionOffset;
+        if (ExtendedPartitionOffset == 0)
+        {
+            // Set the start of the parrent extended partition
+            ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
+        }
+        // Read the partition boot record
+        if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
+        {
+            return FALSE;
+        }
+
+        // Get the first real partition table entry
+        if (!DiskGetFirstPartitionEntry(&MasterBootRecord, PartitionTableEntry))
+        {
+            return FALSE;
+        }
+
+        // Now correct the start sector of the partition
+        PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionTableEntry.SectorCountBeforePartition;
+    }
+
+    // When we get here we should have the correct entry
+    // already stored in PartitionTableEntry
+    // so just return TRUE
+    return TRUE;
 }
 
 BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    ULONG        Index;
+    ULONG Index;
 
     for (Index=0; Index<4; Index++)
     {
@@ -181,7 +197,7 @@ BOOLEAN DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTIT
 
 BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-    ULONG        Index;
+    ULONG Index;
 
     for (Index=0; Index<4; Index++)
     {

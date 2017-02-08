@@ -165,8 +165,11 @@ LocationOverride = "conectat la portul de tastatură"
 *PNP0303.DeviceDesc = "Tastatură IBM PC/AT"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 KeyboardClassName = "Клавиатуры"
+HID.KeyboardDevice    = "Клавиатура HID"
 StdMfg = "(Стандартные клавиатуры)"
+LocationOverride = "подключено к порту клавиатуры"
 *PNP0303.DeviceDesc = "Клавиатура IBM PC/AT"
 
 [Strings.041B]

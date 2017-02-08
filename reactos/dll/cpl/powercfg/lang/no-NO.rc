@@ -2,7 +2,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Strømstyringsplan"
 FONT 8, "MS Shell Dlg"
@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "Tekst"
     IDS_CONFIG1 "Innstillinger for %1 strømplan"
     IDS_CONFIG2 "Avanserte innstillinger for %1"
-    IDS_SIZEBYTS "%i byte"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "Ikke gjør noe"
     IDS_PowerActionNone1 "Ingen handling"
     IDS_PowerActionUnknown "Ukjent"

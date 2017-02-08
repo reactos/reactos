@@ -97,16 +97,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Araç İpuçları ve Seçkeler İçin Aşağıdaki Geçiş Etkisi Kullan:",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Görüntülük Yazı Tiplerinin Kıyılarını Yumuşatmak İçin Aşağıdaki Yöntemi Kullan:", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "&Büyük Simgeler Kullan", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Seçkeler Altında Gölge Göster", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "S&ürüklerken Pencere İçeriğini Göster", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "S&eçenek Düğmesine Basana Dek Düğme Takımıyla Gezinme İçin Altı Çizili Harfleri Gizle",
@@ -180,7 +180,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Ölçünlü"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -228,28 +228,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Masaüstü"
-    IDS_ELEMENT_2 "Edilgin Pencere Başlığı"
-    IDS_ELEMENT_3 "Edilgin Pencere Kıyılığı"
-    IDS_ELEMENT_4 "Etkin Pencere Başlığı"
-    IDS_ELEMENT_5 "Etkin Pencere Kıyılığı"
-    IDS_ELEMENT_6 "Seçke"
-    IDS_ELEMENT_7 "Seçili Öğeler"
-    IDS_ELEMENT_8 "Pencereler"
-    IDS_ELEMENT_9 "Kaydırma Çubukları"
-    IDS_ELEMENT_10 "3D Nesneler"
-    IDS_ELEMENT_11 "Renklik Etiketi"
-    IDS_ELEMENT_12 "Simge Etiketi"
-    IDS_ELEMENT_13 "Başlık Çubuğu"
-    IDS_ELEMENT_14 "Edilgin Seçke Öğeleri"
-    IDS_ELEMENT_15 "İletişim Penceresi"
-    IDS_ELEMENT_16 "Kaydırma Çubuğu Denetimleri"
-    IDS_ELEMENT_17 "Uygulama Arka Planı"
-    IDS_ELEMENT_18 "Küçük Başlık Çubuğu"
-    IDS_ELEMENT_19 "Simge Aralığı (Yatay)"
-    IDS_ELEMENT_20 "Simge Aralığı (Dikey)"
-    IDS_ELEMENT_21 "Çabuk Yardım"
-    IDS_ELEMENT_22 "Simge"
+    IDS_ELEMENT_0 "Masaüstü"
+    IDS_ELEMENT_1 "Edilgin Pencere Başlığı"
+    IDS_ELEMENT_2 "Edilgin Pencere Kıyılığı"
+    IDS_ELEMENT_3 "Etkin Pencere Başlığı"
+    IDS_ELEMENT_4 "Etkin Pencere Kıyılığı"
+    IDS_ELEMENT_5 "Seçke"
+    IDS_ELEMENT_6 "Seçili Öğeler"
+    IDS_ELEMENT_7 "Pencereler"
+    IDS_ELEMENT_8 "Kaydırma Çubukları"
+    IDS_ELEMENT_9 "3D Nesneler"
+    IDS_ELEMENT_10 "Renklik Etiketi"
+    IDS_ELEMENT_11 "Başlık Çubuğu"
+    IDS_ELEMENT_12 "İletişim Penceresi"
+    IDS_ELEMENT_13 "Uygulama Arka Planı"
+    IDS_ELEMENT_14 "Simge Aralığı (Yatay)"
+    IDS_ELEMENT_15 "Simge Aralığı (Dikey)"
+    IDS_ELEMENT_16 "Çabuk Yardım"
+    IDS_ELEMENT_17 "Simge"
+//  IDS_ELEMENT_18 "Edilgin Seçke Öğeleri"
 END
 
 STRINGTABLE

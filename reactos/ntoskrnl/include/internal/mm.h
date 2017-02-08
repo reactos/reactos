@@ -514,15 +514,6 @@ MiRosCleanupMemoryArea(
     PEPROCESS Process,
     PMMVAD Vad);
 
-NTSTATUS
-NTAPI
-MmFreeMemoryAreaByPtr(
-    PMMSUPPORT AddressSpace,
-    PVOID BaseAddress,
-    PMM_FREE_PAGE_FUNC FreePage,
-    PVOID FreePageContext
-);
-
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(
@@ -1396,6 +1387,11 @@ ExpCheckPoolAllocation(
     PVOID P,
     POOL_TYPE PoolType,
     ULONG Tag);
+
+VOID
+NTAPI
+ExReturnPoolQuota(
+    IN PVOID P);
 
 
 /* mmsup.c *****************************************************************/

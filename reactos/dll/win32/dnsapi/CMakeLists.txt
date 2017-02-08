@@ -24,6 +24,6 @@ add_library(dnsapi SHARED
 
 set_module_type(dnsapi win32dll)
 target_link_libraries(dnsapi adns)
-add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
+add_importlibs(dnsapi advapi32 user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_pch(dnsapi dnsapi/precomp.h SOURCE)
 add_cd_file(TARGET dnsapi DESTINATION reactos/system32 FOR all)

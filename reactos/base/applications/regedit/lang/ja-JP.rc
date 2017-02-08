@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "ヘルプ(&H)"
     BEGIN
-        MENUITEM "バージョン情報(&A)...", ID_HELP_ABOUT
+        MENUITEM "バージョン情報(&A)", ID_HELP_ABOUT
     END
 END
 
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "ネットワーク レジストリへの接続(&C)...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "ネットワーク レジストリの切断(&D)...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "印刷(&P)\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "印刷(&P)...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "レジストリ エディタの終了(&X)", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "キー名のコピー(&C)", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "検索(&F)\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "検索(&F)...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "次を検索(&X)\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "表示(&V)"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "複数行文字列値(&M)", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "検索(&F)", ID_EDIT_FIND
+        MENUITEM "検索(&F)...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "削除(&D)", ID_TREE_DELETE
         MENUITEM "名前の変更(&R)", ID_TREE_RENAME

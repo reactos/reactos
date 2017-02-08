@@ -50,7 +50,7 @@ CreateCallProc(IN PDESKTOP Desktop,
     }
 
     /* Release the extra reference (UserCreateObject added 2 references) */
-    UserDereferenceObject(NewCallProc);
+    if (NewCallProc != NULL) UserDereferenceObject(NewCallProc);
 
     return NewCallProc;
 }

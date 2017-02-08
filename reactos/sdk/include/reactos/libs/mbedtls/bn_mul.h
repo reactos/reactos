@@ -162,10 +162,6 @@
 
 #define MULADDC_INIT                        \
     asm(                                    \
-        "movq   %3, %%rsi           \n\t"   \
-        "movq   %4, %%rdi           \n\t"   \
-        "movq   %5, %%rcx           \n\t"   \
-        "movq   %6, %%rbx           \n\t"   \
         "xorq   %%r8, %%r8          \n\t"
 
 #define MULADDC_CORE                        \
@@ -181,12 +177,9 @@
         "addq   $8,      %%rdi      \n\t"
 
 #define MULADDC_STOP                        \
-        "movq   %%rcx, %0           \n\t"   \
-        "movq   %%rdi, %1           \n\t"   \
-        "movq   %%rsi, %2           \n\t"   \
-        : "=m" (c), "=m" (d), "=m" (s)                      \
-        : "m" (s), "m" (d), "m" (c), "m" (b)                \
-        : "rax", "rcx", "rdx", "rbx", "rsi", "rdi", "r8"    \
+        : "+c" (c), "+D" (d), "+S" (s)      \
+        : "b" (b)                           \
+        : "rax", "rdx", "r8"                \
     );
 
 #endif /* AMD64 */
@@ -563,7 +556,23 @@
 
 #endif /* TriCore */
 
-#if defined(__arm__)
+/*
+ * gcc -O0 by default uses r7 for the frame pointer, so it complains about our
+ * use of r7 below, unless -fomit-frame-pointer is passed. Unfortunately,
+ * passing that option is not easy when building with yotta.
+ *
+ * On the other hand, -fomit-frame-pointer is implied by any -Ox options with
+ * x !=0, which we can detect using __OPTIMIZE__ (which is also defined by
+ * clang and armcc5 under the same conditions).
+ *
+ * So, only use the optimized assembly below for optimized build, which avoids
+ * the build error and is pretty reasonable anyway.
+ */
+#if defined(__GNUC__) && !defined(__OPTIMIZE__)
+#define MULADDC_CANNOT_USE_R7
+#endif
+
+#if defined(__arm__) && !defined(MULADDC_CANNOT_USE_R7)
 
 #if defined(__thumb__) && !defined(__thumb2__)
 

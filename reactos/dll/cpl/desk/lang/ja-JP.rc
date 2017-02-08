@@ -95,16 +95,16 @@ FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL "次のアニメーション効果をメニューとツール チップに使用する(&U):",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "次の方法でスクリーン フォントの縁を滑らかにする(&S):", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "大きいアイコンを使用する(&E)", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "メニューの下に影を表示する(&A)", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "ドラッグ中にウィンドウの内容を表示する(&W)", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "Alt キーを押すまでキーボード ナビゲーションの下線を隠しておく(&H)",
@@ -178,7 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "スタンダード"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -226,28 +226,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "デスクトップ"
-    IDS_ELEMENT_2 "非アクティブ ウィンドウのタイトル"
-    IDS_ELEMENT_3 "非アクティブ ウィンドウの縁"
-    IDS_ELEMENT_4 "アクティブ ウィンドウのタイトル"
-    IDS_ELEMENT_5 "アクティブ ウィンドウの縁"
-    IDS_ELEMENT_6 "メニュー"
-    IDS_ELEMENT_7 "選択された項目"
-    IDS_ELEMENT_8 "ウィンドウ"
-    IDS_ELEMENT_9 "スクロール バー"
-    IDS_ELEMENT_10 "3D オブジェクト"
-    IDS_ELEMENT_11 "パレット タイトル"
-    IDS_ELEMENT_12 "シンボル タイトル"
-    IDS_ELEMENT_13 "キャプション バー"
-    IDS_ELEMENT_14 "非アクティブ メニュー項目"
-    IDS_ELEMENT_15 "ダイアログ"
-    IDS_ELEMENT_16 "スクロール バー コントロール"
-    IDS_ELEMENT_17 "アプリケーションの背景"
-    IDS_ELEMENT_18 "小さいキャプションバー"
-    IDS_ELEMENT_19 "シンボルの間隔 (横)"
-    IDS_ELEMENT_20 "シンボルの間隔 (縦)"
-    IDS_ELEMENT_21 "クイック情報"
-    IDS_ELEMENT_22 "シンボル"
+    IDS_ELEMENT_0 "デスクトップ"
+    IDS_ELEMENT_1 "非アクティブ ウィンドウのタイトル"
+    IDS_ELEMENT_2 "非アクティブ ウィンドウの縁"
+    IDS_ELEMENT_3 "アクティブ ウィンドウのタイトル"
+    IDS_ELEMENT_4 "アクティブ ウィンドウの縁"
+    IDS_ELEMENT_5 "メニュー"
+    IDS_ELEMENT_6 "選択された項目"
+    IDS_ELEMENT_7 "ウィンドウ"
+    IDS_ELEMENT_8 "スクロール バー"
+    IDS_ELEMENT_9 "3D オブジェクト"
+    IDS_ELEMENT_10 "パレット タイトル"
+    IDS_ELEMENT_11 "キャプション バー"
+    IDS_ELEMENT_12 "ダイアログ"
+    IDS_ELEMENT_13 "アプリケーションの背景"
+    IDS_ELEMENT_14 "シンボルの間隔 (横)"
+    IDS_ELEMENT_15 "シンボルの間隔 (縦)"
+    IDS_ELEMENT_16 "クイック情報"
+    IDS_ELEMENT_17 "シンボル"
+//  IDS_ELEMENT_18 "非アクティブ メニュー項目"
 END
 
 STRINGTABLE

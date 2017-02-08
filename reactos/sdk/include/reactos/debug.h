@@ -116,7 +116,7 @@ RtlAssert(
 
     #endif
 
-    #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n");
+    #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n")
 
     #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)

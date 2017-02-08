@@ -19,6 +19,11 @@ License = Gratuită
 Description = Program de producție de muzică pentru sisteme NES și Famicom.
 Size = 1,5 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Эмулятор звукового чипа NES и Famicom.
+Size = 1,5 МиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = FamiTracker, NES ve Famicom dizgeleri için mûsikî üretmeye bir ücretsiz pencere izleyicisidir.

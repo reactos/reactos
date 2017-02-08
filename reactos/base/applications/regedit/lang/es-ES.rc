@@ -23,7 +23,7 @@ BEGIN
     END
     POPUP "Ay&uda"
     BEGIN
-        MENUITEM "&Acerca de...", ID_HELP_ABOUT
+        MENUITEM "&Acerca de", ID_HELP_ABOUT
     END
 END
 
@@ -40,7 +40,7 @@ BEGIN
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Desconectar del Registro de red...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Im&primir\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "Im&primir...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "S&alir", ID_REGISTRY_EXIT
     END
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copiar nombre de clave", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Buscar\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Buscar...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Buscar &siguiente\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Ver"
@@ -126,7 +126,7 @@ BEGIN
             MENUITEM "Valor de cadena &múltiple", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valor de cadena e&xpandible", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Buscar", ID_EDIT_FIND
+        MENUITEM "&Buscar...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Eliminar", ID_TREE_DELETE
         MENUITEM "&Renombrar", ID_TREE_RENAME

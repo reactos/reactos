@@ -365,7 +365,7 @@ typedef struct _RECEIVE_DESCRIPTOR
   USHORT MCNT;          /* message byte count ; always AND with 0x0fff */
   UCHAR  RPC;           /* runt packet count */
   UCHAR  RCC;           /* receive collision count */
-  ULONG  RES;           /* resereved */
+  ULONG  RES;           /* reserved */
 } RECEIVE_DESCRIPTOR, *PRECEIVE_DESCRIPTOR;
 
 /* receive descriptor flags */

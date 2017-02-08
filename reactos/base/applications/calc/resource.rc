@@ -22,9 +22,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_CALC_BIG ICON "res/calc.ico"
 IDI_CALC_SMALL ICON "res/calc_sm.ico"
 
-/* Bitmaps */
-IDB_BITMAP_ROS BITMAP "res/ROS_logo.bmp"
-
 #include <reactos/manifest_exe.rc>
 
 /* UTF-8 */

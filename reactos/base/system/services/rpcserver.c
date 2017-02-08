@@ -21,6 +21,7 @@
 
 #define MANAGER_TAG 0x72674D68  /* 'hMgr' */
 #define SERVICE_TAG 0x63765368  /* 'hSvc' */
+#define INVALID_TAG 0xAABBCCDD
 
 typedef struct _SCMGR_HANDLE
 {
@@ -840,7 +841,7 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
         if (dwError != ERROR_SUCCESS)
             return dwError;
 
-        dwSize = MAX_PATH;
+        dwSize = MAX_PATH * sizeof(WCHAR);
 
         /* Check for the DependOnService Value */
         dwError = RegQueryValueExW(hServiceEnumKey,
@@ -952,7 +953,8 @@ DWORD RCloseServiceHandle(
     {
         DPRINT("Found manager handle\n");
 
-        /* FIXME: add handle cleanup code */
+        /* Make sure we don't access stale memory if someone tries to use this handle again. */
+        hManager->Handle.Tag = INVALID_TAG;
 
         HeapFree(GetProcessHeap(), 0, hManager);
         hManager = NULL;
@@ -966,13 +968,14 @@ DWORD RCloseServiceHandle(
     {
         DPRINT("Found service handle\n");
 
-        /* Lock the service database exlusively */
+        /* Lock the service database exclusively */
         ScmLockDatabaseExclusive();
 
         /* Get the pointer to the service record */
         lpService = hService->ServiceEntry;
 
-        /* FIXME: add handle cleanup code */
+        /* Make sure we don't access stale memory if someone tries to use this handle again. */
+        hService->Handle.Tag = INVALID_TAG;
 
         /* Free the handle */
         HeapFree(GetProcessHeap(), 0, hService);
@@ -1019,12 +1022,12 @@ DWORD RCloseServiceHandle(
                     return ERROR_SUCCESS;
                 }
 
-                /* There are no references and no runnning dependencies,
+                /* There are no references and no running dependencies,
                    it is now safe to delete the service */
 
                 /* Delete the Service Key */
-                dwError = RegDeleteKeyW(hServicesKey,
-                                        lpService->lpServiceName);
+                dwError = ScmDeleteRegKey(hServicesKey,
+                                          lpService->lpServiceName);
 
                 RegCloseKey(hServicesKey);
 
@@ -1235,7 +1238,7 @@ DWORD RControlService(
                 dwControl == SERVICE_CONTROL_PAUSE ||
                 dwControl == SERVICE_CONTROL_CONTINUE)
             {
-                /* Log a sucessful send control */
+                /* Log a successful send control */
 
                 switch (dwControl)
                 {
@@ -1364,9 +1367,6 @@ DWORD RQueryServiceObjectSecurity(
     DWORD dwBytesNeeded;
     DWORD dwError;
 
-
-    SECURITY_DESCRIPTOR ObjectDescriptor;
-
     DPRINT("RQueryServiceObjectSecurity() called\n");
 
     hSvc = ScmGetServiceFromHandle(hService);
@@ -1401,11 +1401,8 @@ DWORD RQueryServiceObjectSecurity(
     /* Lock the service database */
     ScmLockDatabaseShared();
 
-
-    /* hack */
-    Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
-
-    Status = RtlQuerySecurityObject(&ObjectDescriptor  /* lpService->lpSecurityDescriptor */,
+    /* Retrieve the security descriptor */
+    Status = RtlQuerySecurityObject(lpService->pSecurityDescriptor,
                                     dwSecurityInformation,
                                     (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                     cbBufSize,
@@ -1442,14 +1439,15 @@ DWORD RSetServiceObjectSecurity(
     SC_RPC_HANDLE hService,
     DWORD dwSecurityInformation,
     LPBYTE lpSecurityDescriptor,
-    DWORD dwSecuityDescriptorSize)
+    DWORD dwSecurityDescriptorSize)
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
-    ULONG DesiredAccess = 0;
-    /* HANDLE hToken = NULL; */
-    HKEY hServiceKey;
-    /* NTSTATUS Status; */
+    ACCESS_MASK DesiredAccess = 0;
+    HANDLE hToken = NULL;
+    HKEY hServiceKey = NULL;
+    BOOL bDatabaseLocked = FALSE;
+    NTSTATUS Status;
     DWORD dwError;
 
     DPRINT("RSetServiceObjectSecurity() called\n");
@@ -1489,14 +1487,14 @@ DWORD RSetServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT("lpService == NULL!\n");
+        DPRINT1("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1516,13 +1514,10 @@ DWORD RSetServiceObjectSecurity(
     RpcRevertToSelf();
 #endif
 
-    /* Lock the service database exclusive */
-    ScmLockDatabaseExclusive();
-
-#if 0
+    /* Build the new security descriptor */
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
-                                  &lpService->lpSecurityDescriptor,
+                                  &lpService->pSecurityDescriptor,
                                   &ScmServiceMapping,
                                   hToken);
     if (!NT_SUCCESS(Status))
@@ -1530,31 +1525,34 @@ DWORD RSetServiceObjectSecurity(
         dwError = RtlNtStatusToDosError(Status);
         goto Done;
     }
-#endif
 
+    /* Lock the service database exclusive */
+    ScmLockDatabaseExclusive();
+    bDatabaseLocked = TRUE;
+
+    /* Open the service key */
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 READ_CONTROL | KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
                                 &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
-    UNIMPLEMENTED;
-    dwError = ERROR_SUCCESS;
-//    dwError = ScmWriteSecurityDescriptor(hServiceKey,
-//                                         lpService->lpSecurityDescriptor);
+    /* Store the new security descriptor */
+    dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                         lpService->pSecurityDescriptor);
 
     RegFlushKey(hServiceKey);
-    RegCloseKey(hServiceKey);
 
 Done:
-
-#if 0
-    if (hToken != NULL)
-        NtClose(hToken);
-#endif
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
 
     /* Unlock service database */
-    ScmUnlockDatabase();
+    if (bDatabaseLocked == TRUE)
+        ScmUnlockDatabase();
+
+    if (hToken != NULL)
+        NtClose(hToken);
 
     DPRINT("RSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
@@ -1848,6 +1846,40 @@ DWORD RChangeServiceConfigW(
         return ERROR_ACCESS_DENIED;
     }
 
+    /* Check for invalid service type value */
+    if ((dwServiceType != SERVICE_NO_CHANGE) &&
+        (dwServiceType != SERVICE_KERNEL_DRIVER) &&
+        (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS))
+            return ERROR_INVALID_PARAMETER;
+
+    /* Check for invalid start type value */
+    if ((dwStartType != SERVICE_NO_CHANGE) &&
+        (dwStartType != SERVICE_BOOT_START) &&
+        (dwStartType != SERVICE_SYSTEM_START) &&
+        (dwStartType != SERVICE_AUTO_START) &&
+        (dwStartType != SERVICE_DEMAND_START) &&
+        (dwStartType != SERVICE_DISABLED))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Only drivers can be boot start or system start services */
+    if ((dwStartType == SERVICE_BOOT_START) ||
+        (dwStartType == SERVICE_SYSTEM_START))
+    {
+        if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
+            (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER))
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Check for invalid error control value */
+    if ((dwErrorControl != SERVICE_NO_CHANGE) &&
+        (dwErrorControl != SERVICE_ERROR_IGNORE) &&
+        (dwErrorControl != SERVICE_ERROR_NORMAL) &&
+        (dwErrorControl != SERVICE_ERROR_SEVERE) &&
+        (dwErrorControl != SERVICE_ERROR_CRITICAL))
+        return ERROR_INVALID_PARAMETER;
+
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
@@ -1992,6 +2024,7 @@ DWORD RChangeServiceConfigW(
             goto done;
     }
 
+    /* Set the tag */
     if (lpdwTagId != NULL)
     {
         dwError = ScmAssignNewTag(lpService);
@@ -2022,7 +2055,27 @@ DWORD RChangeServiceConfigW(
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Decrypt and write password */
+        if (wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+        else
+        {
+            /* Delete the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            NULL);
+            if (dwError == ERROR_FILE_NOT_FOUND)
+                dwError = ERROR_SUCCESS;
+
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
     }
 
 done:
@@ -2237,6 +2290,14 @@ DWORD RCreateServiceW(
             goto done;
     }
 
+    /* Assign the default security descriptor */
+    if (dwServiceType & SERVICE_WIN32)
+    {
+        dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
     /* Write service data to the registry */
     /* Create the service key */
     dwError = ScmCreateServiceKey(lpServiceName,
@@ -2323,6 +2384,7 @@ DWORD RCreateServiceW(
             goto done;
     }
 
+    /* Set the service tag */
     if (lpdwTagId != NULL)
     {
         dwError = RegSetValueExW(hServiceKey,
@@ -2345,9 +2407,10 @@ DWORD RCreateServiceW(
             goto done;
     }
 
-    /* Write service start name */
+    /* Start name and password are only used by Win32 services */
     if (dwServiceType & SERVICE_WIN32)
     {
+        /* Write service start name */
         lpObjectName = (lpServiceStartName != NULL) ? (LPWSTR)lpServiceStartName : L"LocalSystem";
         dwError = RegSetValueExW(hServiceKey,
                                  L"ObjectName",
@@ -2357,11 +2420,24 @@ DWORD RCreateServiceW(
                                  (DWORD)((wcslen(lpObjectName) + 1) * sizeof(WCHAR)));
         if (dwError != ERROR_SUCCESS)
             goto done;
-    }
 
-    if (lpPassword != NULL)
-    {
-        /* FIXME: Decrypt and write password */
+        if (lpPassword != NULL && wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+
+DPRINT1("\n");
+        /* Write the security descriptor */
+        dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                             lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     dwError = ScmCreateServiceHandle(lpService,
@@ -3452,11 +3528,34 @@ DWORD RChangeServiceConfigA(
                                        dwDependSize);
 
         HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Decrypt and write password */
+        if (wcslen((LPWSTR)lpPassword) != 0)
+        {
+            /* FIXME: Decrypt the password */
+
+            /* Write the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            (LPCWSTR)lpPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+        else
+        {
+            /* Delete the password */
+            dwError = ScmSetServicePassword(lpService->szServiceName,
+                                            NULL);
+            if (dwError == ERROR_FILE_NOT_FOUND)
+                dwError = ERROR_SUCCESS;
+
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
     }
 
 done:
@@ -4515,8 +4614,52 @@ DWORD RI_ScGetCurrentGroupStateW(
     LPWSTR lpLoadOrderGroup,
     LPDWORD lpState)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PMANAGER_HANDLE hManager;
+    PSERVICE_GROUP pServiceGroup;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("RI_ScGetCurrentGroupStateW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
+    {
+        DPRINT1("Invalid service manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check for SC_MANAGER_ENUMERATE_SERVICE access right */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT("Insufficient access rights! 0x%lx\n",
+                hManager->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
+
+    /* Get the group list entry */
+    pServiceGroup = ScmGetServiceGroupByName(lpLoadOrderGroup);
+    if (pServiceGroup == NULL)
+    {
+        dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+        goto done;
+    }
+
+    /* FIXME: Return the group state */
+    *lpState = 0;
+
+done:
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("RI_ScGetCurrentGroupStateW() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
@@ -4956,18 +5099,13 @@ DWORD RChangeServiceConfig2A(
 
 
 static DWORD
-ScmSetFailureActions(PSERVICE_HANDLE hSvc,
-                     PSERVICE lpService,
-                     HKEY hServiceKey,
+ScmSetFailureActions(HKEY hServiceKey,
                      LPSERVICE_FAILURE_ACTIONSW lpFailureActions)
 {
     LPSERVICE_FAILURE_ACTIONSW lpReadBuffer = NULL;
     LPSERVICE_FAILURE_ACTIONSW lpWriteBuffer = NULL;
-    BOOL bIsActionRebootSet = FALSE;
-    DWORD dwDesiredAccess = SERVICE_CHANGE_CONFIG;
     DWORD dwRequiredSize = 0;
     DWORD dwType = 0;
-    DWORD i = 0;
     DWORD dwError;
 
     /* There is nothing to be done if we have no failure actions */
@@ -4975,48 +5113,7 @@ ScmSetFailureActions(PSERVICE_HANDLE hSvc,
         return ERROR_SUCCESS;
 
     /*
-     * 1- Check whether or not we can set
-     *    failure actions for this service.
-     */
-
-    /* Failure actions can only be set for Win32 services, not for drivers */
-    if (lpService->Status.dwServiceType & SERVICE_DRIVER)
-        return ERROR_CANNOT_DETECT_DRIVER_FAILURE;
-
-    /*
-     * If the service controller handles the SC_ACTION_RESTART action,
-     * hService must have the SERVICE_START access right.
-     *
-     * If you specify SC_ACTION_REBOOT, the caller must have the
-     * SE_SHUTDOWN_NAME privilege.
-     */
-    if (lpFailureActions->cActions > 0 &&
-        lpFailureActions->lpsaActions != NULL)
-    {
-        for (i = 0; i < lpFailureActions->cActions; ++i)
-        {
-           if (lpFailureActions->lpsaActions[i].Type == SC_ACTION_RESTART)
-               dwDesiredAccess |= SERVICE_START;
-           else if (lpFailureActions->lpsaActions[i].Type == SC_ACTION_REBOOT)
-               bIsActionRebootSet = TRUE;
-        }
-    }
-
-    /* Re-check the access rights */
-    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
-                                  dwDesiredAccess))
-    {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
-        return ERROR_ACCESS_DENIED;
-    }
-
-    /* FIXME: Check if the caller has the SE_SHUTDOWN_NAME privilege */
-    if (bIsActionRebootSet)
-    {
-    }
-
-    /*
-     * 2- Retrieve the original value of FailureActions.
+     * 1- Retrieve the original value of FailureActions.
      */
 
     /* Query value length */
@@ -5083,7 +5180,7 @@ ScmSetFailureActions(PSERVICE_HANDLE hSvc,
     lpReadBuffer->lpCommand = NULL;
 
     /*
-     * 3- Initialize the new value to set.
+     * 2- Initialize the new value to set.
      */
 
     dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
@@ -5230,6 +5327,7 @@ DWORD RChangeServiceConfig2W(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
+    ACCESS_MASK RequiredAccess = SERVICE_CHANGE_CONFIG;
 
     DPRINT("RChangeServiceConfig2W() called\n");
     DPRINT("dwInfoLevel = %lu\n", Info.dwInfoLevel);
@@ -5240,15 +5338,25 @@ DWORD RChangeServiceConfig2W(
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
-        DPRINT1("Invalid service handle!\n");
+        DPRINT("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
+    if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
+        RequiredAccess |= SERVICE_START;
+
+    /* Check the access rights */
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
-                                  SERVICE_CHANGE_CONFIG))
+                                  RequiredAccess))
     {
         DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
+    }
+
+    if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        /* FIXME: Check if the caller has the SE_SHUTDOWN_NAME privilege */
+
     }
 
     lpService = hSvc->ServiceEntry;
@@ -5256,6 +5364,13 @@ DWORD RChangeServiceConfig2W(
     {
         DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
+    }
+
+    /* Failure actions can only be set for Win32 services, not for drivers */
+    if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
+    {
+        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
+            return ERROR_CANNOT_DETECT_DRIVER_FAILURE;
     }
 
     /* Lock the service database exclusively */
@@ -5310,9 +5425,7 @@ DWORD RChangeServiceConfig2W(
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
-        dwError = ScmSetFailureActions(hSvc,
-                                       lpService,
-                                       hServiceKey,
+        dwError = ScmSetFailureActions(hServiceKey,
                                        (LPSERVICE_FAILURE_ACTIONSW)Info.psfa);
     }
 
@@ -5836,7 +5949,12 @@ DWORD RQueryServiceStatusEx(
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
-    lpStatus->dwProcessId = (lpService->lpImage != NULL) ? lpService->lpImage->dwProcessId : 0; /* FIXME */
+    /* Copy the service process ID */
+    if ((lpService->Status.dwCurrentState == SERVICE_STOPPED) || (lpService->lpImage == NULL))
+        lpStatus->dwProcessId = 0;
+    else
+        lpStatus->dwProcessId = lpService->lpImage->dwProcessId;
+
     lpStatus->dwServiceFlags = 0;			/* FIXME */
 
     /* Unlock the service database */
@@ -5961,7 +6079,9 @@ DWORD REnumServicesStatusExA(
                &lpStatusPtrIncrW->ServiceStatusProcess,
                sizeof(SERVICE_STATUS));
 
-        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrIncrW->ServiceStatusProcess.dwProcessId; /* FIXME */
+        /* Copy the service process ID */
+        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrIncrW->ServiceStatusProcess.dwProcessId;
+
         lpStatusPtrA->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
         lpStatusPtrIncrW++;
@@ -6239,8 +6359,13 @@ DWORD REnumServicesStatusExW(
             memcpy(&lpStatusPtr->ServiceStatusProcess,
                    &CurrentService->Status,
                    sizeof(SERVICE_STATUS));
-            lpStatusPtr->ServiceStatusProcess.dwProcessId =
-                (CurrentService->lpImage != NULL) ? CurrentService->lpImage->dwProcessId : 0; /* FIXME */
+
+            /* Copy the service process ID */
+            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) || (CurrentService->lpImage == NULL))
+                lpStatusPtr->ServiceStatusProcess.dwProcessId = 0;
+            else
+                lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->lpImage->dwProcessId;
+
             lpStatusPtr->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
             lpStatusPtr++;

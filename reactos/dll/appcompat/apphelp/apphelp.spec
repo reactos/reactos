@@ -4,7 +4,7 @@
 @ stub ApphelpCheckMsiPackage
 @ stub ApphelpCheckRunApp
 @ stub ApphelpCheckRunAppEx
-@ stub ApphelpCheckShellObject
+@ stdcall ApphelpCheckShellObject(ptr long ptr)
 @ stub ApphelpCreateAppcompatData
 @ stub ApphelpFixMsiPackage
 @ stub ApphelpFixMsiPackageExe
@@ -20,87 +20,87 @@
 @ stub SdbAddLayerTagRefToQuery
 @ stub SdbApphelpNotify
 @ stub SdbApphelpNotifyExSdbApphelpNotifyEx
-@ stub SdbBeginWriteListTag
+@ stdcall SdbBeginWriteListTag(ptr long)
 @ stub SdbBuildCompatEnvVariables
 @ stub SdbCloseApphelpInformation
-@ stub SdbCloseDatabase
-@ stub SdbCloseDatabaseWrite
+@ stdcall SdbCloseDatabase(ptr)
+@ stdcall SdbCloseDatabaseWrite(ptr)
 @ stub SdbCloseLocalDatabase
 @ stub SdbCommitIndexes
-@ stub SdbCreateDatabase
+@ stdcall SdbCreateDatabase(wstr long)
 @ stub SdbCreateHelpCenterURL
 @ stub SdbCreateMsiTransformFile
 @ stub SdbDeclareIndex
 @ stub SdbDumpSearchPathPartCaches
 @ stub SdbEnumMsiTransforms
-@ stub SdbEndWriteListTag
+@ stdcall SdbEndWriteListTag(ptr long)
 @ stub SdbEscapeApphelpURL
 @ stub SdbFindFirstDWORDIndexedTag
 @ stub SdbFindFirstMsiPackage
 @ stub SdbFindFirstMsiPackage_Str
-@ stub SdbFindFirstNamedTag
+@ stdcall SdbFindFirstNamedTag(ptr long long long wstr)
 @ stub SdbFindFirstStringIndexedTag
-@ stub SdbFindFirstTag
+@ stdcall SdbFindFirstTag(ptr long long)
 @ stub SdbFindFirstTagRef
 @ stub SdbFindNextDWORDIndexedTag
 @ stub SdbFindNextMsiPackage
 @ stub SdbFindNextStringIndexedTag
-@ stub SdbFindNextTag
+@ stdcall SdbFindNextTag(ptr long long)
 @ stub SdbFindNextTagRef
 @ stub SdbFreeDatabaseInformation
-@ stub SdbFreeFileAttributes
+@ stdcall SdbFreeFileAttributes(ptr)
 @ stub SdbFreeFileInfo
 @ stub SdbFreeFlagInfo
 @ stub SdbGetAppCompatDataSize
-@ stub SdbGetAppPatchDir
-@ stub SdbGetBinaryTagData
-@ stub SdbGetDatabaseID
+@ stdcall SdbGetAppPatchDir(ptr wstr long)
+@ stdcall SdbGetBinaryTagData(ptr long)
+@ stdcall SdbGetDatabaseID(ptr ptr)
 @ stub SdbGetDatabaseInformation
 @ stub SdbGetDatabaseInformationByName
 @ stub SdbGetDatabaseMatch
-@ stub SdbGetDatabaseVersion
+@ stdcall SdbGetDatabaseVersion(wstr ptr ptr)
 @ stub SdbGetDllPath
 @ stub SdbGetEntryFlags
-@ stub SdbGetFileAttributes
+@ stdcall SdbGetFileAttributes(wstr ptr ptr)
 @ stub SdbGetFileImageType
 @ stub SdbGetFileImageTypeEx
 @ stub SdbGetFileInfo
-@ stub SdbGetFirstChild
+@ stdcall SdbGetFirstChild(ptr long)
 @ stub SdbGetIndex
 @ stub SdbGetItemFromItemRef
 @ stub SdbGetLayerName
-@ stub SdbGetLayerTagRef
+@ stdcall SdbGetLayerTagRef(ptr wstr)
 @ stub SdbGetLocalPDB
-@ stub SdbGetMatchingExe
+@ stdcall SdbGetMatchingExe(ptr wstr wstr wstr long ptr)
 @ stub SdbGetMsiPackageInformation
 @ stub SdbGetNamedLayer
-@ stub SdbGetNextChild
+@ stdcall SdbGetNextChild(ptr long long)
 @ stub SdbGetNthUserSdb
 @ stdcall SdbGetPermLayerKeys(wstr wstr ptr long)
 @ stub SdbGetShowDebugInfoOption
 @ stub SdbGetShowDebugInfoOptionValue
-@ stub SdbGetStandardDatabaseGUID
-@ stub SdbGetStringTagPtr
-@ stub SdbGetTagDataSize
-@ stub SdbGetTagFromTagID
+@ stdcall SdbGetStandardDatabaseGUID(long ptr)
+@ stdcall SdbGetStringTagPtr(ptr long)
+@ stdcall SdbGetTagDataSize(ptr long)
+@ stdcall SdbGetTagFromTagID(ptr long)
 @ stub SdbGrabMatchingInfo
 @ stub SdbGrabMatchingInfoEx
-@ stub SdbGUIDFromString
-@ stub SdbGUIDToString
-@ stub SdbInitDatabase
+@ stdcall SdbGUIDFromString(wstr ptr)
+@ stdcall SdbGUIDToString(ptr wstr long)
+@ stdcall SdbInitDatabase(long wstr)
 @ stub SdbInitDatabaseEx
-@ stub SdbIsNullGUID
+@ stdcall SdbIsNullGUID(ptr)
 @ stub SdbIsStandardDatabase
 @ stub SdbIsTagrefFromLocalDB
 @ stub SdbIsTagrefFromMainDB
 @ stub SdbLoadString
-@ stub SdbMakeIndexKeyFromString
+@ stdcall SdbMakeIndexKeyFromString(wstr)
 @ stub SdbOpenApphelpDetailsDatabase
 @ stub SdbOpenApphelpDetailsDatabaseSP
 @ stub SdbOpenApphelpInformation
 @ stub SdbOpenApphelpInformationByID
 @ stub SdbOpenApphelpResourceFile
-@ stub SdbOpenDatabase
+@ stdcall SdbOpenDatabase(wstr long)
 @ stub SdbOpenDbFromGuid
 @ stub SdbOpenLocalDatabase
 @ stub SdbPackAppCompatData
@@ -115,21 +115,21 @@
 @ stub SdbQueryReinstallUpgrade
 @ stub SdbReadApphelpData
 @ stub SdbReadApphelpDetailsData
-@ stub SdbReadBinaryTag
+@ stdcall SdbReadBinaryTag(ptr long ptr long)
 @ stub SdbReadBYTETag
-@ stub SdbReadDWORDTag
+@ stdcall SdbReadDWORDTag(ptr long long)
 @ stub SdbReadDWORDTagRef
 @ stub SdbReadEntryInformation
 @ stub SdbReadMsiTransformInfo
 @ stub SdbReadPatchBits
-@ stub SdbReadQWORDTag
+@ stdcall SdbReadQWORDTag(ptr long int64)
 @ stub SdbReadQWORDTagRef
-@ stub SdbReadStringTag
+@ stdcall SdbReadStringTag(ptr long wstr long)
 @ stub SdbReadStringTagRef
-@ stub SdbReadWORDTag
+@ stdcall SdbReadWORDTag(ptr long long)
 @ stub SdbReadWORDTagRef
 @ stub SdbRegisterDatabase
-@ stub SdbReleaseDatabase
+@ stdcall SdbReleaseDatabase(ptr)
 @ stub SdbReleaseMatchingExe
 @ stub SdbResolveDatabase
 @ stub SdbSetApphelpDebugParameters
@@ -143,20 +143,20 @@
 @ stub SdbStringDuplicate
 @ stub SdbStringReplace
 @ stub SdbStringReplaceArray
-@ stub SdbTagIDToTagRef
-@ stub SdbTagRefToTagID
-@ stub SdbTagToString
+@ stdcall SdbTagIDToTagRef(ptr ptr long ptr)
+@ stdcall SdbTagRefToTagID(ptr long ptr ptr)
+@ stdcall SdbTagToString(long)
 @ stub SdbUnregisterDatabase
-@ stub SdbWriteBinaryTag
-@ stub SdbWriteBinaryTagFromFile
+@ stdcall SdbWriteBinaryTag(ptr long ptr long)
+@ stdcall SdbWriteBinaryTagFromFile(ptr long wstr)
 @ stub SdbWriteBYTETag
-@ stub SdbWriteDWORDTag
-@ stub SdbWriteNULLTag
-@ stub SdbWriteQWORDTag
-@ stub SdbWriteStringRefTag
-@ stub SdbWriteStringTag
+@ stdcall SdbWriteDWORDTag(ptr long long)
+@ stdcall SdbWriteNULLTag(ptr long)
+@ stdcall SdbWriteQWORDTag(ptr long int64)
+@ stdcall SdbWriteStringRefTag(ptr long long)
+@ stdcall SdbWriteStringTag(ptr long wstr)
 @ stub SdbWriteStringTagDirect
-@ stub SdbWriteWORDTag
+@ stdcall SdbWriteWORDTag(ptr long long)
 @ stub SE_DllLoaded
 @ stub SE_DllUnloaded
 @ stub SE_GetHookAPIs

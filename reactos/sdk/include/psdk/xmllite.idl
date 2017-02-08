@@ -300,3 +300,5 @@ cpp_quote("STDAPI CreateXmlWriter(REFIID riid, void **ppvObject, IMalloc *pMallo
 cpp_quote("typedef IUnknown IXmlWriterOutput;")
 cpp_quote("STDAPI CreateXmlWriterOutputWithEncodingName(IUnknown *stream, IMalloc *pMalloc,")
 cpp_quote("                                             LPCWSTR encoding, IXmlWriterOutput **output);")
+cpp_quote("STDAPI CreateXmlWriterOutputWithEncodingCodePage(IUnknown *stream, IMalloc *pMalloc,")
+cpp_quote("    UINT codepage, IXmlWriterOutput **output);")

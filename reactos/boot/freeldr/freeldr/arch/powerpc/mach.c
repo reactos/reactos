@@ -247,7 +247,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return slots;
 }
 
-BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
+BOOLEAN PpcDiskGetBootPath(PCHAR OutBootPath, ULONG Size) {
     strncpy( OutBootPath, BootPath, Size );
     return TRUE;
 }

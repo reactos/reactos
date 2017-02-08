@@ -44,12 +44,12 @@ BEGIN
         MENUITEM "&Sil\tSil", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Bul...\tDenetim+F", CMD_SEARCH
-        MENUITEM "S&onrakini Bul\tİ3", CMD_SEARCH_NEXT
+        MENUITEM "S&onrakini Bul\tF3", CMD_SEARCH_NEXT
         MENUITEM "&Değiştir...\tDenetim+H", CMD_REPLACE
         MENUITEM "G&it...\tDenetim+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Tümünü Seç\tDenetim+A", CMD_SELECT_ALL
-        MENUITEM "&Şimdiki Zamânı Koy\tİ5", CMD_TIME_DATE
+        MENUITEM "&Şimdiki Zamânı Koy\tF5", CMD_TIME_DATE
     END
     POPUP "&Biçim"
     BEGIN

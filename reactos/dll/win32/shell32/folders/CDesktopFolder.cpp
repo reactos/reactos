@@ -258,45 +258,72 @@ CDesktopFolder::~CDesktopFolder()
 
 HRESULT WINAPI CDesktopFolder::FinalConstruct()
 {
-    WCHAR                                szMyPath[MAX_PATH];
+    WCHAR szMyPath[MAX_PATH];
     HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
 
     /* Create the root pidl */
     pidlRoot = _ILCreateDesktop();
+    if (!pidlRoot)
+        return E_OUTOFMEMORY;
 
     /* Create the inner fs folder */
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_DesktopFSFolder));
-    if (FAILED(hr))
+    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+                                NULL,
+                                NULL,
+                                &CLSID_ShellFSFolder,
+                                CSIDL_DESKTOPDIRECTORY,
+                                IID_PPV_ARG(IShellFolder2, &m_DesktopFSFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
+    /* Create the inner shared fs folder. Dont fail on failure. */
+    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+                                NULL,
+                                NULL,
+                                &CLSID_ShellFSFolder,
+                                CSIDL_COMMON_DESKTOPDIRECTORY,
+                                IID_PPV_ARG(IShellFolder2, &m_SharedDesktopFSFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    PERSIST_FOLDER_TARGET_INFO info;
-    ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
-    info.csidl = CSIDL_DESKTOPDIRECTORY;
-    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
-
-    /* Create the inner shared fs folder */
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder, &m_SharedDesktopFSFolder));
-    if (FAILED(hr))
+    /* Create the inner reg folder */
+    hr = CRegFolder_CreateInstance(&CLSID_ShellDesktop,
+                                   pidlRoot,
+                                   L"", 
+                                   IID_PPV_ARG(IShellFolder2, &m_regFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
-
-    info.csidl = CSIDL_COMMON_DESKTOPDIRECTORY;
-    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
-
+    /* Cache the path to the user desktop directory */
     if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_DESKTOPDIRECTORY, TRUE ))
         return E_UNEXPECTED;
 
     sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
+    if (!sPathTarget)
+        return E_OUTOFMEMORY;
+
     wcscpy(sPathTarget, szMyPath);
     return S_OK;
+}
+
+HRESULT CDesktopFolder::_GetSFFromPidl(LPCITEMIDLIST pidl, IShellFolder2** psf)
+{
+    WCHAR szFileName[MAX_PATH];
+
+    if (_ILIsSpecialFolder(pidl))
+        return m_regFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
+
+    lstrcpynW(szFileName, sPathTarget, MAX_PATH - 1);
+    PathAddBackslashW(szFileName);
+    int cLen = wcslen(szFileName);
+
+    if (!_ILSimpleGetTextW(pidl, szFileName + cLen, MAX_PATH - cLen))
+        return E_FAIL;
+
+    if (GetFileAttributes(szFileName) == INVALID_FILE_ATTRIBUTES)
+        return m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
+    else
+        return m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IShellFolder2, psf));
 }
 
 /**************************************************************************
@@ -338,7 +365,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
 
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
     {
-        return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
     }
     else if (PathGetDriveNumberW (lpszDisplayName) >= 0)
     {
@@ -394,14 +421,7 @@ HRESULT WINAPI CDesktopFolder::ParseDisplayName(
         {
             if (pdwAttributes && *pdwAttributes)
             {
-                if (_ILIsMyComputer(pidlTemp))
-                    *pdwAttributes &= dwMyComputerAttributes;
-                else if (_ILIsNetHood(pidlTemp))
-                    *pdwAttributes &= dwMyNetPlacesAttributes;
-                else if (_ILIsSpecialFolder(pidlTemp))
-                    SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
-                else if(_ILIsFolder(pidlTemp) || _ILIsValue(pidlTemp))
-                    SHELL32_GetFSItemAttributes(this, pidlTemp, pdwAttributes);
+                GetAttributesOf(1, &pidlTemp, pdwAttributes);
             }
         }
     }
@@ -433,13 +453,15 @@ HRESULT WINAPI CDesktopFolder::BindToObject(
     REFIID riid,
     LPVOID *ppvOut)
 {
-    TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n",
-           this, pidl, pbcReserved, shdebugstr_guid (&riid), ppvOut);
+    if (!pidl)
+        return E_INVALIDARG;
 
-    if (_ILIsSpecialFolder(pidl))
-        return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
+    CComPtr<IShellFolder2> psf;
+    HRESULT hr = _GetSFFromPidl(pidl, &psf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    return m_DesktopFSFolder->BindToObject(pidl, pbcReserved, riid, ppvOut );
+    return psf->BindToObject(pidl, pbcReserved, riid, ppvOut);
 }
 
 /**************************************************************************
@@ -477,7 +499,7 @@ HRESULT WINAPI CDesktopFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl
         return MAKE_COMPARE_HRESULT(bIsDesktopFolder1 - bIsDesktopFolder2);
 
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
-        return SHELL32_CompareGuidItems(this, lParam, pidl1, pidl2);
+        return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
     return m_DesktopFSFolder->CompareIDs(lParam, pidl1, pidl2);
 }
@@ -507,8 +529,21 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
-        WARN ("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = 0;
+            dcm.apidl = NULL;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
@@ -553,10 +588,15 @@ HRESULT WINAPI CDesktopFolder::GetAttributesOf(
                 *rgfInOut &= dwMyComputerAttributes;
             else if (_ILIsNetHood(apidl[i]))
                 *rgfInOut &= dwMyNetPlacesAttributes;
-            else if (_ILIsSpecialFolder(apidl[i]))
-                SHELL32_GetGuidItemAttributes(this, apidl[i], rgfInOut);
-            else if(_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]))
-                SHELL32_GetFSItemAttributes(this, apidl[i], rgfInOut);
+            else if (_ILIsFolder(apidl[i]) || _ILIsValue(apidl[i]) || _ILIsSpecialFolder(apidl[i]))
+            {
+                CComPtr<IShellFolder2> psf;
+                HRESULT hr = _GetSFFromPidl(apidl[i], &psf);
+                if (FAILED_UNEXPECTEDLY(hr))
+                    continue;
+
+                psf->GetAttributesOf(1, &apidl[i], rgfInOut);
+            }
             else
                 ERR("Got an unknown pidl type!!!\n");
         }
@@ -589,8 +629,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     UINT *prgfInOut,
     LPVOID *ppvOut)
 {
-    LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
@@ -601,42 +640,60 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     *ppvOut = NULL;
 
+    if (cidl == 1 && !_ILIsSpecialFolder(apidl[0]))
+    {
+        CComPtr<IShellFolder2> psf;
+        HRESULT hr = _GetSFFromPidl(apidl[0], &psf);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psf->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, ppvOut);
+    }
+
     if (IsEqualIID (riid, IID_IContextMenu))
     {
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder *)this, NULL, 0, NULL, (IContextMenu **)&pObj);
+        if (_ILIsSpecialFolder(apidl[0]))
+        {
+            hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
+        }
+        else
+        {
+            /* Do not use the context menu of the CFSFolder here. */
+            /* We need to pass a pointer of the CDesktopFolder so as the data object that the context menu gets is rooted to the desktop */
+            /* Otherwise operations like that involve items from both user and shared desktop will not work */
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = cidl;
+            dcm.apidl = apidl;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, &pObj);
+        }
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
         hr = IDataObject_Constructor( hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
     }
-    else if (IsEqualIID (riid, IID_IExtractIconA) && (cidl == 1))
+    else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconA_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
+        hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
     }
-    else if (IsEqualIID (riid, IID_IExtractIconW) && (cidl == 1))
+    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconW_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID (riid, IID_IDropTarget))
-    {
-        /* only interested in attempting to bind to shell folders, not files, semicolon intentionate */
-        if (cidl > 1)
-        {
-            hr = this->_GetDropTarget(apidl[0], (LPVOID*) &pObj);
-        }
-    }
-    else if ((IsEqualIID(riid, IID_IShellLinkW) ||
-              IsEqualIID(riid, IID_IShellLinkA)) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-        SHFree (pidl);
+        CComPtr<IShellFolder> psfChild;
+        hr = this->BindToObject(apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psfChild->CreateViewObject(NULL, riid, ppvOut);
     }
     else
         hr = E_NOINTERFACE;
@@ -657,9 +714,6 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
  */
 HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    HRESULT hr = S_OK;
-    LPWSTR pszPath;
-
     TRACE ("(%p)->(pidl=%p,0x%08x,%p)\n", this, pidl, dwFlags, strRet);
     pdump (pidl);
 
@@ -670,81 +724,21 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
     {
         return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
     }
-    else if (!_ILIsDesktop(pidl) && _ILIsSpecialFolder(pidl))
+    else if (_ILIsDesktop(pidl))
     {
-        return SHELL32_GetDisplayNameOfGUIDItem(this, L"", pidl, dwFlags, strRet);
-    }
-
-    pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
-    if (!pszPath)
-        return E_OUTOFMEMORY;
-
-    if (_ILIsDesktop (pidl))
-    {
-        if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
-                (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
-            wcscpy(pszPath, sPathTarget);
+        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+            return SHSetStrRet(strRet, sPathTarget);
         else
-            HCR_GetClassNameW(CLSID_ShellDesktop, pszPath, MAX_PATH);
-    }
-    else
-    {
-        int cLen = 0;
-
-        /* file system folder or file rooted at the desktop */
-        if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
-        {
-            lstrcpynW(pszPath, sPathTarget, MAX_PATH - 1);
-            PathAddBackslashW(pszPath);
-            cLen = wcslen(pszPath);
-        }
-
-        _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
-        if (!_ILIsFolder(pidl))
-            SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-
-        if (GetFileAttributes(pszPath) == INVALID_FILE_ATTRIBUTES)
-        {
-            /* file system folder or file rooted at the AllUsers desktop */
-            if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
-                    (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
-            {
-                SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
-                PathAddBackslashW(pszPath);
-                cLen = wcslen(pszPath);
-            }
-
-            _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
-            if (!_ILIsFolder(pidl))
-                SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
-        }
+            return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    if (SUCCEEDED(hr))
-    {
-        /* Win9x always returns ANSI strings, NT always returns Unicode strings */
-        if (GetVersion() & 0x80000000)
-        {
-            strRet->uType = STRRET_CSTR;
-            if (!WideCharToMultiByte(CP_ACP, 0, pszPath, -1, strRet->cStr, MAX_PATH,
-                                     NULL, NULL))
-                strRet->cStr[0] = '\0';
-            CoTaskMemFree(pszPath);
-        }
-        else
-        {
-            strRet->uType = STRRET_WSTR;
-            strRet->pOleStr = pszPath;
-        }
-    }
-    else
-        CoTaskMemFree(pszPath);
+    /* file system folder or file rooted at the desktop */
+    CComPtr<IShellFolder2> psf;
+    HRESULT hr = _GetSFFromPidl(pidl, &psf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
-    TRACE ("-- (%p)->(%s,0x%08x)\n", this,
-           strRet->uType == STRRET_CSTR ? strRet->cStr :
-           debugstr_w(strRet->pOleStr), hr);
-    return hr;
+    return psf->GetDisplayNameOf(pidl, dwFlags, strRet);
 }
 
 /**************************************************************************
@@ -766,65 +760,12 @@ HRESULT WINAPI CDesktopFolder::SetNameOf(
     DWORD dwFlags,
     PITEMID_CHILD *pPidlOut)
 {
-    CComPtr<IShellFolder2>                psf;
-    HRESULT hr;
-    WCHAR szSrc[MAX_PATH + 1], szDest[MAX_PATH + 1];
-    LPWSTR ptr;
-    BOOL bIsFolder = _ILIsFolder (ILFindLastID (pidl));
-
-    TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", this, hwndOwner, pidl,
-           debugstr_w (lpName), dwFlags, pPidlOut);
-
-    if (_ILGetGUIDPointer(pidl))
-        return SHELL32_SetNameOfGuidItem(pidl, lpName, dwFlags, pPidlOut);
-
-    /* build source path */
-    lstrcpynW(szSrc, sPathTarget, MAX_PATH);
-    ptr = PathAddBackslashW (szSrc);
-    if (ptr)
-        _ILSimpleGetTextW (pidl, ptr, MAX_PATH + 1 - (ptr - szSrc));
-
-    /* build destination path */
-    if (dwFlags == SHGDN_NORMAL || dwFlags & SHGDN_INFOLDER) {
-        lstrcpynW(szDest, sPathTarget, MAX_PATH);
-        ptr = PathAddBackslashW (szDest);
-        if (ptr)
-            lstrcpynW(ptr, lpName, MAX_PATH + 1 - (ptr - szDest));
-    } else
-        lstrcpynW(szDest, lpName, MAX_PATH);
-
-    if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
-        WCHAR *ext = PathFindExtensionW(szSrc);
-        if(*ext != '\0') {
-            INT len = wcslen(szDest);
-            lstrcpynW(szDest + len, ext, MAX_PATH - len);
-        }
-    }
-
-    if (!memcmp(szSrc, szDest, (wcslen(szDest) + 1) * sizeof(WCHAR)))
-    {
-        /* src and destination is the same */
-        hr = S_OK;
-        if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
-
+    CComPtr<IShellFolder2> psf;
+    HRESULT hr = _GetSFFromPidl(pidl, &psf);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
-    TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
-    if (MoveFileW (szSrc, szDest))
-    {
-        hr = S_OK;
-
-        if (pPidlOut)
-            hr = _ILCreateFromPathW(szDest, pPidlOut);
-
-        SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM,
-                        SHCNF_PATHW, szSrc, szDest);
-
-        return hr;
-    }
-    return E_FAIL;
+    return psf->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
 }
 
 HRESULT WINAPI CDesktopFolder::GetDefaultSearchGUID(GUID *pguid)
@@ -878,10 +819,6 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     UINT iColumn,
     SHELLDETAILS *psd)
 {
-    HRESULT hr = S_OK;
-
-    TRACE ("(%p)->(%p %i %p)\n", this, pidl, iColumn, psd);
-
     if (!psd || iColumn >= DESKTOPSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
 
@@ -889,37 +826,17 @@ HRESULT WINAPI CDesktopFolder::GetDetailsOf(
     {
         psd->fmt = DesktopSFHeader[iColumn].fmt;
         psd->cxChar = DesktopSFHeader[iColumn].cxChar;
-        psd->str.uType = STRRET_CSTR;
-        LoadStringA (shell32_hInstance, DesktopSFHeader[iColumn].colnameid,
-                     psd->str.cStr, MAX_PATH);
-        return S_OK;
-    }
-    else if (_ILIsSpecialFolder(pidl))
-    {
-        return SHELL32_GetDetailsOfGuidItem(this, pidl, iColumn, psd);
+        return SHSetStrRet(&psd->str, DesktopSFHeader[iColumn].colnameid);
     }
 
-    /* the data from the pidl */
-    psd->str.uType = STRRET_CSTR;
-    switch (iColumn)
-    {
-        case 0:        /* name */
-            hr = GetDisplayNameOf(pidl,
-                                  SHGDN_NORMAL | SHGDN_INFOLDER, &psd->str);
-            break;
-        case 1:        /* size */
-            _ILGetFileSize (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 2:        /* type */
-            _ILGetFileType (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 3:        /* date */
-            _ILGetFileDate (pidl, psd->str.cStr, MAX_PATH);
-            break;
-        case 4:        /* attributes */
-            _ILGetFileAttributes (pidl, psd->str.cStr, MAX_PATH);
-            break;
-    }
+    CComPtr<IShellFolder2> psf;
+    HRESULT hr = _GetSFFromPidl(pidl, &psf);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr =  psf->GetDetailsOf(pidl, iColumn, psd);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     return hr;
 }
@@ -946,62 +863,68 @@ HRESULT WINAPI CDesktopFolder::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    return E_NOTIMPL;
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    if (!pidl) return E_POINTER;
+    if (!pidl) 
+        return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
     *pidl = ILClone (pidlRoot);
     return S_OK;
 }
 
-HRESULT WINAPI CDesktopFolder::_GetDropTarget(LPCITEMIDLIST pidl, LPVOID *ppvOut) {
-    HRESULT hr;
+HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
 
-    TRACE("CFSFolder::_GetDropTarget entered\n");
+    /* no data object means no selection */
+    if (!pdtobj)
+    {
+        if (uMsg == DFM_INVOKECOMMAND && wParam == DFM_CMD_PROPERTIES)
+        {
+            if (32 >= (UINT)ShellExecuteW(hwndOwner, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
+                return E_FAIL;
+            return S_OK;
+        }
+        else if (uMsg == DFM_MERGECONTEXTMENU)
+        {
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+        }
 
-    if (_ILGetGUIDPointer (pidl) || _ILIsFolder (pidl))
-        return this->BindToObject(pidl, NULL, IID_IDropTarget, ppvOut);
+        return S_OK;
+    }
 
-    LPITEMIDLIST pidlNext = NULL;
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (cidl > 1)
+        ERR("SHMultiFileProperties is not yet implemented\n");
 
     STRRET strFile;
-    hr = this->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strFile);
+    hr = GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
     if (SUCCEEDED(hr))
     {
-        WCHAR wszPath[MAX_PATH];
-        hr = StrRetToBufW(&strFile, pidl, wszPath, _countof(wszPath));
-
-        if (SUCCEEDED(hr))
-        {
-            PathRemoveFileSpecW (wszPath);
-            hr = this->ParseDisplayName(NULL, NULL, wszPath, NULL, &pidlNext, NULL);
-
-            if (SUCCEEDED(hr))
-            {
-                CComPtr<IShellFolder> psf;
-                hr = this->BindToObject(pidlNext, NULL, IID_PPV_ARG(IShellFolder, &psf));
-                CoTaskMemFree(pidlNext);
-                if (SUCCEEDED(hr))
-                {
-                    hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_IDropTarget, NULL, ppvOut);
-                    if (FAILED(hr))
-                        ERR("FS GetUIObjectOf failed: %x\n", hr);
-                }
-                else 
-                    ERR("BindToObject failed: %x\n", hr);
-            }
-            else
-                ERR("ParseDisplayName failed: %x\n", hr);
-        }
-        else
-            ERR("StrRetToBufW failed: %x\n", hr);
-    }    
+        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
+        if (FAILED(hr))
+            ERR("SH_ShowPropertiesDialog failed\n");
+    }
     else
-        ERR("GetDisplayNameOf failed: %x\n", hr);
+    {
+        ERR("Failed to get display name\n");
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
 
     return hr;
 }

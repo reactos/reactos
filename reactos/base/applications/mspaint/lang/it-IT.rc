@@ -15,17 +15,23 @@ BEGIN
         MENUITEM "Nuovo\tCtrl+N", IDM_FILENEW
         MENUITEM "Apri...\tCtrl+F12", IDM_FILEOPEN
         MENUITEM "Salva\tMaiusc+F12", IDM_FILESAVE
-        MENUITEM "Salva con nome...", IDM_FILESAVEAS
+        MENUITEM "Sal&va con nome...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Imposta come sfondo (normale)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Imposta come sfondo (centrata)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Imposta come sfondo (estesa)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Esci\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&sci\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Modifica"
     BEGIN
@@ -37,7 +43,7 @@ BEGIN
         MENUITEM "Incolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Cancella area selezionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "Inverte selezione", IDM_EDITINVERTSELECTION
-        MENUITEM "Seleziona tutto\tCtrl+5(tn)", IDM_EDITSELECTALL
+        MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Copia su...", IDM_EDITCOPYTO
         MENUITEM "Incolla da...", IDM_EDITPASTEFROM
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "Poligono"
     IDS_TOOLTIP15 "Ellisse"
     IDS_TOOLTIP16 "Rettangolo arrotondato"
-    IDS_OPENFILTER "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "All Files"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
     IDS_PRINTRES "%d x %d pixels per metro"
     IDS_INTNUMBERS "Si prega di inserire solo numeri interi!"

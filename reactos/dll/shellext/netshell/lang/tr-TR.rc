@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014, 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2014-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -78,6 +78,48 @@ BEGIN
     PUSHBUTTON "&Kapat", IDC_CLOSE, 120, 155, 60, 14
 END
 
+IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Kur"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Tipik ya da husûsî ayarlar kullanıp kullanmayacağınızı seçiniz:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Tipik Ayarlar", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Husûsî Ayarlar", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "ReactOS Ağları için, Kütük ve Yazdırma Paylaşımı'yla İstemci'yi kullanan ağ bağlantılarını ve kendiliğinden adreslemeli TCP/IP aktarım kuralı oluşturur.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Ağ bileşenlerini elle yapılandırmanıza olanak sağlar.", IDC_STATIC, 65, 90, 243, 20
+END
+
+IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Kur"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Aygıt için:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "Yok", IDC_NETWORK_DEVICE, 75, 2, 253, 20
+    LTEXT "Denetlenen ve bu bağlantı eliyle kullanan bileşenler:", IDC_STATIC, 33, 12, 253, 20
+    CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
+    PUSHBUTTON "&Kur...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "K&aldır", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Husûsiyetler", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "Tanım", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+END
+
+IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Kur"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Bu bilgisayarın bir etki alanının bir üyesi olmasını ister misiniz?\n\
+(Ağ yöneticinizden bu bilgiyi edinebilirsiniz.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Hayır, bu bilgisayar bir çalışma takımının parçası olacak.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Evet, bu bilgisayar bir etki alanının parçası olacak.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Çalışma Takımı ya da Etki Alanı Adı:", IDC_STATIC, 33, 72, 126, 14
+    EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "ÖNEMLİ: Bu bilgisayar bir ağın parçası olmayacaksa bir etki alanına katılmak için yeterli haklarınız olmaz, ya da ne gireceğinizi bilmiyorsanız yalnızca şu an için çalışma takımı seçiniz. Bu seçenekler ileriki bir zamanda değiştirilebilir.", IDC_STATIC, 33, 107, 263, 50
+END
+
 STRINGTABLE
 BEGIN
     IDS_PHYSICAL_ADDRESS "Fizîkî Adres"
@@ -121,4 +163,16 @@ BEGIN
     IDS_DURATION_DAYS "%d Gün %s"
     IDS_ASSIGNED_DHCP "DHCP eliyle atanmış."
     IDS_ASSIGNED_MANUAL "Elle yapılandırılmış."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORKSETTINGSTITLE "Ağ Ayarları"
+    IDS_NETWORKSETTINGSSUBTITLE "Başka ağlara, bilgisayarlara ve Umûmî Ağ'a bağlanmak için kullanılacak ağ yazılımını kurar."
+    IDS_NETWORKCOMPONENTTITLE "Ağ Bileşenleri"
+    IDS_NETWORKCOMPONENTSUBTITLE "Bilgisayarınızda hangi ağ bileşenlerinin kullanacağını belirtir. Yeni bileşenler eklemek için Kur'a tıklayınız."
+    IDS_NETWORKDOMAINTITLE "Çalışma Takımı ya da Bilgisayar Etki Alanı"
+    IDS_NETWORKDOMAINSUBTITLE "Bir etki alanı, bir ağ yöneticisi eliyle tanımlanmış bir takım bilgisayardır. Bir çalışma takımı, aynı çalışma takımı adını paylaşan bir takım bilgisayardır."
+    IDS_REACTOS_SETUP "ReactOS Kur"
+    IDS_WZD_DOMAIN_NAME "Kur, etki alanınızın ya da\nçalışma takımınızın adını\ngirene dek sürdüremez."
 END

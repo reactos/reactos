@@ -36,12 +36,12 @@ BEGIN
     LTEXT "Dauer:", -1, 19, 34, 60, 8
     LTEXT "Übertragungsrate:", -1, 19, 48, 60, 8
     GROUPBOX "Aktivität", -1, 9, 74, 182, 70, BS_GROUPBOX
-    RTEXT "Gesendet", -1, 26, 90, 60, 8
-    ICON "", IDC_NETSTAT, 110, 85, 32, 32
-    LTEXT "Empfangen", -1, 149, 90, 37, 8
+    LTEXT "Gesendet", -1, 55, 90, 60, 8
+    ICON "", IDC_NETSTAT, 105, 85, 32, 32
+    RTEXT "Empfangen", -1, 137, 90, 44, 8
     LTEXT "Bytes:", -1, 17, 115, 32, 8
-    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
-    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+    LTEXT "000.000.000", IDC_SEND, 55, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 137, 115, 44, 8
     PUSHBUTTON "E&igenschaften", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
     PUSHBUTTON "&Deaktivieren", IDC_ENDISABLE, 66, 150, 50, 14
     RTEXT "", IDC_STATUS, 83, 20, 98, 8
@@ -74,6 +74,48 @@ BEGIN
     LTEXT "Netzwerkverbindungs&details:", -1, 10, 4, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 10, 15, 170, 130
     PUSHBUTTON "&Schließen", IDC_CLOSE, 120, 155, 60, 14
+END
+
+IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Wählen Sie, ob Standard- oder benutzerdefinierte Einstellungen verwendet werden sollen:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Standardeinstellungen", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Benutzerdefinierte Einstellungen", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "Erstellt Netzwerkverbindungen unter Verwendung des Clients für ReactOS-Netzwerke, Datei- und Druckerfreigabe für ReactOS-Netzwerke und des TCP/IP-Transportprotokolls mit automatischer Adressierung.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Ermöglicht die manuelle Konfiguration von Netzwerkkomponenten.", IDC_STATIC, 65, 90, 243, 20
+END
+
+IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Für Gerät:", IDC_STATIC, 33, 2, 100, 20
+    LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
+    LTEXT "Aktivierte Komponenten werden von dieser Verbindung verwendet:", IDC_STATIC, 33, 17, 253, 10
+    CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 27, 250, 45
+    PUSHBUTTON "I&nstallieren...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Deinstallieren", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "Ei&genschaften", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "Beschreibung", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+END
+
+IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Soll dieser Computer einer Domäne oder Arbeitsgruppe hinzugefügt werden?\n\
+(Domänen-Anmelde-Informationen müssen eventuell vom Netzwerkadministrator bezogen werden.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Diesen Computer folgender Arbeitsgruppe hinzufügen.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Diesen Computer folgender Domäne hinzufügen.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Arbeitsgruppe oder Domäne:", IDC_STATIC, 33, 72, 126, 14
+    EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Hinweis: Soll dieser Computer nicht mit einem Netzwerk verbunden werden, ungenügend Rechte besitzen, einer Domäne beizutreten oder Sie schlicht nicht wissen, was Sie eingeben sollen, wählen Sie vorläufig Arbeitsgruppe.\nDiese Einstellung kann später jederzeit verändert werden.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -119,4 +161,16 @@ BEGIN
     IDS_DURATION_DAYS "%d Tage %s"
     IDS_ASSIGNED_DHCP "Von DHCP zugewiesen"
     IDS_ASSIGNED_MANUAL "Manuell konfiguriert"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NETWORKSETTINGSTITLE "Netzwerkeinstellungen"
+    IDS_NETWORKSETTINGSSUBTITLE "Die Installation von Netzwerksoftware ermöglicht das Herstellen von Verbindungen mit anderen Computern, Netzwerken und dem Internet."
+    IDS_NETWORKCOMPONENTTITLE "Netzwerkkomponenten"
+    IDS_NETWORKCOMPONENTSUBTITLE "Wählen Sie die Netzwerkkomponenten, die aktiviert werden sollen. Klicken Sie auf ""Installieren"", um eine Komponente hinzuzufügen."
+    IDS_NETWORKDOMAINTITLE "Arbeitsgruppe oder Computerdomäne"
+    IDS_NETWORKDOMAINSUBTITLE "Eine Arbeitsgruppe besteht aus Computern mit gleichem Arbeitsgruppennamen.\nEine Domäne ist eine vom Netzwerkadministrator vorgegebene Computergruppe."
+    IDS_REACTOS_SETUP "ReactOS Setup"
+    IDS_WZD_DOMAIN_NAME "Setup kann nicht fortgesetzt werden bevor Sie den Namen der Domäne oder Arbeitsgruppe festgelegt haben."
 END

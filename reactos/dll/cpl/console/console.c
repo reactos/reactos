@@ -90,7 +90,7 @@ ApplyConsoleInfo(HWND hwndDlg)
     static BOOL ConsoleInfoAlreadySaved = FALSE;
     
     /*
-     * We alread applied all the console properties (and saved if needed).
+     * We already applied all the console properties (and saved if needed).
      * Nothing more needs to be done.
      */
     if (ConsoleInfoAlreadySaved)
@@ -227,9 +227,9 @@ InitApplet(HANDLE hSectionOrWnd)
     }
     psh.pszCaption = szTitle;
 
-    if (/* pSharedInfo != NULL && */ ConInfo->hWnd != NULL)
+    if (pSharedInfo != NULL)
     {
-        /* We were started from a console window: this is our parent. */
+        /* We were started from a console window: this is our parent (or ConInfo->hWnd is NULL) */
         psh.hwndParent = ConInfo->hWnd;
     }
     else

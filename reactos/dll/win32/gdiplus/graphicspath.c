@@ -1202,11 +1202,9 @@ GpStatus WINGDIPAPI GdipFlattenPath(GpPath *path, GpMatrix* matrix, REAL flatnes
     if(path->pathdata.Count == 0)
         return Ok;
 
-    if(matrix){
-        stat = GdipTransformPath(path, matrix);
-        if (stat != Ok)
-            return stat;
-    }
+    stat = GdipTransformPath(path, matrix);
+    if(stat != Ok)
+        return stat;
 
     pt = path->pathdata.Points[0];
     if(!init_path_list(&list, pt.X, pt.Y))
@@ -1569,17 +1567,49 @@ GpStatus WINGDIPAPI GdipIsOutlineVisiblePathPointI(GpPath* path, INT x, INT y,
 GpStatus WINGDIPAPI GdipIsOutlineVisiblePathPoint(GpPath* path, REAL x, REAL y,
     GpPen *pen, GpGraphics *graphics, BOOL *result)
 {
-    static int calls;
+    GpStatus stat;
+    GpPath *wide_path;
+    GpMatrix *transform = NULL;
 
     TRACE("(%p,%0.2f,%0.2f,%p,%p,%p)\n", path, x, y, pen, graphics, result);
 
     if(!path || !pen)
         return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    stat = GdipClonePath(path, &wide_path);
 
-    return NotImplemented;
+    if (stat != Ok)
+        return stat;
+
+    if (pen->unit == UnitPixel && graphics != NULL)
+    {
+        stat = GdipCreateMatrix(&transform);
+
+        if (stat == Ok)
+            stat = get_graphics_transform(graphics, CoordinateSpaceDevice,
+                CoordinateSpaceWorld, transform);
+    }
+
+    if (stat == Ok)
+        stat = GdipWidenPath(wide_path, pen, transform, 1.0);
+
+    if (pen->unit == UnitPixel && graphics != NULL)
+    {
+        if (stat == Ok)
+            stat = GdipInvertMatrix(transform);
+
+        if (stat == Ok)
+            stat = GdipTransformPath(wide_path, transform);
+    }
+
+    if (stat == Ok)
+        stat = GdipIsVisiblePathPoint(wide_path, x, y, graphics, result);
+
+    GdipDeleteMatrix(transform);
+
+    GdipDeletePath(wide_path);
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipIsVisiblePathPointI(GpPath* path, INT x, INT y, GpGraphics *graphics, BOOL *result)
@@ -1663,7 +1693,7 @@ GpStatus WINGDIPAPI GdipTransformPath(GpPath *path, GpMatrix *matrix)
     if(!path)
         return InvalidParameter;
 
-    if(path->pathdata.Count == 0)
+    if(path->pathdata.Count == 0 || !matrix)
         return Ok;
 
     return GdipTransformMatrixPoints(matrix, path->pathdata.Points,
@@ -1876,7 +1906,7 @@ static void widen_closed_figure(GpPath *path, GpPen *pen, int start, int end,
     int i;
     path_list_node_t *prev_point;
 
-    if (end <= start+1)
+    if (end <= start)
         return;
 
     /* left outline */

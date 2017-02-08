@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "&Выход", IDM_EXIT
         MENUITEM "&Параметры", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе...", IDM_ABOUT
+        MENUITEM "&О программе", IDM_ABOUT
     END
 END
 
@@ -30,12 +30,12 @@ END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 185, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Параметры"
+CAPTION "Параметры экранной лупы"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "В&ыход", IDOK, 94, 158, 50, 14
+    DEFPUSHBUTTON "&ОК", IDOK, 94, 158, 50, 14
     PUSHBUTTON "&Справка", IDC_BUTTON_HELP, 34, 158, 50, 14
-    LTEXT "Увеличение:", IDC_STATIC, 6, 8, 68, 8
+    LTEXT "&Увеличение:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 92, 6, 85, 66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Слежение", IDC_STATIC, 7, 25, 170, 59
     GROUPBOX "Представление", IDC_STATIC, 7, 87, 170, 57

@@ -23,9 +23,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
-extern const unsigned short wine_linebreak_table[];
+extern const unsigned short wine_linebreak_table[] DECLSPEC_HIDDEN;
 
-enum breaking_types { b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL, b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2, b_HL, b_CJ, b_RI};
+enum breaking_types {
+    b_BK=1, b_CR, b_LF, b_CM, b_SG, b_GL, b_CB, b_SP, b_ZW, b_NL, b_WJ, b_JL, b_JV, b_JT, b_H2, b_H3, b_XX, b_OP, b_CL,
+    b_CP, b_QU, b_NS, b_EX, b_SY, b_IS, b_PR, b_PO, b_NU, b_AL, b_ID, b_IN, b_HY, b_BB, b_BA, b_SA, b_AI, b_B2, b_HL,
+    b_CJ, b_RI, b_EB, b_EM, b_ZWJ
+};
 
 enum breaking_class {b_r=1, b_s, b_x};
 

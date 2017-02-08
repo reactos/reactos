@@ -15,7 +15,7 @@ TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, 
 {
     TV_INSERTSTRUCTW Insert;
 
-    ZeroMemory(&Insert, sizeof(TV_INSERTSTRUCT));
+    ZeroMemory(&Insert, sizeof(Insert));
 
     Insert.item.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     Insert.hInsertAfter = TVI_LAST;

@@ -168,7 +168,7 @@ CPortDMus::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortDMus_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortDMus_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -285,7 +285,7 @@ CPortDMus::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create descriptior\n");
+        DPRINT("Failed to create descriptor\n");
 
         if (Miniport)
             Miniport->Release();
@@ -434,7 +434,7 @@ NTSTATUS
 NTAPI
 CPortDMus::ReleaseChildren()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

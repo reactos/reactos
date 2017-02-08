@@ -1,0 +1,30 @@
+[Section]
+Name = Podcast Easy
+Version = 0.7
+License = GNU GPL v3
+Description = Application for downloading podcasts.
+Size = 682.5 KiB
+Category = 5
+URLSite = http://r57zone.github.io
+URLDownload = https://github.com/r57zone/Podcast-Easy-for-Windows/releases/download/0.7/PodcastEasy_Setup.exe
+CDPath = none
+SHA1 = d419a6c26b9879e0d3faba75888ad04aded43399
+
+[Section.0407]
+Description = Anwendung zum Herunterladen von Podcasts.
+Size = 682,5 KiB
+
+[Section.0418]
+Description = Aplicație pentru descărcarea de fișiere audio.
+Size = 682,5 Kio
+
+[Section.0419]
+License = GNU GPL v3
+Description = Приложение для загрузки подкастов.
+Size = 682,5 КиБ
+
+[Section.041f]
+License = GNU GPL sürüm 3
+Description = Ortam akışlarını indirmek için uygulama.
+Size = 682,5 KiB
+

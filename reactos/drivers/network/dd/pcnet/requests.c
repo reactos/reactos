@@ -1,7 +1,7 @@
 /*
  * ReactOS AMD PCNet Driver
  *
- * Copyright (C) 2000 Casper Hornstroup <chorns@users.sourceforge.net>
+ * Copyright (C) 2000 Casper Hornstrup <chorns@users.sourceforge.net>
  * Copyright (C) 2003 Vizzini <vizzini@plasmic.com>
  * Copyright (C) 2004 Filip Navara <navaraf@reactos.com>
  *
@@ -302,7 +302,7 @@ MiniportQueryInformation(
                        Adapter->Statistics.XmtLossesOfCarrier +
                        Adapter->Statistics.XmtCollisions +
                        Adapter->Statistics.XmtLateCollisions +
-                       Adapter->Statistics.XmtExcessiveDefferals +
+                       Adapter->Statistics.XmtExcessiveDeferrals +
                        Adapter->Statistics.XmtBufferUnderflows +
                        Adapter->Statistics.XmtBufferErrors;
         break;

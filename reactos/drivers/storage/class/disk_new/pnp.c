@@ -363,7 +363,7 @@ Return Value:
     status = ClassReadDriveCapacity(Fdo);
 
     //
-    // If the read capcity failed then just return, unless this is a
+    // If the read capacity failed then just return, unless this is a
     // removable disk where a device object partition needs to be created.
     //
 
@@ -438,7 +438,7 @@ Return Value:
         fdoExtension->DMByteSkew = fdoExtension->DMSkew * bytesPerSector;
 
         //
-        // Save away the infomation that we need, since this deviceExtension will soon be
+        // Save away the information that we need, since this deviceExtension will soon be
         // blown away.
         //
 
@@ -495,7 +495,7 @@ Return Value:
     DiskCreateSymbolicLinks(Fdo);
 
     //
-    // Determine the type of disk and enable failure preiction in the hardware
+    // Determine the type of disk and enable failure prediction in the hardware
     // and enable failure prediction polling.
     //
 

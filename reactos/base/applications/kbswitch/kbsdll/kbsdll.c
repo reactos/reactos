@@ -7,48 +7,15 @@
 
 #include "../kbswitch.h"
 
-HHOOK hKeyboardHook, hLangHook, hWinHook;
-HINSTANCE hInstance;
-HWND hKbSwitchWnd;
+HHOOK hWinHook = NULL;
+HHOOK hShellHook = NULL;
+HINSTANCE hInstance = NULL;
+HWND hKbSwitchWnd = NULL;
 
 static VOID
 SendMessageToMainWnd(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
     PostMessage(hKbSwitchWnd, Msg, wParam, lParam);
-}
-
-/* Not used yet */
-LRESULT CALLBACK
-KeyboardHookProc(int code, WPARAM wParam, LPARAM lParam)
-{
-    return CallNextHookEx(hKeyboardHook, code, wParam, lParam);
-}
-
-LRESULT CALLBACK
-LangHookProc(int code, WPARAM wParam, LPARAM lParam)
-{
-    PMSG msg;
-    msg = (PMSG) lParam;
-
-    switch (msg->message)
-    {
-        case WM_INPUTLANGCHANGEREQUEST:
-        {
-            SendMessageToMainWnd(WM_LANG_CHANGED, wParam, msg->lParam);
-        }
-        break;
-
-        case WM_HOTKEY:
-        {
-            if (msg->hwnd)
-            {
-                SendMessageToMainWnd(WM_LOAD_LAYOUT, (WPARAM)msg->hwnd, msg->lParam);
-            }
-        }
-        break;
-    }
-
-    return CallNextHookEx(hLangHook, code, wParam, lParam);
 }
 
 LRESULT CALLBACK
@@ -69,18 +36,6 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
-
-        case HCBT_CREATEWND:
-        {
-            RegisterHotKey((HWND)wParam, id, MOD_ALT, VK_F10);
-        }
-        break;
-
-        case HCBT_DESTROYWND:
-        {
-            UnregisterHotKey((HWND)wParam, id);
-        }
-        break;
     }
 
     GlobalDeleteAtom(id);
@@ -88,25 +43,40 @@ WinHookProc(int code, WPARAM wParam, LPARAM lParam)
     return CallNextHookEx(hWinHook, code, wParam, lParam);
 }
 
+LRESULT CALLBACK
+ShellHookProc(int code, WPARAM wParam, LPARAM lParam)
+{
+    switch (code)
+    {
+        case HSHELL_LANGUAGE:
+        {
+            SendMessageToMainWnd(WM_LANG_CHANGED, wParam, lParam);
+        }
+        break;
+    }
+
+    return CallNextHookEx(hShellHook, code, wParam, lParam);
+}
+
 BOOL WINAPI
 KbSwitchSetHooks(VOID)
 {
-    hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD, KeyboardHookProc, hInstance, 0);
-    hLangHook = SetWindowsHookEx(WH_GETMESSAGE, LangHookProc, hInstance, 0);
     hWinHook = SetWindowsHookEx(WH_CBT, WinHookProc, hInstance, 0);
+    hShellHook = SetWindowsHookEx(WH_SHELL, ShellHookProc, hInstance, 0);
 
-    if ((hKeyboardHook)&&(hLangHook)&&(hWinHook))
-        return TRUE;
-    else
+    if (!hWinHook || !hShellHook)
+    {
         return FALSE;
+    }
+
+    return TRUE;
 }
 
 VOID WINAPI
 KbSwitchDeleteHooks(VOID)
 {
-    if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
-    if (hLangHook) UnhookWindowsHookEx(hLangHook);
     if (hWinHook) UnhookWindowsHookEx(hWinHook);
+    if (hShellHook) UnhookWindowsHookEx(hShellHook);
 }
 
 BOOL WINAPI
@@ -117,10 +87,15 @@ DllMain(IN HINSTANCE hinstDLL,
     switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
+        {
             hInstance = hinstDLL;
             hKbSwitchWnd = FindWindow(szKbSwitcherName, NULL);
-            if (!hKbSwitchWnd) return FALSE;
-            break;
+            if (!hKbSwitchWnd)
+            {
+                return FALSE;
+            }
+        }
+        break;
     }
 
     return TRUE;

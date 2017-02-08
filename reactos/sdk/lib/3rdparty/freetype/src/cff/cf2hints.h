@@ -220,7 +220,7 @@ FT_BEGIN_HEADER
 
     /* character space miter limit threshold */
     CF2_Fixed  miterLimit;
-    /* vertical/horzizontal snap distance in character space */
+    /* vertical/horizontal snap distance in character space */
     CF2_Fixed  snapThreshold;
 
     FT_Vector  offsetStart0;  /* first and second points of first */

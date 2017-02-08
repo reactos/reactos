@@ -4,7 +4,8 @@
  * FILE:            ntoskrnl/cc/pin.c
  * PURPOSE:         Implements cache managers pinning interface
  *
- * PROGRAMMERS:
+ * PROGRAMMERS:     ?
+                    Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -61,6 +62,7 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -74,6 +76,7 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(Status);
         return FALSE;
     }
 
@@ -87,11 +90,13 @@ CcMapData (
             return FALSE;
         }
 
-        if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
+        Status = CcReadVirtualAddress(Vacb);
+        if (!NT_SUCCESS(Status))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                 FileObject, FileOffset, Length, Flags);
+            ExRaiseStatus(Status);
             return FALSE;
         }
     }
@@ -103,6 +108,7 @@ CcMapData (
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
         return FALSE;
     }
 
@@ -113,7 +119,9 @@ CcMapData (
     iBcb->PFCB.MappedFileOffset = *FileOffset;
     iBcb->Vacb = Vacb;
     iBcb->Dirty = FALSE;
+    iBcb->Pinned = FALSE;
     iBcb->RefCount = 1;
+    ExInitializeResourceLite(&iBcb->Lock);
     *pBcb = (PVOID)iBcb;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p\n",
@@ -133,8 +141,18 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
+
+    ASSERT(FileObject);
+    ASSERT(FileObject->SectionObjectPointer);
+    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
+    ASSERT(SharedCacheMap->PinAccess);
 
     /* no-op for current implementation. */
     return TRUE;
@@ -153,13 +171,34 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    PINTERNAL_BCB iBcb;
+
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
 
     if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {
         if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
+        {
+            iBcb = *Bcb;
+
+            ASSERT(iBcb->Pinned == FALSE);
+
+            iBcb->Pinned = TRUE;
+            iBcb->Vacb->PinCount++;
+            CcRosReleaseVacbLock(iBcb->Vacb);
+
+            if (Flags & PIN_EXCLUSIVE)
+            {
+                ExAcquireResourceExclusiveLite(&iBcb->Lock, TRUE);
+            }
+            else
+            {
+                ExAcquireResourceSharedLite(&iBcb->Lock, TRUE);
+            }
+
             return TRUE;
+        }
         else
             CcUnpinData(*Bcb);
     }
@@ -218,19 +257,9 @@ VOID NTAPI
 CcUnpinData (
     IN PVOID Bcb)
 {
-    PINTERNAL_BCB iBcb = Bcb;
-
     CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
 
-    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
-                     iBcb->Vacb,
-                     TRUE,
-                     iBcb->Dirty,
-                     FALSE);
-    if (--iBcb->RefCount == 0)
-    {
-        ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
-    }
+    CcUnpinDataForThread(Bcb, (ERESOURCE_THREAD)PsGetCurrentThread());
 }
 
 /*
@@ -246,13 +275,25 @@ CcUnpinDataForThread (
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
 
-    if (iBcb->OwnerPointer != (PVOID)ResourceThreadId)
+    if (iBcb->Pinned)
     {
-        DPRINT1("Invalid owner! Caller: %p, Owner: %p\n", (PVOID)ResourceThreadId, iBcb->OwnerPointer);
-        return;
+        ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
+        iBcb->Pinned = FALSE;
+        CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+        iBcb->Vacb->PinCount--;
     }
 
-    CcUnpinData(Bcb);
+    CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+                     iBcb->Vacb,
+                     TRUE,
+                     iBcb->Dirty,
+                     FALSE);
+
+    if (--iBcb->RefCount == 0)
+    {
+        ExDeleteResourceLite(&iBcb->Lock);
+        ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+    }
 }
 
 /*
@@ -290,11 +331,7 @@ CcUnpinRepinnedBcb (
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             if (iBcb->Vacb->Dirty)
             {
                 IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
@@ -303,13 +340,21 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
+            CcRosReleaseVacbLock(iBcb->Vacb);
         }
         else
         {
             IoStatus->Status = STATUS_SUCCESS;
         }
 
+        if (iBcb->Pinned)
+        {
+            ExReleaseResourceLite(&iBcb->Lock);
+            iBcb->Pinned = FALSE;
+            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+            iBcb->Vacb->PinCount--;
+        }
+        ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
     }
 }

@@ -225,3 +225,17 @@ HRESULT WINAPI GetThemeSysString(HTHEME hTheme, int iStringID,
         return MSSTYLES_GetPropertyString(tp, pszStringBuff, cchMaxStringChars);
     return E_PROP_ID_UNSUPPORTED;
 }
+
+#ifndef __REACTOS__
+/***********************************************************************
+ *      GetThemeTransitionDuration                          (UXTHEME.@)
+ */
+HRESULT WINAPI GetThemeTransitionDuration(HTHEME hTheme, int iPartId, int iStateIdFrom,
+                                          int iStateIdTo, int iPropId, DWORD *pdwDuration)
+{
+    FIXME("(%p, %u, %u, %u, %u, %p) stub\n", hTheme, iPartId, iStateIdFrom, iStateIdTo,
+          iPropId, pdwDuration);
+
+    return E_NOTIMPL;
+}
+#endif

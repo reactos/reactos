@@ -93,6 +93,9 @@ DLinkDFE538TX.DeviceDesc = "Adaptor Ethernet D-Link DFE-538TX (RTL8139)"
 LevelOneFPC0106TX.DeviceDesc = "Adaptor Ethernet LevelOne FPC-0106Tx (RTL8139)"
 CompaqHNE300.DeviceDesc = "Adaptor Ethernet Compaq HNE-300 (RTL8139C)"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 

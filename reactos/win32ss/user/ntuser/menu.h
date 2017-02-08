@@ -122,6 +122,8 @@ typedef struct tagROSMENUITEMINFO
 //
 //
 
+BOOL FASTCALL IntIsMenu(HMENU);
+
 PMENU FASTCALL
 IntGetMenuObject(HMENU hMenu);
 

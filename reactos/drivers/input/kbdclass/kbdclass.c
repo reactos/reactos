@@ -707,7 +707,7 @@ ClassAddDevice(
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* Register interface ; ignore the error (if any) as having
-	 * a registred interface is not so important... */
+	 * a registered interface is not so important... */
 	Status = IoRegisterDeviceInterface(
 		Pdo,
 		&GUID_DEVINTERFACE_KEYBOARD,

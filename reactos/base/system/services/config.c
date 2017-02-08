@@ -10,9 +10,11 @@
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
+#include <ntsecapi.h>
 
 #define NDEBUG
 #include <debug.h>
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -441,6 +443,238 @@ ScmReadDependencies(HKEY hServiceKey,
         HeapFree(GetProcessHeap(), 0, lpServices);
 
     return ERROR_SUCCESS;
+}
+
+
+DWORD
+ScmSetServicePassword(
+    IN PCWSTR pszServiceName,
+    IN PCWSTR pszPassword)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    UNICODE_STRING ServiceName = {0, 0, NULL};
+    UNICODE_STRING Password;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    RtlZeroMemory(&ObjectAttributes, sizeof(OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_CREATE_SECRET,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+        return RtlNtStatusToDosError(Status);
+
+    ServiceName.Length = (wcslen(pszServiceName) + 4) * sizeof(WCHAR);
+    ServiceName.MaximumLength = ServiceName.Length + sizeof(WCHAR);
+    ServiceName.Buffer = HeapAlloc(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   ServiceName.MaximumLength);
+    if (ServiceName.Buffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(ServiceName.Buffer, L"_SC_");
+    wcscat(ServiceName.Buffer, pszServiceName);
+
+    RtlInitUnicodeString(&Password, pszPassword);
+
+    Status = LsaStorePrivateData(PolicyHandle,
+                                 &ServiceName,
+                                 pszPassword ? &Password : NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+done:
+    if (ServiceName.Buffer != NULL)
+        HeapFree(GetProcessHeap(), 0, ServiceName.Buffer);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+
+    return dwError;
+}
+
+
+DWORD
+ScmWriteSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+    HKEY hSecurityKey = NULL;
+    DWORD dwDisposition;
+    DWORD dwError;
+
+    DPRINT("ScmWriteSecurityDescriptor(%p %p)\n", hServiceKey, pSecurityDescriptor);
+
+    dwError = RegCreateKeyExW(hServiceKey,
+                              L"Security",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_SET_VALUE,
+                              NULL,
+                              &hSecurityKey,
+                              &dwDisposition);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegSetValueExW(hSecurityKey,
+                             L"Security",
+                             0,
+                             REG_BINARY,
+                             (LPBYTE)pSecurityDescriptor,
+                             RtlLengthSecurityDescriptor(pSecurityDescriptor));
+
+    RegCloseKey(hSecurityKey);
+
+    return dwError;
+}
+
+
+DWORD
+ScmReadSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR pRelativeSD = NULL;
+    HKEY hSecurityKey = NULL;
+    DWORD dwBufferLength = 0;
+    DWORD dwType;
+    DWORD dwError;
+
+    DPRINT("ScmReadSecurityDescriptor(%p %p)\n", hServiceKey, ppSecurityDescriptor);
+
+    *ppSecurityDescriptor = NULL;
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Security",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hSecurityKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security key does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
+        goto done;
+    }
+
+    dwError = RegQueryValueExW(hSecurityKey,
+                               L"Security",
+                               0,
+                               &dwType,
+                               NULL,
+                               &dwBufferLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security value does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
+        goto done;
+    }
+
+    DPRINT("dwBufferLength: %lu\n", dwBufferLength);
+    pRelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  dwBufferLength);
+    if (pRelativeSD == NULL)
+    {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    DPRINT("pRelativeSD: %lu\n", pRelativeSD);
+    dwError = RegQueryValueExW(hSecurityKey,
+                               L"Security",
+                               0,
+                               &dwType,
+                               (LPBYTE)pRelativeSD,
+                               &dwBufferLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        goto done;
+    }
+
+    *ppSecurityDescriptor = pRelativeSD;
+
+done:
+    if (dwError != ERROR_SUCCESS && pRelativeSD != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pRelativeSD);
+
+    if (hSecurityKey != NULL)
+        RegCloseKey(hSecurityKey);
+
+    return dwError;
+}
+
+
+DWORD
+ScmDeleteRegKey(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszSubKey)
+{
+    DWORD dwMaxSubkeyLen, dwMaxValueLen;
+    DWORD dwMaxLen, dwSize;
+    PWSTR pszName = NULL;
+    HKEY hSubKey;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Get maximum length of key and value names */
+    dwError = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
+                               &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    dwMaxSubkeyLen++;
+    dwMaxValueLen++;
+    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
+
+    /* Allocate the name buffer */
+    pszName = HeapAlloc(GetProcessHeap(), 0, dwMaxLen * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLen;
+        if (RegEnumKeyExW(hSubKey, 0, pszName, &dwSize,
+                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
+            break;
+        }
+
+        dwError = ScmDeleteRegKey(hSubKey, pszName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+done:
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+
+    RegCloseKey(hSubKey);
+
+    /* Finally delete the key */
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(hKey, pszSubKey);
+
+    return dwError;
 }
 
 /* EOF */

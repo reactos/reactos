@@ -4948,14 +4948,6 @@ static int sig_tree_compare(const void *key, const struct wine_rb_entry *entry)
     return compare_sig(key, &e->sig);
 }
 
-static const struct wine_rb_functions sig_tree_functions =
-{
-    wined3d_rb_alloc,
-    wined3d_rb_realloc,
-    wined3d_rb_free,
-    sig_tree_compare
-};
-
 static HRESULT shader_arb_alloc(struct wined3d_device *device, const struct wined3d_vertex_pipe_ops *vertex_pipe,
         const struct fragment_pipeline *fragment_pipe)
 {
@@ -4993,11 +4985,7 @@ static HRESULT shader_arb_alloc(struct wined3d_device *device, const struct wine
     memset(priv->pshader_const_dirty, 1,
             sizeof(*priv->pshader_const_dirty) * d3d_info->limits.ps_uniform_count);
 
-    if(wine_rb_init(&priv->signature_tree, &sig_tree_functions) == -1)
-    {
-        ERR("RB tree init failed\n");
-        goto fail;
-    }
+    wine_rb_init(&priv->signature_tree, sig_tree_compare);
 
     priv->vertex_pipe = vertex_pipe;
     priv->fragment_pipe = fragment_pipe;
@@ -5836,13 +5824,7 @@ static void *arbfp_alloc(const struct wined3d_shader_backend_ops *shader_backend
     else if (!(priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv))))
         return NULL;
 
-    if (wine_rb_init(&priv->fragment_shaders, &wined3d_ffp_frag_program_rb_functions) == -1)
-    {
-        ERR("Failed to initialize rbtree.\n");
-        if (priv != shader_priv)
-            HeapFree(GetProcessHeap(), 0, priv);
-        return NULL;
-    }
+    wine_rb_init(&priv->fragment_shaders, wined3d_ffp_frag_program_key_compare);
     priv->use_arbfp_fixed_func = TRUE;
 
     return priv;
@@ -6970,14 +6952,6 @@ static void arbfp_free_blit_shader(struct wine_rb_entry *entry, void *context)
     HeapFree(GetProcessHeap(), 0, entry_arb);
 }
 
-static const struct wine_rb_functions wined3d_arbfp_blit_rb_functions =
-{
-    wined3d_rb_alloc,
-    wined3d_rb_realloc,
-    wined3d_rb_free,
-    arbfp_blit_type_compare,
-};
-
 static HRESULT arbfp_blit_alloc(struct wined3d_device *device)
 {
     struct arbfp_blit_priv *priv;
@@ -6985,12 +6959,7 @@ static HRESULT arbfp_blit_alloc(struct wined3d_device *device)
     if (!(priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv))))
         return E_OUTOFMEMORY;
 
-    if (wine_rb_init(&priv->shaders, &wined3d_arbfp_blit_rb_functions) == -1)
-    {
-        ERR("Failed to initialize rbtree.\n");
-        HeapFree(GetProcessHeap(), 0, priv);
-        return E_OUTOFMEMORY;
-    }
+    wine_rb_init(&priv->shaders, arbfp_blit_type_compare);
 
     device->blit_priv = priv;
 

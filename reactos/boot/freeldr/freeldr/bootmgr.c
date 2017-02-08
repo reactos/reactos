@@ -73,7 +73,7 @@ VOID LoadOperatingSystem(IN OperatingSystemItem* OperatingSystem)
 
     if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
     {
-        /* Try to infere the boot type value */
+        /* Try to infer the boot type value */
 #ifdef _M_IX86
         ULONG FileId;
         if (ArcOpen((PSTR)SectionName, OpenReadOnly, &FileId) == ESUCCESS)

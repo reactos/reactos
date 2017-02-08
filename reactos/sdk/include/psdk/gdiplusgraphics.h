@@ -19,8 +19,21 @@
 #ifndef _GDIPLUSGRAPHICS_H
 #define _GDIPLUSGRAPHICS_H
 
+class Image;
+class ImageAttributes;
+class CachedBitmap;
+class Region;
+class Font;
+class GraphicsPath;
+class Metafile;
+
 class Graphics : public GdiplusBase
 {
+  friend class Region;
+  friend class Font;
+  friend class Bitmap;
+  friend class CachedBitmap;
+
 public:
   Graphics(Image *image)
   {

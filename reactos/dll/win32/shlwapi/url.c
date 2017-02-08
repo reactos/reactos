@@ -911,7 +911,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     }
 
     if (ret == S_OK) {
-	/* Reuse mrelative as temp storage as its already allocated and not needed anymore */
+        /* Reuse mrelative as temp storage as it's already allocated and not needed anymore */
         if(*pcchCombined == 0)
             *pcchCombined = 1;
 	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, (dwFlags & ~URL_FILE_USE_PATHURL));
@@ -946,8 +946,10 @@ HRESULT WINAPI UrlEscapeA(
 
     if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
         return E_INVALIDARG;
-    if(dwFlags & URL_ESCAPE_AS_UTF8)
+    if(dwFlags & URL_ESCAPE_AS_UTF8) {
+        RtlFreeUnicodeString(&urlW);
         return E_NOTIMPL;
+    }
     if((ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags)) == E_POINTER) {
         escapedW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
         ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags);
@@ -1188,13 +1190,23 @@ HRESULT WINAPI UrlEscapeW(
                     if ((cur >= 0xd800 && cur <= 0xdfff) &&
                         (src[1] >= 0xdc00 && src[1] <= 0xdfff))
                     {
+#ifdef __REACTOS__
+                        len = WideCharToMultiByte( CP_UTF8, 0, src, 2,
+                                                   utf, sizeof(utf), NULL, NULL );
+#else
                         len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, src, 2,
                                                    utf, sizeof(utf), NULL, NULL );
+#endif
                         src++;
                     }
                     else
+#ifdef __REACTOS__
+                        len = WideCharToMultiByte( CP_UTF8, 0, &cur, 1,
+                                                   utf, sizeof(utf), NULL, NULL );
+#else
                         len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, &cur, 1,
                                                    utf, sizeof(utf), NULL, NULL );
+#endif
 
                     if (!len) {
                         utf[0] = 0xef;

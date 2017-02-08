@@ -151,9 +151,6 @@ void     hash_table_iter_init(const struct hash_table* ht,
                               struct hash_table_iter* hti, const char* name) DECLSPEC_HIDDEN;
 void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 
-#define GET_ENTRY(__i, __t, __f) \
-    ((__t*)((char*)(__i) - FIELD_OFFSET(__t,__f)))
-
 
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
 /* some more Wine extensions */
@@ -400,7 +397,6 @@ struct symt_idx_to_ptr
 };
 #endif
 
-extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module
 {
     struct process*             process;
@@ -699,6 +695,7 @@ extern const char*  pe_map_directory(struct module* module, int dirno, DWORD* si
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* basedir, const char* source) DECLSPEC_HIDDEN;
 extern const char*  source_get(const struct module* module, unsigned idx) DECLSPEC_HIDDEN;
+extern int          source_rb_compare(const void *key, const struct wine_rb_entry *entry) DECLSPEC_HIDDEN;
 
 /* stabs.c */
 typedef void (*stabs_def_cb)(struct module* module, unsigned long load_offset,

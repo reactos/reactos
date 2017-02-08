@@ -39,7 +39,9 @@ Description = Navigator popular cu multe funcționalități avansate, incluzând
 Size = 7,2 Mio
 
 [Section.0419]
+License = Бесплатно
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
+Size = 7,2 МиБ
 
 [Section.041f]
 License = Ücretsiz

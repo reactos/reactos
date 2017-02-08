@@ -31,6 +31,10 @@ Description = DOSBox - emulator DOSa.
 Description = Emulator DOS, cu surse deschise.
 Size = 1,4 Mio
 
+[Section.0419]
+Description = Эмулятор DOS.
+Size = 1,4 МиБ
+
 [Section.041f]
 Description = Açık kaynak bir DOS öykünücüsü.
 Size = 1,4 MiB

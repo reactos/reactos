@@ -20,7 +20,6 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <shobjidl.h>
-#include <recyclebin.h>
 #include <ndk/rtlfuncs.h>
 #include <fmifs/fmifs.h>
 #include <tchar.h>
@@ -28,6 +27,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlstr.h>
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>
@@ -41,6 +41,7 @@
 
 #include <shellutils.h>
 
+#include "shellrecyclebin/recyclebin.h"
 #include "wine/pidl.h"
 #include "debughlp.h"
 #include "wine/shell32_main.h"
@@ -53,8 +54,9 @@
 #include "CFolderItemVerbs.h"
 #include "CFolderItems.h"
 #include "CFolder.h"
-#include "CShell.h"
+#include "CShellDispatch.h"
 #include "CDropTargetHelper.h"
+#include "CFolderOptions.h"
 #include "folders/CFSFolder.h"
 #include "folders/CDrivesFolder.h"
 #include "folders/CDesktopFolder.h"
@@ -66,6 +68,7 @@
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
 #include "droptargets/CexeDropHandler.h"
+#include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
 #include "dialogs/filedefext.h"

@@ -147,7 +147,7 @@ extern LONG CdXAAudioPhileHeader[];
 //      ASSERT_RESOURCE_NOT_MINE( IN PERESOURCE Resource );
 //
 //  The following macros are used to check whether the current thread
-//  owns the resoures in the given structures.
+//  owns the resource in the given structures.
 //
 //      ASSERT_EXCLUSIVE_CDDATA
 //

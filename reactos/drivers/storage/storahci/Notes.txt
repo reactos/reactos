@@ -1,0 +1,168 @@
+AhciPortInitialize
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciAllocateResourceForAdapter
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciHwInitialize
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciInterruptHandler
+    Flags
+        NOT_IMPLEMENTED
+        TESTED
+    Comment
+        Fatal Error not supported
+        Error Recovery not supported
+        Complete Request Routine
+
+AhciHwInterrupt
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciHwStartIo
+    Flags
+        IMPLEMENTED
+        TESTED
+    Comment
+        Adapter based IO request not supported
+        Need to implement more srb functions
+
+AhciHwResetBus
+    Flags
+        NOT_IMPLEMENTED
+    Comment
+        Adapter master bus reset not implemented
+
+AhciHwFindAdapter
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+DriverEntry
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciATA_CFIS
+    Flags
+        IMPLEMENTED
+    Comment
+        Need to implement NCQ
+
+AhciATAPI_CFIS
+    Flags
+        NOT_IMPLEMENTED
+    Comment
+        Need to configure command table according to Srb function
+
+AhciBuild_PRDT
+    Flags
+        IMPLEMENTED
+    Comment
+        NONE
+
+AhciProcessSrb
+    Flags
+        IMPLEMENTED
+    Comment
+        Only ATA/ATAPI type CFIS supported
+        Also I am not sure about FIS alignment in SrbExtension.
+
+AhciActivatePort
+    Flags
+        IMPLEMENTED
+    Comment
+        NCQ not supported
+
+AhciProcessIO
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+DeviceInquiryRequest
+    Flags
+        IMPLEMENTED
+        TESTED
+    Comment
+        EVPD is not sending Data buffer for IDENTIFY command.
+        Need to implement VPD
+
+AhciAdapterReset
+    Flags
+        NOT_IMPLEMENTED
+    Comment
+        NONE
+
+AhciZeroMemory
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+IsPortValid
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AddQueue
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+RemoveQueue
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+        TESTED
+    Comment
+        NONE
+
+AhciCompleteIssuedSrb
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+    Comment
+        NONE
+
+InquiryCompletion
+    Flags
+        NOT_IMPLEMENTED
+    Comment
+        NONE

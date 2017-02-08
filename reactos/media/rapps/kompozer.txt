@@ -6,7 +6,7 @@ Description = A complete web authoring system that combines web file management 
 Size = 7.6 MiB
 Category = 5
 URLSite = http://www.kompozer.net/
-URLDownload = http://downloads.sourceforge.net/project/kompozer/current/0.7.10/kompozer-0.7.10-win32.zip
+URLDownload = http://download.sourceforge.net/project/kompozer/current/0.7.10/kompozer-0.7.10-win32.zip
 SHA1 = cb0fbb2f9d4a547131176158e9e7185ee525a8a3
 CDPath = none
 
@@ -17,6 +17,10 @@ Size = 7,6 MiB
 [Section.0418]
 Description = Sistem complet de autorizare web care combină gestiunea fișierelor web și modul de editare directă a paginilor. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 7,6 Mio
+
+[Section.0419]
+Description = Визуальный HTML-редактор, основанный на Nvu. Одна из лучших бесплатных альтернатив Adobe CS3. Вам потребуется программа распаковки ZIP, чтобы запустить его.
+Size = 7,6 МиБ
 
 [Section.041f]
 Description = Umûmî Ağ kütük yönetimiyle kullanımı kolay WYSIWYG Umûmî Ağ sayfası düzenlemesini birleştiren eksiksiz bir Umûmî Ağ yazarlık dizgesidir. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.

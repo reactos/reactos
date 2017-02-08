@@ -1,3 +1,4 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 COPYFILEDLGORD DIALOGEX 20, 20, 208, 105
@@ -11,6 +12,28 @@ BEGIN
     LTEXT "Destinația:", -1, 7, 30, 77, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", DESTSTRORD, 7, 41, 194, 22, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", PROGRESSORD, "setupx_progress", 7, 63, 194, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDPROMPTFORDISK DIALOG 0, 0, 260, 120
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "Fișiere necesare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Introduceți discul de instalare al producătorului apoi\nverificați că mai jos e selectată unitatea corectă", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Fișierele producătorului vor fi copiate din:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
+    DEFPUSHBUTTON "Con&firmă", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&nulează", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Spe&cificare…", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROMPTDISK   "Este necesar fișierul «%1» din %2"
+    IDS_UNKNOWN      "Nespecificat"
+    IDS_COPYFROM     "Copie fișiere din:"
+    IDS_INFO         "Tastați calea unde sunt amplasate fișierele, apoi confirmați."
 END
 
 STRINGTABLE

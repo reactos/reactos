@@ -32,6 +32,11 @@ License = Nespecificată
 Description = Platformă .NET (cu surse deschise).
 Size = 118,7 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = .NET Framework с открытым исходным кодом.
+Size = 118,7 МиБ
+
 [Section.041f]
 Name = Mono .NET Geliştirme Çatısı
 License = Bilinmiyor

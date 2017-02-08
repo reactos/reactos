@@ -27,6 +27,8 @@ KGUARDED_MUTEX PopVolumeLock;
 LIST_ENTRY PopVolumeDevices;
 KSPIN_LOCK PopDopeGlobalLock;
 
+#define TAG_PO_DOPE 'EPOD'
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PDEVICE_OBJECT_POWER_EXTENSION
@@ -45,7 +47,7 @@ PopGetDope(IN PDEVICE_OBJECT DeviceObject)
     /* Allocate some dope for the device */
     Dope = ExAllocatePoolWithTag(NonPagedPool,
                                  sizeof(DEVICE_OBJECT_POWER_EXTENSION),
-                                 'Dope');
+                                 TAG_PO_DOPE);
     if (!Dope) goto Return;
 
     /* Initialize the initial contents of the dope */
@@ -69,7 +71,7 @@ PopGetDope(IN PDEVICE_OBJECT DeviceObject)
     KeReleaseSpinLock(&PopDopeGlobalLock, OldIrql);
 
     /* Check if someone other than us already assigned the dope, so free ours */
-    if (Dope) ExFreePoolWithTag(Dope, 'Dope');
+    if (Dope) ExFreePoolWithTag(Dope, TAG_PO_DOPE);
 
     /* Return the dope to the caller */
 Return:
@@ -140,7 +142,7 @@ PoRemoveVolumeDevice(IN PDEVICE_OBJECT DeviceObject)
     KeReleaseSpinLock(&PopDopeGlobalLock, OldIrql);
 
     /* Free dope */
-    ExFreePoolWithTag(Dope, 'Dope');
+    ExFreePoolWithTag(Dope, TAG_PO_DOPE);
 }
 
 VOID

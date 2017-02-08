@@ -300,10 +300,10 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
                       IN PUNICODE_STRING OldPassword,
                       IN PUNICODE_STRING NewPassword)
 {
-    ENCRYPTED_NT_OWF_PASSWORD OldNtPassword;
-    ENCRYPTED_NT_OWF_PASSWORD NewNtPassword;
-    ENCRYPTED_LM_OWF_PASSWORD OldLmPassword;
-    ENCRYPTED_LM_OWF_PASSWORD NewLmPassword;
+    NT_OWF_PASSWORD OldNtPassword;
+    NT_OWF_PASSWORD NewNtPassword;
+    LM_OWF_PASSWORD OldLmPassword;
+    LM_OWF_PASSWORD NewLmPassword;
     OEM_STRING LmPwdString;
     CHAR LmPwdBuffer[15];
     BOOLEAN OldLmPasswordPresent = FALSE;
@@ -312,8 +312,8 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
 
     ENCRYPTED_LM_OWF_PASSWORD OldLmEncryptedWithNewLm;
     ENCRYPTED_LM_OWF_PASSWORD NewLmEncryptedWithOldLm;
-    ENCRYPTED_LM_OWF_PASSWORD OldNtEncryptedWithNewNt;
-    ENCRYPTED_LM_OWF_PASSWORD NewNtEncryptedWithOldNt;
+    ENCRYPTED_NT_OWF_PASSWORD OldNtEncryptedWithNewNt;
+    ENCRYPTED_NT_OWF_PASSWORD NewNtEncryptedWithOldNt;
     PENCRYPTED_LM_OWF_PASSWORD pOldLmEncryptedWithNewLm = NULL;
     PENCRYPTED_LM_OWF_PASSWORD pNewLmEncryptedWithOldLm = NULL;
 
@@ -377,6 +377,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
 
     if (OldLmPasswordPresent && NewLmPasswordPresent)
     {
+        /* Encrypt the old LM hash with the new LM hash */
         Status = SystemFunction012((const BYTE *)&OldLmPassword,
                                    (const BYTE *)&NewLmPassword,
                                    (LPBYTE)&OldLmEncryptedWithNewLm);
@@ -386,6 +387,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
             return Status;
         }
 
+        /* Encrypt the new LM hash with the old LM hash */
         Status = SystemFunction012((const BYTE *)&NewLmPassword,
                                    (const BYTE *)&OldLmPassword,
                                    (LPBYTE)&NewLmEncryptedWithOldLm);
@@ -399,6 +401,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         pNewLmEncryptedWithOldLm = &NewLmEncryptedWithOldLm;
     }
 
+    /* Encrypt the old NT hash with the new NT hash */
     Status = SystemFunction012((const BYTE *)&OldNtPassword,
                                (const BYTE *)&NewNtPassword,
                                (LPBYTE)&OldNtEncryptedWithNewNt);
@@ -408,6 +411,7 @@ SamChangePasswordUser(IN SAM_HANDLE UserHandle,
         return Status;
     }
 
+    /* Encrypt the new NT hash with the old NT hash */
     Status = SystemFunction012((const BYTE *)&NewNtPassword,
                                (const BYTE *)&OldNtPassword,
                                (LPBYTE)&NewNtEncryptedWithOldNt);
@@ -1983,7 +1987,7 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
             return Status;
         }
 
-        /* Calculate the NT hash value of the passord */
+        /* Calculate the NT hash value of the password */
         Status = SystemFunction007((PUNICODE_STRING)&PasswordBuffer->Password,
                                    (LPBYTE)&Internal1Buffer.EncryptedNtOwfPassword);
         if (!NT_SUCCESS(Status))

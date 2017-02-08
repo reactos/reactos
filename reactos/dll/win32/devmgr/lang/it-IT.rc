@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Questo dispositivo funziona regolarmente."
     IDS_DEV_NOT_CONFIGURED "Questo dispositivo non è configurato correttamente."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS non può caricare il driver di questo dispositivo perchè il computer stà rilevando due tipi di bus %1 ."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS non può caricare il driver di questo dispositivo perchè il computer stà rilevando due tipi di bus %1."
     IDS_DEV_DEVLOADER_FAILED2 "Il loader %1 per questo dispositivo non puo' caricare il driver."
     IDS_DEV_OUT_OF_MEMORY "Il driver di questo dispositivo potrebbe essere sbagliato, o il sistema potrebbe non avere sufficiente memoria o altre risorse."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Questo dispositivo non funziona regolarmente perchè uno dei driver è sbagliato, o è sbagliato il registry."

@@ -95,7 +95,7 @@ LoadPropSheetHandlers(LPCWSTR pwszPath, PROPSHEETHEADERW *pHeader, UINT cMaxPage
  */
 
 BOOL
-SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
+SH_ShowPropertiesDialog(LPCWSTR pwszPath, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
     HPSXA hpsxa[3] = {NULL, NULL, NULL};
     CComObject<CFileDefExt> *pFileDefExt = NULL;

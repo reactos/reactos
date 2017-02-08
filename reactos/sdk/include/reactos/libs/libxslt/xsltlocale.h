@@ -12,6 +12,7 @@
 #define __XML_XSLTLOCALE_H__
 
 #include <libxml/xmlstring.h>
+#include "xsltexports.h"
 
 #ifdef XSLT_LOCALE_XLOCALE
 
@@ -53,10 +54,18 @@ typedef xmlChar xsltLocaleChar;
 
 #endif
 
-xsltLocale xsltNewLocale(const xmlChar *langName);
-void xsltFreeLocale(xsltLocale locale);
-xsltLocaleChar *xsltStrxfrm(xsltLocale locale, const xmlChar *string);
-int xsltLocaleStrcmp(xsltLocale locale, const xsltLocaleChar *str1, const xsltLocaleChar *str2);
-void xsltFreeLocales(void);
+XSLTPUBFUN xsltLocale XSLTCALL
+	xsltNewLocale			(const xmlChar *langName);
+XSLTPUBFUN void XSLTCALL
+	xsltFreeLocale			(xsltLocale locale);
+XSLTPUBFUN xsltLocaleChar * XSLTCALL
+	xsltStrxfrm			(xsltLocale locale,
+					 const xmlChar *string);
+XSLTPUBFUN int XSLTCALL
+	xsltLocaleStrcmp		(xsltLocale locale,
+					 const xsltLocaleChar *str1,
+					 const xsltLocaleChar *str2);
+XSLTPUBFUN void XSLTCALL
+	xsltFreeLocales			(void);
 
 #endif /* __XML_XSLTLOCALE_H__ */

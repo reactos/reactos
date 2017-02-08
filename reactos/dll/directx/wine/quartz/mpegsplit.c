@@ -360,7 +360,7 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
 
     ZeroMemory(pamt, sizeof(*pamt));
     ppiOutput->dir = PINDIR_OUTPUT;
-    ppiOutput->pFilter = (IBaseFilter*)This;
+    ppiOutput->pFilter = &This->Parser.filter.IBaseFilter_iface;
     wsprintfW(ppiOutput->achName, wszAudioStream);
 
     pamt->formattype = FORMAT_WaveFormatEx;
@@ -575,8 +575,7 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
 
             if (FAILED(hr))
             {
-                if (amt.pbFormat)
-                    CoTaskMemFree(amt.pbFormat);
+                CoTaskMemFree(amt.pbFormat);
                 ERR("Could not create pin for MPEG audio stream (%x)\n", hr);
                 break;
             }

@@ -38,6 +38,10 @@ UnknownClassName = "Nieznane urządzenie"
 ReactOS = "Echipa ReactOS"
 UnknownClassName = "Alte dispozitive"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+UnknownClassName = "Другие устройства"
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 UnknownClassName = "Başka Aygıtlar"

@@ -42,7 +42,7 @@ typedef struct {
     MIB_UDPEXROW table;
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
-/* function declerations */
+/* function declarations */
 BOOL ParseCmdline(int argc, char* argv[]);
 BOOL DisplayOutput(VOID);
 DWORD DoFormatMessage(DWORD ErrorCode);

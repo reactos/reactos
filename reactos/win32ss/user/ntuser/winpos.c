@@ -32,6 +32,40 @@ VOID FASTCALL IntLinkWindow(PWND Wnd,PWND WndInsertAfter);
 
 /* FUNCTIONS *****************************************************************/
 
+#if DBG
+/***********************************************************************
+ *           dump_winpos_flags
+ */
+static void dump_winpos_flags(UINT flags)
+{
+    static const DWORD dumped_flags = (SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW |
+                                       SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW |
+                                       SWP_HIDEWINDOW | SWP_NOCOPYBITS | SWP_NOOWNERZORDER |
+                                       SWP_NOSENDCHANGING | SWP_DEFERERASE | SWP_ASYNCWINDOWPOS |
+                                       SWP_NOCLIENTSIZE | SWP_NOCLIENTMOVE | SWP_STATECHANGED);
+    TRACE("flags:");
+    if(flags & SWP_NOSIZE) TRACE(" SWP_NOSIZE");
+    if(flags & SWP_NOMOVE) TRACE(" SWP_NOMOVE");
+    if(flags & SWP_NOZORDER) TRACE(" SWP_NOZORDER");
+    if(flags & SWP_NOREDRAW) TRACE(" SWP_NOREDRAW");
+    if(flags & SWP_NOACTIVATE) TRACE(" SWP_NOACTIVATE");
+    if(flags & SWP_FRAMECHANGED) TRACE(" SWP_FRAMECHANGED");
+    if(flags & SWP_SHOWWINDOW) TRACE(" SWP_SHOWWINDOW");
+    if(flags & SWP_HIDEWINDOW) TRACE(" SWP_HIDEWINDOW");
+    if(flags & SWP_NOCOPYBITS) TRACE(" SWP_NOCOPYBITS");
+    if(flags & SWP_NOOWNERZORDER) TRACE(" SWP_NOOWNERZORDER");
+    if(flags & SWP_NOSENDCHANGING) TRACE(" SWP_NOSENDCHANGING");
+    if(flags & SWP_DEFERERASE) TRACE(" SWP_DEFERERASE");
+    if(flags & SWP_ASYNCWINDOWPOS) TRACE(" SWP_ASYNCWINDOWPOS");
+    if(flags & SWP_NOCLIENTSIZE) TRACE(" SWP_NOCLIENTSIZE");
+    if(flags & SWP_NOCLIENTMOVE) TRACE(" SWP_NOCLIENTMOVE");
+    if(flags & SWP_STATECHANGED) TRACE(" SWP_STATECHANGED");
+
+    if(flags & ~dumped_flags) TRACE(" %08x", flags & ~dumped_flags);
+    TRACE("\n");
+}
+#endif
+
 BOOL FASTCALL
 IntGetClientOrigin(PWND Window OPTIONAL, LPPOINT Point)
 {
@@ -220,6 +254,30 @@ PWND FASTCALL IntGetLastTopMostWindow(VOID)
     return NULL;
 }
 
+VOID
+SelectWindowRgn( PWND Window, HRGN hRgnClip)
+{
+    if (Window->hrgnClip)
+    {
+        /* Delete no longer needed region handle */
+        IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(Window->hrgnClip);
+        Window->hrgnClip = NULL;       
+    }
+
+    if (hRgnClip > HRGN_WINDOW)
+    {
+        /*if (Window != UserGetDesktopWindow()) // Window->fnid != FNID_DESKTOP)
+        {
+            NtGdiOffsetRgn(hRgnClip, Window->rcWindow.left, Window->rcWindow.top);
+        }*/
+        /* Set public ownership */
+        IntGdiSetRegionOwner(hRgnClip, GDI_OBJ_HMGR_PUBLIC);
+
+        Window->hrgnClip = hRgnClip;
+    }
+}
+
 //
 // This helps with CORE-6129 forcing modal dialog active when another app is minimized or closed.
 //
@@ -343,6 +401,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
 
    if (IntIsDesktopWindow(Wnd))
    {
+      //ERR("WinPosActivateOtherWindow Set Focus Msg Q No window!\n");
       IntSetFocusMessageQueue(NULL);
       return;
    }
@@ -379,6 +438,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    WndTo = WndTo->spwndChild;
    if ( WndTo == NULL )
    {
+      //ERR("WinPosActivateOtherWindow No window!\n");
       return;
    }
    for (;;)
@@ -406,10 +466,10 @@ done:
       }
    }
    //ERR("WinPosActivateOtherWindow Set Active  0x%p\n",WndTo);
-   if (!co_IntSetActiveWindow(WndTo,FALSE,TRUE,FALSE))  /* Ok for WndTo to be NULL here */
+   if (!UserSetActiveWindow(WndTo))  /* Ok for WndTo to be NULL here */
    {
       //ERR("WPAOW SA 1\n");
-      co_IntSetActiveWindow(NULL,FALSE,TRUE,FALSE);
+      UserSetActiveWindow(NULL);
    }
    if (WndTo) UserDerefObjectCo(WndTo);
 }
@@ -1758,10 +1818,16 @@ co_WinPosSetWindowPos(
    HDC Dc;
    RECTL CopyRect;
    PWND Ancestor;
-   BOOL bPointerInWindow;
+   BOOL bPointerInWindow, PosChanged = FALSE;
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
    ASSERT_REFS_CO(Window);
+
+   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags %s",
+          Window, WndInsertAfter, x, y, cx, cy, flags);
+#if DBG
+   dump_winpos_flags(flags);
+#endif
 
    /* FIXME: Get current active window from active queue. Why? since r2915. */
 
@@ -1862,6 +1928,13 @@ co_WinPosSetWindowPos(
       }
    }
 
+   //// HACK 3
+   if (Window->hrgnNewFrame)
+   {
+       SelectWindowRgn( Window, Window->hrgnNewFrame ); // Should be PSMWP->acvr->hrgnClip
+       Window->hrgnNewFrame = NULL;
+   }
+
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect, valid_rects);
 
 //   ERR("co_WinPosDoNCCALCSize returned 0x%x\n valid dest: %d %d %d %d\n valid src : %d %d %d %d\n", WvrFlags,
@@ -1884,6 +1957,7 @@ co_WinPosSetWindowPos(
       WinPosInternalMoveWindow(Window,
                                NewClientRect.left - OldClientRect.left,
                                NewClientRect.top - OldClientRect.top);
+      PosChanged = TRUE;
    }
 
    Window->rcWindow = NewWindowRect;
@@ -1951,11 +2025,12 @@ co_WinPosSetWindowPos(
        * class need to be completely repainted on (horizontal/vertical) size
        * change.
        */
-      if ( VisBefore != NULL &&
-           VisAfter != NULL &&
-          !(WinPos.flags & SWP_NOCOPYBITS) &&
-          ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
-          !(Window->ExStyle & WS_EX_TRANSPARENT) )
+      if ( ( VisBefore != NULL &&
+             VisAfter != NULL &&
+            !(WinPos.flags & SWP_NOCOPYBITS) &&
+            ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
+            !(Window->ExStyle & WS_EX_TRANSPARENT) ) || 
+            ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore) )
       {
 
          /*
@@ -2000,8 +2075,9 @@ co_WinPosSetWindowPos(
             REGION_Delete(CopyRgn);
             CopyRgn = NULL;
          }
-         else if (OldWindowRect.left != NewWindowRect.left ||
-                  OldWindowRect.top != NewWindowRect.top)
+         else if ( OldWindowRect.left != NewWindowRect.left ||
+                   OldWindowRect.top != NewWindowRect.top ||
+                  (WinPos.flags & SWP_FRAMECHANGED) )
          {
              HRGN DcRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
              PREGION DcRgnObj = REGION_LockRgn(DcRgn);
@@ -2041,7 +2117,19 @@ co_WinPosSetWindowPos(
       {
          CopyRgn = NULL;
       }
-
+#if 0
+      /////// Fixes NoPopup tests but breaks msg_paint tests.
+      if ( !PosChanged && (WinPos.flags & SWP_FRAMECHANGED) && VisBefore)
+      {
+         PWND Parent = Window->spwndParent;
+         ERR("SWP_FRAMECHANGED no chg\n");
+         if ( !(Window->style & WS_CHILD) && (Parent) && (Parent->style & WS_CLIPCHILDREN))
+         {
+            ERR("SWP_FRAMECHANGED Parent WS_CLIPCHILDREN\n");
+            //IntInvalidateWindows( Window, VisBefore, /*RDW_ERASE |*/ RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+         }
+      }
+#endif
       /* We need to redraw what wasn't visible before */
       if (VisAfter != NULL)
       {
@@ -2126,22 +2214,32 @@ co_WinPosSetWindowPos(
       {
          co_IntSendMessageNoWait(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
       }
-      /*   Do not allow setting if already active.
-           Fix A : wine msg test_SetParent:WmSetParentSeq_2:25 msg!
-           Recursion broke the tests.
-       */
-      else if ( pti->MessageQueue->spwndActive != Window ||
-                pti->MessageQueue != gpqForeground ) // This fixes the breakage at boot time caused by the above line!
+      else
       {
-         // Inside SAW? Fixes Api AttachThreadInput tests.
-         TRACE("SetWindowPos Set FG Window! hWnd %p\n",WinPos.hwnd);
-         if (!(Window->state & WNDS_BEINGACTIVATED))
+         //ERR("SetWindowPos Set FG Window!\n");
+         if ( pti->MessageQueue->spwndActive != Window ||
+              pti->MessageQueue != gpqForeground )
          {
-            TRACE("SetWindowPos Set FG Window!\n");
-            // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
-            co_IntSetForegroundWindow(Window);
+            //ERR("WPSWP : set active window\n");
+            if (!(Window->state & WNDS_BEINGACTIVATED)) // Inside SAW?
+            {
+               co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
+            }
          }
       }
+   }
+
+   if ( !PosChanged &&
+         (WinPos.flags & SWP_FRAMECHANGED) &&
+        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message. 
+         VisAfter )
+   {
+       PWND Parent = Window->spwndParent;
+       if ( !(Window->style & WS_CHILD) && (Parent) && (Parent->style & WS_CLIPCHILDREN))
+       {
+           TRACE("SWP_FRAMECHANGED Parent WS_CLIPCHILDREN\n");
+           UserSyncAndPaintWindows( Parent, RDW_CLIPCHILDREN);
+       }
    }
 
    // Fix wine msg test_SetFocus, prevents sending WM_WINDOWPOSCHANGED.
@@ -2449,7 +2547,8 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
         ((Cmd == SW_SHOW) || (Cmd == SW_NORMAL)))
    {
       ERR("WinPosShowWindow Set active\n");
-      UserSetActiveWindow(Wnd);
+      //UserSetActiveWindow(Wnd);
+      co_IntSetForegroundWindow(Wnd); // HACK
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
    }
 #endif
@@ -2520,7 +2619,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    {
       co_UserSetFocus(Wnd);
       // Fix wine Win test_SetFocus todo #3,
-      if (!(style & WS_CHILD)) co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
+      if (!(style & WS_CHILD)) co_IntSendMessage(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
    }
    //ERR("co_WinPosShowWindow EXIT\n");
    return WasVisible;
@@ -3291,20 +3390,16 @@ NtUserSetWindowRgn(
          RETURN( 0);
    }
 
-   if (Window->hrgnClip)
-   {
-      /* Delete no longer needed region handle */
-      IntGdiSetRegionOwner(Window->hrgnClip, GDI_OBJ_HMGR_POWNED);
-      GreDeleteObject(Window->hrgnClip);
-   }
-
+   //// HACK 1 : Work around the lack of supporting DeferWindowPos.
    if (hrgnCopy)
    {
-      /* Set public ownership */
-      IntGdiSetRegionOwner(hrgnCopy, GDI_OBJ_HMGR_PUBLIC);
+       Window->hrgnNewFrame = hrgnCopy; // Should be PSMWP->acvr->hrgnClip
    }
-   Window->hrgnClip = hrgnCopy;
-
+   else
+   {
+       Window->hrgnNewFrame = HRGN_WINDOW;
+   }
+   //// HACK 2
    Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );
 
    RETURN( (INT)Ret);

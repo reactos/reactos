@@ -1,29 +1,21 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   246
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-#define SYSTEM_COLUMN    (18 * PROPSHEETPADDING)
-#define LABELLINE(x)     (((PROPSHEETPADDING + 2) * x) + (x + 2))
-#define ICONSIZE         16
-
 /* IDs */
-#define IDC_CPLICON_1 1
+
+/* Set default to IDI_AC */
+#define IDC_CPLICON_1 IDI_AC
 
 #define IDS_PROCENT  49
 #define IDS_SOUND    50
 #define IDS_TEXT     51
 #define IDS_CONFIG1  53
 #define IDS_CONFIG2  54
-#define IDS_SIZEBYTS 55
-#define IDS_SIZEMB   56
 
-#define IDD_PROPPAGEPOWERSHEMES 70
-#define IDD_PROPPAGEALARMS      71
-#define IDD_PROPPAGEPOWERMETER  72
-#define IDD_PROPPAGEADVANCED    73
-#define IDD_PROPPAGEHIBERNATE   74
+#define IDD_PROPPAGEPOWERSCHEMES 70
+#define IDD_PROPPAGEALARMS       71
+#define IDD_PROPPAGEPOWERMETER   72
+#define IDD_PROPPAGEADVANCED     73
+#define IDD_PROPPAGEHIBERNATE    74
 
 #define IDS_NOACTION               100
 #define IDS_PowerActionNone1       114

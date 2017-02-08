@@ -746,8 +746,8 @@ EnumHKCRKey(
             NULL);
         if (ErrorCode != ERROR_SUCCESS)
         {
-            /* Most likely ERROR_NO_MORE_ITEMS */
-            ERR("Returning %d.\n", ErrorCode);
+            if (ErrorCode != ERROR_NO_MORE_ITEMS)
+                ERR("Returning %d.\n", ErrorCode);
             goto Exit;
         }
         FallbackSubKeyName[FallbackSubkeyLen] = L'\0';

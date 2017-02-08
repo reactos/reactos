@@ -31,6 +31,10 @@ Version = Versiunea 186 (4.8.13)
 Description = Portarea Windows a programului GNU Midnight Commander pe 32-biți.
 Size = 2,4 Mio
 
+[Section.0419]
+Description = Файловый менеджер с текстовым интерфейсом.
+Size = 2,4 МиБ
+
 [Section.041f]
 Version = Yapı 186 (4.8.13)
 License = GPL sürüm 3

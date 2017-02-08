@@ -37,6 +37,11 @@ URLSite = http://smplayer.sourceforge.net/pl/
 Description = Lector multimedia (interfață pentru MPlayer).
 Size = 23,1 Mio
 
+[Section.0419]
+URLSite = http://smplayer.sourceforge.net/ru/
+Description = Графический интерфейс для MPlayer.
+Size = 23,1 МиБ
+
 [Section.041f]
 Description = MPlayer için çizgelik arayüz.
 URLSite = http://smplayer.sourceforge.net/tr/

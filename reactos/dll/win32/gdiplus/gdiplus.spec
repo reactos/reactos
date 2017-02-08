@@ -264,7 +264,7 @@
 264 stdcall GdipGetHatchForegroundColor(ptr ptr)
 265 stdcall GdipGetHatchStyle(ptr ptr)
 266 stdcall GdipGetHemfFromMetafile(ptr ptr)
-267 stub GdipGetImageAttributesAdjustedPalette
+267 stdcall GdipGetImageAttributesAdjustedPalette(ptr ptr long)
 268 stdcall GdipGetImageBounds(ptr ptr ptr)
 269 stdcall GdipGetImageDecoders(long long ptr)
 270 stdcall GdipGetImageDecodersSize(ptr ptr)
@@ -303,7 +303,7 @@
 303 stdcall GdipGetMetafileHeaderFromFile(wstr ptr)
 304 stdcall GdipGetMetafileHeaderFromMetafile(ptr ptr)
 305 stdcall GdipGetMetafileHeaderFromStream(ptr ptr)
-306 stub GdipGetMetafileHeaderFromWmf
+306 stdcall GdipGetMetafileHeaderFromWmf(ptr ptr ptr)
 307 stdcall GdipGetNearestColor(ptr ptr)
 308 stdcall GdipGetPageScale(ptr ptr)
 309 stdcall GdipGetPageUnit(ptr ptr)
@@ -615,11 +615,11 @@
 615 stub GdipGetEffectParameterSize
 616 stub GdipGetEffectParameters
 617 stdcall GdipSetEffectParameters(ptr ptr long)
-618 stub GdipInitializePalette
+618 stdcall GdipInitializePalette(ptr long long long ptr)
 619 stdcall GdipBitmapCreateApplyEffect(ptr long ptr ptr ptr ptr long ptr ptr)
 620 stdcall GdipBitmapApplyEffect(ptr ptr ptr long ptr ptr)
-621 stub GdipBitmapGetHistogram
-622 stub GdipBitmapGetHistogramSize
+621 stdcall GdipBitmapGetHistogram(ptr long long ptr ptr ptr ptr)
+622 stdcall GdipBitmapGetHistogramSize(long ptr)
 623 stdcall GdipBitmapConvertFormat(ptr long long long ptr float)
 624 stdcall GdipImageSetAbort(ptr ptr)
 625 stub GdipGraphicsSetAbort

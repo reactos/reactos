@@ -88,7 +88,7 @@
                                           FT_Int         isItalic )
   {
     FT_Bytes  p = table;
-    FT_UInt   i, cnt, table_size ;
+    FT_UInt   i, cnt, table_size;
 
     OTV_OPTIONAL_TABLE( Coverage );
     OTV_OPTIONAL_TABLE( DeviceTableOffset );

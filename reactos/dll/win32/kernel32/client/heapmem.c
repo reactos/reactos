@@ -851,7 +851,7 @@ GlobalReAlloc(HGLOBAL hMem,
     /* If this wasn't a movable heap, then we MUST re-alloc in place */
     if (!(uFlags & GMEM_MOVEABLE)) Flags |= HEAP_REALLOC_IN_PLACE_ONLY;
 
-    /* Lock the heap and disable built-in locking in the RTL Heap funcitons */
+    /* Lock the heap and disable built-in locking in the RTL Heap functions */
     RtlLockHeap(BaseHeap);
     Flags |= HEAP_NO_SERIALIZE;
 
@@ -985,7 +985,7 @@ GlobalReAlloc(HGLOBAL hMem,
             {
                 /*
                  * Check if the handle matches the pointer or the moveable flag
-                 * isn't there, which is what we expect since it currenly isn't.
+                 * isn't there, which is what we expect since it currently isn't.
                  */
                 if ((Handle == hMem) || !(Flags & BASE_HEAP_FLAG_MOVABLE))
                 {
@@ -1333,7 +1333,7 @@ GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer)
     lpBuffer->ullTotalVirtual = (BaseStaticServerData->SysInfo.MaximumUserModeAddress -
                                  BaseStaticServerData->SysInfo.MinimumUserModeAddress) + 1;
 
-    /* And finally the avilable virtual space */
+    /* And finally the available virtual space */
     lpBuffer->ullAvailVirtual = lpBuffer->ullTotalVirtual - VmCounters.VirtualSize;
     lpBuffer->ullAvailExtendedVirtual = 0;
 
@@ -1619,7 +1619,7 @@ LocalReAlloc(HLOCAL hMem,
     /* If this wasn't a movable heap, then we MUST re-alloc in place */
     if (!(uFlags & LMEM_MOVEABLE)) Flags |= HEAP_REALLOC_IN_PLACE_ONLY;
 
-    /* Lock the heap and disable built-in locking in the RTL Heap funcitons */
+    /* Lock the heap and disable built-in locking in the RTL Heap functions */
     RtlLockHeap(BaseHeap);
     Flags |= HEAP_NO_SERIALIZE;
 

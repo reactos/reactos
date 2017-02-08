@@ -181,16 +181,19 @@ int aexpand(char* name, int expand_wildcards)
  */
 void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, int* new_mode)
 {
-   int i, afterlastspace, ignorespace, doexpand;
+   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex, anyLetter;
    size_t len;
-   char* aNewCmdln;
+   char* buffer;
 
    /* missing threading init */
 
    i = 0;
-   afterlastspace = 0;
-   ignorespace = 0;
    doexpand = expand_wildcards;
+   escapedQuote = FALSE;
+   anyLetter = FALSE;
+   slashesAdded = 0;
+   inQuotes = 0;
+   bufferIndex = 0;
 
    if (__argv && _environ)
    {
@@ -203,58 +206,101 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    __argc = 0;
 
    len = strlen(_acmdln);
+   buffer = malloc(sizeof(char) * len);
 
-   /* Allocate a temporary buffer to be used instead of the original _acmdln parameter. */
-   aNewCmdln = strndup(_acmdln, len);
-
-   while (aNewCmdln[i])
+   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461(v=vs.71).aspx
+   while (TRUE)
    {
-      if (aNewCmdln[i] == '"')
+      // Arguments are delimited by white space, which is either a space or a tab.
+      if (i >= len || ((_acmdln[i] == ' ' || _acmdln[i] == '\t') && !inQuotes))
       {
-         if(ignorespace)
+         // Handle the case when empty spaces are in the end of the cmdline
+         if (anyLetter) 
          {
-            ignorespace = 0;
+            aexpand(strndup(buffer, bufferIndex), doexpand);
          }
-         else
+         // Copy the last element from buffer and quit the loop
+         if (i >= len)
          {
-            ignorespace = 1;
-            doexpand = 0;
+            break;
          }
-         memmove(aNewCmdln + i, aNewCmdln + i + 1, len - i);
-         len--;
+
+         while (_acmdln[i] == ' ' || _acmdln[i] == '\t')
+            ++i;
+         anyLetter = FALSE;
+         bufferIndex = 0;
+         slashesAdded = 0;
+         escapedQuote = FALSE;
          continue;
       }
 
-      if (aNewCmdln[i] == ' ' && !ignorespace)
-      {
-         aexpand(strndup(aNewCmdln + afterlastspace, i - afterlastspace), doexpand);
-         i++;
-         while (aNewCmdln[i] == ' ')
-            i++;
-         afterlastspace=i;
-         doexpand = expand_wildcards;
-      }
-      else
-      {
-         i++;
-      }
-   }
+      anyLetter = TRUE;
 
-   if (aNewCmdln[afterlastspace] != 0)
-   {
-      aexpand(strndup(aNewCmdln + afterlastspace, i - afterlastspace), doexpand);
+      if (_acmdln[i] == '\\')
+      {
+         buffer[bufferIndex++] = _acmdln[i];
+         ++slashesAdded;
+         ++i;
+         escapedQuote = FALSE;
+         continue;
+      }
+
+      if (_acmdln[i] == '\"')
+      {
+         if (slashesAdded > 0)
+         {
+            if (slashesAdded % 2 == 0)
+            {
+               // If an even number of backslashes is followed by a double quotation mark, then one backslash (\)
+               // is placed in the argv array for every pair of backslashes (\\), and the double quotation mark (")
+               // is interpreted as a string delimiter.
+               bufferIndex -= slashesAdded / 2;
+            }
+            else
+            {
+               // If an odd number of backslashes is followed by a double quotation mark, then one backslash (\)
+               // is placed in the argv array for every pair of backslashes (\\) and the double quotation mark is
+               // interpreted as an escape sequence by the remaining backslash, causing a literal double quotation mark (")
+               // to be placed in argv.
+               bufferIndex -= slashesAdded / 2 + 1;
+               buffer[bufferIndex++] = '\"';
+               slashesAdded = 0;
+               escapedQuote = TRUE;
+               ++i;
+               continue;
+            }
+            slashesAdded = 0;
+         }
+         else if (!inQuotes && i > 0 && _acmdln[i - 1] == '\"' && !escapedQuote)
+         {
+            buffer[bufferIndex++] = '\"';
+            ++i;
+            escapedQuote = TRUE;
+            continue;
+         }
+         slashesAdded = 0;
+         escapedQuote = FALSE;
+         inQuotes = !inQuotes;
+         doexpand = inQuotes ? FALSE : expand_wildcards;
+         ++i;
+         continue;
+      }
+
+      buffer[bufferIndex++] = _acmdln[i];
+      slashesAdded = 0;
+      escapedQuote = FALSE;
+      ++i;
    }
 
    /* Free the temporary buffer. */
-   free(aNewCmdln);
-
+   free(buffer);
    HeapValidate(GetProcessHeap(), 0, NULL);
 
    *argc = __argc;
    if (__argv == NULL)
    {
-       __argv = (char**)malloc(sizeof(char*));
-       __argv[0] = 0;
+      __argv = (char**)malloc(sizeof(char*));
+      __argv[0] = 0;
    }
    *argv = __argv;
    *env  = _environ;
@@ -269,16 +315,19 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
                     int expand_wildcards, int* new_mode)
 {
-   int i, afterlastspace, ignorespace, doexpand;
+   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex, anyLetter;
    size_t len;
-   wchar_t* wNewCmdln;
+   wchar_t* buffer;
 
    /* missing threading init */
 
    i = 0;
-   afterlastspace = 0;
-   ignorespace = 0;
    doexpand = expand_wildcards;
+   escapedQuote = FALSE;
+   anyLetter = TRUE;
+   slashesAdded = 0;
+   inQuotes = 0;
+   bufferIndex = 0;
 
    if (__wargv && __winitenv)
    {
@@ -291,58 +340,102 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    __argc = 0;
 
    len = wcslen(_wcmdln);
+   buffer = malloc(sizeof(wchar_t) * len);
 
-   /* Allocate a temporary buffer to be used instead of the original _wcmdln parameter. */
-   wNewCmdln = wcsndup(_wcmdln, len);
-
-   while (wNewCmdln[i])
+   // Reference: https://msdn.microsoft.com/en-us/library/a1y7w461(v=vs.71).aspx
+   while (TRUE)
    {
-      if (wNewCmdln[i] == L'"')
+      // Arguments are delimited by white space, which is either a space or a tab.
+      if (i >= len || ((_wcmdln[i] == ' ' || _wcmdln[i] == '\t') && !inQuotes))
       {
-         if(ignorespace)
+         // Handle the case when empty spaces are in the end of the cmdline
+         if (anyLetter)
          {
-            ignorespace = 0;
+            wexpand(wcsndup(buffer, bufferIndex), doexpand);
          }
-         else
+         // Copy the last element from buffer and quit the loop
+         if (i >= len)
          {
-            ignorespace = 1;
-            doexpand = 0;
+            break;
          }
-         memmove(wNewCmdln + i, wNewCmdln + i + 1, (len - i) * sizeof(wchar_t));
-         len--;
+
+         while (_wcmdln[i] == ' ' || _wcmdln[i] == '\t')
+            ++i;
+         anyLetter = FALSE;
+         bufferIndex = 0;
+         slashesAdded = 0;
+         escapedQuote = FALSE;
          continue;
       }
 
-      if (wNewCmdln[i] == L' ' && !ignorespace)
-      {
-         wexpand(wcsndup(wNewCmdln + afterlastspace, i - afterlastspace), doexpand);
-         i++;
-         while (wNewCmdln[i] == L' ')
-            i++;
-         afterlastspace=i;
-         doexpand = expand_wildcards;
-      }
-      else
-      {
-         i++;
-      }
-   }
+      anyLetter = TRUE;
 
-   if (wNewCmdln[afterlastspace] != 0)
-   {
-      wexpand(wcsndup(wNewCmdln + afterlastspace, i - afterlastspace), doexpand);
+      if (_wcmdln[i] == '\\')
+      {
+         buffer[bufferIndex++] = _wcmdln[i];
+         ++slashesAdded;
+         ++i;
+         escapedQuote = FALSE;
+         continue;
+      }
+
+      if (_wcmdln[i] == '\"')
+      {
+         if (slashesAdded > 0)
+         {
+            if (slashesAdded % 2 == 0)
+            {
+               // If an even number of backslashes is followed by a double quotation mark, then one backslash (\)
+               // is placed in the argv array for every pair of backslashes (\\), and the double quotation mark (")
+               // is interpreted as a string delimiter.
+               bufferIndex -= slashesAdded / 2;
+            }
+            else
+            {
+               // If an odd number of backslashes is followed by a double quotation mark, then one backslash (\)
+               // is placed in the argv array for every pair of backslashes (\\) and the double quotation mark is
+               // interpreted as an escape sequence by the remaining backslash, causing a literal double quotation mark (")
+               // to be placed in argv.
+               bufferIndex -= slashesAdded / 2 + 1;
+               buffer[bufferIndex++] = '\"';
+               slashesAdded = 0;
+               escapedQuote = TRUE;
+               ++i;
+               continue;
+            }
+            slashesAdded = 0;
+         }
+         else if (!inQuotes && i > 0 && _wcmdln[i - 1] == '\"' && !escapedQuote)
+         {
+            buffer[bufferIndex++] = '\"';
+            ++i;
+            escapedQuote = TRUE;
+            continue;
+         }
+         slashesAdded = 0;
+         escapedQuote = FALSE;
+         inQuotes = !inQuotes;
+         doexpand = inQuotes ? FALSE : expand_wildcards;
+         ++i;
+         continue;
+      }
+
+      buffer[bufferIndex++] = _wcmdln[i];
+      slashesAdded = 0;
+      escapedQuote = FALSE;
+      ++i;
    }
 
    /* Free the temporary buffer. */
-   free(wNewCmdln);
+   free(buffer);
 
    HeapValidate(GetProcessHeap(), 0, NULL);
 
    *argc = __argc;
    if (__wargv == NULL)
    {
-       __wargv = (wchar_t**)malloc(sizeof(wchar_t*));
-       __wargv[0] = 0;
+      __wargv = (wchar_t**)malloc(sizeof(wchar_t*));
+      __wargv[0] = 0;
    }
    *wargv = __wargv;
    *wenv = __winitenv;

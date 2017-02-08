@@ -28,7 +28,7 @@ BEGIN
     POPUP "Pomocník"
     BEGIN
         MENUITEM "Pomocník\tF1", ID_HELP, GRAYED
-        MENUITEM "Čo je ...", ID_ABOUT
+        MENUITEM "Čo je", ID_ABOUT
     END
 END
 

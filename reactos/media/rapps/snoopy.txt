@@ -26,6 +26,11 @@ License = Gratuită
 Description = Recrearea jocului Snoppy (original pe C64).
 Size = 704,2 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Ремейк оригинальной игры C64 Snoopy.
+Size = 704,2 КиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Özgün C64 Snoopy'in yeniden yapılmışı.

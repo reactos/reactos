@@ -9,20 +9,16 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <ndk/exfuncs.h>
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
-#include <psdk/ntsecapi.h>
 #include <lsass/lsass.h>
 
 #define NDEBUG
 #include <debug.h>
-
-/* GLOBALS *******************************************************************/
-
-extern HANDLE Secur32Heap;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -30,105 +26,14 @@ extern HANDLE Secur32Heap;
  * @implemented
  */
 NTSTATUS
-WINAPI
-LsaDeregisterLogonProcess(HANDLE LsaHandle)
-{
-    LSA_API_MSG ApiMessage;
-    NTSTATUS Status;
-
-    DPRINT("LsaDeregisterLogonProcess()\n");
-
-    ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
-    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
-    ApiMessage.h.u2.ZeroInit = 0;
-
-    Status = ZwRequestWaitReplyPort(LsaHandle,
-                                    (PPORT_MESSAGE)&ApiMessage,
-                                    (PPORT_MESSAGE)&ApiMessage);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    if (!NT_SUCCESS(ApiMessage.Status))
-    {
-        DPRINT1("ZwRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
-        return ApiMessage.Status;
-    }
-
-    NtClose(LsaHandle);
-
-    DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
-
-    return Status;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-WINAPI
-LsaConnectUntrusted(PHANDLE LsaHandle)
-{
-    UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
-    SECURITY_QUALITY_OF_SERVICE SecurityQos;
-    LSA_CONNECTION_INFO ConnectInfo;
-    ULONG ConnectInfoLength = sizeof(ConnectInfo);
-    NTSTATUS Status;
-
-    DPRINT("LsaConnectUntrusted(%p)\n", LsaHandle);
-
-    RtlInitUnicodeString(&PortName,
-                         L"\\LsaAuthenticationPort");
-
-    SecurityQos.Length              = sizeof(SecurityQos);
-    SecurityQos.ImpersonationLevel  = SecurityIdentification;
-    SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
-    SecurityQos.EffectiveOnly       = TRUE;
-
-    RtlZeroMemory(&ConnectInfo,
-                  ConnectInfoLength);
-
-    ConnectInfo.CreateContext = TRUE;
-
-    Status = ZwConnectPort(LsaHandle,
-                           &PortName,
-                           &SecurityQos,
-                           NULL,
-                           NULL,
-                           NULL,
-                           &ConnectInfo,
-                           &ConnectInfoLength);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwConnectPort failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    if (!NT_SUCCESS(ConnectInfo.Status))
-    {
-        DPRINT1("ConnectInfo.Status: 0x%08lx\n", ConnectInfo.Status);
-    }
-
-    return ConnectInfo.Status;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-WINAPI
-LsaCallAuthenticationPackage(HANDLE LsaHandle,
-                             ULONG AuthenticationPackage,
-                             PVOID ProtocolSubmitBuffer,
-                             ULONG SubmitBufferLength,
-                             PVOID *ProtocolReturnBuffer,
-                             PULONG ReturnBufferLength,
-                             PNTSTATUS ProtocolStatus)
+NTAPI
+LsaCallAuthenticationPackage(IN HANDLE LsaHandle,
+                             IN ULONG AuthenticationPackage,
+                             IN PVOID ProtocolSubmitBuffer,
+                             IN ULONG SubmitBufferLength,
+                             OUT PVOID *ProtocolReturnBuffer,
+                             OUT PULONG ReturnBufferLength,
+                             OUT PNTSTATUS ProtocolStatus)
 {
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
@@ -171,14 +76,54 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
  * @implemented
  */
 NTSTATUS
-WINAPI
-LsaFreeReturnBuffer(PVOID Buffer)
+NTAPI
+LsaDeregisterLogonProcess(IN HANDLE LsaHandle)
 {
-    ULONG Length = 0;
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    DPRINT("LsaDeregisterLogonProcess()\n");
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    Status = ZwRequestWaitReplyPort(LsaHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    ZwClose(LsaHandle);
+
+    DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+LsaFreeReturnBuffer(IN PVOID Buffer)
+{
+    SIZE_T Size = 0;
 
     return ZwFreeVirtualMemory(NtCurrentProcess(),
                                &Buffer,
-                               &Length,
+                               &Size,
                                MEM_RELEASE);
 }
 
@@ -187,10 +132,10 @@ LsaFreeReturnBuffer(PVOID Buffer)
  * @implemented
  */
 NTSTATUS
-WINAPI
-LsaLookupAuthenticationPackage(HANDLE LsaHandle,
-                               PLSA_STRING PackageName,
-                               PULONG AuthenticationPackage)
+NTAPI
+LsaLookupAuthenticationPackage(IN HANDLE LsaHandle,
+                               IN PLSA_STRING PackageName,
+                               OUT PULONG AuthenticationPackage)
 {
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
@@ -210,7 +155,7 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
     strncpy(ApiMessage.LookupAuthenticationPackage.Request.PackageName,
             PackageName->Buffer,
             ApiMessage.LookupAuthenticationPackage.Request.PackageNameLength);
-    ApiMessage.LookupAuthenticationPackage.Request.PackageName[ApiMessage.LookupAuthenticationPackage.Request.PackageNameLength] = '\0';
+    ApiMessage.LookupAuthenticationPackage.Request.PackageName[ApiMessage.LookupAuthenticationPackage.Request.PackageNameLength] = ANSI_NULL;
 
     Status = ZwRequestWaitReplyPort(LsaHandle,
                                     (PPORT_MESSAGE)&ApiMessage,
@@ -235,21 +180,21 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
  * @implemented
  */
 NTSTATUS
-WINAPI
-LsaLogonUser(HANDLE LsaHandle,
-             PLSA_STRING OriginName,
-             SECURITY_LOGON_TYPE LogonType,
-             ULONG AuthenticationPackage,
-             PVOID AuthenticationInformation,
-             ULONG AuthenticationInformationLength,
-             PTOKEN_GROUPS LocalGroups,
-             PTOKEN_SOURCE SourceContext,
-             PVOID *ProfileBuffer,
-             PULONG ProfileBufferLength,
-             PLUID LogonId,
-             PHANDLE Token,
-             PQUOTA_LIMITS Quotas,
-             PNTSTATUS SubStatus)
+NTAPI
+LsaLogonUser(IN HANDLE LsaHandle,
+             IN PLSA_STRING OriginName,
+             IN SECURITY_LOGON_TYPE LogonType,
+             IN ULONG AuthenticationPackage,
+             IN PVOID AuthenticationInformation,
+             IN ULONG AuthenticationInformationLength,
+             IN PTOKEN_GROUPS LocalGroups OPTIONAL,
+             IN PTOKEN_SOURCE SourceContext,
+             OUT PVOID *ProfileBuffer,
+             OUT PULONG ProfileBufferLength,
+             OUT PLUID LogonId,
+             OUT PHANDLE Token,
+             OUT PQUOTA_LIMITS Quotas,
+             OUT PNTSTATUS SubStatus)
 {
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
@@ -300,23 +245,64 @@ LsaLogonUser(HANDLE LsaHandle,
  * @implemented
  */
 NTSTATUS
-WINAPI
-LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
-                        PHANDLE Handle,
-                        PLSA_OPERATIONAL_MODE OperationalMode)
+NTAPI
+LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
+                        OUT PHANDLE LsaHandle,
+                        OUT PLSA_OPERATIONAL_MODE OperationalMode)
 {
-    UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     LSA_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
+    UNICODE_STRING PortName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING EventName;
+    HANDLE EventHandle;
     NTSTATUS Status;
 
     DPRINT("LsaRegisterLogonProcess()\n");
 
     /* Check the logon process name length */
-    if (LsaLogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
+    if (LogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
         return STATUS_NAME_TOO_LONG;
 
+    /* Wait for the LSA authentication thread */
+    RtlInitUnicodeString(&EventName,
+                         L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &EventName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = ZwOpenEvent(&EventHandle,
+                         SYNCHRONIZE,
+                         &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("ZwOpenEvent failed (Status 0x%08lx)\n", Status);
+
+        Status = ZwCreateEvent(&EventHandle,
+                               SYNCHRONIZE,
+                               &ObjectAttributes,
+                               NotificationEvent,
+                               FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ZwCreateEvent failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
+
+    Status = ZwWaitForSingleObject(EventHandle,
+                                   TRUE,
+                                   NULL);
+    ZwClose(EventHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwWaitForSingleObject failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Establish the connection */
     RtlInitUnicodeString(&PortName,
                          L"\\LsaAuthenticationPort");
 
@@ -326,13 +312,13 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     SecurityQos.EffectiveOnly       = TRUE;
 
     strncpy(ConnectInfo.LogonProcessNameBuffer,
-            LsaLogonProcessName->Buffer,
-            LsaLogonProcessName->Length);
-    ConnectInfo.Length = LsaLogonProcessName->Length;
-    ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = '\0';
+            LogonProcessName->Buffer,
+            LogonProcessName->Length);
+    ConnectInfo.Length = LogonProcessName->Length;
+    ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = ANSI_NULL;
     ConnectInfo.CreateContext = TRUE;
 
-    Status = ZwConnectPort(Handle,
+    Status = ZwConnectPort(LsaHandle,
                            &PortName,
                            &SecurityQos,
                            NULL,
@@ -356,4 +342,3 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 
     return ConnectInfo.Status;
 }
-

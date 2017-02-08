@@ -354,7 +354,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
     /* FIXME
     *  compare so we do not write too far
     *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
-    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max height
     *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
     */
 
@@ -377,7 +377,7 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT 
     /* FIXME
     *  compare so we do not write too far
     *  ThisDest->lpLcl->lpGbl->wWidth; <- surface max width
-    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max heght
+    *  ThisDest->lpLcl->lpGbl->wHeight <- surface max height
     *  ThisDest->lpLcl->lpGbl->lPitch  <- surface bpp
     */
 
@@ -451,7 +451,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
         return DDERR_INVALIDPARAMS; 
     }
 
-    /* FIXME add a check see if lock suport or not */
+    /* FIXME add a check see if lock support or not */
 
     if (prect!=NULL)
     {
@@ -494,7 +494,7 @@ Main_DDrawSurface_Lock (LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT prect,
         //if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
         //{
         //    ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
-        //    // FIXME the interanl mddsdPrimary shall be DDSURFACEDESC2
+        //    // FIXME the internal mddsdPrimary shall be DDSURFACEDESC2
         //    memcpy(pDDSD,&This->Surf->mddsdPrimary,sizeof(DDSURFACEDESC));
         //    pDDSD->dwSize = sizeof(DDSURFACEDESC2);
         //}

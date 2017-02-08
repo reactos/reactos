@@ -75,7 +75,7 @@ public:
 
         m_Tray = pTray;
 
-        m_hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+        m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
         if (!m_hEvent)
             return E_FAIL;
 
@@ -120,7 +120,7 @@ DesktopCreateWindow(IN OUT ITrayWindow *Tray)
     CDesktopThread* pDesktopThread = new CDesktopThread();
 
     HRESULT hres = pDesktopThread->Initialize(Tray);
-    if(FAILED_UNEXPECTEDLY(hres))
+    if (FAILED_UNEXPECTEDLY(hres))
     {
         delete pDesktopThread;
         return NULL;

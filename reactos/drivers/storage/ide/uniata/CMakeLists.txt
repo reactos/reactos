@@ -8,6 +8,8 @@ include_directories(
 #add_definitions(-D_DEBUG)
 
 list(APPEND SOURCE
+    atacmd_map.cpp
+    bm_devs.cpp
     id_ata.cpp
     id_badblock.cpp
     id_dma.cpp

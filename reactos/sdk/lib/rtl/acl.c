@@ -41,7 +41,7 @@ RtlFirstFreeAce(IN PACL Acl,
     }
 
     /* If the last spot is empty and still valid, return it */
-    if ((ULONG_PTR)Current < AclEnd) *FirstFreeAce = Current;
+    if ((ULONG_PTR)Current <= AclEnd) *FirstFreeAce = Current;
     return TRUE;
 }
 

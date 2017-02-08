@@ -1,6 +1,6 @@
 /*
  * Copyright 2013 Mislav Blažević
- * Copyright 2015 Mark Jansen
+ * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,52 +24,99 @@
 extern "C" {
 #endif
 
-typedef enum _SHIM_LOG_LEVEL {
-    SHIM_ERR = 1,
-    SHIM_WARN = 2,
-    SHIM_INFO = 3,
-}SHIM_LOG_LEVEL;
+#include "sdbtypes.h"
 
-/* apphelp.c */
-BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format, ...);
-extern ULONG g_ShimDebugLevel;
+/* Flags for SdbInitDatabase */
+#define HID_DOS_PATHS 0x1
+#define HID_DATABASE_FULLPATH 0x2
+#define HID_NO_DATABASE 0x4
+#define HID_DATABASE_TYPE_MASK 0xF00F0000
+#define SDB_DATABASE_MAIN_MSI 0x80020000
+#define SDB_DATABASE_MAIN_SHIM 0x80030000
+#define SDB_DATABASE_MAIN_DRIVERS 0x80040000
 
-#define SHIM_ERR(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_ERR, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
-#define SHIM_WARN(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_WARN, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
-#define SHIM_INFO(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_INFO, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
+typedef struct _SDB {
+    PDB db;
+    BOOL auto_loaded;
+} SDB, *HSDB;
 
+typedef struct tagATTRINFO {
+    TAG   type;
+    DWORD flags;
+    union {
+        QWORD qwattr;
+        DWORD dwattr;
+        WCHAR *lpattr;
+    };
+} ATTRINFO, *PATTRINFO;
+
+#define SDB_MAX_SDBS 16
+#define SDB_MAX_EXES 16
+#define SDB_MAX_LAYERS 8
+
+/* Flags for adwExeFlags */
+#define SHIMREG_DISABLE_SHIM (0x00000001)
+#define SHIMREG_DISABLE_APPHELP (0x00000002)
+#define SHIMREG_APPHELP_NOUI (0x00000004)
+#define SHIMREG_APPHELP_CANCEL (0x10000000)
+#define SHIMREG_DISABLE_SXS (0x00000010)
+#define SHIMREG_DISABLE_LAYER (0x00000020)
+#define SHIMREG_DISABLE_DRIVER (0x00000040)
+
+#define SDBGMEF_IGNORE_ENVIRONMENT (0x1)
+
+typedef struct tagSDBQUERYRESULT {
+    TAGREF atrExes[SDB_MAX_EXES];
+    DWORD  adwExeFlags[SDB_MAX_EXES];
+    TAGREF atrLayers[SDB_MAX_LAYERS];
+    DWORD  dwLayerFlags;
+    TAGREF trApphelp;
+    DWORD  dwExeCount;
+    DWORD  dwLayerCount;
+    GUID   guidID;
+    DWORD  dwFlags;
+    DWORD  dwCustomSDBMap;
+    GUID   rgGuidDB[SDB_MAX_SDBS];
+} SDBQUERYRESULT, *PSDBQUERYRESULT;
+
+#include "sdbpapi.h"
 
 /* sdbapi.c */
-void SdbpHeapInit(void);
-void SdbpHeapDeinit(void);
-#if SDBAPI_DEBUG_ALLOC
+PWSTR SdbpStrDup(LPCWSTR string);
+HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
+void WINAPI SdbReleaseDatabase(HSDB);
+BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length);
 
-LPVOID SdbpAlloc(SIZE_T size, int line, const char* file);
-LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, int line, const char* file);
-void SdbpFree(LPVOID mem, int line, const char* file);
+PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
+void WINAPI SdbCloseDatabase(PDB);
+BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
+BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
+LPWSTR WINAPI SdbGetStringTagPtr(PDB db, TAGID tagid);
+TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name);
 
-#define SdbAlloc(size) SdbpAlloc(size, __LINE__, __FILE__)
-#define SdbReAlloc(mem, size) SdbpReAlloc(mem, size, __LINE__, __FILE__)
-#define SdbFree(mem) SdbpFree(mem, __LINE__, __FILE__)
+/* sdbread.c */
+BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num);
+TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid);
+TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
+TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child);
+BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
 
-#else
-
-LPVOID SdbpAlloc(SIZE_T size);
-LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size);
-void SdbpFree(LPVOID mem);
-
-#define SdbAlloc(size) SdbpAlloc(size)
-#define SdbReAlloc(mem, size) SdbpReAlloc(mem, size)
-#define SdbFree(mem) SdbpFree(mem)
-
-#endif
-
+/* sdbfileattr.c*/
+BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info);
 
 /* layer.c */
 BOOL WINAPI AllowPermLayer(PCWSTR path);
 BOOL WINAPI SdbGetPermLayerKeys(PCWSTR wszPath, PWSTR pwszLayers, PDWORD pdwBytes, DWORD dwFlags);
 BOOL WINAPI SetPermLayerState(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
 
+/* hsdb.c */
+BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich);
+
+
+#define ATTRIBUTE_AVAILABLE 0x1
+#define ATTRIBUTE_FAILED 0x2
+
+#include "sdbtagid.h"
 
 #ifdef __cplusplus
 } // extern "C"

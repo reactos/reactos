@@ -12,14 +12,14 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "開啟\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 ReactOS 控制台(&A)...", IDM_HELP_ABOUT
+        MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
 END
 
@@ -27,8 +27,8 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新建\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "開啟\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM "儲存", IDM_FILE_SAVE
         MENUITEM "另存為...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
@@ -40,7 +40,7 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 ReactOS 控制台(&A)...", IDM_HELP_ABOUT
+        MENUITEM "關於 ReactOS 控制台(&A)", IDM_HELP_ABOUT
     END
 END
 

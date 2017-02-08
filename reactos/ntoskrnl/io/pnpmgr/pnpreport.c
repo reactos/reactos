@@ -108,6 +108,7 @@ IopGetInterfaceTypeString(INTERFACE_TYPE IfType)
 }
 
 VOID
+NTAPI
 IopReportTargetDeviceChangeAsyncWorker(PVOID Context)
 {
   PINTERNAL_WORK_QUEUE_ITEM Item;
@@ -509,7 +510,7 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
     Item->PhysicalDeviceObject = PhysicalDeviceObject;
     Item->Callback = Callback;
     Item->Context = Context;
-    ExInitializeWorkItem(&(Item->WorkItem), (PWORKER_THREAD_ROUTINE)IopReportTargetDeviceChangeAsyncWorker, Item);
+    ExInitializeWorkItem(&(Item->WorkItem), IopReportTargetDeviceChangeAsyncWorker, Item);
 
     /* Finally, queue the item, our work here is done */
     ExQueueWorkItem(&(Item->WorkItem), DelayedWorkQueue);

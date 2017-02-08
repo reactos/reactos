@@ -698,7 +698,7 @@ FindDeviceInfo(IN PDEVICE_EXTENSION DeviceExtension,
         FreePool(DeviceName.Buffer);
     }
 
-    /* Return found intormation */
+    /* Return found information */
     if (NextEntry == &(DeviceExtension->DeviceListHead))
     {
         return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -1612,7 +1612,7 @@ MountMgrMountedDeviceRemoval(IN PDEVICE_EXTENSION DeviceExtension,
         }
     }
 
-    /* Releave driver */
+    /* Release driver */
     KeReleaseSemaphore(&(DeviceExtension->DeviceLock), IO_NO_INCREMENT, 1, FALSE);
 }
 

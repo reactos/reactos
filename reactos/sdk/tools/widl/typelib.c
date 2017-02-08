@@ -247,7 +247,10 @@ void end_typelib(void)
 {
     if (!typelib) return;
 
-    create_msft_typelib(typelib);
+    if (do_old_typelib)
+        create_sltg_typelib(typelib);
+    else
+        create_msft_typelib(typelib);
 }
 
 static void tlb_read(int fd, void *buf, int count)

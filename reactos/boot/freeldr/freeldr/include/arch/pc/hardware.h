@@ -23,16 +23,24 @@
 #define CONFIG_CMD(bus, dev_fn, where) \
     (0x80000000 | (((ULONG)(bus)) << 16) | (((dev_fn) & 0x1F) << 11) | (((dev_fn) & 0xE0) << 3) | ((where) & ~3))
 
-#define TAG_HW_RESOURCE_LIST 'lRwH'
-#define TAG_HW_DISK_CONTEXT 'cDwH'
+#define TAG_HW_RESOURCE_LIST    'lRwH'
+#define TAG_HW_DISK_CONTEXT     'cDwH'
 
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
-
 VOID StallExecutionProcessor(ULONG Microseconds);
-
 VOID HalpCalibrateStallExecution(VOID);
+
+typedef
+PCM_PARTIAL_RESOURCE_LIST
+(*GET_HARDDISK_CONFIG_DATA)(UCHAR DriveNumber, ULONG* pSize);
+
+extern GET_HARDDISK_CONFIG_DATA GetHarddiskConfigurationData;
+
+VOID
+DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
+                PCONFIGURATION_COMPONENT_DATA BusKey);
 
 /* hwacpi.c */
 VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);

@@ -1,0 +1,48 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_POWER_METER DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Stav napájení"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Stav napájení", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189
+    CONTROL "&Vždy zobrazovat ikonu", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10
+    CONTROL "Zobrazit detaily pro každou &baterii.", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8
+    CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
+END
+
+STRINGTABLE
+BEGIN
+    //Power related strings
+    IDS_PWR_PROPERTIES        "&Upravit možnosti napájení"
+    IDS_PWR_METER             "&Otevřít ukazatel spotřeby"
+    IDS_PWR_PERCENT_REMAINING "zbývá %1!u!%%"
+    IDS_PWR_CHARGING          " (nabíjení)"
+    IDS_PWR_UNKNOWN_REMAINING "Zbývá neznámo"
+    IDS_PWR_AC "On AC power"
+    IDS_PWR_HOURS_REMAINING "zbývá %1!u!:%2!02u! hodin (%3!u!%%)"
+    IDS_PWR_MINUTES_REMAINING "zbývá %1!u! minut (%2!u!%%)"
+
+    //Hotplug related strings
+    IDS_HOTPLUG_REMOVE_1 "Bezpečně odebrat hardware"
+    IDS_HOTPLUG_REMOVE_2 "&Bezpečně odebrat hardwar"
+    IDS_HOTPLUG_REMOVE_3 "Bezpečně odebrat%s"
+    IDS_HOTPLUG_COMMA ", "
+    IDS_HOTPLUG_DRIVE " - Jednotka(%s)"
+    IDS_HOTPLUG_DRIVES " - Jednotky(%s)"
+    IDS_HOTPLUG_A "A:"
+    IDS_HOTPLUG_REQUIRES "Tento hradware vyžaduje ""bezpečné vyjmutí"""
+    IDS_HOTPLUG_CLICK "Před odebráním tohoto hardware kliknětě na tuto ikonu a vyberte hardware, který chcete odebrat."
+
+    //Volume related strings
+    IDS_VOL_VOLUME "Hlasitost"
+    IDS_VOL_ADJUST "&Upravit vlastnosti zvuku"
+    IDS_VOL_OPEN "&Otevřít ovládání hlasitosti"
+    IDS_VOL_MUTED "Hlasitost (ztlumeno)"
+
+    //Keyboard-Mouse related strings
+    IDS_KEYS_STICKY "StickyKeys"
+    IDS_KEYS_MOUSE "MouseKeys"
+    IDS_KEYS_FILTER "FilterKeys"
+END

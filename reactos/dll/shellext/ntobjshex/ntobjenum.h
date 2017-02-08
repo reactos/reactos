@@ -27,7 +27,7 @@ extern "C" {
 enum OBJECT_TYPE {
     DIRECTORY_OBJECT, SYMBOLICLINK_OBJECT,
     MUTANT_OBJECT, SECTION_OBJECT, EVENT_OBJECT, SEMAPHORE_OBJECT,
-    TIMER_OBJECT, KEY_OBJECT, EVENTPAIR_OBJECT, IOCOMPLETITION_OBJECT,
+    TIMER_OBJECT, KEY_OBJECT, EVENTPAIR_OBJECT, IOCOMPLETION_OBJECT,
     DEVICE_OBJECT, FILE_OBJECT, CONTROLLER_OBJECT, PROFILE_OBJECT,
     TYPE_OBJECT, DESKTOP_OBJECT, WINDOWSTATION_OBJECT, DRIVER_OBJECT,
     TOKEN_OBJECT, PROCESS_OBJECT, THREAD_OBJECT, ADAPTER_OBJECT, PORT_OBJECT,
@@ -82,7 +82,7 @@ struct RegPidlEntry
 
     union {
         struct {
-            // For Value entries, this contains the value contents, if it's resonably small.
+            // For Value entries, this contains the value contents, if it's reasonably small.
             // For Key entries, this contains the custom class name
             DWORD contentType;
             USHORT contentsLength;

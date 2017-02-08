@@ -674,7 +674,6 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     else
     {
         /* Nothing */
-        *Length = 0;
         PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
     }
 
@@ -866,7 +865,7 @@ SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCa
         SrbExtension = (PVOID *)CommonBuffer;
         DeviceExtension->FreeSrbExtensions = SrbExtension;
 
-        /* Fill the remainding pointers (if we have more than 1 SRB) */
+        /* Fill the remaining pointers (if we have more than 1 SRB) */
         while (CommonBufferLength >= 2 * BufSize)
         {
             *SrbExtension = (PVOID*)((PCHAR)SrbExtension + BufSize);
@@ -1547,7 +1546,7 @@ CreatePortConfig:
 
           for (i = 0; i < DeviceExtension->InterruptCount; i++)
           {
-              /* Determing IRQ sharability as usual */
+              /* Determine IRQ sharability as usual */
               if (PortConfig->AdapterInterfaceType == MicroChannel ||
                   InterruptMode[i] == LevelSensitive)
               {
@@ -1895,7 +1894,7 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 
             DPRINT("Notify: RequestComplete (Srb %p)\n", Srb);
 
-            /* Make sure Srb is allright */
+            /* Make sure Srb is alright */
             ASSERT(Srb->SrbStatus != SRB_STATUS_PENDING);
             ASSERT(Srb->Function != SRB_FUNCTION_EXECUTE_SCSI || Srb->SrbStatus != SRB_STATUS_SUCCESS || Srb->ScsiStatus == SCSISTAT_GOOD);
 
@@ -3433,7 +3432,7 @@ SpiAllocateSrbStructures(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                 LunExtension->PendingRequest = Srb->OriginalRequest;
                 LunExtension->Flags |= LUNEX_REQUEST_PENDING | SCSI_PORT_LU_ACTIVE;
 
-                /* Relese the spinlock and return */
+                /* Release the spinlock and return */
                 KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
                 return NULL;
             }
@@ -4418,7 +4417,7 @@ SpiProcessCompletedRequest(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
         DPRINT("Busy SRB status %x\n", Srb->SrbStatus);
 
-        /* Requeu, if needed */
+        /* Requeue, if needed */
         if (LunExtension->Flags & (LUNEX_FROZEN_QUEUE | LUNEX_BUSY))
         {
             DPRINT("it's being requeued\n");
@@ -4500,7 +4499,7 @@ Error:
             /* If LUN is busy, we have to requeue it in order to allow request sense */
             if (LunExtension->Flags & LUNEX_BUSY)
             {
-                DPRINT("Requeueing busy request to allow request sense\n");
+                DPRINT("Requeuing busy request to allow request sense\n");
 
                 if (!KeInsertByKeyDeviceQueue(&LunExtension->DeviceQueue,
                     &LunExtension->BusyRequest->Tail.Overlay.DeviceQueueEntry,
@@ -4669,7 +4668,7 @@ SpiSaveInterruptData(IN PVOID Context)
                                           Srb->TargetId,
                                           Srb->Lun);
 
-        /* We have to check special cases if request is unsuccessfull*/
+        /* We have to check special cases if request is unsuccessful*/
         if (Srb->SrbStatus != SRB_STATUS_SUCCESS)
         {
             /* Check if we need request sense by a few conditions */

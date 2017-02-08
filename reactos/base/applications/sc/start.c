@@ -14,6 +14,7 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hSc = NULL;
     LPSERVICE_STATUS_PROCESS pServiceInfo = NULL;
+    BOOL bResult = TRUE;
 
 #ifdef SCDBG
     LPCTSTR *TmpArgs = ServiceArgs;
@@ -34,28 +35,33 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
                                SC_MANAGER_CONNECT);
     if (hSCManager == NULL)
     {
-        ReportLastError();
-        return FALSE;
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     hSc = OpenService(hSCManager,
                       ServiceName,
                       SERVICE_START | SERVICE_QUERY_STATUS);
-
     if (hSc == NULL)
-        goto fail;
+    {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
+        bResult = FALSE;
+        goto done;
+    }
 
     if (!ArgCount)
     {
         ServiceArgs = NULL;
     }
 
-    if (! StartService(hSc,
-                       ArgCount,
-                       ServiceArgs))
+    if (!StartService(hSc,
+                      ArgCount,
+                      ServiceArgs))
     {
         _tprintf(_T("[SC] StartService FAILED %lu:\n\n"), GetLastError());
-        goto fail;
+        bResult = FALSE;
+        goto done;
     }
 
     pServiceInfo = QueryService(ServiceName);
@@ -64,18 +70,19 @@ BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
         PrintService(ServiceName,
                      pServiceInfo,
                      TRUE);
+
+        HeapFree(GetProcessHeap(), 0, pServiceInfo);
     }
 
-    HeapFree(GetProcessHeap(), 0, pServiceInfo);
-    CloseServiceHandle(hSc);
-    CloseServiceHandle(hSCManager);
+done:
+    if (bResult == FALSE)
+        ReportLastError();
 
-    return TRUE;
+    if (hSc)
+        CloseServiceHandle(hSc);
 
-fail:
-    ReportLastError();
-    if (hSc) CloseServiceHandle(hSc);
-    if (hSCManager) CloseServiceHandle(hSCManager);
-    return FALSE;
+    if (hSCManager)
+        CloseServiceHandle(hSCManager);
 
+    return bResult;
 }

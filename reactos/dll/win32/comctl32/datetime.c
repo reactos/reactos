@@ -771,10 +771,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
                     GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
                 }
 
-                selection.left   = 0;
-                selection.top    = 0;
-                selection.right  = size.cx;
-                selection.bottom = size.cy;
+                SetRect(&selection, 0, 0, size.cx, size.cy);
                 /* center rectangle */
                 OffsetRect(&selection, (field->right  + field->left - size.cx)/2,
                                        (field->bottom - size.cy)/2);
@@ -1543,7 +1540,6 @@ static LRESULT WINAPI
 DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     DATETIME_INFO *infoPtr = ((DATETIME_INFO *)GetWindowLongPtrW (hwnd, 0));
-    LRESULT ret;
 
     TRACE ("%x, %lx, %lx\n", uMsg, wParam, lParam);
 
@@ -1559,8 +1555,7 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return DATETIME_SetSystemTime (infoPtr, wParam, (SYSTEMTIME *) lParam);
 
     case DTM_GETRANGE:
-	ret = SendMessageW (infoPtr->hMonthCal, MCM_GETRANGE, wParam, lParam);
-	return ret ? ret : 1; /* bug emulation */
+	return SendMessageW (infoPtr->hMonthCal, MCM_GETRANGE, wParam, lParam);
 
     case DTM_SETRANGE:
 	return SendMessageW (infoPtr->hMonthCal, MCM_SETRANGE, wParam, lParam);

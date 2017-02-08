@@ -65,7 +65,7 @@ typedef struct _APPINFO
     SOCKET icmpSock;                // socket descriptor
     SOCKADDR_IN source, dest;       // source and destination address info
     PECHO_REPLY_HEADER SendPacket;   // ICMP echo packet
-    PIPv4_HEADER RecvPacket;         // return reveive packet
+    PIPv4_HEADER RecvPacket;         // return receive packet
 
     BOOL bUsePerformanceCounter;    // whether to use the high res performance counter
     LARGE_INTEGER TicksPerMs;       // number of millisecs in relation to proc freq

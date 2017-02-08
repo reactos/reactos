@@ -19,6 +19,11 @@ License = Gratuită, cu funcționalități opționale negratuite
 Description = Lector media cu diverse extensii, având o largă comunitate de utilizatori.
 Size = 14,3 Mio
 
+[Section.0419]
+License = Условно бесплатно
+Description = Поддерживает расширяемость с помощью плагинов и скинов. Имеет возможность визуализировать музыку. Есть списки воспроизведения и медиа-библиотека.
+Size = 14,3 МиБ
+
 [Section.041f]
 Version = 5.666 Eksiksiz
 License = Ücretsiz Seçkin

@@ -37,6 +37,11 @@ License = Nespecificată
 Description = Program de conversie și difuziune de conținut audio și video în formaturi Windows Media.
 Size = 9,5 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Утилита для захвата видео с помощью соответствующего устройства и преобразования его в другие форматы.
+Size = 9,5 МиБ
+
 [Section.041b]
 Description = Neznáma
 

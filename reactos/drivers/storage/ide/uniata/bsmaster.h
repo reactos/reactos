@@ -36,6 +36,9 @@ Revision History:
     Some definitions were taken from FreeBSD 4.3-9.2 ATA driver by
          Søren Schmidt, Copyright (c) 1998-2014
 
+Licence:
+    GPLv2
+
 --*/
 
 #ifndef __IDE_BUSMASTER_H__
@@ -60,7 +63,7 @@ Revision History:
 #define         ATA_WAIT_IDLE           0x9
 
 
-#include "bm_devs.h"
+#include "bm_devs_decl.h"
 
 #include "uata_ctl.h"
 
@@ -75,6 +78,7 @@ Revision History:
 #define	IO_WD1	        0x1F0		/* Primary Fixed Disk Controller */
 #define	IO_WD2	        0x170		/* Secondary Fixed Disk Controller */
 #define IP_PC98_BANK    0x432
+#define	IO_FLOPPY_INT	0x3F6		/* AltStatus inside Floppy I/O range */
 
 #define PCI_ADDRESS_IOMASK              0xfffffff0
 
@@ -1008,6 +1012,8 @@ typedef struct _HW_CHANNEL {
 
     PATA_REQ            cur_req;
     ULONG               cur_cdev;
+    ULONG               last_cdev; /* device for which we have configured timings last time */
+    ULONG               last_devsel; /* device selected during last call to SelectDrive() */
 /*    PATA_REQ            first_req;
     PATA_REQ            last_req;*/
     ULONG               queue_depth;
@@ -1123,6 +1129,7 @@ typedef struct _HW_CHANNEL {
 #define CTRFLAGS_LBA48                  0x0040
 #define CTRFLAGS_DSC_BSY                0x0080
 #define CTRFLAGS_NO_SLAVE               0x0100
+//#define CTRFLAGS_DMA_BEFORE_R           0x0200
 //#define CTRFLAGS_PATA                   0x0200
 //#define CTRFLAGS_NOT_PRESENT            0x0200
 #define CTRFLAGS_AHCI_PM                0x0400
@@ -1439,7 +1446,7 @@ ScsiPortGetBusDataByOffset(
 extern ULONG
 NTAPI
 AtapiFindListedDev(
-    PBUSMASTER_CONTROLLER_INFORMATION BusMasterAdapters,
+    PBUSMASTER_CONTROLLER_INFORMATION_BASE BusMasterAdapters,
     ULONG     lim,
     IN PVOID  HwDeviceExtension,
     IN ULONG  BusNumber,
@@ -1874,9 +1881,14 @@ extern BOOLEAN g_opt_AtapiDmaRawRead;
 extern BOOLEAN hasPCI;
 
 extern BOOLEAN InDriverEntry;
+extern BOOLEAN g_Dump;
 
 extern BOOLEAN g_opt_Verbose;
 extern ULONG   g_opt_VirtualMachine;
+
+extern ULONG   g_opt_WaitBusyResetCount;
+
+extern ULONG CPU_num;
 
 #define VM_AUTO      0x00
 #define VM_NONE      0x01
@@ -1885,7 +1897,7 @@ extern ULONG   g_opt_VirtualMachine;
 #define VM_QEMU      0x04
 #define VM_BOCHS     0x05
 
-#define VM_MAX_KNOWN VM_QEMU
+#define VM_MAX_KNOWN VM_BOCHS
 
 extern BOOLEAN WinVer_WDM_Model;
 

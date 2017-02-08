@@ -77,6 +77,8 @@ HRESULT WINAPI PropVariantToUInt16(REFPROPVARIANT propvarIn, USHORT *ret);
 HRESULT WINAPI PropVariantToUInt32(REFPROPVARIANT propvarIn, ULONG *ret);
 HRESULT WINAPI PropVariantToUInt64(REFPROPVARIANT propvarIn, ULONGLONG *ret);
 
+HRESULT WINAPI PropVariantToStringAlloc(REFPROPVARIANT propvarIn, WCHAR **ret);
+
 #ifdef __cplusplus
 
 HRESULT InitPropVariantFromBoolean(BOOL fVal, PROPVARIANT *ppropvar);

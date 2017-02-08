@@ -21,7 +21,7 @@
      receiving mouse information (and if you are making mouse then send out
      7 databits and 2 stop bits). 
      The byte marked with 1. is send first, then the others. The bit D6 in
-     the first byte is used for syncronizing the software to mouse packets
+     the first byte is used for synchronizing the software to mouse packets
      if it goes out of sync. 
 
       LB is the state of the left button (1 means pressed down)
@@ -37,7 +37,7 @@
  Logitech serial mouse
 
    Logitech uses the Microsoft serial mouse protocol in their mouses (for
-   example Logitech Pilot mouse and others). The origianal protocol supports
+   example Logitech Pilot mouse and others). The original protocol supports
    only two buttons, but logitech as added third button to some of their
    mouse models. To make this possible logitech has made one extension to
    the protocol. 

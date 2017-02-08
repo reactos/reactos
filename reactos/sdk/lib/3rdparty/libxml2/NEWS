@@ -845,7 +845,7 @@ Gansterer),
    - Improvement: switch parser to XML-1.0 5th edition, add parsing flags
       for old versions, switch URI parsing to RFC 3986,
       add xmlSchemaValidCtxtGetParserCtxt (Holger Kaelberer),
-      new hashing functions for dictionnaries (based on Stefan Behnel work),
+      new hashing functions for dictionaries (based on Stefan Behnel work),
       improve handling of misplaced html/head/body in HTML parser, better
       regression test tools and code coverage display, better algorithms
       to detect various versions of the billion laughts attacks, make
@@ -1231,7 +1231,7 @@ Do not use or package 2.6.25
     Bakefile support (Francesco Montorsi), Windows compilation (Joel Reed),
     some gcc4 fixes, HP-UX portability fixes (Rick Jones).
    - bug fixes: xmlSchemaElementDump namespace (Kasimier Buchcik), push and
-    xmlreader stopping on non-fatal errors, thread support for dictionnaries
+    xmlreader stopping on non-fatal errors, thread support for dictionaries
     reference counting (Gary Coady), internal subset and push problem, URL
     saved in xmlCopyDoc, various schemas bug fixes (Kasimier), Python paths
     fixup (Stephane Bidoul), xmlGetNodePath and namespaces, xmlSetNsProp fix
@@ -1244,7 +1244,7 @@ Do not use or package 2.6.25
     Hendricks), aliasing bug exposed by gcc4 on s390, xmlTextReaderNext bug
     (Rob Richards), Schemas decimal type fixes (William Brack),
     xmlByteConsumed static buffer (Ben Maurer).
-   - improvement: speedup parsing comments and DTDs, dictionnary support for
+   - improvement: speedup parsing comments and DTDs, dictionary support for
     hash tables, Schemas Identity constraints (Kasimier), streaming XPath
     subset, xmlTextReaderReadString added (Bjorn Reese), Schemas canonical
     values handling (Kasimier), add xmlTextReaderByteConsumed (Aron
@@ -1454,7 +1454,7 @@ Do not use or package 2.6.25
     URI on SYSTEM lookup failure, XInclude parse flags inheritance (William),
     XInclude and XPointer fixes for entities (William), XML parser bug
     reported by Holger Rauch, nanohttp fd leak (William),  regexps char
-    groups '-' handling (William), dictionnary reference counting problems,
+    groups '-' handling (William), dictionary reference counting problems,
     do not close stderr.
    - performance patches from Petr Pajas
    - Documentation fixes: XML_CATALOG_FILES in man pages (Mike Hommey)
@@ -1482,7 +1482,7 @@ Do not use or package 2.6.25
     William) reported by Yuuichi Teranishi
    - bugfixes: make test and path issues, xmlWriter attribute serialization
     (William Brack), xmlWriter indentation (William), schemas validation
-    (Eric Haszlakiewicz), XInclude dictionnaries issues (William and Oleg
+    (Eric Haszlakiewicz), XInclude dictionaries issues (William and Oleg
     Paraschenko), XInclude empty fallback (William), HTML warnings (William),
     XPointer in XInclude (William), Python namespace serialization,
     isolat1ToUTF8 bound error (Alfred Mickautsch), output of parameter
@@ -1503,7 +1503,7 @@ Do not use or package 2.6.25
 
 
 2.6.5: Jan 25 2004:
-   - Bugfixes: dictionnaries for schemas (William Brack), regexp segfault
+   - Bugfixes: dictionaries for schemas (William Brack), regexp segfault
     (William), xs:all problem (William), a number of XPointer bugfixes
     (William), xmllint error go to stderr, DTD validation problem with
     namespace, memory leak (William), SAX1 cleanup and minimal options fixes
@@ -1515,14 +1515,14 @@ Do not use or package 2.6.25
     Fleck), doc (Sven Zimmerman), I/O example.
    - Python bindings: fixes (William), enum support (StÃ©phane Bidoul),
     structured error reporting (StÃ©phane Bidoul)
-   - XInclude: various fixes for conformance, problem related to dictionnary
+   - XInclude: various fixes for conformance, problem related to dictionary
     references (William & me), recursion (William)
    - xmlWriter: indentation (Lucas Brasilino), memory leaks (Alfred
     Mickautsch),
    - xmlSchemas: normalizedString datatype (John Belmonte)
    - code cleanup for strings functions (William)
    - Windows: compiler patches (Mark Vakoc)
-   - Parser optimizations, a few new XPath and dictionnary APIs for future
+   - Parser optimizations, a few new XPath and dictionary APIs for future
     XSLT optimizations.
 
 
@@ -1617,8 +1617,8 @@ Do not use or package 2.6.25
     of change
    - Increased the library modularity, far more options can be stripped out,
     a --with-minimum configuration will weight around 160KBytes
-   - Use per parser and per document dictionnary, allocate names and small
-    text nodes from the dictionnary
+   - Use per parser and per document dictionary, allocate names and small
+    text nodes from the dictionary
    - Switch to a SAX2 like parser rewrote most of the XML parser core,
     provides namespace resolution and defaulted attributes, minimize memory
     allocations and copies, namespace checking and specific error handling,
@@ -1665,7 +1665,7 @@ Do not use or package 2.6.25
     (William), xmlCleanupParser (Marc Liyanage), CDATA output (William), HTTP
     error handling.
    - xmllint options: --dtdvalidfpi for Tobias Reif, --sax1 for compat
-    testing,  --nodict for building without tree dictionnary, --nocdata to
+    testing,  --nodict for building without tree dictionary, --nocdata to
     replace CDATA by text, --nsclean to remove surperfluous  namespace
     declarations
    - added xml2-config --libtool-libs option from Kevin P. Fleming

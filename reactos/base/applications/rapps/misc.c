@@ -55,7 +55,7 @@ GetSystemColorDepth(VOID)
     DEVMODE pDevMode;
     INT ColorDepth;
 
-    pDevMode.dmSize = sizeof(DEVMODE);
+    pDevMode.dmSize = sizeof(pDevMode);
     pDevMode.dmDriverExtra = 0;
 
     if (!EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &pDevMode))
@@ -143,13 +143,13 @@ SetWelcomeText(VOID)
 {
     WCHAR szText[MAX_STR_LEN*3];
 
-    LoadStringW(hInst, IDS_WELCOME_TITLE, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_WELCOME_TITLE, szText, _countof(szText));
     NewRichEditText(szText, CFE_BOLD);
 
-    LoadStringW(hInst, IDS_WELCOME_TEXT, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_WELCOME_TEXT, szText, _countof(szText));
     InsertRichEditText(szText, 0);
 
-    LoadStringW(hInst, IDS_WELCOME_URL, szText, sizeof(szText) / sizeof(WCHAR));
+    LoadStringW(hInst, IDS_WELCOME_URL, szText, _countof(szText));
     InsertRichEditText(szText, CFM_LINK);
 }
 
@@ -272,7 +272,7 @@ ExtractFilesFromCab(LPWSTR lpCabName, LPWSTR lpOutputPath)
         pfnExtract = (void *) GetProcAddress(hCabinetDll, "Extract");
         if (pfnExtract)
         {
-            ZeroMemory(&Dest, sizeof(SESSION));
+            ZeroMemory(&Dest, sizeof(Dest));
 
             WideCharToMultiByte(CP_ACP, 0, lpOutputPath, -1, Dest.Destination, MAX_PATH, NULL, NULL);
             WideCharToMultiByte(CP_ACP, 0, lpCabName, -1, szCabName, MAX_PATH, NULL, NULL);
@@ -315,7 +315,7 @@ InitLogs(VOID)
         return;
     }
 
-    if (!GetModuleFileName(NULL, szPath, sizeof(szPath) / sizeof(szPath[0])))
+    if (!GetModuleFileNameW(NULL, szPath, _countof(szPath)))
         return;
 
     if (RegSetValueExW(hKey,

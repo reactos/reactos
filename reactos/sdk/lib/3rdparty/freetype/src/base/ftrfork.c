@@ -403,7 +403,7 @@
         errors[i] = FT_Err_Ok;
 
       if ( errors[i] )
-        continue ;
+        continue;
 
       errors[i] = (FT_RACCESS_GUESS_TABLE_GET[i].func)( library,
                                                  stream, base_name,

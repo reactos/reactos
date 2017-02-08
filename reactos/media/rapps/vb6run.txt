@@ -41,6 +41,11 @@ License = Nespecificată
 Description = Pachet necesar pentru aplicațiile compilate cu Visual Basic 6. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
 Size = 1,0 Mio
 
+[Section.0419]
+License = Неизвестно
+Description = Необходим для приложений, написанных в Visual Basic 6. Содержит: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
+Size = 1,0 МиБ
+
 [Section.041f]
 Name = Microsoft Visual Basic 6 Yürütücü
 License = Bilinmiyor

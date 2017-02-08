@@ -22,7 +22,7 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Üzerine", ID_HELP_ABOUT
     END
 END
 
@@ -66,7 +66,7 @@ BEGIN
         MENUITEM "Di&zin Yolunu Çoğalt", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
         MENUITEM "&Bul...\tDenetim+F", ID_EDIT_FIND
-        MENUITEM "S&onrakini Bul\tİ3", ID_EDIT_FINDNEXT
+        MENUITEM "S&onrakini Bul\tF3...", ID_EDIT_FINDNEXT
     END
     POPUP "&Görünüm"
     BEGIN
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Böl", ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Yenile\tİ5", ID_VIEW_REFRESH
+        MENUITEM "&Yenile\tF5", ID_VIEW_REFRESH
     END
     POPUP "Y&er İmleri"
     BEGIN
@@ -83,9 +83,9 @@ BEGIN
     END
     POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Yardım Konuları\tİ1", ID_HELP_HELPTOPICS
+        MENUITEM "&Yardım Konuları\tF1", ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine...", ID_HELP_ABOUT
+        MENUITEM "&Değer Defteri Düzenleyicisi Üzerine", ID_HELP_ABOUT
     END
 END
 

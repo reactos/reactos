@@ -34,8 +34,13 @@ Description = glidewrapper jest potrzebny do uruchomienia Diablo2 w ReactOS-ie.
 
 [Section.0418]
 License = Gratuită
-Description = O interfață Glide (de emulare a cartelelor grafice 3dfx cu OpenGL), necesar pentru a executa Diablo II în ReactOS.
+Description = Interfață Glide (de emulare a cartelelor grafice 3dfx cu OpenGL), necesar pentru a executa Diablo II în ReactOS.
 Size = 249,0 Kio
+
+[Section.0419]
+License = Бесплатно
+Description = API для эмуляции 3dfx видеокарт с OpenGL. Необходимо для запуска Diablo II в ReactOS.
+Size = 249,0 КиБ
 
 [Section.041f]
 Name = Zeckensack Eliyle Glide wrapper

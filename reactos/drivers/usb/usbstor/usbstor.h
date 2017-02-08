@@ -162,8 +162,8 @@ typedef struct
     UCHAR LogicalBlockByte2;                                         // lba byte 2
     UCHAR LogicalBlockByte3;                                         // lba byte 3
     UCHAR Reserved;                                                  // reserved 0x00
-    UCHAR ContiguousLogicBlocksByte0;                                // msb contigious logic blocks byte
-    UCHAR ContiguousLogicBlocksByte1;                                // msb contigious logic blocks
+    UCHAR ContiguousLogicBlocksByte0;                                // msb contiguous logic blocks byte
+    UCHAR ContiguousLogicBlocksByte1;                                // msb contiguous logic blocks
     UCHAR Reserved1[3];                                              // reserved 0x00
 }UFI_READ_WRITE_CMD;
 
@@ -190,7 +190,7 @@ C_ASSERT(sizeof(UFI_CAPACITY_CMD) == 12);
 #define UFI_CAPACITY_CMD_LEN 0xA //FIXME support length 16 too if requested
 
 //
-// UFI Read Capcacity command response
+// UFI Read Capacity command response
 //
 typedef struct
 {
@@ -283,7 +283,7 @@ typedef struct
     UCHAR BlockLengthByte2;
 }UFI_CAPACITY_DESCRIPTOR, *PUFI_CAPACITY_DESCRIPTOR;
 
-#define UNFORMATED_MEDIA_CODE_DESCRIPTORY_TYPE (1)
+#define UNFORMATTED_MEDIA_CODE_DESCRIPTORY_TYPE (1)
 #define FORMAT_MEDIA_CODE_DESCRIPTOR_TYPE      (2)
 #define CARTRIDGE_MEDIA_CODE_DESCRIPTOR_TYPE   (3)
 

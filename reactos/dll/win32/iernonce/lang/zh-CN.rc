@@ -1,0 +1,29 @@
+/* Simplified Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "%1 RunEx 的格式或 RunOnceEx 条目是无效的。 竖线 ('|') 在函数名后需要和支持 WinMain() 参数所需要的功能。"
+    IDS_LOADERROR "出现了一个错误加载 %1。 该文件可能未安装或已被损坏。"
+    IDS_CALLERROR "出现了一个错误或异常调用函数 %1 %2 中。"
+    IDS_INCORRECTFORMAT "以下的 RunEx 或 命令的格式不正确: %1 。Shell 执行的命令必须以 || 开头。"
+    IDS_NOEXPORT "无法调用该函数 %1 文件 %2 中因为该函数不存在或不被导出。"
+    IDS_EXECUTEERROR "执行 %1 时出现错误或异常。"
+    IDS_NOFUNCTION "无法找到函数 %1 文件 %2 中。"
+    IDS_NODEPENDENCY "无法加载依赖项文件 %1。."
+    IDS_SETUPERROR "设置 %1 时出错。此错误已记录，安装将继续"
+    IDS_INCOMPLETE "以前安装的应用程序尚未完成。\n\n登录使用管理员帐户来完成安装。"
+    IDS_SETUP "ReactOS 安装"
+    IDS_SERVICEERROR "一些服务无法启动。安装程序需要重新启动系统以便启动这些服务。"
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "ReactOS 安装"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "ReactOS 现在设置以下各项: ", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

@@ -101,7 +101,7 @@ public:
             /* send the current progress to the progress bar */
             SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
 
-            /* format the bits and bytes into pretty and accesible units... */
+            /* format the bits and bytes into pretty and accessible units... */
             StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
             StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 
@@ -212,7 +212,7 @@ static BOOL CertIsValid(HINTERNET hInternet, LPWSTR lpszHostName)
             Ret = HttpSendRequestW(hRequest, L"", 0, NULL, 0);
             if (Ret)
             {
-                certInfoLength = sizeof(INTERNET_CERTIFICATE_INFOW);
+                certInfoLength = sizeof(certInfo);
                 Ret = InternetQueryOptionW(hRequest,
                                            INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT,
                                            &certInfo,
@@ -348,7 +348,15 @@ ThreadFunc(LPVOID Context)
 
     hFile = InternetOpenUrlW(hOpen, AppInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE|INTERNET_FLAG_KEEP_CONNECTION, 0);
     if (!hFile)
+    {
+        WCHAR szMsgText[MAX_STR_LEN];
+
+        if (!LoadStringW(hInst, IDS_UNABLE_TO_DOWNLOAD2, szMsgText, _countof(szMsgText)))
+            goto end;
+
+        MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
         goto end;
+    }
 
     if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
         goto end;
@@ -357,7 +365,7 @@ ThreadFunc(LPVOID Context)
     {
         WCHAR szMsgText[MAX_STR_LEN];
 
-        if (!LoadStringW(hInst, IDS_UNABLE_TO_DOWNLOAD, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+        if (!LoadStringW(hInst, IDS_UNABLE_TO_DOWNLOAD, szMsgText, _countof(szMsgText)))
             goto end;
 
         MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
@@ -395,7 +403,7 @@ ThreadFunc(LPVOID Context)
     {
         WCHAR szMsgText[MAX_STR_LEN];
 
-        if (!LoadStringW(hInst, IDS_CERT_DOES_NOT_MATCH, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+        if (!LoadStringW(hInst, IDS_CERT_DOES_NOT_MATCH, szMsgText, _countof(szMsgText)))
             goto end;
 
         MessageBoxW(Dlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
@@ -508,6 +516,7 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
                               sizeof(szProgressText),
                               (PCWSTR)lParam);
             }
+            return TRUE;
         }
 
         case WM_ERASEBKGND:
@@ -563,7 +572,7 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
             ZeroMemory(szProgressText, sizeof(szProgressText));
             RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
         }
-
+        /* Fall-through */
         default:
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
@@ -655,7 +664,7 @@ DownloadApplicationsDB(LPCWSTR lpUrl)
 {
     APPLICATION_INFO IntInfo;
 
-    ZeroMemory(&IntInfo, sizeof(APPLICATION_INFO));
+    ZeroMemory(&IntInfo, sizeof(IntInfo));
     if (FAILED(StringCbCopyW(IntInfo.szUrlDownload,
                              sizeof(IntInfo.szUrlDownload),
                              lpUrl)))

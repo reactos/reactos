@@ -672,7 +672,7 @@ KsGenerateEventList(
     IN KSEVENTS_LOCKTYPE EventsFlags,
     IN PVOID EventsLock)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -740,5 +740,5 @@ KsGenerateEvents(
     IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,
     IN PVOID CallBackContext OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }

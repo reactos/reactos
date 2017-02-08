@@ -600,8 +600,6 @@ VOID COpenWithList::LoadRecommendedFromHKCR(LPCWSTR pwszExt)
     dwSize = sizeof(wszBuf);
     if (RegGetValueW(hKey, NULL, L"PerceivedType", RRF_RT_REG_SZ, NULL, wszBuf, &dwSize) == ERROR_SUCCESS)
     {
-        RegCloseKey(hKey);
-
         StringCbPrintfW(wszBuf2, sizeof(wszBuf2), L"SystemFileAssociations\\%s", wszBuf);
         if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszBuf2, 0, KEY_READ | KEY_WRITE, &hSubkey) == ERROR_SUCCESS)
         {

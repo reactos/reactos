@@ -1,0 +1,50 @@
+#include <windef.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS PIF Manager Icon Resource Library"
+#define REACTOS_STR_INTERNAL_NAME       "pifmgr"
+#define REACTOS_STR_ORIGINAL_FILENAME   "pifmgr.dll"
+#include <reactos/version.rc>
+
+/* Icons */
+1  ICON "res/01.ico"
+2  ICON "res/02.ico"
+3  ICON "res/03.ico"
+4  ICON "res/04.ico"
+5  ICON "res/05.ico"
+6  ICON "res/06.ico"
+7  ICON "res/00.ico"
+8  ICON "res_alt/08.ico"
+9  ICON "res/09.ico"
+/* No icon 10 */
+11 ICON "res/11.ico"
+12 ICON "res/12.ico"
+13 ICON "res/13.ico"
+14 ICON "res/14.ico"
+15 ICON "res/15.ico"
+16 ICON "res_alt/16.ico"
+17 ICON "res/17.ico"
+18 ICON "res/18.ico"
+19 ICON "res/19.ico"
+20 ICON "res/20.ico"
+21 ICON "res/00.ico"
+22 ICON "res/22.ico"
+23 ICON "res/23.ico"
+24 ICON "res_alt/24.ico"
+25 ICON "res_alt/25.ico"
+26 ICON "res_alt/26.ico"
+27 ICON "res/00.ico"
+28 ICON "res/00.ico"
+29 ICON "res_alt/29.ico"
+30 ICON "res/00.ico"
+31 ICON "res/00.ico"
+32 ICON "res_alt/32.ico"
+33 ICON "res_alt/33.ico"
+34 ICON "res/34.ico"
+35 ICON "res/00.ico"
+36 ICON "res_alt/36.ico"
+37 ICON "res_alt/37.ico"
+38 ICON "res/00.ico"
+39 ICON "res/00.ico"

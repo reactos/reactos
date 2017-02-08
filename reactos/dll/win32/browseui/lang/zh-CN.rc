@@ -92,7 +92,6 @@ BEGIN
     END
     POPUP "帮助(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "此副本的 ReactOS 是合法的吗？(&L)", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "关于 ReactOS(&A)", IDM_HELP_ABOUT
     END
 END

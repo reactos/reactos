@@ -35,6 +35,11 @@ License = Gratuită
 Description = Aplicație rapidă de căutări complexe de text.
 Size = 4,9 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Быстрый и многофункциональный инструмент поиска.
+Size = 4,9 МиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Hızlı ve husûsiyet zengini bir arama uygulaması.

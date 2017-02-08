@@ -5622,14 +5622,6 @@ static int wined3d_sampler_compare(const void *key, const struct wine_rb_entry *
     return memcmp(&sampler->desc, key, sizeof(sampler->desc));
 }
 
-static const struct wine_rb_functions wined3d_sampler_rb_functions =
-{
-    wined3d_rb_alloc,
-    wined3d_rb_realloc,
-    wined3d_rb_free,
-    wined3d_sampler_compare,
-};
-
 HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
         UINT adapter_idx, enum wined3d_device_type device_type, HWND focus_window, DWORD flags,
         BYTE surface_alignment, struct wined3d_device_parent *device_parent)
@@ -5661,11 +5653,7 @@ HRESULT device_init(struct wined3d_device *device, struct wined3d *wined3d,
 
     fragment_pipeline = adapter->fragment_pipe;
 
-    if (wine_rb_init(&device->samplers, &wined3d_sampler_rb_functions) == -1)
-    {
-        ERR("Failed to initialize sampler rbtree.\n");
-        return E_OUTOFMEMORY;
-    }
+    wine_rb_init(&device->samplers, wined3d_sampler_compare);
 
     if (vertex_pipeline->vp_states && fragment_pipeline->states
             && FAILED(hr = compile_state_table(device->StateTable, device->multistate_funcs,

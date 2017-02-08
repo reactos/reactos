@@ -153,6 +153,7 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
                                  PVOID Context)
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    PDEVICE_OBJECT TopDeviceObject;
     NTSTATUS Status;
 
     DPRINT("PopQuerySystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
@@ -163,13 +164,16 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
-    Status = PopSendQuerySystemPowerState(DeviceNode->PhysicalDeviceObject,
+    TopDeviceObject = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+
+    Status = PopSendQuerySystemPowerState(TopDeviceObject,
                                           PowerStateContext->SystemPowerState,
                                           PowerStateContext->PowerAction);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Device '%wZ' failed IRP_MN_QUERY_POWER\n", &DeviceNode->InstancePath);
     }
+    ObDereferenceObject(TopDeviceObject);
 
 #if 0
     return Status;
@@ -183,6 +187,7 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
                                PVOID Context)
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    PDEVICE_OBJECT TopDeviceObject;
     NTSTATUS Status;
 
     DPRINT("PopSetSystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
@@ -196,13 +201,22 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
-    Status = PopSendSetSystemPowerState(DeviceNode->PhysicalDeviceObject,
+    TopDeviceObject = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+    if (TopDeviceObject == PowerStateContext->PowerDevice)
+    {
+        ObDereferenceObject(TopDeviceObject);
+        return STATUS_SUCCESS;
+    }
+
+    Status = PopSendSetSystemPowerState(TopDeviceObject,
                                         PowerStateContext->SystemPowerState,
                                         PowerStateContext->PowerAction);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Device '%wZ' failed IRP_MN_SET_POWER\n", &DeviceNode->InstancePath);
     }
+
+    ObDereferenceObject(TopDeviceObject);
 
 #if 0
     return Status;
@@ -643,6 +657,7 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
                    IN ULONG OutputBufferLength)
 {
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
 
     PAGED_CODE();
 
@@ -651,6 +666,20 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
            PowerInformationLevel,
            InputBuffer, InputBufferLength,
            OutputBuffer, OutputBufferLength);
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(InputBuffer, InputBufferLength, 1);
+            ProbeForWrite(OutputBuffer, OutputBufferLength, sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     switch (PowerInformationLevel)
     {
@@ -663,11 +692,20 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
             if (OutputBufferLength < sizeof(SYSTEM_BATTERY_STATE))
                 return STATUS_BUFFER_TOO_SMALL;
 
-            /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
-            RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
-            BatteryState->EstimatedTime = MAXULONG;
+            _SEH2_TRY
+            {
+                /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
+                RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
+                BatteryState->EstimatedTime = MAXULONG;
 
-            Status = STATUS_SUCCESS;
+                Status = STATUS_SUCCESS;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             break;
         }
 
@@ -680,11 +718,49 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
             if (OutputBufferLength < sizeof(SYSTEM_POWER_CAPABILITIES))
                 return STATUS_BUFFER_TOO_SMALL;
 
-            /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
-            RtlZeroMemory(PowerCapabilities, sizeof(SYSTEM_POWER_CAPABILITIES));
-            //PowerCapabilities->SystemBatteriesPresent = 0;
+            _SEH2_TRY
+            {
+                /* Just zero the struct (and thus set PowerCapabilities->SystemBatteriesPresent = FALSE) */
+                RtlZeroMemory(PowerCapabilities, sizeof(SYSTEM_POWER_CAPABILITIES));
+                //PowerCapabilities->SystemBatteriesPresent = 0;
 
-            Status = STATUS_SUCCESS;
+                Status = STATUS_SUCCESS;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            break;
+        }
+
+        case ProcessorInformation:
+        {
+            PPROCESSOR_POWER_INFORMATION PowerInformation = (PPROCESSOR_POWER_INFORMATION)OutputBuffer;
+
+            if (InputBuffer != NULL)
+                return STATUS_INVALID_PARAMETER;
+            if (OutputBufferLength < sizeof(PROCESSOR_POWER_INFORMATION))
+                return STATUS_BUFFER_TOO_SMALL;
+
+            _SEH2_TRY
+            {
+                PowerInformation->Number = 0;
+                PowerInformation->MaxMhz = 1000;
+                PowerInformation->CurrentMhz = 1000;
+                PowerInformation->MhzLimit = 1000;
+                PowerInformation->MaxIdleState = 0;
+                PowerInformation->CurrentIdleState = 0;
+
+                Status = STATUS_SUCCESS;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
             break;
         }
 

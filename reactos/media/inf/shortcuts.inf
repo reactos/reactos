@@ -14,11 +14,12 @@ CommunicationsShortcuts=2, %ACCESSORIES%\%COMMUNICATIONS%
 GamesShortcuts=2, %GAMES%
 
 [DesktopShortcuts]
+%SystemRoot%\readme.txt, %README_TITLE%, %README_DESC%
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE_SHORT%, %RAPPS_DESC%, 0
 
 [ProgramShortcuts]
-%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1
+%SystemRoot%\explorer.exe, %EXPLORER_TITLE%, %EXPLORER_DESC%, 1, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\rapps.exe, %RAPPS_TITLE%, %RAPPS_DESC%, 0
 
 [AdminToolsShortcuts]
@@ -28,31 +29,32 @@ GamesShortcuts=2, %GAMES%
 %SystemRoot%\system32\msconfig.exe, %MSCONFIG_TITLE%, %MSCONFIG_DESC%, 0
 
 [CommunicationsShortcuts]
-%SystemRoot%\system32\mstsc.exe, %MSTSC_TITLE%, %MSTSC_DESC%, 0
+%SystemRoot%\system32\mstsc.exe, %MSTSC_TITLE%, %MSTSC_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [AccessoriesShortcuts]
-%SystemRoot%\system32\calc.exe, %CALC_TITLE%, %CALC_DESC%, 0
+%SystemRoot%\system32\calc.exe, %CALC_TITLE%, %CALC_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\cmd.exe, %CMD_TITLE%, %CMD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
-%SystemRoot%\system32\notepad.exe, %NOTEPAD_TITLE%, %NOTEPAD_DESC%, 0
-%SystemRoot%\system32\screenshot.exe, %SCREENSHOT_TITLE%, %SCREENSHOT_DESC%, 0
-%SystemRoot%\system32\wordpad.exe, %WORDPAD_TITLE%, %WORDPAD_DESC%, 0
-%SystemRoot%\system32\mspaint.exe, %MSPAINT_TITLE%, %MSPAINT_DESC%, 0
+%SystemRoot%\system32\notepad.exe, %NOTEPAD_TITLE%, %NOTEPAD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\screenshot.exe, %SCREENSHOT_TITLE%, %SCREENSHOT_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\wordpad.exe, %WORDPAD_TITLE%, %WORDPAD_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\mspaint.exe, %MSPAINT_TITLE%, %MSPAINT_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [SystemToolsShortcuts]
 %SystemRoot%\system32\charmap.exe, %CHARMAP_TITLE%, %CHARMAP_DESC%, 0
 %SystemRoot%\system32\clipbrd.exe, %CLIPBRD_TITLE%, %CLIPBRD_DESC%, 0
 %SystemRoot%\system32\kbswitch.exe, %KBSWITCH_TITLE%, %KBSWITCH_DESC%, 0
 %SystemRoot%\regedit.exe, %REGEDIT_TITLE%, %REGEDIT_DESC%, 0
+%SystemRoot%\system32\taskmgr.exe, %TASKMGR_TITLE%, %TASKMGR_DESC%, 0
 %SystemRoot%\system32\dxdiag.exe, %DXDIAG_TITLE%, %DXDIAG_DESC%, 0
 
 [AccessibilityShortcuts]
-%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0
-%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0
+%SystemRoot%\system32\magnify.exe, %MAGNIFY_TITLE%, %MAGNIFY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
+%SystemRoot%\system32\osk.exe, %OSK_TITLE%, %OSK_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [EntertainmentShortcuts]
-%SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0
+%SystemRoot%\system32\mplay32.exe, %MPLAY_TITLE%, %MPLAY_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 %SystemRoot%\system32\sndvol32.exe, %SNDVOL_TITLE%, %SNDVOL_DESC%, 0
-%SystemRoot%\system32\sndrec32.exe, %SNDREC32_TITLE%, %SNDREC32_DESC%, 0
+%SystemRoot%\system32\sndrec32.exe, %SNDREC32_TITLE%, %SNDREC32_DESC%, 0, %HOMEDRIVE%%HOMEPATH%
 
 [GamesShortcuts]
 %SystemRoot%\system32\sol.exe, %SOL_TITLE%, %SOL_DESC%, 0
@@ -69,6 +71,9 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
+
+README_TITLE=Read Me
+README_DESC=ReactOS Read-Me file
 
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
@@ -105,6 +110,8 @@ KBSWITCH_TITLE=Keyboard Layout Switcher
 KBSWITCH_DESC=Keyboard Layout Switcher
 REGEDIT_TITLE=Registry Editor
 REGEDIT_DESC=Launch Registry Editor
+TASKMGR_TITLE=Task Manager
+TASKMGR_DESC=Launch the Task Manager
 DXDIAG_TITLE=ReactX Diagnostic
 DXDIAG_DESC=Launch ReactX-Diagnostic program
 MAGNIFY_TITLE=Magnify
@@ -259,6 +266,9 @@ ENTERTAINMENT=Unterhaltung
 COMMUNICATIONS=Kommunikation
 GAMES=Spiele
 
+README_TITLE=Lies Mich
+README_DESC=Lies-Mich Datei für ReactOS
+
 CMD_TITLE=Eingabeaufforderung
 CMD_DESC=Öffne Kommandozeilenfenster
 EXPLORER_TITLE=ReactOS Explorer
@@ -384,6 +394,9 @@ ACCESSIBILITY=Accesibilidad
 ENTERTAINMENT=Entretenimiento
 COMMUNICATIONS=Comunicaciones
 GAMES=Juegos
+
+README_TITLE=Léame
+README_DESC=Documento Léame de ReactOS
 
 CMD_TITLE=Consola
 CMD_DESC=Abre una consola de comandos.
@@ -511,6 +524,9 @@ ENTERTAINMENT=Divertissement
 COMMUNICATIONS=Communications
 GAMES=Jeux
 
+README_TITLE=Lisez-Moi
+README_DESC=Fichier Lisez-Moi pour ReactOS
+
 CMD_TITLE=Invite de commandes
 CMD_DESC=Ouvrir l'invite de commandes
 EXPLORER_TITLE=Explorateur ReactOS
@@ -546,6 +562,8 @@ KBSWITCH_TITLE=Sélecteur de configuration clavier
 KBSWITCH_DESC=Sélecteur de configuration clavier
 REGEDIT_TITLE=Éditeur de Registre
 REGEDIT_DESC=Lancer l'Éditeur de Registre
+TASKMGR_TITLE=Gestionnaire des tâches
+TASKMGR_DESC=Lancer le Gestionnaire des tâches
 DXDIAG_TITLE=Diagnostic ReactX
 DXDIAG_DESC=Lancer le prorgramme de diagnostic ReactX
 MAGNIFY_TITLE=Loupe
@@ -763,6 +781,9 @@ ENTERTAINMENT=Divertimento
 COMMUNICATIONS=Comunicazioni
 GAMES=Giochi
 
+README_TITLE=Leggimi
+README_DESC=File Leggimi per ReactOS
+
 CMD_TITLE=Prompt dei comandi
 CMD_DESC=Apri la finestra dei comandi
 EXPLORER_TITLE=ReactOS Explorer
@@ -888,6 +909,9 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
+
+README_TITLE=Lees Mij
+README_DESC=LeesMij bestand voor ReactOS
 
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
@@ -1078,6 +1102,9 @@ ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Communications
 GAMES=Jogos
 
+README_TITLE=Leia-Me
+README_DESC=Arquivo de informações para ReactOS
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Abrir prompt de comando
 EXPLORER_TITLE=ReactOS Explorer
@@ -1141,6 +1168,9 @@ ENTERTAINMENT=Divertisment
 COMMUNICATIONS=Communicații
 GAMES=Jocuri
 
+README_TITLE=De citit
+README_DESC=Fișier de informare ReactOS
+
 CMD_TITLE=Linie de comandă
 CMD_DESC=Mediu textual cu operații lansate de la linia de comandă.
 EXPLORER_TITLE=Explorator ReactOS
@@ -1170,12 +1200,14 @@ MSPAINT_TITLE=Pictare
 MSPAINT_DESC=Editor de imagini elementar.
 CHARMAP_TITLE=Hartă de caractere
 CHARMAP_DESC=Program de acces la toate caracterele disponibile.
-CLIPBRD_TITLE=Clipboard Viewer
-CLIPBRD_DESC=Clipboard Viewer
+CLIPBRD_TITLE=Inspector de Clipboard
+CLIPBRD_DESC=Inspector de Clipboard
 KBSWITCH_TITLE=Comutator aranjamente de tastatură
 KBSWITCH_DESC=Program pentru comutarea aranjamentelor de tastatură.
 REGEDIT_TITLE=Editor de registru
 REGEDIT_DESC=Program pentru editarea registrului de sistem.
+TASKMGR_TITLE=Gestionar de activități
+TASKMGR_DESC=Program de gestiune a activităților
 DXDIAG_TITLE=Diagnostic ReactX
 DXDIAG_DESC=Instrument de diagnostic ReactX.
 MAGNIFY_TITLE=Lupă
@@ -1201,8 +1233,11 @@ ACCESSORIES=Стандартные
 SYSTOOLS=Служебные
 ACCESSIBILITY=Специальные возможности
 ENTERTAINMENT=Развлечения
-COMMUNICATIONS=Communications
+COMMUNICATIONS=Связь
 GAMES=Игры
+
+README_TITLE=Прочти Меня
+README_DESC=файл ReadMe для ReactOS
 
 CMD_TITLE=Командная строка
 CMD_DESC=Используется для выполнения вводимых с клавиатуры команд.
@@ -1233,12 +1268,14 @@ MSPAINT_TITLE=Paint
 MSPAINT_DESC=Создание и редактирование рисунков.
 CHARMAP_TITLE=Таблица символов
 CHARMAP_DESC=Позволяет вводить отсутствующие на клавиатуре знаки.
-CLIPBRD_TITLE=Clipboard Viewer
-CLIPBRD_DESC=Clipboard Viewer
+CLIPBRD_TITLE=Буфер обмена
+CLIPBRD_DESC=Буфер обмена
 KBSWITCH_TITLE=Переключатель раскладки клавиатуры
 KBSWITCH_DESC=Переключатель раскладки клавиатуры
 REGEDIT_TITLE=Редактор реестра
 REGEDIT_DESC=Запустить редактор реестра
+TASKMGR_TITLE=Диспетчер задач
+TASKMGR_DESC=Запустить диспетчер задач
 DXDIAG_TITLE=Средство диагностики ReactX
 DXDIAG_DESC=Запустить программу диагностики ReactX
 MAGNIFY_TITLE=Экранная лупа
@@ -1330,6 +1367,9 @@ ENTERTAINMENT=Eğlence
 COMMUNICATIONS=İletişim
 GAMES=Oyunlar
 
+README_TITLE=Benioku
+README_DESC=ReactOS Benioku
+
 CMD_TITLE=Komut İstemi
 CMD_DESC=Komut İstemi'ni aç
 EXPLORER_TITLE=ReactOS Gezgini
@@ -1392,6 +1432,9 @@ ACCESSIBILITY=Спеціальні можливості
 ENTERTAINMENT=Розваги
 COMMUNICATIONS=Communications
 GAMES=Ігри
+
+README_TITLE=Прочитай Мене
+README_DESC=файл ReadMe для ReactOS
 
 CMD_TITLE=Командний рядок
 CMD_DESC=Відкрити командний рядок

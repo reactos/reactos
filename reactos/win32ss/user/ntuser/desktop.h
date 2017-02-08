@@ -316,6 +316,6 @@ PWND FASTCALL co_GetDesktopWindow(PWND);
 BOOL FASTCALL IntPaintDesktop(HDC);
 BOOL FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM, LRESULT *);
 BOOL FASTCALL UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult);
-VOID NTAPI DesktopThreadMain();
+VOID NTAPI DesktopThreadMain(VOID);
 
 /* EOF */

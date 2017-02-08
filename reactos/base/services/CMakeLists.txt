@@ -1,9 +1,9 @@
 
 add_subdirectory(audiosrv)
+add_subdirectory(dhcpcsvc)
 add_subdirectory(eventlog)
 add_subdirectory(rpcss)
 add_subdirectory(schedsvc)
-add_subdirectory(spoolsv)
 add_subdirectory(srvsvc)
 add_subdirectory(svchost)
 add_subdirectory(tcpsvcs)

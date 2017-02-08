@@ -27,6 +27,10 @@ Description = Gra typu Arcade dla UNIX, Mac OS X, Windows i DOS. Bazująca na "B
 Description = Joc de tip arcadă pentru UNIX, Mac OS X, Windows și DOS; respectând tradiția: „Boulder Dash” (C64), „Emerald Mine” (Amiga), „Supaplex” (Amiga/PC), și „Sokoban” (PC).
 Size = 2,4 Mio
 
+[Section.0419]
+Description = Игра в стиле аркады для Unix, Мас OS X, Windows и DOS в традициях: "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC). Вам нужна потребуется программа распаковки zip для установки.
+Size = 2,4 МиБ
+
 [Section.041f]
 License = GPL sürüm 2
 Description = "Boulder Dash" (C64), "Emerald Mine" (Amiga), "Supaplex" (Amiga/PC), "Sokoban" (PC) gelenekleri içinde; UNIX, Mac OS X, Windows ve DOS için atari oyun salonu türünde oyun. Kurmak için bir ZIP çıkartma izlencesi gerekir.

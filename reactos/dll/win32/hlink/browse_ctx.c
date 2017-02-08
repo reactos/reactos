@@ -103,10 +103,13 @@ static HRESULT WINAPI IHlinkBC_Register(IHlinkBrowseContext* iface,
     IMoniker *mon;
     IMoniker *composite;
     IRunningObjectTable *ROT;
+    HRESULT hr;
 
     FIXME("(%p)->(%i %p %p %p)\n", This, dwReserved, piunk, pimk, pdwRegister);
 
-    CreateItemMoniker(NULL, szIdent, &mon);
+    hr = CreateItemMoniker(NULL, szIdent, &mon);
+    if (FAILED(hr))
+        return hr;
     CreateGenericComposite(mon, pimk, &composite);
 
     GetRunningObjectTable(0, &ROT);

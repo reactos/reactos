@@ -398,11 +398,11 @@
     for ( j = 0; j < TRICK_SFNT_IDS_NUM_FACES; j++ )
     {
       if ( !has_cvt  && !sfnt_id[j][TRICK_SFNT_ID_cvt].Length )
-        num_matched_ids[j] ++;
+        num_matched_ids[j]++;
       if ( !has_fpgm && !sfnt_id[j][TRICK_SFNT_ID_fpgm].Length )
-        num_matched_ids[j] ++;
+        num_matched_ids[j]++;
       if ( !has_prep && !sfnt_id[j][TRICK_SFNT_ID_prep].Length )
-        num_matched_ids[j] ++;
+        num_matched_ids[j]++;
       if ( num_matched_ids[j] == TRICK_SFNT_IDS_PER_FACE )
         return TRUE;
     }
@@ -1287,10 +1287,12 @@
 
     TT_Driver  driver = (TT_Driver)ttdriver;
 
-#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
-    driver->interpreter_version = TT_INTERPRETER_VERSION_38;
-#else
     driver->interpreter_version = TT_INTERPRETER_VERSION_35;
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+    driver->interpreter_version = TT_INTERPRETER_VERSION_38;
+#endif
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+    driver->interpreter_version = TT_INTERPRETER_VERSION_40;
 #endif
 
 #else /* !TT_USE_BYTECODE_INTERPRETER */

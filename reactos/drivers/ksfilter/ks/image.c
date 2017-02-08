@@ -102,7 +102,7 @@ KspQueryRegValue(
     IN OUT PULONG BufferLength,
     OUT PULONG Type)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

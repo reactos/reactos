@@ -1,19 +1,17 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 
-#if 0
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Consum de energie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Stare", 1001, BUTTON, BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
-    CONTROL "&Afișează pictogramă în bara de activități.", 1002, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10 
-    CONTROL "Afișează detalii pentru fiecare &baterie.", 1003, BUTTON, BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
-    CONTROL "", 1000, STATIC, SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
+    CONTROL "Stare", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
+    CONTROL "&Afișează pictogramă în bara de activități.", 1002, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 6, 6, 120, 10 
+    CONTROL "Afișează detalii pentru fiecare &baterie.", 1003, "Button", BS_AUTOCHECKBOX | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 135, 6, 120, 8 
+    CONTROL "", 1000, "Static", SS_LEFT | WS_CHILD | WS_GROUP, 11, 29, 229, 178 
 END
-#endif
 
 STRINGTABLE
 BEGIN
@@ -21,8 +19,8 @@ BEGIN
     IDS_PWR_PROPERTIES        "&Ajustare proprietăți de consum energie"
     IDS_PWR_METER             "&Deschide Contor de energie"
     IDS_PWR_PERCENT_REMAINING "Au mai rămas %1!u!%%"
-    IDS_PWR_CHARGING          " (se încarcă)"
-    IDS_PWR_UNKNOWN_REMAINING "Nu se cunoaște cât a mai rămas"
+    IDS_PWR_CHARGING          " (în încărcare)"
+    IDS_PWR_UNKNOWN_REMAINING "Nu este disponibil cât a mai rămas"
     IDS_PWR_AC "În rețea de CA"
     IDS_PWR_HOURS_REMAINING "Au mai rămas %1!u!:%2!02u! ore (%3!u!%%)"
     IDS_PWR_MINUTES_REMAINING "Au mai rămas %1!u! min (%2!u!%%)"
@@ -35,7 +33,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - unitate (%s)"
     IDS_HOTPLUG_DRIVES " - unități (%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Acest dispozitiv necesită „Scoatere în siguranță”"
+    IDS_HOTPLUG_REQUIRES "Acest dispozitiv necesită „Scoatere în siguranță”"
     IDS_HOTPLUG_CLICK "Înainte de a scoate acest dispozitiv, apăsați pe această pictogramă și selectați dispozitivul pe care doriți să-l scoateți."
 
     //Volume related strings

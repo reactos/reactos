@@ -775,15 +775,6 @@
 
         maxProfile->maxTwilightPoints = 0xFFFFU - 4;
       }
-
-      /* we arbitrarily limit recursion to avoid stack exhaustion */
-      if ( maxProfile->maxComponentDepth > 100 )
-      {
-        FT_TRACE0(( "tt_face_load_maxp:"
-                    " abnormally large component depth (%d) set to 100\n",
-                    maxProfile->maxComponentDepth ));
-        maxProfile->maxComponentDepth = 100;
-      }
     }
 
     FT_TRACE3(( "numGlyphs: %u\n", maxProfile->numGlyphs ));
@@ -1193,8 +1184,8 @@
 #define FT_STRUCTURE  TT_Postscript
 
       FT_FRAME_START( 32 ),
-        FT_FRAME_ULONG( FormatType ),
-        FT_FRAME_ULONG( italicAngle ),
+        FT_FRAME_LONG ( FormatType ),
+        FT_FRAME_LONG ( italicAngle ),
         FT_FRAME_SHORT( underlinePosition ),
         FT_FRAME_SHORT( underlineThickness ),
         FT_FRAME_ULONG( isFixedPitch ),

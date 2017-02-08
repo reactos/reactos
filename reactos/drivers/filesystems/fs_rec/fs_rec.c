@@ -61,7 +61,7 @@ FsRecLoadFileSystem(IN PDEVICE_OBJECT DeviceObject,
         /* Make sure that we haven't already loaded the FS */
         if (DeviceExtension->State != Loaded)
         {
-            /* Unregiser us, and set us as loaded */
+            /* Unregister us, and set us as loaded */
             IoUnregisterFileSystem(DeviceObject);
             DeviceExtension->State = Loaded;
         }
@@ -170,6 +170,18 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
             Status = FsRecBtrfsFsControl(DeviceObject, Irp);
             break;
 
+        case FS_TYPE_REISERFS:
+
+            /* Send REISERFS command */
+            Status = FsRecReiserfsFsControl(DeviceObject, Irp);
+            break;
+
+        case FS_TYPE_FFS:
+
+            /* Send FFS command */
+            Status = FsRecFfsFsControl(DeviceObject, Irp);
+            break;
+
         default:
 
             /* Unrecognized FS */
@@ -243,7 +255,7 @@ FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
                           0);
     if (NT_SUCCESS(Status))
     {
-        /* We suceeded, close the handle */
+        /* We succeeded, close the handle */
         ZwClose(FileHandle);
     }
     else if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
@@ -395,6 +407,26 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                              L"\\Btrfs",
                              L"\\FileSystem\\BtrfsRecognizer",
                              FS_TYPE_BTRFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register REISERFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\Reiserfs",
+                             L"\\FileSystem\\ReiserfsRecognizer",
+                             FS_TYPE_REISERFS,
+                             FILE_DEVICE_DISK_FILE_SYSTEM);
+    if (NT_SUCCESS(Status)) DeviceCount++;
+
+    /* Register FFS */
+    Status = FsRecRegisterFs(DriverObject,
+                             NULL,
+                             NULL,
+                             L"\\ffs",
+                             L"\\FileSystem\\FfsRecognizer",
+                             FS_TYPE_FFS,
                              FILE_DEVICE_DISK_FILE_SYSTEM);
     if (NT_SUCCESS(Status)) DeviceCount++;
 

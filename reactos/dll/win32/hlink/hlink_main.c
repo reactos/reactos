@@ -221,8 +221,8 @@ HRESULT WINAPI HlinkCreateFromData(IDataObject *piDataObj,
         IHlinkSite *pihlsite, DWORD dwSiteData, IUnknown *piunkOuter,
         REFIID riid, void **ppvObj)
 {
-    FIXME("%p %p %d %p %p %p\n",
-          piDataObj, pihlsite, dwSiteData, piunkOuter, riid, ppvObj);
+    FIXME("%p, %p, %d, %p, %s, %p\n", piDataObj, pihlsite, dwSiteData,
+           piunkOuter, debugstr_guid(riid), ppvObj);
     *ppvObj = NULL;
     return E_NOTIMPL;
 }

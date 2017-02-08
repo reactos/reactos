@@ -544,9 +544,11 @@ cleanup:
 		}
 	}
 
-	Irp->IoStatus.Status = Status;
 	if (Status != STATUS_PENDING)
+	{
+		Irp->IoStatus.Status = Status;
 		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	}
 	return Status;
 }
 

@@ -1115,26 +1115,6 @@ UINT WINAPI GetMetaFileBitsEx( HMETAFILE hmf, UINT nSize, LPVOID buf )
     return mfSize;
 }
 
-#include <pshpack2.h>
-typedef struct
-{
-    DWORD magic;   /* WMFC */
-    WORD unk04;    /* 1 */
-    WORD unk06;    /* 0 */
-    WORD unk08;    /* 0 */
-    WORD unk0a;    /* 1 */
-    WORD checksum;
-    DWORD unk0e;   /* 0 */
-    DWORD num_chunks;
-    DWORD chunk_size;
-    DWORD remaining_size;
-    DWORD emf_size;
-    BYTE *emf_data;
-} mf_comment_chunk;
-#include <poppack.h>
-
-static const DWORD wmfc_magic = 0x43464d57;
-
 /******************************************************************
  *         add_mf_comment
  *
@@ -1147,7 +1127,7 @@ static BOOL add_mf_comment(HDC hdc, HENHMETAFILE emf)
 {
     DWORD size = GetEnhMetaFileBits(emf, 0, NULL), i;
     BYTE *bits, *chunk_data;
-    mf_comment_chunk *chunk = NULL;
+    emf_in_wmf_comment *chunk = NULL;
     BOOL ret = FALSE;
     static const DWORD max_chunk_size = 0x2000;
 
@@ -1156,10 +1136,10 @@ static BOOL add_mf_comment(HDC hdc, HENHMETAFILE emf)
     if(!bits) return FALSE;
     if(!GetEnhMetaFileBits(emf, size, bits)) goto end;
 
-    chunk = HeapAlloc(GetProcessHeap(), 0, max_chunk_size + FIELD_OFFSET(mf_comment_chunk, emf_data));
+    chunk = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(emf_in_wmf_comment, emf_data[max_chunk_size]));
     if(!chunk) goto end;
 
-    chunk->magic = wmfc_magic;
+    chunk->magic = WMFC_MAGIC;
     chunk->unk04 = 1;
     chunk->unk06 = 0;
     chunk->unk08 = 0;
@@ -1177,10 +1157,10 @@ static BOOL add_mf_comment(HDC hdc, HENHMETAFILE emf)
             chunk->chunk_size = chunk->remaining_size;
 
         chunk->remaining_size -= chunk->chunk_size;
-        memcpy(&chunk->emf_data, chunk_data, chunk->chunk_size);
+        memcpy(chunk->emf_data, chunk_data, chunk->chunk_size);
         chunk_data += chunk->chunk_size;
 
-        if(!Escape(hdc, MFCOMMENT, chunk->chunk_size + FIELD_OFFSET(mf_comment_chunk, emf_data), (char*)chunk, NULL))
+        if(!Escape(hdc, MFCOMMENT, FIELD_OFFSET(emf_in_wmf_comment, emf_data[chunk->chunk_size]), (char*)chunk, NULL))
             goto end;
     }
     ret = TRUE;

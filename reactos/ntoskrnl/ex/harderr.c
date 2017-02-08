@@ -148,7 +148,7 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     if (!Thread->HardErrorsAreDisabled)
     {
         /* Check if we can't do errors anymore, and this is serious */
-        if ((!ExReadyForErrors) && (NT_ERROR(ErrorStatus)))
+        if (!ExReadyForErrors && NT_ERROR(ErrorStatus))
         {
             /* Use the system handler */
             ExpSystemErrorHandler(ErrorStatus,
@@ -162,7 +162,7 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     /* Enable hard error processing if it is enabled for the process
      * or if the exception status forces it */
     if ((Process->DefaultHardErrorProcessing & 1) ||
-        (ErrorStatus & 0x10000000))
+        (ErrorStatus & HARDERROR_OVERRIDE_ERRORMODE))
     {
         /* Check if we have an exception port */
         if (Process->ExceptionPort)
@@ -186,80 +186,78 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
     if (Thread->HardErrorsAreDisabled) PortHandle = NULL;
 
     /* Now check if we have a port */
-    if (PortHandle)
+    if (PortHandle == NULL)
     {
-        /* Check if this is the default process */
-        if (Process == ExpDefaultErrorPortProcess)
+        /* Just return to caller */
+        *Response = ResponseReturnToCaller;
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if this is the default process */
+    if (Process == ExpDefaultErrorPortProcess)
+    {
+        /* We can't handle the error, check if this is critical */
+        if (NT_ERROR(ErrorStatus))
         {
-            /* We can't handle the error, check if this is critical */
-            if (NT_ERROR(ErrorStatus))
-            {
-                /* It is, invoke the system handler */
-                ExpSystemErrorHandler(ErrorStatus,
-                                      NumberOfParameters,
-                                      UnicodeStringParameterMask,
-                                      Parameters,
-                                      (PreviousMode != KernelMode) ? TRUE: FALSE);
+            /* It is, invoke the system handler */
+            ExpSystemErrorHandler(ErrorStatus,
+                                  NumberOfParameters,
+                                  UnicodeStringParameterMask,
+                                  Parameters,
+                                  (PreviousMode != KernelMode) ? TRUE: FALSE);
 
-                /* If we survived, return to caller */
-                *Response = ResponseReturnToCaller;
-                return STATUS_SUCCESS;
-            }
-        }
-
-        /* Setup the LPC Message */
-        Message->h.u1.Length = (sizeof(HARDERROR_MSG) << 16) |
-                               (sizeof(HARDERROR_MSG) - sizeof(PORT_MESSAGE));
-        Message->h.u2.ZeroInit = 0;
-        Message->h.u2.s2.Type = LPC_ERROR_EVENT;
-        Message->Status = ErrorStatus &~ 0x10000000;
-        Message->ValidResponseOptions = ValidResponseOptions;
-        Message->UnicodeStringParameterMask = UnicodeStringParameterMask;
-        Message->NumberOfParameters = NumberOfParameters;
-        KeQuerySystemTime(&Message->ErrorTime);
-
-        /* Copy the parameters */
-        if (Parameters) RtlMoveMemory(&Message->Parameters,
-                                      Parameters,
-                                      sizeof(ULONG_PTR) * NumberOfParameters);
-
-        /* Send the LPC Message */
-        Status = LpcRequestWaitReplyPort(PortHandle,
-                                         (PVOID)Message,
-                                         (PVOID)Message);
-        if (NT_SUCCESS(Status))
-        {
-            /* Check what kind of response we got */
-            if ((Message->Response != ResponseReturnToCaller) &&
-                (Message->Response != ResponseNotHandled) &&
-                (Message->Response != ResponseAbort) &&
-                (Message->Response != ResponseCancel) &&
-                (Message->Response != ResponseIgnore) &&
-                (Message->Response != ResponseNo) &&
-                (Message->Response != ResponseOk) &&
-                (Message->Response != ResponseRetry) &&
-                (Message->Response != ResponseYes) &&
-                (Message->Response != ResponseTryAgain) &&
-                (Message->Response != ResponseContinue))
-            {
-                /* Reset to a default one */
-                Message->Response = ResponseReturnToCaller;
-            }
-
-            /* Set the response */
-            *Response = Message->Response;
-        }
-        else
-        {
-            /* Set the response */
+            /* If we survived, return to caller */
             *Response = ResponseReturnToCaller;
+            return STATUS_SUCCESS;
         }
+    }
+
+    /* Setup the LPC Message */
+    Message->h.u1.Length = (sizeof(HARDERROR_MSG) << 16) |
+                           (sizeof(HARDERROR_MSG) - sizeof(PORT_MESSAGE));
+    Message->h.u2.ZeroInit = 0;
+    Message->h.u2.s2.Type = LPC_ERROR_EVENT;
+    Message->Status = ErrorStatus & ~HARDERROR_OVERRIDE_ERRORMODE;
+    Message->ValidResponseOptions = ValidResponseOptions;
+    Message->UnicodeStringParameterMask = UnicodeStringParameterMask;
+    Message->NumberOfParameters = NumberOfParameters;
+    KeQuerySystemTime(&Message->ErrorTime);
+
+    /* Copy the parameters */
+    if (Parameters) RtlMoveMemory(&Message->Parameters,
+                                  Parameters,
+                                  sizeof(ULONG_PTR) * NumberOfParameters);
+
+    /* Send the LPC Message */
+    Status = LpcRequestWaitReplyPort(PortHandle,
+                                     (PPORT_MESSAGE)Message,
+                                     (PPORT_MESSAGE)Message);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check what kind of response we got */
+        if ((Message->Response != ResponseReturnToCaller) &&
+            (Message->Response != ResponseNotHandled) &&
+            (Message->Response != ResponseAbort) &&
+            (Message->Response != ResponseCancel) &&
+            (Message->Response != ResponseIgnore) &&
+            (Message->Response != ResponseNo) &&
+            (Message->Response != ResponseOk) &&
+            (Message->Response != ResponseRetry) &&
+            (Message->Response != ResponseYes) &&
+            (Message->Response != ResponseTryAgain) &&
+            (Message->Response != ResponseContinue))
+        {
+            /* Reset to a default one */
+            Message->Response = ResponseReturnToCaller;
+        }
+
+        /* Set the response */
+        *Response = Message->Response;
     }
     else
     {
-        /* Set defaults */
+        /* Set the response */
         *Response = ResponseReturnToCaller;
-        Status = STATUS_SUCCESS;
     }
 
     /* Return status */
@@ -554,6 +552,8 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             case OptionYesNo:
             case OptionYesNoCancel:
             case OptionShutdownSystem:
+            case OptionOkNoWait:
+            case OptionCancelTryContinue:
                 break;
 
             /* Anything else is invalid */
@@ -687,7 +687,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
  * @implemented
  *
  * NtSetDefaultHardErrorPort is typically called only once. After call,
- * kernel set BOOLEAN flag named _ExReadyForErrors to TRUE, and all other
+ * kernel set BOOLEAN flag named ExReadyForErrors to TRUE, and all other
  * tries to change default port are broken with STATUS_UNSUCCESSFUL error code
  * See: http://www.windowsitlibrary.com/Content/356/08/2.html
  *      http://undocumented.ntinternals.net/UserMode/Undocumented%20Functions/Error/NtSetDefaultHardErrorPort.html

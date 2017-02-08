@@ -387,8 +387,13 @@ DC_vCleanup(PVOID ObjectBody)
     /* Free CLIPOBJ resources */
     IntEngFreeClipResources(&pdc->co);
 
-    PATH_Delete(pdc->dclevel.hPath);
-
+    if (pdc->dclevel.hPath)
+    {
+       DPRINT("DC_vCleanup Path\n");
+       PATH_Delete(pdc->dclevel.hPath);
+       pdc->dclevel.hPath = 0;
+       pdc->dclevel.flPath = 0;
+    }
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
@@ -687,9 +692,11 @@ NtGdiOpenDCW(
 {
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
-    DEVMODEW dmInit;
     PVOID dhpdev;
     HDC hdc;
+    WORD dmSize, dmDriverExtra;
+    DWORD Size;
+    DEVMODEW * _SEH2_VOLATILE pdmAllocated = NULL;
 
     /* Only if a devicename is given, we need any data */
     if (pustrDevice)
@@ -706,13 +713,22 @@ NtGdiOpenDCW(
             /* Copy the string */
             RtlCopyUnicodeString(&ustrDevice, pustrDevice);
 
+            /* Allocate and store pdmAllocated if pdmInit is not NULL */
             if (pdmInit)
             {
-                /* FIXME: could be larger */
-                /* According to a comment in Windows SDK the size of the buffer for
-                   pdm is (pdm->dmSize + pdm->dmDriverExtra) */
                 ProbeForRead(pdmInit, sizeof(DEVMODEW), 1);
-                RtlCopyMemory(&dmInit, pdmInit, sizeof(DEVMODEW));
+
+                dmSize = pdmInit->dmSize;
+                dmDriverExtra = pdmInit->dmDriverExtra;
+                Size = dmSize + dmDriverExtra;
+                ProbeForRead(pdmInit, Size, 1);
+
+                pdmAllocated = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                     Size,
+                                                     TAG_DC);
+                RtlCopyMemory(pdmAllocated, pdmInit, Size);
+                pdmAllocated->dmSize = dmSize;
+                pdmAllocated->dmDriverExtra = dmDriverExtra;
             }
 
             if (pUMdhpdev)
@@ -722,6 +738,10 @@ NtGdiOpenDCW(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            if (pdmAllocated)
+            {
+                ExFreePoolWithTag(pdmAllocated, TAG_DC);
+            }
             SetLastNtError(_SEH2_GetExceptionCode());
             _SEH2_YIELD(return NULL);
         }
@@ -745,7 +765,7 @@ NtGdiOpenDCW(
 
     /* Call the internal function */
     hdc = GreOpenDCW(pustrDevice ? &ustrDevice : NULL,
-                     pdmInit ? &dmInit : NULL,
+                     pdmAllocated,
                      NULL, // FIXME: pwszLogAddress
                      iType,
                      bDisplay,
@@ -768,6 +788,12 @@ NtGdiOpenDCW(
             (void)0;
         }
         _SEH2_END
+    }
+
+    /* Free the allocated */
+    if (pdmAllocated)
+    {
+        ExFreePoolWithTag(pdmAllocated, TAG_DC);
     }
 
     return hdc;

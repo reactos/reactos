@@ -27,9 +27,9 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-//FIXME: Find a better way to retrieve ARC disk information
+// FIXME: Find a better way to retrieve ARC disk information
 extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
+extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
@@ -148,14 +148,10 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
         ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
 
         /* Copy the data over */
-        ArcDiskSig->DiskSignature.Signature = reactos_arc_disk_info[i].Signature;
-        ArcDiskSig->DiskSignature.CheckSum = reactos_arc_disk_info[i].CheckSum;
+        RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
 
-        /* Copy the ARC Name */
-        strncpy(ArcDiskSig->ArcName, reactos_arc_disk_info[i].ArcName, MAX_PATH);
+        /* Set the ARC Name pointer and mark the partition table as valid */
         ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
-
-        /* Mark partition table as valid */
         ArcDiskSig->DiskSignature.ValidPartitionTable = TRUE;
 
         /* Insert into the list */
@@ -176,8 +172,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Convert all DTE into virtual addresses */
     List_PaToVa(&LoaderBlock->LoadOrderListHead);
 
-    /* this one will be converted right before switching to
-       virtual paging mode */
+    /* This one will be converted right before switching to virtual paging mode */
     //List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
 
     /* Convert list of boot drivers */
@@ -190,11 +185,12 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     Extension->MinorVersion = VersionToBoot & 0xFF;
     Extension->Profile.Status = 2;
 
-    /* Check if ACPI is present */
+    /* Check if FreeLdr detected a ACPI table */
     if (AcpiPresent)
     {
-        /* See KiRosFrldrLpbToNtLpb for details */
+        /* Set the pointer to something for compatibility */
         Extension->AcpiTable = (PVOID)1;
+        // FIXME: Extension->AcpiTableSize;
     }
 
 #ifdef _M_IX86
@@ -441,7 +437,7 @@ LoadModule(
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
-    PVOID BaseAdress = NULL;
+    PVOID BaseAddress = NULL;
 
     UiDrawBackdrop();
     sprintf(ProgressString, "Loading %s...", File);
@@ -451,13 +447,13 @@ LoadModule(
     strcat(FullFileName, "SYSTEM32\\");
     strcat(FullFileName, File);
 
-    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
+    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
         TRACE("Loading %s failed\n", File);
         return FALSE;
     }
-    TRACE("%s loaded successfully at %p\n", File, BaseAdress);
+    TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
     strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
     strcat(FullFileName, File);
@@ -469,7 +465,7 @@ LoadModule(
     Success = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                            (IsKdTransportDll ? "KDCOM.DLL" : File),
                                            FullFileName,
-                                           BaseAdress,
+                                           BaseAddress,
                                            Dte);
 
     return Success;
@@ -650,7 +646,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     }
 
     /* Append a backslash if needed */
-    if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
+    if ((BootPath[0] == 0) || BootPath[strlen(BootPath) - 1] != '\\')
         strcat(BootPath, "\\");
 
     /* Read booting options */
@@ -692,7 +688,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 
     TRACE("BootPath: '%s'\n", BootPath);
 
-    /* Allocate and minimalistic-initialize LPB */
+    /* Allocate and minimalist-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
 
     /* Load Hive */
@@ -700,10 +696,16 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     UiDrawProgressBarCenter(15, 100, "Loading system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "loaded" : "not loaded"));
+    /* Bail out if failure */
+    if (!Success)
+        return;
 
     /* Load NLS data, OEM font, and prepare boot drivers list */
     Success = WinLdrScanSystemHive(LoaderBlock, BootPath);
     TRACE("SYSTEM hive %s\n", (Success ? "scanned" : "not scanned"));
+    /* Bail out if failure */
+    if (!Success)
+        return;
 
     /* Finish loading */
     LoadAndBootWindowsCommon(OperatingSystemVersion,

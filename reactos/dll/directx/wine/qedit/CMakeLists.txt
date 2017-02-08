@@ -7,6 +7,7 @@ list(APPEND SOURCE
     main.c
     mediadet.c
     samplegrabber.c
+    timeline.c
     qedit_private.h)
 
 add_library(qedit SHARED

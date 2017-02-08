@@ -2,10 +2,11 @@ LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDD_SLAYERSHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "תאימות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "If you have problems running this program in ReactOS, select an operating system ReactOS should report to the application.", -1, 7, 7, 210, 31
+    LTEXT "אם הנך נתקל בבעיות בהפעלת התכנית בReactOS, אנא בחר את מערכת ההפעלה שReactOS תדווח לתכנית.", -1, 7,7,210,31
     GROUPBOX "מצב תאימות", IDC_COMPATGROUP, 7, 41, 210, 49
     CHECKBOX "הפעל תוכנית זו במצב תאימות עבור:", IDC_CHKRUNCOMPATIBILITY, 18, 57, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP
     COMBOBOX IDC_COMPATIBILITYMODE, 18, 70, 188, 85, CBS_HASSTRINGS | CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
@@ -19,6 +20,7 @@ END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
 CAPTION "עריכת מצבי תאימות"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN

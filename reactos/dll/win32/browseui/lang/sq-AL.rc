@@ -91,7 +91,6 @@ BEGIN
     END
     POPUP "&Ndihmë", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "A eshte kjo kopje e ReactOS e &ligjshme?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Rreth ReactOS", IDM_HELP_ABOUT
     END
 END

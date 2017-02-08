@@ -45,7 +45,7 @@ list(APPEND BOOTLIB_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND BOOTLIB_ASM_SOURCE
-         #lib/arch/i386/foo.asm
+         lib/arch/i386/transfer.s
          )
     list(APPEND BOOTLIB_SOURCE
          lib/arch/i386/arch.c
@@ -70,7 +70,7 @@ endif()
 add_asm_files(bootlib_asm ${BOOTLIB_ASM_SOURCE})
 add_library(bootlib ${BOOTLIB_SOURCE} ${bootlib_asm})
 add_pch(bootlib app/bootmgr/bootmgr.h BOOTLIB_SOURCE)
-add_dependencies(bootlib bugcodes bootmsg xdk)
+add_dependencies(bootlib bugcodes asm bootmsg xdk)
 
 list(APPEND BOOTMGR_BASE_SOURCE
      app/bootmgr/efiemu.c

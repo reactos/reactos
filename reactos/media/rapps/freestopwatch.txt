@@ -1,6 +1,6 @@
 [Section]
 Name = Free Stopwatch
-Version = 3.0.2
+Version = 4.0
 License = Freeware
 Description = A flexible digital stopwatch software.
 Size = 1.5 MiB
@@ -18,6 +18,11 @@ Size = 1,5 MiB
 License = Gratuită
 Description = Aplicație flexibilă de cronometru digital.
 Size = 1,5 Mio
+
+[Section.0419]
+License = Бесплатно
+Description = Цифровой секундомер.
+Size = 1,5 МиБ
 
 [Section.041f]
 Name = Ücretsiz Süreölçer

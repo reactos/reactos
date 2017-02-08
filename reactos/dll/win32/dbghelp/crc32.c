@@ -53,7 +53,7 @@
 /* order from highest-order term to lowest-order term.  UARTs transmit */
 /* characters in order from LSB to MSB.  By storing the CRC this way,  */
 /* we hand it to the UART in the order low-byte to high-byte; the UART */
-/* sends each low-bit to hight-bit; and the result is transmission bit */
+/* sends each low-bit to high-bit; and the result is transmission bit  */
 /* by bit from highest- to lowest-order term without requiring any bit */
 /* shuffling on our part.  Reception works similarly.                  */
 

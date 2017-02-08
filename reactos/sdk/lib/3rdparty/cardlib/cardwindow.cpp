@@ -112,10 +112,10 @@ BOOL CardWindow::Create(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle, int x, 
         return FALSE;
 
     //Create the window associated with this object
-    m_hWnd = CreateWindowEx(WS_EX_CLIENTEDGE, szCardName, 0,
-        WS_CHILD | WS_VISIBLE,
-        0,0,100,100,
-        hwndParent, 0, GetModuleHandle(0), this);
+    m_hWnd = CreateWindowEx(dwExStyle, szCardName, NULL,
+                            dwStyle,
+                            x, y, width, height,
+                            hwndParent, NULL, GetModuleHandle(NULL), this);
 
     return TRUE;
 }

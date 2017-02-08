@@ -92,10 +92,8 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
 static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 {
     MSIPACKAGE *package = param;
-    WCHAR product[GUID_SIZE];
-    DWORD index = 0;
-    DWORD attributes = 0;
-    DWORD sz = GUID_SIZE;
+    WCHAR product[SQUASHED_GUID_SIZE];
+    DWORD index = 0, attributes = 0, sz = sizeof(product)/sizeof(product[0]);
     LPCWSTR upgrade_code;
     HKEY hkey = 0;
     UINT rc = ERROR_SUCCESS;

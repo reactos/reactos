@@ -3,8 +3,8 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
+ *                  Modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -12,6 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -24,18 +25,18 @@ static const char*
 _module_name_from_addr(const void* addr, void **module_start_addr,
                        char* psz, size_t nChars)
 {
-   MEMORY_BASIC_INFORMATION mbi;
-   if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
-       !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
-   {
-      psz[0] = '\0';
-      *module_start_addr = 0;
-   }
-   else
-   {
-      *module_start_addr = (void *)mbi.AllocationBase;
-   }
-   return psz;
+    MEMORY_BASIC_INFORMATION mbi;
+    if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
+        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+    {
+        psz[0] = '\0';
+        *module_start_addr = 0;
+    }
+    else
+    {
+        *module_start_addr = (void *)mbi.AllocationBase;
+    }
+    return psz;
 }
 
 
@@ -43,55 +44,55 @@ static VOID
 _dump_context(PCONTEXT pc)
 {
 #ifdef _M_IX86
-   /*
-    * Print out the CPU registers
-    */
-   DbgPrint("CS:EIP %x:%x\n", pc->SegCs&0xffff, pc->Eip );
-   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
-	    pc->SegFs&0xffff, pc->SegGs&0xfff);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", pc->Eax, pc->Ebx, pc->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
-	    pc->Ebp, pc->Esi, pc->Esp);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
+    /*
+     * Print out the CPU registers
+     */
+    DbgPrint("CS:EIP %x:%x\n", pc->SegCs&0xffff, pc->Eip );
+    DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+             pc->SegFs&0xffff, pc->SegGs&0xfff);
+    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", pc->Eax, pc->Ebx, pc->Ecx);
+    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
+             pc->Ebp, pc->Esi, pc->Esp);
+    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
 #elif defined(_M_AMD64)
-   DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
-   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
-	    pc->SegFs&0xffff, pc->SegGs&0xfff);
-   DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
-   DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
-   DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
-   DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
-   DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
+    DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
+    DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+             pc->SegFs&0xffff, pc->SegGs&0xfff);
+    DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
+    DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
+    DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
+    DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
+    DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
 #elif defined(_M_ARM)
-   DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
-   DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
-   DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
-   DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
-   DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
+    DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
+    DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
+    DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
+    DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
+    DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
 #else
-#error "Unknown architecture"
+    #error "Unknown architecture"
 #endif
 }
 
 static VOID
-PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
     PVOID StartAddr;
     CHAR szMod[128] = "";
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
 
-    /* Print a stack trace. */
+    /* Print a stack trace */
     DbgPrint("Unhandled exception\n");
     DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
 
-    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
         ExceptionRecord->NumberParameters == 2)
     {
         DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
     }
 
-    _dump_context (ContextRecord);
+    _dump_context(ContextRecord);
     _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
     DbgPrint("Address:\n   %8x+%-8x   %s\n",
              (PVOID)StartAddr,
@@ -209,7 +210,7 @@ GetErrorMode(VOID)
     /* Query the current setting */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDefaultHardErrorMode,
-                                       (PVOID)&ErrMode,
+                                       &ErrMode,
                                        sizeof(ErrMode),
                                        NULL);
     if (!NT_SUCCESS(Status))
@@ -238,97 +239,432 @@ GetErrorMode(VOID)
 /*
  * @implemented
  */
-LONG WINAPI
-UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
+LONG
+WINAPI
+UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
-   LONG RetValue;
-   HANDLE DebugPort = NULL;
-   NTSTATUS ErrCode;
-   ULONG_PTR ErrorParameters[4];
-   ULONG ErrorResponse;
-   PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
-   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+    static UNICODE_STRING AeDebugKey =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_AEDEBUG);
 
-   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-       ExceptionRecord->NumberParameters >= 2)
-   {
-      switch(ExceptionRecord->ExceptionInformation[0])
-      {
-      case EXCEPTION_WRITE_FAULT:
-         /* Change the protection on some write attempts, some InstallShield setups
-            have this bug */
-         RetValue = BasepCheckForReadOnlyResource(
-            (PVOID)ExceptionRecord->ExceptionInformation[1]);
-         if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
-            return EXCEPTION_CONTINUE_EXECUTION;
-         break;
-      case EXCEPTION_EXECUTE_FAULT:
-         /* FIXME */
-         break;
-      }
-   }
+    static BOOLEAN IsSecondChance = FALSE;
 
-   /* Is there a debugger running ? */
-   ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
-                                       &DebugPort, sizeof(HANDLE), NULL);
-   if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
-   {
-      BaseSetLastNTError(ErrCode);
-      return EXCEPTION_EXECUTE_HANDLER;
-   }
+    /* Exception data */
+    NTSTATUS Status;
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+    LONG RetValue;
 
-   if (DebugPort)
-   {
-      /* Pass the exception to debugger. */
-      DPRINT("Passing exception to debugger\n");
-      return EXCEPTION_CONTINUE_SEARCH;
-   }
+    /* Debugger and hard error parameters */
+    HANDLE DebugPort = NULL;
+    ULONG_PTR ErrorParameters[4];
+    ULONG DebugResponse, ErrorResponse;
 
-   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
-   if (RealFilter)
-   {
-      LONG ret = RealFilter(ExceptionInfo);
-      if (ret != EXCEPTION_CONTINUE_SEARCH)
-         return ret;
-   }
+    /* Post-Mortem "Auto-Execute" (AE) Debugger registry data */
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ValueString;
+    ULONG Length;
+    UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)Buffer;
+    BOOLEAN AeDebugAuto = FALSE;
+    PWCHAR AeDebugPath = NULL;
+    WCHAR AeDebugCmdLine[MAX_PATH];
 
-   PrintStackTrace(ExceptionInfo);
+    /* Debugger process data */
+    BOOL Success;
+    HRESULT hr;
+    ULONG PrependLength;
+    HANDLE hDebugEvent;
+    HANDLE WaitHandles[2];
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInfo;
 
-   /* Save exception code and address */
-   ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
+    /* In case this is a nested exception, just kill the process */
+    if (ExceptionRecord->ExceptionFlags & EXCEPTION_NESTED_CALL)
+    {
+        NtTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
 
-   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
-   {
-       /* get the type of operation that caused the access violation */
-       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
-   }
-   else
-   {
-       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
-   }
+    if ((ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) &&
+        (ExceptionRecord->NumberParameters >= 2))
+    {
+        switch (ExceptionRecord->ExceptionInformation[0])
+        {
+            case EXCEPTION_WRITE_FAULT:
+            {
+                /*
+                 * Change the protection on some write attempts,
+                 * some InstallShield setups have this bug.
+                 */
+                RetValue = BasepCheckForReadOnlyResource(
+                    (PVOID)ExceptionRecord->ExceptionInformation[1]);
+                if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                break;
+            }
 
-   /* Save faulting address */
-   ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
+            case EXCEPTION_EXECUTE_FAULT:
+                /* FIXME */
+                break;
+        }
+    }
 
-   /* Raise the harderror */
-   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
-       4, 0, ErrorParameters, OptionOkCancel, &ErrorResponse);
+    /* If the process is being debugged, pass the exception to the debugger */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugPort,
+                                       &DebugPort,
+                                       sizeof(DebugPort),
+                                       NULL);
+    if (NT_SUCCESS(Status) && DebugPort)
+    {
+        DPRINT("Passing exception to debugger\n");
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
 
-   if (NT_SUCCESS(ErrCode) && (ErrorResponse == ResponseCancel))
-   {
-       /* FIXME: Check the result, if the "Cancel" button was
-                 clicked run a debugger */
-       DPRINT1("Debugging is not implemented yet\n");
-   }
+    /* No debugger present, let's continue... */
 
-   /*
-    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
-    * the __except block will be executed. Normally this will end up in a
-    * Terminate process.
-    */
+    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+    if (RealFilter)
+    {
+        RetValue = RealFilter(ExceptionInfo);
+        if (RetValue != EXCEPTION_CONTINUE_SEARCH)
+            return RetValue;
+    }
 
-   return EXCEPTION_EXECUTE_HANDLER;
+    /* ReactOS-specific: DPRINT a stack trace */
+    PrintStackTrace(ExceptionInfo);
+
+    /*
+     * Now pop up an error if needed. Check both the process-wide (Win32)
+     * and per-thread error-mode flags (NT).
+     */
+    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) ||
+        (RtlGetThreadErrorMode() & RTL_SEM_NOGPFAULTERRORBOX))
+    {
+        /* Do not display the pop-up error box, just transfer control to the exception handler */
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
+    /* Save exception code and address */
+    ErrorParameters[0] = (ULONG_PTR)ExceptionRecord->ExceptionCode;
+    ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
+
+    if (ExceptionRecord->ExceptionCode == STATUS_IN_PAGE_ERROR)
+    {
+        /*
+         * Get the underlying status code that resulted in the exception,
+         * and just forget about the type of operation (read/write).
+         */
+        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
+    }
+    else // if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) or others...
+    {
+        /* Get the type of operation that caused the access violation */
+        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
+    }
+
+    /* Save faulting address */
+    ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
+
+    /*
+     * Prepare the hard error dialog: default to only OK
+     * in case we do not have any debugger at our disposal.
+     */
+    DebugResponse = OptionOk;
+    AeDebugAuto = FALSE;
+
+    /*
+     * Retrieve Post-Mortem Debugger settings from the registry, under:
+     * HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug
+     * (REGSTR_PATH_AEDEBUG).
+     */
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &AeDebugKey,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /*
+         * Read the 'Auto' REG_SZ value:
+         * "0" (or any other value): Prompt the user for starting the debugger.
+         * "1": Start the debugger without prompting.
+         */
+        RtlInitUnicodeString(&ValueString, REGSTR_VAL_AEDEBUG_AUTO);
+        Status = NtQueryValueKey(KeyHandle,
+                                 &ValueString,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 sizeof(Buffer),
+                                 &Length);
+        if (NT_SUCCESS(Status) && (PartialInfo->Type == REG_SZ))
+        {
+            AeDebugAuto = (*(PWCHAR)PartialInfo->Data == L'1');
+        }
+        else
+        {
+            AeDebugAuto = FALSE;
+        }
+
+        /*
+         * Read and store the 'Debugger' REG_SZ value. Its usual format is:
+         *    C:\dbgtools\ntsd.exe -p %ld -e %ld -g
+         * with the first and second parameters being respectively
+         * the process ID and a notification event handle.
+         */
+        RtlInitUnicodeString(&ValueString, REGSTR_VAL_AEDEBUG_DEBUGGER);
+        Status = NtQueryValueKey(KeyHandle,
+                                 &ValueString,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 sizeof(Buffer),
+                                 &Length);
+        if (NT_SUCCESS(Status) && (PartialInfo->Type == REG_SZ))
+        {
+            /* We hope the string is NULL-terminated */
+            AeDebugPath = (PWCHAR)PartialInfo->Data;
+
+            /* Skip any prepended whitespace */
+            while (  *AeDebugPath &&
+                   ((*AeDebugPath == L' ') ||
+                    (*AeDebugPath == L'\t')) ) // iswspace(*AeDebugPath)
+            {
+                ++AeDebugPath;
+            }
+
+            if (*AeDebugPath)
+            {
+                /* We have a debugger path, we can prompt the user to debug the program */
+                DebugResponse = OptionOkCancel;
+            }
+            else
+            {
+                /* We actually do not have anything, reset the pointer */
+                AeDebugPath = NULL;
+            }
+        }
+        else
+        {
+            AeDebugPath = NULL;
+        }
+
+        NtClose(KeyHandle);
+    }
+
+    // TODO: Start a ReactOS Fault Reporter (unimplemented!)
+    //
+    // For now we are doing the "old way" (aka Win2k), that is also the fallback
+    // case for Windows XP/2003 in case it does not find faultrep.dll to display
+    // the nice "Application Error" dialog box: We use a hard error to communicate
+    // the problem and prompt the user to continue debugging the application or
+    // to terminate it.
+    //
+    // Since Windows XP/2003, we have the ReportFault API available.
+    // See http://www.clausbrod.de/twiki/pub/Blog/DefinePrivatePublic20070616/reportfault.cpp
+    // and https://msdn.microsoft.com/en-us/library/windows/desktop/bb513616(v=vs.85).aspx
+    // and the legacy ReportFault API: https://msdn.microsoft.com/en-us/library/windows/desktop/bb513615(v=vs.85).aspx
+    //
+    // NOTE: Starting Vista+, the fault API is constituted of the WerXXX functions.
+    //
+    // Also see Vostokov's book "Memory Dump Analysis Anthology Collector's Edition, Volume 1"
+    // at: https://books.google.fr/books?id=9w2x6NHljg4C&pg=PA115&lpg=PA115
+
+    if (!(AeDebugPath && AeDebugAuto))
+    {
+        /*
+         * Either there is no debugger specified, or the debugger should
+         * not start automatically: display the hard error no matter what.
+         * For a first chance exception, allow continuing or debugging;
+         * for a second chance exception, just debug or kill the process.
+         */
+        Status = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | HARDERROR_OVERRIDE_ERRORMODE,
+                                  4,
+                                  0,
+                                  ErrorParameters,
+                                  (!IsSecondChance ? DebugResponse : OptionOk),
+                                  &ErrorResponse);
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+        ErrorResponse = (AeDebugPath ? ResponseCancel : ResponseOk);
+    }
+
+    /*
+     * If the user has chosen not to debug the process, or
+     * if this is a second chance exception, kill the process.
+     */
+    if (!NT_SUCCESS(Status) || (ErrorResponse != ResponseCancel) || IsSecondChance)
+        goto Quit;
+
+    /* If the exception comes from a CSR Server, kill it (this will lead to ReactOS shutdown) */
+    if (BaseRunningInServerProcess)
+    {
+        IsSecondChance = TRUE;
+        goto Quit;
+    }
+
+    /*
+     * Attach a debugger to this process. The debugger process is given
+     * the process ID of the current process to be debugged, as well as
+     * a notification event handle. After being spawned, the debugger
+     * initializes and attaches to the process by calling DebugActiveProcess.
+     * When the debugger is ready, it signals the notification event,
+     * so that we can give it control over the process being debugged,
+     * by passing it the exception.
+     *
+     * See https://msdn.microsoft.com/en-us/library/ms809754.aspx
+     * and http://www.debuginfo.com/articles/ntsdwatson.html
+     * and https://sourceware.org/ml/gdb-patches/2012-08/msg00893.html
+     * for more details.
+     */
+
+    /* Create an inheritable notification debug event for the debugger */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_INHERIT,
+                               NULL,
+                               NULL);
+    Status = NtCreateEvent(&hDebugEvent,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+        hDebugEvent = NULL;
+
+    /* Build the debugger command line */
+
+    Success = FALSE;
+
+    /*
+     * We will add two longs (process ID and event handle) to the command
+     * line. The biggest 32-bit unsigned int (0xFFFFFFFF == 4.294.967.295)
+     * takes 10 decimal digits. We then count the terminating NULL.
+     */
+    Length = wcslen(AeDebugPath) + 2*10 + 1;
+
+    /* Check whether the debugger path may be a relative path */
+    if ((*AeDebugPath != L'"') &&
+        (RtlDetermineDosPathNameType_U(AeDebugPath) == RtlPathTypeRelative))
+    {
+        /* Relative path, prepend SystemRoot\System32 */
+        PrependLength = wcslen(SharedUserData->NtSystemRoot) + 10 /* == wcslen(L"\\System32\\") */;
+        if (PrependLength + Length <= ARRAYSIZE(AeDebugCmdLine))
+        {
+            hr = StringCchPrintfW(AeDebugCmdLine,
+                                  PrependLength + 1,
+                                  L"%s\\System32\\",
+                                  SharedUserData->NtSystemRoot);
+            Success = SUCCEEDED(hr);
+        }
+    }
+    else
+    {
+        /* Full path */
+        PrependLength = 0;
+        if (Length <= ARRAYSIZE(AeDebugCmdLine))
+            Success = TRUE;
+    }
+
+    /* Format the command line */
+    if (Success)
+    {
+        hr = StringCchPrintfW(&AeDebugCmdLine[PrependLength],
+                              Length,
+                              AeDebugPath,
+                              HandleToUlong(NtCurrentTeb()->ClientId.UniqueProcess), // GetCurrentProcessId()
+                              hDebugEvent);
+        Success = SUCCEEDED(hr);
+    }
+
+    /* Start the debugger */
+    if (Success)
+    {
+        DPRINT1("\nStarting debugger: '%S'\n", AeDebugCmdLine);
+
+        RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+        RtlZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
+
+        StartupInfo.cb = sizeof(StartupInfo);
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+
+        Success = CreateProcessW(NULL,
+                                 AeDebugCmdLine,
+                                 NULL, NULL,
+                                 TRUE, 0,
+                                 NULL, NULL,
+                                 &StartupInfo, &ProcessInfo);
+    }
+
+    if (Success)
+    {
+        WaitHandles[0] = hDebugEvent;
+        WaitHandles[1] = ProcessInfo.hProcess;
+
+        /* Loop until the debugger gets ready or terminates unexpectedly */
+        do
+        {
+            /* Alertable wait */
+            Status = NtWaitForMultipleObjects(ARRAYSIZE(WaitHandles),
+                                              WaitHandles,
+                                              WaitAny,
+                                              TRUE, NULL);
+        } while ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC));
+
+        /*
+         * The debugger terminated unexpectedly and we cannot attach to it.
+         * Kill the process being debugged.
+         */
+        if (Status == STATUS_WAIT_1)
+        {
+            /* Be sure there is no other debugger attached */
+            Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                               ProcessDebugPort,
+                                               &DebugPort,
+                                               sizeof(DebugPort),
+                                               NULL);
+            if (!NT_SUCCESS(Status) || !DebugPort)
+            {
+                /* No debugger is attached, kill the process at next round */
+                IsSecondChance = TRUE;
+            }
+        }
+
+        CloseHandle(ProcessInfo.hThread);
+        CloseHandle(ProcessInfo.hProcess);
+
+        if (hDebugEvent)
+            NtClose(hDebugEvent);
+
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    /* We failed starting the debugger, close the event handle and kill the process */
+
+    if (hDebugEvent)
+        NtClose(hDebugEvent);
+
+    IsSecondChance = TRUE;
+
+
+Quit:
+    /* If this is a second chance exception, kill the process */
+    if (IsSecondChance)
+        NtTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+
+    /* Otherwise allow handling exceptions in first chance */
+
+    /*
+     * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
+     * the __except block will be executed. Normally this will end up in a
+     * Terminate process.
+     */
+
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 /*
@@ -359,9 +695,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         /* We do, normalize the count */
         if (nNumberOfArguments > EXCEPTION_MAXIMUM_PARAMETERS)
-        {
             nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
-        }
 
         /* Set the count of parameters and copy them */
         ExceptionRecord.NumberParameters = nNumberOfArguments;
@@ -379,14 +713,14 @@ RaiseException(IN DWORD dwExceptionCode,
     }
 
     /* Trace the wine special error and show the modulename and functionname */
-    if (dwExceptionCode == 0x80000100 /*EXCEPTION_WINE_STUB*/)
+    if (dwExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */)
     {
-       /* Numbers of parameter must be equal to two */
-       if (ExceptionRecord.NumberParameters == 2)
-       {
-          DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
-          DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
-       }
+        /* Numbers of parameter must be equal to two */
+        if (ExceptionRecord.NumberParameters == 2)
+        {
+            DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
+            DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
+        }
     }
 
     /* Raise the exception */

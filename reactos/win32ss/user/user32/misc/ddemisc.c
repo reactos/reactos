@@ -2456,7 +2456,10 @@ UINT WINAPI DdeQueryConvInfo(HCONV hConv, DWORD id, PCONVINFO lpConvInfo)
     }
 
     if (ret != 0)
+    {
+	ci.cb = lpConvInfo->cb;
 	memcpy(lpConvInfo, &ci, min((size_t)lpConvInfo->cb, sizeof(ci)));
+    }
     return ret;
 }
 

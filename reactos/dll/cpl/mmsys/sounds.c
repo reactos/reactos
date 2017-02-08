@@ -5,11 +5,14 @@
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>
  *                  Dmitry Chapyshev <dmitry@reactos.org>
+ *                  Victor Martinez Calvo <victor.martinez@reactos.org>
  */
 
 #include "mmsys.h"
 
 #include <commdlg.h>
+#include <strsafe.h>
+
 #include <debug.h>
 
 struct __APP_MAP__;
@@ -291,6 +294,8 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
     HKEY hSubKey;
     TCHAR szValue[MAX_PATH];
     DWORD dwValue, dwResult;
+    LRESULT lResult;
+    PSOUND_SCHEME_CONTEXT pScheme;
 
     if (RegOpenKeyEx(hKey,
                      szSubKey,
@@ -309,27 +314,35 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
                                (LPBYTE)szValue,
                                &dwValue);
     RegCloseKey(hSubKey);
-    if (dwResult == ERROR_SUCCESS)
-    {
-        LRESULT lResult = SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValue);
-        if (lResult != CB_ERR)
-        {
-            PSOUND_SCHEME_CONTEXT pScheme = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SOUND_SCHEME_CONTEXT));
-            if (pScheme != NULL)
-            {
-                _tcscpy(pScheme->szDesc, szValue);
-                _tcscpy(pScheme->szName, szSubKey);
-            }
 
-            SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)pScheme);
-            if (SetDefault)
-            {
-                SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
-            }
-        }
-        return TRUE;
+    if (dwResult != ERROR_SUCCESS)
+        return FALSE;
+
+    /* Try to add the new profile */
+    lResult = SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_ADDSTRING, (WPARAM)0, (LPARAM)szValue);
+    if (lResult == CB_ERR)
+        return FALSE;
+
+    /* Allocate the profile scheme buffer */
+    pScheme = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SOUND_SCHEME_CONTEXT));
+    if (pScheme == NULL)
+    {
+        /* We failed to allocate the buffer, no need to keep a dangling string in the combobox */
+        SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_DELETESTRING, (WPARAM)lResult, (LPARAM)0);
+        return FALSE;
     }
-    return FALSE;
+
+    StringCchCopy(pScheme->szDesc, MAX_PATH, szValue);
+    StringCchCopy(pScheme->szName, MAX_PATH, szSubKey);
+
+    /* Associate the value with the item in the combobox */
+    SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETITEMDATA, (WPARAM)lResult, (LPARAM)pScheme);
+
+    /* Optionally, select the profile */ 
+    if (SetDefault)
+        SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_SETCURSEL, (WPARAM)lResult, (LPARAM)0);
+
+    return TRUE;
 }
 
 

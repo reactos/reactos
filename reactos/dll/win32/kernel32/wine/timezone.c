@@ -32,7 +32,7 @@ static const int MonthLengths[2][12] =
     { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
-/* STATIC FUNTIONS **********************************************************/
+/* STATIC FUNCTIONS **********************************************************/
 
 static inline int IsLeapYear(int Year)
 {

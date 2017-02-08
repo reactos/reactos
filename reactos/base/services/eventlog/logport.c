@@ -1,25 +1,25 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/logport.c
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2002 Eric Kohl
- *                   Copyright 2005 Saveliy Tretiakov
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/logport.c
+ * PURPOSE:         LPC Port Interface support
+ * COPYRIGHT:       Copyright 2002 Eric Kohl
+ *                  Copyright 2005 Saveliy Tretiakov
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
-
 #include <ndk/lpcfuncs.h>
+#include <iolog/iolog.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
-HANDLE ConnectPortHandle = NULL;
-HANDLE MessagePortHandle = NULL;
+static HANDLE ConnectPortHandle = NULL;
+static HANDLE MessagePortHandle = NULL;
 extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
@@ -46,23 +46,21 @@ NTSTATUS WINAPI PortThreadRoutine(PVOID Param)
 
 NTSTATUS InitLogPort(VOID)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING PortName;
-    PORT_MESSAGE Request;
     NTSTATUS Status;
+    UNICODE_STRING PortName = RTL_CONSTANT_STRING(ELF_PORT_NAME);
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PORT_MESSAGE Request;
 
     ConnectPortHandle = NULL;
     MessagePortHandle = NULL;
 
-    RtlInitUnicodeString(&PortName, L"\\ErrorLogPort");
     InitializeObjectAttributes(&ObjectAttributes, &PortName, 0, NULL, NULL);
 
     Status = NtCreatePort(&ConnectPortHandle,
                           &ObjectAttributes,
                           0,
-                          0x100,
-                          0x2000);
-
+                          PORT_MAXIMUM_MESSAGE_LENGTH, // IO_ERROR_LOG_MESSAGE_LENGTH,
+                          2 * PAGE_SIZE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreatePort() failed (Status %lx)\n", Status);
@@ -70,7 +68,6 @@ NTSTATUS InitLogPort(VOID)
     }
 
     Status = NtListenPort(ConnectPortHandle, &Request);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtListenPort() failed (Status %lx)\n", Status);
@@ -78,8 +75,7 @@ NTSTATUS InitLogPort(VOID)
     }
 
     Status = NtAcceptConnectPort(&MessagePortHandle, ConnectPortHandle,
-                                 NULL, TRUE, NULL, NULL);
-
+                                 &Request, TRUE, NULL, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtAcceptConnectPort() failed (Status %lx)\n", Status);
@@ -93,7 +89,7 @@ NTSTATUS InitLogPort(VOID)
         goto ByeBye;
     }
 
-  ByeBye:
+ByeBye:
     if (!NT_SUCCESS(Status))
     {
         if (ConnectPortHandle != NULL)
@@ -107,13 +103,18 @@ NTSTATUS InitLogPort(VOID)
 
 NTSTATUS ProcessPortMessage(VOID)
 {
-    IO_ERROR_LPC Request;
-    PIO_ERROR_LOG_MESSAGE Message;
-    PEVENTLOGRECORD pRec;
-    ULONG ulRecNum;
-    DWORD dwRecSize;
     NTSTATUS Status;
     PLOGFILE SystemLog = NULL;
+    UCHAR Buffer[PORT_MAXIMUM_MESSAGE_LENGTH]; // IO_ERROR_LOG_MESSAGE_LENGTH
+    PELF_API_MSG Message = (PELF_API_MSG)Buffer;
+    PIO_ERROR_LOG_MESSAGE ErrorMessage;
+    PEVENTLOGRECORD LogBuffer;
+    SIZE_T RecSize;
+    ULONG Time;
+    USHORT EventType;
+    UNICODE_STRING SourceName, ComputerName;
+    DWORD dwComputerNameLength;
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
 
     DPRINT("ProcessPortMessage() called\n");
 
@@ -122,9 +123,9 @@ NTSTATUS ProcessPortMessage(VOID)
     while (TRUE)
     {
         Status = NtReplyWaitReceivePort(MessagePortHandle,
-                                        0,
                                         NULL,
-                                        &Request.Header);
+                                        NULL,
+                                        &Message->Header);
 
         if (!NT_SUCCESS(Status))
         {
@@ -134,56 +135,108 @@ NTSTATUS ProcessPortMessage(VOID)
 
         DPRINT("Received message\n");
 
-        if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED)
+        if (Message->Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
             DPRINT("Port closed\n");
             return STATUS_SUCCESS;
         }
 
-        if (Request.Header.u2.s2.Type == LPC_REQUEST)
+        if (Message->Header.u2.s2.Type == LPC_REQUEST)
         {
             DPRINT("Received request\n");
         }
-        else if (Request.Header.u2.s2.Type == LPC_DATAGRAM)
+        else if (Message->Header.u2.s2.Type == LPC_DATAGRAM)
         {
-            DPRINT("Received datagram\n");
-            Message = (PIO_ERROR_LOG_MESSAGE) & Request.Message;
-            ulRecNum = SystemLog ? SystemLog->Header.CurrentRecordNumber : 0;
+            DPRINT("Received datagram (0x%x, 0x%x)\n",
+                   Message->Unknown[0], Message->Unknown[1]);
+            ErrorMessage = &Message->IoErrorMessage;
 
-            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize,
-                    ulRecNum, Message->Type, Message->EntryData.EventCategory,
-                    Message->EntryData.ErrorCode,
-                    (WCHAR *) (((PBYTE) Message) + Message->DriverNameOffset),
-                    L"MyComputer",  /* FIXME */
-                    0,
-                    NULL,
-                    Message->EntryData.NumberOfStrings,
-                    (WCHAR *) (((PBYTE) Message) + Message->EntryData.StringOffset),
-                    Message->EntryData.DumpDataSize,
-                    (LPVOID) (((PBYTE) Message) + sizeof(IO_ERROR_LOG_PACKET) -
-                        sizeof(ULONG)));
+            // ASSERT(ErrorMessage->Type == IO_TYPE_ERROR_MESSAGE);
 
-            if (pRec == NULL)
+            RtlInitEmptyUnicodeString(&SourceName, NULL, 0);
+            if (ErrorMessage->DriverNameLength > sizeof(UNICODE_NULL)) // DriverNameLength counts NULL-terminator
             {
-                DPRINT("LogfAllocAndBuildNewRecord failed!\n");
-                return STATUS_NO_MEMORY;
+                SourceName.Buffer = (PWSTR)((ULONG_PTR)ErrorMessage + ErrorMessage->DriverNameOffset);
+                SourceName.MaximumLength = ErrorMessage->DriverNameLength;
+                SourceName.Length = SourceName.MaximumLength - sizeof(UNICODE_NULL);
             }
 
-            DPRINT("dwRecSize = %d\n", dwRecSize);
+            dwComputerNameLength = ARRAYSIZE(szComputerName);
+            if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+                szComputerName[0] = L'\0';
 
-            DPRINT("\n --- EVENTLOG RECORD ---\n");
-            PRINT_RECORD(pRec);
-            DPRINT("\n");
+            RtlInitUnicodeString(&ComputerName, szComputerName);
+
+            RtlTimeToSecondsSince1970(&ErrorMessage->TimeStamp, &Time);
+
+            /* Set the event type based on the error code severity */
+            EventType = (USHORT)(ErrorMessage->EntryData.ErrorCode >> 30);
+            if (EventType == STATUS_SEVERITY_SUCCESS)
+            {
+                EventType = EVENTLOG_SUCCESS;
+            }
+            else if (EventType == STATUS_SEVERITY_INFORMATIONAL) // NT_INFORMATION
+            {
+                EventType = EVENTLOG_INFORMATION_TYPE;
+            }
+            else if (EventType == STATUS_SEVERITY_WARNING)       // NT_WARNING
+            {
+                EventType = EVENTLOG_WARNING_TYPE;
+            }
+            else if (EventType == STATUS_SEVERITY_ERROR)         // NT_ERROR
+            {
+                EventType = EVENTLOG_ERROR_TYPE;
+            }
+            else
+            {
+                /* Unknown severity, set to error */
+                EventType = EVENTLOG_ERROR_TYPE;
+            }
+
+            /*
+             * The data being saved consists of the IO_ERROR_LOG_PACKET structure
+             * header, plus the additional raw data from the driver.
+             */
+            LogBuffer = LogfAllocAndBuildNewRecord(
+                            &RecSize,
+                            Time,
+                            EventType,
+                            ErrorMessage->EntryData.EventCategory,
+                            ErrorMessage->EntryData.ErrorCode,
+                            &SourceName,
+                            &ComputerName,
+                            0,
+                            NULL,
+                            ErrorMessage->EntryData.NumberOfStrings,
+                            (PWSTR)((ULONG_PTR)ErrorMessage +
+                                ErrorMessage->EntryData.StringOffset),
+                            FIELD_OFFSET(IO_ERROR_LOG_PACKET, DumpData) +
+                                ErrorMessage->EntryData.DumpDataSize,
+                            (PVOID)&ErrorMessage->EntryData);
+            if (LogBuffer == NULL)
+            {
+                DPRINT1("LogfAllocAndBuildNewRecord failed!\n");
+                // return STATUS_NO_MEMORY;
+                continue;
+            }
 
             if (!onLiveCD && SystemLog)
             {
-                if (!LogfWriteData(SystemLog, dwRecSize, (PBYTE) pRec))
-                    DPRINT("LogfWriteData failed!\n");
-                else
-                    DPRINT("Data written to Log!\n");
+                Status = LogfWriteRecord(SystemLog, LogBuffer, RecSize);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR writing to event log `%S' (Status 0x%08lx)\n",
+                            SystemLog->LogName, Status);
+                }
+            }
+            else
+            {
+                DPRINT1("\n--- EVENTLOG RECORD ---\n");
+                PRINT_RECORD(LogBuffer);
+                DPRINT1("\n");
             }
 
-            LogfFreeRecord(pRec);
+            LogfFreeRecord(LogBuffer);
         }
     }
 

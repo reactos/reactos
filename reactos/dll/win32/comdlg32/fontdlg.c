@@ -517,7 +517,6 @@ static INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *
 
 static void CFn_FitFontSize( HWND hDlg, int points)
 {
-    WCHAR buffW[16];
     int i,n;
 
     /* look for fitting font size in combobox3 */
@@ -536,8 +535,7 @@ static void CFn_FitFontSize( HWND hDlg, int points)
     }
 
     /* no default matching size, set text manually */
-    sprintfW(buffW, fontsizefmtW, points);
-    SetDlgItemTextW(hDlg, cmb3, buffW);
+    SetDlgItemInt(hDlg, cmb3, points, TRUE);
 }
 
 static BOOL CFn_FitFontStyle( HWND hDlg, LONG packedstyle )
@@ -1156,9 +1154,7 @@ static LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSE
         MapWindowPoints( 0, hDlg, (LPPOINT) &info.rcWindow, 2);
         hdc = BeginPaint( hDlg, &ps );
 
-        TRACE("erase %d, rect=(%d,%d)-(%d,%d)\n", ps.fErase,
-              ps.rcPaint.left, ps.rcPaint.top,
-              ps.rcPaint.right, ps.rcPaint.bottom);
+        TRACE("erase %d, rect=%s\n", ps.fErase, wine_dbgstr_rect(&ps.rcPaint));
 
         /* Paint frame */
         DrawEdge( hdc, &info.rcWindow, EDGE_SUNKEN, BF_RECT|BF_ADJUST );

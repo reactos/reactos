@@ -23,6 +23,10 @@ Size = 370,9 KiB
 Description = Joc cu pinguini care cad de pe aisberg, iar jucătorul trebuie să-i salte pe docuri.
 Size = 370,9 Kio
 
+[Section.0419]
+Description = Пингвины падают с айсберга, а вы должны их ловить батутом.
+Size = 370,9 КиБ
+
 [Section.0804]
 Description = 企鹅从冰山落下，你不得不弹起他们进码头。
 

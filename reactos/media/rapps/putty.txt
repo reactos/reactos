@@ -34,6 +34,10 @@ Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz b
 Description = Client gratuit de SSH, Telnet, rlogin, și TCP brut.
 Size = 1,7 Mio
 
+[Section.0419]
+Description = Свободно распространяемый клиент для различных протоколов удалённого доступа, включая SSH, Telnet, rlogin.
+Size = 1,7 МиБ
+
 [Section.041f]
 Description = Ücretsiz bir SSH, Telnet, rlogin ve işlenmemiş TCP istemcisi.
 Size = 1,7 MiB

@@ -83,6 +83,7 @@ static declarator_t *make_declarator(var_t *var);
 static type_t *make_safearray(type_t *type);
 static typelib_t *make_library(const char *name, const attr_list_t *attrs);
 static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type);
+static warning_list_t *append_warning(warning_list_t *, int);
 
 static type_t *reg_typedefs(decl_spec_t *decl_spec, var_list_t *names, attr_list_t *attrs);
 static type_t *find_type_or_error(const char *name, int t);
@@ -148,6 +149,8 @@ static struct namespace *current_namespace = &global_namespace;
 	declarator_list_t *declarator_list;
 	statement_t *statement;
 	statement_list_t *stmt_list;
+	warning_t *warning;
+	warning_list_t *warning_list;
 	ifref_t *ifref;
 	ifref_list_t *ifref_list;
 	char *str;
@@ -224,6 +227,7 @@ static struct namespace *current_namespace = &global_namespace;
 %token tOUT
 %token tPARTIALIGNORE tPASCAL
 %token tPOINTERDEFAULT
+%token tPRAGMA_WARNING
 %token tPROGID tPROPERTIES
 %token tPROPGET tPROPPUT tPROPPUTREF
 %token tPROXY tPTR
@@ -291,8 +295,9 @@ static struct namespace *current_namespace = &global_namespace;
 %type <uuid> uuid_string
 %type <import> import_start
 %type <typelib> library_start librarydef
-%type <statement> statement typedef
+%type <statement> statement typedef pragma_warning
 %type <stmt_list> gbl_statements imp_statements int_statements
+%type <warning_list> warnings
 
 %left ','
 %right '?' ':'
@@ -373,6 +378,22 @@ statement:
 	| import				{ $$ = make_statement_import($1); }
 	| typedef ';'				{ $$ = $1; }
 	| aPRAGMA				{ $$ = make_statement_pragma($1); }
+	| pragma_warning { $$ = NULL; }
+	;
+
+pragma_warning: tPRAGMA_WARNING '(' aIDENTIFIER ':' warnings ')'
+                  {
+                      int result;
+                      $$ = NULL;
+                      result = do_warning($3, $5);
+                      if(!result)
+                          error_loc("expected \"disable\" or \"enable\"\n");
+                  }
+	;
+
+warnings:
+	  aNUM { $$ = append_warning(NULL, $1); }
+	| warnings aNUM { $$ = append_warning($1, $2); }
 	;
 
 typedecl:
@@ -1411,6 +1432,21 @@ static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type)
   assert(ptrchain_type->type_type == TYPE_POINTER);
   ptrchain_type->details.pointer.ref = type;
   return ptrchain;
+}
+
+static warning_list_t *append_warning(warning_list_t *list, int num)
+{
+    warning_t *entry;
+
+    if(!list)
+    {
+        list = xmalloc( sizeof(*list) );
+        list_init( list );
+    }
+    entry = xmalloc( sizeof(*entry) );
+    entry->num = num;
+    list_add_tail( list, &entry->entry );
+    return list;
 }
 
 static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const declarator_t *decl,

@@ -26,6 +26,11 @@ License = Gratuită
 Description = Joc similar cu „Frozen Fruits”.
 Size = 892,3 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Игра похожа на Frozen Fruits.
+Size = 892,3 КиБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Frozen Fruits benzeri bir oyun.

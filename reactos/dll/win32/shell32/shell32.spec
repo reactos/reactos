@@ -239,7 +239,7 @@
 240 stdcall PathIsSlowA(str long)
 241 stdcall -noname SHGetUserDisplayName(wstr ptr)
 242 stdcall -noname SHGetProcessDword(long long)
-243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx # FIXME: Inspect
+243 stdcall -noname SHSetShellWindowEx(ptr ptr) user32.SetShellWindowEx
 244 stdcall -noname SHSettingsChanged(ptr ptr)
 245 stdcall SHTestTokenMembership(ptr ptr)
 246 stub -noname SHInvokePrivilegedFunctionW

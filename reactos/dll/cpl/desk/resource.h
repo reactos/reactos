@@ -1,15 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   246
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-
-#define SYSTEM_COLUMN (18 * PROPSHEETPADDING)
-#define LABELLINE(x)  (((PROPSHEETPADDING + 2) * x) + (x + 2))
-
-#define ICONSIZE 16
-
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */
@@ -147,12 +137,7 @@
 #define IDS_ELEMENT_15 3215
 #define IDS_ELEMENT_16 3216
 #define IDS_ELEMENT_17 3217
-#define IDS_ELEMENT_18 3218
-#define IDS_ELEMENT_19 3219
-#define IDS_ELEMENT_20 3220
-#define IDS_ELEMENT_21 3221
-#define IDS_ELEMENT_22 3222
-#define IDS_ELEMENT_23 3223
+// #define IDS_ELEMENT_18 3218
 
 #define IDS_MULTIPLEMONITORS 3300
 #define IDS_UNKNOWNMONITOR   3301

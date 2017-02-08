@@ -712,7 +712,7 @@ done:
 /******************************************************************
  *  CreateAssemblyNameObject   (FUSION.@)
  */
-HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *ppAssemblyNameObj,
+HRESULT WINAPI CreateAssemblyNameObject(IAssemblyName **ppAssemblyNameObj,
                                         LPCWSTR szAssemblyName, DWORD dwFlags,
                                         LPVOID pvReserved)
 {

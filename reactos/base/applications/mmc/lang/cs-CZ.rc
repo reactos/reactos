@@ -9,14 +9,14 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
+        MENUITEM "Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END
 END
 
@@ -24,20 +24,20 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "&Soubor"
     BEGIN
-        MENUITEM "New\tCtrl+N", IDM_FILE_NEW
-        MENUITEM "Open\tStrg+O", IDM_FILE_OPEN
-        MENUITEM "Save", IDM_FILE_SAVE
-        MENUITEM "Save as...", IDM_FILE_SAVEAS
+        MENUITEM "Nový\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "&Otevřít...\tCtrl+O", IDM_FILE_OPEN
+        MENUITEM "&Uložiť", IDM_FILE_SAVE
+        MENUITEM "Uložit j&ako...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Uk&ončit\tAlt+F4", IDM_FILE_EXIT
     END
-    POPUP "&Windows"
+    POPUP "&Okna"
     BEGIN
-        MENUITEM "List", IDM_WINDOWS_LIST
+        MENUITEM "Seznam", IDM_WINDOWS_LIST
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O konzoli řízení systému ReactOS...", IDM_HELP_ABOUT
+        MENUITEM "&O konzoli řízení systému ReactOS", IDM_HELP_ABOUT
     END
 END
 

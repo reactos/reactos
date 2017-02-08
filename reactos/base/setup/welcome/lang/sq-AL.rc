@@ -12,8 +12,9 @@ BEGIN
     IDS_APPTITLE "ReactOS - Mirë se vini"
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Mirë se vini në Sistemin Operative ReactOS.\n\nKliko në një topik në të majtë."
-//    IDS_CHECKTEXT "Trego këtë dialog përsëri"
-//    IDS_CLOSETEXT "Dil"
+
+    IDS_CHECKTEXT "Trego këtë dialog përsëri"
+    IDS_CLOSETEXT "Dil"
 END
 
 /* Topic buttons */
@@ -22,13 +23,6 @@ BEGIN
     IDS_TOPICBUTTON0 "Instalo ReactOS"
     IDS_TOPICBUTTON1 "Shfleto këtë CD"
     IDS_TOPICBUTTON2 "Dil"
-//    IDS_TOPICBUTTON3 "Temë bosh 3"
-//    IDS_TOPICBUTTON4 "Temë bosh 4"
-//    IDS_TOPICBUTTON5 "Temë bosh 5"
-//    IDS_TOPICBUTTON6 "Temë bosh 6"
-//    IDS_TOPICBUTTON7 "Temë bosh 7"
-//    IDS_TOPICBUTTON8 "Temë bosh 8"
-//    IDS_TOPICBUTTON9 "Temë bosh 9"
 END
 
 /* Topic titles */
@@ -37,13 +31,6 @@ BEGIN
     IDS_TOPICTITLE0 "Instalo ReactOS"
     IDS_TOPICTITLE1 "Shfleto këtë CD"
     IDS_TOPICTITLE2 "Dil"
-//    IDS_TOPICTITLE3 "Titull teme bosh 3"
-//    IDS_TOPICTITLE4 "Titull teme bosh 4"
-//    IDS_TOPICTITLE5 "Titull teme bosh 5"
-//    IDS_TOPICTITLE6 "Titull teme bosh 6"
-//    IDS_TOPICTITLE7 "Titull teme bosh 7"
-//    IDS_TOPICTITLE8 "Titull teme bosh 8"
-//    IDS_TOPICTITLE9 "Titull teme bosh 9"
 END
 
 /* Topic descriptions */
@@ -52,11 +39,4 @@ BEGIN
     IDS_TOPICDESC0 "Krijo një instalim ose përmirësim të ReactOS'it në instalimin ekzistues në kompjuterin tuaj."
     IDS_TOPICDESC1 "Shfleto këtë CD."
     IDS_TOPICDESC2 "Kliko për të dalë nga ky program."
-//    IDS_TOPICDESC3 "Përshkrimi i Temës 3.\n\nPërshkrimi i Temës 3 Këtu."
-//    IDS_TOPICDESC4 "Përshkrimi i Temës 4.\n\nPërshkrimi i Temës 4 Këtu."
-//    IDS_TOPICDESC5 "Përshkrimi i Temës 5.\n\nPërshkrimi i Temës 5 Këtu."
-//    IDS_TOPICDESC6 "Përshkrimi i Temës 6.\n\nPërshkrimi i Temës 6 Këtu."
-//    IDS_TOPICDESC7 "Përshkrimi i Temës 7.\n\nPërshkrimi i Temës 7 Këtu."
-//    IDS_TOPICDESC8 "Përshkrimi i Temës 8.\n\nPërshkrimi i Temës 8 Këtu."
-//    IDS_TOPICDESC9 "Përshkrimi i Temës 9.\n\nPërshkrimi i Temës 9 Këtu."
 END

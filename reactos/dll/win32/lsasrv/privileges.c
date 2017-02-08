@@ -88,7 +88,7 @@ LsarpLookupPrivilegeName(PLUID Value,
         return STATUS_NO_SUCH_PRIVILEGE;
     }
 
-    for (Priv = 0; Priv < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); Priv++)
+    for (Priv = 0; Priv < ARRAYSIZE(WellKnownPrivileges); Priv++)
     {
         if (Value->LowPart == WellKnownPrivileges[Priv].Luid.LowPart &&
             Value->HighPart == WellKnownPrivileges[Priv].Luid.HighPart)
@@ -152,25 +152,23 @@ LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
-                          PLUID Value)
+
+PLUID
+LsarpLookupPrivilegeValue(
+    IN PRPC_UNICODE_STRING Name)
 {
     ULONG Priv;
 
     if (Name->Length == 0 || Name->Buffer == NULL)
-        return STATUS_NO_SUCH_PRIVILEGE;
+        return NULL;
 
-    for (Priv = 0; Priv < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); Priv++)
+    for (Priv = 0; Priv < ARRAYSIZE(WellKnownPrivileges); Priv++)
     {
         if (_wcsicmp(Name->Buffer, WellKnownPrivileges[Priv].Name) == 0)
-        {
-            *Value = WellKnownPrivileges[Priv].Luid;
-            return STATUS_SUCCESS;
-        }
+            return (PLUID)&(WellKnownPrivileges[Priv].Luid);
     }
 
-    return STATUS_NO_SUCH_PRIVILEGE;
+    return NULL;
 }
 
 
@@ -189,7 +187,7 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
 
     EnumIndex = *EnumerationContext;
 
-    for (; EnumIndex < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); EnumIndex++)
+    for (; EnumIndex < ARRAYSIZE(WellKnownPrivileges); EnumIndex++)
     {
         TRACE("EnumIndex: %lu\n", EnumIndex);
         TRACE("Privilege Name: %S\n", WellKnownPrivileges[EnumIndex].Name);
@@ -278,7 +276,7 @@ LsapLookupAccountRightName(ULONG RightValue,
     PRPC_UNICODE_STRING NameBuffer;
     ULONG i;
 
-    for (i = 0; i < sizeof(WellKnownRights) / sizeof(WellKnownRights[0]); i++)
+    for (i = 0; i < ARRAYSIZE(WellKnownRights); i++)
     {
         if (WellKnownRights[i].Flag == RightValue)
         {
@@ -305,6 +303,25 @@ LsapLookupAccountRightName(ULONG RightValue,
     }
 
     return STATUS_NO_SUCH_PRIVILEGE;
+}
+
+
+ACCESS_MASK
+LsapLookupAccountRightValue(
+    IN PRPC_UNICODE_STRING Name)
+{
+    ULONG i;
+
+    if (Name->Length == 0 || Name->Buffer == NULL)
+        return 0;
+
+    for (i = 0; i < ARRAYSIZE(WellKnownRights); i++)
+    {
+        if (_wcsicmp(Name->Buffer, WellKnownRights[i].Name) == 0)
+            return WellKnownRights[i].Flag;
+    }
+
+    return 0;
 }
 
 /* EOF */

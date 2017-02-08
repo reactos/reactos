@@ -10,6 +10,7 @@
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
 BOOL gbBaseVideo = 0;
+static PPROCESSINFO gpFullscreen = NULL;
 
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
@@ -442,7 +443,7 @@ UserEnumCurrentDisplaySettings(
     {
         /* No device found */
         ERR("No PDEV found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     *ppdm = ppdev->pdmwDev;
@@ -473,11 +474,8 @@ UserEnumDisplaySettings(
     {
         /* No device found */
         ERR("No device found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
-
-    if (iModeNum >= pGraphicsDevice->cDevModes)
-        return STATUS_NO_MORE_ENTRIES;
 
     iFoundMode = 0;
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
@@ -503,7 +501,7 @@ UserEnumDisplaySettings(
     }
 
     /* Nothing was found */
-    return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER_2;
 }
 
 NTSTATUS
@@ -571,6 +569,26 @@ NtUserEnumDisplaySettings(
     TRACE("Enter NtUserEnumDisplaySettings(%wZ, %lu, %p, 0x%lx)\n",
           pustrDevice, iModeNum, lpDevMode, dwFlags);
 
+    _SEH2_TRY
+    {
+        ProbeForRead(lpDevMode, sizeof(DEVMODEW), sizeof(UCHAR));
+
+        cbSize = lpDevMode->dmSize;
+        cbExtra = lpDevMode->dmDriverExtra;
+
+        ProbeForWrite(lpDevMode, cbSize + cbExtra, sizeof(UCHAR));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    if (lpDevMode->dmSize != sizeof(DEVMODEW))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
     if (pustrDevice)
     {
         /* Initialize destination string */
@@ -579,20 +597,24 @@ NtUserEnumDisplaySettings(
         _SEH2_TRY
         {
             /* Probe the UNICODE_STRING and the buffer */
-            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
-            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+            ProbeForReadUnicodeString(pustrDevice);
+
+            if (!pustrDevice->Length || !pustrDevice->Buffer)
+                ExRaiseStatus(STATUS_NO_MEMORY);
+
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, sizeof(UCHAR));
 
             /* Copy the string */
             RtlCopyUnicodeString(&ustrDevice, pustrDevice);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            _SEH2_YIELD(return STATUS_INVALID_PARAMETER_1);
         }
-        _SEH2_END
+        _SEH2_END;
 
         pustrDevice = &ustrDevice;
-   }
+    }
 
     /* Acquire global USER lock */
     UserEnterShared();
@@ -624,11 +646,6 @@ NtUserEnumDisplaySettings(
         /* Copy some information back */
         _SEH2_TRY
         {
-            ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
-            cbSize = lpDevMode->dmSize;
-            cbExtra = lpDevMode->dmDriverExtra;
-
-            ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
             /* Output what we got */
             RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
@@ -648,6 +665,15 @@ NtUserEnumDisplaySettings(
     }
 
     return Status;
+}
+VOID
+UserUpdateFullscreen(
+    DWORD flags)
+{
+    if (flags & CDS_FULLSCREEN)
+        gpFullscreen = gptiCurrent->ppi;
+    else
+        gpFullscreen = NULL;
 }
 
 LONG
@@ -774,6 +800,8 @@ UserChangeDisplaySettings(
             goto leave;
         }
 
+        UserUpdateFullscreen(flags);
+
         /* Update the system metrics */
         InitMetrics();
 
@@ -807,6 +835,18 @@ leave:
     PDEVOBJ_vRelease(ppdev);
 
     return lResult;
+}
+
+VOID
+UserDisplayNotifyShutdown(
+    PPROCESSINFO ppiCurrent)
+{
+    if (ppiCurrent == gpFullscreen)
+    {
+        UserChangeDisplaySettings(NULL, NULL, 0, NULL);
+        if (gpFullscreen)
+            ERR("Failed to restore display mode!\n");
+    }
 }
 
 LONG

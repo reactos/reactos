@@ -241,7 +241,7 @@ typedef struct _FILE_RECORD_HEADER
     ULONG BytesAllocated;         /* Allocated size of the FILE record */
     ULONGLONG BaseFileRecord;     /* File reference to the base FILE record */
     USHORT NextAttributeNumber;   /* Next Attribute Id */
-    USHORT Pading;                /* Align to 4 UCHAR boundary (XP) */
+    USHORT Padding;               /* Align to 4 UCHAR boundary (XP) */
     ULONG MFTRecordNumber;        /* Number of this MFT Record (XP) */
 } FILE_RECORD_HEADER, *PFILE_RECORD_HEADER;
 
@@ -816,16 +816,6 @@ NtfsAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 PVOID
 NtfsGetUserBuffer(PIRP Irp,
                   BOOLEAN Paging);
-
-#if 0
-BOOLEAN
-wstrcmpjoki(PWSTR s1, PWSTR s2);
-
-VOID
-CdfsSwapString(PWCHAR Out,
-	       PUCHAR In,
-	       ULONG Count);
-#endif
 
 VOID
 NtfsFileFlagsToAttributes(ULONG NtfsAttributes,

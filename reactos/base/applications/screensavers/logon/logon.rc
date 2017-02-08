@@ -26,6 +26,9 @@ IDB_SERVER BITMAP "res/1.bmp"
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
+#ifdef LANGUAGE_CS_CZ
+    #include "lang/cs-CZ.rc"
+#endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif

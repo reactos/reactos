@@ -37,7 +37,7 @@ BEGIN
     END
     POPUP "Pomo&c"
     BEGIN
-        MENUITEM "&O programie...", IDM_ABOUT
+        MENUITEM "&O programie", IDM_ABOUT
     END
 END
 

@@ -67,15 +67,6 @@ FT_BEGIN_HEADER
                        FT_Int32      load_flags );
 
 
-  typedef FT_UInt
-  (*FT_CharMap_CharIndexFunc)( FT_CharMap  charmap,
-                               FT_Long     charcode );
-
-  typedef FT_Long
-  (*FT_CharMap_CharNextFunc)( FT_CharMap  charmap,
-                              FT_Long     charcode );
-
-
   typedef FT_Error
   (*FT_Face_GetKerningFunc)( FT_Face     face,
                              FT_UInt     left_glyph,
@@ -213,7 +204,7 @@ FT_BEGIN_HEADER
   /*    And when it is no longer needed a `destroy' function needs to be   */
   /*    called to release that allocation.                                 */
   /*                                                                       */
-  /*    `fcinit.c' (ft_create_default_module_classes) already contains a   */
+  /*    `ftinit.c' (ft_create_default_module_classes) already contains a   */
   /*    mechanism to call these functions for the default modules          */
   /*    described in `ftmodule.h'.                                         */
   /*                                                                       */

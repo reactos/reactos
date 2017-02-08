@@ -18,7 +18,7 @@
 
 #define MK_STR(s) #s
 
-int alloc_fd(HANDLE hand, int flag); //FIXME: Remove
+int msvcrt_alloc_fd(HANDLE hand, int flag); //FIXME: Remove
 unsigned split_oflags(unsigned oflags); //FIXME: Remove
 
 #ifndef _UNICODE
@@ -121,12 +121,12 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
 
     if ( *md == 'r' )
     {
-        pf = _tfdopen(alloc_fd(hReadPipe,  split_oflags(_fmode)) , _T("r"));
+        pf = _tfdopen(msvcrt_alloc_fd(hReadPipe,  split_oflags(_fmode)) , _T("r"));
         CloseHandle(hWritePipe);
     }
     else
     {
-        pf = _tfdopen( alloc_fd(hWritePipe, split_oflags(_fmode)) , _T("w"));
+        pf = _tfdopen( msvcrt_alloc_fd(hWritePipe, split_oflags(_fmode)) , _T("w"));
         CloseHandle(hReadPipe);
     }
 

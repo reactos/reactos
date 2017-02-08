@@ -40,7 +40,8 @@ NTSTATUS
 VfatHasFileSystem(
     PDEVICE_OBJECT DeviceToMount,
     PBOOLEAN RecognizedFS,
-    PFATINFO pFatInfo)
+    PFATINFO pFatInfo,
+    BOOLEAN Override)
 {
     NTSTATUS Status;
     PARTITION_INFORMATION PartitionInfo;
@@ -64,10 +65,10 @@ VfatHasFileSystem(
                                       0,
                                       &DiskGeometry,
                                       &Size,
-                                      FALSE);
+                                      Override);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
+        DPRINT("VfatBlockDeviceIoControl failed (%x)\n", Status);
         return Status;
     }
 
@@ -82,10 +83,10 @@ VfatHasFileSystem(
                                           0,
                                           &PartitionInfo,
                                           &Size,
-                                          FALSE);
+                                          Override);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("VfatBlockDeviceIoControl faild (%x)\n", Status);
+            DPRINT("VfatBlockDeviceIoControl failed (%x)\n", Status);
             return Status;
         }
 
@@ -137,7 +138,7 @@ VfatHasFileSystem(
         Offset.QuadPart = 0;
 
         /* Try to recognize FAT12/FAT16/FAT32 partitions */
-        Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
+        Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, Override);
         if (NT_SUCCESS(Status))
         {
             if (Boot->Signatur1 != 0xaa55)
@@ -219,6 +220,7 @@ VfatHasFileSystem(
                     DPRINT("FAT12\n");
                     FatInfo.FatType = FAT12;
                     FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &Boot->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
                 else if (FatInfo.NumberOfClusters >= 65525)
                 {
@@ -227,12 +229,14 @@ VfatHasFileSystem(
                     FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
                     FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
                     FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &((struct _BootSector32*)Boot)->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
                 else
                 {
                     DPRINT("FAT16\n");
                     FatInfo.FatType = FAT16;
                     FatInfo.RootCluster = FatInfo.rootStart / FatInfo.SectorsPerCluster;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &Boot->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
 
                 if (PartitionInfoIsValid &&
@@ -263,7 +267,7 @@ VfatHasFileSystem(
         Offset.QuadPart = 0;
 
         /* Try to recognize FATX16/FATX32 partitions (Xbox) */
-        Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, FALSE);
+        Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, Override);
         if (NT_SUCCESS(Status))
         {
             *RecognizedFS = TRUE;
@@ -331,30 +335,6 @@ VfatHasFileSystem(
     return Status;
 }
 
-/*
- * FUNCTION: Mounts the device
- */
-static
-NTSTATUS
-VfatMountDevice(
-    PDEVICE_EXTENSION DeviceExt,
-    PDEVICE_OBJECT DeviceToMount)
-{
-    NTSTATUS Status;
-    BOOLEAN RecognizedFS;
-
-    DPRINT("Mounting VFAT device...\n");
-
-    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &DeviceExt->FatInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    DPRINT("MountVfatdev %u, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
-
-    return STATUS_SUCCESS;
-}
-
 
 /*
  * FUNCTION: Mount the filesystem
@@ -392,7 +372,7 @@ VfatMount(
     DeviceToMount = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
     Vpb = IrpContext->Stack->Parameters.MountVolume.Vpb;
 
-    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &FatInfo);
+    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &FatInfo, FALSE);
     if (!NT_SUCCESS(Status))
     {
         goto ByeBye;
@@ -442,12 +422,7 @@ VfatMount(
     DeviceObject->Vpb = Vpb;
     DeviceToMount->Vpb = Vpb;
 
-    Status = VfatMountDevice(DeviceExt, DeviceToMount);
-    if (!NT_SUCCESS(Status))
-    {
-        /* FIXME: delete device object */
-        goto ByeBye;
-    }
+    RtlCopyMemory(&DeviceExt->FatInfo, &FatInfo, sizeof(FATINFO));
 
     DPRINT("BytesPerSector:     %u\n", DeviceExt->FatInfo.BytesPerSector);
     DPRINT("SectorsPerCluster:  %u\n", DeviceExt->FatInfo.SectorsPerCluster);
@@ -576,7 +551,7 @@ VfatMount(
     }
 
     VolumeFcb->Flags = FCB_IS_VOLUME;
-    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
+    VolumeFcb->RFCB.FileSize.QuadPart = (LONGLONG) DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
     VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
     VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
     DeviceExt->VolumeFcb = VolumeFcb;
@@ -646,19 +621,19 @@ VfatVerify(
     NTSTATUS Status = STATUS_SUCCESS;
     FATINFO FatInfo;
     BOOLEAN RecognizedFS;
-    PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
+    PDEVICE_EXTENSION DeviceExt;
 
     DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
     DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
-    Status = VfatBlockDeviceIoControl(DeviceToVerify,
+    DeviceExt = DeviceToVerify->DeviceExtension;
+    Status = VfatBlockDeviceIoControl(DeviceExt->StorageDevice,
                                       IOCTL_DISK_CHECK_VERIFY,
                                       NULL,
                                       0,
                                       NULL,
                                       0,
                                       TRUE);
-    DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
     if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
         DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
@@ -666,25 +641,33 @@ VfatVerify(
     }
     else
     {
-        Status = VfatHasFileSystem(DeviceToVerify, &RecognizedFS, &FatInfo);
+        Status = VfatHasFileSystem(DeviceExt->StorageDevice, &RecognizedFS, &FatInfo, TRUE);
         if (!NT_SUCCESS(Status) || RecognizedFS == FALSE)
         {
             Status = STATUS_WRONG_VOLUME;
         }
         else if (sizeof(FATINFO) == RtlCompareMemory(&FatInfo, &DeviceExt->FatInfo, sizeof(FATINFO)))
         {
+            DPRINT1("Same volume\n");
             /*
              * FIXME:
-             *   Preformated floppy disks have very often a serial number of 0000:0000.
+             *   Preformatted floppy disks have very often a serial number of 0000:0000.
              *   We should calculate a crc sum over the sectors from the root directory as secondary volume number.
              *   Each write to the root directory must update this crc sum.
              */
+            /* HACK */
+            if (!FatInfo.FixedMedia && FatInfo.FatType >= FATX16)
+            {
+                Status = STATUS_WRONG_VOLUME;
+            }
         }
         else
         {
             Status = STATUS_WRONG_VOLUME;
         }
     }
+
+    IrpContext->Stack->Parameters.VerifyVolume.Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
     return Status;
 }

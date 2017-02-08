@@ -28,8 +28,6 @@ ULONG UtlNextUpdatePercentage;
 BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
-
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -221,7 +219,7 @@ BlUtlInitialize (
 
 VOID
 BmUpdateProgressInfo (
-    _In_ PVOID Uknown,
+    _In_ PVOID Unknown,
     _In_ PWCHAR ProgressInfo
     )
 {
@@ -307,7 +305,7 @@ BlTblFindEntry (
                               Argument4);
             if (Result)
             {
-                /* Entry fouund return it */
+                /* Entry found return it */
                 *EntryIndex = Index;
                 Entry = Table[Index];
                 break;
@@ -679,7 +677,7 @@ BlHtStore (
     PLIST_ENTRY HashLinkHead;
     PBL_HASH_TABLE HashTable;
 
-    /* Check for invalid tablle ID, missing arguments, or malformed entry */
+    /* Check for invalid table ID, missing arguments, or malformed entry */
     if ((HtTableSize <= TableId) ||
         !(Entry) ||
         !(Data) ||
@@ -749,7 +747,7 @@ BlUtlCheckSum (
             }
         }
 
-        if (Length != Length)
+        if (i != Length)
         {
             PartialSum += (unsigned __int8)Buffer[Length];
             if (Flags & BL_UTL_CHECKSUM_COMPLEMENT)
@@ -777,4 +775,92 @@ BlUtlCheckSum (
     }
 
     return PartialSum;
+}
+
+BOOLEAN
+Archx86IsCpuidSupported (
+    VOID
+    )
+{
+    ULONG CallerFlags, Flags;
+
+    /* Read the original flags, and add the CPUID bit */
+    CallerFlags = __readeflags() ^ 0x200000;
+    __writeeflags(CallerFlags);
+
+    /* Read our flags now */
+    Flags = __readeflags();
+
+    /* Check if the bit stuck */
+    return (((CallerFlags ^ Flags) >> 21) & 1) ^ 1;
+}
+
+BOOLEAN
+BlArchIsCpuIdFunctionSupported (
+    _In_ ULONG Function
+    )
+{
+    BOOLEAN Supported;
+    INT CpuInfo[4];
+
+    /* Check if the CPU supports this instruction */
+    Supported = Archx86IsCpuidSupported();
+    if (!Supported)
+    {
+        return FALSE;
+    }
+
+    /* Check if it's the extended function */
+    if (Function >= 0x80000000)
+    {
+        /* Check if extended functions are supported */
+        __cpuid(CpuInfo, 0x80000000);
+        if ((CpuInfo[0] & 0xFFFFFF00) != 0x80000000)
+        {
+            /* Nope */
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* It's a regular function, get the maximum one supported */
+        __cpuid(CpuInfo, 0);
+    }
+
+    /* Check if our function is within bounds */
+    if (Function <= CpuInfo[0])
+    {
+        return TRUE;
+    }
+
+    /* Nope */
+    return FALSE;
+}
+
+ULONGLONG
+BlArchGetPerformanceCounter (
+    VOID
+    )
+{
+    INT CpuInfo[4];
+
+    /* Serialize with CPUID, if it exists */
+    if (Archx86IsCpuidSupported())
+    {
+        BlArchCpuId(0, 0, CpuInfo);
+    }
+
+    /* Read the TSC */
+    return __rdtsc();
+}
+
+VOID
+BlArchCpuId (
+    _In_ ULONG Function,
+    _In_ ULONG SubFunction,
+    _Out_ INT* Result
+    )
+{
+    /* Use the intrinsic */
+    __cpuidex(Result, Function, SubFunction);
 }

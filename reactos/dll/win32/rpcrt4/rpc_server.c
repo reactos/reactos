@@ -1079,7 +1079,7 @@ void RPCRT4_destroy_all_protseqs(void)
 RPC_STATUS WINAPI RpcServerRegisterIf( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv )
 {
   TRACE("(%p,%s,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv);
-  return RpcServerRegisterIf2( IfSpec, MgrTypeUuid, MgrEpv, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, (UINT)-1, NULL );
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, (UINT)-1, NULL, NULL );
 }
 
 /***********************************************************************
@@ -1089,7 +1089,7 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
                        UINT Flags, UINT MaxCalls, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
   TRACE("(%p,%s,%p,%u,%u,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls, IfCallbackFn);
-  return RpcServerRegisterIf2( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, (UINT)-1, IfCallbackFn );
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, (UINT)-1, IfCallbackFn, NULL );
 }
 
 /***********************************************************************
@@ -1098,12 +1098,25 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
 RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
                       UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, MaxRpcSize, IfCallbackFn, NULL );
+}
+
+/***********************************************************************
+ *             RpcServerRegisterIf3 (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcServerRegisterIf3( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
+    UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn, void* SecurityDescriptor)
+{
   PRPC_SERVER_INTERFACE If = IfSpec;
   RpcServerInterface* sif;
   unsigned int i;
 
-  TRACE("(%p,%s,%p,%u,%u,%u,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls,
-         MaxRpcSize, IfCallbackFn);
+  TRACE("(%p,%s,%p,%u,%u,%u,%p,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls,
+        MaxRpcSize, IfCallbackFn, SecurityDescriptor);
+
+  if (SecurityDescriptor)
+      FIXME("Unsupported SecurityDescriptor argument.\n");
+
   TRACE(" interface id: %s %d.%d\n", debugstr_guid(&If->InterfaceId.SyntaxGUID),
                                      If->InterfaceId.SyntaxVersion.MajorVersion,
                                      If->InterfaceId.SyntaxVersion.MinorVersion);
@@ -1275,10 +1288,43 @@ struct rpc_server_registered_auth_info
 {
     struct list entry;
     TimeStamp exp;
+    BOOL cred_acquired;
     CredHandle cred;
     ULONG max_token;
     USHORT auth_type;
+    WCHAR *principal;
 };
+
+static RPC_STATUS find_security_package(ULONG auth_type, SecPkgInfoW **packages_buf, SecPkgInfoW **ret)
+{
+    SECURITY_STATUS sec_status;
+    SecPkgInfoW *packages;
+    ULONG package_count;
+    ULONG i;
+
+    sec_status = EnumerateSecurityPackagesW(&package_count, &packages);
+    if (sec_status != SEC_E_OK)
+    {
+        ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n", sec_status);
+        return RPC_S_SEC_PKG_ERROR;
+    }
+
+    for (i = 0; i < package_count; i++)
+        if (packages[i].wRPCID == auth_type)
+            break;
+
+    if (i == package_count)
+    {
+        WARN("unsupported AuthnSvc %u\n", auth_type);
+        FreeContextBuffer(packages);
+        return RPC_S_UNKNOWN_AUTHN_SERVICE;
+    }
+
+    TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name), auth_type);
+    *packages_buf = packages;
+    *ret = packages + i;
+    return RPC_S_OK;
+}
 
 RPC_STATUS RPCRT4_ServerGetRegisteredAuthInfo(
     USHORT auth_type, CredHandle *cred, TimeStamp *exp, ULONG *max_token)
@@ -1291,6 +1337,28 @@ RPC_STATUS RPCRT4_ServerGetRegisteredAuthInfo(
     {
         if (auth_info->auth_type == auth_type)
         {
+            if (!auth_info->cred_acquired)
+            {
+                SecPkgInfoW *packages, *package;
+                SECURITY_STATUS sec_status;
+
+                status = find_security_package(auth_info->auth_type, &packages, &package);
+                if (status != RPC_S_OK)
+                    break;
+
+                sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)auth_info->principal, package->Name,
+                                                       SECPKG_CRED_INBOUND, NULL, NULL, NULL, NULL,
+                                                       &auth_info->cred, &auth_info->exp);
+                FreeContextBuffer(packages);
+                if (sec_status != SEC_E_OK)
+                {
+                    status = RPC_S_SEC_PKG_ERROR;
+                    break;
+                }
+
+                auth_info->cred_acquired = TRUE;
+            }
+
             *cred = auth_info->cred;
             *exp = auth_info->exp;
             *max_token = auth_info->max_token;
@@ -1310,7 +1378,9 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
     EnterCriticalSection(&server_auth_info_cs);
     LIST_FOR_EACH_ENTRY_SAFE(auth_info, cursor2, &server_registered_auth_info, struct rpc_server_registered_auth_info, entry)
     {
-        FreeCredentialsHandle(&auth_info->cred);
+        if (auth_info->cred_acquired)
+            FreeCredentialsHandle(&auth_info->cred);
+        HeapFree(GetProcessHeap(), 0, auth_info->principal);
         HeapFree(GetProcessHeap(), 0, auth_info);
     }
     LeaveCriticalSection(&server_auth_info_cs);
@@ -1323,63 +1393,18 @@ void RPCRT4_ServerFreeAllRegisteredAuthInfo(void)
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-    SECURITY_STATUS sec_status;
-    CredHandle cred;
-    TimeStamp exp;
-    ULONG package_count;
-    ULONG i;
-    PSecPkgInfoA packages;
-    ULONG max_token;
-    struct rpc_server_registered_auth_info *auth_info;
+    WCHAR *principal_name = NULL;
+    RPC_STATUS status;
 
     TRACE("(%s,%u,%p,%p)\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg);
 
-    sec_status = EnumerateSecurityPackagesA(&package_count, &packages);
-    if (sec_status != SEC_E_OK)
-    {
-        ERR("EnumerateSecurityPackagesA failed with error 0x%08x\n",
-            sec_status);
-        return RPC_S_SEC_PKG_ERROR;
-    }
-
-    for (i = 0; i < package_count; i++)
-        if (packages[i].wRPCID == AuthnSvc)
-            break;
-
-    if (i == package_count)
-    {
-        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
-        FreeContextBuffer(packages);
-        return RPC_S_UNKNOWN_AUTHN_SERVICE;
-    }
-    TRACE("found package %s for service %u\n", packages[i].Name,
-          AuthnSvc);
-    sec_status = AcquireCredentialsHandleA((SEC_CHAR *)ServerPrincName,
-                                           packages[i].Name,
-                                           SECPKG_CRED_INBOUND, NULL, NULL,
-                                           NULL, NULL, &cred, &exp);
-    max_token = packages[i].cbMaxToken;
-    FreeContextBuffer(packages);
-    if (sec_status != SEC_E_OK)
-        return RPC_S_SEC_PKG_ERROR;
-
-    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
-    if (!auth_info)
-    {
-        FreeCredentialsHandle(&cred);
+    if(ServerPrincName && !(principal_name = RPCRT4_strdupAtoW((const char*)ServerPrincName)))
         return RPC_S_OUT_OF_RESOURCES;
-    }
 
-    auth_info->exp = exp;
-    auth_info->cred = cred;
-    auth_info->max_token = max_token;
-    auth_info->auth_type = AuthnSvc;
+    status = RpcServerRegisterAuthInfoW(principal_name, AuthnSvc, GetKeyFn, Arg);
 
-    EnterCriticalSection(&server_auth_info_cs);
-    list_add_tail(&server_registered_auth_info, &auth_info->entry);
-    LeaveCriticalSection(&server_auth_info_cs);
-
-    return RPC_S_OK;
+    HeapFree(GetProcessHeap(), 0, principal_name);
+    return status;
 }
 
 /***********************************************************************
@@ -1388,55 +1413,29 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG Au
 RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG AuthnSvc, RPC_AUTH_KEY_RETRIEVAL_FN GetKeyFn,
                             LPVOID Arg )
 {
-    SECURITY_STATUS sec_status;
-    CredHandle cred;
-    TimeStamp exp;
-    ULONG package_count;
-    ULONG i;
-    PSecPkgInfoW packages;
-    ULONG max_token;
     struct rpc_server_registered_auth_info *auth_info;
+    SecPkgInfoW *packages, *package;
+    ULONG max_token;
+    RPC_STATUS status;
 
     TRACE("(%s,%u,%p,%p)\n", debugstr_w(ServerPrincName), AuthnSvc, GetKeyFn, Arg);
 
-    sec_status = EnumerateSecurityPackagesW(&package_count, &packages);
-    if (sec_status != SEC_E_OK)
-    {
-        ERR("EnumerateSecurityPackagesW failed with error 0x%08x\n",
-            sec_status);
-        return RPC_S_SEC_PKG_ERROR;
-    }
+    status = find_security_package(AuthnSvc, &packages, &package);
+    if (status != RPC_S_OK)
+        return status;
 
-    for (i = 0; i < package_count; i++)
-        if (packages[i].wRPCID == AuthnSvc)
-            break;
-
-    if (i == package_count)
-    {
-        WARN("unsupported AuthnSvc %u\n", AuthnSvc);
-        FreeContextBuffer(packages);
-        return RPC_S_UNKNOWN_AUTHN_SERVICE;
-    }
-    TRACE("found package %s for service %u\n", debugstr_w(packages[i].Name),
-          AuthnSvc);
-    sec_status = AcquireCredentialsHandleW((SEC_WCHAR *)ServerPrincName,
-                                           packages[i].Name,
-                                           SECPKG_CRED_INBOUND, NULL, NULL,
-                                           NULL, NULL, &cred, &exp);
-    max_token = packages[i].cbMaxToken;
+    max_token = package->cbMaxToken;
     FreeContextBuffer(packages);
-    if (sec_status != SEC_E_OK)
-        return RPC_S_SEC_PKG_ERROR;
 
-    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
+    auth_info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*auth_info));
     if (!auth_info)
-    {
-        FreeCredentialsHandle(&cred);
+        return RPC_S_OUT_OF_RESOURCES;
+
+    if (ServerPrincName && !(auth_info->principal = RPCRT4_strdupW(ServerPrincName))) {
+        HeapFree(GetProcessHeap(), 0, auth_info);
         return RPC_S_OUT_OF_RESOURCES;
     }
 
-    auth_info->exp = exp;
-    auth_info->cred = cred;
     auth_info->max_token = max_token;
     auth_info->auth_type = AuthnSvc;
 

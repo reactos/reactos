@@ -238,7 +238,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Ще бъде изпитан DirectDraw за изобразяване на цял екран. Трябва да бъде изобразен движещ се бял правоъгълник. Да продължим ли?"
     IDS_DDFULLSCREEN_RESULT "Видяхте ли бял движещ се правоъгълник в режим „цял екран“?"
     IDS_FORMAT_ADAPTER_MEM "%u МБ"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u бита)(%uХц)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u бита)(%uХц)"
     IDS_OPTION_NO "Не"
     IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
     IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."

@@ -54,7 +54,7 @@ typedef union _CDB_RBC {
         UCHAR Reserved[3];
 
         UCHAR Prevent : 1;
-        UCHAR Persistant : 1;
+        UCHAR Persistent : 1;
         UCHAR Reserved3 : 6;
 
         UCHAR Control;

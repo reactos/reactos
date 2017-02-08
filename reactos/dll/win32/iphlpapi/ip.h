@@ -61,6 +61,16 @@ struct ip {
 #ifdef _IP_VHL
 	u_char	ip_vhl;			/* version << 4 | header length >> 2 */
 #else
+#ifdef __REACTOS__
+#if BYTE_ORDER == LITTLE_ENDIAN
+	u_char	ip_hl : 4,		/* header length */
+		ip_v : 4;			/* version */
+#endif
+#if BYTE_ORDER == BIG_ENDIAN
+	u_char	ip_v : 4,			/* version */
+		ip_hl : 4;		/* header length */
+#endif
+#else
 #if BYTE_ORDER == LITTLE_ENDIAN
 	u_int	ip_hl:4,		/* header length */
 		ip_v:4;			/* version */
@@ -69,6 +79,7 @@ struct ip {
 	u_int	ip_v:4,			/* version */
 		ip_hl:4;		/* header length */
 #endif
+#endif /* __REACTOS__ */
 #endif /* not _IP_VHL */
 	u_char	ip_tos;			/* type of service */
 	u_short	ip_len;			/* total length */
@@ -151,6 +162,16 @@ struct	ip_timestamp {
 	u_char	ipt_code;		/* IPOPT_TS */
 	u_char	ipt_len;		/* size of structure (variable) */
 	u_char	ipt_ptr;		/* index of current entry */
+#ifdef __REACTOS__
+#if BYTE_ORDER == LITTLE_ENDIAN
+	u_char	ipt_flg:4,		/* flags, see below */
+		ipt_oflw:4;		/* overflow counter */
+#endif
+#if BYTE_ORDER == BIG_ENDIAN
+	u_char	ipt_oflw:4,		/* overflow counter */
+		ipt_flg:4;		/* flags, see below */
+#endif
+#else
 #if BYTE_ORDER == LITTLE_ENDIAN
 	u_int	ipt_flg:4,		/* flags, see below */
 		ipt_oflw:4;		/* overflow counter */
@@ -159,6 +180,7 @@ struct	ip_timestamp {
 	u_int	ipt_oflw:4,		/* overflow counter */
 		ipt_flg:4;		/* flags, see below */
 #endif
+#endif  /* __REACTOS__ */
 	union ipt_timestamp {
 		n_long	ipt_time[1];
 		struct	ipt_ta {

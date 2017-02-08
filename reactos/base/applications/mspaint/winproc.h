@@ -40,6 +40,6 @@ public:
 
     void alignChildrenToMainWindow();
     void saveImage(BOOL overwrite);
-    void UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname);
+    void UpdateApplicationProperties(HBITMAP bitmap, LPCTSTR newfilepathname);
     void InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window);
 };

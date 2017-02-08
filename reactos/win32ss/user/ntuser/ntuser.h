@@ -14,6 +14,7 @@ extern PTHREADINFO gptiCurrent;
 extern PPROCESSINFO gppiList;
 extern PPROCESSINFO ppiScrnSaver;
 extern PPROCESSINFO gppiInputProvider;
+extern BOOL g_AlwaysDisplayVersion;
 extern ATOM gaGuiConsoleWndClass;
 extern ATOM AtomDDETrack;
 extern ATOM AtomQOS;
@@ -25,5 +26,6 @@ VOID FASTCALL UserEnterExclusive(VOID);
 VOID FASTCALL UserLeave(VOID);
 BOOL FASTCALL UserIsEntered(VOID);
 BOOL FASTCALL UserIsEnteredExclusive(VOID);
+DWORD FASTCALL UserGetLanguageToggle(VOID);
 
 /* EOF */

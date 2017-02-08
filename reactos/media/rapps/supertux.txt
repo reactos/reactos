@@ -27,6 +27,10 @@ Description = SuperTux to darmowa dwu wymiarowa gra platformowa OpenSource.
 Description = Joc 2D gratuit, cu surse deschise.
 Size = 7,3 Mio
 
+[Section.0419]
+Description = Свободный классический платформер в стиле Super Mario Bros.
+Size = 7,3 МиБ
+
 [Section.041f]
 Description = Ücretsiz, açık kaynak ve iki boyutlu bir platform oyunu.
 Size = 7,3 MiB

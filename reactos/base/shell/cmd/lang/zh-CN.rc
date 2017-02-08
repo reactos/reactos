@@ -64,7 +64,7 @@ ERRORLEVEL 将被设置为用户输入在选项中的偏移。\n"
     STRING_CMD_HELP2 "\n可用功能："
     STRING_CMD_HELP3 "  [别名]"
     STRING_CMD_HELP4 "  [历史]"
-    STRING_CMD_HELP5 "  [Unix 文件名自动完成]"
+    STRING_CMD_HELP5 "  [Bash 文件名自动完成]"
     STRING_CMD_HELP6 "  [目录栈]"
     STRING_CMD_HELP7 "  [重定向和管道]"
     STRING_CMD_HELP8 "启动一个新的 ReactOS 命令行解释器的新实例。\n\n\
@@ -239,15 +239,15 @@ MKLINK [/D | /H | /J] 链接名 目标\n\n\
   /H  创建一个硬链接。\n\
   /J  创建一个目录连接点。\n\n\
 如果 /H 或 /J 均未被指定，一个符号链接将被创建。"
-    STRING_MEMMORY_HELP1 "显示系统内存容量。\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% 内存已安装。\n\n\
+    STRING_MEMORY_HELP1 "显示系统内存容量。\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% 内存已安装。\n\n\
   %13s 字节 总物理内存。\n\
   %13s 字节 可用物理内存。\n\n\
   %13s 字节 总页面文件大小。\n\
   %13s 字节 可用页面文件。\n\n\
   %13s 字节 总虚拟内存。\n\
   %13s 字节 可用虚拟内存。\n"
-    STRING_MISC_HELP1 "按任意键继续...\n"
+    STRING_MISC_HELP1 "按任意键继续..."
     STRING_MOVE_HELP1 "覆盖 %s 吗 (Yes/No/All)？"
     STRING_MOVE_HELP2 "移动文件并重命名文件和目录。\n\n\
 移动一个或多个文件：\n\
@@ -491,7 +491,7 @@ RESTORE       恢复窗口\n\
     STRING_REPLACE_ERROR6 "没有文件被发现 - %s\n"
     STRING_REPLACE_ERROR7 "扩展错误 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令行解释器                                       输入 HELP = 帮助  "
-    STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS 操作系统 [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令行解释器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上运行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

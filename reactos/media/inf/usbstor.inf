@@ -82,6 +82,7 @@ GenericMfg = "(dispozitive generice USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Dispozitiv USB de stocare"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные устройства USB)"
 GenericBulkOnlyTransport.DeviceDesc = "Запоминающее устройство USB"
 

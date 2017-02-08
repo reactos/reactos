@@ -126,7 +126,7 @@ NTAPI
 HidClassDriverUnload(
     IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -801,7 +801,7 @@ HidClass_Write(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -950,7 +950,7 @@ HidClass_InternalDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     ASSERT(FALSE);
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);

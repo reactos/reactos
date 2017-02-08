@@ -3,6 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/tdilib)
 spec2def(wshtcpip.dll wshtcpip.spec)
 
 list(APPEND SOURCE
+    iflist.c
     wshtcpip.c
     wshtcpip.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wshtcpip.def)

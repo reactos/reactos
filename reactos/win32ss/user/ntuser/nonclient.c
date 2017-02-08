@@ -214,6 +214,7 @@ DefWndStartSizeMove(PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		case VK_ESCAPE:
 		  return 0;
 		}
+              break;
             default:
               IntTranslateKbdMessage( &msg, 0 );
               pti->TIF_flags |= TIF_MOVESIZETRACKING;
@@ -612,11 +613,6 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
     PCURICON_OBJECT pIcon = NULL;
     HICON hIcon;
 
-   //FIXME: Some callers use this function as if it returns a boolean saying "this window has an icon".
-   //FIXME: Hence we must return a pointer with no reference count.
-   //FIXME: This is bad and we should feel bad.
-   //FIXME: Stop whining over wine code.
-
    hIcon = UserGetProp(pWnd, gpsi->atomIconSmProp, TRUE);
    if (!hIcon) hIcon = UserGetProp(pWnd, gpsi->atomIconProp, TRUE);
 
@@ -635,11 +631,9 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    }
    if (hIcon)
    {
-       pIcon = UserGetCurIconObject(hIcon);
-       if (pIcon)
-       {
-           UserDereferenceObject(pIcon);
-       }
+       pIcon = (PCURICON_OBJECT)UserGetObjectNoErr(gHandleTable,
+                                                   hIcon,
+                                                   TYPE_CURSOR);
    }
    return pIcon;
 }
@@ -677,12 +671,6 @@ IntIsScrollBarVisible(PWND pWnd, INT hBar)
     return FALSE;
 
   return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
-}
-
-BOOL
-UserHasMenu(PWND pWnd, ULONG Style)
-{
-   return (!(Style & WS_CHILD) && UlongToHandle(pWnd->IDMenu) != 0);
 }
 
 /*
@@ -852,7 +840,7 @@ VOID UserDrawCaptionBar(
 
    if (!(Flags & DC_NOVISIBLE) && !IntIsWindowVisible(pWnd)) return;
 
-   ERR("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
+   TRACE("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
@@ -949,12 +937,12 @@ VOID UserDrawCaptionBar(
 
    if (!(Style & WS_MINIMIZE))
    {
-      PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
       /* Draw menu bar */
-      if (menu && !(Style & WS_CHILD))
+      if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
       {
+          PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
           TempRect = CurrentRect;
-          TempRect.bottom = TempRect.top + menu->cyMenu;
+          TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
           CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
       }
 
@@ -1118,13 +1106,16 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
 
    if (!(Style & WS_MINIMIZE))
    {
-     PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
      /* Draw menu bar */
-     if (menu && !(Style & WS_CHILD))
+     if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
      {
-         TempRect = CurrentRect;
-         TempRect.bottom = TempRect.top + menu->cyMenu;
-         if (!(Flags & DC_NOSENDMSG)) CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+         if (!(Flags & DC_NOSENDMSG))
+         {
+             PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
+             TempRect = CurrentRect;
+             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+         }
      }
 
      if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1225,7 +1216,7 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
             Rect->top += UserGetSystemMetrics(SM_CYCAPTION);
       }
 
-      if (Wnd->IDMenu && ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+      if (HAS_MENU(Wnd, Style))
       {
          HDC hDC = UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
 
@@ -1381,7 +1372,7 @@ LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
    }
 
    if ((Wnd->state & WNDS_NONCPAINT) || !(Wnd->style & WS_VISIBLE))
-      return 0;
+      return TRUE;
 
    /* This isn't documented but is reproducible in at least XP SP2 and
     * Outlook 2007 depends on it

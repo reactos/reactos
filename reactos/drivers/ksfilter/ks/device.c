@@ -151,7 +151,7 @@ IKsDevice_fnAddPowerEntry(
 {
     //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -163,7 +163,7 @@ IKsDevice_fnRemovePowerEntry(
 {
     //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 
 }
@@ -179,7 +179,7 @@ IKsDevice_fnPinStateChange(
 {
     //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 
 }
@@ -216,7 +216,7 @@ IKsDevice_fnCheckIoCapability(
 {
     //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -575,7 +575,7 @@ IKsDevice_Power(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     /* TODO */
 
@@ -782,15 +782,14 @@ KsInitializeDevice(
             }
         }
 
-        /* does the driver pnp notification */
-        if (Descriptor->Dispatch)
+        /* does the driver care about the add device */
+        if (Descriptor->Dispatch && Descriptor->Dispatch->Add)
         {
-            /* does the driver care about the add device */
             Status = Descriptor->Dispatch->Add(&Header->KsDevice);
-
             DPRINT("Driver: AddHandler Status %x\n", Status);
-            Header->KsDevice.Descriptor = Descriptor;
         }
+
+        Header->KsDevice.Descriptor = Descriptor;
     }
 
 

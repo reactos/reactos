@@ -456,8 +456,3 @@ LRESULT CBrandBand::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     Invalidate(FALSE);
     return 0;
 }
-
-HRESULT CreateBrandBand(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CBrandBand>(riid, ppv);
-}

@@ -1,4 +1,27 @@
+#include <windef.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
 #define REACTOS_STR_FILE_DESCRIPTION  "Console Telnet for Win32"
 #define REACTOS_STR_INTERNAL_NAME     "telnet"
 #define REACTOS_STR_ORIGINAL_FILENAME "telnet.exe"
 #include <reactos/version.rc>
+
+IDI_APPICON ICON "telnet.ico"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_EN_US
+    #include "lang/en-US.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ro-RO.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/tr-TR.rc"
+#endif

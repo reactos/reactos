@@ -28,7 +28,7 @@ BEGIN
     STRING_FILESYSTEM "Der Typ des Dateisystems ist %s.\n"
     STRING_LABEL_NAME_EDIT "Geben Sie die aktuelle Datenträgerbezeichnung für Datenträger %C: ein"
     STRING_ERROR_LABEL "Eine unzulässige Datenträgerbezeichnung wurde für diesen Datenträger eingegeben.\n"
-    STRING_YN_FORMAT "\nACHTUNG, beim Formatieren werden ALLE Daten auf dem Datenträger %C: gelöscht!\nMit Formatierung fortfahren? (Ja/Nein)? "
+    STRING_YN_FORMAT "\nACHTUNG, beim Formatieren werden ALLE Daten auf dem Datenträger %C: gelöscht!\nMit Formatierung fortfahren (Ja/Nein)? "
     STRING_YES_NO_FAQ "JN"
     STRING_VERIFYING "Prüfen"
     STRING_FAST_FMT "Schnellformatierung"

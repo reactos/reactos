@@ -12,6 +12,7 @@ list(APPEND SOURCE
 
 add_library(advpack SHARED
     ${SOURCE}
+    advpack.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)
 
 set_module_type(advpack win32dll)

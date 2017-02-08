@@ -22,11 +22,6 @@ add_library(wdmaud.drv SHARED
 set_module_type(wdmaud.drv win32dll UNICODE)
 set_target_properties(wdmaud.drv PROPERTIES SUFFIX "")
 target_link_libraries(wdmaud.drv mmebuddy libsamplerate mmixer)
-
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    target_link_libraries(wdmaud.drv mingwex)
-endif()
-
 add_importlibs(wdmaud.drv user32 winmm advapi32 msvcrt setupapi ksuser kernel32 ntdll)
 add_pch(wdmaud.drv wdmaud.h SOURCE)
 add_cd_file(TARGET wdmaud.drv DESTINATION reactos/system32 FOR all)

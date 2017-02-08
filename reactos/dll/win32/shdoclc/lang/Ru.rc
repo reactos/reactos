@@ -203,7 +203,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Dump LayoutRects",   IDM_DUMPLAYOUTRECTS
         MENUITEM "Memory Monitor",     IDM_MEMORYMONITOR
         MENUITEM "Performance Meters", IDM_PERFORMANCEMETERS
-        MENUITEM "Save HTML",          IDM_SAVEHTML
+        MENUITEM "Сохранить HTML",     IDM_SAVEHTML
         MENUITEM SEPARATOR
         MENUITEM "Вид об&зора",        IDM_BROWSEMODE
         MENUITEM "Из&менить вид",      IDM_EDITMODE

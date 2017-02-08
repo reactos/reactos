@@ -761,7 +761,7 @@
 @ cdecl _wsystem(wstr)
 @ cdecl _wtempnam(wstr wstr)
 @ cdecl _wtmpnam(ptr)
-# @ cdecl _wtof(wstr)
+@ cdecl _wtof(wstr)
 @ cdecl _wtoi(wstr)
 @ cdecl _wtoi64(wstr)
 @ cdecl _wtol(wstr)

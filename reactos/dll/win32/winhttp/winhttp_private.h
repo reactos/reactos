@@ -380,4 +380,19 @@ static inline char *strdupWA( const WCHAR *src )
     return dst;
 }
 
+static inline char *strdupWA_sized( const WCHAR *src, DWORD size )
+{
+    char *dst = NULL;
+    if (src)
+    {
+        int len = WideCharToMultiByte( CP_ACP, 0, src, size, NULL, 0, NULL, NULL ) + 1;
+        if ((dst = heap_alloc( len )))
+        {
+            WideCharToMultiByte( CP_ACP, 0, src, len, dst, size, NULL, NULL );
+            dst[len - 1] = 0;
+        }
+    }
+    return dst;
+}
+
 #endif /* _WINE_WINHTTP_PRIVATE_H_ */

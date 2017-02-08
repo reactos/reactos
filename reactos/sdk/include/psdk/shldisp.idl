@@ -359,6 +359,36 @@ interface FolderItems : IDispatch
 }
 
 /*****************************************************************************
+ * FolderItems2 interface
+ */
+[
+    uuid(c94f0ad0-f363-11d2-a327-00c04f8eec7f),
+    oleautomation,
+    dual
+]
+interface FolderItems2 : FolderItems
+{
+    HRESULT InvokeVerbEx( [in, optional] VARIANT verb,
+        [in, optional] VARIANT args );
+}
+
+/*****************************************************************************
+ * FolderItems3 interface
+ */
+[
+    uuid(eaa7c309-bbec-49d5-821d-64d966cb667f),
+    oleautomation,
+    dual
+]
+interface FolderItems3 : FolderItems2
+{
+    HRESULT Filter( [in] long flags, [in] BSTR spec );
+
+    [id(0), propget]
+    HRESULT Verbs( [out, retval] FolderItemVerbs **ppfic );
+}
+
+/*****************************************************************************
  * FolderItemVerb interface
  */
 [

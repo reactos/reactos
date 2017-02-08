@@ -64,7 +64,7 @@ ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
     STRING_CMD_HELP2 "\n可用功能："
     STRING_CMD_HELP3 "  [別名]"
     STRING_CMD_HELP4 "  [歷史]"
-    STRING_CMD_HELP5 "  [Unix 檔名自動完成]"
+    STRING_CMD_HELP5 "  [Bash 檔名自動完成]"
     STRING_CMD_HELP6 "  [目錄棧]"
     STRING_CMD_HELP7 "  [重定向和管道]"
     STRING_CMD_HELP8 "啟動一個新的 ReactOS 命令列直譯器的新例項。\n\n\
@@ -239,15 +239,15 @@ MKLINK [/D | /H | /J] 連結名 目標\n\n\
   /H  創建一個硬連結。\n\
   /J  創建一個目錄連線點。\n\n\
 如果 /H 或 /J 均未被指定，一個符號連結將被創建。"
-    STRING_MEMMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
+    STRING_MEMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
   %13s 位元組 總物理內存。\n\
   %13s 位元組 可用物理內存。\n\n\
   %13s 位元組 總頁面檔案大小。\n\
   %13s 位元組 可用頁面檔案。\n\n\
   %13s 位元組 總虛擬內存。\n\
   %13s 位元組 可用虛擬內存。\n"
-    STRING_MISC_HELP1 "按任意鍵繼續...\n"
+    STRING_MISC_HELP1 "按任意鍵繼續..."
     STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)？"
     STRING_MOVE_HELP2 "移動檔案並重新命名檔案和目錄。\n\n\
 移動一個或多個檔案：\n\
@@ -491,7 +491,7 @@ RESTORE       恢復視窗\n\
     STRING_REPLACE_ERROR6 "沒有檔案被發現 - %s\n"
     STRING_REPLACE_ERROR7 "擴展錯誤 32\n"
     STRING_CMD_INFOLINE "  ReactOS 命令列直譯器                                       輸入 HELP = 幫助  "
-    STRING_REACTOS_VERSION "ReactOS 作業系統 [版本 %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS 作業系統 [版本 %s %s]\n"
     STRING_CMD_SHELLINFO "\nReactOS 命令列直譯器\n版本 %s %s"
     STRING_VERSION_RUNNING_ON "在 上運行"
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

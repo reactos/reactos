@@ -27,6 +27,13 @@ HKCR
 				val Attributes = d '0'
 			}
 		}
+		ForceRemove {6D5313C0-8C62-11D1-B2CD-006097DF8C11} = s 'Folder Options Property Page Extension'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
 	}
 }
 HKLM

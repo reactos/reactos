@@ -28,6 +28,11 @@ License = GPL, LGPL modificată
 Description = Mediu integrat de dezvoltare (IDE) multiplatformă care vă permite crearea de programe Object Pascal. Pentru compilarea proiectelor este utilizat compilatorul Free Pascal.
 Size = 114,4 Mio
 
+[Section.0419]
+License = Измененная LGPL, GPL
+Description = Открытая среда разработки программного обеспечения на языке Object Pascal для компилятора Free Pascal.
+Size = 114,4 МиБ
+
 [Section.041f]
 License = Değiştirilmiş LGPL, GPL
 Description = Object Pascal izlenceleri oluşturmanızı sağlayan çapraz platform bir IDE. Tasarılarınızı derlemek için Free Pascal derleyicisini kullanır.

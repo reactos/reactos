@@ -22,10 +22,10 @@ list(APPEND SOURCE
     rw.c
     shutdown.c
     volume.c
-    fastfat.rc)
+    fastfat.h)
 
-add_library(fastfat_new SHARED ${SOURCE})
+add_library(fastfat_new SHARED ${SOURCE} fastfat.rc)
 set_module_type(fastfat_new kernelmodedriver)
 target_link_libraries(fastfat_new ${PSEH_LIB} fullfat)
 add_importlibs(fastfat_new ntoskrnl hal)
-add_pch(fastfat_new fastfat.h)
+add_pch(fastfat_new fastfat.h SOURCE)

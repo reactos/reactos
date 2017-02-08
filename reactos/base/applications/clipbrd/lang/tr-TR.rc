@@ -35,7 +35,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_CLIPBOARD "Pano Görüntüleyicisi"
-    STRING_CLIPFILE  "Pano Öğesi"
+    STRING_CLIPFILE  "Pano Ögesi"
     STRING_DELETE_MSG "Pano içeriğini sil?"
     STRING_DELETE_TITLE "Pano Sil"
     STRING_FORMAT_NT "ReactOS İçin Pano Kütükleri (*.clp)"

@@ -2286,7 +2286,7 @@ retryIdentifier:
         ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
 
         //
-        // Check if indentifier can be read back.
+        // Check if identifier can be read back.
         //
 
         if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
@@ -2510,7 +2510,7 @@ retryIdentifier:
         }// preConfig check
 
         //
-        // Save the Interrupe Mode for later use
+        // Save the Interrupt Mode for later use
         //
         deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
 
@@ -2864,7 +2864,7 @@ Return Value:
             ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
 
             //
-            // Check if indentifier can be read back.
+            // Check if identifier can be read back.
             //
 
             if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
@@ -2966,7 +2966,7 @@ Return Value:
             atapiOnly = FALSE;
 
             //
-            // Save the Interrupe Mode for later use
+            // Save the Interrupt Mode for later use
             //
             deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
 
@@ -3170,7 +3170,7 @@ Return Value:
                     ScsiPortWritePortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow, 0xAA);
 
                     //
-                    // Check if indentifier can be read back.
+                    // Check if identifier can be read back.
                     //
 
                     if ((statusByte = ScsiPortReadPortUchar(&((PIDE_REGISTERS_1)ioSpace)->CylinderLow)) != 0xAA) {
@@ -3296,7 +3296,7 @@ Return Value:
                         atapiOnly = FALSE;
 
                         //
-                        // Save the Interrupe Mode for later use
+                        // Save the Interrupt Mode for later use
                         //
                         deviceExtension->InterruptMode = ConfigInfo->InterruptMode;
 
@@ -4068,7 +4068,7 @@ CompleteRequest:
                 PSENSE_DATA senseData = (PSENSE_DATA) srb->DataBuffer;
 
                 if (status == SRB_STATUS_DATA_OVERRUN) {
-                    // Check to see if we at least get mininum number of bytes
+                    // Check to see if we at least get minimum number of bytes
                     if ((srb->DataTransferLength - deviceExtension->WordsLeft) >
                         (FIELD_OFFSET (SENSE_DATA, AdditionalSenseLength) + sizeof(senseData->AdditionalSenseLength))) {
                         status = SRB_STATUS_SUCCESS;
@@ -4403,7 +4403,7 @@ Return Value:
             }
 
             //
-            // Zero the ouput buffer as the input buffer info. has been saved off locally (the buffers are the same).
+            // Zero the output buffer as the input buffer info. has been saved off locally (the buffers are the same).
             //
 
             for (i = 0; i < (sizeof(SENDCMDOUTPARAMS) + READ_ATTRIBUTE_BUFFER_SIZE - 1); i++) {
@@ -4453,7 +4453,7 @@ Return Value:
             }
 
             //
-            // Zero the ouput buffer as the input buffer info. has been saved off locally (the buffers are the same).
+            // Zero the output buffer as the input buffer info. has been saved off locally (the buffers are the same).
             //
 
             for (i = 0; i < (sizeof(SENDCMDOUTPARAMS) - 1); i++) {
@@ -5483,7 +5483,6 @@ Return Value:
                 //
 
                 deviceExtension->ExpectingInterrupt = FALSE;
-                status = SRB_STATUS_SUCCESS;
 
             } else {
 
@@ -5495,7 +5494,6 @@ Return Value:
 
                 GetBaseStatus(baseIoAddress1, statusByte);
                 deviceExtension->ExpectingInterrupt = FALSE;
-                status = SRB_STATUS_SUCCESS;
 
                 if (errorByte & IDE_ERROR_DATA_ERROR) {
 
@@ -6466,7 +6464,7 @@ BuildMechanismStatusSrb (
     srb->Length     = sizeof(SCSI_REQUEST_BLOCK);
 
     //
-    // Set flags to disable synchronous negociation.
+    // Set flags to disable synchronous negotiation.
     //
     srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
 
@@ -6512,7 +6510,7 @@ BuildRequestSenseSrb (
     srb->Length     = sizeof(SCSI_REQUEST_BLOCK);
 
     //
-    // Set flags to disable synchronous negociation.
+    // Set flags to disable synchronous negotiation.
     //
     srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
 

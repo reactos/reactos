@@ -13,19 +13,25 @@ BEGIN
     POPUP "檔案(&F)"
     BEGIN
         MENUITEM "新建(&N)\tCtrl+N", IDM_FILENEW
-        MENUITEM "開啟... (&O)\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "開啟...(&O)\tCtrl+O", IDM_FILEOPEN
         MENUITEM "儲存(&S)\tCtrl+S", IDM_FILESAVE
-        MENUITEM "另存為... (&A)", IDM_FILESAVEAS
+        MENUITEM "另存為...(&A)", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "頁面檢視", IDM_FILEPAGEVIEW
         MENUITEM "頁面設定...", IDM_FILEPAGESETUP
-        MENUITEM "列印...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "列印(&P)...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "儲存為壁紙 (普通)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "儲存為壁紙 (居中)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "儲存為壁紙 (拉伸)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "結束(&Q)\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "結束(&X)\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "編輯(&E)"
     BEGIN
@@ -37,7 +43,7 @@ BEGIN
         MENUITEM "貼上\tCtrl+V", IDM_EDITPASTE
         MENUITEM "刪除選中區域\tDel", IDM_EDITDELETESELECTION
         MENUITEM "反轉選擇", IDM_EDITINVERTSELECTION
-        MENUITEM "全選\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "全選(&A)\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "複製到...", IDM_EDITCOPYTO
         MENUITEM "從...貼上", IDM_EDITPASTEFROM
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "多邊形"
     IDS_TOOLTIP15 "橢圓形"
     IDS_TOOLTIP16 "圓角矩形"
-    IDS_OPENFILTER "點陣圖文件 (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 位元點陣圖 (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "All Files"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d 位元組"
     IDS_PRINTRES "%d x %d 像素每米"
     IDS_INTNUMBERS "請輸入整數只!"

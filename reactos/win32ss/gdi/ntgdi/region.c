@@ -3506,6 +3506,7 @@ NtGdiCombineRgn(
     {
         DPRINT1("NtGdiCombineRgn invalid parameters: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return ERROR;
     }
 

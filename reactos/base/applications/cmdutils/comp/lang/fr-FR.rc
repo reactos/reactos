@@ -1,0 +1,23 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Compare le contenu de deux fichiers ou ensembles de fichiers.\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      Spécifie l'emplacement et le nom du premier fichier à comparer.\n\
+  data2      Spécifie l'emplacement et le nom du second fichier à comparer.\n\
+  /A         Affiche les différences en caractères ASCII (défaut: hexadécimal).\n\
+  /L         Affiche les numéros de ligne des différences.\n"
+    IDS_INVALIDSWITCH "Paramètre invalide - /%c\n"
+    IDS_BADSYNTAX "Syntaxe incorrecte\n"
+    IDS_FILEERROR "Impossible de trouver/ouvrir le fichier : %s\n"
+    IDS_COMPARING "Comparaison de %s et %s...\n"
+    IDS_FILESIZEERROR "Ne peut pas déterminer la taille du fichier : %s\n"
+    IDS_SIZEDIFFERS "Les fichiers sont de taille différente.\n"
+    IDS_READERROR "Erreur lors de la lecture des fichiers.\n"
+    IDS_MISMATCHLINE "Erreur de comparaison à LIGNE %d\n"
+    IDS_MISMATCHOFFSET "Erreur de comparaison à OFFSET 0x%X\n"
+    IDS_ASCIIDIFF "fichier%d = %c\n"
+    IDS_HEXADECIMALDIFF "fichier%d = %X\n"
+    IDS_MATCH "Comparaison des fichiers OK\n"
+END

@@ -27,6 +27,10 @@ Description = Bos Wars to futurystyczna gra strategiczna czasu rzeczywistego. Ab
 Description = Joc de strategie futurist, în timp real. Necesită „Microsoft Visual C++ 2008 SP1 Redistributable”.
 Size = 62,3 Mio
 
+[Section.0419]
+Description = Футуристическая стратегия, отдалённо напоминающая игры типа Command & Conquer. Для работы необходимо наличие Microsoft Visual C++ 2008.
+Size = 62,3 МиБ
+
 [Section.041f]
 Description = Gelecekçi ve gerçek zamanlı bir izlem oyunu. Çalıştırmak için Microsoft Visual C++ 2008 Yürütücü gerekir.
 Size = 62,3 MiB

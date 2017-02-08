@@ -107,19 +107,11 @@
  * DESCRIPTION: Compare two Buffers, with a maximum length
  *
  ******************************************************************************/
-#ifdef __REACTOS__
-int
-memcmp (
-    const void              *VBuffer1,
-    const void              *VBuffer2,
-    ACPI_SIZE               Count)
-#else /* __REACTOS__ */
 int
 memcmp (
     void                    *VBuffer1,
     void                    *VBuffer2,
     ACPI_SIZE               Count)
-#endif /* __REACTOS__ */
 {
     char                    *Buffer1 = (char *) VBuffer1;
     char                    *Buffer2 = (char *) VBuffer2;
@@ -514,17 +506,10 @@ strncat (
  *
  ******************************************************************************/
 
-#ifdef __REACTOS__
-char *
-strstr (
-    const char              *String1,
-    const char              *String2)
-#else /* __REACTOS **/
 char *
 strstr (
     char                    *String1,
     char                    *String2)
-#endif /* __REACTOS__ */
 {
     UINT32                  Length;
 
@@ -532,22 +517,14 @@ strstr (
     Length = strlen (String2);
     if (!Length)
     {
-#ifdef __REACTOS__
-        return (char *)(String1);
-#else /* __REACTOS__ */
         return (String1);
-#endif /* __REACTOS__ */
     }
 
     while (strlen (String1) >= Length)
     {
         if (memcmp (String1, String2, Length) == 0)
         {
-#ifdef __REACTOS__
-            return (char *)(String1);
-#else /* __REACTOS__ */
             return (String1);
-#endif /* __REACTOS__ */
         }
         String1++;
     }

@@ -4,6 +4,7 @@
  *  fontview.c
  *
  *  Copyright (C) 2007  Timo Kreuzer <timo <dot> kreuzer <at> reactos <dot> org>
+ *  Copyright (C) 2016-2017  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,8 +31,11 @@
 #include "resource.h"
 
 HINSTANCE g_hInstance;
-EXTLOGFONTW g_ExtLogFontW;
+INT g_FontIndex = 0;
+INT g_NumFonts = 0;
+LOGFONTW g_LogFonts[64];
 LPCWSTR g_fileName;
+WCHAR g_FontTitle[1024] = L"";
 
 static const WCHAR g_szFontViewClassName[] = L"FontViewWClass";
 
@@ -93,6 +97,7 @@ WinMain (HINSTANCE hThisInstance,
          int nCmdShow)
 {
 	int argc;
+	INT i;
 	WCHAR** argv;
 	WCHAR szFileName[MAX_PATH] = L"";
 	DWORD dwSize;
@@ -118,10 +123,10 @@ WinMain (HINSTANCE hThisInstance,
 	if (argc < 2)
 	{
 		OPENFILENAMEW fontOpen;
-        WCHAR filter[MAX_PATH], dialogTitle[MAX_PATH];
+        WCHAR filter[MAX_PATH*2], dialogTitle[MAX_PATH];
 
-		LoadStringW(NULL, IDS_OPEN, dialogTitle, MAX_PATH);
-		LoadStringW(NULL, IDS_FILTER_LIST, filter, MAX_PATH);
+		LoadStringW(NULL, IDS_OPEN, dialogTitle, ARRAYSIZE(dialogTitle));
+		LoadStringW(NULL, IDS_FILTER_LIST, filter, ARRAYSIZE(filter));
 
 		/* Clears out any values of fontOpen before we use it */
 		ZeroMemory(&fontOpen, sizeof(fontOpen));
@@ -161,19 +166,31 @@ WinMain (HINSTANCE hThisInstance,
 	}
 
 	/* Get the font name */
-	dwSize = sizeof(g_ExtLogFontW.elfFullName);
-	if (!GetFontResourceInfoW(fileName, &dwSize, g_ExtLogFontW.elfFullName, 1))
+	dwSize = sizeof(g_LogFonts);
+	ZeroMemory(g_LogFonts, sizeof(g_LogFonts));
+	if (!GetFontResourceInfoW(fileName, &dwSize, g_LogFonts, 2))
+	{
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
+		return -1;
+	}
+	g_NumFonts = 0;
+	for (i = 0; i < ARRAYSIZE(g_LogFonts); ++i)
+	{
+		if (g_LogFonts[i].lfFaceName[0] == 0)
+			break;
+
+		++g_NumFonts;
+	}
+	if (g_NumFonts == 0)
 	{
 		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
 		return -1;
 	}
 
-	dwSize = sizeof(LOGFONTW);
-	if (!GetFontResourceInfoW(fileName, &dwSize, &g_ExtLogFontW.elfLogFont, 2))
-	{
-		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
-		return -1;
-	}
+	/* get font title */
+	dwSize = sizeof(g_FontTitle);
+	ZeroMemory(g_FontTitle, sizeof(g_FontTitle));
+	GetFontResourceInfoW(fileName, &dwSize, g_FontTitle, 1);
 
 	if (!Display_InitClass(hThisInstance))
 	{
@@ -204,9 +221,9 @@ WinMain (HINSTANCE hThisInstance,
 
 	/* The class is registered, let's create the main window */
 	hMainWnd = CreateWindowExW(
-				0,						/* Extended possibilites for variation */
+				0,						/* Extended possibilities for variation */
 				g_szFontViewClassName,	/* Classname */
-				g_ExtLogFontW.elfFullName,/* Title Text */
+				g_FontTitle,			/* Title Text */
 				WS_OVERLAPPEDWINDOW,	/* default window */
 				CW_USEDEFAULT,			/* Windows decides the position */
 				CW_USEDEFAULT,			/* where the window ends up on the screen */
@@ -222,6 +239,8 @@ WinMain (HINSTANCE hThisInstance,
 	/* Main message loop */
 	while (GetMessage (&msg, NULL, 0, 0))
 	{
+		if (IsDialogMessage(hMainWnd, &msg))
+			continue;
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
@@ -237,7 +256,9 @@ MainWnd_OnCreate(HWND hwnd)
 	WCHAR szQuit[MAX_BUTTONNAME];
 	WCHAR szPrint[MAX_BUTTONNAME];
 	WCHAR szString[MAX_STRING];
-	HWND hDisplay, hButtonInstall, hButtonPrint;
+	WCHAR szPrevious[MAX_STRING];
+	WCHAR szNext[MAX_STRING];
+	HWND hDisplay, hButtonInstall, hButtonPrint, hButtonPrev, hButtonNext;
 
 	/* create the display window */
 	hDisplay = CreateWindowExW(
@@ -257,10 +278,6 @@ MainWnd_OnCreate(HWND hwnd)
 
 	LoadStringW(g_hInstance, IDS_STRING, szString, MAX_STRING);
 	SendMessage(hDisplay, FVM_SETSTRING, 0, (LPARAM)szString);
-
-	/* Init the display window with the font name */
-	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_ExtLogFontW);
-	ShowWindow(hDisplay, SW_SHOWNORMAL);
 
 	/* Create the install button */
 	LoadStringW(g_hInstance, IDS_INSTALL, szQuit, MAX_BUTTONNAME);
@@ -298,6 +315,51 @@ MainWnd_OnCreate(HWND hwnd)
 			);
 	SendMessage(hButtonPrint, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
 
+	/* Create the previous button */
+	LoadStringW(g_hInstance, IDS_PREVIOUS, szPrevious, MAX_BUTTONNAME);
+	hButtonPrev = CreateWindowExW(
+				0,						/* Extended style */
+				L"button",				/* Classname */
+				szPrevious,				/* Title text */
+				WS_CHILD | WS_VISIBLE,	/* Window style */
+				450,					/* X-pos */
+				BUTTON_POS_Y,			/* Y-Pos */
+				BUTTON_WIDTH,			/* Width */
+				BUTTON_HEIGHT,			/* Height */
+				hwnd,					/* Parent */
+				(HMENU)IDC_PREV,		/* Identifier */
+				g_hInstance,			/* Program Instance handler */
+				NULL					/* Window Creation data */
+			);
+	SendMessage(hButtonPrev, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
+
+	/* Create the next button */
+	LoadStringW(g_hInstance, IDS_NEXT, szNext, MAX_BUTTONNAME);
+	hButtonNext = CreateWindowExW(
+				0,						/* Extended style */
+				L"button",				/* Classname */
+				szNext,					/* Title text */
+				WS_CHILD | WS_VISIBLE,	/* Window style */
+				450,					/* X-pos */
+				BUTTON_POS_Y,			/* Y-Pos */
+				BUTTON_WIDTH,			/* Width */
+				BUTTON_HEIGHT,			/* Height */
+				hwnd,					/* Parent */
+				(HMENU)IDC_NEXT,		/* Identifier */
+				g_hInstance,			/* Program Instance handler */
+				NULL					/* Window Creation data */
+			);
+	SendMessage(hButtonNext, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), (LPARAM)TRUE);
+
+	EnableWindow(hButtonPrev, FALSE);
+	if (g_NumFonts <= 1)
+		EnableWindow(hButtonNext, FALSE);
+
+	/* Init the display window with the font name */
+	g_FontIndex = 0;
+	SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_LogFonts[g_FontIndex]);
+	ShowWindow(hDisplay, SW_SHOWNORMAL);
+
 	return 0;
 }
 
@@ -305,10 +367,36 @@ static LRESULT
 MainWnd_OnSize(HWND hwnd)
 {
 	RECT rc;
+	HWND hInstall, hPrint, hPrev, hNext, hDisplay;
+	HDWP hDWP;
 
 	GetClientRect(hwnd, &rc);
-	MoveWindow(GetDlgItem(hwnd, IDC_PRINT), rc.right - BUTTON_WIDTH - BUTTON_POS_X, BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, TRUE);
-	MoveWindow(GetDlgItem(hwnd, IDC_DISPLAY), 0, HEADER_SIZE, rc.right, rc.bottom - HEADER_SIZE, TRUE);
+
+	hDWP = BeginDeferWindowPos(5);
+
+	hInstall = GetDlgItem(hwnd, IDC_INSTALL);
+	if (hDWP)
+		hDWP = DeferWindowPos(hDWP, hInstall, NULL, BUTTON_POS_X, BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, SWP_NOZORDER);
+
+	hPrint = GetDlgItem(hwnd, IDC_PRINT);
+	if (hDWP)
+		hDWP = DeferWindowPos(hDWP, hPrint, NULL, BUTTON_POS_X + BUTTON_WIDTH + BUTTON_PADDING, BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, SWP_NOZORDER);
+
+	hPrev = GetDlgItem(hwnd, IDC_PREV);
+	if (hDWP)
+		hDWP = DeferWindowPos(hDWP, hPrev, NULL, rc.right - (BUTTON_WIDTH * 2 + BUTTON_PADDING + BUTTON_POS_X), BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, SWP_NOZORDER);
+
+	hNext = GetDlgItem(hwnd, IDC_NEXT);
+	if (hDWP)
+		hDWP = DeferWindowPos(hDWP, hNext, NULL, rc.right - (BUTTON_WIDTH + BUTTON_POS_X), BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, SWP_NOZORDER);
+
+	hDisplay = GetDlgItem(hwnd, IDC_DISPLAY);
+	if (hDWP)
+		hDWP = DeferWindowPos(hDWP, hDisplay, NULL, 0, HEADER_SIZE, rc.right, rc.bottom - HEADER_SIZE, SWP_NOZORDER);
+
+	EndDeferWindowPos(hDWP);
+
+	InvalidateRect(hwnd, NULL, TRUE);
 
 	return 0;
 }
@@ -349,6 +437,42 @@ MainWnd_OnInstall(HWND hwnd)
 	return 0;
 }
 
+static LRESULT
+MainWnd_OnPrev(HWND hwnd)
+{
+	HWND hDisplay;
+	if (g_FontIndex > 0)
+	{
+		--g_FontIndex;
+		EnableWindow(GetDlgItem(hwnd, IDC_NEXT), TRUE);
+		if (g_FontIndex == 0)
+			EnableWindow(GetDlgItem(hwnd, IDC_PREV), FALSE);
+
+		hDisplay = GetDlgItem(hwnd, IDC_DISPLAY);
+		SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_LogFonts[g_FontIndex]);
+		InvalidateRect(hDisplay, NULL, TRUE);
+	}
+	return 0;
+}
+
+static LRESULT
+MainWnd_OnNext(HWND hwnd)
+{
+	HWND hDisplay;
+	if (g_FontIndex + 1 < g_NumFonts)
+	{
+		++g_FontIndex;
+		EnableWindow(GetDlgItem(hwnd, IDC_PREV), TRUE);
+		if (g_FontIndex == g_NumFonts - 1)
+			EnableWindow(GetDlgItem(hwnd, IDC_NEXT), FALSE);
+
+		hDisplay = GetDlgItem(hwnd, IDC_DISPLAY);
+		SendMessage(hDisplay, FVM_SETTYPEFACE, 0, (LPARAM)&g_LogFonts[g_FontIndex]);
+		InvalidateRect(hDisplay, NULL, TRUE);
+	}
+	return 0;
+}
+
 LRESULT CALLBACK
 MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -368,11 +492,15 @@ MainWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				case IDC_INSTALL:
 					return MainWnd_OnInstall(hwnd);
-					break;
 
 				case IDC_PRINT:
 					return Display_OnPrint(hwnd);
-					break;
+
+				case IDC_PREV:
+					return MainWnd_OnPrev(hwnd);
+
+				case IDC_NEXT:
+					return MainWnd_OnNext(hwnd);
 			}
 			break;
 

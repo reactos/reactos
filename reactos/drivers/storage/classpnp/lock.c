@@ -124,7 +124,7 @@ ClassAcquireRemoveLockEx(
                 commonExtension->RemoveTrackingUntrackedCount++;
             
                 DebugPrint((ClassDebugWarning, ">>>>>ClassAcquireRemoveLock: "
-                            "Cannot track Tag %p - currently %d untracked requsts\n",
+                            "Cannot track Tag %p - currently %d untracked requests\n",
                             Tag, commonExtension->RemoveTrackingUntrackedCount));
 
                 KeReleaseSpinLock(&commonExtension->RemoveTrackingSpinlock,

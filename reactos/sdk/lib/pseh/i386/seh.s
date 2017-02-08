@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.inc>
+#include <ks386.inc>
 
 #define DISPOSITION_DISMISS         0
 #define DISPOSITION_CONTINUE_SEARCH 1
@@ -16,6 +17,16 @@
 
 #define EXCEPTION_EXIT_UNWIND 4
 #define EXCEPTION_UNWINDING 2
+
+/* See seh_prolog.s */
+SEH_FRAME_NewEsp         =  0 /* 0x00 */
+SEH_FRAME_unused         =  4 /* 0x04 */
+SEH_FRAME_PreviousRecord =  8 /* 0x08 */
+SEH_FRAME_Handler        = 12 /* 0x0c */
+SEH_FRAME_SEHTable       = 16 /* 0x10 */
+SEH_FRAME_Disable        = 20 /* 0x14 */
+SEH_FRAME_OriginalEbp    = 24 /* 0x18 */
+SEH_FRAME_Size           = 28 /* 0x1c */
 
 
 EXTERN _RtlUnwind@16:PROC
@@ -301,7 +312,9 @@ except_return2:
 
 
 __except_handler3:
-
+PARAM_ExceptionRecord = 8
+PARAM_RegistrationFrame = 12
+PARAM_Context = 16
     /* Setup stack and save volatiles */
     push ebp
     mov ebp, esp
@@ -315,23 +328,23 @@ __except_handler3:
     cld
 
     /* Get exception registration and record */
-    mov ebx, [ebp+12]
-    mov eax, [ebp+8]
+    mov ebx, [ebp+PARAM_RegistrationFrame]
+    mov eax, [ebp+PARAM_ExceptionRecord]
 
     /* Check if this is an unwind */
-    test dword ptr [eax+4], EXCEPTION_EXIT_UNWIND + EXCEPTION_UNWINDING
+    test dword ptr [eax+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_EXIT_UNWIND + EXCEPTION_UNWINDING
     jnz except_unwind3
 
     /* Save exception pointers structure */
-    mov [ebp-8], eax
-    mov eax, [ebp+16]
-    mov [ebp-4], eax
+    mov [ebp-8+EXCEPTION_POINTERS_EXCEPTION_RECORD], eax
+    mov eax, [ebp+PARAM_Context]
+    mov [ebp-8+EXCEPTION_POINTERS_CONTEXT_RECORD], eax
     lea eax, [ebp-8]
-    mov [ebx-4], eax
+    mov [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_unused], eax
 
     /* Get the try level and scope table */
-    mov esi, [ebx+12]
-    mov edi, [ebx+8]
+    mov esi, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_Disable]
+    mov edi, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_SEHTable]
 
     /* FIXME: Validate the SEH exception */
 
@@ -343,13 +356,13 @@ except_loop3:
     /* Check if this is the termination handler */
     lea ecx, [esi+esi*2]
     mov eax, [edi+ecx*4+4]
-    or eax, eax
+    test eax, eax
     jz except_continue3
 
     /* Save registers clear them all */
     push esi
     push ebp
-    lea ebp, [ebx+16]
+    lea ebp, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_OriginalEbp]
     xor ebx, ebx
     xor ecx, ecx
     xor edx, edx
@@ -362,19 +375,19 @@ except_loop3:
     pop esi
 
     /* Restore ebx and check the result */
-    mov ebx, [ebp+12]
-    or eax, eax
+    mov ebx, [ebp+PARAM_RegistrationFrame]
+    test eax, eax
     jz except_continue3
     js except_dismiss3
 
     /* So this is an accept, call the termination handlers */
-    mov edi, [ebx+8]
+    mov edi, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_SEHTable]
     push ebx
     call __global_unwind2
     add esp, 4
 
     /* Restore ebp */
-    lea ebp, [ebx+16]
+    lea ebp, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_OriginalEbp]
 
     /* Do local unwind */
     push esi
@@ -387,7 +400,7 @@ except_loop3:
     /* Set new try level */
     lea ecx, [esi+esi*2]
     mov eax, [edi+ecx*4]
-    mov [ebx+12], eax
+    mov [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_Disable], eax
 
     /* Clear registers and call except handler */
     mov eax, [edi+ecx*4+8]
@@ -400,7 +413,7 @@ except_loop3:
 
 except_continue3:
     /* Reload try level and except again */
-    mov edi, [ebx+8]
+    mov edi, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_SEHTable]
     lea ecx, [esi+esi*2]
     mov esi, [edi+ecx*4]
     jmp except_loop3
@@ -410,22 +423,20 @@ except_dismiss3:
     mov eax, DISPOSITION_DISMISS
     jmp except_return3
 
-except_search3:
-    /* Continue searching */
-    mov eax, DISPOSITION_CONTINUE_SEARCH
-    jmp except_return3
-
     /* Do local unwind */
 except_unwind3:
     push ebp
-    mov ebp, [ebx+16]
+    lea ebp, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_OriginalEbp]
     push -1
     push ebx
     call __local_unwind2
     add esp, 8
 
-    /* Retore EBP and set return disposition */
+    /* Restore EBP */
     pop ebp
+
+except_search3:
+    /* Continue searching */
     mov eax, DISPOSITION_CONTINUE_SEARCH
 
 except_return3:

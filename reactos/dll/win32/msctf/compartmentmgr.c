@@ -46,15 +46,6 @@ typedef struct tagCompartmentEnumGuid {
     struct list *cursor;
 } CompartmentEnumGuid;
 
-
-typedef struct tagCompartmentSink {
-    struct list         entry;
-    union {
-        IUnknown            *pIUnknown;
-        ITfCompartmentEventSink *pITfCompartmentEventSink;
-    } interfaces;
-} CompartmentSink;
-
 typedef struct tagCompartment {
     ITfCompartment ITfCompartment_iface;
     ITfSource ITfSource_iface;
@@ -423,23 +414,11 @@ static HRESULT CompartmentEnumGuid_Constructor(struct list *values, IEnumGUID **
 /**************************************************
  * ITfCompartment
  **************************************************/
-static void free_sink(CompartmentSink *sink)
-{
-        IUnknown_Release(sink->interfaces.pIUnknown);
-        HeapFree(GetProcessHeap(),0,sink);
-}
-
 static void Compartment_Destructor(Compartment *This)
 {
-    struct list *cursor, *cursor2;
     TRACE("destroying %p\n", This);
     VariantClear(&This->variant);
-    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->CompartmentEventSink)
-    {
-        CompartmentSink* sink = LIST_ENTRY(cursor,CompartmentSink,entry);
-        list_remove(cursor);
-        free_sink(sink);
-    }
+    free_sinks(&This->CompartmentEventSink);
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -489,6 +468,7 @@ static HRESULT WINAPI Compartment_SetValue(ITfCompartment *iface,
     TfClientId tid, const VARIANT *pvarValue)
 {
     Compartment *This = impl_from_ITfCompartment(iface);
+    ITfCompartmentEventSink *sink;
     struct list *cursor;
 
     TRACE("(%p) %i %p\n",This,tid,pvarValue);
@@ -514,10 +494,9 @@ static HRESULT WINAPI Compartment_SetValue(ITfCompartment *iface,
     else if (V_VT(pvarValue) == VT_UNKNOWN)
         IUnknown_AddRef(V_UNKNOWN(&This->variant));
 
-    LIST_FOR_EACH(cursor, &This->CompartmentEventSink)
+    SINK_FOR_EACH(cursor, &This->CompartmentEventSink, ITfCompartmentEventSink, sink)
     {
-        CompartmentSink* sink = LIST_ENTRY(cursor,CompartmentSink,entry);
-        ITfCompartmentEventSink_OnChange(sink->interfaces.pITfCompartmentEventSink,&This->valueData->guid);
+        ITfCompartmentEventSink_OnChange(sink, &This->valueData->guid);
     }
 
     return S_OK;
@@ -572,7 +551,6 @@ static HRESULT WINAPI CompartmentSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     Compartment *This = impl_from_ITfSource(iface);
-    CompartmentSink *cs;
 
     TRACE("(%p) %s %p %p\n",This,debugstr_guid(riid),punk,pdwCookie);
 
@@ -580,47 +558,23 @@ static HRESULT WINAPI CompartmentSource_AdviseSink(ITfSource *iface,
         return E_INVALIDARG;
 
     if (IsEqualIID(riid, &IID_ITfCompartmentEventSink))
-    {
-        cs = HeapAlloc(GetProcessHeap(),0,sizeof(CompartmentSink));
-        if (!cs)
-            return E_OUTOFMEMORY;
-        if (FAILED(IUnknown_QueryInterface(punk, riid, (LPVOID *)&cs->interfaces.pITfCompartmentEventSink)))
-        {
-            HeapFree(GetProcessHeap(),0,cs);
-            return CONNECT_E_CANNOTCONNECT;
-        }
-        list_add_head(&This->CompartmentEventSink,&cs->entry);
-        *pdwCookie = generate_Cookie(COOKIE_MAGIC_COMPARTMENTSINK , cs);
-    }
-    else
-    {
-        FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
-        return E_NOTIMPL;
-    }
+        return advise_sink(&This->CompartmentEventSink, &IID_ITfCompartmentEventSink,
+                           COOKIE_MAGIC_COMPARTMENTSINK, punk, pdwCookie);
 
-    TRACE("cookie %x\n",*pdwCookie);
-
-    return S_OK;
+    FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI CompartmentSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     Compartment *This = impl_from_ITfSource(iface);
-    CompartmentSink *sink;
 
     TRACE("(%p) %x\n",This,pdwCookie);
 
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_COMPARTMENTSINK)
         return E_INVALIDARG;
 
-    sink = remove_Cookie(pdwCookie);
-    if (!sink)
-        return CONNECT_E_NOCONNECTION;
-
-    list_remove(&sink->entry);
-    free_sink(sink);
-
-    return S_OK;
+    return unadvise_sink(pdwCookie);
 }
 
 static const ITfSourceVtbl CompartmentSourceVtbl =

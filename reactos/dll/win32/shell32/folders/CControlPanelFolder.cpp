@@ -125,6 +125,22 @@ static PIDLCPanelStruct *_ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
+HRESULT CCPLExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    PIDLCPanelStruct *pData = _ILGetCPanelPointer(pidl);
+    if (!pData)
+        return E_FAIL;
+
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    initIcon->SetNormalIcon(pData->szName, (int)pData->iconIdx != -1 ? pData->iconIdx : 0);
+
+    return initIcon->QueryInterface(riid, ppvOut);
+}
+
 BOOL CControlPanelEnum::RegisterCPanelApp(LPCWSTR wpath)
 {
     CPlApplet* applet = Control_LoadApplet(0, wpath, NULL);
@@ -275,14 +291,6 @@ CControlPanelFolder::~CControlPanelFolder()
     SHFree(pidlRoot);
 }
 
-HRESULT WINAPI CControlPanelFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreateControlPanel();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
-}
-
 /**************************************************************************
 *    CControlPanelFolder::ParseDisplayName
 */
@@ -295,7 +303,7 @@ HRESULT WINAPI CControlPanelFolder::ParseDisplayName(
     DWORD *pdwAttributes)
 {
     /* We only support parsing guid names */
-    return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+    return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
 }
 
 /**************************************************************************
@@ -315,7 +323,7 @@ HRESULT WINAPI CControlPanelFolder::BindToObject(
     REFIID riid,
     LPVOID *ppvOut)
 {
-    return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
+    return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 }
 
 /**************************************************************************
@@ -425,7 +433,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
             if (_ILIsCPanelStruct(*apidl))
                 *rgfInOut &= SFGAO_CANLINK;
             else if (_ILIsSpecialFolder(*apidl))
-                SHELL32_GetGuidItemAttributes(this, *apidl, rgfInOut);
+                m_regFolder->GetAttributesOf(1, apidl, rgfInOut);
             else
                 ERR("Got an unkown pidl here!\n");
             apidl++;
@@ -454,8 +462,7 @@ HRESULT WINAPI CControlPanelFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_A
 HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
         UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid, UINT * prgfInOut, LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n",
@@ -479,24 +486,14 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
             if (bHasCpl)
                 hr = ShellObjectCreatorInit<CCPLItemMenu>(cidl, apidl, riid, &pObj);
             else
-                hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
+                hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
         } else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1)) {
             hr = IDataObject_Constructor(hwndOwner, pidlRoot, apidl, cidl, (IDataObject **)&pObj);
-        } else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1)) {
-            pidl = ILCombine(pidlRoot, apidl[0]);
-            pObj = IExtractIconA_Constructor(pidl);
-            SHFree(pidl);
-            hr = S_OK;
-        } else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1)) {
-            pidl = ILCombine(pidlRoot, apidl[0]);
-            pObj = IExtractIconW_Constructor(pidl);
-            SHFree(pidl);
-            hr = S_OK;
-        } else if ((IsEqualIID(riid, IID_IShellLinkW) || IsEqualIID(riid, IID_IShellLinkA))
-                   && (cidl == 1)) {
-            pidl = ILCombine(pidlRoot, apidl[0]);
-            hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*)&pObj);
-            SHFree(pidl);
+        } else if ((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1)) {
+            if (_ILGetCPanelPointer(apidl[0]))
+                hr = CCPLExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
+            else
+                hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
         } else {
             hr = E_NOINTERFACE;
         }
@@ -526,11 +523,10 @@ HRESULT WINAPI CControlPanelFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD
     }
     else if (_ILIsSpecialFolder(pidl))
     {
-        static const WCHAR* pszCPanelPath = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}";
-        return SHELL32_GetDisplayNameOfGUIDItem(this, pszCPanelPath, pidl, dwFlags, strRet);
+        return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    return S_OK;
+    return E_FAIL;
 }
 
 /**************************************************************************
@@ -601,7 +597,7 @@ HRESULT WINAPI CControlPanelFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iCol
     }
     else if (_ILIsSpecialFolder(pidl))
     {
-        return SHELL32_GetDetailsOfGuidItem(this, pidl, iColumn, psd);
+        return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
     }
     else 
     {
@@ -653,6 +649,17 @@ HRESULT WINAPI CControlPanelFolder::Initialize(LPCITEMIDLIST pidl)
         SHFree((LPVOID)pidlRoot);
 
     pidlRoot = ILClone(pidl);
+
+    /* Create the inner reg folder */
+    HRESULT hr;
+    static const WCHAR* pszCPanelPath = L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}";
+    hr = CRegFolder_CreateInstance(&CLSID_ControlPanel,
+                                   pidlRoot,
+                                   pszCPanelPath, 
+                                   IID_PPV_ARG(IShellFolder2, &m_regFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     return S_OK;
 }
 
@@ -668,20 +675,6 @@ HRESULT WINAPI CControlPanelFolder::GetCurFolder(LPITEMIDLIST * pidl)
     *pidl = ILClone(pidlRoot);
     return S_OK;
 }
-
-HRESULT CPanel_GetIconLocationW(LPCITEMIDLIST pidl, LPWSTR szIconFile, UINT cchMax, int* piIndex)
-{
-    PIDLCPanelStruct* pcpanel = _ILGetCPanelPointer(pidl);
-
-    if (!pcpanel)
-        return E_INVALIDARG;
-
-    wcsncpy(szIconFile, pcpanel->szName, cchMax);
-    *piIndex = (int)pcpanel->iconIdx != -1 ? pcpanel->iconIdx : 0;
-
-    return S_OK;
-}
-
 
 CCPLItemMenu::CCPLItemMenu()
 {

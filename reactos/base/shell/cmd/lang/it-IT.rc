@@ -63,7 +63,7 @@ ERRORLEVEL è valorizzato alla posizione in elenco delle scelta dell'utente.\n"
     STRING_CMD_HELP2 "\nFunzioni disponibili:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [storia]"
-    STRING_CMD_HELP5 "  [completamento automatico dei nomi dei file]"
+    STRING_CMD_HELP5 "  [completamento automatico dei nomi dei file Bash]"
     STRING_CMD_HELP6 "  [cartelle]"
     STRING_CMD_HELP7 "  [ridirezione e piping]"
     STRING_CMD_HELP8 "Attiva un altro interprete dei comandi ReactOS.\n\n\
@@ -256,16 +256,16 @@ MKLINK [/D | /H | /J] nomelink target\n\n\
   /H  Crea un hard link.\n\
   /J  Crea una directory junction.\n\n\
 Se non sono specificati ne /H ne /J verrà creato un link simbolico."
-    STRING_MEMMORY_HELP1 "Visualizza la quantità della memoria di sistema.\n\n\
+    STRING_MEMORY_HELP1 "Visualizza la quantità della memoria di sistema.\n\n\
 MEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% carico di memoria.\n\n\
+    STRING_MEMORY_HELP2 "\n  %12s%% carico di memoria.\n\n\
   %13s byte RAM fisica totale.\n\
   %13s byte RAM fisica disponibile.\n\n\
   %13s byte file di paginazione totale.\n\
   %13s byte file di paginazione disponibile.\n\n\
   %13s byte memoria virtuale totale.\n\
   %13s byte memoria virtuale totale disponibile.\n"
-    STRING_MISC_HELP1 "Premi un tasto per continuare...\n"
+    STRING_MISC_HELP1 "Premi un tasto per continuare..."
     STRING_MOVE_HELP1 "Sovrascrivi %s (Si/No/Tutti)? "
     STRING_MOVE_HELP2 "Sposta i file o cambia il nome a file e cartelle.\n\n\
 Per spostare uno o più file:\n\
@@ -532,7 +532,7 @@ titolo        il nuovo titolo\n"
     STRING_REPLACE_ERROR6 "Nessun file trovato - %s\n"
     STRING_REPLACE_ERROR7 "Errore esteso 32\n"
     STRING_CMD_INFOLINE "  ReactOS Command Prompt                                      Type HELP = Help  "
-    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s-%s]\n"
+    STRING_REACTOS_VERSION "ReactOS Operating System [Version %s %s]\n"
     STRING_CMD_SHELLINFO "\nInterprete di linea di comando di ReactOS\nVersion %s %s"
     STRING_VERSION_RUNNING_ON "In esecuzione su: "
     STRING_VERSION_RUNVER "%s [Version %d.%d.%d] %s"

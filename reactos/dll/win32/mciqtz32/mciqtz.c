@@ -22,18 +22,19 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <stdarg.h>
+#include <math.h>
+
 #include <windef.h>
-//#include "winbase.h"
-//#include "winuser.h"
 #include <mmddk.h>
 #include <wine/debug.h>
+
 #include "mciqtz_private.h"
 #include <digitalv.h>
 #include <wownt32.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciqtz);
 
-static DWORD CALLBACK MCIQTZ_taskThread(LPVOID arg);
+static DWORD MCIQTZ_mciClose(UINT, DWORD, LPMCI_GENERIC_PARMS);
 static DWORD MCIQTZ_mciStop(UINT, DWORD, LPMCI_GENERIC_PARMS);
 
 /*======================================================================*
@@ -70,40 +71,6 @@ static WINE_MCIQTZ* MCIQTZ_mciGetOpenDev(UINT wDevID)
     return wma;
 }
 
-/***************************************************************************
- *                              MCIQTZ_relayTaskMessage         [internal]
- */
-static LRESULT MCIQTZ_relayTaskMessage(DWORD_PTR dwDevID, UINT wMsg,
-                                      DWORD dwFlags, LPARAM lpParms)
-{
-    WINE_MCIQTZ *wma;
-    LRESULT res;
-    HANDLE handles[2];
-    DWORD ret;
-    TRACE("(%08lX, %08x, %08x, %08lx)\n", dwDevID, wMsg, dwFlags, lpParms);
-
-    wma = MCIQTZ_mciGetOpenDev(dwDevID);
-    if (!wma)
-        return MCIERR_INVALID_DEVICE_ID;
-    EnterCriticalSection(&wma->cs);
-    wma->task.devid = dwDevID;
-    wma->task.msg   = wMsg;
-    wma->task.flags = dwFlags;
-    wma->task.parms = lpParms;
-    SetEvent(wma->task.notify);
-    handles[0] = wma->task.done;
-    handles[1] = wma->task.thread;
-    ret = WaitForMultipleObjects(sizeof(handles)/sizeof(handles[0]), handles,
-                                 FALSE, INFINITE);
-    if (ret == WAIT_OBJECT_0)
-        res = wma->task.res;
-    else
-        res = MCIERR_INTERNAL;
-    LeaveCriticalSection(&wma->cs);
-
-    return res;
-}
-
 /**************************************************************************
  *                              MCIQTZ_drvOpen                  [internal]
  */
@@ -123,25 +90,12 @@ static DWORD MCIQTZ_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
         return 0;
 
     wma->stop_event = CreateEventW(NULL, FALSE, FALSE, NULL);
-    wma->task.notify = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!wma->task.notify) goto err;
-    wma->task.done = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (!wma->task.done)   goto err;
-    wma->task.thread = CreateThread(NULL, 0, MCIQTZ_taskThread, &wma->task, 0, NULL);
-    if (!wma->task.thread) goto err;
-    InitializeCriticalSection(&wma->cs);
-    wma->cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": WINE_MCIQTZ");
     modp->wType = MCI_DEVTYPE_DIGITAL_VIDEO;
     wma->wDevID = modp->wDeviceID;
     modp->wCustomCommandTable = wma->command_table = mciLoadCommandResource(MCIQTZ_hInstance, mciAviWStr, 0);
     mciSetDriverData(wma->wDevID, (DWORD_PTR)wma);
 
     return modp->wDeviceID;
-err:
-    if (wma->task.notify) CloseHandle(wma->task.notify);
-    if (wma->task.done)   CloseHandle(wma->task.done);
-    HeapFree(GetProcessHeap(), 0, wma);
-    return 0;
 }
 
 /**************************************************************************
@@ -157,16 +111,9 @@ static DWORD MCIQTZ_drvClose(DWORD dwDevID)
 
     if (wma) {
         /* finish all outstanding things */
-        MCIQTZ_relayTaskMessage(dwDevID, MCI_CLOSE_DRIVER, MCI_WAIT, 0);
+        MCIQTZ_mciClose(dwDevID, MCI_WAIT, NULL);
 
         mciFreeCommandResource(wma->command_table);
-        MCIQTZ_relayTaskMessage(dwDevID, MCI_CLOSE, MCI_WAIT, 0);
-        WaitForSingleObject(wma->task.thread, INFINITE);
-        CloseHandle(wma->task.notify);
-        CloseHandle(wma->task.done);
-        CloseHandle(wma->task.thread);
-        wma->cs.DebugInfo->Spare[0] = 0;
-        DeleteCriticalSection(&wma->cs);
         mciSetDriverData(dwDevID, 0);
         CloseHandle(wma->stop_event);
         HeapFree(GetProcessHeap(), 0, wma);
@@ -222,6 +169,9 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
     RECT rc = { 0, 0, 0, 0 };
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpOpenParms);
+
+    if(!lpOpenParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
@@ -446,6 +396,9 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
@@ -502,6 +455,9 @@ static DWORD MCIQTZ_mciSeek(UINT wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lpParms
     LONGLONG newpos;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
@@ -587,6 +543,29 @@ static DWORD MCIQTZ_mciPause(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpP
 }
 
 /***************************************************************************
+ *                              MCIQTZ_mciResume                 [internal]
+ */
+static DWORD MCIQTZ_mciResume(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms)
+{
+    WINE_MCIQTZ* wma;
+    HRESULT hr;
+
+    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    wma = MCIQTZ_mciGetOpenDev(wDevID);
+    if (!wma)
+        return MCIERR_INVALID_DEVICE_ID;
+
+    hr = IMediaControl_Run(wma->pmctrl);
+    if (FAILED(hr)) {
+        TRACE("Cannot run filtergraph (hr = %x)\n", hr);
+        return MCIERR_INTERNAL;
+    }
+
+    return 0;
+}
+
+/***************************************************************************
  *                              MCIQTZ_mciGetDevCaps            [internal]
  */
 static DWORD MCIQTZ_mciGetDevCaps(UINT wDevID, DWORD dwFlags, LPMCI_GETDEVCAPS_PARMS lpParms)
@@ -594,6 +573,9 @@ static DWORD MCIQTZ_mciGetDevCaps(UINT wDevID, DWORD dwFlags, LPMCI_GETDEVCAPS_P
     WINE_MCIQTZ* wma;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
@@ -691,6 +673,9 @@ static DWORD MCIQTZ_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpPar
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
@@ -744,6 +729,9 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
     DWORD ret = MCI_INTEGER_RETURNED;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
@@ -845,6 +833,9 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
@@ -907,6 +898,9 @@ static DWORD MCIQTZ_mciWindow(UINT wDevID, DWORD dwFlags, LPMCI_DGV_WINDOW_PARMS
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
     if (dwFlags & MCI_TEST)
@@ -950,6 +944,9 @@ static DWORD MCIQTZ_mciPut(UINT wDevID, DWORD dwFlags, MCI_GENERIC_PARMS *lpParm
     HRESULT hr;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
@@ -996,6 +993,9 @@ static DWORD MCIQTZ_mciUpdate(UINT wDevID, DWORD dwFlags, LPMCI_DGV_UPDATE_PARMS
     DWORD res = 0;
 
     TRACE("%04x, %08x, %p\n", wDevID, dwFlags, lpParms);
+
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
 
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
@@ -1058,6 +1058,9 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
 
     TRACE("(%04x, %08x, %p)\n", wDevID, dwFlags, lpParms);
 
+    if(!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
     wma = MCIQTZ_mciGetOpenDev(wDevID);
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
@@ -1071,7 +1074,7 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
         switch (lpParms->dwItem) {
         case MCI_DGV_SETAUDIO_VOLUME:
             if (dwFlags & MCI_DGV_SETAUDIO_VALUE) {
-                long vol = -10000;
+                long vol;
                 HRESULT hr;
                 if (lpParms->dwValue > 1000) {
                     ret = MCIERR_OUTOFRANGE;
@@ -1079,7 +1082,11 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
                 }
                 if (dwFlags & MCI_TEST)
                     break;
-                vol += (long)lpParms->dwValue * 10;
+                if (lpParms->dwValue != 0)
+                    vol = (long)(2000.0 * (log10(lpParms->dwValue) - 3.0));
+                else
+                    vol = -10000;
+                TRACE("Setting volume to %ld\n", vol);
                 hr = IBasicAudio_put_Volume(wma->audio, vol);
                 if (FAILED(hr)) {
                     WARN("Cannot set volume (hr = %x)\n", hr);
@@ -1094,79 +1101,6 @@ static DWORD MCIQTZ_mciSetAudio(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SETAUDIO_P
     }
 
     return ret;
-}
-
-/***************************************************************************
- *                              MCIQTZ_taskThread               [internal]
- */
-static DWORD CALLBACK MCIQTZ_taskThread(LPVOID arg)
-{
-    WINE_MCIQTZ_TASK *task = (WINE_MCIQTZ_TASK *)arg;
-
-    for (;;) {
-        DWORD ret = WaitForSingleObject(task->notify, INFINITE);
-        if (ret != WAIT_OBJECT_0) {
-            TRACE("Got error (%u)\n", ret);
-            continue;
-        }
-
-        switch (task->msg) {
-        case MCI_OPEN_DRIVER:
-            task->res = MCIQTZ_mciOpen(task->devid, task->flags, (LPMCI_DGV_OPEN_PARMSW)task->parms);
-            break;
-        case MCI_CLOSE_DRIVER:
-            task->res = MCIQTZ_mciClose(task->devid, task->flags, (LPMCI_GENERIC_PARMS)task->parms);
-            break;
-        case MCI_PLAY:
-            task->res = MCIQTZ_mciPlay(task->devid, task->flags, (LPMCI_PLAY_PARMS)task->parms);
-            break;
-        case MCI_SEEK:
-            task->res = MCIQTZ_mciSeek(task->devid, task->flags, (LPMCI_SEEK_PARMS)task->parms);
-            break;
-        case MCI_STOP:
-            task->res = MCIQTZ_mciStop(task->devid, task->flags, (LPMCI_GENERIC_PARMS)task->parms);
-            break;
-        case MCI_PAUSE:
-            task->res = MCIQTZ_mciPause(task->devid, task->flags, (LPMCI_GENERIC_PARMS)task->parms);
-            break;
-        case MCI_GETDEVCAPS:
-            task->res = MCIQTZ_mciGetDevCaps(task->devid, task->flags, (LPMCI_GETDEVCAPS_PARMS)task->parms);
-            break;
-        case MCI_SET:
-            task->res = MCIQTZ_mciSet(task->devid, task->flags, (LPMCI_DGV_SET_PARMS)task->parms);
-            break;
-        case MCI_STATUS:
-            task->res = MCIQTZ_mciStatus(task->devid, task->flags, (LPMCI_DGV_STATUS_PARMSW)task->parms);
-            break;
-        case MCI_WHERE:
-            task->res = MCIQTZ_mciWhere(task->devid, task->flags, (LPMCI_DGV_RECT_PARMS)task->parms);
-            break;
-        case MCI_SETAUDIO:
-            task->res = MCIQTZ_mciSetAudio(task->devid, task->flags, (LPMCI_DGV_SETAUDIO_PARMSW)task->parms);
-            break;
-        case MCI_UPDATE:
-            task->res = MCIQTZ_mciUpdate(task->devid, task->flags, (LPMCI_DGV_UPDATE_PARMS)task->parms);
-            break;
-        case MCI_WINDOW:
-            task->res = MCIQTZ_mciWindow(task->devid, task->flags, (LPMCI_DGV_WINDOW_PARMSW)task->parms);
-            break;
-        case MCI_PUT:
-            task->res = MCIQTZ_mciPut(task->devid, task->flags, (MCI_GENERIC_PARMS*)task->parms);
-            break;
-        case MCI_CLOSE:
-            /* Special internal message */
-            SetEvent(task->done);
-            goto end;
-        default:
-            FIXME("Shouldn't receive another message (%04x)\n", task->msg);
-            task->res = MCIERR_UNRECOGNIZED_COMMAND;
-            break;
-        }
-        SetEvent(task->done);
-    }
-
-end:
-    return 0;
 }
 
 /*======================================================================*
@@ -1200,28 +1134,26 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         return 1;
 
     switch (wMsg) {
-        case MCI_OPEN_DRIVER:
-        case MCI_PLAY:
-        case MCI_SEEK:
-        case MCI_GETDEVCAPS:
-        case MCI_SET:
-        case MCI_STATUS:
-        case MCI_WHERE:
-            if (!dwParam2) return MCIERR_NULL_PARAMETER_BLOCK;
-            return MCIQTZ_relayTaskMessage(dwDevID, wMsg, dwParam1, dwParam2);
-        case MCI_CLOSE_DRIVER:
-        case MCI_STOP:
-        case MCI_PAUSE:
-            return MCIQTZ_relayTaskMessage(dwDevID, wMsg, dwParam1, dwParam2);
+        case MCI_OPEN_DRIVER:   return MCIQTZ_mciOpen      (dwDevID, dwParam1, (LPMCI_DGV_OPEN_PARMSW)     dwParam2);
+        case MCI_CLOSE_DRIVER:  return MCIQTZ_mciClose     (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
+        case MCI_PLAY:          return MCIQTZ_mciPlay      (dwDevID, dwParam1, (LPMCI_PLAY_PARMS)          dwParam2);
+        case MCI_SEEK:          return MCIQTZ_mciSeek      (dwDevID, dwParam1, (LPMCI_SEEK_PARMS)          dwParam2);
+        case MCI_STOP:          return MCIQTZ_mciStop      (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
+        case MCI_PAUSE:         return MCIQTZ_mciPause     (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
+        case MCI_RESUME:        return MCIQTZ_mciResume    (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
+        case MCI_GETDEVCAPS:    return MCIQTZ_mciGetDevCaps(dwDevID, dwParam1, (LPMCI_GETDEVCAPS_PARMS)    dwParam2);
+        case MCI_SET:           return MCIQTZ_mciSet       (dwDevID, dwParam1, (LPMCI_DGV_SET_PARMS)       dwParam2);
+        case MCI_STATUS:        return MCIQTZ_mciStatus    (dwDevID, dwParam1, (LPMCI_DGV_STATUS_PARMSW)   dwParam2);
+        case MCI_WHERE:         return MCIQTZ_mciWhere     (dwDevID, dwParam1, (LPMCI_DGV_RECT_PARMS)      dwParam2);
         /* Digital Video specific */
-        case MCI_SETAUDIO:
+        case MCI_SETAUDIO:      return MCIQTZ_mciSetAudio  (dwDevID, dwParam1, (LPMCI_DGV_SETAUDIO_PARMSW) dwParam2);
         case MCI_UPDATE:
+            return MCIQTZ_mciUpdate(dwDevID, dwParam1, (LPMCI_DGV_UPDATE_PARMS)dwParam2);
         case MCI_WINDOW:
+            return MCIQTZ_mciWindow(dwDevID, dwParam1, (LPMCI_DGV_WINDOW_PARMSW)dwParam2);
         case MCI_PUT:
-            if (!dwParam2) return MCIERR_NULL_PARAMETER_BLOCK;
-            return MCIQTZ_relayTaskMessage(dwDevID, wMsg, dwParam1, dwParam2);
+            return MCIQTZ_mciPut(dwDevID, dwParam1, (MCI_GENERIC_PARMS*)dwParam2);
         case MCI_RECORD:
-        case MCI_RESUME:
         case MCI_INFO:
         case MCI_LOAD:
         case MCI_SAVE:

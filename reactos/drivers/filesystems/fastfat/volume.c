@@ -314,7 +314,17 @@ FsdSetFsLabelInformation(
 
     /* Search existing volume entry on disk */
     FileOffset.QuadPart = 0;
-    if (CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+    _SEH2_TRY
+    {
+        CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, PIN_WAIT, &Context, (PVOID*)&Entry);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (NT_SUCCESS(Status))
     {
         while (TRUE)
         {
@@ -339,7 +349,17 @@ FsdSetFsLabelInformation(
             {
                 CcUnpinData(Context);
                 FileOffset.u.LowPart += PAGE_SIZE;
-                if (!CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+                _SEH2_TRY
+                {
+                    CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, PIN_WAIT, &Context, (PVOID*)&Entry);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                if (!NT_SUCCESS(Status))
                 {
                     Context = NULL;
                     break;
@@ -362,12 +382,19 @@ FsdSetFsLabelInformation(
         {
             FileOffset.u.HighPart = 0;
             FileOffset.u.LowPart = VolumeLabelDirIndex * SizeDirEntry;
-            if (!CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry,
-                           TRUE, &Context, (PVOID*)&Entry))
+
+            Status = STATUS_SUCCESS;
+            _SEH2_TRY
             {
-                Status = STATUS_UNSUCCESSFUL;
+                CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, PIN_WAIT, &Context, (PVOID*)&Entry);
             }
-            else
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            if (NT_SUCCESS(Status))
             {
                 RtlCopyMemory(Entry, &VolumeLabelDirEntry, SizeDirEntry);
                 CcSetDirtyPinnedData(Context, NULL);

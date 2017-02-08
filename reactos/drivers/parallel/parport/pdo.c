@@ -175,12 +175,25 @@ NTAPI
 PdoPower(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
+
     DPRINT("PdoPower()\n");
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    switch (IoStack->MinorFunction)
+    {
+        case IRP_MN_SET_POWER:
+        case IRP_MN_QUERY_POWER:
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+    }
+
+    Status = Irp->IoStatus.Status;
+    PoStartNextPowerIrp(Irp);
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /* EOF */

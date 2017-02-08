@@ -246,7 +246,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання в повноекранному режимі. Повинен рухатись білий прямокутник. Продовжити?"
     IDS_DDFULLSCREEN_RESULT "Ви бачили, як рухався білий прямокутник в повноекранному режимі?"
     IDS_FORMAT_ADAPTER_MEM "%u Мб"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u біт)(%uГц)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u біт)(%uГц)"
     IDS_OPTION_NO "Ні"
     IDS_D3DTEST_DESCRIPTION "Буде виконана перевірка інтерфейсу Direct3D. Продовжити?"
     IDS_D3DTEST_D3Dx "Цей тест використає апаратно-прискорений Direct3D інтерфейс %u."

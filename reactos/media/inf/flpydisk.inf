@@ -91,6 +91,13 @@ FloppyClassName = "Unitate de disc flexibil"
 GenericMfg = "(unități generice de disc flexibil)"
 Floppy.DeviceDesc = "Unitate de disc flexibil"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+FloppyClassName = "Дисководы гибких дисков"
+GenericMfg = "(Универсальные дисководы гибких дисков)"
+Floppy.DeviceDesc = "Универсальный дисковод гибких дисков"
+
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 

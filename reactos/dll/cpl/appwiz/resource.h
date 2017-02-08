@@ -1,10 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH  	380
-#define PROPSHEETHEIGHT 	228
-#define PROPSHEETPADDING 	6
-
 /* Icons */
 #define IDI_CPLSYSTEM	1500
 #define IDI_APPICO		1501

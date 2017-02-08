@@ -1,25 +1,25 @@
 [Section]
 Name = UltraVNC
-Version = 1.2.1.0
+Version = 1.2.1.1
 License = GPL
 Description = Open source VNC client/server.
-Size = 3.1 MiB
+Size = 41.0 KiB
 Category = 5
 URLSite = http://www.uvnc.com/
-URLDownload = http://www.uvnc.eu/download/1210/UltraVNC_1_2_10_X86_Setup.exe
-SHA1 = ebc5d5ae35629771cd818b75b5fb2ee31028cf16
+URLDownload = http://www.uvnc.eu/download/1211/UltraVNC_1_2_11_X86_Setup.exe
+SHA1 = 8416a4a9b57ecfc09b4cba81b8a275010c8b4d8b
 CDPath = none
 
 [Section.0407]
 Description = Quelloffener VNC Client/Server.
-Size = 3,1 MiB
+Size = 41,0 KiB
 
 [Section.0a]
 Description = Cliente/servidor VNC de código abierto.
 
 [Section.040c]
 Description = Client/serveur VNC open source.
-Size = 3,1 Mio
+Size = 41,0 Kio
 
 [Section.0410]
 Description = Client/server VNC open source.
@@ -32,11 +32,15 @@ Description = Otwarty klient/serwer VNC.
 
 [Section.0418]
 Description = Sistem client/server computațional de rețea virtuală (VNC) cu surse deschise.
-Size = 3,1 Mio
+Size = 41,0 Kio
+
+[Section.0419]
+Description = VNC клиент/сервер с открытым исходным кодом.
+Size = 41,0 КиБ
 
 [Section.041f]
 Description = Açık kaynak VNC istemcisi ve sunucusu.
-Size = 3,1 MiB
+Size = 41,0 KiB
 
 [Section.0422]
 Description = Відкритий VNC клієнт/сервер.

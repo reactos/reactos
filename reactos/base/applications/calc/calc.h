@@ -41,8 +41,6 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
-#define CALC_VERSION        TEXT("1.11")
-
 #define MAX_CALC_SIZE       256
 
 /*#define USE_KEYBOARD_HOOK*/

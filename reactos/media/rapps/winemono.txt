@@ -31,6 +31,10 @@ Description = Wine Mono .NET Framework
 Description = Reimplementara gratuită a platformei .NET utilizată de bibliotecile Wine.
 Size = 51,2 Mio
 
+[Section.0419]
+Description = Свободная реализация .NET Framework, используемая в библиотеках Wine.
+Size = 51,2 МиБ
+
 [Section.041f]
 Name = Wine Mono .NET Çatısı
 License = GPL sürüm 2, LGPL sürüm 2, MIT, BSD, MS-PL, MPL sürüm 1.1

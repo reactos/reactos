@@ -521,17 +521,18 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
 }
 
 static int init_finish(adns_state ads) {
-  struct in_addr ia;
   struct protoent *proto;
   int r;
-
+/* Don't add loopback on ReactOS it slows down queries to non existent server */
+#ifndef __REACTOS__
+  struct in_addr ia;
   if (!ads->nservers) {
     if (ads->diagfile && ads->iflags & adns_if_debug)
       fprintf(ads->diagfile,"adns: no nameservers, using localhost\n");
     ia.s_addr= htonl(INADDR_LOOPBACK);
     addserver(ads,ia);
   }
-
+#endif
   proto= getprotobyname("udp"); if (!proto) { r= ENOPROTOOPT; goto x_free; }
   ADNS_CLEAR_ERRNO;
   ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);
@@ -571,13 +572,6 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
 #ifdef ADNS_JGAA_WIN32
   #define SECURE_PATH_LEN (MAX_PATH - 64)
   char PathBuf[MAX_PATH];
-  struct in_addr addr;
-  #define ADNS_PFIXED_INFO_BLEN (2048)
-  PFIXED_INFO network_info = (PFIXED_INFO)_alloca(ADNS_PFIXED_INFO_BLEN);
-  ULONG network_info_blen = ADNS_PFIXED_INFO_BLEN;
-  DWORD network_info_result;
-  PIP_ADDR_STRING pip;
-  const char *network_err_str = "";
 #endif
 
   r= init_begin(&ads, flags, diagfile ? diagfile : stderr);
@@ -601,23 +595,6 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
   strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
   readconfig(ads,PathBuf,0);
-  network_info_result = GetNetworkParams(network_info, &network_info_blen);
-  if (network_info_result != ERROR_SUCCESS){
-    switch(network_info_result) {
-    case ERROR_BUFFER_OVERFLOW: network_err_str = "ERROR_BUFFER_OVERFLOW"; break;
-    case ERROR_INVALID_PARAMETER: network_err_str = "ERROR_INVALID_PARAMETER"; break;
-    case ERROR_NO_DATA: network_err_str = "ERROR_NO_DATA"; break;
-    case ERROR_NOT_SUPPORTED: network_err_str = "ERROR_NOT_SUPPORTED"; break;}
-    adns__diag(ads,-1,0,"GetNetworkParams() failed with error [%d] %s",
-      network_info_result,network_err_str);
-    }
-  else {
-    for(pip = &(network_info->DnsServerList); pip; pip = pip->Next) {
-      addr.s_addr = inet_addr(pip->IpAddress.String);
-      if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
-        addserver(ads, addr);
-    }
-  }
 #else
   readconfig(ads,"/etc/resolv.conf",1);
   readconfig(ads,"/etc/resolv-adns.conf",0);
@@ -734,4 +711,7 @@ adns_query adns_forallqueries_next(adns_state ads, void **context_r) {
 /* ReactOS addition */
 void adns_addserver(adns_state ads, struct in_addr addr) {
     addserver(ads, addr);
+}
+void adns_ccf_search(adns_state ads, const char *fn, int lno, const char *buf) {
+    ccf_search(ads, fn, lno, buf);
 }

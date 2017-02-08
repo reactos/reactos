@@ -37,6 +37,10 @@ Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym 
 Description = Pachet necesar pentru execuția unor jocuri (cu surse deschise). Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 548,0 Kio
 
+[Section.0419]
+Description = Нужен для запуска некоторых игр с открытым исходным кодом. Вам понадобится такой инструмент, как 7-zip, чтобы распаковать его.
+Size = 548,0 КиБ
+
 [Section.041f]
 Name = SDL (Bayağı Doğrudan Ortam Katmanı) Karıştırıcısı
 Description = Birtakım açık kaynak oyunları çalıştırmak için gereklidir. Çıkartmak için Zip gibi bir araca gereksinim duyacaksınız.

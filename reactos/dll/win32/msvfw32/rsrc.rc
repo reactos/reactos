@@ -50,6 +50,9 @@
 #ifdef LANGUAGE_IT_IT
     #include "lang/msvfw32_It.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/msvfw32_Ja.rc"
+#endif
 #ifdef LANGUAGE_KO_KR
     #include "lang/msvfw32_Ko.rc"
 #endif

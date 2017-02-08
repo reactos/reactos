@@ -95,16 +95,16 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "&Usare il seguente effetto per le transizioni in menu e tooltip",
             IDC_EFFAPPEARANCE_ANIMATION, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19, CBS_DROPDOWNLIST |
+    COMBOBOX IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 95, 19, CBS_DROPDOWNLIST |
              CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
     CONTROL "U&sare il seguente metodo per arrotondare i bordi dei font per lo schermo", IDC_EFFAPPEARANCE_SMOOTHING,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 267, 19
-    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19, CBS_DROPDOWNLIST |
-             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 42, 267, 19
+    COMBOBOX IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 95, 19, CBS_DROPDOWNLIST |
+             CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL "Usare le icone grandi", IDC_EFFAPPEARANCE_LARGEICONS, "button",
             BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 267, 19
     CONTROL "&Ombreggiatura sotto i menu", IDC_EFFAPPEARANCE_SETDROPSHADOW,
-            "button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 267, 19
+            "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 95, 267, 19
     CONTROL "Mostrare il contenuto delle finestr mentre le si trascina", IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Nascondere la sottolineatura delle lettere di navigazione finche non è premuto il tasto Alt",
@@ -178,7 +178,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARDEFFECT "Standard"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_CLEARTYPEEFFECT "FreeType Antialiased"
 END
 
 STRINGTABLE
@@ -226,28 +226,25 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ELEMENT_1 "Desktop"
-    IDS_ELEMENT_2 "Titolo di una finestra non attiva"
-    IDS_ELEMENT_3 "Bordo di una finestra non attiva"
-    IDS_ELEMENT_4 "Titolo di una finestra attiva"
-    IDS_ELEMENT_5 "Bordo di una finestra non attiva"
-    IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Elementi evidenziati"
-    IDS_ELEMENT_8 "Finestre"
-    IDS_ELEMENT_9 "Barre di scorrimento"
-    IDS_ELEMENT_10 "Oggetti 3d"
-    IDS_ELEMENT_11 "Titolo della palette"
-    IDS_ELEMENT_12 "Titolo dei simboli"
-    IDS_ELEMENT_13 "Barra del titolo"
-    IDS_ELEMENT_14 "Elementi dei menu disattivati"
-    IDS_ELEMENT_15 "Dialogo"
-    IDS_ELEMENT_16 "Controlli della barra di scorrimento"
-    IDS_ELEMENT_17 "Sfondo della applicazione"
-    IDS_ELEMENT_18 "Barra del titolo piccola"
-    IDS_ELEMENT_19 "Distanza tra i simboli (orizzontale)"
-    IDS_ELEMENT_20 "Distanza tra i simboli  (verticale)"
-    IDS_ELEMENT_21 "Informazioni rapide"
-    IDS_ELEMENT_22 "Simbolo"
+    IDS_ELEMENT_0 "Desktop"
+    IDS_ELEMENT_1 "Titolo di una finestra non attiva"
+    IDS_ELEMENT_2 "Bordo di una finestra non attiva"
+    IDS_ELEMENT_3 "Titolo di una finestra attiva"
+    IDS_ELEMENT_4 "Bordo di una finestra non attiva"
+    IDS_ELEMENT_5 "Menu"
+    IDS_ELEMENT_6 "Elementi evidenziati"
+    IDS_ELEMENT_7 "Finestre"
+    IDS_ELEMENT_8 "Barre di scorrimento"
+    IDS_ELEMENT_9 "Oggetti 3d"
+    IDS_ELEMENT_10 "Titolo della palette"
+    IDS_ELEMENT_11 "Barra del titolo"
+    IDS_ELEMENT_12 "Dialogo"
+    IDS_ELEMENT_13 "Sfondo della applicazione"
+    IDS_ELEMENT_14 "Distanza tra i simboli (orizzontale)"
+    IDS_ELEMENT_15 "Distanza tra i simboli  (verticale)"
+    IDS_ELEMENT_16 "Informazioni rapide"
+    IDS_ELEMENT_17 "Simbolo"
+//  IDS_ELEMENT_18 "Elementi dei menu disattivati"
 END
 
 STRINGTABLE

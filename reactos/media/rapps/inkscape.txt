@@ -18,6 +18,10 @@ Size = 41,3 MiB
 Description = Editor de grafică vectorială oferit sub Licența Publică Generală GNU.
 Size = 41,3 Mio
 
+[Section.0419]
+Description = Векторный графический редактор под лицензией GNU General Public License.
+Size = 41,3 МиБ
+
 [Section.0a]
 Description = Un editor de gráficos vectoriales bajo la licencia GNU GPL.
 

@@ -52,7 +52,7 @@ HOTKEYS ACCELERATORS
 
 #include <reactos/manifest_exe.rc>
 
-#include <rappsmsg.rc>
+#include <rappsmsg_new.rc>
 
 /* UTF-8 */
 #pragma code_page(65001)

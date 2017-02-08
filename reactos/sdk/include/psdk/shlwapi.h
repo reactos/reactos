@@ -578,18 +578,22 @@ int WINAPI SHRegGetIntW(_In_ HKEY, _In_opt_ LPCWSTR, _In_ int);
 /* IQueryAssociation and helpers */
 enum
 {
-    ASSOCF_INIT_NOREMAPCLSID    = 0x001, /* Don't map clsid->progid */
-    ASSOCF_INIT_BYEXENAME       = 0x002, /* .exe name given */
-    ASSOCF_OPEN_BYEXENAME       = 0x002, /* Synonym */
-    ASSOCF_INIT_DEFAULTTOSTAR   = 0x004, /* Use * as base */
-    ASSOCF_INIT_DEFAULTTOFOLDER = 0x008, /* Use folder as base */
-    ASSOCF_NOUSERSETTINGS       = 0x010, /* No HKCU reads */
-    ASSOCF_NOTRUNCATE           = 0x020, /* Don't truncate return */
-    ASSOCF_VERIFY               = 0x040, /* Verify data */
-    ASSOCF_REMAPRUNDLL          = 0x080, /* Get rundll args */
-    ASSOCF_NOFIXUPS             = 0x100, /* Don't fixup errors */
-    ASSOCF_IGNOREBASECLASS      = 0x200, /* Don't read baseclass */
-    ASSOCF_INIT_IGNOREUNKNOWN   = 0x400, /* Fail for unknown progid */
+    ASSOCF_NONE                 = 0x0000,
+    ASSOCF_INIT_NOREMAPCLSID    = 0x0001, /* Don't map clsid->progid */
+    ASSOCF_INIT_BYEXENAME       = 0x0002, /* .exe name given */
+    ASSOCF_OPEN_BYEXENAME       = 0x0002, /* Synonym */
+    ASSOCF_INIT_DEFAULTTOSTAR   = 0x0004, /* Use * as base */
+    ASSOCF_INIT_DEFAULTTOFOLDER = 0x0008, /* Use folder as base */
+    ASSOCF_NOUSERSETTINGS       = 0x0010, /* No HKCU reads */
+    ASSOCF_NOTRUNCATE           = 0x0020, /* Don't truncate return */
+    ASSOCF_VERIFY               = 0x0040, /* Verify data */
+    ASSOCF_REMAPRUNDLL          = 0x0080, /* Get rundll args */
+    ASSOCF_NOFIXUPS             = 0x0100, /* Don't fixup errors */
+    ASSOCF_IGNOREBASECLASS      = 0x0200, /* Don't read baseclass */
+    ASSOCF_INIT_IGNOREUNKNOWN   = 0x0400, /* Fail for unknown progid */
+    ASSOCF_INIT_FIXED_PROGID    = 0x0800, /* Used passed string as progid, don't try to map it */
+    ASSOCF_IS_PROTOCOL          = 0x1000, /* Treat as protocol, that should be mapped */
+    ASSOCF_INIT_FOR_FILE        = 0x2000, /* progid is for file extension association */
 };
 
 typedef DWORD ASSOCF;

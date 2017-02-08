@@ -1,5 +1,16 @@
 #pragma once
 
+#define IDC_FILENEEDED    503
+#define IDC_INFO          504
+#define IDC_COPYFROM      505
+#define IDC_PATH          506
+#define IDC_RUNDLG_BROWSE 507
+
+#define IDS_PROMPTDISK  508
+#define IDS_UNKNOWN     509
+#define IDS_COPYFROM    510
+#define IDS_INFO        511
+
 #define IDS_QUERY_REBOOT_TEXT       1000
 #define IDS_QUERY_REBOOT_CAPTION    2000
 #define IDS_INF_FILE                2001
@@ -8,6 +19,8 @@
 #define SOURCESTRORD                3001
 #define DESTSTRORD                  3002
 #define PROGRESSORD                 3003
+
+#define IDPROMPTFORDISK             3004
 
 #define IDI_SETUPAPI_DISP_ADAPT     1
 #define IDI_SETUPAPI_MOUSE          2

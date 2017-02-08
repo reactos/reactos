@@ -629,6 +629,10 @@ UpdateKBLayout(VOID)
  *
  * Next pages: IntroPage, QuitPage
  *
+ * SIDEEFFECTS
+ *  Init SelectedLanguageId
+ *  Init LanguageId
+ *
  * RETURNS
  *   Number of the next page.
  */
@@ -658,7 +662,10 @@ LanguagePage(PINPUT_RECORD Ir)
     /* If there's just a single language in the list skip
      * the language selection process altogether! */
     if (GenericListHasSingleEntry(LanguageList))
+    {
+        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
         return INTRO_PAGE;
+    }
 
     DrawGenericList(LanguageList,
                     2,
@@ -772,6 +779,8 @@ LanguagePage(PINPUT_RECORD Ir)
  *  Init RequiredPartitionDiskSpace
  *  Init IsUnattendedSetup
  *  If unattended, init *List and sets the Codepage
+ *  If unattended, init SelectedLanguageId
+ *  If unattended, init LanguageId
  *
  * RETURNS
  *   Number of the next page.
@@ -906,6 +915,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
         /* new part */
         wcscpy(SelectedLanguageId,LocaleID);
+        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
 
         /* first we hack LanguageList */
         ListEntry = GetFirstListEntry(LanguageList);
@@ -1481,7 +1491,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
 
     if (size < RequiredPartitionDiskSpace)
     {
-        /* partition is too small so ask for another partion */
+        /* partition is too small so ask for another partition */
         DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
         return FALSE;
     }
@@ -1971,6 +1981,8 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2126,6 +2138,8 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2280,6 +2294,8 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
         {
             if (ConfirmQuit(Ir) == TRUE)
                 return QUIT_PAGE;
+
+            break;
         }
         else if (Cancel == TRUE)
         {
@@ -2368,7 +2384,7 @@ ConfirmDeleteSystemPartitionPage(PINPUT_RECORD Ir)
         }
     }
 
-    return SELECT_PARTITION_PAGE;
+    return CONFIRM_DELETE_SYSTEM_PARTITION_PAGE;
 }
 
 
@@ -2390,7 +2406,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR Unit;
-    CHAR PartType[32];
+    CHAR PartTypeString[32];
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2405,7 +2421,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartType, 30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                       PartTypeString,
+                                       ARRAYSIZE(PartTypeString));
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
@@ -2427,7 +2445,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         Unit = MUIGetString(STRING_KB);
     }
 
-    if (PartType == NULL)
+    if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
     {
         CONSOLE_PrintTextXY(6, 10,
                             MUIGetString(STRING_HDDINFOUNK2),
@@ -2443,7 +2461,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                             "   %c%c  %s    %I64u %s",
                             (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                             (PartEntry->DriveLetter == 0) ? '-' : ':',
-                            PartType,
+                            PartTypeString,
                             PartSize,
                             Unit);
     }
@@ -2545,6 +2563,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PCHAR DiskUnit;
     PCHAR PartUnit;
     CHAR PartTypeString[32];
+    FORMATMACHINESTATE PreviousFormatState;
 
     DPRINT("SelectFileSystemPage()\n");
 
@@ -2579,6 +2598,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    PreviousFormatState = PartitionList->FormatState;
     switch (PartitionList->FormatState)
     {
         case Start:
@@ -2681,7 +2701,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* adjust partition type */
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartTypeString, 30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                       PartTypeString,
+                                       ARRAYSIZE(PartTypeString));
 
     if (PartEntry->AutoCreate == TRUE)
     {
@@ -2692,7 +2714,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             PartEntry->PartitionNumber,
                             PartSize,
                             PartUnit,
-                            PartType);
+                            PartTypeString);
 #endif
 
         CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED),
@@ -2735,7 +2757,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
 
-        if (PartTypeString == NULL)
+        if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
         {
             CONSOLE_PrintTextXY(8, 10,
                                 MUIGetString(STRING_HDDINFOUNK4),
@@ -2814,6 +2836,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
+            PartitionList->FormatState = Start;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2839,6 +2862,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
         }
     }
+
+    PartitionList->FormatState = PreviousFormatState;
 
     return SELECT_FILE_SYSTEM_PAGE;
 }
@@ -2871,7 +2896,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 #ifndef NDEBUG
     ULONG Line;
     ULONG i;
-    PLIST_ENTRY Entry;
+    PPARTITION_INFORMATION PartitionInfo;
 #endif
 
     DPRINT("FormatPartitionPage()\n");
@@ -2981,38 +3006,29 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
 #ifndef NDEBUG
             CONSOLE_PrintTextXY(6, 12,
-                                "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
-                                DiskEntry->DiskSize,
-                                DiskEntry->CylinderSize,
-                                DiskEntry->TrackSize);
+                                "Cylinders: %I64u  Tracks/Cyl: %lu  Sectors/Trk: %lu  Bytes/Sec: %lu  %c",
+                                DiskEntry->Cylinders,
+                                DiskEntry->TracksPerCylinder,
+                                DiskEntry->SectorsPerTrack,
+                                DiskEntry->BytesPerSector,
+                                DiskEntry->Dirty ? '*' : ' ');
 
             Line = 13;
-            DiskEntry = PartitionList->TempDisk;
-            Entry = DiskEntry->PartListHead.Flink;
 
-            while (Entry != &DiskEntry->PrimaryPartListHead)
+            for (i = 0; i < DiskEntry->LayoutBuffer->PartitionCount; i++)
             {
-                PartEntry = CONTAINING_RECORD(Entry, PARTENTRY, ListEntry);
+                PartitionInfo = &DiskEntry->LayoutBuffer->PartitionEntry[i];
 
-                if (PartEntry->IsPartitioned == TRUE)
-                {
-                    CONSOLE_PrintTextXY(6, Line,
-                                        "%2u:  %2u  %c  %12I64u  %12I64u  %2u  %c",
-                                        i,
-                                        PartEntry->PartitionNumber,
-                                        PartEntry->BootIndicator ? 'A' : '-',
-                                        PartEntry->StartSector.QuadPart,
-                                        PartEntry->SectorCount.QuadPart,
-                                        PartEntry->PartitionType,
-                                        PartEntry->Dirty ? '*' : ' ');
-                    Line++;
-                }
-
-                Entry = Entry->Flink;
+                CONSOLE_PrintTextXY(6, Line,
+                                    "%2u:  %2lu  %c  %12I64u  %12I64u  %02x",
+                                    i,
+                                    PartitionInfo->PartitionNumber,
+                                    PartitionInfo->BootIndicator ? 'A' : '-',
+                                    PartitionInfo->StartingOffset.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionLength.QuadPart / DiskEntry->BytesPerSector,
+                                    PartitionInfo->PartitionType);
+                Line++;
             }
-
-            /* Restore the old entry */
-            PartEntry = PartitionList->TempPartition;
 #endif
 
             if (WritePartitionsToDisk(PartitionList) == FALSE)
@@ -3109,7 +3125,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
             PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
 
-    /* HACK: Do not try to check a partition with an unknown filesytem */
+    /* HACK: Do not try to check a partition with an unknown filesystem */
     if (CurrentFileSystem == NULL)
     {
         PartEntry->NeedsCheck = FALSE;
@@ -3251,9 +3267,12 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     WCHAR c;
     ULONG Length;
 
-    /* We do not need the filsystem list any more */
-    DestroyFileSystemList(FileSystemList);
-    FileSystemList = NULL;
+    /* We do not need the filesystem list any more */
+    if (FileSystemList != NULL)
+    {
+        DestroyFileSystemList(FileSystemList);
+        FileSystemList = NULL;
+    }
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -3586,7 +3605,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     Status = SetupCreateDirectory(PathBuffer);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
-        DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+        DPRINT1("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
         MUIDisplayError(ERROR_CREATE_INSTALL_DIR, Ir, POPUP_WAIT_ENTER);
         return FALSE;
     }

@@ -11,7 +11,7 @@ CDPath = none
 
 [Section.0405]
 Name = Ovladač AC97 pro VirtualBox
-Licence = Neznámá
+License = Neznámá
 Description = Rozbalte do složky "ReactOS" a pak ReactOS dvakrát restartujte.
 
 [Section.0407]
@@ -28,7 +28,7 @@ Description = Controlador de audio para dispositivos compatibles con AC'97. Se d
 [Section.0410]
 Name = Driver AC97 per VirtualBox
 License = Sconosciuta
-Descrizione = Estrarre nella cartella "ReactOS" e poi riavviare ReactOS due volte.
+Description = Estrarre nella cartella "ReactOS" e poi riavviare ReactOS due volte.
 
 [Section.040c]
 Name = Pilote AC97 pour VirtualBox
@@ -43,19 +43,20 @@ Description = Pak uit in de "ReactOS" map en start tweemaal opnieuw op.
 
 [Section.0415]
 Name = Sterownik AC97 dla VirtualBox
-Licence = Nieznana
+License = Nieznana
 Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
 
 [Section.0418]
 Name = Modul pilot AC97 pentru VirtualBox
-Licence = Nespecificată
+License = Nespecificată
 Description = Dezarhivați în dosarul ReactOS apoi reporniți ReactOS de două ori.
 Size = 185,5 Kio
 
 [Section.0419]
 Name = Драйвер AC97 для VirtualBox
-Licence = Не указано
+License = Не указано
 Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+Size = 185,5 КиБ
 
 [Section.041f]
 Name = VirtualBox için AC'97 Sürücüsü
@@ -65,7 +66,7 @@ Size = 185,5 KiB
 
 [Section.0422]
 Name = Драйвер AC97 для VirtualBox
-Licence = Невідома
+License = Невідома
 Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
 
 [Section.0804]

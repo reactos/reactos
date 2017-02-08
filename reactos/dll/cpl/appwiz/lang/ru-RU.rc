@@ -1,6 +1,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+IDD_FIRSTPAGE DIALOGEX 0, 0, 380, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Создания ярлыка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -9,7 +9,7 @@ BEGIN
     LTEXT "Text2", -1, 115, 35, 160, 17
 END
 
-IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, 380, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Создание ярлыка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -43,14 +43,14 @@ END
 
 IDD_CONFIG_STARTMENU DIALOGEX 0, 0, 212, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Remove Shortcuts/Folders"
+CAPTION "Удаление ярлыков/папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&To remove an item from the Start menu, select the item and click Remove.", -1, 10, 10, 192, 16
+    LTEXT "&Для удаления пункта в меню Пуск, выберите его и нажмите ""Удалить"".", -1, 10, 10, 192, 16
     CONTROL "List1", IDC_STARTMENU_TREE, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS |
             LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 10, 32, 192, 138
-    PUSHBUTTON "&Remove", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
-    DEFPUSHBUTTON "Close", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Удалить", IDC_REMOVE_ENTRIES, 98, 176, 50, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON "Закрыть", IDOK, 152, 176, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 ID_DWL_GECKO_DIALOG DIALOGEX  0, 0, 260, 95
@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Установщик Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS не может найти Wine Gecko пакет, который необходим для приложений с поддержкой HTML, чтобы работать правильно. ReactOS может автоматически загрузить и устанавить ее для вас.",
+    CONTROL "ReactOS не может найти Wine Gecko пакет, который необходим для приложений с поддержкой HTML, чтобы работать правильно. ReactOS может автоматически загрузить и установить его для вас.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP

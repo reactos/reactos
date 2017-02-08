@@ -1,6 +1,6 @@
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+IDD_PROPPAGEPOWERSCHEMES DIALOGEX 0, 0, 252, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Schémata napájení"
 FONT 8, "MS Shell Dlg"
@@ -110,8 +110,6 @@ BEGIN
     IDS_TEXT "Text"
     IDS_CONFIG1 "Nastavení pro schéma napájení %1"
     IDS_CONFIG2 "Pokročilá nastavení pro %1"
-    IDS_SIZEBYTS "%i bytů"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "Nedělat nic"
     IDS_PowerActionNone1 "Žádná akce"
     IDS_PowerActionUnknown "Neznámý"

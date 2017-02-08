@@ -1,11 +1,4 @@
-/* 
- * FILE:       base/applications/cacls/lang/ro-RO.rc
- *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum at fulea.stefan)
- * CHANGE LOG: 2011-08-20  initial translation
- *             2011-10-17  diacritics change
- */
-
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -18,7 +11,7 @@ CACLS nume_fișier [/T] [/E] [/C] [/G utilizator:acces [...]]\n\
    /T                   Modifică ACL pentru fișierele specificate în\n\
                         directorul curent și toate subdirectoarele sale.\n\
    /E                   Editează ACL curentă evitând astfel înlocuirea ei.\n\
-   /C                   Continuă și la erori de acces interzis.\n\
+   /C                   Continuă și la erori de acces respins.\n\
    /G utilizator:acces  Acordă drepturile de acces specificate pentru utilizator.\n\
                         acces poate fi de: R  Citire\n\
                                            W  Scriere\n\
@@ -33,8 +26,8 @@ CACLS nume_fișier [/T] [/E] [/C] [/G utilizator:acces [...]]\n\
                                         C  De modificare (scriere)\n\
                                         F  Deplin\n\
    /D utilizator        Interzice accesul pentru utilizatorul specificat.\n\
-Se pot specifica mai multe fișiere utilizând metacaractere.\n\
-Pot fi specificați mai mulți utilizatori în aceiași comandă.\n\n\
+Utilizând metacaractere pot fi specificate mai multe fișiere.\n\
+În aceiași comandă pot fi specificați mai mulți utilizatori.\n\n\
 Abrevieri:\n\
    CI - Moștenire container.\n\
         ACE moștenită de directoare.\n\

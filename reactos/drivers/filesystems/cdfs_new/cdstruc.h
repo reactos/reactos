@@ -133,7 +133,7 @@ Abstract:
         5. A fast mutex in the Vcb will protect access to the Fcb table and
             the open counts in the Vcb.  It is also used to modify the reference
             counts in all Fcbs.  This mutex cannot be acquired
-            exclusely and is an end resource.
+            exclusively and is an end resource.
 
         6. A fast mutex in the Fcb will synchronize access to all Fcb fields
             which aren't synchronized in some other way.  A thread may acquire
@@ -244,7 +244,7 @@ typedef struct _CD_NAME {
     UNICODE_STRING FileName;
 
     //
-    //  String containging the version number.
+    //  String containing the version number.
     //
 
     UNICODE_STRING VersionString;
@@ -364,7 +364,7 @@ typedef struct _CD_DATA {
     //      operation.
     //  MaxDelayedCloseCount - Trigger delay close work at this threshold.
     //  MinDelayedCloseCount - Turn off delay close work at this threshold.
-    //  DelayedCloseCount - Number of entries on the delayted close queue.
+    //  DelayedCloseCount - Number of entries on the delayed close queue.
     //
     //  CloseItem - Workqueue item used to start FspClose thread.
     //
@@ -781,7 +781,7 @@ typedef struct _FCB_NONPAGED {
 
     //
     //  The following field contains a record of special pointers used by
-    //  MM and Cache to manipluate section objects.  Note that the values
+    //  MM and Cache to manipulate section objects.  Note that the values
     //  are set outside of the file system.  However the file system on an
     //  open/create will set the file object's SectionObject field to
     //  point to this field
@@ -1037,7 +1037,7 @@ typedef CCB *PCCB;
 
 
 //
-//  The Irp Context record is allocated for every orginating Irp.  It is
+//  The Irp Context record is allocated for every originating Irp.  It is
 //  created by the Fsd dispatch routines, and deallocated by the CdComplete
 //  request routine
 //
@@ -1487,7 +1487,7 @@ typedef DIRENT_ENUM_CONTEXT *PDIRENT_ENUM_CONTEXT;
 
 //
 //  Following structure is used to smooth out the differences in the HSG, ISO
-//  and Joliett directory entries.
+//  and Joliet directory entries.
 //
 
 typedef struct _DIRENT {

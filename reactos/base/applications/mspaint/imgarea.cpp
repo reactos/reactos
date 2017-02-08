@@ -252,9 +252,9 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
 
         if (!drawing)
         {
-            TCHAR coordStr[100];
-            _stprintf(coordStr, _T("%ld, %ld"), xNow, yNow);
-            SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
+            CString strCoord;
+            strCoord.Format(_T("%ld, %ld"), xNow, yNow);
+            SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
         }
     }
     if (drawing)
@@ -291,9 +291,9 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             case TOOL_AIRBRUSH:
             case TOOL_SHAPE:
             {
-                TCHAR coordStr[100];
-                _stprintf(coordStr, _T("%ld, %ld"), xNow, yNow);
-                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
+                CString strCoord;
+                strCoord.Format(_T("%ld, %ld"), xNow, yNow);
+                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) (LPCTSTR) strCoord);
                 break;
             }
         }
@@ -303,11 +303,11 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             Invalidate(FALSE);
             if ((toolsModel.GetActiveTool() >= TOOL_TEXT) || (toolsModel.GetActiveTool() == TOOL_RECTSEL) || (toolsModel.GetActiveTool() == TOOL_FREESEL))
             {
-                TCHAR sizeStr[100];
+                CString strSize;
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
-                _stprintf(sizeStr, _T("%ld x %ld"), xRel, yRel);
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+                strSize.Format(_T("%ld x %ld"), xRel, yRel);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
         if ((wParam & MK_RBUTTON) != 0)
@@ -316,11 +316,11 @@ LRESULT CImgAreaWindow::OnMouseMove(UINT nMsg, WPARAM wParam, LPARAM lParam, BOO
             Invalidate(FALSE);
             if (toolsModel.GetActiveTool() >= TOOL_TEXT)
             {
-                TCHAR sizeStr[100];
+                CString strSize;
                 if ((toolsModel.GetActiveTool() >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
                     yRel = xRel;
-                _stprintf(sizeStr, _T("%ld x %ld"), xRel, yRel);
-                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+                strSize.Format(_T("%ld x %ld"), xRel, yRel);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) (LPCTSTR) strSize);
             }
         }
     }

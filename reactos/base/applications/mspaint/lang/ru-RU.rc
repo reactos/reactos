@@ -1,4 +1,4 @@
-﻿LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ID_MENU MENU
 BEGIN
@@ -9,15 +9,21 @@ BEGIN
         MENUITEM "&Сохранить\tCtrl+S", IDM_FILESAVE
         MENUITEM "Сохранить &как...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Со сканера или камеры...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Просмотр страницы", IDM_FILEPAGEVIEW
         MENUITEM "Параметры страницы...", IDM_FILEPAGESETUP
-        MENUITEM "Печать...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "&Печать...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Отправить...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Сделать фоновым рисунком (&замостить)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Сделать фоновым рисунком (по ц&ентру)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Сделать фоновым рисунком (раст&януть)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "В&ыход\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Недавно открытые файлы", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Выход\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Правка"
     BEGIN
@@ -202,13 +208,13 @@ BEGIN
     IDS_TOOLTIP14 "Многоугольник"
     IDS_TOOLTIP15 "Эллипс"
     IDS_TOOLTIP16 "Скругленный прямоугольник"
-    IDS_OPENFILTER "Точечные рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Все файлы (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24-разрядный рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Все файлы"
+    IDS_ALLPICTUREFILES "Все файлы изображений"
     IDS_FILESIZE "%d байт"
     IDS_PRINTRES "%d x %d пикселей на метр"
     IDS_INTNUMBERS, "Необходимо вводить только целые числа!"
     IDS_PERCENTAGE, "Процент должен быть в интервале от 1 до 500."
     IDS_ANGLE, "Угол должен быть в интервале от -89 до 89."
     IDS_LOADERRORTEXT, "Невозможно загрузить файл %s."
-    IDS_ENLARGEPROMPTTEXT "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_ENLARGEPROMPTTEXT "Изображения в буфере обмена больше растрового изображения.\nХотите увеличить точечный рисунок?"
 END

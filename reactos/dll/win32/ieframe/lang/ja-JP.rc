@@ -1,0 +1,77 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDR_BROWSE_MAIN_MENU MENU
+{
+    POPUP "ファイル(&F)"
+    {
+        POPUP "新規(&N)"
+        {
+            MENUITEM "ウィンドウ(&W)",          ID_BROWSE_NEW_WINDOW
+        }
+        MENUITEM "開く(&O)...",                 ID_BROWSE_OPEN
+        MENUITEM "保存(&S)",                    ID_BROWSE_SAVE
+        MENUITEM "名前を付けて保存(&A)...",     ID_BROWSE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "印刷形式(&F)...",             ID_BROWSE_PRINT_FORMAT
+        MENUITEM "印刷(&I)...",                 ID_BROWSE_PRINT
+        MENUITEM "印刷プレビュー(&W)",          ID_BROWSE_PRINT_PREVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "プロパティ(&P)",              ID_BROWSE_PROPERTIES
+        MENUITEM "閉じる(&C)",                  ID_BROWSE_QUIT
+    }
+    POPUP "表示(&V)"
+    {
+        POPUP "ツール バー(&T)"
+        {
+            MENUITEM "標準のバー(&S)",          ID_BROWSE_BAR_STD
+            MENUITEM "アドレス バー(&A)",       ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "お気に入り(&F)"
+    {
+        MENUITEM "お気に入りに追加(&A)...",     ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
+    }
+    POPUP "ヘルプ(&H)"
+    {
+        MENUITEM "Internet Explorerについて(&A)", ID_BROWSE_ABOUT
+    }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "戻る"
+    IDS_TB_FORWARD          "進む"
+    IDS_TB_STOP             "停止"
+    IDS_TB_REFRESH          "更新"
+    IDS_TB_HOME             "ホーム"
+    IDS_TB_PRINT            "印刷..."
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "アドレス"
+}
+
+STRINGTABLE
+{
+    IDS_FINDINGRESOURCE     "%s を検索中"
+    IDS_BEGINDOWNLOADDATA   "%s のダウンロードを開始"
+    IDS_ENDDOWNLOADDATA     "%s をダウンロード中"
+    IDS_SENDINGREQUEST      "%s を問い合わせ中"
+}
+
+IDD_BROWSE_OPEN DIALOGEX 10, 10, 200, 70
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION
+CAPTION "Open URL"
+FONT 9, "MS UI Gothic"
+{
+    LTEXT "Internet Explorerで開きたいURLを指定して下さい。",-1, 35,5,160,25
+    LTEXT "開く:", -1, 5, 32, 30, 15
+#ifdef __REACTOS__
+    ICON IDC_PAGEICO, IDC_PAGEICO, 2, 5, 21, 20, SS_ICON
+#endif
+    EDITTEXT IDC_BROWSE_OPEN_URL, 35, 30, 160, 13
+    DEFPUSHBUTTON "OK", IDOK, 90, 50, 50, 14
+    PUSHBUTTON "キャンセル", IDCANCEL, 145, 50, 50, 14
+}

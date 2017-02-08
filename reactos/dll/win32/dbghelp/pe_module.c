@@ -358,7 +358,7 @@ static BOOL pe_locate_with_coff_symbol_table(struct module* module)
             hash_table_iter_init(&module->ht_symbols, &hti, name);
             while ((ptr = hash_table_iter_up(&hti)))
             {
-                sym = GET_ENTRY(ptr, struct symt_data, hash_elt);
+                sym = CONTAINING_RECORD(ptr, struct symt_data, hash_elt);
                 if (sym->symt.tag == SymTagData &&
                     (sym->kind == DataIsGlobal || sym->kind == DataIsFileStatic) &&
                     sym->u.var.kind == loc_absolute &&

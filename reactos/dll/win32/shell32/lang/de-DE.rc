@@ -1,43 +1,43 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Große Symbole", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Kleine Symbole", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Symbole anordnen", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Ansicht"
+        POPUP "&Ansicht", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Große Symbole", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Kleine Symbole", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Symbole anordnen"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Symbole anordnen", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Nach &Name", 0x30  /* column 0 */
-            MENUITEM "Nach &Typ", 0x32  /* column 2 */
-            MENUITEM "Nach &Größe", 0x31  /* ... */
-            MENUITEM "Nach &Datum", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Icons anordnen", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
         MENUITEM "Einfügen als Verweis", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
-        MENUITEM "&Eigenschaften", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
@@ -405,20 +405,20 @@ CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Aufgaben", -1, 7, 10, 249, 45
-    ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", 14001, 40, 25, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", 14002, 40, 37, 150, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_TASKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 25, 21, 20
+    AUTORADIOBUTTON "&Allgemeine Aufgaben in Ordnern anzeigen", IDC_FOLDER_OPTIONS_COMMONTASKS, 40, 20, 150, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "ReactOS Klassisc&he Ansicht verwenden", IDC_FOLDER_OPTIONS_CLASSICFOLDERS, 40, 32, 150, 10
     GROUPBOX "Ordner durchsuchen", -1, 7, 60, 249, 45, WS_TABSTOP
-    ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", 14004, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", 14005, 40, 82, 150, 10, WS_TABSTOP | WS_GROUP
+    CONTROL "", IDC_FOLDER_OPTIONS_FOLDERICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 70, 21, 20
+    AUTORADIOBUTTON "Jeden Ordner im &selben Fenster öffnen", IDC_FOLDER_OPTIONS_SAMEWINDOW, 40, 70, 150, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Jeden Ordner im eigenen Fenster öffnen", IDC_FOLDER_OPTIONS_OWNWINDOW, 40, 82, 150, 10
     GROUPBOX "Markieren von Elementen", -1, 7, 110, 249, 60
-    ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
-    AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", 14007, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", 14008, 50, 132, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", 14009, 50, 144, 210, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", 14010, 40, 156, 210, 10, WS_TABSTOP | WS_GROUP
-    PUSHBUTTON "&Wiederherstellen", 14011, 180, 180, 60, 14, WS_TABSTOP
+    CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
+    AUTORADIOBUTTON "&Öffnen durch &einfachen Klick (Markieren durch zeigen)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 210, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Symbolbeschriftungen wie im Br&owser unterstreichen", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 200, 10
+    AUTORADIOBUTTON "Symbolbeschriftungen nur beim Zeigen &unterstreichen", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 200, 10
+    AUTORADIOBUTTON "&Öffnen durch &Doppelklick (Markieren durch einfachen Klick)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 210, 10
+    PUSHBUTTON "&Wiederherstellen", 14011, 191, 175, 65, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -432,8 +432,8 @@ BEGIN
     PUSHBUTTON "Auf a&lle Ordner anwenden", 14001, 60, 50, 90, 14, WS_TABSTOP
     PUSHBUTTON "&Alle Ordner zurücksetzen", 14002, 160, 50, 90, 14, WS_TABSTOP
     LTEXT "Erweiterte Einstellungen:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-    PUSHBUTTON "&Wiederherstellen", 14004, 180, 210, 80, 14, WS_TABSTOP
+    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "&Wiederherstellen", 14004, 191, 235, 65, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -442,16 +442,16 @@ CAPTION "Dateitypen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 80, 10
-    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-    PUSHBUTTON "&Neu", 14001, 120, 110, 50, 14, WS_TABSTOP
-    PUSHBUTTON "&Löschen", 14002, 180, 110, 50, 14, WS_TABSTOP
-    GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 130, 249, 70
-    LTEXT "Öffnen mit:", -1, 12, 140, 40, 10
+    CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
+    PUSHBUTTON "&Neu", 14001, 140, 140, 55, 14, WS_TABSTOP
+    PUSHBUTTON "&Löschen", 14002, 200, 140, 55, 14, WS_TABSTOP
+    GROUPBOX "Details zum Dateityp '%s'", 14003, 7, 170, 249, 70
+    LTEXT "Öffnen mit:", -1, 12, 180, 40, 10
     //ICON
-    LTEXT "Name", 14005, 100, 140, 40, 10
-    PUSHBUTTON "Än&dern...", 14006, 180, 140, 50, 14, WS_TABSTOP
-    LTEXT "", 14007, 12, 155, 160, 30
-    PUSHBUTTON "&Erweitert", 14008, 180, 175, 50, 14, WS_TABSTOP
+    LTEXT "Name", 14005, 100, 180, 40, 10
+    PUSHBUTTON "Än&dern...", 14006, 200, 180, 50, 14, WS_TABSTOP
+    LTEXT "", 14007, 12, 195, 160, 30
+    PUSHBUTTON "&Erweitert", 14008, 200, 215, 50, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -475,26 +475,26 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Abmelden"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Sind Sie sicher, dass Sie sich abmelden wollen?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "&Abmelden", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Abbrechen", IDCANCEL, 122, 40, 60, 14
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 7, 7, 20, 20
+    LTEXT "Sind Sie sicher, dass Sie sich abmelden wollen?", -1, 35, 16, 166, 8
+    DEFPUSHBUTTON "&Abmelden", IDOK, 41, 39, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 95, 39, 50, 14
 END
 
-IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
+IDD_DISCONNECT DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ReactOS trennen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Sind Sie sicher dass Sie die Verbindung trennen wollen?", -1, 49, 12, 137, 23
-    DEFPUSHBUTTON "&Trennen", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Abbrechen", IDCANCEL, 123, 40, 60, 14
+    ICON IDI_SHELL_DISCONN, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Sind Sie sicher dass Sie die Verbindung trennen wollen?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "&Trennen", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_AUTOPLAY1 DIALOGEX 0, 0, 227, 218
@@ -603,18 +603,18 @@ BEGIN
     LTEXT "", 14003, 60, 80, 170, 10
 END
 
-IDD_PICK_ICON DIALOGEX 0, 0, 237, 204
+IDD_PICK_ICON DIALOGEX 0, 0, 193, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Anderes Symbol"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Dateiname:", -1, 7, 14, 208, 10
-    PUSHBUTTON "Durchsuchen...", IDC_BUTTON_PATH, 148, 24,67,14
-    EDITTEXT IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Symbole:", -1, 7, 47, 208, 10
-    LISTBOX IDC_PICKICON_LIST, 7, 57, 208, 119, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
-    DEFPUSHBUTTON "OK", IDOK, 107, 181, 50, 14
-    PUSHBUTTON "Abbrechen", IDCANCEL, 167, 181, 50, 14
+    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    PUSHBUTTON "Durchsuchen...", IDC_BUTTON_PATH, 126, 17, 59, 14
+    EDITTEXT IDC_EDIT_PATH, 7, 17, 114, 14, ES_AUTOHSCROLL
+    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
+    PUSHBUTTON "Abbrechen", IDCANCEL, 135, 179, 50, 14
 END
 
 IDD_NOOPEN DIALOGEX 0, 0, 240, 80
@@ -666,6 +666,12 @@ BEGIN
     IDS_CONTROLPANEL "Systemsteuerung"
     IDS_ADMINISTRATIVETOOLS "Verwaltung"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
+    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
+    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+
     /* context menus */
     IDS_VIEW_LARGE "&Große Symbole"
     IDS_VIEW_SMALL "&Kleine Symbole"
@@ -683,8 +689,8 @@ BEGIN
     IDS_RENAME "Umbenennen"
     IDS_PASTE "Einfügen"
 
-    IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
-    IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."
+    IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
+    IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."
     IDS_DELETEITEM_CAPTION "Bestätigung: Objekt löschen"
     IDS_DELETEFOLDER_CAPTION "Bestätigung: Verzeichnis löschen"
     IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie '%1' löschen möchten?"
@@ -710,8 +716,6 @@ BEGIN
     IDS_RESTART_PROMPT "Möchten Sie das System neu starten?"
     IDS_SHUTDOWN_TITLE "Herunterfahren"
     IDS_SHUTDOWN_PROMPT "Möchten Sie das System herunterfahren?"
-    IDS_LOGOFF_TITLE "Ausloggen"
-    IDS_LOGOFF_PROMPT "Möchten Sie sich ausloggen?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Anzeigen der Datei Ausführen Dialogbox nicht möglich (interner Fehler)"
@@ -797,6 +801,7 @@ BEGIN
     IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
     IDS_VXD_FILE "Virtueller Gerätetreiber"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"
@@ -831,4 +836,24 @@ BEGIN
     IDS_MENU_EMPTY "(Leer)"
     IDS_OBJECTS "%d Objekte"
     IDS_OBJECTS_SELECTED "%d Objekte ausgewählt"
+
+    IDS_ADVANCED_FOLDER "Files and Folders"
+    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
+    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
+    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
+    IDS_ADVANCED_HIDDEN "Hidden files and folders"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
+    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
+    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
+    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
+    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
+    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
+    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
+    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
 END

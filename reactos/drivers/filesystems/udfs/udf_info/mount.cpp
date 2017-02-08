@@ -1316,12 +1316,12 @@ exit_with_err:
             last_loc = loc;
             loc = Vcb->LVid->nextIntegrityExt;
             Vcb->LVid = NULL;
-            MyFreePool__(Buf);
             lvid_count++;
             if(lvid_count > UDF_MAX_LVID_CHAIN_LENGTH) {
                 RC = STATUS_DISK_CORRUPT_ERROR;
                 goto exit_with_err;
             }
+            MyFreePool__(Buf);
             continue;
         }
         // process last LVID

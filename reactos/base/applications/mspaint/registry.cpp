@@ -13,33 +13,40 @@
 #include <winreg.h>
 
 /* FUNCTIONS ********************************************************/
-
-void RegistrySettings::SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile) //FIXME: Has to be called 2x to apply the pattern (tiled/stretched) too
+static DWORD ReadDWORD(CRegKey &key, LPCTSTR lpName, DWORD &dwValue, BOOL bCheckForDef)
 {
-    HKEY hDesktop;
-    TCHAR szStyle[3], szTile[3];
+    DWORD dwPrev = dwValue;
 
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) FileName, SPIF_UPDATEINIFILE);
+    if (key.QueryDWORDValue(lpName, dwValue) != ERROR_SUCCESS)
+        dwValue = dwPrev;
 
-    if ((dwStyle > 2) || (dwTile > 2))
-        return;
+    if (bCheckForDef && dwValue == 0)
+        dwValue = dwPrev;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER,
-                     _T("Control Panel\\Desktop"), 0, KEY_READ | KEY_SET_VALUE, &hDesktop) == ERROR_SUCCESS)
+    return dwPrev;
+}
+
+static void ReadFileHistory(CRegKey &key, LPCTSTR lpName, CString &strFile)
+{
+    ULONG nChars = MAX_PATH;
+    LPTSTR szFile = strFile.GetBuffer(nChars);
+    if (key.QueryStringValue(lpName, szFile, &nChars) != ERROR_SUCCESS)
+        szFile[0] = '\0';
+    strFile.ReleaseBuffer();
+}
+
+void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::WallpaperStyle style)
+{
+    CRegKey desktop;
+    if (desktop.Open(HKEY_CURRENT_USER, _T("Control Panel\\Desktop")) == ERROR_SUCCESS)
     {
-        RegSetValueEx(hDesktop, _T("Wallpaper"), 0, REG_SZ, (LPBYTE) FileName,
-                      _tcslen(FileName) * sizeof(TCHAR));
+        desktop.SetStringValue(_T("Wallpaper"), szFileName);
 
-        _stprintf(szStyle, _T("%lu"), dwStyle);
-        _stprintf(szTile, _T("%lu"), dwTile);
-
-        RegSetValueEx(hDesktop, _T("WallpaperStyle"), 0, REG_SZ, (LPBYTE) szStyle,
-                      _tcslen(szStyle) * sizeof(TCHAR));
-        RegSetValueEx(hDesktop, _T("TileWallpaper"), 0, REG_SZ, (LPBYTE) szTile,
-                      _tcslen(szTile) * sizeof(TCHAR));
-
-        RegCloseKey(hDesktop);
+        desktop.SetStringValue(_T("WallpaperStyle"), (style == RegistrySettings::STRETCHED) ? _T("2") : _T("1"));
+        desktop.SetStringValue(_T("TileWallpaper"), (style == RegistrySettings::TILED) ? _T("1") : _T("0"));
     }
+
+    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 }
 
 void RegistrySettings::LoadPresets()
@@ -68,58 +75,104 @@ void RegistrySettings::LoadPresets()
 
 void RegistrySettings::Load()
 {
-    HKEY hView;
     LoadPresets();
-    if (RegOpenKeyEx(HKEY_CURRENT_USER,
-                     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"),
-                     0, KEY_READ | KEY_SET_VALUE, &hView) == ERROR_SUCCESS)
+
+    CRegKey view;
+    if (view.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"), KEY_READ) == ERROR_SUCCESS)
     {
-        DWORD cbData;
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("BMPHeight"), 0, NULL, (LPBYTE) &BMPHeight, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("BMPWidth"), 0, NULL, (LPBYTE) &BMPWidth, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("GridExtent"), 0, NULL, (LPBYTE) &GridExtent, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("NoStretching"), 0, NULL, (LPBYTE) &NoStretching, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("ShowThumbnail"), 0, NULL, (LPBYTE) &ShowThumbnail, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("SnapToGrid"), 0, NULL, (LPBYTE) &SnapToGrid, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("ThumbHeight"), 0, NULL, (LPBYTE) &ThumbHeight, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("ThumbWidth"), 0, NULL, (LPBYTE) &ThumbWidth, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("ThumbXPos"), 0, NULL, (LPBYTE) &ThumbXPos, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("ThumbYPos"), 0, NULL, (LPBYTE) &ThumbYPos, &cbData);
-        cbData = sizeof(DWORD);
-        RegQueryValueEx(hView, _T("UnitSetting"), 0, NULL, (LPBYTE) &UnitSetting, &cbData);
-        cbData = sizeof(WINDOWPLACEMENT);
-        RegQueryValueEx(hView, _T("WindowPlacement"), 0, NULL, (LPBYTE) &WindowPlacement, &cbData);
+        ReadDWORD(view, _T("BMPHeight"),     BMPHeight,     TRUE);
+        ReadDWORD(view, _T("BMPWidth"),      BMPWidth,      TRUE);
+        ReadDWORD(view, _T("GridExtent"),    GridExtent,    FALSE);
+        ReadDWORD(view, _T("NoStretching"),  NoStretching,  FALSE);
+        ReadDWORD(view, _T("ShowThumbnail"), ShowThumbnail, FALSE);
+        ReadDWORD(view, _T("SnapToGrid"),    SnapToGrid,    FALSE);
+        ReadDWORD(view, _T("ThumbHeight"),   ThumbHeight,   TRUE);
+        ReadDWORD(view, _T("ThumbWidth"),    ThumbWidth,    TRUE);
+        ReadDWORD(view, _T("ThumbXPos"),     ThumbXPos,     TRUE);
+        ReadDWORD(view, _T("ThumbYPos"),     ThumbYPos,     TRUE);
+        ReadDWORD(view, _T("UnitSetting"),   UnitSetting,   FALSE);
+
+        ULONG pnBytes = sizeof(WINDOWPLACEMENT);
+        view.QueryBinaryValue(_T("WindowPlacement"), &WindowPlacement, &pnBytes);
+    }
+
+    CRegKey files;
+    if (files.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ReadFileHistory(files, _T("File1"), strFile1);
+        ReadFileHistory(files, _T("File2"), strFile2);
+        ReadFileHistory(files, _T("File3"), strFile3);
+        ReadFileHistory(files, _T("File4"), strFile4);
     }
 }
 
 void RegistrySettings::Store()
 {
-    HKEY hView;
-    if (RegCreateKeyEx(HKEY_CURRENT_USER,
-                       _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View"),
-                       0, NULL, 0, KEY_READ | KEY_SET_VALUE, NULL, &hView, NULL) == ERROR_SUCCESS)
+    CRegKey view;
+    if (view.Create(HKEY_CURRENT_USER,
+                     _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\View")) == ERROR_SUCCESS)
     {
-        RegSetValueEx(hView, _T("BMPHeight"), 0, REG_DWORD, (LPBYTE) &BMPHeight, sizeof(DWORD));
-        RegSetValueEx(hView, _T("BMPWidth"), 0, REG_DWORD, (LPBYTE) &BMPWidth, sizeof(DWORD));
-        RegSetValueEx(hView, _T("GridExtent"), 0, REG_DWORD, (LPBYTE) &GridExtent, sizeof(DWORD));
-        RegSetValueEx(hView, _T("NoStretching"), 0, REG_DWORD, (LPBYTE) &NoStretching, sizeof(DWORD));
-        RegSetValueEx(hView, _T("ShowThumbnail"), 0, REG_DWORD, (LPBYTE) &ShowThumbnail, sizeof(DWORD));
-        RegSetValueEx(hView, _T("SnapToGrid"), 0, REG_DWORD, (LPBYTE) &SnapToGrid, sizeof(DWORD));
-        RegSetValueEx(hView, _T("ThumbHeight"), 0, REG_DWORD, (LPBYTE) &ThumbHeight, sizeof(DWORD));
-        RegSetValueEx(hView, _T("ThumbWidth"), 0, REG_DWORD, (LPBYTE) &ThumbWidth, sizeof(DWORD));
-        RegSetValueEx(hView, _T("ThumbXPos"), 0, REG_DWORD, (LPBYTE) &ThumbXPos, sizeof(DWORD));
-        RegSetValueEx(hView, _T("ThumbYPos"), 0, REG_DWORD, (LPBYTE) &ThumbYPos, sizeof(DWORD));
-        RegSetValueEx(hView, _T("UnitSetting"), 0, REG_DWORD, (LPBYTE) &UnitSetting, sizeof(DWORD));
-        RegSetValueEx(hView, _T("WindowPlacement"), 0, REG_BINARY, (LPBYTE) &WindowPlacement, sizeof(WINDOWPLACEMENT));
+        view.SetDWORDValue(_T("BMPHeight"),     BMPHeight);
+        view.SetDWORDValue(_T("BMPWidth"),      BMPWidth);
+        view.SetDWORDValue(_T("GridExtent"),    GridExtent);
+        view.SetDWORDValue(_T("NoStretching"),  NoStretching);
+        view.SetDWORDValue(_T("ShowThumbnail"), ShowThumbnail);
+        view.SetDWORDValue(_T("SnapToGrid"),    SnapToGrid);
+        view.SetDWORDValue(_T("ThumbHeight"),   ThumbHeight);
+        view.SetDWORDValue(_T("ThumbWidth"),    ThumbWidth);
+        view.SetDWORDValue(_T("ThumbXPos"),     ThumbXPos);
+        view.SetDWORDValue(_T("ThumbYPos"),     ThumbYPos);
+        view.SetDWORDValue(_T("UnitSetting"),   UnitSetting);
+
+        view.SetBinaryValue(_T("WindowPlacement"), &WindowPlacement, sizeof(WINDOWPLACEMENT));
+    }
+
+    CRegKey files;
+    if (files.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List")) == ERROR_SUCCESS)
+    {
+        if (!strFile1.IsEmpty())
+            files.SetStringValue(_T("File1"), strFile1);
+        if (!strFile2.IsEmpty())
+            files.SetStringValue(_T("File2"), strFile2);
+        if (!strFile3.IsEmpty())
+            files.SetStringValue(_T("File3"), strFile3);
+        if (!strFile4.IsEmpty())
+            files.SetStringValue(_T("File4"), strFile4);
+    }
+}
+
+void RegistrySettings::SetMostRecentFile(LPCTSTR szPathName)
+{
+    if (strFile1 == szPathName)
+    {
+        // do nothing
+    }
+    else if (strFile2 == szPathName)
+    {
+        CString strTemp = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else if (strFile3 == szPathName)
+    {
+        CString strTemp = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else if (strFile4 == szPathName)
+    {
+        CString strTemp = strFile4;
+        strFile4 = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else
+    {
+        strFile4 = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = szPathName;
     }
 }

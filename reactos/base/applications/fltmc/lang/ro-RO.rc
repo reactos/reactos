@@ -1,0 +1,28 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nComenzi valide:\n\
+               load        Încarcă un modul-pilot de tip filtru\n\
+               unload      Descarcă un modul-pilot de tip filtru\n\
+               filters     Afișează filtrele înregistrate acum în sistem\n\n"
+
+    IDS_USAGE_LOAD      "Încarcă un modul-pilot de tip filtru\n"
+    IDS_USAGE_UNLOAD    "Descarcă un modul-pilot de tip filtru\n"
+    IDS_USAGE_FILTERS   "Afișează toate filtrele înregistrate\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DISPLAY_FILTERS1    "Nume de filtru                  Num Instanțe     Altitudine  Cadru\n"
+    IDS_DISPLAY_FILTERS2    "Nume de filtru                  Num Instanțe    Cadru\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_PRIV      "Eșec la instituirea dreptului de încărcare pentru modulul-pilot (0x%X)\n"
+    IDS_ERROR_FILTERS   "Eșec la afișarea filtrelor (0x%X)\n"
+    IDS_ERROR_LOAD      "Eșec la încărcarea filtrului (0x%X)\n"
+    IDS_ERROR_UNLOAD    "Eșec la descărcarea filtrului (0x%X)\n"
+END

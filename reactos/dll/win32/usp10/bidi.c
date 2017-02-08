@@ -47,7 +47,7 @@
 
 #include "usp10_internal.h"
 
-extern const unsigned short bidi_bracket_table[];
+extern const unsigned short bidi_bracket_table[] DECLSPEC_HIDDEN;
 
 WINE_DEFAULT_DEBUG_CHANNEL(bidi);
 
@@ -959,6 +959,11 @@ static void resolveResolved(unsigned baselevel, const WORD * pcls, WORD *plevel,
                     pcls[j] == RLO || pcls[j] == PDF || pcls[j] == BN))
                 plevel[j--] = baselevel;
             plevel[i] = baselevel;
+        }
+        else if (pcls[i] == LRE || pcls[i] == RLE || pcls[i] == LRO || pcls[i] == RLO ||
+                 pcls[i] == PDF || pcls[i] == BN)
+        {
+            plevel[i] = i ? plevel[i - 1] : baselevel;
         }
         if (i == eos &&
             (pcls[i] == WS || pcls[i] == FSI || pcls[i] == LRI || pcls[i] == RLI ||

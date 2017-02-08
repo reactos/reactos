@@ -47,6 +47,37 @@ LPITEMIDLIST ILCreateFromNetworkPlaceW(LPCWSTR lpNetworkPlace)
 *   IShellFolder implementation
 */
 
+HRESULT CNetFolderExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_NETWORK_FOLDER);
+
+    return initIcon->QueryInterface(riid, ppvOut);
+}
+
+HRESULT CALLBACK NetFolderMenuCallback(IShellFolder *psf,
+                                       HWND         hwnd,
+                                       IDataObject  *pdtobj,
+                                       UINT         uMsg,
+                                       WPARAM       wParam,
+                                       LPARAM       lParam)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
+    }
+    return E_NOTIMPL;
+}
+
 class CNetFolderEnum :
     public CEnumIDListBase
 {
@@ -192,16 +223,8 @@ CNetFolder::CNetFolder()
 
 CNetFolder::~CNetFolder()
 {
-    TRACE("-- destroying IShellFolder(%p)\n", this);
-    SHFree(pidlRoot);
-}
-
-HRESULT WINAPI CNetFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreateGuid(PT_GUID, CLSID_NetworkPlaces); /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
+    if (pidlRoot)
+        SHFree(pidlRoot);
 }
 
 /**************************************************************************
@@ -260,36 +283,31 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
 #ifdef HACKY_UNC_PATHS
-    HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
+    PITEMID_CHILD pidlChild = ILCloneFirst (pidl);
+    if (!pidlChild)
+        return E_FAIL;
 
-    PERSIST_FOLDER_TARGET_INFO pfti = {0};
-    pfti.csidl = -1;
-    wcscpy(pfti.szTargetParsingName, (WCHAR*)pidl->mkid.abID);
+    PIDLIST_ABSOLUTE pidlAbsolute = ILCombine(pidlRoot,pidlChild);
+    if (!pidlAbsolute)
+        return E_FAIL;
 
-    PCUIDLIST_RELATIVE pidlChild = ILCloneFirst (pidl);
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = SHELL32_CoCreateInitSF(pidlAbsolute, 
+                                        (WCHAR*)pidl->mkid.abID, 
+                                        NULL, 
+                                        &CLSID_ShellFSFolder, 
+                                        -1, 
+                                        IID_PPV_ARG(IShellFolder, &psf));
+    ILFree(pidlChild);
+    ILFree(pidlAbsolute);
 
-    hr = ppf3->InitializeEx(NULL, ILCombine(pidlRoot,pidlChild), &pfti);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (_ILIsPidlSimple (pidl))
-    {
-        return ppf3->QueryInterface(riid, ppvOut);
-    }
+        return psf->QueryInterface(riid, ppvOut);
     else
-    {
-        CComPtr<IShellFolder> psf;
-        hr = ppf3->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
-        if (FAILED(hr))
-            return hr;
-
         return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
-
 #else
     return E_NOTIMPL;
 #endif
@@ -403,8 +421,7 @@ HRESULT WINAPI CNetFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY apid
 HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CHILD_ARRAY apidl, REFIID riid,
         UINT * prgfInOut, LPVOID * ppvOut)
 {
-    LPITEMIDLIST pidl;
-    IUnknown *pObj = NULL;
+    LPVOID pObj = NULL;
     HRESULT hr = E_INVALIDARG;
 
     TRACE("(%p)->(%p,%u,apidl=%p,%s,%p,%p)\n", this,
@@ -417,8 +434,11 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 
     if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
     {
-        IContextMenu  * pCm = NULL;
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
+        IContextMenu * pCm = NULL;
+        HKEY hkey;
+        UINT cKeys = 0;
+        AddClassKeyToArray(L"Folder", &hkey, &cKeys);
+        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, this, NetFolderMenuCallback, cKeys, &hkey, &pCm);
         pObj = pCm;
     }
     else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1))
@@ -427,19 +447,9 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
         hr = IDataObject_Constructor (hwndOwner, pidlRoot, apidl, cidl, &pDo);
         pObj = pDo;
     }
-    else if (IsEqualIID(riid, IID_IExtractIconA) && (cidl == 1))
+    else if ((IsEqualIID(riid, IID_IExtractIconA) || IsEqualIID(riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconA_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
-    }
-    else if (IsEqualIID(riid, IID_IExtractIconW) && (cidl == 1))
-    {
-        pidl = ILCombine (pidlRoot, apidl[0]);
-        pObj = IExtractIconW_Constructor (pidl);
-        SHFree (pidl);
-        hr = S_OK;
+        hr = CNetFolderExtractIcon_CreateInstance(apidl[0], riid, &pObj);
     }
     else if (IsEqualIID(riid, IID_IDropTarget) && (cidl >= 1))
     {
@@ -464,43 +474,11 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 */
 HRESULT WINAPI CNetFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    LPWSTR pszName;
-
-    TRACE ("(%p)->(pidl=%p,0x%08lx,%p)\n", this, pidl, dwFlags, strRet);
-    pdump (pidl);
-
-    if (!strRet)
+    if (!strRet || !pidl || !pidl->mkid.cb)
         return E_INVALIDARG;
 
-    if (!pidl->mkid.cb)
-    {
-        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
-        if (!pszName)
-            return E_OUTOFMEMORY;
-
-        if (LoadStringW(shell32_hInstance, IDS_NETWORKPLACE, pszName, MAX_PATH))
-        {
-            pszName[MAX_PATH-1] = L'\0';
-            strRet->uType = STRRET_WSTR;
-            strRet->pOleStr = pszName;
-            return S_OK;
-        }
-        CoTaskMemFree(pszName);
-        return E_FAIL;
-    }
 #ifdef HACKY_UNC_PATHS
-    else
-    {
-        LPCWSTR pstr = (LPCWSTR)pidl->mkid.abID;
-        pszName = (LPWSTR)CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
-        if (!pszName)
-            return E_OUTOFMEMORY;
-
-        wcscpy(pszName, pstr);
-        strRet->pOleStr = pszName;
-        strRet->uType = STRRET_WSTR;
-        return S_OK;
-    }
+    return SHSetStrRet(strRet, (LPCWSTR)pidl->mkid.abID);
 #endif
     return E_NOTIMPL;
 }
@@ -567,22 +545,13 @@ HRESULT WINAPI CNetFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNID *
 
 HRESULT WINAPI CNetFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
-    WCHAR buffer[MAX_PATH] = {0};
-    HRESULT hr = E_FAIL;
-
     if (iColumn >= NETWORKPLACESSHELLVIEWCOLUMNS)
         return E_FAIL;
 
     psd->fmt = NetworkPlacesSFHeader[iColumn].fmt;
     psd->cxChar = NetworkPlacesSFHeader[iColumn].cxChar;
     if (pidl == NULL)
-    {
-        psd->str.uType = STRRET_WSTR;
-        if (LoadStringW(shell32_hInstance, NetworkPlacesSFHeader[iColumn].colnameid, buffer, _countof(buffer)))
-            hr = SHStrDupW(buffer, &psd->str.pOleStr);
-
-        return hr;
-    }
+        return SHSetStrRet(&psd->str, NetworkPlacesSFHeader[iColumn].colnameid);
 
     if (iColumn == COLUMN_NAME)
         return GetDisplayNameOf(pidl, SHGDN_NORMAL, &psd->str);
@@ -621,8 +590,10 @@ HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE("(%p)->(%p)\n", this, pidl);
+    if (pidlRoot)
+        SHFree((LPVOID)pidlRoot);
 
+    pidlRoot = ILClone(pidl);
     return S_OK;
 }
 

@@ -44,7 +44,7 @@ void TaskManager_OnFileNew(void)
 
         /* NOTE - don't check whether running on win 9x or NT, let's just
                   assume that a unicode build only runs on NT */
-        RunFileDlg(hMainWnd, hIcon, NULL, NULL, szText, RFF_CALCDIRECTORY);
+        RunFileDlg(hMainWnd, hIcon, NULL, szTitle, szText, RFF_CALCDIRECTORY);
 
         DeleteObject(hIcon);
     }

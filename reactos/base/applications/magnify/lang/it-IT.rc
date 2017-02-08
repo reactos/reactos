@@ -34,22 +34,22 @@ CAPTION "Impostazioni di Magnifier"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Uscita", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Aiuto", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Livello d'ingrandimento:", IDC_STATIC, 6, 8, 78, 8
+    PUSHBUTTON "&Aiuto", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "&Livello d'ingrandimento:", IDC_STATIC, 6, 8, 78, 8
     COMBOBOX IDC_ZOOM, 96, 6, 48, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Proseguimento", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Presentazione", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Seguire il cursore del mouse", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Seguire il cursore del &mouse", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "Seguire la selezione da tastiera", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Seguire la sele&zione da tastiera", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 120, 10
-    CONTROL "Seguire l'immissione di testo", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "Seguire l'immissione di &testo", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "Inverti i colori", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Inverti i colori", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "Avvio in minimizzato", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "A&vvio in minimizzato", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "Mostra Magnifier", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "M&ostra Magnifier", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 

@@ -74,7 +74,6 @@ BEGIN
     END
     POPUP "&Ayuda", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "¿Es &legal esta copia de ReactOS?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Acerca de ReactOS", IDM_HELP_ABOUT
     END
 END

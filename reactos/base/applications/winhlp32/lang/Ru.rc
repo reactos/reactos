@@ -41,14 +41,14 @@ MAIN_MENU MENU
  POPUP "&Закладка" {
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
  }
- POPUP "&Настройки" {
+ POPUP "&Параметры" {
   MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
   MENUITEM "История",		MNID_OPTS_HISTORY
-  POPUP    "Шрифт"
+  POPUP    "&Шрифт"
   BEGIN
-    MENUITEM "Мелкий",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Обычный",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Крупный",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "&Мелкий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "&Обычный",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "&Крупный",     	MNID_OPTS_FONTS_LARGE
   END
  }
  POPUP "&Справка" {

@@ -10,8 +10,9 @@ BEGIN
     IDS_APPTITLE "ברוכים הבאים - ReactOS"
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "ברוכים הבאים למערכת ההפעלה ReactOS,\nבחר נושא מצד ימין"
-//    IDS_CHECKTEXT "הראה חלון זה שוב"
-//    IDS_CLOSETEXT "יציאה"
+
+    IDS_CHECKTEXT "הראה חלון זה שוב"
+    IDS_CLOSETEXT "יציאה"
 END
 
 /* Topic buttons */
@@ -20,13 +21,6 @@ BEGIN
     IDS_TOPICBUTTON0 "התקנת ReactOS"
     IDS_TOPICBUTTON1 "סייר בתוכן הדיסק"
     IDS_TOPICBUTTON2 "יציאה"
-//    IDS_TOPICBUTTON3 "Empty Topic 3"
-//    IDS_TOPICBUTTON4 "Empty Topic 4"
-//    IDS_TOPICBUTTON5 "Empty Topic 5"
-//    IDS_TOPICBUTTON6 "Empty Topic 6"
-//    IDS_TOPICBUTTON7 "Empty Topic 7"
-//    IDS_TOPICBUTTON8 "Empty Topic 8"
-//    IDS_TOPICBUTTON9 "Empty Topic 9"
 END
 
 /* Topic titles */
@@ -35,13 +29,6 @@ BEGIN
     IDS_TOPICTITLE0 "התקנת ReactOS"
     IDS_TOPICTITLE1 "סייר בתוכן הדיסק"
     IDS_TOPICTITLE2 "יציאה"
-//    IDS_TOPICTITLE3 "Empty Topic Title 3"
-//    IDS_TOPICTITLE4 "Empty Topic Title 4"
-//    IDS_TOPICTITLE5 "Empty Topic Title 5"
-//    IDS_TOPICTITLE6 "Empty Topic Title 6"
-//    IDS_TOPICTITLE7 "Empty Topic Title 7"
-//    IDS_TOPICTITLE8 "Empty Topic Title 8"
-//    IDS_TOPICTITLE9 "Empty Topic Title 9"
 END
 
 /* Topic descriptions */
@@ -50,11 +37,4 @@ BEGIN
     IDS_TOPICDESC0 "צור התקנה חדשה של ReactOS במחשבך או שדרג את ההתקנה הנוכחית."
     IDS_TOPICDESC1 "סייר בתוכן הדיסק."
     IDS_TOPICDESC2 "לחץ כדי לסגור יישום זה."
-//    IDS_TOPICDESC3 "Topic description 3.\n\nDescribe topic 3 here."
-//    IDS_TOPICDESC4 "Topic description 4.\n\nDescribe topic 4 here."
-//    IDS_TOPICDESC5 "Topic description 5.\n\nDescribe topic 5 here."
-//    IDS_TOPICDESC6 "Topic description 6.\n\nDescribe topic 6 here."
-//    IDS_TOPICDESC7 "Topic description 7.\n\nDescribe topic 7 here."
-//    IDS_TOPICDESC8 "Topic description 8.\n\nDescribe topic 8 here."
-//    IDS_TOPICDESC9 "Topic description 9.\n\nDescribe topic 9 here."
 END

@@ -41,10 +41,15 @@ FAT32GetNextCluster(
     ChunkSize = CACHEPAGESIZE(DeviceExt);
     FATOffset = CurrentCluster * sizeof(ULONG);
     Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-    if (!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     CurrentCluster = (*(PULONG)((char*)BaseAddress + (FATOffset % ChunkSize))) & 0x0fffffff;
     if (CurrentCluster >= 0xffffff8 && CurrentCluster <= 0xfffffff)
@@ -81,10 +86,15 @@ FAT16GetNextCluster(
     ChunkSize = CACHEPAGESIZE(DeviceExt);
     FATOffset = CurrentCluster * 2;
     Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-    if (!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-         return STATUS_UNSUCCESSFUL;
+        CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     CurrentCluster = *((PUSHORT)((char*)BaseAddress + (FATOffset % ChunkSize)));
     if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
@@ -121,10 +131,15 @@ FAT12GetNextCluster(
     *NextCluster = 0;
 
     Offset.QuadPart = 0;
-    if (!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, MAP_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, MAP_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     CBlock = (PUSHORT)((char*)BaseAddress + (CurrentCluster * 12) / 8);
     if ((CurrentCluster % 2) == 0)
@@ -176,11 +191,16 @@ FAT16FindAndMarkAvailableCluster(
         for (i = StartCluster; i < FatLength;)
         {
             Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
-            if (!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress))
+            _SEH2_TRY
+            {
+                CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 DPRINT1("CcPinRead(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
-                return STATUS_UNSUCCESSFUL;
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
+            _SEH2_END;
 
             Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
             BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
@@ -235,11 +255,16 @@ FAT12FindAndMarkAvailableCluster(
     *Cluster = 0;
     StartCluster = DeviceExt->LastAvailableCluster;
     Offset.QuadPart = 0;
-    if (!CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, PIN_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, PIN_WAIT, &Context, &BaseAddress);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT1("CcPinRead(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector);
-        return STATUS_UNSUCCESSFUL;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
+    _SEH2_END;
 
     for (j = 0; j < 2; j++)
     {
@@ -305,11 +330,16 @@ FAT32FindAndMarkAvailableCluster(
         for (i = StartCluster; i < FatLength;)
         {
             Offset.QuadPart = ROUND_DOWN(i * 4, ChunkSize);
-            if (!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress))
+            _SEH2_TRY
+            {
+                CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 DPRINT1("CcPinRead(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
-                return STATUS_UNSUCCESSFUL;
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
+            _SEH2_END;
             Block = (PULONG)((ULONG_PTR)BaseAddress + (i * 4) % ChunkSize);
             BlockEnd = (PULONG)((ULONG_PTR)BaseAddress + ChunkSize);
 
@@ -358,10 +388,15 @@ FAT12CountAvailableClusters(
     PUSHORT CBlock;
 
     Offset.QuadPart = 0;
-    if (!CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, MAP_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcMapData(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, MAP_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     numberofclusters = DeviceExt->FatInfo.NumberOfClusters + 2;
 
@@ -413,10 +448,15 @@ FAT16CountAvailableClusters(
     for (i = 2; i < FatLength; )
     {
         Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
-        if (!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
+        _SEH2_TRY
         {
-            return STATUS_UNSUCCESSFUL;
+            CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress);
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
         Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
         BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
 
@@ -463,11 +503,16 @@ FAT32CountAvailableClusters(
     for (i = 2; i < FatLength; )
     {
         Offset.QuadPart = ROUND_DOWN(i * 4, ChunkSize);
-        if (!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress))
+        _SEH2_TRY
+        {
+            CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, MAP_WAIT, &Context, &BaseAddress);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             DPRINT1("CcMapData(Offset %x, Length %u) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
-            return STATUS_UNSUCCESSFUL;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
         Block = (PULONG)((ULONG_PTR)BaseAddress + (i * 4) % ChunkSize);
         BlockEnd = (PULONG)((ULONG_PTR)BaseAddress + ChunkSize);
 
@@ -529,10 +574,15 @@ FAT12WriteCluster(
     LARGE_INTEGER Offset;
 
     Offset.QuadPart = 0;
-    if (!CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, PIN_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcPinRead(DeviceExt->FATFileObject, &Offset, DeviceExt->FatInfo.FATSectors * DeviceExt->FatInfo.BytesPerSector, PIN_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
     CBlock = (PUCHAR)BaseAddress;
 
     FATOffset = (ClusterToWrite * 12) / 8;
@@ -578,10 +628,15 @@ FAT16WriteCluster(
     ChunkSize = CACHEPAGESIZE(DeviceExt);
     FATOffset = ClusterToWrite * 2;
     Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-    if (!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
            ClusterToWrite);
@@ -614,10 +669,15 @@ FAT32WriteCluster(
 
     FATOffset = (ClusterToWrite * 4);
     Offset.QuadPart = ROUND_DOWN(FATOffset, ChunkSize);
-    if (!CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress))
+    _SEH2_TRY
     {
-        return STATUS_UNSUCCESSFUL;
+        CcPinRead(DeviceExt->FATFileObject, &Offset, ChunkSize, PIN_WAIT, &Context, &BaseAddress);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     DPRINT("Writing 0x%x for offset 0x%x 0x%x\n", NewValue, FATOffset,
            ClusterToWrite);

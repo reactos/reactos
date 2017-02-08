@@ -43,6 +43,6 @@
 #define SHTDN_REASON_FLAG_USER_DEFINED           0x40000000
 #define SHTDN_REASON_FLAG_PLANNED                0x80000000
 
-#endif /* WIN32_WINNT >= 0x0501 */
+#endif /* _WIN32_WINNT >= 0x0501 */
 
 #endif /* _REASON_H */

@@ -60,13 +60,13 @@ HRESULT InitShellServices(HDPA * phdpa)
 
     *phdpa = NULL;
 
-    TRACE("Enumerating Shell Service Ojbect GUIDs...\n");
+    TRACE("Enumerating Shell Service Object GUIDs...\n");
 
-    if (RegOpenKey(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ShellServiceObjectDelayLoad",
         &hkey))
     {
-        ERR("RegOpenKey failed.\n");
+        ERR("RegOpenKeyW failed.\n");
         return HRESULT_FROM_WIN32(GetLastError());
     }
 

@@ -22,25 +22,28 @@
 VOID
 NTAPI
 IopCleanupAfterException(IN PFILE_OBJECT FileObject,
-                         IN PIRP Irp,
+                         IN PIRP Irp OPTIONAL,
                          IN PKEVENT Event OPTIONAL,
                          IN PKEVENT LocalEvent OPTIONAL)
 {
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "IRP: %p. FO: %p \n", Irp, FileObject);
 
-    /* Check if we had a buffer */
-    if (Irp->AssociatedIrp.SystemBuffer)
+    if (Irp)
     {
-        /* Free it */
-        ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+        /* Check if we had a buffer */
+        if (Irp->AssociatedIrp.SystemBuffer)
+        {
+            /* Free it */
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+        }
+
+        /* Free the mdl */
+        if (Irp->MdlAddress) IoFreeMdl(Irp->MdlAddress);
+
+        /* Free the IRP */
+        IoFreeIrp(Irp);
     }
-
-    /* Free the mdl */
-    if (Irp->MdlAddress) IoFreeMdl(Irp->MdlAddress);
-
-    /* Free the IRP */
-    IoFreeIrp(Irp);
 
     /* Check if we had a file lock */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -210,6 +213,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG BufferLength;
+
+    PAGED_CODE();
+
     IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
@@ -342,8 +348,8 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* If that's FS I/O, try to do it with FastIO path */
-    if (!IsDevIoCtl)
+    /* If this is a device I/O, try to do it with FastIO path */
+    if (IsDevIoCtl)
     {
         PFAST_IO_DISPATCH FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
@@ -378,10 +384,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 _SEH2_END;
             }
 
-            /* If we're to dismount a volume, increaase the dismount count */
+            /* If we are dismounting a volume, increase the dismount count */
             if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
             {
-                InterlockedExchangeAdd((PLONG)&SharedUserData->DismountCount, 1);
+                InterlockedIncrement((PLONG)&SharedUserData->DismountCount);
             }
 
             /* Call the FSD */
@@ -412,7 +418,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 /* Backup our complete context in case it exists */
                 if (FileObject->CompletionContext)
                 {
-                     CompletionInfo = *(FileObject->CompletionContext);
+                    CompletionInfo = *(FileObject->CompletionContext);
                 }
 
                 /* If we had an event, signal it */
@@ -606,7 +612,16 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     }
 
     /* Use deferred completion for FS I/O */
-    Irp->Flags |= (!IsDevIoCtl) ? IRP_DEFER_IO_COMPLETION : 0;
+    if (!IsDevIoCtl)
+    {
+        Irp->Flags |= IRP_DEFER_IO_COMPLETION;
+    }
+
+    /* If we are dismounting a volume, increaase the dismount count */
+    if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
+    {
+        InterlockedIncrement((PLONG)&SharedUserData->DismountCount);
+    }
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,

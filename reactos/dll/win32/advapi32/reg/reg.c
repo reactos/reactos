@@ -425,9 +425,14 @@ RegCloseKey(HKEY hKey)
     NTSTATUS Status;
 
     /* don't close null handle or a pseudo handle */
-    if ((!hKey) || (((ULONG_PTR)hKey & 0xF0000000) == 0x80000000))
+    if (!hKey)
     {
         return ERROR_INVALID_HANDLE;
+    }
+
+    if (((ULONG_PTR)hKey & 0xF0000000) == 0x80000000)
+    {
+        return ERROR_SUCCESS;
     }
 
     Status = NtClose(hKey);
@@ -2632,7 +2637,7 @@ RegEnumKeyExW(
         {
             if (KeyInfo->Basic.NameLength > NameLength)
             {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_MORE_DATA;
             }
             else
             {
@@ -2648,7 +2653,7 @@ RegEnumKeyExW(
             if (KeyInfo->Node.NameLength > NameLength ||
                 KeyInfo->Node.ClassLength > ClassLength)
             {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_MORE_DATA;
             }
             else
             {
@@ -3850,7 +3855,7 @@ RegQueryMultipleValuesA(HKEY hKey,
     LONG ErrorCode;
 
     if (maxBytes >= (1024*1024))
-        return ERROR_TRANSFER_TOO_LONG;
+        return ERROR_MORE_DATA;
 
     *ldwTotsize = 0;
 
@@ -3914,7 +3919,7 @@ RegQueryMultipleValuesW(HKEY hKey,
     LONG ErrorCode;
 
     if (maxBytes >= (1024*1024))
-        return ERROR_TRANSFER_TOO_LONG;
+        return ERROR_MORE_DATA;
 
     *ldwTotsize = 0;
 
@@ -4130,19 +4135,31 @@ RegQueryValueExW(
 
     RtlInitUnicodeString( &name_str, name );
 
-    if (data) total_size = min( sizeof(buffer), *count + info_size );
+    if (data)
+        total_size = min( sizeof(buffer), *count + info_size );
     else
-    {
         total_size = info_size;
-        if (count) *count = 0;
-    }
 
-    /* this matches Win9x behaviour - NT sets *type to a random value */
-    if (type) *type = REG_NONE;
 
     status = NtQueryValueKey( hkey, &name_str, KeyValuePartialInformation,
                               buffer, total_size, &total_size );
-    if (!NT_SUCCESS(status) && status != STATUS_BUFFER_OVERFLOW) goto done;
+
+    if (!NT_SUCCESS(status) && status != STATUS_BUFFER_OVERFLOW)
+    {
+        // NT: Valid handles with inexistant/null values or invalid (but not NULL) handles sets type to REG_NONE
+        // On windows these conditions are likely to be side effects of the implementation...
+        if (status == STATUS_INVALID_HANDLE && hkey)
+        {
+            if (type) *type = REG_NONE;
+            if (count) *count = 0;
+        }
+        else if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+        {
+            if (type) *type = REG_NONE;
+            if (data == NULL && count) *count = 0;
+        }
+        goto done;
+    }
 
     if (data)
     {
